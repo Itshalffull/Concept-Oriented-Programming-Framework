@@ -274,10 +274,10 @@ describe('QualitySignal functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('record'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 20 }), dimension: fc.string({ minLength: 1, maxLength: 20 }), status: fc.string({ minLength: 1, maxLength: 20 }), severity: fc.string({ minLength: 1, maxLength: 20 }), summary: fc.string(), artifact_path: fc.string(), artifact_hash: fc.string(), run_ref: fc.string() }) }),
-              fc.record({ action: fc.constant('latest'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 20 }), dimension: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('record'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 50 }), dimension: fc.string({ minLength: 1, maxLength: 50 }), status: fc.string({ minLength: 1, maxLength: 50 }), severity: fc.string({ minLength: 1, maxLength: 50 }), summary: fc.string(), artifact_path: fc.string(), artifact_hash: fc.string(), run_ref: fc.string() }) }),
+              fc.record({ action: fc.constant('latest'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 50 }), dimension: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('rollup'), input: fc.record({ target_symbols: fc.string(), dimensions: fc.string() }) }),
-              fc.record({ action: fc.constant('explain'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 20 }), dimensions: fc.string() }) }),
+              fc.record({ action: fc.constant('explain'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 50 }), dimensions: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -304,10 +304,10 @@ describe('QualitySignal functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('record'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 20 }), dimension: fc.string({ minLength: 1, maxLength: 20 }), status: fc.string({ minLength: 1, maxLength: 20 }), severity: fc.string({ minLength: 1, maxLength: 20 }), summary: fc.string(), artifact_path: fc.string(), artifact_hash: fc.string(), run_ref: fc.string() }) }),
-              fc.record({ action: fc.constant('latest'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 20 }), dimension: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('record'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 50 }), dimension: fc.string({ minLength: 1, maxLength: 50 }), status: fc.string({ minLength: 1, maxLength: 50 }), severity: fc.string({ minLength: 1, maxLength: 50 }), summary: fc.string(), artifact_path: fc.string(), artifact_hash: fc.string(), run_ref: fc.string() }) }),
+              fc.record({ action: fc.constant('latest'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 50 }), dimension: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('rollup'), input: fc.record({ target_symbols: fc.string(), dimensions: fc.string() }) }),
-              fc.record({ action: fc.constant('explain'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 20 }), dimensions: fc.string() }) }),
+              fc.record({ action: fc.constant('explain'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 50 }), dimensions: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

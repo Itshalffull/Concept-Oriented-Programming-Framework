@@ -275,9 +275,9 @@ describe('EloRating functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('configure'), input: fc.record({ kFactor: fc.string(), initialRating: fc.string(), kFactorDecay: fc.string() }) }),
-              fc.record({ action: fc.constant('recordOutcome'), input: fc.record({ config: fc.string(), winner: fc.string({ minLength: 1, maxLength: 20 }), loser: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('recordDraw'), input: fc.record({ config: fc.string(), participantA: fc.string({ minLength: 1, maxLength: 20 }), participantB: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('getRating'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('recordOutcome'), input: fc.record({ config: fc.string(), winner: fc.string({ minLength: 1, maxLength: 50 }), loser: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('recordDraw'), input: fc.record({ config: fc.string(), participantA: fc.string({ minLength: 1, maxLength: 50 }), participantB: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getRating'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -305,9 +305,9 @@ describe('EloRating functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('configure'), input: fc.record({ kFactor: fc.string(), initialRating: fc.string(), kFactorDecay: fc.string() }) }),
-              fc.record({ action: fc.constant('recordOutcome'), input: fc.record({ config: fc.string(), winner: fc.string({ minLength: 1, maxLength: 20 }), loser: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('recordDraw'), input: fc.record({ config: fc.string(), participantA: fc.string({ minLength: 1, maxLength: 20 }), participantB: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('getRating'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('recordOutcome'), input: fc.record({ config: fc.string(), winner: fc.string({ minLength: 1, maxLength: 50 }), loser: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('recordDraw'), input: fc.record({ config: fc.string(), participantA: fc.string({ minLength: 1, maxLength: 50 }), participantB: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getRating'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

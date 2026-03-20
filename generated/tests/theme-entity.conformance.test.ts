@@ -457,12 +457,12 @@ describe('ThemeEntity functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), source: fc.string({ minLength: 1, maxLength: 20 }), ast: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolveToken'), input: fc.record({ theme: fc.string(), tokenPath: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), source: fc.string({ minLength: 1, maxLength: 50 }), ast: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolveToken'), input: fc.record({ theme: fc.string(), tokenPath: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('contrastAudit'), input: fc.record({ theme: fc.string() }) }),
               fc.record({ action: fc.constant('diffThemes'), input: fc.record({ a: fc.string(), b: fc.string() }) }),
-              fc.record({ action: fc.constant('affectedWidgets'), input: fc.record({ theme: fc.string(), changedToken: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('affectedWidgets'), input: fc.record({ theme: fc.string(), changedToken: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('generatedOutputs'), input: fc.record({ theme: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -490,12 +490,12 @@ describe('ThemeEntity functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), source: fc.string({ minLength: 1, maxLength: 20 }), ast: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolveToken'), input: fc.record({ theme: fc.string(), tokenPath: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), source: fc.string({ minLength: 1, maxLength: 50 }), ast: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolveToken'), input: fc.record({ theme: fc.string(), tokenPath: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('contrastAudit'), input: fc.record({ theme: fc.string() }) }),
               fc.record({ action: fc.constant('diffThemes'), input: fc.record({ a: fc.string(), b: fc.string() }) }),
-              fc.record({ action: fc.constant('affectedWidgets'), input: fc.record({ theme: fc.string(), changedToken: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('affectedWidgets'), input: fc.record({ theme: fc.string(), changedToken: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('generatedOutputs'), input: fc.record({ theme: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

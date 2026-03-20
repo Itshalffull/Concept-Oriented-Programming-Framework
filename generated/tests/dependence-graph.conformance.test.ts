@@ -448,12 +448,12 @@ describe('DependenceGraph functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('compute'), input: fc.record({ scopeRef: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('queryDependents'), input: fc.record({ symbol: fc.string({ minLength: 1, maxLength: 20 }), edgeKinds: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('queryDependencies'), input: fc.record({ symbol: fc.string({ minLength: 1, maxLength: 20 }), edgeKinds: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('sliceForward'), input: fc.record({ criterion: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('sliceBackward'), input: fc.record({ criterion: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('impactAnalysis'), input: fc.record({ changed: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('compute'), input: fc.record({ scopeRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('queryDependents'), input: fc.record({ symbol: fc.string({ minLength: 1, maxLength: 50 }), edgeKinds: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('queryDependencies'), input: fc.record({ symbol: fc.string({ minLength: 1, maxLength: 50 }), edgeKinds: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('sliceForward'), input: fc.record({ criterion: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('sliceBackward'), input: fc.record({ criterion: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('impactAnalysis'), input: fc.record({ changed: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ graph: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -481,12 +481,12 @@ describe('DependenceGraph functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('compute'), input: fc.record({ scopeRef: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('queryDependents'), input: fc.record({ symbol: fc.string({ minLength: 1, maxLength: 20 }), edgeKinds: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('queryDependencies'), input: fc.record({ symbol: fc.string({ minLength: 1, maxLength: 20 }), edgeKinds: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('sliceForward'), input: fc.record({ criterion: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('sliceBackward'), input: fc.record({ criterion: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('impactAnalysis'), input: fc.record({ changed: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('compute'), input: fc.record({ scopeRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('queryDependents'), input: fc.record({ symbol: fc.string({ minLength: 1, maxLength: 50 }), edgeKinds: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('queryDependencies'), input: fc.record({ symbol: fc.string({ minLength: 1, maxLength: 50 }), edgeKinds: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('sliceForward'), input: fc.record({ criterion: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('sliceBackward'), input: fc.record({ criterion: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('impactAnalysis'), input: fc.record({ changed: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ graph: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

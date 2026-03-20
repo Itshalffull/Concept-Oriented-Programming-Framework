@@ -229,8 +229,8 @@ describe('ActionLog functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('append'), input: fc.record({ record: fc.string() }) }),
-              fc.record({ action: fc.constant('addEdge'), input: fc.record({ from: fc.string(), to: fc.string(), sync: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('query'), input: fc.record({ flow: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('addEdge'), input: fc.record({ from: fc.string(), to: fc.string(), sync: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('query'), input: fc.record({ flow: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -258,8 +258,8 @@ describe('ActionLog functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('append'), input: fc.record({ record: fc.string() }) }),
-              fc.record({ action: fc.constant('addEdge'), input: fc.record({ from: fc.string(), to: fc.string(), sync: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('query'), input: fc.record({ flow: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('addEdge'), input: fc.record({ from: fc.string(), to: fc.string(), sync: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('query'), input: fc.record({ flow: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

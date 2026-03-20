@@ -199,14 +199,14 @@ describe('EmbeddingCache imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('warm'), input: fc.record({ path: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('lookup'), input: fc.record({ digest: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('put'), input: fc.record({ digest: fc.string({ minLength: 1, maxLength: 20 }), vector: fc.string({ minLength: 1, maxLength: 20 }), model: fc.string({ minLength: 1, maxLength: 20 }), dimensions: fc.integer({ min: 0, max: 1000 }), sourceKind: fc.string({ minLength: 1, maxLength: 20 }), sourceKey: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('flush'), input: fc.record({ path: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('evict'), input: fc.record({ digest: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('warm'), input: fc.record({ path: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('lookup'), input: fc.record({ digest: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('put'), input: fc.record({ digest: fc.string({ minLength: 1, maxLength: 50 }), vector: fc.string({ minLength: 1, maxLength: 50 }), model: fc.string({ minLength: 1, maxLength: 50 }), dimensions: fc.integer({ min: 1, max: 1000 }), sourceKind: fc.string({ minLength: 1, maxLength: 50 }), sourceKey: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('flush'), input: fc.record({ path: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('evict'), input: fc.record({ digest: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('stats'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('lookupWithConfig'), input: fc.record({ digest: fc.string({ minLength: 1, maxLength: 20 }), model: fc.string({ minLength: 1, maxLength: 20 }), dimensions: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('putWithConfig'), input: fc.record({ digest: fc.string({ minLength: 1, maxLength: 20 }), model: fc.string({ minLength: 1, maxLength: 20 }), dimensions: fc.integer({ min: 0, max: 1000 }), vector: fc.string({ minLength: 1, maxLength: 20 }), sourceKind: fc.string({ minLength: 1, maxLength: 20 }), sourceKey: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('lookupWithConfig'), input: fc.record({ digest: fc.string({ minLength: 1, maxLength: 50 }), model: fc.string({ minLength: 1, maxLength: 50 }), dimensions: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('putWithConfig'), input: fc.record({ digest: fc.string({ minLength: 1, maxLength: 50 }), model: fc.string({ minLength: 1, maxLength: 50 }), dimensions: fc.integer({ min: 1, max: 1000 }), vector: fc.string({ minLength: 1, maxLength: 50 }), sourceKind: fc.string({ minLength: 1, maxLength: 50 }), sourceKey: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -232,14 +232,14 @@ describe('EmbeddingCache imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('warm'), input: fc.record({ path: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('lookup'), input: fc.record({ digest: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('put'), input: fc.record({ digest: fc.string({ minLength: 1, maxLength: 20 }), vector: fc.string({ minLength: 1, maxLength: 20 }), model: fc.string({ minLength: 1, maxLength: 20 }), dimensions: fc.integer({ min: 0, max: 1000 }), sourceKind: fc.string({ minLength: 1, maxLength: 20 }), sourceKey: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('flush'), input: fc.record({ path: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('evict'), input: fc.record({ digest: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('warm'), input: fc.record({ path: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('lookup'), input: fc.record({ digest: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('put'), input: fc.record({ digest: fc.string({ minLength: 1, maxLength: 50 }), vector: fc.string({ minLength: 1, maxLength: 50 }), model: fc.string({ minLength: 1, maxLength: 50 }), dimensions: fc.integer({ min: 1, max: 1000 }), sourceKind: fc.string({ minLength: 1, maxLength: 50 }), sourceKey: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('flush'), input: fc.record({ path: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('evict'), input: fc.record({ digest: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('stats'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('lookupWithConfig'), input: fc.record({ digest: fc.string({ minLength: 1, maxLength: 20 }), model: fc.string({ minLength: 1, maxLength: 20 }), dimensions: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('putWithConfig'), input: fc.record({ digest: fc.string({ minLength: 1, maxLength: 20 }), model: fc.string({ minLength: 1, maxLength: 20 }), dimensions: fc.integer({ min: 0, max: 1000 }), vector: fc.string({ minLength: 1, maxLength: 20 }), sourceKind: fc.string({ minLength: 1, maxLength: 20 }), sourceKey: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('lookupWithConfig'), input: fc.record({ digest: fc.string({ minLength: 1, maxLength: 50 }), model: fc.string({ minLength: 1, maxLength: 50 }), dimensions: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('putWithConfig'), input: fc.record({ digest: fc.string({ minLength: 1, maxLength: 50 }), model: fc.string({ minLength: 1, maxLength: 50 }), dimensions: fc.integer({ min: 1, max: 1000 }), vector: fc.string({ minLength: 1, maxLength: 50 }), sourceKind: fc.string({ minLength: 1, maxLength: 50 }), sourceKey: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

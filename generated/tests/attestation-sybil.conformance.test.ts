@@ -159,7 +159,7 @@ describe('AttestationSybil functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('configure'), input: fc.record({ requiredSchemas: fc.string(), trustedAttesters: fc.string() }) }),
-              fc.record({ action: fc.constant('checkParticipant'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 20 }), attestationRef: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('checkParticipant'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }), attestationRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -187,7 +187,7 @@ describe('AttestationSybil functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('configure'), input: fc.record({ requiredSchemas: fc.string(), trustedAttesters: fc.string() }) }),
-              fc.record({ action: fc.constant('checkParticipant'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 20 }), attestationRef: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('checkParticipant'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }), attestationRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

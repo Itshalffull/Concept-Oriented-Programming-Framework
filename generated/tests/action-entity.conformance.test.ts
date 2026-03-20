@@ -145,8 +145,8 @@ describe('ActionEntity imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), name: fc.string({ minLength: 1, maxLength: 20 }), params: fc.string({ minLength: 1, maxLength: 20 }), variantRefs: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByConcept'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), name: fc.string({ minLength: 1, maxLength: 50 }), params: fc.string({ minLength: 1, maxLength: 50 }), variantRefs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByConcept'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('triggeringSyncs'), input: fc.record({ action: fc.string() }) }),
               fc.record({ action: fc.constant('invokingSyncs'), input: fc.record({ action: fc.string() }) }),
               fc.record({ action: fc.constant('implementations'), input: fc.record({ action: fc.string() }) }),
@@ -177,8 +177,8 @@ describe('ActionEntity imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), name: fc.string({ minLength: 1, maxLength: 20 }), params: fc.string({ minLength: 1, maxLength: 20 }), variantRefs: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByConcept'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), name: fc.string({ minLength: 1, maxLength: 50 }), params: fc.string({ minLength: 1, maxLength: 50 }), variantRefs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByConcept'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('triggeringSyncs'), input: fc.record({ action: fc.string() }) }),
               fc.record({ action: fc.constant('invokingSyncs'), input: fc.record({ action: fc.string() }) }),
               fc.record({ action: fc.constant('implementations'), input: fc.record({ action: fc.string() }) }),

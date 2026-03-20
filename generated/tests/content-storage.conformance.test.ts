@@ -344,10 +344,10 @@ describe('ContentStorage functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('save'), input: fc.record({ record: fc.string(), data: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('save'), input: fc.record({ record: fc.string(), data: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('load'), input: fc.record({ record: fc.string() }) }),
               fc.record({ action: fc.constant('delete'), input: fc.record({ record: fc.string() }) }),
-              fc.record({ action: fc.constant('query'), input: fc.record({ filter: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('query'), input: fc.record({ filter: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('generateSchema'), input: fc.record({ record: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -375,10 +375,10 @@ describe('ContentStorage functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('save'), input: fc.record({ record: fc.string(), data: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('save'), input: fc.record({ record: fc.string(), data: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('load'), input: fc.record({ record: fc.string() }) }),
               fc.record({ action: fc.constant('delete'), input: fc.record({ record: fc.string() }) }),
-              fc.record({ action: fc.constant('query'), input: fc.record({ filter: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('query'), input: fc.record({ filter: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('generateSchema'), input: fc.record({ record: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

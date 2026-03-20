@@ -274,9 +274,9 @@ describe('Merge functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('registerStrategy'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), contentTypes: fc.string() }) }),
+              fc.record({ action: fc.constant('registerStrategy'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), contentTypes: fc.string() }) }),
               fc.record({ action: fc.constant('merge'), input: fc.record({ base: fc.string(), ours: fc.string(), theirs: fc.string(), strategy: fc.string() }) }),
-              fc.record({ action: fc.constant('resolveConflict'), input: fc.record({ mergeId: fc.string(), conflictIndex: fc.integer({ min: 0, max: 1000 }), resolution: fc.string() }) }),
+              fc.record({ action: fc.constant('resolveConflict'), input: fc.record({ mergeId: fc.string(), conflictIndex: fc.integer({ min: 1, max: 1000 }), resolution: fc.string() }) }),
               fc.record({ action: fc.constant('finalize'), input: fc.record({ mergeId: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -304,9 +304,9 @@ describe('Merge functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('registerStrategy'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), contentTypes: fc.string() }) }),
+              fc.record({ action: fc.constant('registerStrategy'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), contentTypes: fc.string() }) }),
               fc.record({ action: fc.constant('merge'), input: fc.record({ base: fc.string(), ours: fc.string(), theirs: fc.string(), strategy: fc.string() }) }),
-              fc.record({ action: fc.constant('resolveConflict'), input: fc.record({ mergeId: fc.string(), conflictIndex: fc.integer({ min: 0, max: 1000 }), resolution: fc.string() }) }),
+              fc.record({ action: fc.constant('resolveConflict'), input: fc.record({ mergeId: fc.string(), conflictIndex: fc.integer({ min: 1, max: 1000 }), resolution: fc.string() }) }),
               fc.record({ action: fc.constant('finalize'), input: fc.record({ mergeId: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

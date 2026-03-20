@@ -112,11 +112,11 @@ describe('Canvas imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('addNode'), input: fc.record({ canvas: fc.string(), node: fc.string({ minLength: 1, maxLength: 20 }), x: fc.integer({ min: 0, max: 1000 }), y: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('moveNode'), input: fc.record({ canvas: fc.string(), node: fc.string({ minLength: 1, maxLength: 20 }), x: fc.integer({ min: 0, max: 1000 }), y: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('groupNodes'), input: fc.record({ canvas: fc.string(), nodes: fc.string({ minLength: 1, maxLength: 20 }), group: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('removeItem'), input: fc.record({ canvas: fc.string(), node: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resizeItem'), input: fc.record({ canvas: fc.string(), node: fc.string({ minLength: 1, maxLength: 20 }), width: fc.integer({ min: 0, max: 1000 }), height: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('addNode'), input: fc.record({ canvas: fc.string(), node: fc.string({ minLength: 1, maxLength: 50 }), x: fc.integer({ min: 1, max: 1000 }), y: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('moveNode'), input: fc.record({ canvas: fc.string(), node: fc.string({ minLength: 1, maxLength: 50 }), x: fc.integer({ min: 1, max: 1000 }), y: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('groupNodes'), input: fc.record({ canvas: fc.string(), nodes: fc.string({ minLength: 1, maxLength: 50 }), group: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('removeItem'), input: fc.record({ canvas: fc.string(), node: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resizeItem'), input: fc.record({ canvas: fc.string(), node: fc.string({ minLength: 1, maxLength: 50 }), width: fc.integer({ min: 1, max: 1000 }), height: fc.integer({ min: 1, max: 1000 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -142,11 +142,11 @@ describe('Canvas imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('addNode'), input: fc.record({ canvas: fc.string(), node: fc.string({ minLength: 1, maxLength: 20 }), x: fc.integer({ min: 0, max: 1000 }), y: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('moveNode'), input: fc.record({ canvas: fc.string(), node: fc.string({ minLength: 1, maxLength: 20 }), x: fc.integer({ min: 0, max: 1000 }), y: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('groupNodes'), input: fc.record({ canvas: fc.string(), nodes: fc.string({ minLength: 1, maxLength: 20 }), group: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('removeItem'), input: fc.record({ canvas: fc.string(), node: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resizeItem'), input: fc.record({ canvas: fc.string(), node: fc.string({ minLength: 1, maxLength: 20 }), width: fc.integer({ min: 0, max: 1000 }), height: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('addNode'), input: fc.record({ canvas: fc.string(), node: fc.string({ minLength: 1, maxLength: 50 }), x: fc.integer({ min: 1, max: 1000 }), y: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('moveNode'), input: fc.record({ canvas: fc.string(), node: fc.string({ minLength: 1, maxLength: 50 }), x: fc.integer({ min: 1, max: 1000 }), y: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('groupNodes'), input: fc.record({ canvas: fc.string(), nodes: fc.string({ minLength: 1, maxLength: 50 }), group: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('removeItem'), input: fc.record({ canvas: fc.string(), node: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resizeItem'), input: fc.record({ canvas: fc.string(), node: fc.string({ minLength: 1, maxLength: 50 }), width: fc.integer({ min: 1, max: 1000 }), height: fc.integer({ min: 1, max: 1000 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

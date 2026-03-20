@@ -457,11 +457,11 @@ describe('Manifest functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('add'), input: fc.record({ project: fc.string(), module_id: fc.string({ minLength: 1, maxLength: 20 }), version_range: fc.string({ minLength: 1, maxLength: 20 }), edge_type: fc.string({ minLength: 1, maxLength: 20 }), environment: fc.string({ minLength: 1, maxLength: 20 }), features: fc.string(), optional: fc.boolean() }) }),
-              fc.record({ action: fc.constant('remove'), input: fc.record({ project: fc.string(), module_id: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('override'), input: fc.record({ project: fc.string(), module_id: fc.string({ minLength: 1, maxLength: 20 }), replacement_id: fc.string(), replacement_source: fc.string(), version_pin: fc.string() }) }),
-              fc.record({ action: fc.constant('disable'), input: fc.record({ project: fc.string(), module_id: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('enable'), input: fc.record({ project: fc.string(), module_id: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('add'), input: fc.record({ project: fc.string(), module_id: fc.string({ minLength: 1, maxLength: 50 }), version_range: fc.string({ minLength: 1, maxLength: 50 }), edge_type: fc.string({ minLength: 1, maxLength: 50 }), environment: fc.string({ minLength: 1, maxLength: 50 }), features: fc.string(), optional: fc.boolean() }) }),
+              fc.record({ action: fc.constant('remove'), input: fc.record({ project: fc.string(), module_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('override'), input: fc.record({ project: fc.string(), module_id: fc.string({ minLength: 1, maxLength: 50 }), replacement_id: fc.string(), replacement_source: fc.string(), version_pin: fc.string() }) }),
+              fc.record({ action: fc.constant('disable'), input: fc.record({ project: fc.string(), module_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('enable'), input: fc.record({ project: fc.string(), module_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('merge'), input: fc.record({ base: fc.string(), overlay: fc.string() }) }),
               fc.record({ action: fc.constant('validate'), input: fc.record({ project: fc.string() }) }),
             ),
@@ -490,11 +490,11 @@ describe('Manifest functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('add'), input: fc.record({ project: fc.string(), module_id: fc.string({ minLength: 1, maxLength: 20 }), version_range: fc.string({ minLength: 1, maxLength: 20 }), edge_type: fc.string({ minLength: 1, maxLength: 20 }), environment: fc.string({ minLength: 1, maxLength: 20 }), features: fc.string(), optional: fc.boolean() }) }),
-              fc.record({ action: fc.constant('remove'), input: fc.record({ project: fc.string(), module_id: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('override'), input: fc.record({ project: fc.string(), module_id: fc.string({ minLength: 1, maxLength: 20 }), replacement_id: fc.string(), replacement_source: fc.string(), version_pin: fc.string() }) }),
-              fc.record({ action: fc.constant('disable'), input: fc.record({ project: fc.string(), module_id: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('enable'), input: fc.record({ project: fc.string(), module_id: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('add'), input: fc.record({ project: fc.string(), module_id: fc.string({ minLength: 1, maxLength: 50 }), version_range: fc.string({ minLength: 1, maxLength: 50 }), edge_type: fc.string({ minLength: 1, maxLength: 50 }), environment: fc.string({ minLength: 1, maxLength: 50 }), features: fc.string(), optional: fc.boolean() }) }),
+              fc.record({ action: fc.constant('remove'), input: fc.record({ project: fc.string(), module_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('override'), input: fc.record({ project: fc.string(), module_id: fc.string({ minLength: 1, maxLength: 50 }), replacement_id: fc.string(), replacement_source: fc.string(), version_pin: fc.string() }) }),
+              fc.record({ action: fc.constant('disable'), input: fc.record({ project: fc.string(), module_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('enable'), input: fc.record({ project: fc.string(), module_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('merge'), input: fc.record({ base: fc.string(), overlay: fc.string() }) }),
               fc.record({ action: fc.constant('validate'), input: fc.record({ project: fc.string() }) }),
             ),

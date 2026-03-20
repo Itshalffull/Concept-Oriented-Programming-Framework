@@ -276,8 +276,8 @@ describe('EntityReflector functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('reflect'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('reflectProvider'), input: fc.record({ provider_name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('registerProvider'), input: fc.record({ provider_name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('reflectProvider'), input: fc.record({ provider_name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('registerProvider'), input: fc.record({ provider_name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('status'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -306,8 +306,8 @@ describe('EntityReflector functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('reflect'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('reflectProvider'), input: fc.record({ provider_name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('registerProvider'), input: fc.record({ provider_name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('reflectProvider'), input: fc.record({ provider_name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('registerProvider'), input: fc.record({ provider_name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('status'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },

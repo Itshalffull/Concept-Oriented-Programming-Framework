@@ -389,12 +389,12 @@ describe('SyncPair functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('link'), input: fc.record({ pairId: fc.string({ minLength: 1, maxLength: 20 }), idA: fc.string({ minLength: 1, maxLength: 20 }), idB: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('sync'), input: fc.record({ pairId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('detectConflicts'), input: fc.record({ pairId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ conflictId: fc.string({ minLength: 1, maxLength: 20 }), resolution: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('unlink'), input: fc.record({ pairId: fc.string({ minLength: 1, maxLength: 20 }), idA: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('getChangeLog'), input: fc.record({ pairId: fc.string({ minLength: 1, maxLength: 20 }), since: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('link'), input: fc.record({ pairId: fc.string({ minLength: 1, maxLength: 50 }), idA: fc.string({ minLength: 1, maxLength: 50 }), idB: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('sync'), input: fc.record({ pairId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('detectConflicts'), input: fc.record({ pairId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ conflictId: fc.string({ minLength: 1, maxLength: 50 }), resolution: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('unlink'), input: fc.record({ pairId: fc.string({ minLength: 1, maxLength: 50 }), idA: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getChangeLog'), input: fc.record({ pairId: fc.string({ minLength: 1, maxLength: 50 }), since: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -421,12 +421,12 @@ describe('SyncPair functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('link'), input: fc.record({ pairId: fc.string({ minLength: 1, maxLength: 20 }), idA: fc.string({ minLength: 1, maxLength: 20 }), idB: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('sync'), input: fc.record({ pairId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('detectConflicts'), input: fc.record({ pairId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ conflictId: fc.string({ minLength: 1, maxLength: 20 }), resolution: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('unlink'), input: fc.record({ pairId: fc.string({ minLength: 1, maxLength: 20 }), idA: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('getChangeLog'), input: fc.record({ pairId: fc.string({ minLength: 1, maxLength: 20 }), since: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('link'), input: fc.record({ pairId: fc.string({ minLength: 1, maxLength: 50 }), idA: fc.string({ minLength: 1, maxLength: 50 }), idB: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('sync'), input: fc.record({ pairId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('detectConflicts'), input: fc.record({ pairId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ conflictId: fc.string({ minLength: 1, maxLength: 50 }), resolution: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('unlink'), input: fc.record({ pairId: fc.string({ minLength: 1, maxLength: 50 }), idA: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getChangeLog'), input: fc.record({ pairId: fc.string({ minLength: 1, maxLength: 50 }), since: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

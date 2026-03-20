@@ -334,10 +334,10 @@ describe('Role functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ role: fc.string(), name: fc.string({ minLength: 1, maxLength: 20 }), purpose: fc.string({ minLength: 1, maxLength: 20 }), permissions: fc.string() }) }),
-              fc.record({ action: fc.constant('assign'), input: fc.record({ role: fc.string(), holder: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('revoke'), input: fc.record({ role: fc.string(), holder: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('check'), input: fc.record({ holder: fc.string({ minLength: 1, maxLength: 20 }), permission: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ role: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }), purpose: fc.string({ minLength: 1, maxLength: 50 }), permissions: fc.string() }) }),
+              fc.record({ action: fc.constant('assign'), input: fc.record({ role: fc.string(), holder: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('revoke'), input: fc.record({ role: fc.string(), holder: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('check'), input: fc.record({ holder: fc.string({ minLength: 1, maxLength: 50 }), permission: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('dissolve'), input: fc.record({ role: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -365,10 +365,10 @@ describe('Role functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ role: fc.string(), name: fc.string({ minLength: 1, maxLength: 20 }), purpose: fc.string({ minLength: 1, maxLength: 20 }), permissions: fc.string() }) }),
-              fc.record({ action: fc.constant('assign'), input: fc.record({ role: fc.string(), holder: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('revoke'), input: fc.record({ role: fc.string(), holder: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('check'), input: fc.record({ holder: fc.string({ minLength: 1, maxLength: 20 }), permission: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ role: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }), purpose: fc.string({ minLength: 1, maxLength: 50 }), permissions: fc.string() }) }),
+              fc.record({ action: fc.constant('assign'), input: fc.record({ role: fc.string(), holder: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('revoke'), input: fc.record({ role: fc.string(), holder: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('check'), input: fc.record({ holder: fc.string({ minLength: 1, maxLength: 50 }), permission: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('dissolve'), input: fc.record({ role: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

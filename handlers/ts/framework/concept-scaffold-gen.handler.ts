@@ -38,6 +38,11 @@ interface ActionDef {
     params: Array<{ name: string; type: string }>;
     description?: string;
   }>;
+  fixtures?: Array<{
+    name: string;
+    input: Record<string, unknown>;
+    expectedVariant?: string;
+  }>;
   description?: string;
 }
 
@@ -152,6 +157,15 @@ function buildConceptSpec(input: Record<string, unknown>): string {
       lines.push(`      -> ${v.name}(${vParamStr}) {`);
       lines.push(`        ${v.description || `${v.name} variant.`}`);
       lines.push('      }');
+    }
+    // Fixtures
+    const fixtures = action.fixtures || [];
+    for (const f of fixtures) {
+      const inputStr = Object.entries(f.input)
+        .map(([k, v]) => `${k}: ${JSON.stringify(v)}`)
+        .join(', ');
+      const arrow = f.expectedVariant && f.expectedVariant !== 'ok' ? ` -> ${f.expectedVariant}` : '';
+      lines.push(`      fixture ${f.name} { ${inputStr} }${arrow}`);
     }
     lines.push('    }');
     lines.push('');

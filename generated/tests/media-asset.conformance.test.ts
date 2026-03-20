@@ -276,7 +276,7 @@ describe('MediaAsset functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('createMedia'), input: fc.record({ asset: fc.string(), source: fc.string({ minLength: 1, maxLength: 20 }), file: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('createMedia'), input: fc.record({ asset: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), file: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('extractMetadata'), input: fc.record({ asset: fc.string() }) }),
               fc.record({ action: fc.constant('generateThumbnail'), input: fc.record({ asset: fc.string() }) }),
               fc.record({ action: fc.constant('getMedia'), input: fc.record({ asset: fc.string() }) }),
@@ -306,7 +306,7 @@ describe('MediaAsset functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('createMedia'), input: fc.record({ asset: fc.string(), source: fc.string({ minLength: 1, maxLength: 20 }), file: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('createMedia'), input: fc.record({ asset: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), file: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('extractMetadata'), input: fc.record({ asset: fc.string() }) }),
               fc.record({ action: fc.constant('generateThumbnail'), input: fc.record({ asset: fc.string() }) }),
               fc.record({ action: fc.constant('getMedia'), input: fc.record({ asset: fc.string() }) }),

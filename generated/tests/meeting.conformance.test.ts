@@ -452,12 +452,12 @@ describe('Meeting functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('schedule'), input: fc.record({ title: fc.string({ minLength: 1, maxLength: 20 }), agenda: fc.string() }) }),
-              fc.record({ action: fc.constant('callToOrder'), input: fc.record({ meeting: fc.string(), chair: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('makeMotion'), input: fc.record({ meeting: fc.string(), mover: fc.string({ minLength: 1, maxLength: 20 }), motionType: fc.string({ minLength: 1, maxLength: 20 }), text: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('secondMotion'), input: fc.record({ meeting: fc.string(), seconder: fc.string({ minLength: 1, maxLength: 20 }), motionIndex: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('schedule'), input: fc.record({ title: fc.string({ minLength: 1, maxLength: 50 }), agenda: fc.string() }) }),
+              fc.record({ action: fc.constant('callToOrder'), input: fc.record({ meeting: fc.string(), chair: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('makeMotion'), input: fc.record({ meeting: fc.string(), mover: fc.string({ minLength: 1, maxLength: 50 }), motionType: fc.string({ minLength: 1, maxLength: 50 }), text: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('secondMotion'), input: fc.record({ meeting: fc.string(), seconder: fc.string({ minLength: 1, maxLength: 50 }), motionIndex: fc.integer({ min: 1, max: 1000 }) }) }),
               fc.record({ action: fc.constant('callQuestion'), input: fc.record({ meeting: fc.string() }) }),
-              fc.record({ action: fc.constant('recordMinute'), input: fc.record({ meeting: fc.string(), record: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('recordMinute'), input: fc.record({ meeting: fc.string(), record: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('adjourn'), input: fc.record({ meeting: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -485,12 +485,12 @@ describe('Meeting functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('schedule'), input: fc.record({ title: fc.string({ minLength: 1, maxLength: 20 }), agenda: fc.string() }) }),
-              fc.record({ action: fc.constant('callToOrder'), input: fc.record({ meeting: fc.string(), chair: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('makeMotion'), input: fc.record({ meeting: fc.string(), mover: fc.string({ minLength: 1, maxLength: 20 }), motionType: fc.string({ minLength: 1, maxLength: 20 }), text: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('secondMotion'), input: fc.record({ meeting: fc.string(), seconder: fc.string({ minLength: 1, maxLength: 20 }), motionIndex: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('schedule'), input: fc.record({ title: fc.string({ minLength: 1, maxLength: 50 }), agenda: fc.string() }) }),
+              fc.record({ action: fc.constant('callToOrder'), input: fc.record({ meeting: fc.string(), chair: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('makeMotion'), input: fc.record({ meeting: fc.string(), mover: fc.string({ minLength: 1, maxLength: 50 }), motionType: fc.string({ minLength: 1, maxLength: 50 }), text: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('secondMotion'), input: fc.record({ meeting: fc.string(), seconder: fc.string({ minLength: 1, maxLength: 50 }), motionIndex: fc.integer({ min: 1, max: 1000 }) }) }),
               fc.record({ action: fc.constant('callQuestion'), input: fc.record({ meeting: fc.string() }) }),
-              fc.record({ action: fc.constant('recordMinute'), input: fc.record({ meeting: fc.string(), record: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('recordMinute'), input: fc.record({ meeting: fc.string(), record: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('adjourn'), input: fc.record({ meeting: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

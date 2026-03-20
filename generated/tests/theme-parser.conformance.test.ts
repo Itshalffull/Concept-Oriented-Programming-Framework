@@ -159,7 +159,7 @@ describe('ThemeParser functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('parse'), input: fc.record({ theme: fc.string(), source: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('parse'), input: fc.record({ theme: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('checkContrast'), input: fc.record({ theme: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -187,7 +187,7 @@ describe('ThemeParser functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('parse'), input: fc.record({ theme: fc.string(), source: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('parse'), input: fc.record({ theme: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('checkContrast'), input: fc.record({ theme: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

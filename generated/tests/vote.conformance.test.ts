@@ -278,8 +278,8 @@ describe('Vote functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('openSession'), input: fc.record({ proposalRef: fc.string({ minLength: 1, maxLength: 20 }), deadline: fc.string(), snapshotRef: fc.string() }) }),
-              fc.record({ action: fc.constant('castVote'), input: fc.record({ session: fc.string(), voter: fc.string({ minLength: 1, maxLength: 20 }), choice: fc.string({ minLength: 1, maxLength: 20 }), weight: fc.string() }) }),
+              fc.record({ action: fc.constant('openSession'), input: fc.record({ proposalRef: fc.string({ minLength: 1, maxLength: 50 }), deadline: fc.string(), snapshotRef: fc.string() }) }),
+              fc.record({ action: fc.constant('castVote'), input: fc.record({ session: fc.string(), voter: fc.string({ minLength: 1, maxLength: 50 }), choice: fc.string({ minLength: 1, maxLength: 50 }), weight: fc.string() }) }),
               fc.record({ action: fc.constant('close'), input: fc.record({ session: fc.string() }) }),
               fc.record({ action: fc.constant('tally'), input: fc.record({ session: fc.string() }) }),
             ),
@@ -308,8 +308,8 @@ describe('Vote functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('openSession'), input: fc.record({ proposalRef: fc.string({ minLength: 1, maxLength: 20 }), deadline: fc.string(), snapshotRef: fc.string() }) }),
-              fc.record({ action: fc.constant('castVote'), input: fc.record({ session: fc.string(), voter: fc.string({ minLength: 1, maxLength: 20 }), choice: fc.string({ minLength: 1, maxLength: 20 }), weight: fc.string() }) }),
+              fc.record({ action: fc.constant('openSession'), input: fc.record({ proposalRef: fc.string({ minLength: 1, maxLength: 50 }), deadline: fc.string(), snapshotRef: fc.string() }) }),
+              fc.record({ action: fc.constant('castVote'), input: fc.record({ session: fc.string(), voter: fc.string({ minLength: 1, maxLength: 50 }), choice: fc.string({ minLength: 1, maxLength: 50 }), weight: fc.string() }) }),
               fc.record({ action: fc.constant('close'), input: fc.record({ session: fc.string() }) }),
               fc.record({ action: fc.constant('tally'), input: fc.record({ session: fc.string() }) }),
             ),

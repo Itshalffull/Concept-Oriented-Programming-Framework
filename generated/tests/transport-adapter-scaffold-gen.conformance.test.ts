@@ -215,8 +215,8 @@ describe('TransportAdapterScaffoldGen functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('generate'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), protocol: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('preview'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), protocol: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('generate'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), protocol: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('preview'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), protocol: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('register'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },

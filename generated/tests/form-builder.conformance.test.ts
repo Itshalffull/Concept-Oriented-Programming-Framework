@@ -100,7 +100,7 @@ describe('FormBuilder functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('buildForm'), input: fc.record({ form: fc.string(), schema: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('buildForm'), input: fc.record({ form: fc.string(), schema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -127,7 +127,7 @@ describe('FormBuilder functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('buildForm'), input: fc.record({ form: fc.string(), schema: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('buildForm'), input: fc.record({ form: fc.string(), schema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

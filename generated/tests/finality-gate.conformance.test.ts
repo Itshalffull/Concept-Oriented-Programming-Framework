@@ -158,7 +158,7 @@ describe('FinalityGate functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('submit'), input: fc.record({ operationRef: fc.string({ minLength: 1, maxLength: 20 }), provider: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('submit'), input: fc.record({ operationRef: fc.string({ minLength: 1, maxLength: 50 }), provider: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('confirm'), input: fc.record({ gate: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -186,7 +186,7 @@ describe('FinalityGate functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('submit'), input: fc.record({ operationRef: fc.string({ minLength: 1, maxLength: 20 }), provider: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('submit'), input: fc.record({ operationRef: fc.string({ minLength: 1, maxLength: 50 }), provider: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('confirm'), input: fc.record({ gate: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

@@ -161,14 +161,14 @@ describe('GenerationProvenance imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('record'), input: fc.record({ outputFile: fc.string({ minLength: 1, maxLength: 20 }), generator: fc.string({ minLength: 1, maxLength: 20 }), sourceSpec: fc.string({ minLength: 1, maxLength: 20 }), sourceSpecKind: fc.string({ minLength: 1, maxLength: 20 }), config: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('getByFile'), input: fc.record({ outputFile: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByGenerator'), input: fc.record({ generator: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findBySource'), input: fc.record({ sourceSpec: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('generationChain'), input: fc.record({ outputFile: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('record'), input: fc.record({ outputFile: fc.string({ minLength: 1, maxLength: 50 }), generator: fc.string({ minLength: 1, maxLength: 50 }), sourceSpec: fc.string({ minLength: 1, maxLength: 50 }), sourceSpecKind: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getByFile'), input: fc.record({ outputFile: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByGenerator'), input: fc.record({ generator: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findBySource'), input: fc.record({ sourceSpec: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('generationChain'), input: fc.record({ outputFile: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('staleFiles'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('impactOfGeneratorChange'), input: fc.record({ generator: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('isGenerated'), input: fc.record({ file: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('impactOfGeneratorChange'), input: fc.record({ generator: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('isGenerated'), input: fc.record({ file: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -194,14 +194,14 @@ describe('GenerationProvenance imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('record'), input: fc.record({ outputFile: fc.string({ minLength: 1, maxLength: 20 }), generator: fc.string({ minLength: 1, maxLength: 20 }), sourceSpec: fc.string({ minLength: 1, maxLength: 20 }), sourceSpecKind: fc.string({ minLength: 1, maxLength: 20 }), config: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('getByFile'), input: fc.record({ outputFile: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByGenerator'), input: fc.record({ generator: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findBySource'), input: fc.record({ sourceSpec: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('generationChain'), input: fc.record({ outputFile: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('record'), input: fc.record({ outputFile: fc.string({ minLength: 1, maxLength: 50 }), generator: fc.string({ minLength: 1, maxLength: 50 }), sourceSpec: fc.string({ minLength: 1, maxLength: 50 }), sourceSpecKind: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getByFile'), input: fc.record({ outputFile: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByGenerator'), input: fc.record({ generator: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findBySource'), input: fc.record({ sourceSpec: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('generationChain'), input: fc.record({ outputFile: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('staleFiles'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('impactOfGeneratorChange'), input: fc.record({ generator: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('isGenerated'), input: fc.record({ file: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('impactOfGeneratorChange'), input: fc.record({ generator: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('isGenerated'), input: fc.record({ file: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

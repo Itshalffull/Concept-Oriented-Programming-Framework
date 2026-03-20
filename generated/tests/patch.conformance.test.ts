@@ -343,7 +343,7 @@ describe('Patch functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ base: fc.string({ minLength: 1, maxLength: 20 }), target: fc.string({ minLength: 1, maxLength: 20 }), effect: fc.string() }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ base: fc.string({ minLength: 1, maxLength: 50 }), target: fc.string({ minLength: 1, maxLength: 50 }), effect: fc.string() }) }),
               fc.record({ action: fc.constant('apply'), input: fc.record({ patchId: fc.string(), content: fc.string() }) }),
               fc.record({ action: fc.constant('invert'), input: fc.record({ patchId: fc.string() }) }),
               fc.record({ action: fc.constant('compose'), input: fc.record({ first: fc.string(), second: fc.string() }) }),
@@ -374,7 +374,7 @@ describe('Patch functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ base: fc.string({ minLength: 1, maxLength: 20 }), target: fc.string({ minLength: 1, maxLength: 20 }), effect: fc.string() }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ base: fc.string({ minLength: 1, maxLength: 50 }), target: fc.string({ minLength: 1, maxLength: 50 }), effect: fc.string() }) }),
               fc.record({ action: fc.constant('apply'), input: fc.record({ patchId: fc.string(), content: fc.string() }) }),
               fc.record({ action: fc.constant('invert'), input: fc.record({ patchId: fc.string() }) }),
               fc.record({ action: fc.constant('compose'), input: fc.record({ first: fc.string(), second: fc.string() }) }),

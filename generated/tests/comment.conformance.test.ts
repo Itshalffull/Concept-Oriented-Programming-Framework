@@ -332,8 +332,8 @@ describe('Comment functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('addComment'), input: fc.record({ comment: fc.string(), entity: fc.string({ minLength: 1, maxLength: 20 }), content: fc.string({ minLength: 1, maxLength: 20 }), author: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('reply'), input: fc.record({ comment: fc.string(), parent: fc.string(), content: fc.string({ minLength: 1, maxLength: 20 }), author: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('addComment'), input: fc.record({ comment: fc.string(), entity: fc.string({ minLength: 1, maxLength: 50 }), content: fc.string({ minLength: 1, maxLength: 50 }), author: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('reply'), input: fc.record({ comment: fc.string(), parent: fc.string(), content: fc.string({ minLength: 1, maxLength: 50 }), author: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('publish'), input: fc.record({ comment: fc.string() }) }),
               fc.record({ action: fc.constant('unpublish'), input: fc.record({ comment: fc.string() }) }),
               fc.record({ action: fc.constant('delete'), input: fc.record({ comment: fc.string() }) }),
@@ -363,8 +363,8 @@ describe('Comment functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('addComment'), input: fc.record({ comment: fc.string(), entity: fc.string({ minLength: 1, maxLength: 20 }), content: fc.string({ minLength: 1, maxLength: 20 }), author: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('reply'), input: fc.record({ comment: fc.string(), parent: fc.string(), content: fc.string({ minLength: 1, maxLength: 20 }), author: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('addComment'), input: fc.record({ comment: fc.string(), entity: fc.string({ minLength: 1, maxLength: 50 }), content: fc.string({ minLength: 1, maxLength: 50 }), author: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('reply'), input: fc.record({ comment: fc.string(), parent: fc.string(), content: fc.string({ minLength: 1, maxLength: 50 }), author: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('publish'), input: fc.record({ comment: fc.string() }) }),
               fc.record({ action: fc.constant('unpublish'), input: fc.record({ comment: fc.string() }) }),
               fc.record({ action: fc.constant('delete'), input: fc.record({ comment: fc.string() }) }),

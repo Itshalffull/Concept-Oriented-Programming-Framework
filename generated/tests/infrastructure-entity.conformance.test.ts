@@ -448,11 +448,11 @@ describe('InfrastructureEntity functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }), sourceFile: fc.string({ minLength: 1, maxLength: 20 }), backend: fc.string({ minLength: 1, maxLength: 20 }), config: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByBackend'), input: fc.record({ backend: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByConcept'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByRuntime'), input: fc.record({ runtime: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), sourceFile: fc.string({ minLength: 1, maxLength: 50 }), backend: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByBackend'), input: fc.record({ backend: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByConcept'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByRuntime'), input: fc.record({ runtime: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('sharedBackends'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('networkTopology'), input: fc.record({  }) }),
             ),
@@ -481,11 +481,11 @@ describe('InfrastructureEntity functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }), sourceFile: fc.string({ minLength: 1, maxLength: 20 }), backend: fc.string({ minLength: 1, maxLength: 20 }), config: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByBackend'), input: fc.record({ backend: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByConcept'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByRuntime'), input: fc.record({ runtime: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), sourceFile: fc.string({ minLength: 1, maxLength: 50 }), backend: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByBackend'), input: fc.record({ backend: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByConcept'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByRuntime'), input: fc.record({ runtime: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('sharedBackends'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('networkTopology'), input: fc.record({  }) }),
             ),

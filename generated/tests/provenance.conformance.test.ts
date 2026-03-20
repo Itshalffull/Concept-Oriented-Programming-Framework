@@ -399,12 +399,12 @@ describe('Provenance functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('record'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 20 }), activity: fc.string({ minLength: 1, maxLength: 20 }), agent: fc.string({ minLength: 1, maxLength: 20 }), inputs: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('trace'), input: fc.record({ entityId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('audit'), input: fc.record({ batchId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('rollback'), input: fc.record({ batchId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('diff'), input: fc.record({ entityId: fc.string({ minLength: 1, maxLength: 20 }), version1: fc.string({ minLength: 1, maxLength: 20 }), version2: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('reproduce'), input: fc.record({ entityId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('record'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 50 }), activity: fc.string({ minLength: 1, maxLength: 50 }), agent: fc.string({ minLength: 1, maxLength: 50 }), inputs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('trace'), input: fc.record({ entityId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('audit'), input: fc.record({ batchId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('rollback'), input: fc.record({ batchId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('diff'), input: fc.record({ entityId: fc.string({ minLength: 1, maxLength: 50 }), version1: fc.string({ minLength: 1, maxLength: 50 }), version2: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('reproduce'), input: fc.record({ entityId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -431,12 +431,12 @@ describe('Provenance functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('record'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 20 }), activity: fc.string({ minLength: 1, maxLength: 20 }), agent: fc.string({ minLength: 1, maxLength: 20 }), inputs: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('trace'), input: fc.record({ entityId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('audit'), input: fc.record({ batchId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('rollback'), input: fc.record({ batchId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('diff'), input: fc.record({ entityId: fc.string({ minLength: 1, maxLength: 20 }), version1: fc.string({ minLength: 1, maxLength: 20 }), version2: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('reproduce'), input: fc.record({ entityId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('record'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 50 }), activity: fc.string({ minLength: 1, maxLength: 50 }), agent: fc.string({ minLength: 1, maxLength: 50 }), inputs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('trace'), input: fc.record({ entityId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('audit'), input: fc.record({ batchId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('rollback'), input: fc.record({ batchId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('diff'), input: fc.record({ entityId: fc.string({ minLength: 1, maxLength: 50 }), version1: fc.string({ minLength: 1, maxLength: 50 }), version2: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('reproduce'), input: fc.record({ entityId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

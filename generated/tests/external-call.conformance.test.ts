@@ -106,8 +106,8 @@ describe('ExternalCall imperative handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('initialize'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('registerProtocol'), input: fc.record({ protocol: fc.string({ minLength: 1, maxLength: 20 }), providerName: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('dispatch'), input: fc.record({ protocol: fc.string({ minLength: 1, maxLength: 20 }), operation: fc.string({ minLength: 1, maxLength: 20 }), endpoint: fc.string({ minLength: 1, maxLength: 20 }), payload: fc.string({ minLength: 1, maxLength: 20 }), config: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('registerProtocol'), input: fc.record({ protocol: fc.string({ minLength: 1, maxLength: 50 }), providerName: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('dispatch'), input: fc.record({ protocol: fc.string({ minLength: 1, maxLength: 50 }), operation: fc.string({ minLength: 1, maxLength: 50 }), endpoint: fc.string({ minLength: 1, maxLength: 50 }), payload: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('listProtocols'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -135,8 +135,8 @@ describe('ExternalCall imperative handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('initialize'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('registerProtocol'), input: fc.record({ protocol: fc.string({ minLength: 1, maxLength: 20 }), providerName: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('dispatch'), input: fc.record({ protocol: fc.string({ minLength: 1, maxLength: 20 }), operation: fc.string({ minLength: 1, maxLength: 20 }), endpoint: fc.string({ minLength: 1, maxLength: 20 }), payload: fc.string({ minLength: 1, maxLength: 20 }), config: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('registerProtocol'), input: fc.record({ protocol: fc.string({ minLength: 1, maxLength: 50 }), providerName: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('dispatch'), input: fc.record({ protocol: fc.string({ minLength: 1, maxLength: 50 }), operation: fc.string({ minLength: 1, maxLength: 50 }), endpoint: fc.string({ minLength: 1, maxLength: 50 }), payload: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('listProtocols'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },

@@ -283,10 +283,10 @@ describe('TypeSystem functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('registerType'), input: fc.record({ type: fc.string(), schema: fc.string({ minLength: 1, maxLength: 20 }), constraints: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('registerType'), input: fc.record({ type: fc.string(), schema: fc.string({ minLength: 1, maxLength: 50 }), constraints: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('resolve'), input: fc.record({ type: fc.string() }) }),
-              fc.record({ action: fc.constant('navigate'), input: fc.record({ type: fc.string(), path: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('serialize'), input: fc.record({ type: fc.string(), value: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('navigate'), input: fc.record({ type: fc.string(), path: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('serialize'), input: fc.record({ type: fc.string(), value: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -313,10 +313,10 @@ describe('TypeSystem functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('registerType'), input: fc.record({ type: fc.string(), schema: fc.string({ minLength: 1, maxLength: 20 }), constraints: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('registerType'), input: fc.record({ type: fc.string(), schema: fc.string({ minLength: 1, maxLength: 50 }), constraints: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('resolve'), input: fc.record({ type: fc.string() }) }),
-              fc.record({ action: fc.constant('navigate'), input: fc.record({ type: fc.string(), path: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('serialize'), input: fc.record({ type: fc.string(), value: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('navigate'), input: fc.record({ type: fc.string(), path: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('serialize'), input: fc.record({ type: fc.string(), value: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

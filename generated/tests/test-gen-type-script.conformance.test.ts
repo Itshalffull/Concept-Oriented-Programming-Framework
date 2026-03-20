@@ -89,9 +89,9 @@ describe('TestGenTypeScript imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('render'), input: fc.record({ test_plan: fc.string({ minLength: 1, maxLength: 20 }), output_path: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('renderBatch'), input: fc.record({ test_plans: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('listRendered'), input: fc.record({ concept_ref: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('render'), input: fc.record({ test_plan: fc.string({ minLength: 1, maxLength: 50 }), output_path: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('renderBatch'), input: fc.record({ test_plans: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('listRendered'), input: fc.record({ concept_ref: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -117,9 +117,9 @@ describe('TestGenTypeScript imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('render'), input: fc.record({ test_plan: fc.string({ minLength: 1, maxLength: 20 }), output_path: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('renderBatch'), input: fc.record({ test_plans: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('listRendered'), input: fc.record({ concept_ref: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('render'), input: fc.record({ test_plan: fc.string({ minLength: 1, maxLength: 50 }), output_path: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('renderBatch'), input: fc.record({ test_plans: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('listRendered'), input: fc.record({ concept_ref: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

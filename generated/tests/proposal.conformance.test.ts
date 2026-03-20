@@ -336,11 +336,11 @@ describe('Proposal functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ proposer: fc.string({ minLength: 1, maxLength: 20 }), title: fc.string({ minLength: 1, maxLength: 20 }), description: fc.string({ minLength: 1, maxLength: 20 }), actions: fc.string() }) }),
-              fc.record({ action: fc.constant('sponsor'), input: fc.record({ proposal: fc.string(), sponsorId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ proposer: fc.string({ minLength: 1, maxLength: 50 }), title: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), actions: fc.string() }) }),
+              fc.record({ action: fc.constant('sponsor'), input: fc.record({ proposal: fc.string(), sponsorId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('activate'), input: fc.record({ proposal: fc.string() }) }),
-              fc.record({ action: fc.constant('advance'), input: fc.record({ proposal: fc.string(), newStatus: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('cancel'), input: fc.record({ proposal: fc.string(), canceller: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('advance'), input: fc.record({ proposal: fc.string(), newStatus: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('cancel'), input: fc.record({ proposal: fc.string(), canceller: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -367,11 +367,11 @@ describe('Proposal functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ proposer: fc.string({ minLength: 1, maxLength: 20 }), title: fc.string({ minLength: 1, maxLength: 20 }), description: fc.string({ minLength: 1, maxLength: 20 }), actions: fc.string() }) }),
-              fc.record({ action: fc.constant('sponsor'), input: fc.record({ proposal: fc.string(), sponsorId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ proposer: fc.string({ minLength: 1, maxLength: 50 }), title: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), actions: fc.string() }) }),
+              fc.record({ action: fc.constant('sponsor'), input: fc.record({ proposal: fc.string(), sponsorId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('activate'), input: fc.record({ proposal: fc.string() }) }),
-              fc.record({ action: fc.constant('advance'), input: fc.record({ proposal: fc.string(), newStatus: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('cancel'), input: fc.record({ proposal: fc.string(), canceller: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('advance'), input: fc.record({ proposal: fc.string(), newStatus: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('cancel'), input: fc.record({ proposal: fc.string(), canceller: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

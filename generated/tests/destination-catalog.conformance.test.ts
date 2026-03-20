@@ -274,9 +274,9 @@ describe('DestinationCatalog functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ destination: fc.string(), name: fc.string({ minLength: 1, maxLength: 20 }), targetConcept: fc.string({ minLength: 1, maxLength: 20 }), targetView: fc.string({ minLength: 1, maxLength: 20 }), href: fc.string({ minLength: 1, maxLength: 20 }), icon: fc.string({ minLength: 1, maxLength: 20 }), group: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolveByName'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolveByHref'), input: fc.record({ href: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ destination: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }), targetConcept: fc.string({ minLength: 1, maxLength: 50 }), targetView: fc.string({ minLength: 1, maxLength: 50 }), href: fc.string({ minLength: 1, maxLength: 50 }), icon: fc.string({ minLength: 1, maxLength: 50 }), group: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolveByName'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolveByHref'), input: fc.record({ href: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -304,9 +304,9 @@ describe('DestinationCatalog functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ destination: fc.string(), name: fc.string({ minLength: 1, maxLength: 20 }), targetConcept: fc.string({ minLength: 1, maxLength: 20 }), targetView: fc.string({ minLength: 1, maxLength: 20 }), href: fc.string({ minLength: 1, maxLength: 20 }), icon: fc.string({ minLength: 1, maxLength: 20 }), group: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolveByName'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolveByHref'), input: fc.record({ href: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ destination: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }), targetConcept: fc.string({ minLength: 1, maxLength: 50 }), targetView: fc.string({ minLength: 1, maxLength: 50 }), href: fc.string({ minLength: 1, maxLength: 50 }), icon: fc.string({ minLength: 1, maxLength: 50 }), group: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolveByName'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolveByHref'), input: fc.record({ href: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },

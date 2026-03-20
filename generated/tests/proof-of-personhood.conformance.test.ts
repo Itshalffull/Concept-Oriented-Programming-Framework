@@ -216,9 +216,9 @@ describe('ProofOfPersonhood functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('verify'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 20 }), method: fc.string({ minLength: 1, maxLength: 20 }), proofHash: fc.string({ minLength: 1, maxLength: 20 }), verifier: fc.string({ minLength: 1, maxLength: 20 }), expiryDays: fc.string() }) }),
-              fc.record({ action: fc.constant('checkStatus'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('revoke'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 20 }), reason: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('verify'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), method: fc.string({ minLength: 1, maxLength: 50 }), proofHash: fc.string({ minLength: 1, maxLength: 50 }), verifier: fc.string({ minLength: 1, maxLength: 50 }), expiryDays: fc.string() }) }),
+              fc.record({ action: fc.constant('checkStatus'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('revoke'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -245,9 +245,9 @@ describe('ProofOfPersonhood functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('verify'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 20 }), method: fc.string({ minLength: 1, maxLength: 20 }), proofHash: fc.string({ minLength: 1, maxLength: 20 }), verifier: fc.string({ minLength: 1, maxLength: 20 }), expiryDays: fc.string() }) }),
-              fc.record({ action: fc.constant('checkStatus'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('revoke'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 20 }), reason: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('verify'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), method: fc.string({ minLength: 1, maxLength: 50 }), proofHash: fc.string({ minLength: 1, maxLength: 50 }), verifier: fc.string({ minLength: 1, maxLength: 50 }), expiryDays: fc.string() }) }),
+              fc.record({ action: fc.constant('checkStatus'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('revoke'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

@@ -225,9 +225,9 @@ describe('AbiDecoderFieldMapping functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('apply'), input: fc.record({ data: fc.string({ minLength: 1, maxLength: 20 }), mapper: fc.string({ minLength: 1, maxLength: 20 }), contract: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('reverse'), input: fc.record({ data: fc.string({ minLength: 1, maxLength: 20 }), mapper: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('register'), input: fc.record({ contract_abi: fc.string({ minLength: 1, maxLength: 20 }), entity_schema: fc.string({ minLength: 1, maxLength: 20 }), field_rules: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('apply'), input: fc.record({ data: fc.string({ minLength: 1, maxLength: 50 }), mapper: fc.string({ minLength: 1, maxLength: 50 }), contract: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('reverse'), input: fc.record({ data: fc.string({ minLength: 1, maxLength: 50 }), mapper: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ contract_abi: fc.string({ minLength: 1, maxLength: 50 }), entity_schema: fc.string({ minLength: 1, maxLength: 50 }), field_rules: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -254,9 +254,9 @@ describe('AbiDecoderFieldMapping functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('apply'), input: fc.record({ data: fc.string({ minLength: 1, maxLength: 20 }), mapper: fc.string({ minLength: 1, maxLength: 20 }), contract: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('reverse'), input: fc.record({ data: fc.string({ minLength: 1, maxLength: 20 }), mapper: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('register'), input: fc.record({ contract_abi: fc.string({ minLength: 1, maxLength: 20 }), entity_schema: fc.string({ minLength: 1, maxLength: 20 }), field_rules: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('apply'), input: fc.record({ data: fc.string({ minLength: 1, maxLength: 50 }), mapper: fc.string({ minLength: 1, maxLength: 50 }), contract: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('reverse'), input: fc.record({ data: fc.string({ minLength: 1, maxLength: 50 }), mapper: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ contract_abi: fc.string({ minLength: 1, maxLength: 50 }), entity_schema: fc.string({ minLength: 1, maxLength: 50 }), field_rules: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

@@ -159,7 +159,7 @@ describe('Majority functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('configure'), input: fc.record({ threshold: fc.string(), binaryOnly: fc.boolean(), tieBreaker: fc.string() }) }),
-              fc.record({ action: fc.constant('count'), input: fc.record({ config: fc.string(), ballots: fc.string({ minLength: 1, maxLength: 20 }), weights: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('count'), input: fc.record({ config: fc.string(), ballots: fc.string({ minLength: 1, maxLength: 50 }), weights: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -187,7 +187,7 @@ describe('Majority functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('configure'), input: fc.record({ threshold: fc.string(), binaryOnly: fc.boolean(), tieBreaker: fc.string() }) }),
-              fc.record({ action: fc.constant('count'), input: fc.record({ config: fc.string(), ballots: fc.string({ minLength: 1, maxLength: 20 }), weights: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('count'), input: fc.record({ config: fc.string(), ballots: fc.string({ minLength: 1, maxLength: 50 }), weights: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

@@ -622,13 +622,13 @@ describe('DeploymentEntity functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), source: fc.string({ minLength: 1, maxLength: 20 }), manifest: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), source: fc.string({ minLength: 1, maxLength: 50 }), manifest: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('listRuntimes'), input: fc.record({ deployment: fc.string() }) }),
-              fc.record({ action: fc.constant('findConceptRuntime'), input: fc.record({ deployment: fc.string(), concept: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findSyncEngine'), input: fc.record({ deployment: fc.string(), sync: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('findConceptRuntime'), input: fc.record({ deployment: fc.string(), concept: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findSyncEngine'), input: fc.record({ deployment: fc.string(), sync: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('topology'), input: fc.record({ deployment: fc.string() }) }),
-              fc.record({ action: fc.constant('transportRoutes'), input: fc.record({ deployment: fc.string(), fromConcept: fc.string({ minLength: 1, maxLength: 20 }), toConcept: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('transportRoutes'), input: fc.record({ deployment: fc.string(), fromConcept: fc.string({ minLength: 1, maxLength: 50 }), toConcept: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('storageTopology'), input: fc.record({ deployment: fc.string() }) }),
               fc.record({ action: fc.constant('environmentDiff'), input: fc.record({ deploymentA: fc.string(), deploymentB: fc.string() }) }),
               fc.record({ action: fc.constant('validateAgainstSpecs'), input: fc.record({ deployment: fc.string() }) }),
@@ -658,13 +658,13 @@ describe('DeploymentEntity functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), source: fc.string({ minLength: 1, maxLength: 20 }), manifest: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), source: fc.string({ minLength: 1, maxLength: 50 }), manifest: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('listRuntimes'), input: fc.record({ deployment: fc.string() }) }),
-              fc.record({ action: fc.constant('findConceptRuntime'), input: fc.record({ deployment: fc.string(), concept: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findSyncEngine'), input: fc.record({ deployment: fc.string(), sync: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('findConceptRuntime'), input: fc.record({ deployment: fc.string(), concept: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findSyncEngine'), input: fc.record({ deployment: fc.string(), sync: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('topology'), input: fc.record({ deployment: fc.string() }) }),
-              fc.record({ action: fc.constant('transportRoutes'), input: fc.record({ deployment: fc.string(), fromConcept: fc.string({ minLength: 1, maxLength: 20 }), toConcept: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('transportRoutes'), input: fc.record({ deployment: fc.string(), fromConcept: fc.string({ minLength: 1, maxLength: 50 }), toConcept: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('storageTopology'), input: fc.record({ deployment: fc.string() }) }),
               fc.record({ action: fc.constant('environmentDiff'), input: fc.record({ deploymentA: fc.string(), deploymentB: fc.string() }) }),
               fc.record({ action: fc.constant('validateAgainstSpecs'), input: fc.record({ deployment: fc.string() }) }),

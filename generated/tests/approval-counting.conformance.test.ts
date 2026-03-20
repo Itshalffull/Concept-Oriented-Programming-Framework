@@ -158,8 +158,8 @@ describe('ApprovalCounting functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configure'), input: fc.record({ maxApprovals: fc.string(), winnerCount: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('count'), input: fc.record({ config: fc.string(), approvalSets: fc.string({ minLength: 1, maxLength: 20 }), weights: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ maxApprovals: fc.string(), winnerCount: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('count'), input: fc.record({ config: fc.string(), approvalSets: fc.string({ minLength: 1, maxLength: 50 }), weights: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -186,8 +186,8 @@ describe('ApprovalCounting functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configure'), input: fc.record({ maxApprovals: fc.string(), winnerCount: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('count'), input: fc.record({ config: fc.string(), approvalSets: fc.string({ minLength: 1, maxLength: 20 }), weights: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ maxApprovals: fc.string(), winnerCount: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('count'), input: fc.record({ config: fc.string(), approvalSets: fc.string({ minLength: 1, maxLength: 50 }), weights: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

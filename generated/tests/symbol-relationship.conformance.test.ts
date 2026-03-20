@@ -341,10 +341,10 @@ describe('SymbolRelationship functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('add'), input: fc.record({ source: fc.string({ minLength: 1, maxLength: 20 }), target: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findFrom'), input: fc.record({ source: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findTo'), input: fc.record({ target: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('transitiveClosure'), input: fc.record({ start: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }), direction: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('add'), input: fc.record({ source: fc.string({ minLength: 1, maxLength: 50 }), target: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findFrom'), input: fc.record({ source: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findTo'), input: fc.record({ target: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('transitiveClosure'), input: fc.record({ start: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), direction: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ relationship: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -372,10 +372,10 @@ describe('SymbolRelationship functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('add'), input: fc.record({ source: fc.string({ minLength: 1, maxLength: 20 }), target: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findFrom'), input: fc.record({ source: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findTo'), input: fc.record({ target: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('transitiveClosure'), input: fc.record({ start: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }), direction: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('add'), input: fc.record({ source: fc.string({ minLength: 1, maxLength: 50 }), target: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findFrom'), input: fc.record({ source: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findTo'), input: fc.record({ target: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('transitiveClosure'), input: fc.record({ start: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), direction: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ relationship: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

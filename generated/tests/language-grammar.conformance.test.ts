@@ -341,9 +341,9 @@ describe('LanguageGrammar functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), extensions: fc.string({ minLength: 1, maxLength: 20 }), parserWasmPath: fc.string({ minLength: 1, maxLength: 20 }), nodeTypes: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ fileExtension: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolveByMime'), input: fc.record({ mimeType: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), extensions: fc.string({ minLength: 1, maxLength: 50 }), parserWasmPath: fc.string({ minLength: 1, maxLength: 50 }), nodeTypes: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ fileExtension: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolveByMime'), input: fc.record({ mimeType: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ grammar: fc.string() }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
             ),
@@ -372,9 +372,9 @@ describe('LanguageGrammar functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), extensions: fc.string({ minLength: 1, maxLength: 20 }), parserWasmPath: fc.string({ minLength: 1, maxLength: 20 }), nodeTypes: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ fileExtension: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolveByMime'), input: fc.record({ mimeType: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), extensions: fc.string({ minLength: 1, maxLength: 50 }), parserWasmPath: fc.string({ minLength: 1, maxLength: 50 }), nodeTypes: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ fileExtension: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolveByMime'), input: fc.record({ mimeType: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ grammar: fc.string() }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
             ),

@@ -332,9 +332,9 @@ describe('Guard functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), checkType: fc.string({ minLength: 1, maxLength: 20 }), condition: fc.string({ minLength: 1, maxLength: 20 }), targetAction: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('checkPre'), input: fc.record({ guard: fc.string(), context: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('checkPost'), input: fc.record({ guard: fc.string(), context: fc.string({ minLength: 1, maxLength: 20 }), result: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), checkType: fc.string({ minLength: 1, maxLength: 50 }), condition: fc.string({ minLength: 1, maxLength: 50 }), targetAction: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('checkPre'), input: fc.record({ guard: fc.string(), context: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('checkPost'), input: fc.record({ guard: fc.string(), context: fc.string({ minLength: 1, maxLength: 50 }), result: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('enable'), input: fc.record({ guard: fc.string() }) }),
               fc.record({ action: fc.constant('disable'), input: fc.record({ guard: fc.string() }) }),
             ),
@@ -363,9 +363,9 @@ describe('Guard functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), checkType: fc.string({ minLength: 1, maxLength: 20 }), condition: fc.string({ minLength: 1, maxLength: 20 }), targetAction: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('checkPre'), input: fc.record({ guard: fc.string(), context: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('checkPost'), input: fc.record({ guard: fc.string(), context: fc.string({ minLength: 1, maxLength: 20 }), result: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), checkType: fc.string({ minLength: 1, maxLength: 50 }), condition: fc.string({ minLength: 1, maxLength: 50 }), targetAction: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('checkPre'), input: fc.record({ guard: fc.string(), context: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('checkPost'), input: fc.record({ guard: fc.string(), context: fc.string({ minLength: 1, maxLength: 50 }), result: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('enable'), input: fc.record({ guard: fc.string() }) }),
               fc.record({ action: fc.constant('disable'), input: fc.record({ guard: fc.string() }) }),
             ),

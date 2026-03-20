@@ -333,11 +333,11 @@ describe('Validator functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('registerConstraint'), input: fc.record({ validator: fc.string(), constraint: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('addRule'), input: fc.record({ validator: fc.string(), field: fc.string({ minLength: 1, maxLength: 20 }), rule: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('validate'), input: fc.record({ validator: fc.string(), data: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('validateField'), input: fc.record({ validator: fc.string(), field: fc.string({ minLength: 1, maxLength: 20 }), value: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('addCustomValidator'), input: fc.record({ validator: fc.string(), name: fc.string({ minLength: 1, maxLength: 20 }), implementation: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('registerConstraint'), input: fc.record({ validator: fc.string(), constraint: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('addRule'), input: fc.record({ validator: fc.string(), field: fc.string({ minLength: 1, maxLength: 50 }), rule: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('validate'), input: fc.record({ validator: fc.string(), data: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('validateField'), input: fc.record({ validator: fc.string(), field: fc.string({ minLength: 1, maxLength: 50 }), value: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('addCustomValidator'), input: fc.record({ validator: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }), implementation: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -364,11 +364,11 @@ describe('Validator functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('registerConstraint'), input: fc.record({ validator: fc.string(), constraint: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('addRule'), input: fc.record({ validator: fc.string(), field: fc.string({ minLength: 1, maxLength: 20 }), rule: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('validate'), input: fc.record({ validator: fc.string(), data: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('validateField'), input: fc.record({ validator: fc.string(), field: fc.string({ minLength: 1, maxLength: 20 }), value: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('addCustomValidator'), input: fc.record({ validator: fc.string(), name: fc.string({ minLength: 1, maxLength: 20 }), implementation: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('registerConstraint'), input: fc.record({ validator: fc.string(), constraint: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('addRule'), input: fc.record({ validator: fc.string(), field: fc.string({ minLength: 1, maxLength: 50 }), rule: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('validate'), input: fc.record({ validator: fc.string(), data: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('validateField'), input: fc.record({ validator: fc.string(), field: fc.string({ minLength: 1, maxLength: 50 }), value: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('addCustomValidator'), input: fc.record({ validator: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }), implementation: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

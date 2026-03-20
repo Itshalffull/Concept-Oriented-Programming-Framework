@@ -98,8 +98,8 @@ describe('WasmProvider imperative handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('register'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('load'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), wasmPath: fc.string({ minLength: 1, maxLength: 20 }), memoryLimit: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('execute'), input: fc.record({ module: fc.string({ minLength: 1, maxLength: 20 }), function: fc.string({ minLength: 1, maxLength: 20 }), args: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('load'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), wasmPath: fc.string({ minLength: 1, maxLength: 50 }), memoryLimit: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('execute'), input: fc.record({ module: fc.string({ minLength: 1, maxLength: 50 }), function: fc.string({ minLength: 1, maxLength: 50 }), args: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -127,8 +127,8 @@ describe('WasmProvider imperative handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('register'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('load'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), wasmPath: fc.string({ minLength: 1, maxLength: 20 }), memoryLimit: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('execute'), input: fc.record({ module: fc.string({ minLength: 1, maxLength: 20 }), function: fc.string({ minLength: 1, maxLength: 20 }), args: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('load'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), wasmPath: fc.string({ minLength: 1, maxLength: 50 }), memoryLimit: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('execute'), input: fc.record({ module: fc.string({ minLength: 1, maxLength: 50 }), function: fc.string({ minLength: 1, maxLength: 50 }), args: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },

@@ -81,9 +81,9 @@ describe('AlloySolverEndpoint imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), jarPath: fc.string({ minLength: 1, maxLength: 20 }), scope: fc.integer({ min: 0, max: 1000 }), timeout: fc.integer({ min: 0, max: 1000 }), options: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('check'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), model: fc.string({ minLength: 1, maxLength: 20 }), predicate: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), jarPath: fc.string({ minLength: 1, maxLength: 50 }), scope: fc.integer({ min: 1, max: 1000 }), timeout: fc.integer({ min: 1, max: 1000 }), options: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('check'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), model: fc.string({ minLength: 1, maxLength: 50 }), predicate: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -109,9 +109,9 @@ describe('AlloySolverEndpoint imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), jarPath: fc.string({ minLength: 1, maxLength: 20 }), scope: fc.integer({ min: 0, max: 1000 }), timeout: fc.integer({ min: 0, max: 1000 }), options: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('check'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), model: fc.string({ minLength: 1, maxLength: 20 }), predicate: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), jarPath: fc.string({ minLength: 1, maxLength: 50 }), scope: fc.integer({ min: 1, max: 1000 }), timeout: fc.integer({ min: 1, max: 1000 }), options: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('check'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), model: fc.string({ minLength: 1, maxLength: 50 }), predicate: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

@@ -392,12 +392,12 @@ describe('ProgressiveSchema functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('captureFreeform'), input: fc.record({ content: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('detectStructure'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('acceptSuggestion'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 20 }), suggestionId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('rejectSuggestion'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 20 }), suggestionId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('promote'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 20 }), targetSchema: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('inferSchema'), input: fc.record({ items: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('captureFreeform'), input: fc.record({ content: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('detectStructure'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('acceptSuggestion'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 50 }), suggestionId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('rejectSuggestion'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 50 }), suggestionId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('promote'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 50 }), targetSchema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('inferSchema'), input: fc.record({ items: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -424,12 +424,12 @@ describe('ProgressiveSchema functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('captureFreeform'), input: fc.record({ content: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('detectStructure'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('acceptSuggestion'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 20 }), suggestionId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('rejectSuggestion'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 20 }), suggestionId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('promote'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 20 }), targetSchema: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('inferSchema'), input: fc.record({ items: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('captureFreeform'), input: fc.record({ content: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('detectStructure'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('acceptSuggestion'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 50 }), suggestionId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('rejectSuggestion'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 50 }), suggestionId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('promote'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 50 }), targetSchema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('inferSchema'), input: fc.record({ items: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

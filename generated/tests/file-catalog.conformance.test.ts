@@ -391,12 +391,12 @@ describe('FileCatalog functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('discover'), input: fc.record({ base_paths: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('registerProvider'), input: fc.record({ provider_name: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }), file_pattern: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('list'), input: fc.record({ kind: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('listForSuite'), input: fc.record({ suite: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('syncFilePathsForSuite'), input: fc.record({ suite: fc.string({ minLength: 1, maxLength: 20 }), search_paths: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('discover'), input: fc.record({ base_paths: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('registerProvider'), input: fc.record({ provider_name: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), file_pattern: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('list'), input: fc.record({ kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('listForSuite'), input: fc.record({ suite: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('syncFilePathsForSuite'), input: fc.record({ suite: fc.string({ minLength: 1, maxLength: 50 }), search_paths: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -423,12 +423,12 @@ describe('FileCatalog functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('discover'), input: fc.record({ base_paths: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('registerProvider'), input: fc.record({ provider_name: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }), file_pattern: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('list'), input: fc.record({ kind: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('listForSuite'), input: fc.record({ suite: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('syncFilePathsForSuite'), input: fc.record({ suite: fc.string({ minLength: 1, maxLength: 20 }), search_paths: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('discover'), input: fc.record({ base_paths: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('registerProvider'), input: fc.record({ provider_name: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), file_pattern: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('list'), input: fc.record({ kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('listForSuite'), input: fc.record({ suite: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('syncFilePathsForSuite'), input: fc.record({ suite: fc.string({ minLength: 1, maxLength: 50 }), search_paths: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

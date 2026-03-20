@@ -333,10 +333,10 @@ describe('Control functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ control: fc.string(), type: fc.string({ minLength: 1, maxLength: 20 }), binding: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('interact'), input: fc.record({ control: fc.string(), input: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ control: fc.string(), type: fc.string({ minLength: 1, maxLength: 50 }), binding: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('interact'), input: fc.record({ control: fc.string(), input: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('getValue'), input: fc.record({ control: fc.string() }) }),
-              fc.record({ action: fc.constant('setValue'), input: fc.record({ control: fc.string(), value: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('setValue'), input: fc.record({ control: fc.string(), value: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('triggerAction'), input: fc.record({ control: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -364,10 +364,10 @@ describe('Control functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ control: fc.string(), type: fc.string({ minLength: 1, maxLength: 20 }), binding: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('interact'), input: fc.record({ control: fc.string(), input: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ control: fc.string(), type: fc.string({ minLength: 1, maxLength: 50 }), binding: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('interact'), input: fc.record({ control: fc.string(), input: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('getValue'), input: fc.record({ control: fc.string() }) }),
-              fc.record({ action: fc.constant('setValue'), input: fc.record({ control: fc.string(), value: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('setValue'), input: fc.record({ control: fc.string(), value: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('triggerAction'), input: fc.record({ control: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

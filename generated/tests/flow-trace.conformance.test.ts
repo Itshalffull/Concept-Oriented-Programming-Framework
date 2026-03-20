@@ -168,7 +168,7 @@ describe('FlowTrace functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('build'), input: fc.record({ flowId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('build'), input: fc.record({ flowId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('render'), input: fc.record({ trace: fc.string(), options: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

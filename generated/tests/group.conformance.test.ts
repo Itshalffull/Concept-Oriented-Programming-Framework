@@ -333,11 +333,11 @@ describe('Group functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('createGroup'), input: fc.record({ group: fc.string(), name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('addMember'), input: fc.record({ group: fc.string(), user: fc.string({ minLength: 1, maxLength: 20 }), role: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('assignGroupRole'), input: fc.record({ group: fc.string(), user: fc.string({ minLength: 1, maxLength: 20 }), role: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('addContent'), input: fc.record({ group: fc.string(), content: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('checkGroupAccess'), input: fc.record({ group: fc.string(), user: fc.string({ minLength: 1, maxLength: 20 }), permission: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('createGroup'), input: fc.record({ group: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('addMember'), input: fc.record({ group: fc.string(), user: fc.string({ minLength: 1, maxLength: 50 }), role: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('assignGroupRole'), input: fc.record({ group: fc.string(), user: fc.string({ minLength: 1, maxLength: 50 }), role: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('addContent'), input: fc.record({ group: fc.string(), content: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('checkGroupAccess'), input: fc.record({ group: fc.string(), user: fc.string({ minLength: 1, maxLength: 50 }), permission: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -364,11 +364,11 @@ describe('Group functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('createGroup'), input: fc.record({ group: fc.string(), name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('addMember'), input: fc.record({ group: fc.string(), user: fc.string({ minLength: 1, maxLength: 20 }), role: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('assignGroupRole'), input: fc.record({ group: fc.string(), user: fc.string({ minLength: 1, maxLength: 20 }), role: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('addContent'), input: fc.record({ group: fc.string(), content: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('checkGroupAccess'), input: fc.record({ group: fc.string(), user: fc.string({ minLength: 1, maxLength: 20 }), permission: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('createGroup'), input: fc.record({ group: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('addMember'), input: fc.record({ group: fc.string(), user: fc.string({ minLength: 1, maxLength: 50 }), role: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('assignGroupRole'), input: fc.record({ group: fc.string(), user: fc.string({ minLength: 1, maxLength: 50 }), role: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('addContent'), input: fc.record({ group: fc.string(), content: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('checkGroupAccess'), input: fc.record({ group: fc.string(), user: fc.string({ minLength: 1, maxLength: 50 }), permission: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

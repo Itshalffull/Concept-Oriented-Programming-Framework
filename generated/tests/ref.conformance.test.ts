@@ -340,11 +340,11 @@ describe('Ref functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), hash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('update'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), newHash: fc.string({ minLength: 1, maxLength: 20 }), expectedOldHash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('delete'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('log'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), hash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('update'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), newHash: fc.string({ minLength: 1, maxLength: 50 }), expectedOldHash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('delete'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('log'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -371,11 +371,11 @@ describe('Ref functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), hash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('update'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), newHash: fc.string({ minLength: 1, maxLength: 20 }), expectedOldHash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('delete'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('log'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), hash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('update'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), newHash: fc.string({ minLength: 1, maxLength: 50 }), expectedOldHash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('delete'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('log'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

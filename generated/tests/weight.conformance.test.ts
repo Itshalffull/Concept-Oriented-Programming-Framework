@@ -274,10 +274,10 @@ describe('Weight functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('updateWeight'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 20 }), source: fc.string({ minLength: 1, maxLength: 20 }), value: fc.string() }) }),
+              fc.record({ action: fc.constant('updateWeight'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), source: fc.string({ minLength: 1, maxLength: 50 }), value: fc.string() }) }),
               fc.record({ action: fc.constant('snapshot'), input: fc.record({ time: fc.string() }) }),
-              fc.record({ action: fc.constant('getWeight'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 20 }), atTime: fc.string() }) }),
-              fc.record({ action: fc.constant('getWeightFromSnapshot'), input: fc.record({ snapshotId: fc.string(), participant: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('getWeight'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), atTime: fc.string() }) }),
+              fc.record({ action: fc.constant('getWeightFromSnapshot'), input: fc.record({ snapshotId: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -304,10 +304,10 @@ describe('Weight functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('updateWeight'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 20 }), source: fc.string({ minLength: 1, maxLength: 20 }), value: fc.string() }) }),
+              fc.record({ action: fc.constant('updateWeight'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), source: fc.string({ minLength: 1, maxLength: 50 }), value: fc.string() }) }),
               fc.record({ action: fc.constant('snapshot'), input: fc.record({ time: fc.string() }) }),
-              fc.record({ action: fc.constant('getWeight'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 20 }), atTime: fc.string() }) }),
-              fc.record({ action: fc.constant('getWeightFromSnapshot'), input: fc.record({ snapshotId: fc.string(), participant: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('getWeight'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), atTime: fc.string() }) }),
+              fc.record({ action: fc.constant('getWeightFromSnapshot'), input: fc.record({ snapshotId: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

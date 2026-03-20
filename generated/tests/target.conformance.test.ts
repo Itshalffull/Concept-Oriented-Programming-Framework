@@ -159,7 +159,7 @@ describe('Target functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('generate'), input: fc.record({ projection: fc.string({ minLength: 1, maxLength: 20 }), targetType: fc.string({ minLength: 1, maxLength: 20 }), config: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('generate'), input: fc.record({ projection: fc.string({ minLength: 1, maxLength: 50 }), targetType: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('diff'), input: fc.record({ output: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -187,7 +187,7 @@ describe('Target functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('generate'), input: fc.record({ projection: fc.string({ minLength: 1, maxLength: 20 }), targetType: fc.string({ minLength: 1, maxLength: 20 }), config: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('generate'), input: fc.record({ projection: fc.string({ minLength: 1, maxLength: 50 }), targetType: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('diff'), input: fc.record({ output: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

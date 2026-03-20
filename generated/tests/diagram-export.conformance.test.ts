@@ -218,8 +218,8 @@ describe('DiagramExport functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('export'), input: fc.record({ canvas_id: fc.string(), format: fc.string({ minLength: 1, maxLength: 20 }), options: fc.string() }) }),
-              fc.record({ action: fc.constant('importDiagram'), input: fc.record({ data: fc.string(), format: fc.string({ minLength: 1, maxLength: 20 }), target_canvas: fc.string() }) }),
+              fc.record({ action: fc.constant('export'), input: fc.record({ canvas_id: fc.string(), format: fc.string({ minLength: 1, maxLength: 50 }), options: fc.string() }) }),
+              fc.record({ action: fc.constant('importDiagram'), input: fc.record({ data: fc.string(), format: fc.string({ minLength: 1, maxLength: 50 }), target_canvas: fc.string() }) }),
               fc.record({ action: fc.constant('detectFormat'), input: fc.record({ data: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -247,8 +247,8 @@ describe('DiagramExport functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('export'), input: fc.record({ canvas_id: fc.string(), format: fc.string({ minLength: 1, maxLength: 20 }), options: fc.string() }) }),
-              fc.record({ action: fc.constant('importDiagram'), input: fc.record({ data: fc.string(), format: fc.string({ minLength: 1, maxLength: 20 }), target_canvas: fc.string() }) }),
+              fc.record({ action: fc.constant('export'), input: fc.record({ canvas_id: fc.string(), format: fc.string({ minLength: 1, maxLength: 50 }), options: fc.string() }) }),
+              fc.record({ action: fc.constant('importDiagram'), input: fc.record({ data: fc.string(), format: fc.string({ minLength: 1, maxLength: 50 }), target_canvas: fc.string() }) }),
               fc.record({ action: fc.constant('detectFormat'), input: fc.record({ data: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

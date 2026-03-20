@@ -365,11 +365,11 @@ describe('Authentication functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ user: fc.string(), provider: fc.string({ minLength: 1, maxLength: 20 }), credentials: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('login'), input: fc.record({ user: fc.string(), credentials: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ user: fc.string(), provider: fc.string({ minLength: 1, maxLength: 50 }), credentials: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('login'), input: fc.record({ user: fc.string(), credentials: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('logout'), input: fc.record({ user: fc.string() }) }),
-              fc.record({ action: fc.constant('authenticate'), input: fc.record({ token: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resetPassword'), input: fc.record({ user: fc.string(), newCredentials: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('authenticate'), input: fc.record({ token: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resetPassword'), input: fc.record({ user: fc.string(), newCredentials: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -396,11 +396,11 @@ describe('Authentication functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ user: fc.string(), provider: fc.string({ minLength: 1, maxLength: 20 }), credentials: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('login'), input: fc.record({ user: fc.string(), credentials: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ user: fc.string(), provider: fc.string({ minLength: 1, maxLength: 50 }), credentials: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('login'), input: fc.record({ user: fc.string(), credentials: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('logout'), input: fc.record({ user: fc.string() }) }),
-              fc.record({ action: fc.constant('authenticate'), input: fc.record({ token: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resetPassword'), input: fc.record({ user: fc.string(), newCredentials: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('authenticate'), input: fc.record({ token: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resetPassword'), input: fc.record({ user: fc.string(), newCredentials: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

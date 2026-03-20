@@ -124,9 +124,9 @@ describe('ContentStore imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('store'), input: fc.record({ data: fc.string(), media_type: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('retrieve'), input: fc.record({ hash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('verify'), input: fc.record({ hash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('store'), input: fc.record({ data: fc.string(), media_type: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('retrieve'), input: fc.record({ hash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('verify'), input: fc.record({ hash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('gc'), input: fc.record({ lockfile_hashes: fc.string() }) }),
               fc.record({ action: fc.constant('stats'), input: fc.record({  }) }),
             ),
@@ -154,9 +154,9 @@ describe('ContentStore imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('store'), input: fc.record({ data: fc.string(), media_type: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('retrieve'), input: fc.record({ hash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('verify'), input: fc.record({ hash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('store'), input: fc.record({ data: fc.string(), media_type: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('retrieve'), input: fc.record({ hash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('verify'), input: fc.record({ hash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('gc'), input: fc.record({ lockfile_hashes: fc.string() }) }),
               fc.record({ action: fc.constant('stats'), input: fc.record({  }) }),
             ),

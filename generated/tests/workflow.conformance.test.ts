@@ -279,10 +279,10 @@ describe('Workflow functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('defineState'), input: fc.record({ workflow: fc.string(), name: fc.string({ minLength: 1, maxLength: 20 }), flags: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('defineTransition'), input: fc.record({ workflow: fc.string(), from: fc.string({ minLength: 1, maxLength: 20 }), to: fc.string({ minLength: 1, maxLength: 20 }), label: fc.string({ minLength: 1, maxLength: 20 }), guard: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('transition'), input: fc.record({ workflow: fc.string(), entity: fc.string({ minLength: 1, maxLength: 20 }), transition: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('getCurrentState'), input: fc.record({ workflow: fc.string(), entity: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('defineState'), input: fc.record({ workflow: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }), flags: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('defineTransition'), input: fc.record({ workflow: fc.string(), from: fc.string({ minLength: 1, maxLength: 50 }), to: fc.string({ minLength: 1, maxLength: 50 }), label: fc.string({ minLength: 1, maxLength: 50 }), guard: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('transition'), input: fc.record({ workflow: fc.string(), entity: fc.string({ minLength: 1, maxLength: 50 }), transition: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getCurrentState'), input: fc.record({ workflow: fc.string(), entity: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -309,10 +309,10 @@ describe('Workflow functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('defineState'), input: fc.record({ workflow: fc.string(), name: fc.string({ minLength: 1, maxLength: 20 }), flags: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('defineTransition'), input: fc.record({ workflow: fc.string(), from: fc.string({ minLength: 1, maxLength: 20 }), to: fc.string({ minLength: 1, maxLength: 20 }), label: fc.string({ minLength: 1, maxLength: 20 }), guard: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('transition'), input: fc.record({ workflow: fc.string(), entity: fc.string({ minLength: 1, maxLength: 20 }), transition: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('getCurrentState'), input: fc.record({ workflow: fc.string(), entity: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('defineState'), input: fc.record({ workflow: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }), flags: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('defineTransition'), input: fc.record({ workflow: fc.string(), from: fc.string({ minLength: 1, maxLength: 50 }), to: fc.string({ minLength: 1, maxLength: 50 }), label: fc.string({ minLength: 1, maxLength: 50 }), guard: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('transition'), input: fc.record({ workflow: fc.string(), entity: fc.string({ minLength: 1, maxLength: 50 }), transition: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getCurrentState'), input: fc.record({ workflow: fc.string(), entity: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

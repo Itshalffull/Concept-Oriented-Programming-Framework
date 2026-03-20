@@ -218,9 +218,9 @@ describe('SybilResistance functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('verify'), input: fc.record({ candidate: fc.string({ minLength: 1, maxLength: 20 }), method: fc.string({ minLength: 1, maxLength: 20 }), evidence: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('challenge'), input: fc.record({ targetId: fc.string(), challenger: fc.string({ minLength: 1, maxLength: 20 }), evidence: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolveChallenge'), input: fc.record({ challengeId: fc.string(), outcome: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('verify'), input: fc.record({ candidate: fc.string({ minLength: 1, maxLength: 50 }), method: fc.string({ minLength: 1, maxLength: 50 }), evidence: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('challenge'), input: fc.record({ targetId: fc.string(), challenger: fc.string({ minLength: 1, maxLength: 50 }), evidence: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolveChallenge'), input: fc.record({ challengeId: fc.string(), outcome: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -247,9 +247,9 @@ describe('SybilResistance functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('verify'), input: fc.record({ candidate: fc.string({ minLength: 1, maxLength: 20 }), method: fc.string({ minLength: 1, maxLength: 20 }), evidence: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('challenge'), input: fc.record({ targetId: fc.string(), challenger: fc.string({ minLength: 1, maxLength: 20 }), evidence: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolveChallenge'), input: fc.record({ challengeId: fc.string(), outcome: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('verify'), input: fc.record({ candidate: fc.string({ minLength: 1, maxLength: 50 }), method: fc.string({ minLength: 1, maxLength: 50 }), evidence: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('challenge'), input: fc.record({ targetId: fc.string(), challenger: fc.string({ minLength: 1, maxLength: 50 }), evidence: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolveChallenge'), input: fc.record({ challengeId: fc.string(), outcome: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

@@ -274,8 +274,8 @@ describe('Objective functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ title: fc.string({ minLength: 1, maxLength: 20 }), description: fc.string({ minLength: 1, maxLength: 20 }), owner: fc.string({ minLength: 1, maxLength: 20 }), targets: fc.string() }) }),
-              fc.record({ action: fc.constant('updateProgress'), input: fc.record({ objective: fc.string(), metricRef: fc.string({ minLength: 1, maxLength: 20 }), currentValue: fc.string() }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ title: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), owner: fc.string({ minLength: 1, maxLength: 50 }), targets: fc.string() }) }),
+              fc.record({ action: fc.constant('updateProgress'), input: fc.record({ objective: fc.string(), metricRef: fc.string({ minLength: 1, maxLength: 50 }), currentValue: fc.string() }) }),
               fc.record({ action: fc.constant('evaluate'), input: fc.record({ objective: fc.string() }) }),
               fc.record({ action: fc.constant('cancel'), input: fc.record({ objective: fc.string() }) }),
             ),
@@ -304,8 +304,8 @@ describe('Objective functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ title: fc.string({ minLength: 1, maxLength: 20 }), description: fc.string({ minLength: 1, maxLength: 20 }), owner: fc.string({ minLength: 1, maxLength: 20 }), targets: fc.string() }) }),
-              fc.record({ action: fc.constant('updateProgress'), input: fc.record({ objective: fc.string(), metricRef: fc.string({ minLength: 1, maxLength: 20 }), currentValue: fc.string() }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ title: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), owner: fc.string({ minLength: 1, maxLength: 50 }), targets: fc.string() }) }),
+              fc.record({ action: fc.constant('updateProgress'), input: fc.record({ objective: fc.string(), metricRef: fc.string({ minLength: 1, maxLength: 50 }), currentValue: fc.string() }) }),
               fc.record({ action: fc.constant('evaluate'), input: fc.record({ objective: fc.string() }) }),
               fc.record({ action: fc.constant('cancel'), input: fc.record({ objective: fc.string() }) }),
             ),

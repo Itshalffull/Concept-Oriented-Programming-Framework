@@ -275,9 +275,9 @@ describe('GlickoRating functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('configure'), input: fc.record({ initialRating: fc.string(), initialDeviation: fc.string(), initialVolatility: fc.string(), inactivityGrowthRate: fc.string() }) }),
-              fc.record({ action: fc.constant('recordOutcome'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 20 }), opponent: fc.string({ minLength: 1, maxLength: 20 }), outcome: fc.string() }) }),
-              fc.record({ action: fc.constant('applyInactivityDecay'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 20 }), daysSinceActive: fc.string() }) }),
-              fc.record({ action: fc.constant('getReliableWeight'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('recordOutcome'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }), opponent: fc.string({ minLength: 1, maxLength: 50 }), outcome: fc.string() }) }),
+              fc.record({ action: fc.constant('applyInactivityDecay'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }), daysSinceActive: fc.string() }) }),
+              fc.record({ action: fc.constant('getReliableWeight'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -305,9 +305,9 @@ describe('GlickoRating functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('configure'), input: fc.record({ initialRating: fc.string(), initialDeviation: fc.string(), initialVolatility: fc.string(), inactivityGrowthRate: fc.string() }) }),
-              fc.record({ action: fc.constant('recordOutcome'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 20 }), opponent: fc.string({ minLength: 1, maxLength: 20 }), outcome: fc.string() }) }),
-              fc.record({ action: fc.constant('applyInactivityDecay'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 20 }), daysSinceActive: fc.string() }) }),
-              fc.record({ action: fc.constant('getReliableWeight'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('recordOutcome'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }), opponent: fc.string({ minLength: 1, maxLength: 50 }), outcome: fc.string() }) }),
+              fc.record({ action: fc.constant('applyInactivityDecay'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }), daysSinceActive: fc.string() }) }),
+              fc.record({ action: fc.constant('getReliableWeight'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

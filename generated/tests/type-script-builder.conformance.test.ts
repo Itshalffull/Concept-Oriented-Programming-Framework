@@ -276,9 +276,9 @@ describe('TypeScriptBuilder functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('build'), input: fc.record({ source: fc.string({ minLength: 1, maxLength: 20 }), toolchainPath: fc.string({ minLength: 1, maxLength: 20 }), platform: fc.string({ minLength: 1, maxLength: 20 }), config: fc.string() }) }),
-              fc.record({ action: fc.constant('test'), input: fc.record({ build: fc.string(), toolchainPath: fc.string({ minLength: 1, maxLength: 20 }), invocation: fc.string(), testType: fc.string() }) }),
-              fc.record({ action: fc.constant('package'), input: fc.record({ build: fc.string(), format: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('build'), input: fc.record({ source: fc.string({ minLength: 1, maxLength: 50 }), toolchainPath: fc.string({ minLength: 1, maxLength: 50 }), platform: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string() }) }),
+              fc.record({ action: fc.constant('test'), input: fc.record({ build: fc.string(), toolchainPath: fc.string({ minLength: 1, maxLength: 50 }), invocation: fc.string(), testType: fc.string() }) }),
+              fc.record({ action: fc.constant('package'), input: fc.record({ build: fc.string(), format: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('register'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -306,9 +306,9 @@ describe('TypeScriptBuilder functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('build'), input: fc.record({ source: fc.string({ minLength: 1, maxLength: 20 }), toolchainPath: fc.string({ minLength: 1, maxLength: 20 }), platform: fc.string({ minLength: 1, maxLength: 20 }), config: fc.string() }) }),
-              fc.record({ action: fc.constant('test'), input: fc.record({ build: fc.string(), toolchainPath: fc.string({ minLength: 1, maxLength: 20 }), invocation: fc.string(), testType: fc.string() }) }),
-              fc.record({ action: fc.constant('package'), input: fc.record({ build: fc.string(), format: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('build'), input: fc.record({ source: fc.string({ minLength: 1, maxLength: 50 }), toolchainPath: fc.string({ minLength: 1, maxLength: 50 }), platform: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string() }) }),
+              fc.record({ action: fc.constant('test'), input: fc.record({ build: fc.string(), toolchainPath: fc.string({ minLength: 1, maxLength: 50 }), invocation: fc.string(), testType: fc.string() }) }),
+              fc.record({ action: fc.constant('package'), input: fc.record({ build: fc.string(), format: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('register'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },

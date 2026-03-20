@@ -216,8 +216,8 @@ describe('Monitor functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('watch'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 20 }), ruleRef: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('observe'), input: fc.record({ observer: fc.string(), behavior: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('watch'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 50 }), ruleRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('observe'), input: fc.record({ observer: fc.string(), behavior: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('resolve'), input: fc.record({ observer: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -245,8 +245,8 @@ describe('Monitor functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('watch'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 20 }), ruleRef: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('observe'), input: fc.record({ observer: fc.string(), behavior: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('watch'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 50 }), ruleRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('observe'), input: fc.record({ observer: fc.string(), behavior: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('resolve'), input: fc.record({ observer: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

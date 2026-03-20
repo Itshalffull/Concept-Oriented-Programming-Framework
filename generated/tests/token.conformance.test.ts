@@ -273,10 +273,10 @@ describe('Token functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('replace'), input: fc.record({ text: fc.string({ minLength: 1, maxLength: 20 }), context: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('getAvailableTokens'), input: fc.record({ context: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('scan'), input: fc.record({ text: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('registerProvider'), input: fc.record({ token: fc.string(), provider: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('replace'), input: fc.record({ text: fc.string({ minLength: 1, maxLength: 50 }), context: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getAvailableTokens'), input: fc.record({ context: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('scan'), input: fc.record({ text: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('registerProvider'), input: fc.record({ token: fc.string(), provider: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -303,10 +303,10 @@ describe('Token functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('replace'), input: fc.record({ text: fc.string({ minLength: 1, maxLength: 20 }), context: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('getAvailableTokens'), input: fc.record({ context: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('scan'), input: fc.record({ text: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('registerProvider'), input: fc.record({ token: fc.string(), provider: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('replace'), input: fc.record({ text: fc.string({ minLength: 1, maxLength: 50 }), context: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getAvailableTokens'), input: fc.record({ context: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('scan'), input: fc.record({ text: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('registerProvider'), input: fc.record({ token: fc.string(), provider: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

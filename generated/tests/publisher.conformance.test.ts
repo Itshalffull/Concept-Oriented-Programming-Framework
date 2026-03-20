@@ -345,11 +345,11 @@ describe('Publisher functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('package'), input: fc.record({ source_path: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }), manifest: fc.string() }) }),
+              fc.record({ action: fc.constant('package'), input: fc.record({ source_path: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), manifest: fc.string() }) }),
               fc.record({ action: fc.constant('sign'), input: fc.record({ publication: fc.string() }) }),
-              fc.record({ action: fc.constant('attest'), input: fc.record({ publication: fc.string(), builder: fc.string({ minLength: 1, maxLength: 20 }), source_repo: fc.string({ minLength: 1, maxLength: 20 }), source_commit: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('attest'), input: fc.record({ publication: fc.string(), builder: fc.string({ minLength: 1, maxLength: 50 }), source_repo: fc.string({ minLength: 1, maxLength: 50 }), source_commit: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('generateSbom'), input: fc.record({ publication: fc.string() }) }),
-              fc.record({ action: fc.constant('upload'), input: fc.record({ publication: fc.string(), registry_url: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('upload'), input: fc.record({ publication: fc.string(), registry_url: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -376,11 +376,11 @@ describe('Publisher functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('package'), input: fc.record({ source_path: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }), manifest: fc.string() }) }),
+              fc.record({ action: fc.constant('package'), input: fc.record({ source_path: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), manifest: fc.string() }) }),
               fc.record({ action: fc.constant('sign'), input: fc.record({ publication: fc.string() }) }),
-              fc.record({ action: fc.constant('attest'), input: fc.record({ publication: fc.string(), builder: fc.string({ minLength: 1, maxLength: 20 }), source_repo: fc.string({ minLength: 1, maxLength: 20 }), source_commit: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('attest'), input: fc.record({ publication: fc.string(), builder: fc.string({ minLength: 1, maxLength: 50 }), source_repo: fc.string({ minLength: 1, maxLength: 50 }), source_commit: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('generateSbom'), input: fc.record({ publication: fc.string() }) }),
-              fc.record({ action: fc.constant('upload'), input: fc.record({ publication: fc.string(), registry_url: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('upload'), input: fc.record({ publication: fc.string(), registry_url: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

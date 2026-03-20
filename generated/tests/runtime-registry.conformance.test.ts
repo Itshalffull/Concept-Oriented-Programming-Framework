@@ -397,12 +397,12 @@ describe('RuntimeRegistry functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('registerConcept'), input: fc.record({ uri: fc.string({ minLength: 1, maxLength: 20 }), has_storage: fc.boolean(), storage_name: fc.string({ minLength: 1, maxLength: 20 }), storage_type: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('registerSync'), input: fc.record({ sync_name: fc.string({ minLength: 1, maxLength: 20 }), source: fc.string({ minLength: 1, maxLength: 20 }), suite: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('getConcept'), input: fc.record({ uri: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('registerConcept'), input: fc.record({ uri: fc.string({ minLength: 1, maxLength: 50 }), has_storage: fc.boolean(), storage_name: fc.string({ minLength: 1, maxLength: 50 }), storage_type: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('registerSync'), input: fc.record({ sync_name: fc.string({ minLength: 1, maxLength: 50 }), source: fc.string({ minLength: 1, maxLength: 50 }), suite: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getConcept'), input: fc.record({ uri: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('listConcepts'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('listSyncs'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('isLoaded'), input: fc.record({ uri: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('isLoaded'), input: fc.record({ uri: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -429,12 +429,12 @@ describe('RuntimeRegistry functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('registerConcept'), input: fc.record({ uri: fc.string({ minLength: 1, maxLength: 20 }), has_storage: fc.boolean(), storage_name: fc.string({ minLength: 1, maxLength: 20 }), storage_type: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('registerSync'), input: fc.record({ sync_name: fc.string({ minLength: 1, maxLength: 20 }), source: fc.string({ minLength: 1, maxLength: 20 }), suite: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('getConcept'), input: fc.record({ uri: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('registerConcept'), input: fc.record({ uri: fc.string({ minLength: 1, maxLength: 50 }), has_storage: fc.boolean(), storage_name: fc.string({ minLength: 1, maxLength: 50 }), storage_type: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('registerSync'), input: fc.record({ sync_name: fc.string({ minLength: 1, maxLength: 50 }), source: fc.string({ minLength: 1, maxLength: 50 }), suite: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getConcept'), input: fc.record({ uri: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('listConcepts'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('listSyncs'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('isLoaded'), input: fc.record({ uri: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('isLoaded'), input: fc.record({ uri: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

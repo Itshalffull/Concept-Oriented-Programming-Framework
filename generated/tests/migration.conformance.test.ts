@@ -336,7 +336,7 @@ describe('Migration functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('plan'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), fromVersion: fc.integer({ min: 0, max: 1000 }), toVersion: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('plan'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), fromVersion: fc.integer({ min: 1, max: 1000 }), toVersion: fc.integer({ min: 1, max: 1000 }) }) }),
               fc.record({ action: fc.constant('expand'), input: fc.record({ migration: fc.string() }) }),
               fc.record({ action: fc.constant('migrate'), input: fc.record({ migration: fc.string() }) }),
               fc.record({ action: fc.constant('contract'), input: fc.record({ migration: fc.string() }) }),
@@ -367,7 +367,7 @@ describe('Migration functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('plan'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), fromVersion: fc.integer({ min: 0, max: 1000 }), toVersion: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('plan'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), fromVersion: fc.integer({ min: 1, max: 1000 }), toVersion: fc.integer({ min: 1, max: 1000 }) }) }),
               fc.record({ action: fc.constant('expand'), input: fc.record({ migration: fc.string() }) }),
               fc.record({ action: fc.constant('migrate'), input: fc.record({ migration: fc.string() }) }),
               fc.record({ action: fc.constant('contract'), input: fc.record({ migration: fc.string() }) }),

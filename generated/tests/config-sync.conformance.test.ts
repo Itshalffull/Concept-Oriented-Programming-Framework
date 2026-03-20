@@ -285,8 +285,8 @@ describe('ConfigSync functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('export'), input: fc.record({ config: fc.string() }) }),
-              fc.record({ action: fc.constant('import'), input: fc.record({ config: fc.string(), data: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('override'), input: fc.record({ config: fc.string(), layer: fc.string({ minLength: 1, maxLength: 20 }), values: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('import'), input: fc.record({ config: fc.string(), data: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('override'), input: fc.record({ config: fc.string(), layer: fc.string({ minLength: 1, maxLength: 50 }), values: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('diff'), input: fc.record({ configA: fc.string(), configB: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -315,8 +315,8 @@ describe('ConfigSync functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('export'), input: fc.record({ config: fc.string() }) }),
-              fc.record({ action: fc.constant('import'), input: fc.record({ config: fc.string(), data: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('override'), input: fc.record({ config: fc.string(), layer: fc.string({ minLength: 1, maxLength: 20 }), values: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('import'), input: fc.record({ config: fc.string(), data: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('override'), input: fc.record({ config: fc.string(), layer: fc.string({ minLength: 1, maxLength: 50 }), values: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('diff'), input: fc.record({ configA: fc.string(), configB: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

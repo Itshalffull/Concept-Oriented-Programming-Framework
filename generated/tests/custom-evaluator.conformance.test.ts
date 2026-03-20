@@ -216,8 +216,8 @@ describe('CustomEvaluator functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), source: fc.string({ minLength: 1, maxLength: 20 }), language: fc.string({ minLength: 1, maxLength: 20 }), sandbox: fc.boolean() }) }),
-              fc.record({ action: fc.constant('evaluate'), input: fc.record({ evaluator: fc.string(), context: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), source: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string({ minLength: 1, maxLength: 50 }), sandbox: fc.boolean() }) }),
+              fc.record({ action: fc.constant('evaluate'), input: fc.record({ evaluator: fc.string(), context: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('deregister'), input: fc.record({ evaluator: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -245,8 +245,8 @@ describe('CustomEvaluator functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), source: fc.string({ minLength: 1, maxLength: 20 }), language: fc.string({ minLength: 1, maxLength: 20 }), sandbox: fc.boolean() }) }),
-              fc.record({ action: fc.constant('evaluate'), input: fc.record({ evaluator: fc.string(), context: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), source: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string({ minLength: 1, maxLength: 50 }), sandbox: fc.boolean() }) }),
+              fc.record({ action: fc.constant('evaluate'), input: fc.record({ evaluator: fc.string(), context: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('deregister'), input: fc.record({ evaluator: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

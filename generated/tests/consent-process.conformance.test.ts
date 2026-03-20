@@ -334,10 +334,10 @@ describe('ConsentProcess functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('initiate'), input: fc.record({ proposalRef: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('initiate'), input: fc.record({ proposalRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('advancePhase'), input: fc.record({ process: fc.string() }) }),
-              fc.record({ action: fc.constant('raiseObjection'), input: fc.record({ process: fc.string(), objector: fc.string({ minLength: 1, maxLength: 20 }), reason: fc.string({ minLength: 1, maxLength: 20 }), isParamount: fc.boolean() }) }),
-              fc.record({ action: fc.constant('integrateObjection'), input: fc.record({ process: fc.string(), objectionIndex: fc.integer({ min: 0, max: 1000 }), amendment: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('raiseObjection'), input: fc.record({ process: fc.string(), objector: fc.string({ minLength: 1, maxLength: 50 }), reason: fc.string({ minLength: 1, maxLength: 50 }), isParamount: fc.boolean() }) }),
+              fc.record({ action: fc.constant('integrateObjection'), input: fc.record({ process: fc.string(), objectionIndex: fc.integer({ min: 1, max: 1000 }), amendment: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('resolve'), input: fc.record({ process: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -365,10 +365,10 @@ describe('ConsentProcess functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('initiate'), input: fc.record({ proposalRef: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('initiate'), input: fc.record({ proposalRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('advancePhase'), input: fc.record({ process: fc.string() }) }),
-              fc.record({ action: fc.constant('raiseObjection'), input: fc.record({ process: fc.string(), objector: fc.string({ minLength: 1, maxLength: 20 }), reason: fc.string({ minLength: 1, maxLength: 20 }), isParamount: fc.boolean() }) }),
-              fc.record({ action: fc.constant('integrateObjection'), input: fc.record({ process: fc.string(), objectionIndex: fc.integer({ min: 0, max: 1000 }), amendment: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('raiseObjection'), input: fc.record({ process: fc.string(), objector: fc.string({ minLength: 1, maxLength: 50 }), reason: fc.string({ minLength: 1, maxLength: 50 }), isParamount: fc.boolean() }) }),
+              fc.record({ action: fc.constant('integrateObjection'), input: fc.record({ process: fc.string(), objectionIndex: fc.integer({ min: 1, max: 1000 }), amendment: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('resolve'), input: fc.record({ process: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

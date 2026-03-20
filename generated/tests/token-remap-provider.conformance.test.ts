@@ -161,7 +161,7 @@ describe('TokenRemapProvider functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('register'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('apply'), input: fc.record({ program: fc.string({ minLength: 1, maxLength: 20 }), spec: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('apply'), input: fc.record({ program: fc.string({ minLength: 1, maxLength: 50 }), spec: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -189,7 +189,7 @@ describe('TokenRemapProvider functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('register'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('apply'), input: fc.record({ program: fc.string({ minLength: 1, maxLength: 20 }), spec: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('apply'), input: fc.record({ program: fc.string({ minLength: 1, maxLength: 50 }), spec: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

@@ -216,7 +216,7 @@ describe('Timelock functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('schedule'), input: fc.record({ operationHash: fc.string({ minLength: 1, maxLength: 20 }), payload: fc.string({ minLength: 1, maxLength: 20 }), delayHours: fc.string(), gracePeriodHours: fc.string() }) }),
+              fc.record({ action: fc.constant('schedule'), input: fc.record({ operationHash: fc.string({ minLength: 1, maxLength: 50 }), payload: fc.string({ minLength: 1, maxLength: 50 }), delayHours: fc.string(), gracePeriodHours: fc.string() }) }),
               fc.record({ action: fc.constant('execute'), input: fc.record({ lock: fc.string() }) }),
               fc.record({ action: fc.constant('cancel'), input: fc.record({ lock: fc.string() }) }),
             ),
@@ -245,7 +245,7 @@ describe('Timelock functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('schedule'), input: fc.record({ operationHash: fc.string({ minLength: 1, maxLength: 20 }), payload: fc.string({ minLength: 1, maxLength: 20 }), delayHours: fc.string(), gracePeriodHours: fc.string() }) }),
+              fc.record({ action: fc.constant('schedule'), input: fc.record({ operationHash: fc.string({ minLength: 1, maxLength: 50 }), payload: fc.string({ minLength: 1, maxLength: 50 }), delayHours: fc.string(), gracePeriodHours: fc.string() }) }),
               fc.record({ action: fc.constant('execute'), input: fc.record({ lock: fc.string() }) }),
               fc.record({ action: fc.constant('cancel'), input: fc.record({ lock: fc.string() }) }),
             ),

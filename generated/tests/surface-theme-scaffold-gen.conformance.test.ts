@@ -215,8 +215,8 @@ describe('SurfaceThemeScaffoldGen functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('generate'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), primaryColor: fc.string({ minLength: 1, maxLength: 20 }), fontFamily: fc.string({ minLength: 1, maxLength: 20 }), baseSize: fc.integer({ min: 0, max: 1000 }), scale: fc.string(), secondaryColor: fc.string(), borderRadius: fc.string(), mode: fc.string({ minLength: 1, maxLength: 20 }), extends: fc.string() }) }),
-              fc.record({ action: fc.constant('preview'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), primaryColor: fc.string({ minLength: 1, maxLength: 20 }), fontFamily: fc.string({ minLength: 1, maxLength: 20 }), baseSize: fc.integer({ min: 0, max: 1000 }), scale: fc.string(), secondaryColor: fc.string(), borderRadius: fc.string(), mode: fc.string({ minLength: 1, maxLength: 20 }), extends: fc.string() }) }),
+              fc.record({ action: fc.constant('generate'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), primaryColor: fc.string({ minLength: 1, maxLength: 50 }), fontFamily: fc.string({ minLength: 1, maxLength: 50 }), baseSize: fc.integer({ min: 1, max: 1000 }), scale: fc.string(), secondaryColor: fc.string(), borderRadius: fc.string(), mode: fc.string({ minLength: 1, maxLength: 50 }), extends: fc.string() }) }),
+              fc.record({ action: fc.constant('preview'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), primaryColor: fc.string({ minLength: 1, maxLength: 50 }), fontFamily: fc.string({ minLength: 1, maxLength: 50 }), baseSize: fc.integer({ min: 1, max: 1000 }), scale: fc.string(), secondaryColor: fc.string(), borderRadius: fc.string(), mode: fc.string({ minLength: 1, maxLength: 50 }), extends: fc.string() }) }),
               fc.record({ action: fc.constant('register'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },

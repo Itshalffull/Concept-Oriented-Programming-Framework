@@ -159,8 +159,8 @@ describe('Annotation functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('annotate'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), scope: fc.string({ minLength: 1, maxLength: 20 }), content: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('annotate'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), scope: fc.string({ minLength: 1, maxLength: 50 }), content: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -187,8 +187,8 @@ describe('Annotation functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('annotate'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), scope: fc.string({ minLength: 1, maxLength: 20 }), content: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('annotate'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), scope: fc.string({ minLength: 1, maxLength: 50 }), content: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

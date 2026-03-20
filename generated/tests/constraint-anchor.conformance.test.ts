@@ -386,9 +386,9 @@ describe('ConstraintAnchor functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('pin'), input: fc.record({ canvas_id: fc.string(), item_id: fc.string(), x: fc.string(), y: fc.string() }) }),
-              fc.record({ action: fc.constant('align'), input: fc.record({ canvas_id: fc.string(), item_ids: fc.string(), axis: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('align'), input: fc.record({ canvas_id: fc.string(), item_ids: fc.string(), axis: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('separate'), input: fc.record({ canvas_id: fc.string(), item_a: fc.string(), item_b: fc.string(), gap: fc.string() }) }),
-              fc.record({ action: fc.constant('setFlowDirection'), input: fc.record({ canvas_id: fc.string(), item_ids: fc.string(), direction: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('setFlowDirection'), input: fc.record({ canvas_id: fc.string(), item_ids: fc.string(), direction: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('removeAnchor'), input: fc.record({ anchor: fc.string() }) }),
               fc.record({ action: fc.constant('getAnchorsForCanvas'), input: fc.record({ canvas_id: fc.string() }) }),
             ),
@@ -418,9 +418,9 @@ describe('ConstraintAnchor functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('pin'), input: fc.record({ canvas_id: fc.string(), item_id: fc.string(), x: fc.string(), y: fc.string() }) }),
-              fc.record({ action: fc.constant('align'), input: fc.record({ canvas_id: fc.string(), item_ids: fc.string(), axis: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('align'), input: fc.record({ canvas_id: fc.string(), item_ids: fc.string(), axis: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('separate'), input: fc.record({ canvas_id: fc.string(), item_a: fc.string(), item_b: fc.string(), gap: fc.string() }) }),
-              fc.record({ action: fc.constant('setFlowDirection'), input: fc.record({ canvas_id: fc.string(), item_ids: fc.string(), direction: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('setFlowDirection'), input: fc.record({ canvas_id: fc.string(), item_ids: fc.string(), direction: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('removeAnchor'), input: fc.record({ anchor: fc.string() }) }),
               fc.record({ action: fc.constant('getAnchorsForCanvas'), input: fc.record({ canvas_id: fc.string() }) }),
             ),

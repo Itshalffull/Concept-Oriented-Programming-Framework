@@ -280,10 +280,10 @@ describe('ContractTest functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('generate'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), specPath: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('verify'), input: fc.record({ contract: fc.string(), producerArtifact: fc.string({ minLength: 1, maxLength: 20 }), producerLanguage: fc.string({ minLength: 1, maxLength: 20 }), consumerArtifact: fc.string({ minLength: 1, maxLength: 20 }), consumerLanguage: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('generate'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), specPath: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('verify'), input: fc.record({ contract: fc.string(), producerArtifact: fc.string({ minLength: 1, maxLength: 50 }), producerLanguage: fc.string({ minLength: 1, maxLength: 50 }), consumerArtifact: fc.string({ minLength: 1, maxLength: 50 }), consumerLanguage: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('matrix'), input: fc.record({ concepts: fc.string() }) }),
-              fc.record({ action: fc.constant('canDeploy'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), language: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('canDeploy'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -310,10 +310,10 @@ describe('ContractTest functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('generate'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), specPath: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('verify'), input: fc.record({ contract: fc.string(), producerArtifact: fc.string({ minLength: 1, maxLength: 20 }), producerLanguage: fc.string({ minLength: 1, maxLength: 20 }), consumerArtifact: fc.string({ minLength: 1, maxLength: 20 }), consumerLanguage: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('generate'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), specPath: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('verify'), input: fc.record({ contract: fc.string(), producerArtifact: fc.string({ minLength: 1, maxLength: 50 }), producerLanguage: fc.string({ minLength: 1, maxLength: 50 }), consumerArtifact: fc.string({ minLength: 1, maxLength: 50 }), consumerLanguage: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('matrix'), input: fc.record({ concepts: fc.string() }) }),
-              fc.record({ action: fc.constant('canDeploy'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), language: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('canDeploy'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

@@ -58,7 +58,7 @@ describe('CommutativityProvider imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('check'), input: fc.record({ programA: fc.string({ minLength: 1, maxLength: 20 }), programB: fc.string({ minLength: 1, maxLength: 20 }), readWriteSetsA: fc.string({ minLength: 1, maxLength: 20 }), readWriteSetsB: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('check'), input: fc.record({ programA: fc.string({ minLength: 1, maxLength: 50 }), programB: fc.string({ minLength: 1, maxLength: 50 }), readWriteSetsA: fc.string({ minLength: 1, maxLength: 50 }), readWriteSetsB: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

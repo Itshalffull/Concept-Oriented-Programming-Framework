@@ -431,11 +431,11 @@ describe('Session functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ session: fc.string(), userId: fc.string({ minLength: 1, maxLength: 20 }), device: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ session: fc.string(), userId: fc.string({ minLength: 1, maxLength: 50 }), device: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('validate'), input: fc.record({ session: fc.string() }) }),
               fc.record({ action: fc.constant('refresh'), input: fc.record({ session: fc.string() }) }),
               fc.record({ action: fc.constant('destroy'), input: fc.record({ session: fc.string() }) }),
-              fc.record({ action: fc.constant('destroyAll'), input: fc.record({ userId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('destroyAll'), input: fc.record({ userId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('getContext'), input: fc.record({ session: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -463,11 +463,11 @@ describe('Session functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ session: fc.string(), userId: fc.string({ minLength: 1, maxLength: 20 }), device: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ session: fc.string(), userId: fc.string({ minLength: 1, maxLength: 50 }), device: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('validate'), input: fc.record({ session: fc.string() }) }),
               fc.record({ action: fc.constant('refresh'), input: fc.record({ session: fc.string() }) }),
               fc.record({ action: fc.constant('destroy'), input: fc.record({ session: fc.string() }) }),
-              fc.record({ action: fc.constant('destroyAll'), input: fc.record({ userId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('destroyAll'), input: fc.record({ userId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('getContext'), input: fc.record({ session: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

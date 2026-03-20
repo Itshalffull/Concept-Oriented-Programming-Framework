@@ -222,8 +222,8 @@ describe('HandlerScaffoldGen functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('generate'), input: fc.record({ conceptName: fc.string({ minLength: 1, maxLength: 20 }), actions: fc.string(), style: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('preview'), input: fc.record({ conceptName: fc.string({ minLength: 1, maxLength: 20 }), actions: fc.string() }) }),
+              fc.record({ action: fc.constant('generate'), input: fc.record({ conceptName: fc.string({ minLength: 1, maxLength: 50 }), actions: fc.string(), style: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('preview'), input: fc.record({ conceptName: fc.string({ minLength: 1, maxLength: 50 }), actions: fc.string() }) }),
               fc.record({ action: fc.constant('register'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },

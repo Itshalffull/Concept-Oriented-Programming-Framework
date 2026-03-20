@@ -332,11 +332,11 @@ describe('Intent functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ intent: fc.string(), target: fc.string({ minLength: 1, maxLength: 20 }), purpose: fc.string({ minLength: 1, maxLength: 20 }), operationalPrinciple: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('update'), input: fc.record({ intent: fc.string(), purpose: fc.string({ minLength: 1, maxLength: 20 }), operationalPrinciple: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ intent: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }), purpose: fc.string({ minLength: 1, maxLength: 50 }), operationalPrinciple: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('update'), input: fc.record({ intent: fc.string(), purpose: fc.string({ minLength: 1, maxLength: 50 }), operationalPrinciple: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('verify'), input: fc.record({ intent: fc.string() }) }),
-              fc.record({ action: fc.constant('discover'), input: fc.record({ query: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('suggestFromDescription'), input: fc.record({ description: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('discover'), input: fc.record({ query: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('suggestFromDescription'), input: fc.record({ description: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -363,11 +363,11 @@ describe('Intent functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ intent: fc.string(), target: fc.string({ minLength: 1, maxLength: 20 }), purpose: fc.string({ minLength: 1, maxLength: 20 }), operationalPrinciple: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('update'), input: fc.record({ intent: fc.string(), purpose: fc.string({ minLength: 1, maxLength: 20 }), operationalPrinciple: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ intent: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }), purpose: fc.string({ minLength: 1, maxLength: 50 }), operationalPrinciple: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('update'), input: fc.record({ intent: fc.string(), purpose: fc.string({ minLength: 1, maxLength: 50 }), operationalPrinciple: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('verify'), input: fc.record({ intent: fc.string() }) }),
-              fc.record({ action: fc.constant('discover'), input: fc.record({ query: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('suggestFromDescription'), input: fc.record({ description: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('discover'), input: fc.record({ query: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('suggestFromDescription'), input: fc.record({ description: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

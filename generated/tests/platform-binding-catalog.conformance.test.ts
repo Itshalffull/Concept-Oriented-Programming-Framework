@@ -204,8 +204,8 @@ describe('PlatformBindingCatalog functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ binding: fc.string(), platform: fc.string({ minLength: 1, maxLength: 20 }), destinationPattern: fc.string({ minLength: 1, maxLength: 20 }), bindingKind: fc.string({ minLength: 1, maxLength: 20 }), payload: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ platform: fc.string({ minLength: 1, maxLength: 20 }), destination: fc.string({ minLength: 1, maxLength: 20 }), bindingKind: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ binding: fc.string(), platform: fc.string({ minLength: 1, maxLength: 50 }), destinationPattern: fc.string({ minLength: 1, maxLength: 50 }), bindingKind: fc.string({ minLength: 1, maxLength: 50 }), payload: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ platform: fc.string({ minLength: 1, maxLength: 50 }), destination: fc.string({ minLength: 1, maxLength: 50 }), bindingKind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({ platform: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -233,8 +233,8 @@ describe('PlatformBindingCatalog functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ binding: fc.string(), platform: fc.string({ minLength: 1, maxLength: 20 }), destinationPattern: fc.string({ minLength: 1, maxLength: 20 }), bindingKind: fc.string({ minLength: 1, maxLength: 20 }), payload: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ platform: fc.string({ minLength: 1, maxLength: 20 }), destination: fc.string({ minLength: 1, maxLength: 20 }), bindingKind: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ binding: fc.string(), platform: fc.string({ minLength: 1, maxLength: 50 }), destinationPattern: fc.string({ minLength: 1, maxLength: 50 }), bindingKind: fc.string({ minLength: 1, maxLength: 50 }), payload: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ platform: fc.string({ minLength: 1, maxLength: 50 }), destination: fc.string({ minLength: 1, maxLength: 50 }), bindingKind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({ platform: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

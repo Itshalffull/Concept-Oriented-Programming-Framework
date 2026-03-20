@@ -355,8 +355,8 @@ describe('Article functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ article: fc.string(), title: fc.string({ minLength: 1, maxLength: 20 }), description: fc.string({ minLength: 1, maxLength: 20 }), body: fc.string({ minLength: 1, maxLength: 20 }), author: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('update'), input: fc.record({ article: fc.string(), title: fc.string({ minLength: 1, maxLength: 20 }), description: fc.string({ minLength: 1, maxLength: 20 }), body: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ article: fc.string(), title: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), body: fc.string({ minLength: 1, maxLength: 50 }), author: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('update'), input: fc.record({ article: fc.string(), title: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), body: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('delete'), input: fc.record({ article: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ article: fc.string() }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
@@ -386,8 +386,8 @@ describe('Article functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ article: fc.string(), title: fc.string({ minLength: 1, maxLength: 20 }), description: fc.string({ minLength: 1, maxLength: 20 }), body: fc.string({ minLength: 1, maxLength: 20 }), author: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('update'), input: fc.record({ article: fc.string(), title: fc.string({ minLength: 1, maxLength: 20 }), description: fc.string({ minLength: 1, maxLength: 20 }), body: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ article: fc.string(), title: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), body: fc.string({ minLength: 1, maxLength: 50 }), author: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('update'), input: fc.record({ article: fc.string(), title: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), body: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('delete'), input: fc.record({ article: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ article: fc.string() }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),

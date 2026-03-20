@@ -146,10 +146,10 @@ describe('ProgramCache imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('lookup'), input: fc.record({ programHash: fc.string({ minLength: 1, maxLength: 20 }), stateHash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('store'), input: fc.record({ programHash: fc.string({ minLength: 1, maxLength: 20 }), stateHash: fc.string({ minLength: 1, maxLength: 20 }), result: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('invalidateByState'), input: fc.record({ stateHash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('invalidateByProgram'), input: fc.record({ programHash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('lookup'), input: fc.record({ programHash: fc.string({ minLength: 1, maxLength: 50 }), stateHash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('store'), input: fc.record({ programHash: fc.string({ minLength: 1, maxLength: 50 }), stateHash: fc.string({ minLength: 1, maxLength: 50 }), result: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('invalidateByState'), input: fc.record({ stateHash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('invalidateByProgram'), input: fc.record({ programHash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('stats'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -176,10 +176,10 @@ describe('ProgramCache imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('lookup'), input: fc.record({ programHash: fc.string({ minLength: 1, maxLength: 20 }), stateHash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('store'), input: fc.record({ programHash: fc.string({ minLength: 1, maxLength: 20 }), stateHash: fc.string({ minLength: 1, maxLength: 20 }), result: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('invalidateByState'), input: fc.record({ stateHash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('invalidateByProgram'), input: fc.record({ programHash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('lookup'), input: fc.record({ programHash: fc.string({ minLength: 1, maxLength: 50 }), stateHash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('store'), input: fc.record({ programHash: fc.string({ minLength: 1, maxLength: 50 }), stateHash: fc.string({ minLength: 1, maxLength: 50 }), result: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('invalidateByState'), input: fc.record({ stateHash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('invalidateByProgram'), input: fc.record({ programHash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('stats'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },

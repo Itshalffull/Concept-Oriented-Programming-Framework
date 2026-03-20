@@ -220,8 +220,8 @@ describe('Attestation functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('attest'), input: fc.record({ schema: fc.string({ minLength: 1, maxLength: 20 }), attester: fc.string({ minLength: 1, maxLength: 20 }), recipient: fc.string({ minLength: 1, maxLength: 20 }), data: fc.string({ minLength: 1, maxLength: 20 }), expiry: fc.string() }) }),
-              fc.record({ action: fc.constant('revoke'), input: fc.record({ attestation: fc.string(), revoker: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('attest'), input: fc.record({ schema: fc.string({ minLength: 1, maxLength: 50 }), attester: fc.string({ minLength: 1, maxLength: 50 }), recipient: fc.string({ minLength: 1, maxLength: 50 }), data: fc.string({ minLength: 1, maxLength: 50 }), expiry: fc.string() }) }),
+              fc.record({ action: fc.constant('revoke'), input: fc.record({ attestation: fc.string(), revoker: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('verify'), input: fc.record({ attestation: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -249,8 +249,8 @@ describe('Attestation functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('attest'), input: fc.record({ schema: fc.string({ minLength: 1, maxLength: 20 }), attester: fc.string({ minLength: 1, maxLength: 20 }), recipient: fc.string({ minLength: 1, maxLength: 20 }), data: fc.string({ minLength: 1, maxLength: 20 }), expiry: fc.string() }) }),
-              fc.record({ action: fc.constant('revoke'), input: fc.record({ attestation: fc.string(), revoker: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('attest'), input: fc.record({ schema: fc.string({ minLength: 1, maxLength: 50 }), attester: fc.string({ minLength: 1, maxLength: 50 }), recipient: fc.string({ minLength: 1, maxLength: 50 }), data: fc.string({ minLength: 1, maxLength: 50 }), expiry: fc.string() }) }),
+              fc.record({ action: fc.constant('revoke'), input: fc.record({ attestation: fc.string(), revoker: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('verify'), input: fc.record({ attestation: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

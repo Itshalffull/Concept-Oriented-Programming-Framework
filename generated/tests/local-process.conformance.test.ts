@@ -106,8 +106,8 @@ describe('LocalProcess imperative handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('initialize'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('registerRuntime'), input: fc.record({ runtime: fc.string({ minLength: 1, maxLength: 20 }), providerName: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('dispatch'), input: fc.record({ runtime: fc.string({ minLength: 1, maxLength: 20 }), operation: fc.string({ minLength: 1, maxLength: 20 }), moduleRef: fc.string({ minLength: 1, maxLength: 20 }), input: fc.string({ minLength: 1, maxLength: 20 }), config: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('registerRuntime'), input: fc.record({ runtime: fc.string({ minLength: 1, maxLength: 50 }), providerName: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('dispatch'), input: fc.record({ runtime: fc.string({ minLength: 1, maxLength: 50 }), operation: fc.string({ minLength: 1, maxLength: 50 }), moduleRef: fc.string({ minLength: 1, maxLength: 50 }), input: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('listRuntimes'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -135,8 +135,8 @@ describe('LocalProcess imperative handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('initialize'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('registerRuntime'), input: fc.record({ runtime: fc.string({ minLength: 1, maxLength: 20 }), providerName: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('dispatch'), input: fc.record({ runtime: fc.string({ minLength: 1, maxLength: 20 }), operation: fc.string({ minLength: 1, maxLength: 20 }), moduleRef: fc.string({ minLength: 1, maxLength: 20 }), input: fc.string({ minLength: 1, maxLength: 20 }), config: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('registerRuntime'), input: fc.record({ runtime: fc.string({ minLength: 1, maxLength: 50 }), providerName: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('dispatch'), input: fc.record({ runtime: fc.string({ minLength: 1, maxLength: 50 }), operation: fc.string({ minLength: 1, maxLength: 50 }), moduleRef: fc.string({ minLength: 1, maxLength: 50 }), input: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('listRuntimes'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },

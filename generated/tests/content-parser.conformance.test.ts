@@ -451,13 +451,13 @@ describe('ContentParser functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('registerFormat'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), grammar: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('registerExtractor'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), pattern: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('parse'), input: fc.record({ content: fc.string(), text: fc.string({ minLength: 1, maxLength: 20 }), format: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('registerFormat'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), grammar: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('registerExtractor'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), pattern: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('parse'), input: fc.record({ content: fc.string(), text: fc.string({ minLength: 1, maxLength: 50 }), format: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('extractRefs'), input: fc.record({ content: fc.string() }) }),
               fc.record({ action: fc.constant('extractTags'), input: fc.record({ content: fc.string() }) }),
               fc.record({ action: fc.constant('extractProperties'), input: fc.record({ content: fc.string() }) }),
-              fc.record({ action: fc.constant('serialize'), input: fc.record({ content: fc.string(), format: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('serialize'), input: fc.record({ content: fc.string(), format: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -484,13 +484,13 @@ describe('ContentParser functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('registerFormat'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), grammar: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('registerExtractor'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), pattern: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('parse'), input: fc.record({ content: fc.string(), text: fc.string({ minLength: 1, maxLength: 20 }), format: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('registerFormat'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), grammar: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('registerExtractor'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), pattern: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('parse'), input: fc.record({ content: fc.string(), text: fc.string({ minLength: 1, maxLength: 50 }), format: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('extractRefs'), input: fc.record({ content: fc.string() }) }),
               fc.record({ action: fc.constant('extractTags'), input: fc.record({ content: fc.string() }) }),
               fc.record({ action: fc.constant('extractProperties'), input: fc.record({ content: fc.string() }) }),
-              fc.record({ action: fc.constant('serialize'), input: fc.record({ content: fc.string(), format: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('serialize'), input: fc.record({ content: fc.string(), format: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

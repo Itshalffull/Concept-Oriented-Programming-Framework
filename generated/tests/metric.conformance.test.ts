@@ -274,9 +274,9 @@ describe('Metric functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), unit: fc.string(), source: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), unit: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('update'), input: fc.record({ metric: fc.string(), value: fc.string() }) }),
-              fc.record({ action: fc.constant('setThreshold'), input: fc.record({ metric: fc.string(), level: fc.string({ minLength: 1, maxLength: 20 }), operator: fc.string({ minLength: 1, maxLength: 20 }), value: fc.string() }) }),
+              fc.record({ action: fc.constant('setThreshold'), input: fc.record({ metric: fc.string(), level: fc.string({ minLength: 1, maxLength: 50 }), operator: fc.string({ minLength: 1, maxLength: 50 }), value: fc.string() }) }),
               fc.record({ action: fc.constant('evaluate'), input: fc.record({ metric: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -304,9 +304,9 @@ describe('Metric functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), unit: fc.string(), source: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), unit: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('update'), input: fc.record({ metric: fc.string(), value: fc.string() }) }),
-              fc.record({ action: fc.constant('setThreshold'), input: fc.record({ metric: fc.string(), level: fc.string({ minLength: 1, maxLength: 20 }), operator: fc.string({ minLength: 1, maxLength: 20 }), value: fc.string() }) }),
+              fc.record({ action: fc.constant('setThreshold'), input: fc.record({ metric: fc.string(), level: fc.string({ minLength: 1, maxLength: 50 }), operator: fc.string({ minLength: 1, maxLength: 50 }), value: fc.string() }) }),
               fc.record({ action: fc.constant('evaluate'), input: fc.record({ metric: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

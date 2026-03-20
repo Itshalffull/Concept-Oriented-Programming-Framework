@@ -50,10 +50,17 @@ const CONSTRUCT_STRATEGY: Record<string, string> = {
 
 // ── Test Plan Types ───────────────────────────────────────────
 
+interface TestPlanFixture {
+  name: string;
+  input: Record<string, unknown>;
+  expectedVariant: string;
+}
+
 interface TestPlanAction {
   name: string;
   params: Array<{ name: string; type: string }>;
   variants: string[];
+  fixtures: TestPlanFixture[];
 }
 
 interface TestPlanExample {
@@ -154,6 +161,11 @@ function buildTestPlan(
     variants: ((a.variants as Array<Record<string, unknown>>) || []).map(
       v => (v.name as string) || '',
     ),
+    fixtures: ((a.fixtures as Array<Record<string, unknown>>) || []).map(f => ({
+      name: (f.name as string) || '',
+      input: (f.input as Record<string, unknown>) || {},
+      expectedVariant: (f.expectedVariant as string) || 'ok',
+    })),
   }));
 
   // Parse invariants into test plan sections
@@ -523,6 +535,6 @@ export const testGenHandler: FunctionalConceptHandler = {
 };
 
 // Re-export for use by scaffold generators and providers
-export { buildTestPlan, type TestPlan, type TestPlanAction, type TestPlanExample,
-  type TestPlanForall, type TestPlanStateInvariant, type TestPlanLiveness,
-  type TestPlanContract };
+export { buildTestPlan, type TestPlan, type TestPlanAction, type TestPlanFixture,
+  type TestPlanExample, type TestPlanForall, type TestPlanStateInvariant,
+  type TestPlanLiveness, type TestPlanContract };

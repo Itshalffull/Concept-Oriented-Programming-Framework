@@ -390,11 +390,11 @@ describe('WidgetStateEntity functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ widget: fc.string({ minLength: 1, maxLength: 20 }), name: fc.string({ minLength: 1, maxLength: 20 }), initial: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByWidget'), input: fc.record({ widget: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ widget: fc.string({ minLength: 1, maxLength: 50 }), name: fc.string({ minLength: 1, maxLength: 50 }), initial: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByWidget'), input: fc.record({ widget: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('reachableFrom'), input: fc.record({ widgetState: fc.string() }) }),
-              fc.record({ action: fc.constant('unreachableStates'), input: fc.record({ widget: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('traceEvent'), input: fc.record({ widget: fc.string({ minLength: 1, maxLength: 20 }), event: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('unreachableStates'), input: fc.record({ widget: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('traceEvent'), input: fc.record({ widget: fc.string({ minLength: 1, maxLength: 50 }), event: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ widgetState: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -422,11 +422,11 @@ describe('WidgetStateEntity functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ widget: fc.string({ minLength: 1, maxLength: 20 }), name: fc.string({ minLength: 1, maxLength: 20 }), initial: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByWidget'), input: fc.record({ widget: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ widget: fc.string({ minLength: 1, maxLength: 50 }), name: fc.string({ minLength: 1, maxLength: 50 }), initial: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByWidget'), input: fc.record({ widget: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('reachableFrom'), input: fc.record({ widgetState: fc.string() }) }),
-              fc.record({ action: fc.constant('unreachableStates'), input: fc.record({ widget: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('traceEvent'), input: fc.record({ widget: fc.string({ minLength: 1, maxLength: 20 }), event: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('unreachableStates'), input: fc.record({ widget: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('traceEvent'), input: fc.record({ widget: fc.string({ minLength: 1, maxLength: 50 }), event: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ widgetState: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

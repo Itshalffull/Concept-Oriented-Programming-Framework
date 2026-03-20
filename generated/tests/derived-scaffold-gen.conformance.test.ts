@@ -215,8 +215,8 @@ describe('DerivedScaffoldGen functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('generate'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), typeParam: fc.string({ minLength: 1, maxLength: 20 }), purpose: fc.string({ minLength: 1, maxLength: 20 }), composes: fc.string(), syncs: fc.string(), surfaceActions: fc.string(), surfaceQueries: fc.string(), principle: fc.string() }) }),
-              fc.record({ action: fc.constant('preview'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), typeParam: fc.string({ minLength: 1, maxLength: 20 }), purpose: fc.string({ minLength: 1, maxLength: 20 }), composes: fc.string(), syncs: fc.string(), surfaceActions: fc.string(), surfaceQueries: fc.string(), principle: fc.string() }) }),
+              fc.record({ action: fc.constant('generate'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), typeParam: fc.string({ minLength: 1, maxLength: 50 }), purpose: fc.string({ minLength: 1, maxLength: 50 }), composes: fc.string(), syncs: fc.string(), surfaceActions: fc.string(), surfaceQueries: fc.string(), principle: fc.string() }) }),
+              fc.record({ action: fc.constant('preview'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), typeParam: fc.string({ minLength: 1, maxLength: 50 }), purpose: fc.string({ minLength: 1, maxLength: 50 }), composes: fc.string(), syncs: fc.string(), surfaceActions: fc.string(), surfaceQueries: fc.string(), principle: fc.string() }) }),
               fc.record({ action: fc.constant('register'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },

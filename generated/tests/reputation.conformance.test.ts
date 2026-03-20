@@ -113,11 +113,11 @@ describe('Reputation imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('earn'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 20 }), amount: fc.string(), reason: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('burn'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 20 }), amount: fc.string(), reason: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('earn'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('burn'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('decay'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('getScore'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('recalculate'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('getScore'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('recalculate'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -143,11 +143,11 @@ describe('Reputation imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('earn'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 20 }), amount: fc.string(), reason: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('burn'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 20 }), amount: fc.string(), reason: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('earn'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('burn'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('decay'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('getScore'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('recalculate'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('getScore'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('recalculate'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

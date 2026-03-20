@@ -97,9 +97,9 @@ describe('DataFlowPath imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('trace'), input: fc.record({ source: fc.string({ minLength: 1, maxLength: 20 }), sink: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('traceFromConfig'), input: fc.record({ configKey: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('traceToOutput'), input: fc.record({ output: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('trace'), input: fc.record({ source: fc.string({ minLength: 1, maxLength: 50 }), sink: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('traceFromConfig'), input: fc.record({ configKey: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('traceToOutput'), input: fc.record({ output: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ path: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -126,9 +126,9 @@ describe('DataFlowPath imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('trace'), input: fc.record({ source: fc.string({ minLength: 1, maxLength: 20 }), sink: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('traceFromConfig'), input: fc.record({ configKey: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('traceToOutput'), input: fc.record({ output: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('trace'), input: fc.record({ source: fc.string({ minLength: 1, maxLength: 50 }), sink: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('traceFromConfig'), input: fc.record({ configKey: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('traceToOutput'), input: fc.record({ output: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ path: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

@@ -392,11 +392,11 @@ describe('VercelRuntime functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('provision'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), teamId: fc.string({ minLength: 1, maxLength: 20 }), framework: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('deploy'), input: fc.record({ project: fc.string(), sourceDirectory: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('setTrafficWeight'), input: fc.record({ project: fc.string(), weight: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('rollback'), input: fc.record({ project: fc.string(), targetDeploymentId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('configureEnv'), input: fc.record({ project: fc.string(), envVars: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('provision'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), teamId: fc.string({ minLength: 1, maxLength: 50 }), framework: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('deploy'), input: fc.record({ project: fc.string(), sourceDirectory: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setTrafficWeight'), input: fc.record({ project: fc.string(), weight: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('rollback'), input: fc.record({ project: fc.string(), targetDeploymentId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('configureEnv'), input: fc.record({ project: fc.string(), envVars: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('destroy'), input: fc.record({ project: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -424,11 +424,11 @@ describe('VercelRuntime functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('provision'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), teamId: fc.string({ minLength: 1, maxLength: 20 }), framework: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('deploy'), input: fc.record({ project: fc.string(), sourceDirectory: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('setTrafficWeight'), input: fc.record({ project: fc.string(), weight: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('rollback'), input: fc.record({ project: fc.string(), targetDeploymentId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('configureEnv'), input: fc.record({ project: fc.string(), envVars: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('provision'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), teamId: fc.string({ minLength: 1, maxLength: 50 }), framework: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('deploy'), input: fc.record({ project: fc.string(), sourceDirectory: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setTrafficWeight'), input: fc.record({ project: fc.string(), weight: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('rollback'), input: fc.record({ project: fc.string(), targetDeploymentId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('configureEnv'), input: fc.record({ project: fc.string(), envVars: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('destroy'), input: fc.record({ project: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

@@ -337,11 +337,11 @@ describe('Builder functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('build'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), source: fc.string({ minLength: 1, maxLength: 20 }), language: fc.string({ minLength: 1, maxLength: 20 }), platform: fc.string({ minLength: 1, maxLength: 20 }), config: fc.string() }) }),
-              fc.record({ action: fc.constant('buildAll'), input: fc.record({ concepts: fc.string(), source: fc.string({ minLength: 1, maxLength: 20 }), targets: fc.string(), config: fc.string() }) }),
-              fc.record({ action: fc.constant('test'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), language: fc.string({ minLength: 1, maxLength: 20 }), platform: fc.string({ minLength: 1, maxLength: 20 }), testFilter: fc.string(), testType: fc.string(), toolName: fc.string() }) }),
+              fc.record({ action: fc.constant('build'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), source: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string({ minLength: 1, maxLength: 50 }), platform: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string() }) }),
+              fc.record({ action: fc.constant('buildAll'), input: fc.record({ concepts: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), targets: fc.string(), config: fc.string() }) }),
+              fc.record({ action: fc.constant('test'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string({ minLength: 1, maxLength: 50 }), platform: fc.string({ minLength: 1, maxLength: 50 }), testFilter: fc.string(), testType: fc.string(), toolName: fc.string() }) }),
               fc.record({ action: fc.constant('status'), input: fc.record({ build: fc.string() }) }),
-              fc.record({ action: fc.constant('history'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), language: fc.string() }) }),
+              fc.record({ action: fc.constant('history'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -368,11 +368,11 @@ describe('Builder functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('build'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), source: fc.string({ minLength: 1, maxLength: 20 }), language: fc.string({ minLength: 1, maxLength: 20 }), platform: fc.string({ minLength: 1, maxLength: 20 }), config: fc.string() }) }),
-              fc.record({ action: fc.constant('buildAll'), input: fc.record({ concepts: fc.string(), source: fc.string({ minLength: 1, maxLength: 20 }), targets: fc.string(), config: fc.string() }) }),
-              fc.record({ action: fc.constant('test'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), language: fc.string({ minLength: 1, maxLength: 20 }), platform: fc.string({ minLength: 1, maxLength: 20 }), testFilter: fc.string(), testType: fc.string(), toolName: fc.string() }) }),
+              fc.record({ action: fc.constant('build'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), source: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string({ minLength: 1, maxLength: 50 }), platform: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string() }) }),
+              fc.record({ action: fc.constant('buildAll'), input: fc.record({ concepts: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), targets: fc.string(), config: fc.string() }) }),
+              fc.record({ action: fc.constant('test'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string({ minLength: 1, maxLength: 50 }), platform: fc.string({ minLength: 1, maxLength: 50 }), testFilter: fc.string(), testType: fc.string(), toolName: fc.string() }) }),
               fc.record({ action: fc.constant('status'), input: fc.record({ build: fc.string() }) }),
-              fc.record({ action: fc.constant('history'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), language: fc.string() }) }),
+              fc.record({ action: fc.constant('history'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

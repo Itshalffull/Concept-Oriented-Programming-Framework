@@ -159,8 +159,8 @@ describe('ActionGuide functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), steps: fc.string(), content: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('render'), input: fc.record({ workflow: fc.string(), format: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), steps: fc.string(), content: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('render'), input: fc.record({ workflow: fc.string(), format: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -187,8 +187,8 @@ describe('ActionGuide functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), steps: fc.string(), content: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('render'), input: fc.record({ workflow: fc.string(), format: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), steps: fc.string(), content: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('render'), input: fc.record({ workflow: fc.string(), format: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

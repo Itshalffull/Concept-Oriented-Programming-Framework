@@ -274,7 +274,7 @@ describe('ProgramSlice functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('compute'), input: fc.record({ criterion: fc.string({ minLength: 1, maxLength: 20 }), direction: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('compute'), input: fc.record({ criterion: fc.string({ minLength: 1, maxLength: 50 }), direction: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('filesInSlice'), input: fc.record({ slice: fc.string() }) }),
               fc.record({ action: fc.constant('symbolsInSlice'), input: fc.record({ slice: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ slice: fc.string() }) }),
@@ -304,7 +304,7 @@ describe('ProgramSlice functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('compute'), input: fc.record({ criterion: fc.string({ minLength: 1, maxLength: 20 }), direction: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('compute'), input: fc.record({ criterion: fc.string({ minLength: 1, maxLength: 50 }), direction: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('filesInSlice'), input: fc.record({ slice: fc.string() }) }),
               fc.record({ action: fc.constant('symbolsInSlice'), input: fc.record({ slice: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ slice: fc.string() }) }),

@@ -163,12 +163,12 @@ describe('FormalProperty imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }), property_text: fc.string({ minLength: 1, maxLength: 20 }), formal_language: fc.string({ minLength: 1, maxLength: 20 }), scope: fc.string({ minLength: 1, maxLength: 20 }), priority: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('prove'), input: fc.record({ property: fc.string(), evidence_ref: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('refute'), input: fc.record({ property: fc.string(), evidence_ref: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('check'), input: fc.record({ property: fc.string(), solver: fc.string({ minLength: 1, maxLength: 20 }), timeout_ms: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('synthesize'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 20 }), intent_ref: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('coverage'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), property_text: fc.string({ minLength: 1, maxLength: 50 }), formal_language: fc.string({ minLength: 1, maxLength: 50 }), scope: fc.string({ minLength: 1, maxLength: 50 }), priority: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('prove'), input: fc.record({ property: fc.string(), evidence_ref: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('refute'), input: fc.record({ property: fc.string(), evidence_ref: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('check'), input: fc.record({ property: fc.string(), solver: fc.string({ minLength: 1, maxLength: 50 }), timeout_ms: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('synthesize'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 50 }), intent_ref: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('coverage'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({ target_symbol: fc.string(), kind: fc.string(), status: fc.string() }) }),
               fc.record({ action: fc.constant('invalidate'), input: fc.record({ property: fc.string() }) }),
             ),
@@ -196,12 +196,12 @@ describe('FormalProperty imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }), property_text: fc.string({ minLength: 1, maxLength: 20 }), formal_language: fc.string({ minLength: 1, maxLength: 20 }), scope: fc.string({ minLength: 1, maxLength: 20 }), priority: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('prove'), input: fc.record({ property: fc.string(), evidence_ref: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('refute'), input: fc.record({ property: fc.string(), evidence_ref: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('check'), input: fc.record({ property: fc.string(), solver: fc.string({ minLength: 1, maxLength: 20 }), timeout_ms: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('synthesize'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 20 }), intent_ref: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('coverage'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), property_text: fc.string({ minLength: 1, maxLength: 50 }), formal_language: fc.string({ minLength: 1, maxLength: 50 }), scope: fc.string({ minLength: 1, maxLength: 50 }), priority: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('prove'), input: fc.record({ property: fc.string(), evidence_ref: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('refute'), input: fc.record({ property: fc.string(), evidence_ref: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('check'), input: fc.record({ property: fc.string(), solver: fc.string({ minLength: 1, maxLength: 50 }), timeout_ms: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('synthesize'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 50 }), intent_ref: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('coverage'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({ target_symbol: fc.string(), kind: fc.string(), status: fc.string() }) }),
               fc.record({ action: fc.constant('invalidate'), input: fc.record({ property: fc.string() }) }),
             ),

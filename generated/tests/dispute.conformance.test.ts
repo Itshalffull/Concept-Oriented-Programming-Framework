@@ -276,10 +276,10 @@ describe('Dispute functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('open'), input: fc.record({ challenger: fc.string({ minLength: 1, maxLength: 20 }), respondent: fc.string({ minLength: 1, maxLength: 20 }), subject: fc.string({ minLength: 1, maxLength: 20 }), evidence: fc.string({ minLength: 1, maxLength: 20 }), bond: fc.string() }) }),
-              fc.record({ action: fc.constant('submitEvidence'), input: fc.record({ dispute: fc.string(), submitter: fc.string({ minLength: 1, maxLength: 20 }), content: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('arbitrate'), input: fc.record({ dispute: fc.string(), arbiter: fc.string({ minLength: 1, maxLength: 20 }), resolution: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('appeal'), input: fc.record({ dispute: fc.string(), appellant: fc.string({ minLength: 1, maxLength: 20 }), reason: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('open'), input: fc.record({ challenger: fc.string({ minLength: 1, maxLength: 50 }), respondent: fc.string({ minLength: 1, maxLength: 50 }), subject: fc.string({ minLength: 1, maxLength: 50 }), evidence: fc.string({ minLength: 1, maxLength: 50 }), bond: fc.string() }) }),
+              fc.record({ action: fc.constant('submitEvidence'), input: fc.record({ dispute: fc.string(), submitter: fc.string({ minLength: 1, maxLength: 50 }), content: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('arbitrate'), input: fc.record({ dispute: fc.string(), arbiter: fc.string({ minLength: 1, maxLength: 50 }), resolution: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('appeal'), input: fc.record({ dispute: fc.string(), appellant: fc.string({ minLength: 1, maxLength: 50 }), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -306,10 +306,10 @@ describe('Dispute functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('open'), input: fc.record({ challenger: fc.string({ minLength: 1, maxLength: 20 }), respondent: fc.string({ minLength: 1, maxLength: 20 }), subject: fc.string({ minLength: 1, maxLength: 20 }), evidence: fc.string({ minLength: 1, maxLength: 20 }), bond: fc.string() }) }),
-              fc.record({ action: fc.constant('submitEvidence'), input: fc.record({ dispute: fc.string(), submitter: fc.string({ minLength: 1, maxLength: 20 }), content: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('arbitrate'), input: fc.record({ dispute: fc.string(), arbiter: fc.string({ minLength: 1, maxLength: 20 }), resolution: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('appeal'), input: fc.record({ dispute: fc.string(), appellant: fc.string({ minLength: 1, maxLength: 20 }), reason: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('open'), input: fc.record({ challenger: fc.string({ minLength: 1, maxLength: 50 }), respondent: fc.string({ minLength: 1, maxLength: 50 }), subject: fc.string({ minLength: 1, maxLength: 50 }), evidence: fc.string({ minLength: 1, maxLength: 50 }), bond: fc.string() }) }),
+              fc.record({ action: fc.constant('submitEvidence'), input: fc.record({ dispute: fc.string(), submitter: fc.string({ minLength: 1, maxLength: 50 }), content: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('arbitrate'), input: fc.record({ dispute: fc.string(), arbiter: fc.string({ minLength: 1, maxLength: 50 }), resolution: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('appeal'), input: fc.record({ dispute: fc.string(), appellant: fc.string({ minLength: 1, maxLength: 50 }), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

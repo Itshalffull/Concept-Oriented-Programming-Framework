@@ -81,8 +81,8 @@ describe('LocalModelInstance imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), runtime: fc.string({ minLength: 1, maxLength: 20 }), modelPath: fc.string({ minLength: 1, maxLength: 20 }), tokenizerPath: fc.string({ minLength: 1, maxLength: 20 }), device: fc.string({ minLength: 1, maxLength: 20 }), maxSequenceLength: fc.integer({ min: 0, max: 1000 }), dimensions: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), runtime: fc.string({ minLength: 1, maxLength: 50 }), modelPath: fc.string({ minLength: 1, maxLength: 50 }), tokenizerPath: fc.string({ minLength: 1, maxLength: 50 }), device: fc.string({ minLength: 1, maxLength: 50 }), maxSequenceLength: fc.integer({ min: 1, max: 1000 }), dimensions: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -109,8 +109,8 @@ describe('LocalModelInstance imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), runtime: fc.string({ minLength: 1, maxLength: 20 }), modelPath: fc.string({ minLength: 1, maxLength: 20 }), tokenizerPath: fc.string({ minLength: 1, maxLength: 20 }), device: fc.string({ minLength: 1, maxLength: 20 }), maxSequenceLength: fc.integer({ min: 0, max: 1000 }), dimensions: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), runtime: fc.string({ minLength: 1, maxLength: 50 }), modelPath: fc.string({ minLength: 1, maxLength: 50 }), tokenizerPath: fc.string({ minLength: 1, maxLength: 50 }), device: fc.string({ minLength: 1, maxLength: 50 }), maxSequenceLength: fc.integer({ min: 1, max: 1000 }), dimensions: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },

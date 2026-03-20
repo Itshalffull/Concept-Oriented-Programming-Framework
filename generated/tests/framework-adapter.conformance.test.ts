@@ -332,11 +332,11 @@ describe('FrameworkAdapter functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ renderer: fc.string(), framework: fc.string({ minLength: 1, maxLength: 20 }), version: fc.string({ minLength: 1, maxLength: 20 }), normalizer: fc.string({ minLength: 1, maxLength: 20 }), mountFn: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('normalize'), input: fc.record({ renderer: fc.string(), props: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('mount'), input: fc.record({ renderer: fc.string(), machine: fc.string({ minLength: 1, maxLength: 20 }), target: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('render'), input: fc.record({ adapter: fc.string(), props: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('unmount'), input: fc.record({ renderer: fc.string(), target: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ renderer: fc.string(), framework: fc.string({ minLength: 1, maxLength: 50 }), version: fc.string({ minLength: 1, maxLength: 50 }), normalizer: fc.string({ minLength: 1, maxLength: 50 }), mountFn: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('normalize'), input: fc.record({ renderer: fc.string(), props: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('mount'), input: fc.record({ renderer: fc.string(), machine: fc.string({ minLength: 1, maxLength: 50 }), target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('render'), input: fc.record({ adapter: fc.string(), props: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('unmount'), input: fc.record({ renderer: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -363,11 +363,11 @@ describe('FrameworkAdapter functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ renderer: fc.string(), framework: fc.string({ minLength: 1, maxLength: 20 }), version: fc.string({ minLength: 1, maxLength: 20 }), normalizer: fc.string({ minLength: 1, maxLength: 20 }), mountFn: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('normalize'), input: fc.record({ renderer: fc.string(), props: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('mount'), input: fc.record({ renderer: fc.string(), machine: fc.string({ minLength: 1, maxLength: 20 }), target: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('render'), input: fc.record({ adapter: fc.string(), props: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('unmount'), input: fc.record({ renderer: fc.string(), target: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ renderer: fc.string(), framework: fc.string({ minLength: 1, maxLength: 50 }), version: fc.string({ minLength: 1, maxLength: 50 }), normalizer: fc.string({ minLength: 1, maxLength: 50 }), mountFn: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('normalize'), input: fc.record({ renderer: fc.string(), props: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('mount'), input: fc.record({ renderer: fc.string(), machine: fc.string({ minLength: 1, maxLength: 50 }), target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('render'), input: fc.record({ adapter: fc.string(), props: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('unmount'), input: fc.record({ renderer: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

@@ -98,8 +98,8 @@ describe('OnnxProvider imperative handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('register'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('load'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), modelPath: fc.string({ minLength: 1, maxLength: 20 }), device: fc.string({ minLength: 1, maxLength: 20 }), options: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('infer'), input: fc.record({ session: fc.string({ minLength: 1, maxLength: 20 }), inputs: fc.string({ minLength: 1, maxLength: 20 }), options: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('load'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), modelPath: fc.string({ minLength: 1, maxLength: 50 }), device: fc.string({ minLength: 1, maxLength: 50 }), options: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('infer'), input: fc.record({ session: fc.string({ minLength: 1, maxLength: 50 }), inputs: fc.string({ minLength: 1, maxLength: 50 }), options: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -127,8 +127,8 @@ describe('OnnxProvider imperative handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('register'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('load'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), modelPath: fc.string({ minLength: 1, maxLength: 20 }), device: fc.string({ minLength: 1, maxLength: 20 }), options: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('infer'), input: fc.record({ session: fc.string({ minLength: 1, maxLength: 20 }), inputs: fc.string({ minLength: 1, maxLength: 20 }), options: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('load'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), modelPath: fc.string({ minLength: 1, maxLength: 50 }), device: fc.string({ minLength: 1, maxLength: 50 }), options: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('infer'), input: fc.record({ session: fc.string({ minLength: 1, maxLength: 50 }), inputs: fc.string({ minLength: 1, maxLength: 50 }), options: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },

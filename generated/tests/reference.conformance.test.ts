@@ -275,10 +275,10 @@ describe('Reference functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('addRef'), input: fc.record({ source: fc.string(), target: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('removeRef'), input: fc.record({ source: fc.string(), target: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('addRef'), input: fc.record({ source: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('removeRef'), input: fc.record({ source: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('getRefs'), input: fc.record({ source: fc.string() }) }),
-              fc.record({ action: fc.constant('resolveTarget'), input: fc.record({ target: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('resolveTarget'), input: fc.record({ target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -305,10 +305,10 @@ describe('Reference functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('addRef'), input: fc.record({ source: fc.string(), target: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('removeRef'), input: fc.record({ source: fc.string(), target: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('addRef'), input: fc.record({ source: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('removeRef'), input: fc.record({ source: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('getRefs'), input: fc.record({ source: fc.string() }) }),
-              fc.record({ action: fc.constant('resolveTarget'), input: fc.record({ target: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('resolveTarget'), input: fc.record({ target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

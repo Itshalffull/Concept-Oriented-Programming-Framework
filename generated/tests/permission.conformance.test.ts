@@ -220,9 +220,9 @@ describe('Permission functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('grant'), input: fc.record({ who: fc.string({ minLength: 1, maxLength: 20 }), where: fc.string({ minLength: 1, maxLength: 20 }), what: fc.string({ minLength: 1, maxLength: 20 }), condition: fc.string(), grantedBy: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('grant'), input: fc.record({ who: fc.string({ minLength: 1, maxLength: 50 }), where: fc.string({ minLength: 1, maxLength: 50 }), what: fc.string({ minLength: 1, maxLength: 50 }), condition: fc.string(), grantedBy: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('revoke'), input: fc.record({ permission: fc.string() }) }),
-              fc.record({ action: fc.constant('check'), input: fc.record({ who: fc.string({ minLength: 1, maxLength: 20 }), where: fc.string({ minLength: 1, maxLength: 20 }), what: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('check'), input: fc.record({ who: fc.string({ minLength: 1, maxLength: 50 }), where: fc.string({ minLength: 1, maxLength: 50 }), what: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -249,9 +249,9 @@ describe('Permission functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('grant'), input: fc.record({ who: fc.string({ minLength: 1, maxLength: 20 }), where: fc.string({ minLength: 1, maxLength: 20 }), what: fc.string({ minLength: 1, maxLength: 20 }), condition: fc.string(), grantedBy: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('grant'), input: fc.record({ who: fc.string({ minLength: 1, maxLength: 50 }), where: fc.string({ minLength: 1, maxLength: 50 }), what: fc.string({ minLength: 1, maxLength: 50 }), condition: fc.string(), grantedBy: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('revoke'), input: fc.record({ permission: fc.string() }) }),
-              fc.record({ action: fc.constant('check'), input: fc.record({ who: fc.string({ minLength: 1, maxLength: 20 }), where: fc.string({ minLength: 1, maxLength: 20 }), what: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('check'), input: fc.record({ who: fc.string({ minLength: 1, maxLength: 50 }), where: fc.string({ minLength: 1, maxLength: 50 }), what: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

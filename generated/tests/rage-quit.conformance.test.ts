@@ -218,8 +218,8 @@ describe('RageQuit functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('initiate'), input: fc.record({ member: fc.string({ minLength: 1, maxLength: 20 }), sharesToBurn: fc.string() }) }),
-              fc.record({ action: fc.constant('calculateClaim'), input: fc.record({ exit: fc.string(), treasuryBalances: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('initiate'), input: fc.record({ member: fc.string({ minLength: 1, maxLength: 50 }), sharesToBurn: fc.string() }) }),
+              fc.record({ action: fc.constant('calculateClaim'), input: fc.record({ exit: fc.string(), treasuryBalances: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('claim'), input: fc.record({ exit: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -247,8 +247,8 @@ describe('RageQuit functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('initiate'), input: fc.record({ member: fc.string({ minLength: 1, maxLength: 20 }), sharesToBurn: fc.string() }) }),
-              fc.record({ action: fc.constant('calculateClaim'), input: fc.record({ exit: fc.string(), treasuryBalances: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('initiate'), input: fc.record({ member: fc.string({ minLength: 1, maxLength: 50 }), sharesToBurn: fc.string() }) }),
+              fc.record({ action: fc.constant('calculateClaim'), input: fc.record({ exit: fc.string(), treasuryBalances: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('claim'), input: fc.record({ exit: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

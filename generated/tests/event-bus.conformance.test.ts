@@ -391,12 +391,12 @@ describe('EventBus functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('registerEventType'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), schema: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('subscribe'), input: fc.record({ event: fc.string({ minLength: 1, maxLength: 20 }), handler: fc.string({ minLength: 1, maxLength: 20 }), priority: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('unsubscribe'), input: fc.record({ subscriptionId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('dispatch'), input: fc.record({ event: fc.string(), data: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('dispatchAsync'), input: fc.record({ event: fc.string(), data: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('getHistory'), input: fc.record({ event: fc.string({ minLength: 1, maxLength: 20 }), limit: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('registerEventType'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), schema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('subscribe'), input: fc.record({ event: fc.string({ minLength: 1, maxLength: 50 }), handler: fc.string({ minLength: 1, maxLength: 50 }), priority: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('unsubscribe'), input: fc.record({ subscriptionId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('dispatch'), input: fc.record({ event: fc.string(), data: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('dispatchAsync'), input: fc.record({ event: fc.string(), data: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getHistory'), input: fc.record({ event: fc.string({ minLength: 1, maxLength: 50 }), limit: fc.integer({ min: 1, max: 1000 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -423,12 +423,12 @@ describe('EventBus functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('registerEventType'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), schema: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('subscribe'), input: fc.record({ event: fc.string({ minLength: 1, maxLength: 20 }), handler: fc.string({ minLength: 1, maxLength: 20 }), priority: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('unsubscribe'), input: fc.record({ subscriptionId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('dispatch'), input: fc.record({ event: fc.string(), data: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('dispatchAsync'), input: fc.record({ event: fc.string(), data: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('getHistory'), input: fc.record({ event: fc.string({ minLength: 1, maxLength: 20 }), limit: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('registerEventType'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), schema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('subscribe'), input: fc.record({ event: fc.string({ minLength: 1, maxLength: 50 }), handler: fc.string({ minLength: 1, maxLength: 50 }), priority: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('unsubscribe'), input: fc.record({ subscriptionId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('dispatch'), input: fc.record({ event: fc.string(), data: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('dispatchAsync'), input: fc.record({ event: fc.string(), data: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getHistory'), input: fc.record({ event: fc.string({ minLength: 1, maxLength: 50 }), limit: fc.integer({ min: 1, max: 1000 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

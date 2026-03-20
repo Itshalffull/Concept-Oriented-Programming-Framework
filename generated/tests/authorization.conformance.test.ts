@@ -297,10 +297,10 @@ describe('Authorization functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('grantPermission'), input: fc.record({ role: fc.string({ minLength: 1, maxLength: 20 }), permission: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('revokePermission'), input: fc.record({ role: fc.string({ minLength: 1, maxLength: 20 }), permission: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('assignRole'), input: fc.record({ user: fc.string(), role: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('checkPermission'), input: fc.record({ user: fc.string(), permission: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('grantPermission'), input: fc.record({ role: fc.string({ minLength: 1, maxLength: 50 }), permission: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('revokePermission'), input: fc.record({ role: fc.string({ minLength: 1, maxLength: 50 }), permission: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('assignRole'), input: fc.record({ user: fc.string(), role: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('checkPermission'), input: fc.record({ user: fc.string(), permission: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -327,10 +327,10 @@ describe('Authorization functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('grantPermission'), input: fc.record({ role: fc.string({ minLength: 1, maxLength: 20 }), permission: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('revokePermission'), input: fc.record({ role: fc.string({ minLength: 1, maxLength: 20 }), permission: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('assignRole'), input: fc.record({ user: fc.string(), role: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('checkPermission'), input: fc.record({ user: fc.string(), permission: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('grantPermission'), input: fc.record({ role: fc.string({ minLength: 1, maxLength: 50 }), permission: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('revokePermission'), input: fc.record({ role: fc.string({ minLength: 1, maxLength: 50 }), permission: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('assignRole'), input: fc.record({ user: fc.string(), role: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('checkPermission'), input: fc.record({ user: fc.string(), permission: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

@@ -283,10 +283,10 @@ describe('Flag functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('flag'), input: fc.record({ flagging: fc.string(), flagType: fc.string({ minLength: 1, maxLength: 20 }), entity: fc.string({ minLength: 1, maxLength: 20 }), user: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('flag'), input: fc.record({ flagging: fc.string(), flagType: fc.string({ minLength: 1, maxLength: 50 }), entity: fc.string({ minLength: 1, maxLength: 50 }), user: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('unflag'), input: fc.record({ flagging: fc.string() }) }),
-              fc.record({ action: fc.constant('isFlagged'), input: fc.record({ flagType: fc.string({ minLength: 1, maxLength: 20 }), entity: fc.string({ minLength: 1, maxLength: 20 }), user: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('getCount'), input: fc.record({ flagType: fc.string({ minLength: 1, maxLength: 20 }), entity: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('isFlagged'), input: fc.record({ flagType: fc.string({ minLength: 1, maxLength: 50 }), entity: fc.string({ minLength: 1, maxLength: 50 }), user: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getCount'), input: fc.record({ flagType: fc.string({ minLength: 1, maxLength: 50 }), entity: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -313,10 +313,10 @@ describe('Flag functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('flag'), input: fc.record({ flagging: fc.string(), flagType: fc.string({ minLength: 1, maxLength: 20 }), entity: fc.string({ minLength: 1, maxLength: 20 }), user: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('flag'), input: fc.record({ flagging: fc.string(), flagType: fc.string({ minLength: 1, maxLength: 50 }), entity: fc.string({ minLength: 1, maxLength: 50 }), user: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('unflag'), input: fc.record({ flagging: fc.string() }) }),
-              fc.record({ action: fc.constant('isFlagged'), input: fc.record({ flagType: fc.string({ minLength: 1, maxLength: 20 }), entity: fc.string({ minLength: 1, maxLength: 20 }), user: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('getCount'), input: fc.record({ flagType: fc.string({ minLength: 1, maxLength: 20 }), entity: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('isFlagged'), input: fc.record({ flagType: fc.string({ minLength: 1, maxLength: 50 }), entity: fc.string({ minLength: 1, maxLength: 50 }), user: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getCount'), input: fc.record({ flagType: fc.string({ minLength: 1, maxLength: 50 }), entity: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

@@ -129,12 +129,12 @@ describe('SolverProvider imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ provider_id: fc.string({ minLength: 1, maxLength: 20 }), supported_languages: fc.string(), supported_kinds: fc.string(), capabilities: fc.string(), priority: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('dispatch'), input: fc.record({ property_ref: fc.string({ minLength: 1, maxLength: 20 }), formal_language: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }), timeout_ms: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('dispatch_batch'), input: fc.record({ properties: fc.string(), timeout_ms: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ provider_id: fc.string({ minLength: 1, maxLength: 50 }), supported_languages: fc.string(), supported_kinds: fc.string(), capabilities: fc.string(), priority: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('dispatch'), input: fc.record({ property_ref: fc.string({ minLength: 1, maxLength: 50 }), formal_language: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), timeout_ms: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('dispatch_batch'), input: fc.record({ properties: fc.string(), timeout_ms: fc.integer({ min: 1, max: 1000 }) }) }),
               fc.record({ action: fc.constant('health_check'), input: fc.record({ provider: fc.string() }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('unregister'), input: fc.record({ provider_id: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('unregister'), input: fc.record({ provider_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -160,12 +160,12 @@ describe('SolverProvider imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ provider_id: fc.string({ minLength: 1, maxLength: 20 }), supported_languages: fc.string(), supported_kinds: fc.string(), capabilities: fc.string(), priority: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('dispatch'), input: fc.record({ property_ref: fc.string({ minLength: 1, maxLength: 20 }), formal_language: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }), timeout_ms: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('dispatch_batch'), input: fc.record({ properties: fc.string(), timeout_ms: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ provider_id: fc.string({ minLength: 1, maxLength: 50 }), supported_languages: fc.string(), supported_kinds: fc.string(), capabilities: fc.string(), priority: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('dispatch'), input: fc.record({ property_ref: fc.string({ minLength: 1, maxLength: 50 }), formal_language: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), timeout_ms: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('dispatch_batch'), input: fc.record({ properties: fc.string(), timeout_ms: fc.integer({ min: 1, max: 1000 }) }) }),
               fc.record({ action: fc.constant('health_check'), input: fc.record({ provider: fc.string() }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('unregister'), input: fc.record({ provider_id: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('unregister'), input: fc.record({ provider_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

@@ -122,9 +122,9 @@ describe('ProgramAnalysis imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('registerProvider'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('run'), input: fc.record({ program: fc.string({ minLength: 1, maxLength: 20 }), provider: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('runAll'), input: fc.record({ program: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('registerProvider'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('run'), input: fc.record({ program: fc.string({ minLength: 1, maxLength: 50 }), provider: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('runAll'), input: fc.record({ program: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('listProviders'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -151,9 +151,9 @@ describe('ProgramAnalysis imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('registerProvider'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('run'), input: fc.record({ program: fc.string({ minLength: 1, maxLength: 20 }), provider: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('runAll'), input: fc.record({ program: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('registerProvider'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('run'), input: fc.record({ program: fc.string({ minLength: 1, maxLength: 50 }), provider: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('runAll'), input: fc.record({ program: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('listProviders'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },

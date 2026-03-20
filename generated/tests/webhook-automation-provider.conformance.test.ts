@@ -159,7 +159,7 @@ describe('WebhookAutomationProvider functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('register'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('execute'), input: fc.record({ action_payload: fc.string({ minLength: 1, maxLength: 20 }), webhook_url: fc.string({ minLength: 1, maxLength: 20 }), method: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('execute'), input: fc.record({ action_payload: fc.string({ minLength: 1, maxLength: 50 }), webhook_url: fc.string({ minLength: 1, maxLength: 50 }), method: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -187,7 +187,7 @@ describe('WebhookAutomationProvider functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('register'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('execute'), input: fc.record({ action_payload: fc.string({ minLength: 1, maxLength: 20 }), webhook_url: fc.string({ minLength: 1, maxLength: 20 }), method: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('execute'), input: fc.record({ action_payload: fc.string({ minLength: 1, maxLength: 50 }), webhook_url: fc.string({ minLength: 1, maxLength: 50 }), method: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

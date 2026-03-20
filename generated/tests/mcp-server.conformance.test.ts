@@ -351,9 +351,9 @@ describe('McpServer functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('start'), input: fc.record({ manifestPath: fc.string({ minLength: 1, maxLength: 20 }), transport: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('registerTool'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), concept: fc.string({ minLength: 1, maxLength: 20 }), action: fc.string({ minLength: 1, maxLength: 20 }), description: fc.string({ minLength: 1, maxLength: 20 }), schema: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('handleCall'), input: fc.record({ toolName: fc.string({ minLength: 1, maxLength: 20 }), arguments: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('start'), input: fc.record({ manifestPath: fc.string({ minLength: 1, maxLength: 50 }), transport: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('registerTool'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), concept: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), schema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('handleCall'), input: fc.record({ toolName: fc.string({ minLength: 1, maxLength: 50 }), arguments: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('stop'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('listTools'), input: fc.record({  }) }),
             ),
@@ -382,9 +382,9 @@ describe('McpServer functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('start'), input: fc.record({ manifestPath: fc.string({ minLength: 1, maxLength: 20 }), transport: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('registerTool'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), concept: fc.string({ minLength: 1, maxLength: 20 }), action: fc.string({ minLength: 1, maxLength: 20 }), description: fc.string({ minLength: 1, maxLength: 20 }), schema: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('handleCall'), input: fc.record({ toolName: fc.string({ minLength: 1, maxLength: 20 }), arguments: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('start'), input: fc.record({ manifestPath: fc.string({ minLength: 1, maxLength: 50 }), transport: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('registerTool'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), concept: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), schema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('handleCall'), input: fc.record({ toolName: fc.string({ minLength: 1, maxLength: 50 }), arguments: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('stop'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('listTools'), input: fc.record({  }) }),
             ),

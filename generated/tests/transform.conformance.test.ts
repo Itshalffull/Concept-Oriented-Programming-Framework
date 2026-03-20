@@ -225,9 +225,9 @@ describe('Transform functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('apply'), input: fc.record({ value: fc.string({ minLength: 1, maxLength: 20 }), transformId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('chain'), input: fc.record({ value: fc.string({ minLength: 1, maxLength: 20 }), transformIds: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('preview'), input: fc.record({ value: fc.string({ minLength: 1, maxLength: 20 }), transformId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('apply'), input: fc.record({ value: fc.string({ minLength: 1, maxLength: 50 }), transformId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('chain'), input: fc.record({ value: fc.string({ minLength: 1, maxLength: 50 }), transformIds: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('preview'), input: fc.record({ value: fc.string({ minLength: 1, maxLength: 50 }), transformId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -254,9 +254,9 @@ describe('Transform functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('apply'), input: fc.record({ value: fc.string({ minLength: 1, maxLength: 20 }), transformId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('chain'), input: fc.record({ value: fc.string({ minLength: 1, maxLength: 20 }), transformIds: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('preview'), input: fc.record({ value: fc.string({ minLength: 1, maxLength: 20 }), transformId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('apply'), input: fc.record({ value: fc.string({ minLength: 1, maxLength: 50 }), transformId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('chain'), input: fc.record({ value: fc.string({ minLength: 1, maxLength: 50 }), transformIds: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('preview'), input: fc.record({ value: fc.string({ minLength: 1, maxLength: 50 }), transformId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

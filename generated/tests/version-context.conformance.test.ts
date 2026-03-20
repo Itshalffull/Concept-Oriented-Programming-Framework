@@ -109,10 +109,10 @@ describe('VersionContext imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('push'), input: fc.record({ user: fc.string({ minLength: 1, maxLength: 20 }), space_id: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('pop'), input: fc.record({ user: fc.string({ minLength: 1, maxLength: 20 }), space_id: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('get'), input: fc.record({ user: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolve_for'), input: fc.record({ user: fc.string({ minLength: 1, maxLength: 20 }), entity_id: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('push'), input: fc.record({ user: fc.string({ minLength: 1, maxLength: 50 }), space_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('pop'), input: fc.record({ user: fc.string({ minLength: 1, maxLength: 50 }), space_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ user: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve_for'), input: fc.record({ user: fc.string({ minLength: 1, maxLength: 50 }), entity_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -138,10 +138,10 @@ describe('VersionContext imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('push'), input: fc.record({ user: fc.string({ minLength: 1, maxLength: 20 }), space_id: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('pop'), input: fc.record({ user: fc.string({ minLength: 1, maxLength: 20 }), space_id: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('get'), input: fc.record({ user: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolve_for'), input: fc.record({ user: fc.string({ minLength: 1, maxLength: 20 }), entity_id: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('push'), input: fc.record({ user: fc.string({ minLength: 1, maxLength: 50 }), space_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('pop'), input: fc.record({ user: fc.string({ minLength: 1, maxLength: 50 }), space_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ user: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve_for'), input: fc.record({ user: fc.string({ minLength: 1, maxLength: 50 }), entity_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

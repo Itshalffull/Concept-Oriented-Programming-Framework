@@ -113,11 +113,11 @@ describe('SpecificationSchema imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), category: fc.string({ minLength: 1, maxLength: 20 }), pattern_type: fc.string({ minLength: 1, maxLength: 20 }), template_text: fc.string({ minLength: 1, maxLength: 20 }), formal_language: fc.string({ minLength: 1, maxLength: 20 }), parameters: fc.string() }) }),
-              fc.record({ action: fc.constant('instantiate'), input: fc.record({ schema: fc.string(), parameter_values: fc.string(), target_symbol: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), category: fc.string({ minLength: 1, maxLength: 50 }), pattern_type: fc.string({ minLength: 1, maxLength: 50 }), template_text: fc.string({ minLength: 1, maxLength: 50 }), formal_language: fc.string({ minLength: 1, maxLength: 50 }), parameters: fc.string() }) }),
+              fc.record({ action: fc.constant('instantiate'), input: fc.record({ schema: fc.string(), parameter_values: fc.string(), target_symbol: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('validate'), input: fc.record({ schema: fc.string(), parameter_values: fc.string() }) }),
-              fc.record({ action: fc.constant('list_by_category'), input: fc.record({ category: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('search'), input: fc.record({ query: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('list_by_category'), input: fc.record({ category: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('search'), input: fc.record({ query: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -143,11 +143,11 @@ describe('SpecificationSchema imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), category: fc.string({ minLength: 1, maxLength: 20 }), pattern_type: fc.string({ minLength: 1, maxLength: 20 }), template_text: fc.string({ minLength: 1, maxLength: 20 }), formal_language: fc.string({ minLength: 1, maxLength: 20 }), parameters: fc.string() }) }),
-              fc.record({ action: fc.constant('instantiate'), input: fc.record({ schema: fc.string(), parameter_values: fc.string(), target_symbol: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), category: fc.string({ minLength: 1, maxLength: 50 }), pattern_type: fc.string({ minLength: 1, maxLength: 50 }), template_text: fc.string({ minLength: 1, maxLength: 50 }), formal_language: fc.string({ minLength: 1, maxLength: 50 }), parameters: fc.string() }) }),
+              fc.record({ action: fc.constant('instantiate'), input: fc.record({ schema: fc.string(), parameter_values: fc.string(), target_symbol: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('validate'), input: fc.record({ schema: fc.string(), parameter_values: fc.string() }) }),
-              fc.record({ action: fc.constant('list_by_category'), input: fc.record({ category: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('search'), input: fc.record({ query: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('list_by_category'), input: fc.record({ category: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('search'), input: fc.record({ query: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

@@ -218,9 +218,9 @@ describe('Middleware functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ traits: fc.string(), target: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('inject'), input: fc.record({ output: fc.string({ minLength: 1, maxLength: 20 }), middlewares: fc.string(), target: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('register'), input: fc.record({ trait: fc.string({ minLength: 1, maxLength: 20 }), target: fc.string({ minLength: 1, maxLength: 20 }), implementation: fc.string({ minLength: 1, maxLength: 20 }), position: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ traits: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('inject'), input: fc.record({ output: fc.string({ minLength: 1, maxLength: 50 }), middlewares: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ trait: fc.string({ minLength: 1, maxLength: 50 }), target: fc.string({ minLength: 1, maxLength: 50 }), implementation: fc.string({ minLength: 1, maxLength: 50 }), position: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -247,9 +247,9 @@ describe('Middleware functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ traits: fc.string(), target: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('inject'), input: fc.record({ output: fc.string({ minLength: 1, maxLength: 20 }), middlewares: fc.string(), target: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('register'), input: fc.record({ trait: fc.string({ minLength: 1, maxLength: 20 }), target: fc.string({ minLength: 1, maxLength: 20 }), implementation: fc.string({ minLength: 1, maxLength: 20 }), position: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ traits: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('inject'), input: fc.record({ output: fc.string({ minLength: 1, maxLength: 50 }), middlewares: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ trait: fc.string({ minLength: 1, maxLength: 50 }), target: fc.string({ minLength: 1, maxLength: 50 }), implementation: fc.string({ minLength: 1, maxLength: 50 }), position: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

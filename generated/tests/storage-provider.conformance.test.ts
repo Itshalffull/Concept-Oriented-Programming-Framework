@@ -287,8 +287,8 @@ describe('StorageProvider functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('provision'), input: fc.record({ store: fc.string(), storeName: fc.string({ minLength: 1, maxLength: 20 }), storageType: fc.string({ minLength: 1, maxLength: 20 }), conceptName: fc.string({ minLength: 1, maxLength: 20 }), config: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('configure'), input: fc.record({ store: fc.string(), settings: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('provision'), input: fc.record({ store: fc.string(), storeName: fc.string({ minLength: 1, maxLength: 50 }), storageType: fc.string({ minLength: 1, maxLength: 50 }), conceptName: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ store: fc.string(), settings: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('getCredentials'), input: fc.record({ store: fc.string() }) }),
               fc.record({ action: fc.constant('destroy'), input: fc.record({ store: fc.string() }) }),
             ),
@@ -317,8 +317,8 @@ describe('StorageProvider functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('provision'), input: fc.record({ store: fc.string(), storeName: fc.string({ minLength: 1, maxLength: 20 }), storageType: fc.string({ minLength: 1, maxLength: 20 }), conceptName: fc.string({ minLength: 1, maxLength: 20 }), config: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('configure'), input: fc.record({ store: fc.string(), settings: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('provision'), input: fc.record({ store: fc.string(), storeName: fc.string({ minLength: 1, maxLength: 50 }), storageType: fc.string({ minLength: 1, maxLength: 50 }), conceptName: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ store: fc.string(), settings: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('getCredentials'), input: fc.record({ store: fc.string() }) }),
               fc.record({ action: fc.constant('destroy'), input: fc.record({ store: fc.string() }) }),
             ),

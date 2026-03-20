@@ -506,7 +506,7 @@ describe('ProjectInit functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ project_name: fc.string({ minLength: 1, maxLength: 20 }), project_path: fc.string({ minLength: 1, maxLength: 20 }), module_list: fc.string(), profile: fc.string({ minLength: 1, maxLength: 20 }), derived_concepts: fc.string() }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ project_name: fc.string({ minLength: 1, maxLength: 50 }), project_path: fc.string({ minLength: 1, maxLength: 50 }), module_list: fc.string(), profile: fc.string({ minLength: 1, maxLength: 50 }), derived_concepts: fc.string() }) }),
               fc.record({ action: fc.constant('writeManifest'), input: fc.record({ init: fc.string() }) }),
               fc.record({ action: fc.constant('writeInterfaceManifests'), input: fc.record({ init: fc.string() }) }),
               fc.record({ action: fc.constant('writeDeployManifests'), input: fc.record({ init: fc.string() }) }),
@@ -540,7 +540,7 @@ describe('ProjectInit functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ project_name: fc.string({ minLength: 1, maxLength: 20 }), project_path: fc.string({ minLength: 1, maxLength: 20 }), module_list: fc.string(), profile: fc.string({ minLength: 1, maxLength: 20 }), derived_concepts: fc.string() }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ project_name: fc.string({ minLength: 1, maxLength: 50 }), project_path: fc.string({ minLength: 1, maxLength: 50 }), module_list: fc.string(), profile: fc.string({ minLength: 1, maxLength: 50 }), derived_concepts: fc.string() }) }),
               fc.record({ action: fc.constant('writeManifest'), input: fc.record({ init: fc.string() }) }),
               fc.record({ action: fc.constant('writeInterfaceManifests'), input: fc.record({ init: fc.string() }) }),
               fc.record({ action: fc.constant('writeDeployManifests'), input: fc.record({ init: fc.string() }) }),

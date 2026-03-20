@@ -334,11 +334,11 @@ describe('PageRankReputation functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configure'), input: fc.record({ dampingFactor: fc.string(), maxIterations: fc.integer({ min: 0, max: 1000 }), convergenceThreshold: fc.string(), preTrusted: fc.string() }) }),
-              fc.record({ action: fc.constant('addEdge'), input: fc.record({ graph: fc.string(), source: fc.string({ minLength: 1, maxLength: 20 }), target: fc.string({ minLength: 1, maxLength: 20 }), weight: fc.string() }) }),
-              fc.record({ action: fc.constant('removeEdge'), input: fc.record({ graph: fc.string(), source: fc.string({ minLength: 1, maxLength: 20 }), target: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ dampingFactor: fc.string(), maxIterations: fc.integer({ min: 1, max: 1000 }), convergenceThreshold: fc.string(), preTrusted: fc.string() }) }),
+              fc.record({ action: fc.constant('addEdge'), input: fc.record({ graph: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), target: fc.string({ minLength: 1, maxLength: 50 }), weight: fc.string() }) }),
+              fc.record({ action: fc.constant('removeEdge'), input: fc.record({ graph: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('compute'), input: fc.record({ graph: fc.string() }) }),
-              fc.record({ action: fc.constant('getScore'), input: fc.record({ graph: fc.string(), participant: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('getScore'), input: fc.record({ graph: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

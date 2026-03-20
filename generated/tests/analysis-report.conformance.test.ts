@@ -333,11 +333,11 @@ describe('AnalysisReport functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('generate'), input: fc.record({ result: fc.string({ minLength: 1, maxLength: 20 }), format: fc.string({ minLength: 1, maxLength: 20 }), title: fc.string() }) }),
-              fc.record({ action: fc.constant('compare'), input: fc.record({ results: fc.string({ minLength: 1, maxLength: 20 }), format: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('generate'), input: fc.record({ result: fc.string({ minLength: 1, maxLength: 50 }), format: fc.string({ minLength: 1, maxLength: 50 }), title: fc.string() }) }),
+              fc.record({ action: fc.constant('compare'), input: fc.record({ results: fc.string({ minLength: 1, maxLength: 50 }), format: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('getReport'), input: fc.record({ report: fc.string() }) }),
               fc.record({ action: fc.constant('listReports'), input: fc.record({ result: fc.string() }) }),
-              fc.record({ action: fc.constant('exportReport'), input: fc.record({ report: fc.string(), outputFormat: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('exportReport'), input: fc.record({ report: fc.string(), outputFormat: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -364,11 +364,11 @@ describe('AnalysisReport functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('generate'), input: fc.record({ result: fc.string({ minLength: 1, maxLength: 20 }), format: fc.string({ minLength: 1, maxLength: 20 }), title: fc.string() }) }),
-              fc.record({ action: fc.constant('compare'), input: fc.record({ results: fc.string({ minLength: 1, maxLength: 20 }), format: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('generate'), input: fc.record({ result: fc.string({ minLength: 1, maxLength: 50 }), format: fc.string({ minLength: 1, maxLength: 50 }), title: fc.string() }) }),
+              fc.record({ action: fc.constant('compare'), input: fc.record({ results: fc.string({ minLength: 1, maxLength: 50 }), format: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('getReport'), input: fc.record({ report: fc.string() }) }),
               fc.record({ action: fc.constant('listReports'), input: fc.record({ result: fc.string() }) }),
-              fc.record({ action: fc.constant('exportReport'), input: fc.record({ report: fc.string(), outputFormat: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('exportReport'), input: fc.record({ report: fc.string(), outputFormat: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

@@ -390,12 +390,12 @@ describe('AccessCatalog functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('registerPermission'), input: fc.record({ entry: fc.string(), key: fc.string({ minLength: 1, maxLength: 20 }), label: fc.string({ minLength: 1, maxLength: 20 }), group: fc.string({ minLength: 1, maxLength: 20 }), description: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('registerRole'), input: fc.record({ entry: fc.string(), key: fc.string({ minLength: 1, maxLength: 20 }), label: fc.string({ minLength: 1, maxLength: 20 }), description: fc.string({ minLength: 1, maxLength: 20 }), permissions: fc.string() }) }),
-              fc.record({ action: fc.constant('registerResourceAction'), input: fc.record({ entry: fc.string(), catalog: fc.string({ minLength: 1, maxLength: 20 }), key: fc.string({ minLength: 1, maxLength: 20 }), label: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('registerPermission'), input: fc.record({ entry: fc.string(), key: fc.string({ minLength: 1, maxLength: 50 }), label: fc.string({ minLength: 1, maxLength: 50 }), group: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('registerRole'), input: fc.record({ entry: fc.string(), key: fc.string({ minLength: 1, maxLength: 50 }), label: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), permissions: fc.string() }) }),
+              fc.record({ action: fc.constant('registerResourceAction'), input: fc.record({ entry: fc.string(), catalog: fc.string({ minLength: 1, maxLength: 50 }), key: fc.string({ minLength: 1, maxLength: 50 }), label: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('listPermissions'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('listRoles'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('listResourceActions'), input: fc.record({ catalog: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('listResourceActions'), input: fc.record({ catalog: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -422,12 +422,12 @@ describe('AccessCatalog functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('registerPermission'), input: fc.record({ entry: fc.string(), key: fc.string({ minLength: 1, maxLength: 20 }), label: fc.string({ minLength: 1, maxLength: 20 }), group: fc.string({ minLength: 1, maxLength: 20 }), description: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('registerRole'), input: fc.record({ entry: fc.string(), key: fc.string({ minLength: 1, maxLength: 20 }), label: fc.string({ minLength: 1, maxLength: 20 }), description: fc.string({ minLength: 1, maxLength: 20 }), permissions: fc.string() }) }),
-              fc.record({ action: fc.constant('registerResourceAction'), input: fc.record({ entry: fc.string(), catalog: fc.string({ minLength: 1, maxLength: 20 }), key: fc.string({ minLength: 1, maxLength: 20 }), label: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('registerPermission'), input: fc.record({ entry: fc.string(), key: fc.string({ minLength: 1, maxLength: 50 }), label: fc.string({ minLength: 1, maxLength: 50 }), group: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('registerRole'), input: fc.record({ entry: fc.string(), key: fc.string({ minLength: 1, maxLength: 50 }), label: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), permissions: fc.string() }) }),
+              fc.record({ action: fc.constant('registerResourceAction'), input: fc.record({ entry: fc.string(), catalog: fc.string({ minLength: 1, maxLength: 50 }), key: fc.string({ minLength: 1, maxLength: 50 }), label: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('listPermissions'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('listRoles'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('listResourceActions'), input: fc.record({ catalog: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('listResourceActions'), input: fc.record({ catalog: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

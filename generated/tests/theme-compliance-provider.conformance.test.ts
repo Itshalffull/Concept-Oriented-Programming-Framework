@@ -161,7 +161,7 @@ describe('ThemeComplianceProvider functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('verify'), input: fc.record({ check: fc.string(), program: fc.string({ minLength: 1, maxLength: 20 }), tokens: fc.string(), manifest: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('verify'), input: fc.record({ check: fc.string(), program: fc.string({ minLength: 1, maxLength: 50 }), tokens: fc.string(), manifest: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('getResults'), input: fc.record({ check: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -189,7 +189,7 @@ describe('ThemeComplianceProvider functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('verify'), input: fc.record({ check: fc.string(), program: fc.string({ minLength: 1, maxLength: 20 }), tokens: fc.string(), manifest: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('verify'), input: fc.record({ check: fc.string(), program: fc.string({ minLength: 1, maxLength: 50 }), tokens: fc.string(), manifest: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('getResults'), input: fc.record({ check: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

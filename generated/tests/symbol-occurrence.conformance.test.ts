@@ -341,11 +341,11 @@ describe('SymbolOccurrence functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('record'), input: fc.record({ symbol: fc.string({ minLength: 1, maxLength: 20 }), file: fc.string({ minLength: 1, maxLength: 20 }), startRow: fc.integer({ min: 0, max: 1000 }), startCol: fc.integer({ min: 0, max: 1000 }), endRow: fc.integer({ min: 0, max: 1000 }), endCol: fc.integer({ min: 0, max: 1000 }), startByte: fc.integer({ min: 0, max: 1000 }), endByte: fc.integer({ min: 0, max: 1000 }), role: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findDefinitions'), input: fc.record({ symbol: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findReferences'), input: fc.record({ symbol: fc.string({ minLength: 1, maxLength: 20 }), roleFilter: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findAtPosition'), input: fc.record({ file: fc.string({ minLength: 1, maxLength: 20 }), row: fc.integer({ min: 0, max: 1000 }), col: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('findInFile'), input: fc.record({ file: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('record'), input: fc.record({ symbol: fc.string({ minLength: 1, maxLength: 50 }), file: fc.string({ minLength: 1, maxLength: 50 }), startRow: fc.integer({ min: 1, max: 1000 }), startCol: fc.integer({ min: 1, max: 1000 }), endRow: fc.integer({ min: 1, max: 1000 }), endCol: fc.integer({ min: 1, max: 1000 }), startByte: fc.integer({ min: 1, max: 1000 }), endByte: fc.integer({ min: 1, max: 1000 }), role: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findDefinitions'), input: fc.record({ symbol: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findReferences'), input: fc.record({ symbol: fc.string({ minLength: 1, maxLength: 50 }), roleFilter: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findAtPosition'), input: fc.record({ file: fc.string({ minLength: 1, maxLength: 50 }), row: fc.integer({ min: 1, max: 1000 }), col: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('findInFile'), input: fc.record({ file: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -372,11 +372,11 @@ describe('SymbolOccurrence functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('record'), input: fc.record({ symbol: fc.string({ minLength: 1, maxLength: 20 }), file: fc.string({ minLength: 1, maxLength: 20 }), startRow: fc.integer({ min: 0, max: 1000 }), startCol: fc.integer({ min: 0, max: 1000 }), endRow: fc.integer({ min: 0, max: 1000 }), endCol: fc.integer({ min: 0, max: 1000 }), startByte: fc.integer({ min: 0, max: 1000 }), endByte: fc.integer({ min: 0, max: 1000 }), role: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findDefinitions'), input: fc.record({ symbol: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findReferences'), input: fc.record({ symbol: fc.string({ minLength: 1, maxLength: 20 }), roleFilter: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findAtPosition'), input: fc.record({ file: fc.string({ minLength: 1, maxLength: 20 }), row: fc.integer({ min: 0, max: 1000 }), col: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('findInFile'), input: fc.record({ file: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('record'), input: fc.record({ symbol: fc.string({ minLength: 1, maxLength: 50 }), file: fc.string({ minLength: 1, maxLength: 50 }), startRow: fc.integer({ min: 1, max: 1000 }), startCol: fc.integer({ min: 1, max: 1000 }), endRow: fc.integer({ min: 1, max: 1000 }), endCol: fc.integer({ min: 1, max: 1000 }), startByte: fc.integer({ min: 1, max: 1000 }), endByte: fc.integer({ min: 1, max: 1000 }), role: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findDefinitions'), input: fc.record({ symbol: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findReferences'), input: fc.record({ symbol: fc.string({ minLength: 1, maxLength: 50 }), roleFilter: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findAtPosition'), input: fc.record({ file: fc.string({ minLength: 1, maxLength: 50 }), row: fc.integer({ min: 1, max: 1000 }), col: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('findInFile'), input: fc.record({ file: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

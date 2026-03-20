@@ -130,11 +130,11 @@ describe('Replica imperative handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('localUpdate'), input: fc.record({ op: fc.string() }) }),
-              fc.record({ action: fc.constant('receiveRemote'), input: fc.record({ op: fc.string(), fromReplica: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('sync'), input: fc.record({ peer: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('receiveRemote'), input: fc.record({ op: fc.string(), fromReplica: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('sync'), input: fc.record({ peer: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('getState'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('fork'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('addPeer'), input: fc.record({ peerId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('addPeer'), input: fc.record({ peerId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

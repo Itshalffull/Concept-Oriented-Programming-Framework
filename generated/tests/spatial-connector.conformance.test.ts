@@ -113,10 +113,10 @@ describe('SpatialConnector imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('draw'), input: fc.record({ canvas: fc.string({ minLength: 1, maxLength: 20 }), source: fc.string({ minLength: 1, maxLength: 20 }), target: fc.string({ minLength: 1, maxLength: 20 }), type: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('draw'), input: fc.record({ canvas: fc.string({ minLength: 1, maxLength: 50 }), source: fc.string({ minLength: 1, maxLength: 50 }), target: fc.string({ minLength: 1, maxLength: 50 }), type: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('promote'), input: fc.record({ connector: fc.string() }) }),
               fc.record({ action: fc.constant('demote'), input: fc.record({ connector: fc.string() }) }),
-              fc.record({ action: fc.constant('surface'), input: fc.record({ canvas: fc.string({ minLength: 1, maxLength: 20 }), source: fc.string({ minLength: 1, maxLength: 20 }), target: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('surface'), input: fc.record({ canvas: fc.string({ minLength: 1, maxLength: 50 }), source: fc.string({ minLength: 1, maxLength: 50 }), target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('hide'), input: fc.record({ connector: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -143,10 +143,10 @@ describe('SpatialConnector imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('draw'), input: fc.record({ canvas: fc.string({ minLength: 1, maxLength: 20 }), source: fc.string({ minLength: 1, maxLength: 20 }), target: fc.string({ minLength: 1, maxLength: 20 }), type: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('draw'), input: fc.record({ canvas: fc.string({ minLength: 1, maxLength: 50 }), source: fc.string({ minLength: 1, maxLength: 50 }), target: fc.string({ minLength: 1, maxLength: 50 }), type: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('promote'), input: fc.record({ connector: fc.string() }) }),
               fc.record({ action: fc.constant('demote'), input: fc.record({ connector: fc.string() }) }),
-              fc.record({ action: fc.constant('surface'), input: fc.record({ canvas: fc.string({ minLength: 1, maxLength: 20 }), source: fc.string({ minLength: 1, maxLength: 20 }), target: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('surface'), input: fc.record({ canvas: fc.string({ minLength: 1, maxLength: 50 }), source: fc.string({ minLength: 1, maxLength: 50 }), target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('hide'), input: fc.record({ connector: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

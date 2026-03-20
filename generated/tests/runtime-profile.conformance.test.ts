@@ -204,8 +204,8 @@ describe('RuntimeProfile functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ profile: fc.string(), name: fc.string({ minLength: 1, maxLength: 20 }), shellId: fc.string({ minLength: 1, maxLength: 20 }), navigatorId: fc.string({ minLength: 1, maxLength: 20 }), transportId: fc.string({ minLength: 1, maxLength: 20 }), platformAdapterId: fc.string({ minLength: 1, maxLength: 20 }), platform: fc.string({ minLength: 1, maxLength: 20 }), router: fc.string({ minLength: 1, maxLength: 20 }), baseUrl: fc.string({ minLength: 1, maxLength: 20 }), retryPolicy: fc.string({ minLength: 1, maxLength: 20 }), authMode: fc.string() }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ profile: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }), shellId: fc.string({ minLength: 1, maxLength: 50 }), navigatorId: fc.string({ minLength: 1, maxLength: 50 }), transportId: fc.string({ minLength: 1, maxLength: 50 }), platformAdapterId: fc.string({ minLength: 1, maxLength: 50 }), platform: fc.string({ minLength: 1, maxLength: 50 }), router: fc.string({ minLength: 1, maxLength: 50 }), baseUrl: fc.string({ minLength: 1, maxLength: 50 }), retryPolicy: fc.string({ minLength: 1, maxLength: 50 }), authMode: fc.string() }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -233,8 +233,8 @@ describe('RuntimeProfile functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ profile: fc.string(), name: fc.string({ minLength: 1, maxLength: 20 }), shellId: fc.string({ minLength: 1, maxLength: 20 }), navigatorId: fc.string({ minLength: 1, maxLength: 20 }), transportId: fc.string({ minLength: 1, maxLength: 20 }), platformAdapterId: fc.string({ minLength: 1, maxLength: 20 }), platform: fc.string({ minLength: 1, maxLength: 20 }), router: fc.string({ minLength: 1, maxLength: 20 }), baseUrl: fc.string({ minLength: 1, maxLength: 20 }), retryPolicy: fc.string({ minLength: 1, maxLength: 20 }), authMode: fc.string() }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ profile: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }), shellId: fc.string({ minLength: 1, maxLength: 50 }), navigatorId: fc.string({ minLength: 1, maxLength: 50 }), transportId: fc.string({ minLength: 1, maxLength: 50 }), platformAdapterId: fc.string({ minLength: 1, maxLength: 50 }), platform: fc.string({ minLength: 1, maxLength: 50 }), router: fc.string({ minLength: 1, maxLength: 50 }), baseUrl: fc.string({ minLength: 1, maxLength: 50 }), retryPolicy: fc.string({ minLength: 1, maxLength: 50 }), authMode: fc.string() }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },

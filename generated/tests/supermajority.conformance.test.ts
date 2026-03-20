@@ -158,8 +158,8 @@ describe('Supermajority functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configure'), input: fc.record({ threshold: fc.string(), roundingMode: fc.string({ minLength: 1, maxLength: 20 }), abstentionsCount: fc.boolean() }) }),
-              fc.record({ action: fc.constant('count'), input: fc.record({ config: fc.string(), ballots: fc.string({ minLength: 1, maxLength: 20 }), weights: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ threshold: fc.string(), roundingMode: fc.string({ minLength: 1, maxLength: 50 }), abstentionsCount: fc.boolean() }) }),
+              fc.record({ action: fc.constant('count'), input: fc.record({ config: fc.string(), ballots: fc.string({ minLength: 1, maxLength: 50 }), weights: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -186,8 +186,8 @@ describe('Supermajority functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configure'), input: fc.record({ threshold: fc.string(), roundingMode: fc.string({ minLength: 1, maxLength: 20 }), abstentionsCount: fc.boolean() }) }),
-              fc.record({ action: fc.constant('count'), input: fc.record({ config: fc.string(), ballots: fc.string({ minLength: 1, maxLength: 20 }), weights: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ threshold: fc.string(), roundingMode: fc.string({ minLength: 1, maxLength: 50 }), abstentionsCount: fc.boolean() }) }),
+              fc.record({ action: fc.constant('count'), input: fc.record({ config: fc.string(), ballots: fc.string({ minLength: 1, maxLength: 50 }), weights: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

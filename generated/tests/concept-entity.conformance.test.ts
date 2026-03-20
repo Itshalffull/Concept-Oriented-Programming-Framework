@@ -154,10 +154,10 @@ describe('ConceptEntity imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), source: fc.string({ minLength: 1, maxLength: 20 }), ast: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByCapability'), input: fc.record({ capability: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findBySuite'), input: fc.record({ suite: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), source: fc.string({ minLength: 1, maxLength: 50 }), ast: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByCapability'), input: fc.record({ capability: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findBySuite'), input: fc.record({ suite: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('generatedArtifacts'), input: fc.record({ entity: fc.string() }) }),
               fc.record({ action: fc.constant('participatingSyncs'), input: fc.record({ entity: fc.string() }) }),
               fc.record({ action: fc.constant('checkCompatibility'), input: fc.record({ a: fc.string(), b: fc.string() }) }),
@@ -186,10 +186,10 @@ describe('ConceptEntity imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), source: fc.string({ minLength: 1, maxLength: 20 }), ast: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByCapability'), input: fc.record({ capability: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findBySuite'), input: fc.record({ suite: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), source: fc.string({ minLength: 1, maxLength: 50 }), ast: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByCapability'), input: fc.record({ capability: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findBySuite'), input: fc.record({ suite: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('generatedArtifacts'), input: fc.record({ entity: fc.string() }) }),
               fc.record({ action: fc.constant('participatingSyncs'), input: fc.record({ entity: fc.string() }) }),
               fc.record({ action: fc.constant('checkCompatibility'), input: fc.record({ a: fc.string(), b: fc.string() }) }),

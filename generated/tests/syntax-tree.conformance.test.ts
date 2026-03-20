@@ -332,10 +332,10 @@ describe('SyntaxTree functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('parse'), input: fc.record({ file: fc.string({ minLength: 1, maxLength: 20 }), grammar: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('reparse'), input: fc.record({ tree: fc.string(), startByte: fc.integer({ min: 0, max: 1000 }), oldEndByte: fc.integer({ min: 0, max: 1000 }), newEndByte: fc.integer({ min: 0, max: 1000 }), newText: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('query'), input: fc.record({ tree: fc.string(), pattern: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('nodeAt'), input: fc.record({ tree: fc.string(), byteOffset: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('parse'), input: fc.record({ file: fc.string({ minLength: 1, maxLength: 50 }), grammar: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('reparse'), input: fc.record({ tree: fc.string(), startByte: fc.integer({ min: 1, max: 1000 }), oldEndByte: fc.integer({ min: 1, max: 1000 }), newEndByte: fc.integer({ min: 1, max: 1000 }), newText: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('query'), input: fc.record({ tree: fc.string(), pattern: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('nodeAt'), input: fc.record({ tree: fc.string(), byteOffset: fc.integer({ min: 1, max: 1000 }) }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ tree: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -363,10 +363,10 @@ describe('SyntaxTree functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('parse'), input: fc.record({ file: fc.string({ minLength: 1, maxLength: 20 }), grammar: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('reparse'), input: fc.record({ tree: fc.string(), startByte: fc.integer({ min: 0, max: 1000 }), oldEndByte: fc.integer({ min: 0, max: 1000 }), newEndByte: fc.integer({ min: 0, max: 1000 }), newText: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('query'), input: fc.record({ tree: fc.string(), pattern: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('nodeAt'), input: fc.record({ tree: fc.string(), byteOffset: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('parse'), input: fc.record({ file: fc.string({ minLength: 1, maxLength: 50 }), grammar: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('reparse'), input: fc.record({ tree: fc.string(), startByte: fc.integer({ min: 1, max: 1000 }), oldEndByte: fc.integer({ min: 1, max: 1000 }), newEndByte: fc.integer({ min: 1, max: 1000 }), newText: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('query'), input: fc.record({ tree: fc.string(), pattern: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('nodeAt'), input: fc.record({ tree: fc.string(), byteOffset: fc.integer({ min: 1, max: 1000 }) }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ tree: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

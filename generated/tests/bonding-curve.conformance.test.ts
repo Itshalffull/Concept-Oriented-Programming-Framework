@@ -276,9 +276,9 @@ describe('BondingCurve functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), curveType: fc.string({ minLength: 1, maxLength: 20 }), parameters: fc.string({ minLength: 1, maxLength: 20 }), reserveToken: fc.string({ minLength: 1, maxLength: 20 }), frictionFee: fc.string() }) }),
-              fc.record({ action: fc.constant('buy'), input: fc.record({ curve: fc.string(), buyer: fc.string({ minLength: 1, maxLength: 20 }), reserveAmount: fc.string() }) }),
-              fc.record({ action: fc.constant('sell'), input: fc.record({ curve: fc.string(), seller: fc.string({ minLength: 1, maxLength: 20 }), tokenAmount: fc.string() }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), curveType: fc.string({ minLength: 1, maxLength: 50 }), parameters: fc.string({ minLength: 1, maxLength: 50 }), reserveToken: fc.string({ minLength: 1, maxLength: 50 }), frictionFee: fc.string() }) }),
+              fc.record({ action: fc.constant('buy'), input: fc.record({ curve: fc.string(), buyer: fc.string({ minLength: 1, maxLength: 50 }), reserveAmount: fc.string() }) }),
+              fc.record({ action: fc.constant('sell'), input: fc.record({ curve: fc.string(), seller: fc.string({ minLength: 1, maxLength: 50 }), tokenAmount: fc.string() }) }),
               fc.record({ action: fc.constant('getPrice'), input: fc.record({ curve: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -306,9 +306,9 @@ describe('BondingCurve functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), curveType: fc.string({ minLength: 1, maxLength: 20 }), parameters: fc.string({ minLength: 1, maxLength: 20 }), reserveToken: fc.string({ minLength: 1, maxLength: 20 }), frictionFee: fc.string() }) }),
-              fc.record({ action: fc.constant('buy'), input: fc.record({ curve: fc.string(), buyer: fc.string({ minLength: 1, maxLength: 20 }), reserveAmount: fc.string() }) }),
-              fc.record({ action: fc.constant('sell'), input: fc.record({ curve: fc.string(), seller: fc.string({ minLength: 1, maxLength: 20 }), tokenAmount: fc.string() }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), curveType: fc.string({ minLength: 1, maxLength: 50 }), parameters: fc.string({ minLength: 1, maxLength: 50 }), reserveToken: fc.string({ minLength: 1, maxLength: 50 }), frictionFee: fc.string() }) }),
+              fc.record({ action: fc.constant('buy'), input: fc.record({ curve: fc.string(), buyer: fc.string({ minLength: 1, maxLength: 50 }), reserveAmount: fc.string() }) }),
+              fc.record({ action: fc.constant('sell'), input: fc.record({ curve: fc.string(), seller: fc.string({ minLength: 1, maxLength: 50 }), tokenAmount: fc.string() }) }),
               fc.record({ action: fc.constant('getPrice'), input: fc.record({ curve: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

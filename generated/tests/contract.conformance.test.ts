@@ -113,10 +113,10 @@ describe('Contract imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), source_concept: fc.string({ minLength: 1, maxLength: 20 }), target_concept: fc.string({ minLength: 1, maxLength: 20 }), assumptions: fc.string(), guarantees: fc.string() }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), source_concept: fc.string({ minLength: 1, maxLength: 50 }), target_concept: fc.string({ minLength: 1, maxLength: 50 }), assumptions: fc.string(), guarantees: fc.string() }) }),
               fc.record({ action: fc.constant('verify'), input: fc.record({ contract: fc.string() }) }),
               fc.record({ action: fc.constant('compose'), input: fc.record({ contracts: fc.string() }) }),
-              fc.record({ action: fc.constant('discharge'), input: fc.record({ contract: fc.string(), assumption_ref: fc.string({ minLength: 1, maxLength: 20 }), evidence_ref: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('discharge'), input: fc.record({ contract: fc.string(), assumption_ref: fc.string({ minLength: 1, maxLength: 50 }), evidence_ref: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({ source_concept: fc.string(), target_concept: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -143,10 +143,10 @@ describe('Contract imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), source_concept: fc.string({ minLength: 1, maxLength: 20 }), target_concept: fc.string({ minLength: 1, maxLength: 20 }), assumptions: fc.string(), guarantees: fc.string() }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), source_concept: fc.string({ minLength: 1, maxLength: 50 }), target_concept: fc.string({ minLength: 1, maxLength: 50 }), assumptions: fc.string(), guarantees: fc.string() }) }),
               fc.record({ action: fc.constant('verify'), input: fc.record({ contract: fc.string() }) }),
               fc.record({ action: fc.constant('compose'), input: fc.record({ contracts: fc.string() }) }),
-              fc.record({ action: fc.constant('discharge'), input: fc.record({ contract: fc.string(), assumption_ref: fc.string({ minLength: 1, maxLength: 20 }), evidence_ref: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('discharge'), input: fc.record({ contract: fc.string(), assumption_ref: fc.string({ minLength: 1, maxLength: 50 }), evidence_ref: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({ source_concept: fc.string(), target_concept: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

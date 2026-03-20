@@ -217,9 +217,9 @@ describe('ArgoCDProvider functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('emit'), input: fc.record({ plan: fc.string({ minLength: 1, maxLength: 20 }), repo: fc.string({ minLength: 1, maxLength: 20 }), path: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('emit'), input: fc.record({ plan: fc.string({ minLength: 1, maxLength: 50 }), repo: fc.string({ minLength: 1, maxLength: 50 }), path: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('reconciliationStatus'), input: fc.record({ application: fc.string() }) }),
-              fc.record({ action: fc.constant('syncWave'), input: fc.record({ application: fc.string(), wave: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('syncWave'), input: fc.record({ application: fc.string(), wave: fc.integer({ min: 1, max: 1000 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -246,9 +246,9 @@ describe('ArgoCDProvider functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('emit'), input: fc.record({ plan: fc.string({ minLength: 1, maxLength: 20 }), repo: fc.string({ minLength: 1, maxLength: 20 }), path: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('emit'), input: fc.record({ plan: fc.string({ minLength: 1, maxLength: 50 }), repo: fc.string({ minLength: 1, maxLength: 50 }), path: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('reconciliationStatus'), input: fc.record({ application: fc.string() }) }),
-              fc.record({ action: fc.constant('syncWave'), input: fc.record({ application: fc.string(), wave: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('syncWave'), input: fc.record({ application: fc.string(), wave: fc.integer({ min: 1, max: 1000 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

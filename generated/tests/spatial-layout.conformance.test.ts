@@ -157,8 +157,8 @@ describe('SpatialLayout functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('apply'), input: fc.record({ canvas: fc.string({ minLength: 1, maxLength: 20 }), algorithm: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('register'), input: fc.record({ algorithm: fc.string({ minLength: 1, maxLength: 20 }), provider: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('apply'), input: fc.record({ canvas: fc.string({ minLength: 1, maxLength: 50 }), algorithm: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ algorithm: fc.string({ minLength: 1, maxLength: 50 }), provider: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -185,8 +185,8 @@ describe('SpatialLayout functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('apply'), input: fc.record({ canvas: fc.string({ minLength: 1, maxLength: 20 }), algorithm: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('register'), input: fc.record({ algorithm: fc.string({ minLength: 1, maxLength: 20 }), provider: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('apply'), input: fc.record({ canvas: fc.string({ minLength: 1, maxLength: 50 }), algorithm: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ algorithm: fc.string({ minLength: 1, maxLength: 50 }), provider: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

@@ -224,7 +224,7 @@ describe('Fetcher functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('fetch'), input: fc.record({ module_id: fc.string({ minLength: 1, maxLength: 20 }), version: fc.string({ minLength: 1, maxLength: 20 }), source_url: fc.string({ minLength: 1, maxLength: 20 }), expected_hash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('fetch'), input: fc.record({ module_id: fc.string({ minLength: 1, maxLength: 50 }), version: fc.string({ minLength: 1, maxLength: 50 }), source_url: fc.string({ minLength: 1, maxLength: 50 }), expected_hash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('fetchBatch'), input: fc.record({ items: fc.string() }) }),
               fc.record({ action: fc.constant('cancel'), input: fc.record({ download: fc.string() }) }),
             ),
@@ -253,7 +253,7 @@ describe('Fetcher functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('fetch'), input: fc.record({ module_id: fc.string({ minLength: 1, maxLength: 20 }), version: fc.string({ minLength: 1, maxLength: 20 }), source_url: fc.string({ minLength: 1, maxLength: 20 }), expected_hash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('fetch'), input: fc.record({ module_id: fc.string({ minLength: 1, maxLength: 50 }), version: fc.string({ minLength: 1, maxLength: 50 }), source_url: fc.string({ minLength: 1, maxLength: 50 }), expected_hash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('fetchBatch'), input: fc.record({ items: fc.string() }) }),
               fc.record({ action: fc.constant('cancel'), input: fc.record({ download: fc.string() }) }),
             ),

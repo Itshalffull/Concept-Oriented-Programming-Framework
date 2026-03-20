@@ -147,11 +147,11 @@ describe('Symbol imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ symbolString: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }), displayName: fc.string({ minLength: 1, maxLength: 20 }), definingFile: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ symbolString: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByKind'), input: fc.record({ kind: fc.string({ minLength: 1, maxLength: 20 }), namespace: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByFile'), input: fc.record({ file: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('rename'), input: fc.record({ symbol: fc.string(), newName: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ symbolString: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), displayName: fc.string({ minLength: 1, maxLength: 50 }), definingFile: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ symbolString: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByKind'), input: fc.record({ kind: fc.string({ minLength: 1, maxLength: 50 }), namespace: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByFile'), input: fc.record({ file: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('rename'), input: fc.record({ symbol: fc.string(), newName: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ symbol: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -178,11 +178,11 @@ describe('Symbol imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ symbolString: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }), displayName: fc.string({ minLength: 1, maxLength: 20 }), definingFile: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ symbolString: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByKind'), input: fc.record({ kind: fc.string({ minLength: 1, maxLength: 20 }), namespace: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByFile'), input: fc.record({ file: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('rename'), input: fc.record({ symbol: fc.string(), newName: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ symbolString: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), displayName: fc.string({ minLength: 1, maxLength: 50 }), definingFile: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ symbolString: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByKind'), input: fc.record({ kind: fc.string({ minLength: 1, maxLength: 50 }), namespace: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByFile'), input: fc.record({ file: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('rename'), input: fc.record({ symbol: fc.string(), newName: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ symbol: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

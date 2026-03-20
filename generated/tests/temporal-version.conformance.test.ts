@@ -122,11 +122,11 @@ describe('TemporalVersion imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('record'), input: fc.record({ contentHash: fc.string({ minLength: 1, maxLength: 20 }), validFrom: fc.string(), validTo: fc.string(), metadata: fc.string() }) }),
+              fc.record({ action: fc.constant('record'), input: fc.record({ contentHash: fc.string({ minLength: 1, maxLength: 50 }), validFrom: fc.string(), validTo: fc.string(), metadata: fc.string() }) }),
               fc.record({ action: fc.constant('asOf'), input: fc.record({ systemTime: fc.string(), validTime: fc.string() }) }),
-              fc.record({ action: fc.constant('between'), input: fc.record({ start: fc.string({ minLength: 1, maxLength: 20 }), end: fc.string({ minLength: 1, maxLength: 20 }), dimension: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('between'), input: fc.record({ start: fc.string({ minLength: 1, maxLength: 50 }), end: fc.string({ minLength: 1, maxLength: 50 }), dimension: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('current'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('supersede'), input: fc.record({ versionId: fc.string(), contentHash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('supersede'), input: fc.record({ versionId: fc.string(), contentHash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -152,11 +152,11 @@ describe('TemporalVersion imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('record'), input: fc.record({ contentHash: fc.string({ minLength: 1, maxLength: 20 }), validFrom: fc.string(), validTo: fc.string(), metadata: fc.string() }) }),
+              fc.record({ action: fc.constant('record'), input: fc.record({ contentHash: fc.string({ minLength: 1, maxLength: 50 }), validFrom: fc.string(), validTo: fc.string(), metadata: fc.string() }) }),
               fc.record({ action: fc.constant('asOf'), input: fc.record({ systemTime: fc.string(), validTime: fc.string() }) }),
-              fc.record({ action: fc.constant('between'), input: fc.record({ start: fc.string({ minLength: 1, maxLength: 20 }), end: fc.string({ minLength: 1, maxLength: 20 }), dimension: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('between'), input: fc.record({ start: fc.string({ minLength: 1, maxLength: 50 }), end: fc.string({ minLength: 1, maxLength: 50 }), dimension: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('current'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('supersede'), input: fc.record({ versionId: fc.string(), contentHash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('supersede'), input: fc.record({ versionId: fc.string(), contentHash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

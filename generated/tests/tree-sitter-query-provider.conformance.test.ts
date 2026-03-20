@@ -147,7 +147,7 @@ describe('TreeSitterQueryProvider functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('initialize'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('execute'), input: fc.record({ pattern: fc.string({ minLength: 1, maxLength: 20 }), tree: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('execute'), input: fc.record({ pattern: fc.string({ minLength: 1, maxLength: 50 }), tree: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -175,7 +175,7 @@ describe('TreeSitterQueryProvider functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('initialize'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('execute'), input: fc.record({ pattern: fc.string({ minLength: 1, maxLength: 20 }), tree: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('execute'), input: fc.record({ pattern: fc.string({ minLength: 1, maxLength: 50 }), tree: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

@@ -456,8 +456,8 @@ describe('Branch functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), fromNode: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('advance'), input: fc.record({ branch: fc.string(), newNode: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), fromNode: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('advance'), input: fc.record({ branch: fc.string(), newNode: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('delete'), input: fc.record({ branch: fc.string() }) }),
               fc.record({ action: fc.constant('protect'), input: fc.record({ branch: fc.string() }) }),
               fc.record({ action: fc.constant('setUpstream'), input: fc.record({ branch: fc.string(), upstream: fc.string() }) }),
@@ -489,8 +489,8 @@ describe('Branch functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), fromNode: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('advance'), input: fc.record({ branch: fc.string(), newNode: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), fromNode: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('advance'), input: fc.record({ branch: fc.string(), newNode: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('delete'), input: fc.record({ branch: fc.string() }) }),
               fc.record({ action: fc.constant('protect'), input: fc.record({ branch: fc.string() }) }),
               fc.record({ action: fc.constant('setUpstream'), input: fc.record({ branch: fc.string(), upstream: fc.string() }) }),

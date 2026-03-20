@@ -390,10 +390,10 @@ describe('Surface functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ surface: fc.string(), kind: fc.string({ minLength: 1, maxLength: 20 }), mountPoint: fc.string() }) }),
-              fc.record({ action: fc.constant('attach'), input: fc.record({ surface: fc.string(), renderer: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resize'), input: fc.record({ surface: fc.string(), width: fc.integer({ min: 0, max: 1000 }), height: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('mount'), input: fc.record({ surface: fc.string(), tree: fc.string({ minLength: 1, maxLength: 20 }), zone: fc.string() }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ surface: fc.string(), kind: fc.string({ minLength: 1, maxLength: 50 }), mountPoint: fc.string() }) }),
+              fc.record({ action: fc.constant('attach'), input: fc.record({ surface: fc.string(), renderer: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resize'), input: fc.record({ surface: fc.string(), width: fc.integer({ min: 1, max: 1000 }), height: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('mount'), input: fc.record({ surface: fc.string(), tree: fc.string({ minLength: 1, maxLength: 50 }), zone: fc.string() }) }),
               fc.record({ action: fc.constant('unmount'), input: fc.record({ surface: fc.string(), zone: fc.string() }) }),
               fc.record({ action: fc.constant('destroy'), input: fc.record({ surface: fc.string() }) }),
             ),
@@ -422,10 +422,10 @@ describe('Surface functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ surface: fc.string(), kind: fc.string({ minLength: 1, maxLength: 20 }), mountPoint: fc.string() }) }),
-              fc.record({ action: fc.constant('attach'), input: fc.record({ surface: fc.string(), renderer: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resize'), input: fc.record({ surface: fc.string(), width: fc.integer({ min: 0, max: 1000 }), height: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('mount'), input: fc.record({ surface: fc.string(), tree: fc.string({ minLength: 1, maxLength: 20 }), zone: fc.string() }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ surface: fc.string(), kind: fc.string({ minLength: 1, maxLength: 50 }), mountPoint: fc.string() }) }),
+              fc.record({ action: fc.constant('attach'), input: fc.record({ surface: fc.string(), renderer: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resize'), input: fc.record({ surface: fc.string(), width: fc.integer({ min: 1, max: 1000 }), height: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('mount'), input: fc.record({ surface: fc.string(), tree: fc.string({ minLength: 1, maxLength: 50 }), zone: fc.string() }) }),
               fc.record({ action: fc.constant('unmount'), input: fc.record({ surface: fc.string(), zone: fc.string() }) }),
               fc.record({ action: fc.constant('destroy'), input: fc.record({ surface: fc.string() }) }),
             ),

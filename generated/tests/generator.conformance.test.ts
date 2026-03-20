@@ -219,7 +219,7 @@ describe('Generator functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('plan'), input: fc.record({ suite: fc.string({ minLength: 1, maxLength: 20 }), interfaceManifest: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('plan'), input: fc.record({ suite: fc.string({ minLength: 1, maxLength: 50 }), interfaceManifest: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('generate'), input: fc.record({ plan: fc.string() }) }),
               fc.record({ action: fc.constant('regenerate'), input: fc.record({ plan: fc.string(), targets: fc.string() }) }),
             ),
@@ -248,7 +248,7 @@ describe('Generator functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('plan'), input: fc.record({ suite: fc.string({ minLength: 1, maxLength: 20 }), interfaceManifest: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('plan'), input: fc.record({ suite: fc.string({ minLength: 1, maxLength: 50 }), interfaceManifest: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('generate'), input: fc.record({ plan: fc.string() }) }),
               fc.record({ action: fc.constant('regenerate'), input: fc.record({ plan: fc.string(), targets: fc.string() }) }),
             ),

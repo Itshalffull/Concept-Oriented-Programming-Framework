@@ -392,12 +392,12 @@ describe('AgenticDelegate functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ agentType: fc.string({ minLength: 1, maxLength: 20 }), principal: fc.string({ minLength: 1, maxLength: 20 }), systemPrompt: fc.string({ minLength: 1, maxLength: 20 }), boundaries: fc.string() }) }),
-              fc.record({ action: fc.constant('assumeRole'), input: fc.record({ delegate: fc.string(), roleId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('releaseRole'), input: fc.record({ delegate: fc.string(), roleId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('proposeAction'), input: fc.record({ delegate: fc.string(), action: fc.string({ minLength: 1, maxLength: 20 }), justification: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('escalate'), input: fc.record({ delegate: fc.string(), reason: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('updateAutonomy'), input: fc.record({ delegate: fc.string(), level: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ agentType: fc.string({ minLength: 1, maxLength: 50 }), principal: fc.string({ minLength: 1, maxLength: 50 }), systemPrompt: fc.string({ minLength: 1, maxLength: 50 }), boundaries: fc.string() }) }),
+              fc.record({ action: fc.constant('assumeRole'), input: fc.record({ delegate: fc.string(), roleId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('releaseRole'), input: fc.record({ delegate: fc.string(), roleId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('proposeAction'), input: fc.record({ delegate: fc.string(), action: fc.string({ minLength: 1, maxLength: 50 }), justification: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('escalate'), input: fc.record({ delegate: fc.string(), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('updateAutonomy'), input: fc.record({ delegate: fc.string(), level: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -424,12 +424,12 @@ describe('AgenticDelegate functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ agentType: fc.string({ minLength: 1, maxLength: 20 }), principal: fc.string({ minLength: 1, maxLength: 20 }), systemPrompt: fc.string({ minLength: 1, maxLength: 20 }), boundaries: fc.string() }) }),
-              fc.record({ action: fc.constant('assumeRole'), input: fc.record({ delegate: fc.string(), roleId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('releaseRole'), input: fc.record({ delegate: fc.string(), roleId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('proposeAction'), input: fc.record({ delegate: fc.string(), action: fc.string({ minLength: 1, maxLength: 20 }), justification: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('escalate'), input: fc.record({ delegate: fc.string(), reason: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('updateAutonomy'), input: fc.record({ delegate: fc.string(), level: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ agentType: fc.string({ minLength: 1, maxLength: 50 }), principal: fc.string({ minLength: 1, maxLength: 50 }), systemPrompt: fc.string({ minLength: 1, maxLength: 50 }), boundaries: fc.string() }) }),
+              fc.record({ action: fc.constant('assumeRole'), input: fc.record({ delegate: fc.string(), roleId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('releaseRole'), input: fc.record({ delegate: fc.string(), roleId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('proposeAction'), input: fc.record({ delegate: fc.string(), action: fc.string({ minLength: 1, maxLength: 50 }), justification: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('escalate'), input: fc.record({ delegate: fc.string(), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('updateAutonomy'), input: fc.record({ delegate: fc.string(), level: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

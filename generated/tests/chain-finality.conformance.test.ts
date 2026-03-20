@@ -158,7 +158,7 @@ describe('ChainFinality functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('track'), input: fc.record({ operationRef: fc.string({ minLength: 1, maxLength: 20 }), txHash: fc.string({ minLength: 1, maxLength: 20 }), chainId: fc.string({ minLength: 1, maxLength: 20 }), requiredConfirmations: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('track'), input: fc.record({ operationRef: fc.string({ minLength: 1, maxLength: 50 }), txHash: fc.string({ minLength: 1, maxLength: 50 }), chainId: fc.string({ minLength: 1, maxLength: 50 }), requiredConfirmations: fc.integer({ min: 1, max: 1000 }) }) }),
               fc.record({ action: fc.constant('checkFinality'), input: fc.record({ entry: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -186,7 +186,7 @@ describe('ChainFinality functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('track'), input: fc.record({ operationRef: fc.string({ minLength: 1, maxLength: 20 }), txHash: fc.string({ minLength: 1, maxLength: 20 }), chainId: fc.string({ minLength: 1, maxLength: 20 }), requiredConfirmations: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('track'), input: fc.record({ operationRef: fc.string({ minLength: 1, maxLength: 50 }), txHash: fc.string({ minLength: 1, maxLength: 50 }), chainId: fc.string({ minLength: 1, maxLength: 50 }), requiredConfirmations: fc.integer({ min: 1, max: 1000 }) }) }),
               fc.record({ action: fc.constant('checkFinality'), input: fc.record({ entry: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

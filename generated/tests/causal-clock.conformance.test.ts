@@ -277,7 +277,7 @@ describe('CausalClock functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('tick'), input: fc.record({ replicaId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('tick'), input: fc.record({ replicaId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('merge'), input: fc.record({ localClock: fc.string(), remoteClock: fc.string() }) }),
               fc.record({ action: fc.constant('compare'), input: fc.record({ a: fc.string(), b: fc.string() }) }),
               fc.record({ action: fc.constant('dominates'), input: fc.record({ a: fc.string(), b: fc.string() }) }),
@@ -307,7 +307,7 @@ describe('CausalClock functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('tick'), input: fc.record({ replicaId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('tick'), input: fc.record({ replicaId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('merge'), input: fc.record({ localClock: fc.string(), remoteClock: fc.string() }) }),
               fc.record({ action: fc.constant('compare'), input: fc.record({ a: fc.string(), b: fc.string() }) }),
               fc.record({ action: fc.constant('dominates'), input: fc.record({ a: fc.string(), b: fc.string() }) }),

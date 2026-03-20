@@ -100,9 +100,9 @@ describe('StakeThreshold imperative handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('configure'), input: fc.record({ minimumStake: fc.string(), slashOnViolation: fc.boolean() }) }),
-              fc.record({ action: fc.constant('deposit'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 20 }), amount: fc.string() }) }),
-              fc.record({ action: fc.constant('checkEligibility'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('slash'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 20 }), reason: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('deposit'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string() }) }),
+              fc.record({ action: fc.constant('checkEligibility'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('slash'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -129,9 +129,9 @@ describe('StakeThreshold imperative handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('configure'), input: fc.record({ minimumStake: fc.string(), slashOnViolation: fc.boolean() }) }),
-              fc.record({ action: fc.constant('deposit'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 20 }), amount: fc.string() }) }),
-              fc.record({ action: fc.constant('checkEligibility'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('slash'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 20 }), reason: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('deposit'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string() }) }),
+              fc.record({ action: fc.constant('checkEligibility'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('slash'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

@@ -274,9 +274,9 @@ describe('DefinitionUnit functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('extract'), input: fc.record({ tree: fc.string({ minLength: 1, maxLength: 20 }), startByte: fc.integer({ min: 0, max: 1000 }), endByte: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('findBySymbol'), input: fc.record({ symbol: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByPattern'), input: fc.record({ kind: fc.string({ minLength: 1, maxLength: 20 }), language: fc.string({ minLength: 1, maxLength: 20 }), namePattern: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('extract'), input: fc.record({ tree: fc.string({ minLength: 1, maxLength: 50 }), startByte: fc.integer({ min: 1, max: 1000 }), endByte: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('findBySymbol'), input: fc.record({ symbol: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByPattern'), input: fc.record({ kind: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string({ minLength: 1, maxLength: 50 }), namePattern: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('diff'), input: fc.record({ a: fc.string(), b: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -304,9 +304,9 @@ describe('DefinitionUnit functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('extract'), input: fc.record({ tree: fc.string({ minLength: 1, maxLength: 20 }), startByte: fc.integer({ min: 0, max: 1000 }), endByte: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('findBySymbol'), input: fc.record({ symbol: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByPattern'), input: fc.record({ kind: fc.string({ minLength: 1, maxLength: 20 }), language: fc.string({ minLength: 1, maxLength: 20 }), namePattern: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('extract'), input: fc.record({ tree: fc.string({ minLength: 1, maxLength: 50 }), startByte: fc.integer({ min: 1, max: 1000 }), endByte: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('findBySymbol'), input: fc.record({ symbol: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByPattern'), input: fc.record({ kind: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string({ minLength: 1, maxLength: 50 }), namePattern: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('diff'), input: fc.record({ a: fc.string(), b: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

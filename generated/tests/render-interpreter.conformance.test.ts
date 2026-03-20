@@ -128,9 +128,9 @@ describe('RenderInterpreter imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ interpreter: fc.string(), target: fc.string({ minLength: 1, maxLength: 20 }), template: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('execute'), input: fc.record({ interpreter: fc.string(), program: fc.string({ minLength: 1, maxLength: 20 }), snapshot: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('dryRun'), input: fc.record({ interpreter: fc.string(), program: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ interpreter: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }), template: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('execute'), input: fc.record({ interpreter: fc.string(), program: fc.string({ minLength: 1, maxLength: 50 }), snapshot: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('dryRun'), input: fc.record({ interpreter: fc.string(), program: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('listTargets'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -157,9 +157,9 @@ describe('RenderInterpreter imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ interpreter: fc.string(), target: fc.string({ minLength: 1, maxLength: 20 }), template: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('execute'), input: fc.record({ interpreter: fc.string(), program: fc.string({ minLength: 1, maxLength: 20 }), snapshot: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('dryRun'), input: fc.record({ interpreter: fc.string(), program: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ interpreter: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }), template: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('execute'), input: fc.record({ interpreter: fc.string(), program: fc.string({ minLength: 1, maxLength: 50 }), snapshot: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('dryRun'), input: fc.record({ interpreter: fc.string(), program: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('listTargets'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },

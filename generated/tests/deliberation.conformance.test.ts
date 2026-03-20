@@ -276,9 +276,9 @@ describe('Deliberation functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('open'), input: fc.record({ proposalRef: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('addEntry'), input: fc.record({ thread: fc.string(), author: fc.string({ minLength: 1, maxLength: 20 }), content: fc.string({ minLength: 1, maxLength: 20 }), entryType: fc.string({ minLength: 1, maxLength: 20 }), parentEntry: fc.string() }) }),
-              fc.record({ action: fc.constant('signal'), input: fc.record({ thread: fc.string(), signaller: fc.string({ minLength: 1, maxLength: 20 }), signal: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('open'), input: fc.record({ proposalRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('addEntry'), input: fc.record({ thread: fc.string(), author: fc.string({ minLength: 1, maxLength: 50 }), content: fc.string({ minLength: 1, maxLength: 50 }), entryType: fc.string({ minLength: 1, maxLength: 50 }), parentEntry: fc.string() }) }),
+              fc.record({ action: fc.constant('signal'), input: fc.record({ thread: fc.string(), signaller: fc.string({ minLength: 1, maxLength: 50 }), signal: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('close'), input: fc.record({ thread: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -306,9 +306,9 @@ describe('Deliberation functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('open'), input: fc.record({ proposalRef: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('addEntry'), input: fc.record({ thread: fc.string(), author: fc.string({ minLength: 1, maxLength: 20 }), content: fc.string({ minLength: 1, maxLength: 20 }), entryType: fc.string({ minLength: 1, maxLength: 20 }), parentEntry: fc.string() }) }),
-              fc.record({ action: fc.constant('signal'), input: fc.record({ thread: fc.string(), signaller: fc.string({ minLength: 1, maxLength: 20 }), signal: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('open'), input: fc.record({ proposalRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('addEntry'), input: fc.record({ thread: fc.string(), author: fc.string({ minLength: 1, maxLength: 50 }), content: fc.string({ minLength: 1, maxLength: 50 }), entryType: fc.string({ minLength: 1, maxLength: 50 }), parentEntry: fc.string() }) }),
+              fc.record({ action: fc.constant('signal'), input: fc.record({ thread: fc.string(), signaller: fc.string({ minLength: 1, maxLength: 50 }), signal: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('close'), input: fc.record({ thread: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

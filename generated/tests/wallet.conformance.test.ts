@@ -275,10 +275,10 @@ describe('Wallet functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('verify'), input: fc.record({ address: fc.string({ minLength: 1, maxLength: 20 }), message: fc.string({ minLength: 1, maxLength: 20 }), signature: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('verifyTypedData'), input: fc.record({ address: fc.string({ minLength: 1, maxLength: 20 }), domain: fc.string({ minLength: 1, maxLength: 20 }), types: fc.string({ minLength: 1, maxLength: 20 }), value: fc.string({ minLength: 1, maxLength: 20 }), signature: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('getNonce'), input: fc.record({ address: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('incrementNonce'), input: fc.record({ address: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('verify'), input: fc.record({ address: fc.string({ minLength: 1, maxLength: 50 }), message: fc.string({ minLength: 1, maxLength: 50 }), signature: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('verifyTypedData'), input: fc.record({ address: fc.string({ minLength: 1, maxLength: 50 }), domain: fc.string({ minLength: 1, maxLength: 50 }), types: fc.string({ minLength: 1, maxLength: 50 }), value: fc.string({ minLength: 1, maxLength: 50 }), signature: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getNonce'), input: fc.record({ address: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('incrementNonce'), input: fc.record({ address: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -305,10 +305,10 @@ describe('Wallet functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('verify'), input: fc.record({ address: fc.string({ minLength: 1, maxLength: 20 }), message: fc.string({ minLength: 1, maxLength: 20 }), signature: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('verifyTypedData'), input: fc.record({ address: fc.string({ minLength: 1, maxLength: 20 }), domain: fc.string({ minLength: 1, maxLength: 20 }), types: fc.string({ minLength: 1, maxLength: 20 }), value: fc.string({ minLength: 1, maxLength: 20 }), signature: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('getNonce'), input: fc.record({ address: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('incrementNonce'), input: fc.record({ address: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('verify'), input: fc.record({ address: fc.string({ minLength: 1, maxLength: 50 }), message: fc.string({ minLength: 1, maxLength: 50 }), signature: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('verifyTypedData'), input: fc.record({ address: fc.string({ minLength: 1, maxLength: 50 }), domain: fc.string({ minLength: 1, maxLength: 50 }), types: fc.string({ minLength: 1, maxLength: 50 }), value: fc.string({ minLength: 1, maxLength: 50 }), signature: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getNonce'), input: fc.record({ address: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('incrementNonce'), input: fc.record({ address: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

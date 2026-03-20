@@ -516,11 +516,11 @@ describe('BuildCache functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('check'), input: fc.record({ stepKey: fc.string({ minLength: 1, maxLength: 20 }), inputHash: fc.string({ minLength: 1, maxLength: 20 }), deterministic: fc.boolean() }) }),
-              fc.record({ action: fc.constant('record'), input: fc.record({ stepKey: fc.string({ minLength: 1, maxLength: 20 }), inputHash: fc.string({ minLength: 1, maxLength: 20 }), outputHash: fc.string({ minLength: 1, maxLength: 20 }), outputRef: fc.string(), sourceLocator: fc.string(), deterministic: fc.boolean() }) }),
-              fc.record({ action: fc.constant('invalidate'), input: fc.record({ stepKey: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('invalidateBySource'), input: fc.record({ sourceLocator: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('invalidateByKind'), input: fc.record({ kindName: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('check'), input: fc.record({ stepKey: fc.string({ minLength: 1, maxLength: 50 }), inputHash: fc.string({ minLength: 1, maxLength: 50 }), deterministic: fc.boolean() }) }),
+              fc.record({ action: fc.constant('record'), input: fc.record({ stepKey: fc.string({ minLength: 1, maxLength: 50 }), inputHash: fc.string({ minLength: 1, maxLength: 50 }), outputHash: fc.string({ minLength: 1, maxLength: 50 }), outputRef: fc.string(), sourceLocator: fc.string(), deterministic: fc.boolean() }) }),
+              fc.record({ action: fc.constant('invalidate'), input: fc.record({ stepKey: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('invalidateBySource'), input: fc.record({ sourceLocator: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('invalidateByKind'), input: fc.record({ kindName: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('invalidateAll'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('status'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('staleSteps'), input: fc.record({  }) }),
@@ -550,11 +550,11 @@ describe('BuildCache functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('check'), input: fc.record({ stepKey: fc.string({ minLength: 1, maxLength: 20 }), inputHash: fc.string({ minLength: 1, maxLength: 20 }), deterministic: fc.boolean() }) }),
-              fc.record({ action: fc.constant('record'), input: fc.record({ stepKey: fc.string({ minLength: 1, maxLength: 20 }), inputHash: fc.string({ minLength: 1, maxLength: 20 }), outputHash: fc.string({ minLength: 1, maxLength: 20 }), outputRef: fc.string(), sourceLocator: fc.string(), deterministic: fc.boolean() }) }),
-              fc.record({ action: fc.constant('invalidate'), input: fc.record({ stepKey: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('invalidateBySource'), input: fc.record({ sourceLocator: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('invalidateByKind'), input: fc.record({ kindName: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('check'), input: fc.record({ stepKey: fc.string({ minLength: 1, maxLength: 50 }), inputHash: fc.string({ minLength: 1, maxLength: 50 }), deterministic: fc.boolean() }) }),
+              fc.record({ action: fc.constant('record'), input: fc.record({ stepKey: fc.string({ minLength: 1, maxLength: 50 }), inputHash: fc.string({ minLength: 1, maxLength: 50 }), outputHash: fc.string({ minLength: 1, maxLength: 50 }), outputRef: fc.string(), sourceLocator: fc.string(), deterministic: fc.boolean() }) }),
+              fc.record({ action: fc.constant('invalidate'), input: fc.record({ stepKey: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('invalidateBySource'), input: fc.record({ sourceLocator: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('invalidateByKind'), input: fc.record({ kindName: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('invalidateAll'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('status'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('staleSteps'), input: fc.record({  }) }),

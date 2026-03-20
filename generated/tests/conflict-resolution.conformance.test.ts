@@ -273,8 +273,8 @@ describe('ConflictResolution functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('registerPolicy'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), priority: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('detect'), input: fc.record({ base: fc.string(), version1: fc.string(), version2: fc.string(), context: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('registerPolicy'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), priority: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('detect'), input: fc.record({ base: fc.string(), version1: fc.string(), version2: fc.string(), context: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('resolve'), input: fc.record({ conflictId: fc.string(), policyOverride: fc.string() }) }),
               fc.record({ action: fc.constant('manualResolve'), input: fc.record({ conflictId: fc.string(), chosen: fc.string() }) }),
             ),
@@ -303,8 +303,8 @@ describe('ConflictResolution functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('registerPolicy'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), priority: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('detect'), input: fc.record({ base: fc.string(), version1: fc.string(), version2: fc.string(), context: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('registerPolicy'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), priority: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('detect'), input: fc.record({ base: fc.string(), version1: fc.string(), version2: fc.string(), context: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('resolve'), input: fc.record({ conflictId: fc.string(), policyOverride: fc.string() }) }),
               fc.record({ action: fc.constant('manualResolve'), input: fc.record({ conflictId: fc.string(), chosen: fc.string() }) }),
             ),

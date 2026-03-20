@@ -97,8 +97,8 @@ describe('OptimisticOracleFinality imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('assertFinality'), input: fc.record({ operationRef: fc.string({ minLength: 1, maxLength: 20 }), asserter: fc.string({ minLength: 1, maxLength: 20 }), bond: fc.string(), challengeWindowHours: fc.string() }) }),
-              fc.record({ action: fc.constant('challenge'), input: fc.record({ assertion: fc.string(), challenger: fc.string({ minLength: 1, maxLength: 20 }), bond: fc.string(), evidence: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('assertFinality'), input: fc.record({ operationRef: fc.string({ minLength: 1, maxLength: 50 }), asserter: fc.string({ minLength: 1, maxLength: 50 }), bond: fc.string(), challengeWindowHours: fc.string() }) }),
+              fc.record({ action: fc.constant('challenge'), input: fc.record({ assertion: fc.string(), challenger: fc.string({ minLength: 1, maxLength: 50 }), bond: fc.string(), evidence: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('resolve'), input: fc.record({ assertion: fc.string(), validAssertion: fc.boolean() }) }),
               fc.record({ action: fc.constant('checkExpiry'), input: fc.record({ assertion: fc.string() }) }),
             ),
@@ -126,8 +126,8 @@ describe('OptimisticOracleFinality imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('assertFinality'), input: fc.record({ operationRef: fc.string({ minLength: 1, maxLength: 20 }), asserter: fc.string({ minLength: 1, maxLength: 20 }), bond: fc.string(), challengeWindowHours: fc.string() }) }),
-              fc.record({ action: fc.constant('challenge'), input: fc.record({ assertion: fc.string(), challenger: fc.string({ minLength: 1, maxLength: 20 }), bond: fc.string(), evidence: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('assertFinality'), input: fc.record({ operationRef: fc.string({ minLength: 1, maxLength: 50 }), asserter: fc.string({ minLength: 1, maxLength: 50 }), bond: fc.string(), challengeWindowHours: fc.string() }) }),
+              fc.record({ action: fc.constant('challenge'), input: fc.record({ assertion: fc.string(), challenger: fc.string({ minLength: 1, maxLength: 50 }), bond: fc.string(), evidence: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('resolve'), input: fc.record({ assertion: fc.string(), validAssertion: fc.boolean() }) }),
               fc.record({ action: fc.constant('checkExpiry'), input: fc.record({ assertion: fc.string() }) }),
             ),

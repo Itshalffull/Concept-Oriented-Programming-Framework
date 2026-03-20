@@ -449,11 +449,11 @@ describe('Schema functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('defineSchema'), input: fc.record({ schema: fc.string(), fields: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('addField'), input: fc.record({ schema: fc.string(), field: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('defineSchema'), input: fc.record({ schema: fc.string(), fields: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('addField'), input: fc.record({ schema: fc.string(), field: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('extendSchema'), input: fc.record({ schema: fc.string(), parent: fc.string() }) }),
-              fc.record({ action: fc.constant('applyTo'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 20 }), schema: fc.string() }) }),
-              fc.record({ action: fc.constant('removeFrom'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 20 }), schema: fc.string() }) }),
+              fc.record({ action: fc.constant('applyTo'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 50 }), schema: fc.string() }) }),
+              fc.record({ action: fc.constant('removeFrom'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 50 }), schema: fc.string() }) }),
               fc.record({ action: fc.constant('getAssociations'), input: fc.record({ schema: fc.string() }) }),
               fc.record({ action: fc.constant('export'), input: fc.record({ schema: fc.string() }) }),
             ),
@@ -482,11 +482,11 @@ describe('Schema functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('defineSchema'), input: fc.record({ schema: fc.string(), fields: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('addField'), input: fc.record({ schema: fc.string(), field: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('defineSchema'), input: fc.record({ schema: fc.string(), fields: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('addField'), input: fc.record({ schema: fc.string(), field: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('extendSchema'), input: fc.record({ schema: fc.string(), parent: fc.string() }) }),
-              fc.record({ action: fc.constant('applyTo'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 20 }), schema: fc.string() }) }),
-              fc.record({ action: fc.constant('removeFrom'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 20 }), schema: fc.string() }) }),
+              fc.record({ action: fc.constant('applyTo'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 50 }), schema: fc.string() }) }),
+              fc.record({ action: fc.constant('removeFrom'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 50 }), schema: fc.string() }) }),
               fc.record({ action: fc.constant('getAssociations'), input: fc.record({ schema: fc.string() }) }),
               fc.record({ action: fc.constant('export'), input: fc.record({ schema: fc.string() }) }),
             ),

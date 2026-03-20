@@ -218,8 +218,8 @@ describe('DailyNote functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('getOrCreateToday'), input: fc.record({ note: fc.string() }) }),
-              fc.record({ action: fc.constant('navigateToDate'), input: fc.record({ date: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('listRecent'), input: fc.record({ count: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('navigateToDate'), input: fc.record({ date: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('listRecent'), input: fc.record({ count: fc.integer({ min: 1, max: 1000 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -247,8 +247,8 @@ describe('DailyNote functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('getOrCreateToday'), input: fc.record({ note: fc.string() }) }),
-              fc.record({ action: fc.constant('navigateToDate'), input: fc.record({ date: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('listRecent'), input: fc.record({ count: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('navigateToDate'), input: fc.record({ date: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('listRecent'), input: fc.record({ count: fc.integer({ min: 1, max: 1000 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

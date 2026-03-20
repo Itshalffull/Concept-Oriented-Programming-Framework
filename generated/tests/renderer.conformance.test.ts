@@ -283,10 +283,10 @@ describe('Renderer functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('render'), input: fc.record({ renderer: fc.string(), tree: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('autoPlaceholder'), input: fc.record({ renderer: fc.string(), name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('stream'), input: fc.record({ renderer: fc.string(), tree: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('mergeCacheability'), input: fc.record({ renderer: fc.string(), tags: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('render'), input: fc.record({ renderer: fc.string(), tree: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('autoPlaceholder'), input: fc.record({ renderer: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('stream'), input: fc.record({ renderer: fc.string(), tree: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('mergeCacheability'), input: fc.record({ renderer: fc.string(), tags: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -313,10 +313,10 @@ describe('Renderer functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('render'), input: fc.record({ renderer: fc.string(), tree: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('autoPlaceholder'), input: fc.record({ renderer: fc.string(), name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('stream'), input: fc.record({ renderer: fc.string(), tree: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('mergeCacheability'), input: fc.record({ renderer: fc.string(), tags: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('render'), input: fc.record({ renderer: fc.string(), tree: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('autoPlaceholder'), input: fc.record({ renderer: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('stream'), input: fc.record({ renderer: fc.string(), tree: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('mergeCacheability'), input: fc.record({ renderer: fc.string(), tags: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

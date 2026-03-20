@@ -396,10 +396,10 @@ describe('FlakyTest functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('record'), input: fc.record({ testId: fc.string({ minLength: 1, maxLength: 20 }), language: fc.string({ minLength: 1, maxLength: 20 }), builder: fc.string({ minLength: 1, maxLength: 20 }), testType: fc.string({ minLength: 1, maxLength: 20 }), passed: fc.boolean(), duration: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('quarantine'), input: fc.record({ testId: fc.string({ minLength: 1, maxLength: 20 }), reason: fc.string({ minLength: 1, maxLength: 20 }), owner: fc.string() }) }),
-              fc.record({ action: fc.constant('release'), input: fc.record({ testId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('isQuarantined'), input: fc.record({ testId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('record'), input: fc.record({ testId: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string({ minLength: 1, maxLength: 50 }), builder: fc.string({ minLength: 1, maxLength: 50 }), testType: fc.string({ minLength: 1, maxLength: 50 }), passed: fc.boolean(), duration: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('quarantine'), input: fc.record({ testId: fc.string({ minLength: 1, maxLength: 50 }), reason: fc.string({ minLength: 1, maxLength: 50 }), owner: fc.string() }) }),
+              fc.record({ action: fc.constant('release'), input: fc.record({ testId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('isQuarantined'), input: fc.record({ testId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('report'), input: fc.record({ testType: fc.string() }) }),
               fc.record({ action: fc.constant('setPolicy'), input: fc.record({ flipThreshold: fc.string(), flipWindow: fc.string(), autoQuarantine: fc.string(), retryCount: fc.string() }) }),
             ),
@@ -428,10 +428,10 @@ describe('FlakyTest functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('record'), input: fc.record({ testId: fc.string({ minLength: 1, maxLength: 20 }), language: fc.string({ minLength: 1, maxLength: 20 }), builder: fc.string({ minLength: 1, maxLength: 20 }), testType: fc.string({ minLength: 1, maxLength: 20 }), passed: fc.boolean(), duration: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('quarantine'), input: fc.record({ testId: fc.string({ minLength: 1, maxLength: 20 }), reason: fc.string({ minLength: 1, maxLength: 20 }), owner: fc.string() }) }),
-              fc.record({ action: fc.constant('release'), input: fc.record({ testId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('isQuarantined'), input: fc.record({ testId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('record'), input: fc.record({ testId: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string({ minLength: 1, maxLength: 50 }), builder: fc.string({ minLength: 1, maxLength: 50 }), testType: fc.string({ minLength: 1, maxLength: 50 }), passed: fc.boolean(), duration: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('quarantine'), input: fc.record({ testId: fc.string({ minLength: 1, maxLength: 50 }), reason: fc.string({ minLength: 1, maxLength: 50 }), owner: fc.string() }) }),
+              fc.record({ action: fc.constant('release'), input: fc.record({ testId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('isQuarantined'), input: fc.record({ testId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('report'), input: fc.record({ testType: fc.string() }) }),
               fc.record({ action: fc.constant('setPolicy'), input: fc.record({ flipThreshold: fc.string(), flipWindow: fc.string(), autoQuarantine: fc.string(), retryCount: fc.string() }) }),
             ),

@@ -579,10 +579,10 @@ describe('FieldPlacement functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ source_field: fc.string({ minLength: 1, maxLength: 20 }), formatter: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ source_field: fc.string({ minLength: 1, maxLength: 50 }), formatter: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('configure'), input: fc.record({ placement: fc.string(), formatter: fc.string(), formatter_options: fc.string(), label_display: fc.string(), label_override: fc.string() }) }),
               fc.record({ action: fc.constant('set_visibility'), input: fc.record({ placement: fc.string(), visible: fc.boolean(), role_visibility: fc.string() }) }),
-              fc.record({ action: fc.constant('set_field_mapping'), input: fc.record({ placement: fc.string(), mapping: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('set_field_mapping'), input: fc.record({ placement: fc.string(), mapping: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('clear_field_mapping'), input: fc.record({ placement: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ placement: fc.string() }) }),
               fc.record({ action: fc.constant('delete'), input: fc.record({ placement: fc.string() }) }),
@@ -614,10 +614,10 @@ describe('FieldPlacement functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ source_field: fc.string({ minLength: 1, maxLength: 20 }), formatter: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ source_field: fc.string({ minLength: 1, maxLength: 50 }), formatter: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('configure'), input: fc.record({ placement: fc.string(), formatter: fc.string(), formatter_options: fc.string(), label_display: fc.string(), label_override: fc.string() }) }),
               fc.record({ action: fc.constant('set_visibility'), input: fc.record({ placement: fc.string(), visible: fc.boolean(), role_visibility: fc.string() }) }),
-              fc.record({ action: fc.constant('set_field_mapping'), input: fc.record({ placement: fc.string(), mapping: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('set_field_mapping'), input: fc.record({ placement: fc.string(), mapping: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('clear_field_mapping'), input: fc.record({ placement: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ placement: fc.string() }) }),
               fc.record({ action: fc.constant('delete'), input: fc.record({ placement: fc.string() }) }),

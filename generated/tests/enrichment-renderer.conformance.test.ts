@@ -274,9 +274,9 @@ describe('EnrichmentRenderer functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ key: fc.string({ minLength: 1, maxLength: 20 }), format: fc.string({ minLength: 1, maxLength: 20 }), order: fc.integer({ min: 0, max: 1000 }), pattern: fc.string({ minLength: 1, maxLength: 20 }), template: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('render'), input: fc.record({ content: fc.string({ minLength: 1, maxLength: 20 }), format: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('listHandlers'), input: fc.record({ format: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ key: fc.string({ minLength: 1, maxLength: 50 }), format: fc.string({ minLength: 1, maxLength: 50 }), order: fc.integer({ min: 1, max: 1000 }), pattern: fc.string({ minLength: 1, maxLength: 50 }), template: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('render'), input: fc.record({ content: fc.string({ minLength: 1, maxLength: 50 }), format: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('listHandlers'), input: fc.record({ format: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('listPatterns'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -304,9 +304,9 @@ describe('EnrichmentRenderer functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ key: fc.string({ minLength: 1, maxLength: 20 }), format: fc.string({ minLength: 1, maxLength: 20 }), order: fc.integer({ min: 0, max: 1000 }), pattern: fc.string({ minLength: 1, maxLength: 20 }), template: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('render'), input: fc.record({ content: fc.string({ minLength: 1, maxLength: 20 }), format: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('listHandlers'), input: fc.record({ format: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ key: fc.string({ minLength: 1, maxLength: 50 }), format: fc.string({ minLength: 1, maxLength: 50 }), order: fc.integer({ min: 1, max: 1000 }), pattern: fc.string({ minLength: 1, maxLength: 50 }), template: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('render'), input: fc.record({ content: fc.string({ minLength: 1, maxLength: 50 }), format: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('listHandlers'), input: fc.record({ format: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('listPatterns'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },

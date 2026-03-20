@@ -215,8 +215,8 @@ describe('SuiteScaffoldGen functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('generate'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), description: fc.string({ minLength: 1, maxLength: 20 }), concepts: fc.string() }) }),
-              fc.record({ action: fc.constant('preview'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), description: fc.string({ minLength: 1, maxLength: 20 }), concepts: fc.string() }) }),
+              fc.record({ action: fc.constant('generate'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), concepts: fc.string() }) }),
+              fc.record({ action: fc.constant('preview'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), concepts: fc.string() }) }),
               fc.record({ action: fc.constant('register'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },

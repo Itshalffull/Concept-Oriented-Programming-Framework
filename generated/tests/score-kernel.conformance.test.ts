@@ -110,10 +110,10 @@ describe('ScoreKernel imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('boot'), input: fc.record({ projectRoot: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('discover'), input: fc.record({ kernel: fc.string(), basePaths: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('boot'), input: fc.record({ projectRoot: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('discover'), input: fc.record({ kernel: fc.string(), basePaths: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('status'), input: fc.record({ kernel: fc.string() }) }),
-              fc.record({ action: fc.constant('connectRuntime'), input: fc.record({ kernel: fc.string(), endpoint: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('connectRuntime'), input: fc.record({ kernel: fc.string(), endpoint: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -139,10 +139,10 @@ describe('ScoreKernel imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('boot'), input: fc.record({ projectRoot: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('discover'), input: fc.record({ kernel: fc.string(), basePaths: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('boot'), input: fc.record({ projectRoot: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('discover'), input: fc.record({ kernel: fc.string(), basePaths: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('status'), input: fc.record({ kernel: fc.string() }) }),
-              fc.record({ action: fc.constant('connectRuntime'), input: fc.record({ kernel: fc.string(), endpoint: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('connectRuntime'), input: fc.record({ kernel: fc.string(), endpoint: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

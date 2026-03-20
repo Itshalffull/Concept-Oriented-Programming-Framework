@@ -96,7 +96,7 @@ describe('KernelBoot imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('boot'), input: fc.record({ projectRoot: fc.string({ minLength: 1, maxLength: 20 }), manifestPath: fc.string() }) }),
+              fc.record({ action: fc.constant('boot'), input: fc.record({ projectRoot: fc.string({ minLength: 1, maxLength: 50 }), manifestPath: fc.string() }) }),
               fc.record({ action: fc.constant('status'), input: fc.record({ kernel: fc.string() }) }),
               fc.record({ action: fc.constant('shutdown'), input: fc.record({ kernel: fc.string() }) }),
             ),
@@ -124,7 +124,7 @@ describe('KernelBoot imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('boot'), input: fc.record({ projectRoot: fc.string({ minLength: 1, maxLength: 20 }), manifestPath: fc.string() }) }),
+              fc.record({ action: fc.constant('boot'), input: fc.record({ projectRoot: fc.string({ minLength: 1, maxLength: 50 }), manifestPath: fc.string() }) }),
               fc.record({ action: fc.constant('status'), input: fc.record({ kernel: fc.string() }) }),
               fc.record({ action: fc.constant('shutdown'), input: fc.record({ kernel: fc.string() }) }),
             ),

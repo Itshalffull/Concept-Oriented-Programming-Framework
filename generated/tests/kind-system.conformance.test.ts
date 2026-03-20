@@ -515,8 +515,8 @@ describe('KindSystem functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), category: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('connect'), input: fc.record({ from: fc.string(), to: fc.string(), relation: fc.string({ minLength: 1, maxLength: 20 }), transformName: fc.string() }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), category: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('connect'), input: fc.record({ from: fc.string(), to: fc.string(), relation: fc.string({ minLength: 1, maxLength: 50 }), transformName: fc.string() }) }),
               fc.record({ action: fc.constant('route'), input: fc.record({ from: fc.string(), to: fc.string() }) }),
               fc.record({ action: fc.constant('validate'), input: fc.record({ from: fc.string(), to: fc.string() }) }),
               fc.record({ action: fc.constant('dependents'), input: fc.record({ kind: fc.string() }) }),
@@ -549,8 +549,8 @@ describe('KindSystem functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), category: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('connect'), input: fc.record({ from: fc.string(), to: fc.string(), relation: fc.string({ minLength: 1, maxLength: 20 }), transformName: fc.string() }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), category: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('connect'), input: fc.record({ from: fc.string(), to: fc.string(), relation: fc.string({ minLength: 1, maxLength: 50 }), transformName: fc.string() }) }),
               fc.record({ action: fc.constant('route'), input: fc.record({ from: fc.string(), to: fc.string() }) }),
               fc.record({ action: fc.constant('validate'), input: fc.record({ from: fc.string(), to: fc.string() }) }),
               fc.record({ action: fc.constant('dependents'), input: fc.record({ kind: fc.string() }) }),

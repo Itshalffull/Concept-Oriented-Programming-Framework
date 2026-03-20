@@ -448,9 +448,9 @@ describe('ConnectorPort functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('addPort'), input: fc.record({ owner: fc.string(), side: fc.string({ minLength: 1, maxLength: 20 }), offset: fc.string(), direction: fc.string({ minLength: 1, maxLength: 20 }), port_type: fc.string(), label: fc.string(), max_connections: fc.string() }) }),
+              fc.record({ action: fc.constant('addPort'), input: fc.record({ owner: fc.string(), side: fc.string({ minLength: 1, maxLength: 50 }), offset: fc.string(), direction: fc.string({ minLength: 1, maxLength: 50 }), port_type: fc.string(), label: fc.string(), max_connections: fc.string() }) }),
               fc.record({ action: fc.constant('removePort'), input: fc.record({ port: fc.string() }) }),
-              fc.record({ action: fc.constant('movePort'), input: fc.record({ port: fc.string(), side: fc.string({ minLength: 1, maxLength: 20 }), offset: fc.string() }) }),
+              fc.record({ action: fc.constant('movePort'), input: fc.record({ port: fc.string(), side: fc.string({ minLength: 1, maxLength: 50 }), offset: fc.string() }) }),
               fc.record({ action: fc.constant('validateConnection'), input: fc.record({ source_port: fc.string(), target_port: fc.string() }) }),
               fc.record({ action: fc.constant('incrementConnection'), input: fc.record({ port: fc.string() }) }),
               fc.record({ action: fc.constant('decrementConnection'), input: fc.record({ port: fc.string() }) }),
@@ -481,9 +481,9 @@ describe('ConnectorPort functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('addPort'), input: fc.record({ owner: fc.string(), side: fc.string({ minLength: 1, maxLength: 20 }), offset: fc.string(), direction: fc.string({ minLength: 1, maxLength: 20 }), port_type: fc.string(), label: fc.string(), max_connections: fc.string() }) }),
+              fc.record({ action: fc.constant('addPort'), input: fc.record({ owner: fc.string(), side: fc.string({ minLength: 1, maxLength: 50 }), offset: fc.string(), direction: fc.string({ minLength: 1, maxLength: 50 }), port_type: fc.string(), label: fc.string(), max_connections: fc.string() }) }),
               fc.record({ action: fc.constant('removePort'), input: fc.record({ port: fc.string() }) }),
-              fc.record({ action: fc.constant('movePort'), input: fc.record({ port: fc.string(), side: fc.string({ minLength: 1, maxLength: 20 }), offset: fc.string() }) }),
+              fc.record({ action: fc.constant('movePort'), input: fc.record({ port: fc.string(), side: fc.string({ minLength: 1, maxLength: 50 }), offset: fc.string() }) }),
               fc.record({ action: fc.constant('validateConnection'), input: fc.record({ source_port: fc.string(), target_port: fc.string() }) }),
               fc.record({ action: fc.constant('incrementConnection'), input: fc.record({ port: fc.string() }) }),
               fc.record({ action: fc.constant('decrementConnection'), input: fc.record({ port: fc.string() }) }),

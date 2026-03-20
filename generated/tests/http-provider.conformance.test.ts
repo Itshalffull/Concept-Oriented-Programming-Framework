@@ -98,8 +98,8 @@ describe('HttpProvider imperative handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('register'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('configure'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), baseUrl: fc.string({ minLength: 1, maxLength: 20 }), headers: fc.string({ minLength: 1, maxLength: 20 }), timeout: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('execute'), input: fc.record({ instance: fc.string({ minLength: 1, maxLength: 20 }), method: fc.string({ minLength: 1, maxLength: 20 }), path: fc.string({ minLength: 1, maxLength: 20 }), body: fc.string({ minLength: 1, maxLength: 20 }), headers: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), baseUrl: fc.string({ minLength: 1, maxLength: 50 }), headers: fc.string({ minLength: 1, maxLength: 50 }), timeout: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('execute'), input: fc.record({ instance: fc.string({ minLength: 1, maxLength: 50 }), method: fc.string({ minLength: 1, maxLength: 50 }), path: fc.string({ minLength: 1, maxLength: 50 }), body: fc.string({ minLength: 1, maxLength: 50 }), headers: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -127,8 +127,8 @@ describe('HttpProvider imperative handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('register'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('configure'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), baseUrl: fc.string({ minLength: 1, maxLength: 20 }), headers: fc.string({ minLength: 1, maxLength: 20 }), timeout: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('execute'), input: fc.record({ instance: fc.string({ minLength: 1, maxLength: 20 }), method: fc.string({ minLength: 1, maxLength: 20 }), path: fc.string({ minLength: 1, maxLength: 20 }), body: fc.string({ minLength: 1, maxLength: 20 }), headers: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), baseUrl: fc.string({ minLength: 1, maxLength: 50 }), headers: fc.string({ minLength: 1, maxLength: 50 }), timeout: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('execute'), input: fc.record({ instance: fc.string({ minLength: 1, maxLength: 50 }), method: fc.string({ minLength: 1, maxLength: 50 }), path: fc.string({ minLength: 1, maxLength: 50 }), body: fc.string({ minLength: 1, maxLength: 50 }), headers: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },

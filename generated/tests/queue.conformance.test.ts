@@ -334,11 +334,11 @@ describe('Queue functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('enqueue'), input: fc.record({ queue: fc.string(), item: fc.string({ minLength: 1, maxLength: 20 }), priority: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('claim'), input: fc.record({ queue: fc.string(), worker: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('process'), input: fc.record({ queue: fc.string(), itemId: fc.string({ minLength: 1, maxLength: 20 }), result: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('release'), input: fc.record({ queue: fc.string(), itemId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('delete'), input: fc.record({ queue: fc.string(), itemId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('enqueue'), input: fc.record({ queue: fc.string(), item: fc.string({ minLength: 1, maxLength: 50 }), priority: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('claim'), input: fc.record({ queue: fc.string(), worker: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('process'), input: fc.record({ queue: fc.string(), itemId: fc.string({ minLength: 1, maxLength: 50 }), result: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('release'), input: fc.record({ queue: fc.string(), itemId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('delete'), input: fc.record({ queue: fc.string(), itemId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -365,11 +365,11 @@ describe('Queue functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('enqueue'), input: fc.record({ queue: fc.string(), item: fc.string({ minLength: 1, maxLength: 20 }), priority: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('claim'), input: fc.record({ queue: fc.string(), worker: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('process'), input: fc.record({ queue: fc.string(), itemId: fc.string({ minLength: 1, maxLength: 20 }), result: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('release'), input: fc.record({ queue: fc.string(), itemId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('delete'), input: fc.record({ queue: fc.string(), itemId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('enqueue'), input: fc.record({ queue: fc.string(), item: fc.string({ minLength: 1, maxLength: 50 }), priority: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('claim'), input: fc.record({ queue: fc.string(), worker: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('process'), input: fc.record({ queue: fc.string(), itemId: fc.string({ minLength: 1, maxLength: 50 }), result: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('release'), input: fc.record({ queue: fc.string(), itemId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('delete'), input: fc.record({ queue: fc.string(), itemId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

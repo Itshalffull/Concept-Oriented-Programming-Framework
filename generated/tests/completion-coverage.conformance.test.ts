@@ -101,8 +101,8 @@ describe('CompletionCoverage imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('check'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), action: fc.string({ minLength: 1, maxLength: 20 }), declaredVariants: fc.string({ minLength: 1, maxLength: 20 }), extractedVariants: fc.string({ minLength: 1, maxLength: 20 }), syncPatterns: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('report'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('check'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), declaredVariants: fc.string({ minLength: 1, maxLength: 50 }), extractedVariants: fc.string({ minLength: 1, maxLength: 50 }), syncPatterns: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('report'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('listUncovered'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -129,8 +129,8 @@ describe('CompletionCoverage imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('check'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), action: fc.string({ minLength: 1, maxLength: 20 }), declaredVariants: fc.string({ minLength: 1, maxLength: 20 }), extractedVariants: fc.string({ minLength: 1, maxLength: 20 }), syncPatterns: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('report'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('check'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), declaredVariants: fc.string({ minLength: 1, maxLength: 50 }), extractedVariants: fc.string({ minLength: 1, maxLength: 50 }), syncPatterns: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('report'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('listUncovered'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },

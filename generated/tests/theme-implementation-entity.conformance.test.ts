@@ -457,12 +457,12 @@ describe('ThemeImplementationEntity functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ theme: fc.string({ minLength: 1, maxLength: 20 }), platform: fc.string({ minLength: 1, maxLength: 20 }), sourceFile: fc.string({ minLength: 1, maxLength: 20 }), ast: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('get'), input: fc.record({ theme: fc.string({ minLength: 1, maxLength: 20 }), platform: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('getByFile'), input: fc.record({ sourceFile: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByTheme'), input: fc.record({ theme: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByPlatform'), input: fc.record({ platform: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolveToken'), input: fc.record({ impl: fc.string(), tokenPath: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ theme: fc.string({ minLength: 1, maxLength: 50 }), platform: fc.string({ minLength: 1, maxLength: 50 }), sourceFile: fc.string({ minLength: 1, maxLength: 50 }), ast: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ theme: fc.string({ minLength: 1, maxLength: 50 }), platform: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getByFile'), input: fc.record({ sourceFile: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByTheme'), input: fc.record({ theme: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByPlatform'), input: fc.record({ platform: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolveToken'), input: fc.record({ impl: fc.string(), tokenPath: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('diffFromSpec'), input: fc.record({ impl: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -490,12 +490,12 @@ describe('ThemeImplementationEntity functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ theme: fc.string({ minLength: 1, maxLength: 20 }), platform: fc.string({ minLength: 1, maxLength: 20 }), sourceFile: fc.string({ minLength: 1, maxLength: 20 }), ast: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('get'), input: fc.record({ theme: fc.string({ minLength: 1, maxLength: 20 }), platform: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('getByFile'), input: fc.record({ sourceFile: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByTheme'), input: fc.record({ theme: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByPlatform'), input: fc.record({ platform: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolveToken'), input: fc.record({ impl: fc.string(), tokenPath: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ theme: fc.string({ minLength: 1, maxLength: 50 }), platform: fc.string({ minLength: 1, maxLength: 50 }), sourceFile: fc.string({ minLength: 1, maxLength: 50 }), ast: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ theme: fc.string({ minLength: 1, maxLength: 50 }), platform: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getByFile'), input: fc.record({ sourceFile: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByTheme'), input: fc.record({ theme: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByPlatform'), input: fc.record({ platform: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolveToken'), input: fc.record({ impl: fc.string(), tokenPath: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('diffFromSpec'), input: fc.record({ impl: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

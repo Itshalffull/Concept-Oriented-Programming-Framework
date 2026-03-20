@@ -159,12 +159,12 @@ describe('TestGen imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('generate'), input: fc.record({ concept_ref: fc.string({ minLength: 1, maxLength: 20 }), language: fc.string({ minLength: 1, maxLength: 20 }), invariant_version: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('buildTestPlan'), input: fc.record({ concept_ref: fc.string({ minLength: 1, maxLength: 20 }), concept_data: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('generate'), input: fc.record({ concept_ref: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string({ minLength: 1, maxLength: 50 }), invariant_version: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('buildTestPlan'), input: fc.record({ concept_ref: fc.string({ minLength: 1, maxLength: 50 }), concept_data: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('regenerate'), input: fc.record({ generation: fc.string() }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({ concept_ref: fc.string(), language: fc.string() }) }),
               fc.record({ action: fc.constant('configure'), input: fc.record({ generation: fc.string(), num_runs: fc.string(), fuzz_duration_s: fc.string(), shrink_enabled: fc.string(), stateful_test_depth: fc.string() }) }),
-              fc.record({ action: fc.constant('coverage'), input: fc.record({ concept_ref: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('coverage'), input: fc.record({ concept_ref: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

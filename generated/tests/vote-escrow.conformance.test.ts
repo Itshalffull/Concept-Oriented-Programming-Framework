@@ -116,7 +116,7 @@ describe('VoteEscrow imperative handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('configure'), input: fc.record({ maxLockDurationDays: fc.string() }) }),
-              fc.record({ action: fc.constant('lock'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 20 }), amount: fc.string(), lockDurationDays: fc.string() }) }),
+              fc.record({ action: fc.constant('lock'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), lockDurationDays: fc.string() }) }),
               fc.record({ action: fc.constant('extendLock'), input: fc.record({ lock: fc.string(), additionalDays: fc.string() }) }),
               fc.record({ action: fc.constant('getWeight'), input: fc.record({ lock: fc.string() }) }),
               fc.record({ action: fc.constant('withdraw'), input: fc.record({ lock: fc.string() }) }),
@@ -146,7 +146,7 @@ describe('VoteEscrow imperative handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('configure'), input: fc.record({ maxLockDurationDays: fc.string() }) }),
-              fc.record({ action: fc.constant('lock'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 20 }), amount: fc.string(), lockDurationDays: fc.string() }) }),
+              fc.record({ action: fc.constant('lock'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), lockDurationDays: fc.string() }) }),
               fc.record({ action: fc.constant('extendLock'), input: fc.record({ lock: fc.string(), additionalDays: fc.string() }) }),
               fc.record({ action: fc.constant('getWeight'), input: fc.record({ lock: fc.string() }) }),
               fc.record({ action: fc.constant('withdraw'), input: fc.record({ lock: fc.string() }) }),

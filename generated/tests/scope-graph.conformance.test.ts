@@ -332,9 +332,9 @@ describe('ScopeGraph functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('build'), input: fc.record({ file: fc.string({ minLength: 1, maxLength: 20 }), tree: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolveReference'), input: fc.record({ graph: fc.string(), scope: fc.string({ minLength: 1, maxLength: 20 }), name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('visibleSymbols'), input: fc.record({ graph: fc.string(), scope: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('build'), input: fc.record({ file: fc.string({ minLength: 1, maxLength: 50 }), tree: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolveReference'), input: fc.record({ graph: fc.string(), scope: fc.string({ minLength: 1, maxLength: 50 }), name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('visibleSymbols'), input: fc.record({ graph: fc.string(), scope: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('resolveCrossFile'), input: fc.record({ graph: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ graph: fc.string() }) }),
             ),
@@ -363,9 +363,9 @@ describe('ScopeGraph functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('build'), input: fc.record({ file: fc.string({ minLength: 1, maxLength: 20 }), tree: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolveReference'), input: fc.record({ graph: fc.string(), scope: fc.string({ minLength: 1, maxLength: 20 }), name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('visibleSymbols'), input: fc.record({ graph: fc.string(), scope: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('build'), input: fc.record({ file: fc.string({ minLength: 1, maxLength: 50 }), tree: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolveReference'), input: fc.record({ graph: fc.string(), scope: fc.string({ minLength: 1, maxLength: 50 }), name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('visibleSymbols'), input: fc.record({ graph: fc.string(), scope: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('resolveCrossFile'), input: fc.record({ graph: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ graph: fc.string() }) }),
             ),

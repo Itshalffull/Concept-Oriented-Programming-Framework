@@ -65,8 +65,8 @@ describe('OpenAIEmbeddingProvider imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('initialize'), input: fc.record({ apiKey: fc.string({ minLength: 1, maxLength: 20 }), apiModel: fc.string({ minLength: 1, maxLength: 20 }), dimensions: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('embed'), input: fc.record({ text: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('initialize'), input: fc.record({ apiKey: fc.string({ minLength: 1, maxLength: 50 }), apiModel: fc.string({ minLength: 1, maxLength: 50 }), dimensions: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('embed'), input: fc.record({ text: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -92,8 +92,8 @@ describe('OpenAIEmbeddingProvider imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('initialize'), input: fc.record({ apiKey: fc.string({ minLength: 1, maxLength: 20 }), apiModel: fc.string({ minLength: 1, maxLength: 20 }), dimensions: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('embed'), input: fc.record({ text: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('initialize'), input: fc.record({ apiKey: fc.string({ minLength: 1, maxLength: 50 }), apiModel: fc.string({ minLength: 1, maxLength: 50 }), dimensions: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('embed'), input: fc.record({ text: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

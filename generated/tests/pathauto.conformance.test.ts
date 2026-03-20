@@ -216,9 +216,9 @@ describe('Pathauto functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('generateAlias'), input: fc.record({ pattern: fc.string(), entity: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('bulkGenerate'), input: fc.record({ pattern: fc.string(), entities: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('cleanString'), input: fc.record({ input: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('generateAlias'), input: fc.record({ pattern: fc.string(), entity: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('bulkGenerate'), input: fc.record({ pattern: fc.string(), entities: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('cleanString'), input: fc.record({ input: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -245,9 +245,9 @@ describe('Pathauto functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('generateAlias'), input: fc.record({ pattern: fc.string(), entity: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('bulkGenerate'), input: fc.record({ pattern: fc.string(), entities: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('cleanString'), input: fc.record({ input: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('generateAlias'), input: fc.record({ pattern: fc.string(), entity: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('bulkGenerate'), input: fc.record({ pattern: fc.string(), entities: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('cleanString'), input: fc.record({ input: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

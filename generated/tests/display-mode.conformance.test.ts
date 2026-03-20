@@ -237,16 +237,16 @@ describe('DisplayMode imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ schema: fc.string({ minLength: 1, maxLength: 20 }), mode_id: fc.string({ minLength: 1, maxLength: 20 }), name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ schema: fc.string({ minLength: 1, maxLength: 20 }), mode_id: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('set_layout'), input: fc.record({ mode: fc.string(), layout: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ schema: fc.string({ minLength: 1, maxLength: 50 }), mode_id: fc.string({ minLength: 1, maxLength: 50 }), name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ schema: fc.string({ minLength: 1, maxLength: 50 }), mode_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('set_layout'), input: fc.record({ mode: fc.string(), layout: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('clear_layout'), input: fc.record({ mode: fc.string() }) }),
-              fc.record({ action: fc.constant('set_component_mapping'), input: fc.record({ mode: fc.string(), mapping: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('set_component_mapping'), input: fc.record({ mode: fc.string(), mapping: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('clear_component_mapping'), input: fc.record({ mode: fc.string() }) }),
               fc.record({ action: fc.constant('set_flat_fields'), input: fc.record({ mode: fc.string(), placements: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ mode: fc.string() }) }),
               fc.record({ action: fc.constant('delete'), input: fc.record({ mode: fc.string() }) }),
-              fc.record({ action: fc.constant('list_for_schema'), input: fc.record({ schema: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('list_for_schema'), input: fc.record({ schema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -273,16 +273,16 @@ describe('DisplayMode imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ schema: fc.string({ minLength: 1, maxLength: 20 }), mode_id: fc.string({ minLength: 1, maxLength: 20 }), name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ schema: fc.string({ minLength: 1, maxLength: 20 }), mode_id: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('set_layout'), input: fc.record({ mode: fc.string(), layout: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ schema: fc.string({ minLength: 1, maxLength: 50 }), mode_id: fc.string({ minLength: 1, maxLength: 50 }), name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ schema: fc.string({ minLength: 1, maxLength: 50 }), mode_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('set_layout'), input: fc.record({ mode: fc.string(), layout: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('clear_layout'), input: fc.record({ mode: fc.string() }) }),
-              fc.record({ action: fc.constant('set_component_mapping'), input: fc.record({ mode: fc.string(), mapping: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('set_component_mapping'), input: fc.record({ mode: fc.string(), mapping: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('clear_component_mapping'), input: fc.record({ mode: fc.string() }) }),
               fc.record({ action: fc.constant('set_flat_fields'), input: fc.record({ mode: fc.string(), placements: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ mode: fc.string() }) }),
               fc.record({ action: fc.constant('delete'), input: fc.record({ mode: fc.string() }) }),
-              fc.record({ action: fc.constant('list_for_schema'), input: fc.record({ schema: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('list_for_schema'), input: fc.record({ schema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },

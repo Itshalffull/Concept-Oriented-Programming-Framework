@@ -286,8 +286,8 @@ describe('Affordance functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('declare'), input: fc.record({ affordance: fc.string(), widget: fc.string({ minLength: 1, maxLength: 20 }), interactor: fc.string({ minLength: 1, maxLength: 20 }), specificity: fc.integer({ min: 0, max: 1000 }), conditions: fc.string(), bind: fc.string(), contractVersion: fc.string(), densityExempt: fc.string(), motifOptimized: fc.string() }) }),
-              fc.record({ action: fc.constant('match'), input: fc.record({ affordance: fc.string(), interactor: fc.string({ minLength: 1, maxLength: 20 }), context: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('declare'), input: fc.record({ affordance: fc.string(), widget: fc.string({ minLength: 1, maxLength: 50 }), interactor: fc.string({ minLength: 1, maxLength: 50 }), specificity: fc.integer({ min: 1, max: 1000 }), conditions: fc.string(), bind: fc.string(), contractVersion: fc.string(), densityExempt: fc.string(), motifOptimized: fc.string() }) }),
+              fc.record({ action: fc.constant('match'), input: fc.record({ affordance: fc.string(), interactor: fc.string({ minLength: 1, maxLength: 50 }), context: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('explain'), input: fc.record({ affordance: fc.string() }) }),
               fc.record({ action: fc.constant('remove'), input: fc.record({ affordance: fc.string() }) }),
             ),
@@ -316,8 +316,8 @@ describe('Affordance functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('declare'), input: fc.record({ affordance: fc.string(), widget: fc.string({ minLength: 1, maxLength: 20 }), interactor: fc.string({ minLength: 1, maxLength: 20 }), specificity: fc.integer({ min: 0, max: 1000 }), conditions: fc.string(), bind: fc.string(), contractVersion: fc.string(), densityExempt: fc.string(), motifOptimized: fc.string() }) }),
-              fc.record({ action: fc.constant('match'), input: fc.record({ affordance: fc.string(), interactor: fc.string({ minLength: 1, maxLength: 20 }), context: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('declare'), input: fc.record({ affordance: fc.string(), widget: fc.string({ minLength: 1, maxLength: 50 }), interactor: fc.string({ minLength: 1, maxLength: 50 }), specificity: fc.integer({ min: 1, max: 1000 }), conditions: fc.string(), bind: fc.string(), contractVersion: fc.string(), densityExempt: fc.string(), motifOptimized: fc.string() }) }),
+              fc.record({ action: fc.constant('match'), input: fc.record({ affordance: fc.string(), interactor: fc.string({ minLength: 1, maxLength: 50 }), context: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('explain'), input: fc.record({ affordance: fc.string() }) }),
               fc.record({ action: fc.constant('remove'), input: fc.record({ affordance: fc.string() }) }),
             ),

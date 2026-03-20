@@ -401,12 +401,12 @@ describe('PessimisticLock functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('checkOut'), input: fc.record({ resource: fc.string({ minLength: 1, maxLength: 20 }), holder: fc.string({ minLength: 1, maxLength: 20 }), duration: fc.string(), reason: fc.string() }) }),
+              fc.record({ action: fc.constant('checkOut'), input: fc.record({ resource: fc.string({ minLength: 1, maxLength: 50 }), holder: fc.string({ minLength: 1, maxLength: 50 }), duration: fc.string(), reason: fc.string() }) }),
               fc.record({ action: fc.constant('checkIn'), input: fc.record({ lockId: fc.string() }) }),
-              fc.record({ action: fc.constant('breakLock'), input: fc.record({ lockId: fc.string(), breaker: fc.string({ minLength: 1, maxLength: 20 }), reason: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('renew'), input: fc.record({ lockId: fc.string(), additionalDuration: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('breakLock'), input: fc.record({ lockId: fc.string(), breaker: fc.string({ minLength: 1, maxLength: 50 }), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('renew'), input: fc.record({ lockId: fc.string(), additionalDuration: fc.integer({ min: 1, max: 1000 }) }) }),
               fc.record({ action: fc.constant('queryLocks'), input: fc.record({ resource: fc.string() }) }),
-              fc.record({ action: fc.constant('queryQueue'), input: fc.record({ resource: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('queryQueue'), input: fc.record({ resource: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -433,12 +433,12 @@ describe('PessimisticLock functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('checkOut'), input: fc.record({ resource: fc.string({ minLength: 1, maxLength: 20 }), holder: fc.string({ minLength: 1, maxLength: 20 }), duration: fc.string(), reason: fc.string() }) }),
+              fc.record({ action: fc.constant('checkOut'), input: fc.record({ resource: fc.string({ minLength: 1, maxLength: 50 }), holder: fc.string({ minLength: 1, maxLength: 50 }), duration: fc.string(), reason: fc.string() }) }),
               fc.record({ action: fc.constant('checkIn'), input: fc.record({ lockId: fc.string() }) }),
-              fc.record({ action: fc.constant('breakLock'), input: fc.record({ lockId: fc.string(), breaker: fc.string({ minLength: 1, maxLength: 20 }), reason: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('renew'), input: fc.record({ lockId: fc.string(), additionalDuration: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('breakLock'), input: fc.record({ lockId: fc.string(), breaker: fc.string({ minLength: 1, maxLength: 50 }), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('renew'), input: fc.record({ lockId: fc.string(), additionalDuration: fc.integer({ min: 1, max: 1000 }) }) }),
               fc.record({ action: fc.constant('queryLocks'), input: fc.record({ resource: fc.string() }) }),
-              fc.record({ action: fc.constant('queryQueue'), input: fc.record({ resource: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('queryQueue'), input: fc.record({ resource: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

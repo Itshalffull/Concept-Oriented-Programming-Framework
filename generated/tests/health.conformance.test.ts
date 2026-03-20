@@ -275,10 +275,10 @@ describe('Health functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('checkConcept'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), runtime: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('checkSync'), input: fc.record({ sync: fc.string({ minLength: 1, maxLength: 20 }), concepts: fc.string() }) }),
-              fc.record({ action: fc.constant('checkSuite'), input: fc.record({ suite: fc.string({ minLength: 1, maxLength: 20 }), environment: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('checkInvariant'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), invariant: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('checkConcept'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), runtime: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('checkSync'), input: fc.record({ sync: fc.string({ minLength: 1, maxLength: 50 }), concepts: fc.string() }) }),
+              fc.record({ action: fc.constant('checkSuite'), input: fc.record({ suite: fc.string({ minLength: 1, maxLength: 50 }), environment: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('checkInvariant'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), invariant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -305,10 +305,10 @@ describe('Health functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('checkConcept'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), runtime: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('checkSync'), input: fc.record({ sync: fc.string({ minLength: 1, maxLength: 20 }), concepts: fc.string() }) }),
-              fc.record({ action: fc.constant('checkSuite'), input: fc.record({ suite: fc.string({ minLength: 1, maxLength: 20 }), environment: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('checkInvariant'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), invariant: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('checkConcept'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), runtime: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('checkSync'), input: fc.record({ sync: fc.string({ minLength: 1, maxLength: 50 }), concepts: fc.string() }) }),
+              fc.record({ action: fc.constant('checkSuite'), input: fc.record({ suite: fc.string({ minLength: 1, maxLength: 50 }), environment: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('checkInvariant'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), invariant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

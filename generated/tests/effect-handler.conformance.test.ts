@@ -126,10 +126,10 @@ describe('EffectHandler imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ protocol: fc.string({ minLength: 1, maxLength: 20 }), operation: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ protocol: fc.string({ minLength: 1, maxLength: 20 }), operation: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('listByProtocol'), input: fc.record({ protocol: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('deregister'), input: fc.record({ protocol: fc.string({ minLength: 1, maxLength: 20 }), operation: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ protocol: fc.string({ minLength: 1, maxLength: 50 }), operation: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ protocol: fc.string({ minLength: 1, maxLength: 50 }), operation: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('listByProtocol'), input: fc.record({ protocol: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('deregister'), input: fc.record({ protocol: fc.string({ minLength: 1, maxLength: 50 }), operation: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -155,10 +155,10 @@ describe('EffectHandler imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ protocol: fc.string({ minLength: 1, maxLength: 20 }), operation: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ protocol: fc.string({ minLength: 1, maxLength: 20 }), operation: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('listByProtocol'), input: fc.record({ protocol: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('deregister'), input: fc.record({ protocol: fc.string({ minLength: 1, maxLength: 20 }), operation: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ protocol: fc.string({ minLength: 1, maxLength: 50 }), operation: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ protocol: fc.string({ minLength: 1, maxLength: 50 }), operation: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('listByProtocol'), input: fc.record({ protocol: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('deregister'), input: fc.record({ protocol: fc.string({ minLength: 1, maxLength: 50 }), operation: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

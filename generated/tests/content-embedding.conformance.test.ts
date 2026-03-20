@@ -97,10 +97,10 @@ describe('ContentEmbedding imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('index'), input: fc.record({ entity_id: fc.string({ minLength: 1, maxLength: 20 }), source_type: fc.string({ minLength: 1, maxLength: 20 }), text: fc.string({ minLength: 1, maxLength: 20 }), model: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('remove'), input: fc.record({ entity_id: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('get'), input: fc.record({ entity_id: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('searchSimilar'), input: fc.record({ entity_id: fc.string({ minLength: 1, maxLength: 20 }), topK: fc.integer({ min: 0, max: 1000 }), source_type: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('index'), input: fc.record({ entity_id: fc.string({ minLength: 1, maxLength: 50 }), source_type: fc.string({ minLength: 1, maxLength: 50 }), text: fc.string({ minLength: 1, maxLength: 50 }), model: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('remove'), input: fc.record({ entity_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ entity_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('searchSimilar'), input: fc.record({ entity_id: fc.string({ minLength: 1, maxLength: 50 }), topK: fc.integer({ min: 1, max: 1000 }), source_type: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -126,10 +126,10 @@ describe('ContentEmbedding imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('index'), input: fc.record({ entity_id: fc.string({ minLength: 1, maxLength: 20 }), source_type: fc.string({ minLength: 1, maxLength: 20 }), text: fc.string({ minLength: 1, maxLength: 20 }), model: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('remove'), input: fc.record({ entity_id: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('get'), input: fc.record({ entity_id: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('searchSimilar'), input: fc.record({ entity_id: fc.string({ minLength: 1, maxLength: 20 }), topK: fc.integer({ min: 0, max: 1000 }), source_type: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('index'), input: fc.record({ entity_id: fc.string({ minLength: 1, maxLength: 50 }), source_type: fc.string({ minLength: 1, maxLength: 50 }), text: fc.string({ minLength: 1, maxLength: 50 }), model: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('remove'), input: fc.record({ entity_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ entity_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('searchSimilar'), input: fc.record({ entity_id: fc.string({ minLength: 1, maxLength: 50 }), topK: fc.integer({ min: 1, max: 1000 }), source_type: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

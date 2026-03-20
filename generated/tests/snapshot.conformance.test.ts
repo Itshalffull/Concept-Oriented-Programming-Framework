@@ -454,13 +454,13 @@ describe('Snapshot functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('compare'), input: fc.record({ outputPath: fc.string({ minLength: 1, maxLength: 20 }), currentContent: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('approve'), input: fc.record({ path: fc.string({ minLength: 1, maxLength: 20 }), approver: fc.string() }) }),
+              fc.record({ action: fc.constant('compare'), input: fc.record({ outputPath: fc.string({ minLength: 1, maxLength: 50 }), currentContent: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('approve'), input: fc.record({ path: fc.string({ minLength: 1, maxLength: 50 }), approver: fc.string() }) }),
               fc.record({ action: fc.constant('approveAll'), input: fc.record({ paths: fc.string() }) }),
-              fc.record({ action: fc.constant('reject'), input: fc.record({ path: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('reject'), input: fc.record({ path: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('status'), input: fc.record({ paths: fc.string() }) }),
-              fc.record({ action: fc.constant('diff'), input: fc.record({ path: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('clean'), input: fc.record({ outputDir: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('diff'), input: fc.record({ path: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('clean'), input: fc.record({ outputDir: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -487,13 +487,13 @@ describe('Snapshot functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('compare'), input: fc.record({ outputPath: fc.string({ minLength: 1, maxLength: 20 }), currentContent: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('approve'), input: fc.record({ path: fc.string({ minLength: 1, maxLength: 20 }), approver: fc.string() }) }),
+              fc.record({ action: fc.constant('compare'), input: fc.record({ outputPath: fc.string({ minLength: 1, maxLength: 50 }), currentContent: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('approve'), input: fc.record({ path: fc.string({ minLength: 1, maxLength: 50 }), approver: fc.string() }) }),
               fc.record({ action: fc.constant('approveAll'), input: fc.record({ paths: fc.string() }) }),
-              fc.record({ action: fc.constant('reject'), input: fc.record({ path: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('reject'), input: fc.record({ path: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('status'), input: fc.record({ paths: fc.string() }) }),
-              fc.record({ action: fc.constant('diff'), input: fc.record({ path: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('clean'), input: fc.record({ outputDir: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('diff'), input: fc.record({ path: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('clean'), input: fc.record({ outputDir: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

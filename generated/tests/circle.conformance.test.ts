@@ -392,12 +392,12 @@ describe('Circle functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), domain: fc.string({ minLength: 1, maxLength: 20 }), parent: fc.string() }) }),
-              fc.record({ action: fc.constant('assignMember'), input: fc.record({ circle: fc.string(), member: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('removeMember'), input: fc.record({ circle: fc.string(), member: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), domain: fc.string({ minLength: 1, maxLength: 50 }), parent: fc.string() }) }),
+              fc.record({ action: fc.constant('assignMember'), input: fc.record({ circle: fc.string(), member: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('removeMember'), input: fc.record({ circle: fc.string(), member: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('setLinks'), input: fc.record({ circle: fc.string(), repLink: fc.string(), leadLink: fc.string() }) }),
               fc.record({ action: fc.constant('dissolve'), input: fc.record({ circle: fc.string() }) }),
-              fc.record({ action: fc.constant('checkJurisdiction'), input: fc.record({ circle: fc.string(), action: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('checkJurisdiction'), input: fc.record({ circle: fc.string(), action: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -424,12 +424,12 @@ describe('Circle functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), domain: fc.string({ minLength: 1, maxLength: 20 }), parent: fc.string() }) }),
-              fc.record({ action: fc.constant('assignMember'), input: fc.record({ circle: fc.string(), member: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('removeMember'), input: fc.record({ circle: fc.string(), member: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), domain: fc.string({ minLength: 1, maxLength: 50 }), parent: fc.string() }) }),
+              fc.record({ action: fc.constant('assignMember'), input: fc.record({ circle: fc.string(), member: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('removeMember'), input: fc.record({ circle: fc.string(), member: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('setLinks'), input: fc.record({ circle: fc.string(), repLink: fc.string(), leadLink: fc.string() }) }),
               fc.record({ action: fc.constant('dissolve'), input: fc.record({ circle: fc.string() }) }),
-              fc.record({ action: fc.constant('checkJurisdiction'), input: fc.record({ circle: fc.string(), action: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('checkJurisdiction'), input: fc.record({ circle: fc.string(), action: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

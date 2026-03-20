@@ -98,8 +98,8 @@ describe('GraphqlProvider imperative handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('register'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('configure'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), url: fc.string({ minLength: 1, maxLength: 20 }), headers: fc.string({ minLength: 1, maxLength: 20 }), schemaRef: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('execute'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 20 }), query: fc.string({ minLength: 1, maxLength: 20 }), variables: fc.string({ minLength: 1, maxLength: 20 }), operationType: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), url: fc.string({ minLength: 1, maxLength: 50 }), headers: fc.string({ minLength: 1, maxLength: 50 }), schemaRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('execute'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 50 }), query: fc.string({ minLength: 1, maxLength: 50 }), variables: fc.string({ minLength: 1, maxLength: 50 }), operationType: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -127,8 +127,8 @@ describe('GraphqlProvider imperative handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('register'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('configure'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), url: fc.string({ minLength: 1, maxLength: 20 }), headers: fc.string({ minLength: 1, maxLength: 20 }), schemaRef: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('execute'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 20 }), query: fc.string({ minLength: 1, maxLength: 20 }), variables: fc.string({ minLength: 1, maxLength: 20 }), operationType: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), url: fc.string({ minLength: 1, maxLength: 50 }), headers: fc.string({ minLength: 1, maxLength: 50 }), schemaRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('execute'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 50 }), query: fc.string({ minLength: 1, maxLength: 50 }), variables: fc.string({ minLength: 1, maxLength: 50 }), operationType: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },

@@ -399,7 +399,7 @@ describe('DAGHistory functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('append'), input: fc.record({ parents: fc.string(), contentRef: fc.string({ minLength: 1, maxLength: 20 }), metadata: fc.string() }) }),
+              fc.record({ action: fc.constant('append'), input: fc.record({ parents: fc.string(), contentRef: fc.string({ minLength: 1, maxLength: 50 }), metadata: fc.string() }) }),
               fc.record({ action: fc.constant('ancestors'), input: fc.record({ nodeId: fc.string() }) }),
               fc.record({ action: fc.constant('commonAncestor'), input: fc.record({ a: fc.string(), b: fc.string() }) }),
               fc.record({ action: fc.constant('descendants'), input: fc.record({ nodeId: fc.string() }) }),
@@ -431,7 +431,7 @@ describe('DAGHistory functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('append'), input: fc.record({ parents: fc.string(), contentRef: fc.string({ minLength: 1, maxLength: 20 }), metadata: fc.string() }) }),
+              fc.record({ action: fc.constant('append'), input: fc.record({ parents: fc.string(), contentRef: fc.string({ minLength: 1, maxLength: 50 }), metadata: fc.string() }) }),
               fc.record({ action: fc.constant('ancestors'), input: fc.record({ nodeId: fc.string() }) }),
               fc.record({ action: fc.constant('commonAncestor'), input: fc.record({ a: fc.string(), b: fc.string() }) }),
               fc.record({ action: fc.constant('descendants'), input: fc.record({ nodeId: fc.string() }) }),

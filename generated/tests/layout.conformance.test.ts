@@ -334,10 +334,10 @@ describe('Layout functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ layout: fc.string(), name: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('configure'), input: fc.record({ layout: fc.string(), config: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ layout: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ layout: fc.string(), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('nest'), input: fc.record({ parent: fc.string(), child: fc.string() }) }),
-              fc.record({ action: fc.constant('setResponsive'), input: fc.record({ layout: fc.string(), breakpoints: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('setResponsive'), input: fc.record({ layout: fc.string(), breakpoints: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('remove'), input: fc.record({ layout: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -365,10 +365,10 @@ describe('Layout functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ layout: fc.string(), name: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('configure'), input: fc.record({ layout: fc.string(), config: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ layout: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ layout: fc.string(), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('nest'), input: fc.record({ parent: fc.string(), child: fc.string() }) }),
-              fc.record({ action: fc.constant('setResponsive'), input: fc.record({ layout: fc.string(), breakpoints: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('setResponsive'), input: fc.record({ layout: fc.string(), breakpoints: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('remove'), input: fc.record({ layout: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

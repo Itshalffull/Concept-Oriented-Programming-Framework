@@ -215,8 +215,8 @@ describe('RegistryScaffoldGen functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('generate'), input: fc.record({ deployManifest: fc.string({ minLength: 1, maxLength: 20 }), outputPath: fc.string({ minLength: 1, maxLength: 20 }), language: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('preview'), input: fc.record({ deployManifest: fc.string({ minLength: 1, maxLength: 20 }), outputPath: fc.string({ minLength: 1, maxLength: 20 }), language: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('generate'), input: fc.record({ deployManifest: fc.string({ minLength: 1, maxLength: 50 }), outputPath: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('preview'), input: fc.record({ deployManifest: fc.string({ minLength: 1, maxLength: 50 }), outputPath: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('register'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },

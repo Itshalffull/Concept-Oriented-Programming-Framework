@@ -216,9 +216,9 @@ describe('ContentDigest functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('compute'), input: fc.record({ unit: fc.string({ minLength: 1, maxLength: 20 }), algorithm: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('lookup'), input: fc.record({ hash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('equivalent'), input: fc.record({ a: fc.string({ minLength: 1, maxLength: 20 }), b: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('compute'), input: fc.record({ unit: fc.string({ minLength: 1, maxLength: 50 }), algorithm: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('lookup'), input: fc.record({ hash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('equivalent'), input: fc.record({ a: fc.string({ minLength: 1, maxLength: 50 }), b: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -245,9 +245,9 @@ describe('ContentDigest functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('compute'), input: fc.record({ unit: fc.string({ minLength: 1, maxLength: 20 }), algorithm: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('lookup'), input: fc.record({ hash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('equivalent'), input: fc.record({ a: fc.string({ minLength: 1, maxLength: 20 }), b: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('compute'), input: fc.record({ unit: fc.string({ minLength: 1, maxLength: 50 }), algorithm: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('lookup'), input: fc.record({ hash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('equivalent'), input: fc.record({ a: fc.string({ minLength: 1, maxLength: 50 }), b: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

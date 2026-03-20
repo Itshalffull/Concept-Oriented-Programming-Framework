@@ -334,11 +334,11 @@ describe('Enricher functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('enrich'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 20 }), enricherId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('suggest'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('accept'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 20 }), enrichmentId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('reject'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 20 }), enrichmentId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('refreshStale'), input: fc.record({ olderThan: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('enrich'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 50 }), enricherId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('suggest'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('accept'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 50 }), enrichmentId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('reject'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 50 }), enrichmentId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('refreshStale'), input: fc.record({ olderThan: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -365,11 +365,11 @@ describe('Enricher functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('enrich'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 20 }), enricherId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('suggest'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('accept'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 20 }), enrichmentId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('reject'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 20 }), enrichmentId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('refreshStale'), input: fc.record({ olderThan: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('enrich'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 50 }), enricherId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('suggest'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('accept'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 50 }), enrichmentId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('reject'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 50 }), enrichmentId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('refreshStale'), input: fc.record({ olderThan: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

@@ -116,9 +116,9 @@ describe('ContentHash imperative handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('store'), input: fc.record({ content: fc.string() }) }),
-              fc.record({ action: fc.constant('retrieve'), input: fc.record({ hash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('verify'), input: fc.record({ hash: fc.string({ minLength: 1, maxLength: 20 }), content: fc.string() }) }),
-              fc.record({ action: fc.constant('delete'), input: fc.record({ hash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('retrieve'), input: fc.record({ hash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('verify'), input: fc.record({ hash: fc.string({ minLength: 1, maxLength: 50 }), content: fc.string() }) }),
+              fc.record({ action: fc.constant('delete'), input: fc.record({ hash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -145,9 +145,9 @@ describe('ContentHash imperative handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('store'), input: fc.record({ content: fc.string() }) }),
-              fc.record({ action: fc.constant('retrieve'), input: fc.record({ hash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('verify'), input: fc.record({ hash: fc.string({ minLength: 1, maxLength: 20 }), content: fc.string() }) }),
-              fc.record({ action: fc.constant('delete'), input: fc.record({ hash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('retrieve'), input: fc.record({ hash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('verify'), input: fc.record({ hash: fc.string({ minLength: 1, maxLength: 50 }), content: fc.string() }) }),
+              fc.record({ action: fc.constant('delete'), input: fc.record({ hash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

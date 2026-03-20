@@ -283,8 +283,8 @@ describe('Interactor functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ interactor: fc.string(), name: fc.string({ minLength: 1, maxLength: 20 }), category: fc.string({ minLength: 1, maxLength: 20 }), properties: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('classify'), input: fc.record({ interactor: fc.string(), fieldType: fc.string({ minLength: 1, maxLength: 20 }), constraints: fc.string(), intent: fc.string() }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ interactor: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }), category: fc.string({ minLength: 1, maxLength: 50 }), properties: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('classify'), input: fc.record({ interactor: fc.string(), fieldType: fc.string({ minLength: 1, maxLength: 50 }), constraints: fc.string(), intent: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ interactor: fc.string() }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({ category: fc.string() }) }),
             ),
@@ -313,8 +313,8 @@ describe('Interactor functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ interactor: fc.string(), name: fc.string({ minLength: 1, maxLength: 20 }), category: fc.string({ minLength: 1, maxLength: 20 }), properties: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('classify'), input: fc.record({ interactor: fc.string(), fieldType: fc.string({ minLength: 1, maxLength: 20 }), constraints: fc.string(), intent: fc.string() }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ interactor: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }), category: fc.string({ minLength: 1, maxLength: 50 }), properties: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('classify'), input: fc.record({ interactor: fc.string(), fieldType: fc.string({ minLength: 1, maxLength: 50 }), constraints: fc.string(), intent: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ interactor: fc.string() }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({ category: fc.string() }) }),
             ),

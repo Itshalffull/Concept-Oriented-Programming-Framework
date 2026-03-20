@@ -417,10 +417,10 @@ describe('ScoreBridge functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('connect'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 20 }), protocol: fc.string({ minLength: 1, maxLength: 20 }), authToken: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('query'), input: fc.record({ bridge: fc.string(), graphql: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('show'), input: fc.record({ bridge: fc.string(), kind: fc.string({ minLength: 1, maxLength: 20 }), name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('traverse'), input: fc.record({ bridge: fc.string(), relation: fc.string({ minLength: 1, maxLength: 20 }), target: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('connect'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 50 }), protocol: fc.string({ minLength: 1, maxLength: 50 }), authToken: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('query'), input: fc.record({ bridge: fc.string(), graphql: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('show'), input: fc.record({ bridge: fc.string(), kind: fc.string({ minLength: 1, maxLength: 50 }), name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('traverse'), input: fc.record({ bridge: fc.string(), relation: fc.string({ minLength: 1, maxLength: 50 }), target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('disconnect'), input: fc.record({ bridge: fc.string() }) }),
               fc.record({ action: fc.constant('status'), input: fc.record({ bridge: fc.string() }) }),
             ),
@@ -449,10 +449,10 @@ describe('ScoreBridge functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('connect'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 20 }), protocol: fc.string({ minLength: 1, maxLength: 20 }), authToken: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('query'), input: fc.record({ bridge: fc.string(), graphql: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('show'), input: fc.record({ bridge: fc.string(), kind: fc.string({ minLength: 1, maxLength: 20 }), name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('traverse'), input: fc.record({ bridge: fc.string(), relation: fc.string({ minLength: 1, maxLength: 20 }), target: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('connect'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 50 }), protocol: fc.string({ minLength: 1, maxLength: 50 }), authToken: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('query'), input: fc.record({ bridge: fc.string(), graphql: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('show'), input: fc.record({ bridge: fc.string(), kind: fc.string({ minLength: 1, maxLength: 50 }), name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('traverse'), input: fc.record({ bridge: fc.string(), relation: fc.string({ minLength: 1, maxLength: 50 }), target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('disconnect'), input: fc.record({ bridge: fc.string() }) }),
               fc.record({ action: fc.constant('status'), input: fc.record({ bridge: fc.string() }) }),
             ),

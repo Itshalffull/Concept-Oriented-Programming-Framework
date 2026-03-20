@@ -283,10 +283,10 @@ describe('Cache functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('set'), input: fc.record({ bin: fc.string(), key: fc.string({ minLength: 1, maxLength: 20 }), data: fc.string({ minLength: 1, maxLength: 20 }), tags: fc.string({ minLength: 1, maxLength: 20 }), maxAge: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('get'), input: fc.record({ bin: fc.string(), key: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('invalidate'), input: fc.record({ bin: fc.string(), key: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('invalidateByTags'), input: fc.record({ tags: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('set'), input: fc.record({ bin: fc.string(), key: fc.string({ minLength: 1, maxLength: 50 }), data: fc.string({ minLength: 1, maxLength: 50 }), tags: fc.string({ minLength: 1, maxLength: 50 }), maxAge: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ bin: fc.string(), key: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('invalidate'), input: fc.record({ bin: fc.string(), key: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('invalidateByTags'), input: fc.record({ tags: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -313,10 +313,10 @@ describe('Cache functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('set'), input: fc.record({ bin: fc.string(), key: fc.string({ minLength: 1, maxLength: 20 }), data: fc.string({ minLength: 1, maxLength: 20 }), tags: fc.string({ minLength: 1, maxLength: 20 }), maxAge: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('get'), input: fc.record({ bin: fc.string(), key: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('invalidate'), input: fc.record({ bin: fc.string(), key: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('invalidateByTags'), input: fc.record({ tags: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('set'), input: fc.record({ bin: fc.string(), key: fc.string({ minLength: 1, maxLength: 50 }), data: fc.string({ minLength: 1, maxLength: 50 }), tags: fc.string({ minLength: 1, maxLength: 50 }), maxAge: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ bin: fc.string(), key: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('invalidate'), input: fc.record({ bin: fc.string(), key: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('invalidateByTags'), input: fc.record({ tags: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

@@ -159,7 +159,7 @@ describe('ProcessAutomationProvider functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('register'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('execute'), input: fc.record({ action_payload: fc.string({ minLength: 1, maxLength: 20 }), process_spec_id: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('execute'), input: fc.record({ action_payload: fc.string({ minLength: 1, maxLength: 50 }), process_spec_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -187,7 +187,7 @@ describe('ProcessAutomationProvider functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('register'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('execute'), input: fc.record({ action_payload: fc.string({ minLength: 1, maxLength: 20 }), process_spec_id: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('execute'), input: fc.record({ action_payload: fc.string({ minLength: 1, maxLength: 50 }), process_spec_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

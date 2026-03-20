@@ -146,7 +146,7 @@ describe('AppInstallation functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ installation: fc.string(), name: fc.string({ minLength: 1, maxLength: 20 }), version: fc.string({ minLength: 1, maxLength: 20 }), status: fc.string({ minLength: 1, maxLength: 20 }), registry: fc.string({ minLength: 1, maxLength: 20 }), description: fc.string(), concepts: fc.integer({ min: 0, max: 1000 }), syncs: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ installation: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }), version: fc.string({ minLength: 1, maxLength: 50 }), status: fc.string({ minLength: 1, maxLength: 50 }), registry: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string(), concepts: fc.integer({ min: 1, max: 1000 }), syncs: fc.integer({ min: 1, max: 1000 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({ status: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -174,7 +174,7 @@ describe('AppInstallation functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ installation: fc.string(), name: fc.string({ minLength: 1, maxLength: 20 }), version: fc.string({ minLength: 1, maxLength: 20 }), status: fc.string({ minLength: 1, maxLength: 20 }), registry: fc.string({ minLength: 1, maxLength: 20 }), description: fc.string(), concepts: fc.integer({ min: 0, max: 1000 }), syncs: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ installation: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }), version: fc.string({ minLength: 1, maxLength: 50 }), status: fc.string({ minLength: 1, maxLength: 50 }), registry: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string(), concepts: fc.integer({ min: 1, max: 1000 }), syncs: fc.integer({ min: 1, max: 1000 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({ status: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

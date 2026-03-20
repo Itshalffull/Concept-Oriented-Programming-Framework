@@ -161,11 +161,11 @@ describe('RuntimeFlow imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('correlate'), input: fc.record({ flowId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByAction'), input: fc.record({ action: fc.string({ minLength: 1, maxLength: 20 }), since: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findBySync'), input: fc.record({ sync: fc.string({ minLength: 1, maxLength: 20 }), since: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByVariant'), input: fc.record({ variant: fc.string({ minLength: 1, maxLength: 20 }), since: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findFailures'), input: fc.record({ since: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('correlate'), input: fc.record({ flowId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByAction'), input: fc.record({ action: fc.string({ minLength: 1, maxLength: 50 }), since: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findBySync'), input: fc.record({ sync: fc.string({ minLength: 1, maxLength: 50 }), since: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByVariant'), input: fc.record({ variant: fc.string({ minLength: 1, maxLength: 50 }), since: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findFailures'), input: fc.record({ since: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('compareToStatic'), input: fc.record({ flow: fc.string() }) }),
               fc.record({ action: fc.constant('sourceLocations'), input: fc.record({ flow: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ flow: fc.string() }) }),
@@ -194,11 +194,11 @@ describe('RuntimeFlow imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('correlate'), input: fc.record({ flowId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByAction'), input: fc.record({ action: fc.string({ minLength: 1, maxLength: 20 }), since: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findBySync'), input: fc.record({ sync: fc.string({ minLength: 1, maxLength: 20 }), since: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByVariant'), input: fc.record({ variant: fc.string({ minLength: 1, maxLength: 20 }), since: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findFailures'), input: fc.record({ since: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('correlate'), input: fc.record({ flowId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByAction'), input: fc.record({ action: fc.string({ minLength: 1, maxLength: 50 }), since: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findBySync'), input: fc.record({ sync: fc.string({ minLength: 1, maxLength: 50 }), since: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByVariant'), input: fc.record({ variant: fc.string({ minLength: 1, maxLength: 50 }), since: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findFailures'), input: fc.record({ since: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('compareToStatic'), input: fc.record({ flow: fc.string() }) }),
               fc.record({ action: fc.constant('sourceLocations'), input: fc.record({ flow: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ flow: fc.string() }) }),

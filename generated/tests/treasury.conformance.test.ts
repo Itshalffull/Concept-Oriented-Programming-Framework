@@ -275,10 +275,10 @@ describe('Treasury functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('deposit'), input: fc.record({ vault: fc.string(), token: fc.string({ minLength: 1, maxLength: 20 }), amount: fc.string(), depositor: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('withdraw'), input: fc.record({ vault: fc.string(), token: fc.string({ minLength: 1, maxLength: 20 }), amount: fc.string(), recipient: fc.string({ minLength: 1, maxLength: 20 }), sourceRef: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('allocate'), input: fc.record({ vault: fc.string(), proposalRef: fc.string({ minLength: 1, maxLength: 20 }), token: fc.string({ minLength: 1, maxLength: 20 }), amount: fc.string() }) }),
-              fc.record({ action: fc.constant('releaseAllocation'), input: fc.record({ vault: fc.string(), proposalRef: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('deposit'), input: fc.record({ vault: fc.string(), token: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), depositor: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('withdraw'), input: fc.record({ vault: fc.string(), token: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), recipient: fc.string({ minLength: 1, maxLength: 50 }), sourceRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('allocate'), input: fc.record({ vault: fc.string(), proposalRef: fc.string({ minLength: 1, maxLength: 50 }), token: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string() }) }),
+              fc.record({ action: fc.constant('releaseAllocation'), input: fc.record({ vault: fc.string(), proposalRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -305,10 +305,10 @@ describe('Treasury functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('deposit'), input: fc.record({ vault: fc.string(), token: fc.string({ minLength: 1, maxLength: 20 }), amount: fc.string(), depositor: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('withdraw'), input: fc.record({ vault: fc.string(), token: fc.string({ minLength: 1, maxLength: 20 }), amount: fc.string(), recipient: fc.string({ minLength: 1, maxLength: 20 }), sourceRef: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('allocate'), input: fc.record({ vault: fc.string(), proposalRef: fc.string({ minLength: 1, maxLength: 20 }), token: fc.string({ minLength: 1, maxLength: 20 }), amount: fc.string() }) }),
-              fc.record({ action: fc.constant('releaseAllocation'), input: fc.record({ vault: fc.string(), proposalRef: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('deposit'), input: fc.record({ vault: fc.string(), token: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), depositor: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('withdraw'), input: fc.record({ vault: fc.string(), token: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), recipient: fc.string({ minLength: 1, maxLength: 50 }), sourceRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('allocate'), input: fc.record({ vault: fc.string(), proposalRef: fc.string({ minLength: 1, maxLength: 50 }), token: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string() }) }),
+              fc.record({ action: fc.constant('releaseAllocation'), input: fc.record({ vault: fc.string(), proposalRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

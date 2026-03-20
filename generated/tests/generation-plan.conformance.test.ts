@@ -395,7 +395,7 @@ describe('GenerationPlan functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('begin'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('recordStep'), input: fc.record({ stepKey: fc.string({ minLength: 1, maxLength: 20 }), status: fc.string({ minLength: 1, maxLength: 20 }), filesProduced: fc.string(), duration: fc.string(), cached: fc.boolean() }) }),
+              fc.record({ action: fc.constant('recordStep'), input: fc.record({ stepKey: fc.string({ minLength: 1, maxLength: 50 }), status: fc.string({ minLength: 1, maxLength: 50 }), filesProduced: fc.string(), duration: fc.string(), cached: fc.boolean() }) }),
               fc.record({ action: fc.constant('complete'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('status'), input: fc.record({ run: fc.string() }) }),
               fc.record({ action: fc.constant('summary'), input: fc.record({ run: fc.string() }) }),
@@ -427,7 +427,7 @@ describe('GenerationPlan functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('begin'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('recordStep'), input: fc.record({ stepKey: fc.string({ minLength: 1, maxLength: 20 }), status: fc.string({ minLength: 1, maxLength: 20 }), filesProduced: fc.string(), duration: fc.string(), cached: fc.boolean() }) }),
+              fc.record({ action: fc.constant('recordStep'), input: fc.record({ stepKey: fc.string({ minLength: 1, maxLength: 50 }), status: fc.string({ minLength: 1, maxLength: 50 }), filesProduced: fc.string(), duration: fc.string(), cached: fc.boolean() }) }),
               fc.record({ action: fc.constant('complete'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('status'), input: fc.record({ run: fc.string() }) }),
               fc.record({ action: fc.constant('summary'), input: fc.record({ run: fc.string() }) }),

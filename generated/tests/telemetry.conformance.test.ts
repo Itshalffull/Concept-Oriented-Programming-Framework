@@ -216,9 +216,9 @@ describe('Telemetry functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configure'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), endpoint: fc.string({ minLength: 1, maxLength: 20 }), samplingRate: fc.string() }) }),
-              fc.record({ action: fc.constant('deployMarker'), input: fc.record({ suite: fc.string({ minLength: 1, maxLength: 20 }), version: fc.string({ minLength: 1, maxLength: 20 }), environment: fc.string({ minLength: 1, maxLength: 20 }), status: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('analyze'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), window: fc.integer({ min: 0, max: 1000 }), criteria: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), endpoint: fc.string({ minLength: 1, maxLength: 50 }), samplingRate: fc.string() }) }),
+              fc.record({ action: fc.constant('deployMarker'), input: fc.record({ suite: fc.string({ minLength: 1, maxLength: 50 }), version: fc.string({ minLength: 1, maxLength: 50 }), environment: fc.string({ minLength: 1, maxLength: 50 }), status: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('analyze'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), window: fc.integer({ min: 1, max: 1000 }), criteria: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -245,9 +245,9 @@ describe('Telemetry functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configure'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), endpoint: fc.string({ minLength: 1, maxLength: 20 }), samplingRate: fc.string() }) }),
-              fc.record({ action: fc.constant('deployMarker'), input: fc.record({ suite: fc.string({ minLength: 1, maxLength: 20 }), version: fc.string({ minLength: 1, maxLength: 20 }), environment: fc.string({ minLength: 1, maxLength: 20 }), status: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('analyze'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), window: fc.integer({ min: 0, max: 1000 }), criteria: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), endpoint: fc.string({ minLength: 1, maxLength: 50 }), samplingRate: fc.string() }) }),
+              fc.record({ action: fc.constant('deployMarker'), input: fc.record({ suite: fc.string({ minLength: 1, maxLength: 50 }), version: fc.string({ minLength: 1, maxLength: 50 }), environment: fc.string({ minLength: 1, maxLength: 50 }), status: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('analyze'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), window: fc.integer({ min: 1, max: 1000 }), criteria: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

@@ -98,8 +98,8 @@ describe('GrpcProvider imperative handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('register'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('configure'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), target: fc.string({ minLength: 1, maxLength: 20 }), protoRef: fc.string({ minLength: 1, maxLength: 20 }), options: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('execute'), input: fc.record({ channel: fc.string({ minLength: 1, maxLength: 20 }), service: fc.string({ minLength: 1, maxLength: 20 }), method: fc.string({ minLength: 1, maxLength: 20 }), payload: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), target: fc.string({ minLength: 1, maxLength: 50 }), protoRef: fc.string({ minLength: 1, maxLength: 50 }), options: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('execute'), input: fc.record({ channel: fc.string({ minLength: 1, maxLength: 50 }), service: fc.string({ minLength: 1, maxLength: 50 }), method: fc.string({ minLength: 1, maxLength: 50 }), payload: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -127,8 +127,8 @@ describe('GrpcProvider imperative handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('register'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('configure'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), target: fc.string({ minLength: 1, maxLength: 20 }), protoRef: fc.string({ minLength: 1, maxLength: 20 }), options: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('execute'), input: fc.record({ channel: fc.string({ minLength: 1, maxLength: 20 }), service: fc.string({ minLength: 1, maxLength: 20 }), method: fc.string({ minLength: 1, maxLength: 20 }), payload: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), target: fc.string({ minLength: 1, maxLength: 50 }), protoRef: fc.string({ minLength: 1, maxLength: 50 }), options: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('execute'), input: fc.record({ channel: fc.string({ minLength: 1, maxLength: 50 }), service: fc.string({ minLength: 1, maxLength: 50 }), method: fc.string({ minLength: 1, maxLength: 50 }), payload: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },

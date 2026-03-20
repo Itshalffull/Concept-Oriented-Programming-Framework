@@ -276,10 +276,10 @@ describe('PredictionMarket functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('createMarket'), input: fc.record({ question: fc.string({ minLength: 1, maxLength: 20 }), outcomes: fc.string(), deadline: fc.string() }) }),
-              fc.record({ action: fc.constant('trade'), input: fc.record({ market: fc.string(), trader: fc.string({ minLength: 1, maxLength: 20 }), outcome: fc.string({ minLength: 1, maxLength: 20 }), amount: fc.string() }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ market: fc.string(), outcome: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('claimPayout'), input: fc.record({ market: fc.string(), trader: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('createMarket'), input: fc.record({ question: fc.string({ minLength: 1, maxLength: 50 }), outcomes: fc.string(), deadline: fc.string() }) }),
+              fc.record({ action: fc.constant('trade'), input: fc.record({ market: fc.string(), trader: fc.string({ minLength: 1, maxLength: 50 }), outcome: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string() }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ market: fc.string(), outcome: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('claimPayout'), input: fc.record({ market: fc.string(), trader: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -306,10 +306,10 @@ describe('PredictionMarket functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('createMarket'), input: fc.record({ question: fc.string({ minLength: 1, maxLength: 20 }), outcomes: fc.string(), deadline: fc.string() }) }),
-              fc.record({ action: fc.constant('trade'), input: fc.record({ market: fc.string(), trader: fc.string({ minLength: 1, maxLength: 20 }), outcome: fc.string({ minLength: 1, maxLength: 20 }), amount: fc.string() }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ market: fc.string(), outcome: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('claimPayout'), input: fc.record({ market: fc.string(), trader: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('createMarket'), input: fc.record({ question: fc.string({ minLength: 1, maxLength: 50 }), outcomes: fc.string(), deadline: fc.string() }) }),
+              fc.record({ action: fc.constant('trade'), input: fc.record({ market: fc.string(), trader: fc.string({ minLength: 1, maxLength: 50 }), outcome: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string() }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ market: fc.string(), outcome: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('claimPayout'), input: fc.record({ market: fc.string(), trader: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

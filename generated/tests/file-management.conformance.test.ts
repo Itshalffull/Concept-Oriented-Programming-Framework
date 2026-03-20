@@ -336,9 +336,9 @@ describe('FileManagement functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('upload'), input: fc.record({ file: fc.string(), data: fc.string({ minLength: 1, maxLength: 20 }), mimeType: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('addUsage'), input: fc.record({ file: fc.string(), entity: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('removeUsage'), input: fc.record({ file: fc.string(), entity: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('upload'), input: fc.record({ file: fc.string(), data: fc.string({ minLength: 1, maxLength: 50 }), mimeType: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('addUsage'), input: fc.record({ file: fc.string(), entity: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('removeUsage'), input: fc.record({ file: fc.string(), entity: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('garbageCollect'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('getFile'), input: fc.record({ file: fc.string() }) }),
             ),
@@ -367,9 +367,9 @@ describe('FileManagement functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('upload'), input: fc.record({ file: fc.string(), data: fc.string({ minLength: 1, maxLength: 20 }), mimeType: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('addUsage'), input: fc.record({ file: fc.string(), entity: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('removeUsage'), input: fc.record({ file: fc.string(), entity: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('upload'), input: fc.record({ file: fc.string(), data: fc.string({ minLength: 1, maxLength: 50 }), mimeType: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('addUsage'), input: fc.record({ file: fc.string(), entity: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('removeUsage'), input: fc.record({ file: fc.string(), entity: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('garbageCollect'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('getFile'), input: fc.record({ file: fc.string() }) }),
             ),

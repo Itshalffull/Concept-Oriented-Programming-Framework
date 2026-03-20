@@ -335,11 +335,11 @@ describe('Taxonomy functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('createVocabulary'), input: fc.record({ vocab: fc.string(), name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('addTerm'), input: fc.record({ vocab: fc.string(), term: fc.string({ minLength: 1, maxLength: 20 }), parent: fc.string() }) }),
-              fc.record({ action: fc.constant('setParent'), input: fc.record({ vocab: fc.string(), term: fc.string({ minLength: 1, maxLength: 20 }), parent: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('tagEntity'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 20 }), vocab: fc.string(), term: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('untagEntity'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 20 }), vocab: fc.string(), term: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('createVocabulary'), input: fc.record({ vocab: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('addTerm'), input: fc.record({ vocab: fc.string(), term: fc.string({ minLength: 1, maxLength: 50 }), parent: fc.string() }) }),
+              fc.record({ action: fc.constant('setParent'), input: fc.record({ vocab: fc.string(), term: fc.string({ minLength: 1, maxLength: 50 }), parent: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('tagEntity'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 50 }), vocab: fc.string(), term: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('untagEntity'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 50 }), vocab: fc.string(), term: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -366,11 +366,11 @@ describe('Taxonomy functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('createVocabulary'), input: fc.record({ vocab: fc.string(), name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('addTerm'), input: fc.record({ vocab: fc.string(), term: fc.string({ minLength: 1, maxLength: 20 }), parent: fc.string() }) }),
-              fc.record({ action: fc.constant('setParent'), input: fc.record({ vocab: fc.string(), term: fc.string({ minLength: 1, maxLength: 20 }), parent: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('tagEntity'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 20 }), vocab: fc.string(), term: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('untagEntity'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 20 }), vocab: fc.string(), term: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('createVocabulary'), input: fc.record({ vocab: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('addTerm'), input: fc.record({ vocab: fc.string(), term: fc.string({ minLength: 1, maxLength: 50 }), parent: fc.string() }) }),
+              fc.record({ action: fc.constant('setParent'), input: fc.record({ vocab: fc.string(), term: fc.string({ minLength: 1, maxLength: 50 }), parent: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('tagEntity'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 50 }), vocab: fc.string(), term: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('untagEntity'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 50 }), vocab: fc.string(), term: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

@@ -146,12 +146,12 @@ describe('CircuitBreaker imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configure'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 20 }), failureThreshold: fc.integer({ min: 0, max: 1000 }), successThreshold: fc.integer({ min: 0, max: 1000 }), resetTimeoutMs: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('check'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('recordSuccess'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('recordFailure'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('reset'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('get'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 50 }), failureThreshold: fc.integer({ min: 1, max: 1000 }), successThreshold: fc.integer({ min: 1, max: 1000 }), resetTimeoutMs: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('check'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('recordSuccess'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('recordFailure'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('reset'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -177,12 +177,12 @@ describe('CircuitBreaker imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configure'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 20 }), failureThreshold: fc.integer({ min: 0, max: 1000 }), successThreshold: fc.integer({ min: 0, max: 1000 }), resetTimeoutMs: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('check'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('recordSuccess'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('recordFailure'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('reset'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('get'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 50 }), failureThreshold: fc.integer({ min: 1, max: 1000 }), successThreshold: fc.integer({ min: 1, max: 1000 }), resetTimeoutMs: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('check'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('recordSuccess'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('recordFailure'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('reset'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

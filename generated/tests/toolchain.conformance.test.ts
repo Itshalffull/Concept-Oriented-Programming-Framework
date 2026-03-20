@@ -280,7 +280,7 @@ describe('Toolchain functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ language: fc.string({ minLength: 1, maxLength: 20 }), platform: fc.string({ minLength: 1, maxLength: 20 }), versionConstraint: fc.string(), category: fc.string(), toolName: fc.string() }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ language: fc.string({ minLength: 1, maxLength: 50 }), platform: fc.string({ minLength: 1, maxLength: 50 }), versionConstraint: fc.string(), category: fc.string(), toolName: fc.string() }) }),
               fc.record({ action: fc.constant('validate'), input: fc.record({ tool: fc.string() }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({ language: fc.string(), category: fc.string() }) }),
               fc.record({ action: fc.constant('capabilities'), input: fc.record({ tool: fc.string() }) }),
@@ -310,7 +310,7 @@ describe('Toolchain functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ language: fc.string({ minLength: 1, maxLength: 20 }), platform: fc.string({ minLength: 1, maxLength: 20 }), versionConstraint: fc.string(), category: fc.string(), toolName: fc.string() }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ language: fc.string({ minLength: 1, maxLength: 50 }), platform: fc.string({ minLength: 1, maxLength: 50 }), versionConstraint: fc.string(), category: fc.string(), toolName: fc.string() }) }),
               fc.record({ action: fc.constant('validate'), input: fc.record({ tool: fc.string() }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({ language: fc.string(), category: fc.string() }) }),
               fc.record({ action: fc.constant('capabilities'), input: fc.record({ tool: fc.string() }) }),

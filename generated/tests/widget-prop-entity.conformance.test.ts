@@ -274,8 +274,8 @@ describe('WidgetPropEntity functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ widget: fc.string({ minLength: 1, maxLength: 20 }), name: fc.string({ minLength: 1, maxLength: 20 }), typeExpr: fc.string({ minLength: 1, maxLength: 20 }), defaultValue: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByWidget'), input: fc.record({ widget: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ widget: fc.string({ minLength: 1, maxLength: 50 }), name: fc.string({ minLength: 1, maxLength: 50 }), typeExpr: fc.string({ minLength: 1, maxLength: 50 }), defaultValue: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByWidget'), input: fc.record({ widget: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('traceToField'), input: fc.record({ prop: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ prop: fc.string() }) }),
             ),
@@ -304,8 +304,8 @@ describe('WidgetPropEntity functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ widget: fc.string({ minLength: 1, maxLength: 20 }), name: fc.string({ minLength: 1, maxLength: 20 }), typeExpr: fc.string({ minLength: 1, maxLength: 20 }), defaultValue: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByWidget'), input: fc.record({ widget: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ widget: fc.string({ minLength: 1, maxLength: 50 }), name: fc.string({ minLength: 1, maxLength: 50 }), typeExpr: fc.string({ minLength: 1, maxLength: 50 }), defaultValue: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByWidget'), input: fc.record({ widget: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('traceToField'), input: fc.record({ prop: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ prop: fc.string() }) }),
             ),

@@ -331,11 +331,11 @@ describe('Formula functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ formula: fc.string(), expression: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ formula: fc.string(), expression: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('evaluate'), input: fc.record({ formula: fc.string() }) }),
               fc.record({ action: fc.constant('getDependencies'), input: fc.record({ formula: fc.string() }) }),
               fc.record({ action: fc.constant('invalidate'), input: fc.record({ formula: fc.string() }) }),
-              fc.record({ action: fc.constant('setExpression'), input: fc.record({ formula: fc.string(), expression: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('setExpression'), input: fc.record({ formula: fc.string(), expression: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -362,11 +362,11 @@ describe('Formula functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ formula: fc.string(), expression: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ formula: fc.string(), expression: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('evaluate'), input: fc.record({ formula: fc.string() }) }),
               fc.record({ action: fc.constant('getDependencies'), input: fc.record({ formula: fc.string() }) }),
               fc.record({ action: fc.constant('invalidate'), input: fc.record({ formula: fc.string() }) }),
-              fc.record({ action: fc.constant('setExpression'), input: fc.record({ formula: fc.string(), expression: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('setExpression'), input: fc.record({ formula: fc.string(), expression: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

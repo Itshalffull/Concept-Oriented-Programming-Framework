@@ -341,10 +341,10 @@ describe('FileArtifact functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ node: fc.string({ minLength: 1, maxLength: 20 }), role: fc.string({ minLength: 1, maxLength: 20 }), language: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('setProvenance'), input: fc.record({ artifact: fc.string(), spec: fc.string({ minLength: 1, maxLength: 20 }), generator: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByRole'), input: fc.record({ role: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findGeneratedFrom'), input: fc.record({ spec: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ node: fc.string({ minLength: 1, maxLength: 50 }), role: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setProvenance'), input: fc.record({ artifact: fc.string(), spec: fc.string({ minLength: 1, maxLength: 50 }), generator: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByRole'), input: fc.record({ role: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findGeneratedFrom'), input: fc.record({ spec: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ artifact: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -372,10 +372,10 @@ describe('FileArtifact functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ node: fc.string({ minLength: 1, maxLength: 20 }), role: fc.string({ minLength: 1, maxLength: 20 }), language: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('setProvenance'), input: fc.record({ artifact: fc.string(), spec: fc.string({ minLength: 1, maxLength: 20 }), generator: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByRole'), input: fc.record({ role: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findGeneratedFrom'), input: fc.record({ spec: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ node: fc.string({ minLength: 1, maxLength: 50 }), role: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setProvenance'), input: fc.record({ artifact: fc.string(), spec: fc.string({ minLength: 1, maxLength: 50 }), generator: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByRole'), input: fc.record({ role: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findGeneratedFrom'), input: fc.record({ spec: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ artifact: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

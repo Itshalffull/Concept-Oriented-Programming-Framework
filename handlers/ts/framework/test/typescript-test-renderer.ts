@@ -13,7 +13,7 @@
 // ============================================================
 
 import type {
-  TestPlan, TestPlanAction, TestPlanExample, TestPlanForall,
+  TestPlan, TestPlanAction, TestPlanFixture, TestPlanExample, TestPlanForall,
   TestPlanStateInvariant, TestPlanLiveness, TestPlanContract,
 } from './test-gen.handler.js';
 
@@ -34,6 +34,24 @@ function defaultInput(params: Array<{ name: string; type: string }>): string {
 }
 
 /**
+ * Serialize a fixture input object to a TypeScript expression string.
+ */
+function fixtureInputStr(input: Record<string, unknown>): string {
+  return Object.entries(input)
+    .map(([k, v]) => `${k}: ${JSON.stringify(v)}`)
+    .join(', ');
+}
+
+/**
+ * Get the best default input for an action: first 'ok' fixture if available, else type-based default.
+ */
+function bestInput(action: TestPlanAction): string {
+  const okFixture = action.fixtures?.find(f => f.expectedVariant === 'ok');
+  if (okFixture) return fixtureInputStr(okFixture.input);
+  return defaultInput(action.params);
+}
+
+/**
  * Returns the expression to invoke an action and get a result.
  * - functional: `await interpret(handler.action({ ... }), storage)`
  * - imperative: `await handler.action({ ... }, storage)`
@@ -45,11 +63,46 @@ function invokeExpr(handlerVar: string, action: string, inputStr: string, style:
   return `await interpret(${handlerVar}.${action}({ ${inputStr} }), storage)`;
 }
 
+/**
+ * Build fast-check arbitraries for an action's params, seeded by fixture values.
+ * If fixtures provide known-good values, mix them with random generation via fc.oneof
+ * so the fuzzer explores valid paths instead of wasting runs on parse errors.
+ */
+function buildInputArbs(action: TestPlanAction): string[] {
+  // Collect all fixture values per param name
+  const fixtureValues: Record<string, Set<string>> = {};
+  for (const fixture of (action.fixtures || [])) {
+    for (const [k, v] of Object.entries(fixture.input)) {
+      if (!fixtureValues[k]) fixtureValues[k] = new Set();
+      fixtureValues[k].add(JSON.stringify(v));
+    }
+  }
+
+  return action.params.map(p => {
+    const t = p.type.toLowerCase();
+    const seeds = fixtureValues[p.name];
+
+    // Type-appropriate random arbitrary
+    let randomArb: string;
+    if (t === 'string') randomArb = `fc.string({ minLength: 1, maxLength: 50 })`;
+    else if (t === 'int' || t === 'number') randomArb = `fc.integer({ min: 1, max: 1000 })`;
+    else if (t === 'bool' || t === 'boolean') randomArb = `fc.boolean()`;
+    else randomArb = `fc.string()`;
+
+    // If we have fixture seeds, mix them with random generation
+    if (seeds && seeds.size > 0) {
+      const constants = [...seeds].map(v => `fc.constant(${v})`).join(', ');
+      return `${p.name}: fc.oneof(${constants}, ${randomArb})`;
+    }
+    return `${p.name}: ${randomArb}`;
+  });
+}
+
 // ── Structural tests (functional only) ──────────────────────
 
 function renderStructuralTests(handlerVar: string, action: TestPlanAction, style: HandlerStyle): string[] {
   const lines: string[] = [];
-  const inputObj = defaultInput(action.params);
+  const inputObj = bestInput(action);
 
   lines.push(`  describe('${action.name}', () => {`);
 
@@ -121,6 +174,20 @@ function renderStructuralTests(handlerVar: string, action: TestPlanAction, style
   lines.push(`      }`);
   lines.push(`    });`);
   lines.push('');
+
+  // Fixture behavioral tests — each fixture asserts its expected variant
+  if (action.fixtures && action.fixtures.length > 0) {
+    for (const fixture of action.fixtures) {
+      const fInput = fixtureInputStr(fixture.input);
+      lines.push(`    it('fixture "${fixture.name}" -> ${fixture.expectedVariant}', async () => {`);
+      lines.push(`      if (typeof ${handlerVar}.${action.name} !== 'function') return;`);
+      lines.push(`      const storage = createInMemoryStorage();`);
+      lines.push(`      const result = ${invokeExpr(handlerVar, action.name, fInput, style)};`);
+      lines.push(`      expect(result.variant).toBe('${fixture.expectedVariant}');`);
+      lines.push(`    });`);
+      lines.push('');
+    }
+  }
 
   lines.push(`  });`);
   lines.push('');
@@ -272,13 +339,7 @@ function renderStateInvariantTests(
     }
 
     const actionArbs = actions.map(a => {
-      const inputArb = a.params.map(p => {
-        const t = p.type.toLowerCase();
-        if (t === 'string') return `${p.name}: fc.string({ minLength: 1, maxLength: 20 })`;
-        if (t === 'int' || t === 'number') return `${p.name}: fc.integer({ min: 0, max: 1000 })`;
-        if (t === 'bool' || t === 'boolean') return `${p.name}: fc.boolean()`;
-        return `${p.name}: fc.string()`;
-      }).join(', ');
+      const inputArb = buildInputArbs(a).join(', ');
       return `fc.record({ action: fc.constant('${a.name}'), input: fc.record({ ${inputArb} }) })`;
     });
 
@@ -408,13 +469,7 @@ function renderContractTests(
 
     // Postcondition: when action produces the target variant, output is well-formed
     if (action && contract.postconditions.length > 0) {
-      const inputArbs = action.params.map(p => {
-        const t = p.type.toLowerCase();
-        if (t === 'string') return `${p.name}: fc.string({ minLength: 1, maxLength: 50 })`;
-        if (t === 'int' || t === 'number') return `${p.name}: fc.integer({ min: 1, max: 1000 })`;
-        if (t === 'bool' || t === 'boolean') return `${p.name}: fc.boolean()`;
-        return `${p.name}: fc.string()`;
-      }).join(', ');
+      const inputArbs = buildInputArbs(action).join(', ');
 
       for (const post of contract.postconditions) {
         lines.push(`    it('${contract.targetAction} ensures on ${post.variant}: ${post.assertion}', async () => {`);

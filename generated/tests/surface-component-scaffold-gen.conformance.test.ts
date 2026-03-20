@@ -215,8 +215,8 @@ describe('SurfaceComponentScaffoldGen functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('generate'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), parts: fc.string(), states: fc.string(), events: fc.string(), role: fc.string(), requires: fc.string(), affordance: fc.string(), props: fc.string(), compose: fc.string() }) }),
-              fc.record({ action: fc.constant('preview'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), parts: fc.string(), states: fc.string(), events: fc.string(), role: fc.string(), requires: fc.string(), affordance: fc.string(), props: fc.string(), compose: fc.string() }) }),
+              fc.record({ action: fc.constant('generate'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), parts: fc.string(), states: fc.string(), events: fc.string(), role: fc.string(), requires: fc.string(), affordance: fc.string(), props: fc.string(), compose: fc.string() }) }),
+              fc.record({ action: fc.constant('preview'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), parts: fc.string(), states: fc.string(), events: fc.string(), role: fc.string(), requires: fc.string(), affordance: fc.string(), props: fc.string(), compose: fc.string() }) }),
               fc.record({ action: fc.constant('register'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },

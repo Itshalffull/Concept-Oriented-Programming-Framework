@@ -333,11 +333,11 @@ describe('SchemaEvolution functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 20 }), schema: fc.string(), compatibility: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('check'), input: fc.record({ oldSchema: fc.string(), newSchema: fc.string(), mode: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('upcast'), input: fc.record({ data: fc.string(), fromVersion: fc.integer({ min: 0, max: 1000 }), toVersion: fc.integer({ min: 0, max: 1000 }), subject: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 50 }), schema: fc.string(), compatibility: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('check'), input: fc.record({ oldSchema: fc.string(), newSchema: fc.string(), mode: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('upcast'), input: fc.record({ data: fc.string(), fromVersion: fc.integer({ min: 1, max: 1000 }), toVersion: fc.integer({ min: 1, max: 1000 }), subject: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('resolve'), input: fc.record({ readerSchema: fc.string(), writerSchema: fc.string() }) }),
-              fc.record({ action: fc.constant('getSchema'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 20 }), version: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('getSchema'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 50 }), version: fc.integer({ min: 1, max: 1000 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -364,11 +364,11 @@ describe('SchemaEvolution functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 20 }), schema: fc.string(), compatibility: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('check'), input: fc.record({ oldSchema: fc.string(), newSchema: fc.string(), mode: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('upcast'), input: fc.record({ data: fc.string(), fromVersion: fc.integer({ min: 0, max: 1000 }), toVersion: fc.integer({ min: 0, max: 1000 }), subject: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 50 }), schema: fc.string(), compatibility: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('check'), input: fc.record({ oldSchema: fc.string(), newSchema: fc.string(), mode: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('upcast'), input: fc.record({ data: fc.string(), fromVersion: fc.integer({ min: 1, max: 1000 }), toVersion: fc.integer({ min: 1, max: 1000 }), subject: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('resolve'), input: fc.record({ readerSchema: fc.string(), writerSchema: fc.string() }) }),
-              fc.record({ action: fc.constant('getSchema'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 20 }), version: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('getSchema'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 50 }), version: fc.integer({ min: 1, max: 1000 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

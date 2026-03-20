@@ -175,6 +175,44 @@ action <name>(<param>: <Type>, ...) {
 | `invalid` | Validation failed | `message: String` |
 | `warning` | Success with issues | Result + `issues: list String` |
 
+### Fixtures
+
+Fixtures are named input examples that serve as test seeds and documentation. They appear inside the action block, after variants:
+
+```
+action record(stepKey: String, inputHash: String, outputHash: String, deterministic: Bool) {
+  -> ok(entry: S)
+  -> error(message: String)
+  fixture valid { stepKey: "build:main", inputHash: "abc123", outputHash: "def456", deterministic: true }
+  fixture minimal { stepKey: "x", inputHash: "h", outputHash: "o", deterministic: false }
+  fixture missingHash { stepKey: "test" } -> error
+}
+```
+
+**Syntax**: `fixture <name> { <key>: <value>, ... } [-> <variant>]`
+
+- **name**: camelCase identifier describing the scenario
+- **input object**: `{ key: value, ... }` with JSON-like values (strings, numbers, booleans, arrays, nested objects)
+- **expected variant** (optional): `-> error`, `-> invalid`, etc. Defaults to `ok` if omitted
+- Fixtures appear after variants but before the action's closing `}`
+
+**Fixture values**:
+
+| Syntax | Type | Example |
+|--------|------|---------|
+| `"text"` | String | `name: "hello"` |
+| `42`, `-1`, `3.14` | Number | `count: 42` |
+| `true`, `false` | Boolean | `deterministic: true` |
+| `[1, 2, 3]` | Array | `ids: [1, 2, 3]` |
+| `{ k: "v" }` | Nested object | `config: { timeout: 30 }` |
+| `none` | Null | `optional: none` |
+
+**Guidelines**:
+- Every action should have at least one `ok` fixture with realistic inputs
+- Add `-> error` or `-> invalid` fixtures to test negative paths
+- Use fixture values that match what the handler actually expects (e.g., JSON strings for params that get `JSON.parse()`d)
+- Fixtures are used by the test generator as seeds for both deterministic and property-based tests
+
 ### Custom Types in Action Parameters
 
 Actions can reference types not defined in the concept. The parser accepts any identifier as a type. Custom types like `ConceptManifest`, `ActionRecord`, `CompiledSync` are used by framework concepts.

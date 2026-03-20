@@ -158,7 +158,7 @@ describe('QuadraticWeight functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configure'), input: fc.record({ tokenSource: fc.string({ minLength: 1, maxLength: 20 }), scalingFactor: fc.string() }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ tokenSource: fc.string({ minLength: 1, maxLength: 50 }), scalingFactor: fc.string() }) }),
               fc.record({ action: fc.constant('computeWeight'), input: fc.record({ config: fc.string(), balance: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -186,7 +186,7 @@ describe('QuadraticWeight functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configure'), input: fc.record({ tokenSource: fc.string({ minLength: 1, maxLength: 20 }), scalingFactor: fc.string() }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ tokenSource: fc.string({ minLength: 1, maxLength: 50 }), scalingFactor: fc.string() }) }),
               fc.record({ action: fc.constant('computeWeight'), input: fc.record({ config: fc.string(), balance: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

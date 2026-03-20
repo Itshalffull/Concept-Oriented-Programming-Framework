@@ -109,7 +109,7 @@ describe('User functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ user: fc.string(), name: fc.string({ minLength: 1, maxLength: 20 }), email: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ user: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }), email: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -136,7 +136,7 @@ describe('User functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ user: fc.string(), name: fc.string({ minLength: 1, maxLength: 20 }), email: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ user: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }), email: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

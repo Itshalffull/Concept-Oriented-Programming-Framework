@@ -276,8 +276,8 @@ describe('ExposedFilter functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('expose'), input: fc.record({ filter: fc.string(), fieldName: fc.string({ minLength: 1, maxLength: 20 }), operator: fc.string({ minLength: 1, maxLength: 20 }), defaultValue: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('collectInput'), input: fc.record({ filter: fc.string(), value: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('expose'), input: fc.record({ filter: fc.string(), fieldName: fc.string({ minLength: 1, maxLength: 50 }), operator: fc.string({ minLength: 1, maxLength: 50 }), defaultValue: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('collectInput'), input: fc.record({ filter: fc.string(), value: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('applyToQuery'), input: fc.record({ filter: fc.string() }) }),
               fc.record({ action: fc.constant('resetToDefaults'), input: fc.record({ filter: fc.string() }) }),
             ),
@@ -306,8 +306,8 @@ describe('ExposedFilter functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('expose'), input: fc.record({ filter: fc.string(), fieldName: fc.string({ minLength: 1, maxLength: 20 }), operator: fc.string({ minLength: 1, maxLength: 20 }), defaultValue: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('collectInput'), input: fc.record({ filter: fc.string(), value: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('expose'), input: fc.record({ filter: fc.string(), fieldName: fc.string({ minLength: 1, maxLength: 50 }), operator: fc.string({ minLength: 1, maxLength: 50 }), defaultValue: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('collectInput'), input: fc.record({ filter: fc.string(), value: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('applyToQuery'), input: fc.record({ filter: fc.string() }) }),
               fc.record({ action: fc.constant('resetToDefaults'), input: fc.record({ filter: fc.string() }) }),
             ),

@@ -229,7 +229,7 @@ describe('Resolver functional handler', () => {
             fc.oneof(
               fc.record({ action: fc.constant('resolve'), input: fc.record({ constraints: fc.string(), policy: fc.string(), locked_versions: fc.string() }) }),
               fc.record({ action: fc.constant('update'), input: fc.record({ resolution: fc.string(), targets: fc.string(), policy: fc.string() }) }),
-              fc.record({ action: fc.constant('explain'), input: fc.record({ resolution: fc.string(), module_id: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('explain'), input: fc.record({ resolution: fc.string(), module_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -258,7 +258,7 @@ describe('Resolver functional handler', () => {
             fc.oneof(
               fc.record({ action: fc.constant('resolve'), input: fc.record({ constraints: fc.string(), policy: fc.string(), locked_versions: fc.string() }) }),
               fc.record({ action: fc.constant('update'), input: fc.record({ resolution: fc.string(), targets: fc.string(), policy: fc.string() }) }),
-              fc.record({ action: fc.constant('explain'), input: fc.record({ resolution: fc.string(), module_id: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('explain'), input: fc.record({ resolution: fc.string(), module_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

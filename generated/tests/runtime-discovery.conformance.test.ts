@@ -413,12 +413,12 @@ describe('RuntimeDiscovery functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('scan'), input: fc.record({ directory: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('scan'), input: fc.record({ directory: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('listProjects'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('listRuntimes'), input: fc.record({ project: fc.string() }) }),
-              fc.record({ action: fc.constant('resolveEndpoint'), input: fc.record({ project: fc.string(), runtime: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolveCredentials'), input: fc.record({ project: fc.string(), runtime: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('selectRuntime'), input: fc.record({ project: fc.string(), runtime: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('resolveEndpoint'), input: fc.record({ project: fc.string(), runtime: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolveCredentials'), input: fc.record({ project: fc.string(), runtime: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('selectRuntime'), input: fc.record({ project: fc.string(), runtime: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -445,12 +445,12 @@ describe('RuntimeDiscovery functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('scan'), input: fc.record({ directory: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('scan'), input: fc.record({ directory: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('listProjects'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('listRuntimes'), input: fc.record({ project: fc.string() }) }),
-              fc.record({ action: fc.constant('resolveEndpoint'), input: fc.record({ project: fc.string(), runtime: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolveCredentials'), input: fc.record({ project: fc.string(), runtime: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('selectRuntime'), input: fc.record({ project: fc.string(), runtime: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('resolveEndpoint'), input: fc.record({ project: fc.string(), runtime: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolveCredentials'), input: fc.record({ project: fc.string(), runtime: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('selectRuntime'), input: fc.record({ project: fc.string(), runtime: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

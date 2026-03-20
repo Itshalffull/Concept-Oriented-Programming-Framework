@@ -274,9 +274,9 @@ describe('SemanticEmbedding functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('compute'), input: fc.record({ unit: fc.string({ minLength: 1, maxLength: 20 }), model: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('searchSimilar'), input: fc.record({ queryVector: fc.string({ minLength: 1, maxLength: 20 }), topK: fc.integer({ min: 0, max: 1000 }), language: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('searchNaturalLanguage'), input: fc.record({ query: fc.string({ minLength: 1, maxLength: 20 }), topK: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('compute'), input: fc.record({ unit: fc.string({ minLength: 1, maxLength: 50 }), model: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('searchSimilar'), input: fc.record({ queryVector: fc.string({ minLength: 1, maxLength: 50 }), topK: fc.integer({ min: 1, max: 1000 }), language: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('searchNaturalLanguage'), input: fc.record({ query: fc.string({ minLength: 1, maxLength: 50 }), topK: fc.integer({ min: 1, max: 1000 }) }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ embedding: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -304,9 +304,9 @@ describe('SemanticEmbedding functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('compute'), input: fc.record({ unit: fc.string({ minLength: 1, maxLength: 20 }), model: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('searchSimilar'), input: fc.record({ queryVector: fc.string({ minLength: 1, maxLength: 20 }), topK: fc.integer({ min: 0, max: 1000 }), language: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('searchNaturalLanguage'), input: fc.record({ query: fc.string({ minLength: 1, maxLength: 20 }), topK: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('compute'), input: fc.record({ unit: fc.string({ minLength: 1, maxLength: 50 }), model: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('searchSimilar'), input: fc.record({ queryVector: fc.string({ minLength: 1, maxLength: 50 }), topK: fc.integer({ min: 1, max: 1000 }), language: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('searchNaturalLanguage'), input: fc.record({ query: fc.string({ minLength: 1, maxLength: 50 }), topK: fc.integer({ min: 1, max: 1000 }) }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ embedding: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

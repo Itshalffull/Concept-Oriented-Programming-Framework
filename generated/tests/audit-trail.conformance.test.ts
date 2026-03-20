@@ -216,7 +216,7 @@ describe('AuditTrail functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('record'), input: fc.record({ eventType: fc.string({ minLength: 1, maxLength: 20 }), actor: fc.string({ minLength: 1, maxLength: 20 }), action: fc.string({ minLength: 1, maxLength: 20 }), details: fc.string({ minLength: 1, maxLength: 20 }), sourceRef: fc.string() }) }),
+              fc.record({ action: fc.constant('record'), input: fc.record({ eventType: fc.string({ minLength: 1, maxLength: 50 }), actor: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), details: fc.string({ minLength: 1, maxLength: 50 }), sourceRef: fc.string() }) }),
               fc.record({ action: fc.constant('query'), input: fc.record({ eventType: fc.string(), actor: fc.string(), fromTime: fc.string(), toTime: fc.string() }) }),
               fc.record({ action: fc.constant('verifyIntegrity'), input: fc.record({ entry: fc.string() }) }),
             ),
@@ -245,7 +245,7 @@ describe('AuditTrail functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('record'), input: fc.record({ eventType: fc.string({ minLength: 1, maxLength: 20 }), actor: fc.string({ minLength: 1, maxLength: 20 }), action: fc.string({ minLength: 1, maxLength: 20 }), details: fc.string({ minLength: 1, maxLength: 20 }), sourceRef: fc.string() }) }),
+              fc.record({ action: fc.constant('record'), input: fc.record({ eventType: fc.string({ minLength: 1, maxLength: 50 }), actor: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), details: fc.string({ minLength: 1, maxLength: 50 }), sourceRef: fc.string() }) }),
               fc.record({ action: fc.constant('query'), input: fc.record({ eventType: fc.string(), actor: fc.string(), fromTime: fc.string(), toTime: fc.string() }) }),
               fc.record({ action: fc.constant('verifyIntegrity'), input: fc.record({ entry: fc.string() }) }),
             ),

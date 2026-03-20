@@ -396,8 +396,8 @@ describe('SeedData functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('discover'), input: fc.record({ base_path: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('register'), input: fc.record({ source_path: fc.string({ minLength: 1, maxLength: 20 }), concept_uri: fc.string({ minLength: 1, maxLength: 20 }), action_name: fc.string({ minLength: 1, maxLength: 20 }), entries: fc.string() }) }),
+              fc.record({ action: fc.constant('discover'), input: fc.record({ base_path: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ source_path: fc.string({ minLength: 1, maxLength: 50 }), concept_uri: fc.string({ minLength: 1, maxLength: 50 }), action_name: fc.string({ minLength: 1, maxLength: 50 }), entries: fc.string() }) }),
               fc.record({ action: fc.constant('apply'), input: fc.record({ seed: fc.string() }) }),
               fc.record({ action: fc.constant('applyAll'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('status'), input: fc.record({  }) }),
@@ -428,8 +428,8 @@ describe('SeedData functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('discover'), input: fc.record({ base_path: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('register'), input: fc.record({ source_path: fc.string({ minLength: 1, maxLength: 20 }), concept_uri: fc.string({ minLength: 1, maxLength: 20 }), action_name: fc.string({ minLength: 1, maxLength: 20 }), entries: fc.string() }) }),
+              fc.record({ action: fc.constant('discover'), input: fc.record({ base_path: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ source_path: fc.string({ minLength: 1, maxLength: 50 }), concept_uri: fc.string({ minLength: 1, maxLength: 50 }), action_name: fc.string({ minLength: 1, maxLength: 50 }), entries: fc.string() }) }),
               fc.record({ action: fc.constant('apply'), input: fc.record({ seed: fc.string() }) }),
               fc.record({ action: fc.constant('applyAll'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('status'), input: fc.record({  }) }),

@@ -273,10 +273,10 @@ describe('Namespace functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('createNamespacedPage'), input: fc.record({ node: fc.string(), path: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('createNamespacedPage'), input: fc.record({ node: fc.string(), path: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('getChildren'), input: fc.record({ node: fc.string() }) }),
               fc.record({ action: fc.constant('getHierarchy'), input: fc.record({ node: fc.string() }) }),
-              fc.record({ action: fc.constant('move'), input: fc.record({ node: fc.string(), newPath: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('move'), input: fc.record({ node: fc.string(), newPath: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -303,10 +303,10 @@ describe('Namespace functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('createNamespacedPage'), input: fc.record({ node: fc.string(), path: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('createNamespacedPage'), input: fc.record({ node: fc.string(), path: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('getChildren'), input: fc.record({ node: fc.string() }) }),
               fc.record({ action: fc.constant('getHierarchy'), input: fc.record({ node: fc.string() }) }),
-              fc.record({ action: fc.constant('move'), input: fc.record({ node: fc.string(), newPath: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('move'), input: fc.record({ node: fc.string(), newPath: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

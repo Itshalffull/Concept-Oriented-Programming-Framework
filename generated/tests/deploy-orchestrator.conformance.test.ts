@@ -226,8 +226,8 @@ describe('DeployOrchestrator functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('deploy'), input: fc.record({ manifestPath: fc.string({ minLength: 1, maxLength: 20 }), environment: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('deployAll'), input: fc.record({ projectRoot: fc.string({ minLength: 1, maxLength: 20 }), environment: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('deploy'), input: fc.record({ manifestPath: fc.string({ minLength: 1, maxLength: 50 }), environment: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('deployAll'), input: fc.record({ projectRoot: fc.string({ minLength: 1, maxLength: 50 }), environment: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('status'), input: fc.record({ run: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -255,8 +255,8 @@ describe('DeployOrchestrator functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('deploy'), input: fc.record({ manifestPath: fc.string({ minLength: 1, maxLength: 20 }), environment: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('deployAll'), input: fc.record({ projectRoot: fc.string({ minLength: 1, maxLength: 20 }), environment: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('deploy'), input: fc.record({ manifestPath: fc.string({ minLength: 1, maxLength: 50 }), environment: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('deployAll'), input: fc.record({ projectRoot: fc.string({ minLength: 1, maxLength: 50 }), environment: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('status'), input: fc.record({ run: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

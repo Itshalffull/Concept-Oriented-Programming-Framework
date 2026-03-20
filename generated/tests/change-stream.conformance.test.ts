@@ -124,11 +124,11 @@ describe('ChangeStream imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('append'), input: fc.record({ type: fc.string({ minLength: 1, maxLength: 20 }), before: fc.string(), after: fc.string(), source: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('append'), input: fc.record({ type: fc.string({ minLength: 1, maxLength: 50 }), before: fc.string(), after: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('subscribe'), input: fc.record({ fromOffset: fc.string() }) }),
-              fc.record({ action: fc.constant('read'), input: fc.record({ subscriptionId: fc.string({ minLength: 1, maxLength: 20 }), maxCount: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('acknowledge'), input: fc.record({ consumer: fc.string({ minLength: 1, maxLength: 20 }), offset: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('replay'), input: fc.record({ from: fc.integer({ min: 0, max: 1000 }), to: fc.string() }) }),
+              fc.record({ action: fc.constant('read'), input: fc.record({ subscriptionId: fc.string({ minLength: 1, maxLength: 50 }), maxCount: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('acknowledge'), input: fc.record({ consumer: fc.string({ minLength: 1, maxLength: 50 }), offset: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('replay'), input: fc.record({ from: fc.integer({ min: 1, max: 1000 }), to: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -154,11 +154,11 @@ describe('ChangeStream imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('append'), input: fc.record({ type: fc.string({ minLength: 1, maxLength: 20 }), before: fc.string(), after: fc.string(), source: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('append'), input: fc.record({ type: fc.string({ minLength: 1, maxLength: 50 }), before: fc.string(), after: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('subscribe'), input: fc.record({ fromOffset: fc.string() }) }),
-              fc.record({ action: fc.constant('read'), input: fc.record({ subscriptionId: fc.string({ minLength: 1, maxLength: 20 }), maxCount: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('acknowledge'), input: fc.record({ consumer: fc.string({ minLength: 1, maxLength: 20 }), offset: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('replay'), input: fc.record({ from: fc.integer({ min: 0, max: 1000 }), to: fc.string() }) }),
+              fc.record({ action: fc.constant('read'), input: fc.record({ subscriptionId: fc.string({ minLength: 1, maxLength: 50 }), maxCount: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('acknowledge'), input: fc.record({ consumer: fc.string({ minLength: 1, maxLength: 50 }), offset: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('replay'), input: fc.record({ from: fc.integer({ min: 1, max: 1000 }), to: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

@@ -332,8 +332,8 @@ describe('StateField functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), name: fc.string({ minLength: 1, maxLength: 20 }), typeExpr: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByConcept'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), name: fc.string({ minLength: 1, maxLength: 50 }), typeExpr: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByConcept'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('traceToGenerated'), input: fc.record({ field: fc.string() }) }),
               fc.record({ action: fc.constant('traceToStorage'), input: fc.record({ field: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ field: fc.string() }) }),
@@ -363,8 +363,8 @@ describe('StateField functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), name: fc.string({ minLength: 1, maxLength: 20 }), typeExpr: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByConcept'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), name: fc.string({ minLength: 1, maxLength: 50 }), typeExpr: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByConcept'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('traceToGenerated'), input: fc.record({ field: fc.string() }) }),
               fc.record({ action: fc.constant('traceToStorage'), input: fc.record({ field: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ field: fc.string() }) }),

@@ -130,7 +130,7 @@ describe('Evidence imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('record'), input: fc.record({ artifact_type: fc.string({ minLength: 1, maxLength: 20 }), content: fc.string(), solver_metadata: fc.string(), property_ref: fc.string({ minLength: 1, maxLength: 20 }), confidence_score: fc.string() }) }),
+              fc.record({ action: fc.constant('record'), input: fc.record({ artifact_type: fc.string({ minLength: 1, maxLength: 50 }), content: fc.string(), solver_metadata: fc.string(), property_ref: fc.string({ minLength: 1, maxLength: 50 }), confidence_score: fc.string() }) }),
               fc.record({ action: fc.constant('validate'), input: fc.record({ evidence: fc.string() }) }),
               fc.record({ action: fc.constant('retrieve'), input: fc.record({ evidence: fc.string() }) }),
               fc.record({ action: fc.constant('compare'), input: fc.record({ evidence1: fc.string(), evidence2: fc.string() }) }),
@@ -161,7 +161,7 @@ describe('Evidence imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('record'), input: fc.record({ artifact_type: fc.string({ minLength: 1, maxLength: 20 }), content: fc.string(), solver_metadata: fc.string(), property_ref: fc.string({ minLength: 1, maxLength: 20 }), confidence_score: fc.string() }) }),
+              fc.record({ action: fc.constant('record'), input: fc.record({ artifact_type: fc.string({ minLength: 1, maxLength: 50 }), content: fc.string(), solver_metadata: fc.string(), property_ref: fc.string({ minLength: 1, maxLength: 50 }), confidence_score: fc.string() }) }),
               fc.record({ action: fc.constant('validate'), input: fc.record({ evidence: fc.string() }) }),
               fc.record({ action: fc.constant('retrieve'), input: fc.record({ evidence: fc.string() }) }),
               fc.record({ action: fc.constant('compare'), input: fc.record({ evidence1: fc.string(), evidence2: fc.string() }) }),

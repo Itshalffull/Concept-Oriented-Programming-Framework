@@ -166,7 +166,7 @@ describe('JWT functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('generate'), input: fc.record({ user: fc.string() }) }),
-              fc.record({ action: fc.constant('verify'), input: fc.record({ token: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('verify'), input: fc.record({ token: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

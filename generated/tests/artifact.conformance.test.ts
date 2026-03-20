@@ -276,10 +276,10 @@ describe('Artifact functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('build'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), spec: fc.string({ minLength: 1, maxLength: 20 }), implementation: fc.string({ minLength: 1, maxLength: 20 }), deps: fc.string() }) }),
-              fc.record({ action: fc.constant('store'), input: fc.record({ hash: fc.string({ minLength: 1, maxLength: 20 }), location: fc.string({ minLength: 1, maxLength: 20 }), concept: fc.string({ minLength: 1, maxLength: 20 }), language: fc.string({ minLength: 1, maxLength: 20 }), platform: fc.string({ minLength: 1, maxLength: 20 }), metadata: fc.string() }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ hash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('gc'), input: fc.record({ olderThan: fc.string(), keepVersions: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('build'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), spec: fc.string({ minLength: 1, maxLength: 50 }), implementation: fc.string({ minLength: 1, maxLength: 50 }), deps: fc.string() }) }),
+              fc.record({ action: fc.constant('store'), input: fc.record({ hash: fc.string({ minLength: 1, maxLength: 50 }), location: fc.string({ minLength: 1, maxLength: 50 }), concept: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string({ minLength: 1, maxLength: 50 }), platform: fc.string({ minLength: 1, maxLength: 50 }), metadata: fc.string() }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ hash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('gc'), input: fc.record({ olderThan: fc.string(), keepVersions: fc.integer({ min: 1, max: 1000 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -306,10 +306,10 @@ describe('Artifact functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('build'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), spec: fc.string({ minLength: 1, maxLength: 20 }), implementation: fc.string({ minLength: 1, maxLength: 20 }), deps: fc.string() }) }),
-              fc.record({ action: fc.constant('store'), input: fc.record({ hash: fc.string({ minLength: 1, maxLength: 20 }), location: fc.string({ minLength: 1, maxLength: 20 }), concept: fc.string({ minLength: 1, maxLength: 20 }), language: fc.string({ minLength: 1, maxLength: 20 }), platform: fc.string({ minLength: 1, maxLength: 20 }), metadata: fc.string() }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ hash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('gc'), input: fc.record({ olderThan: fc.string(), keepVersions: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('build'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), spec: fc.string({ minLength: 1, maxLength: 50 }), implementation: fc.string({ minLength: 1, maxLength: 50 }), deps: fc.string() }) }),
+              fc.record({ action: fc.constant('store'), input: fc.record({ hash: fc.string({ minLength: 1, maxLength: 50 }), location: fc.string({ minLength: 1, maxLength: 50 }), concept: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string({ minLength: 1, maxLength: 50 }), platform: fc.string({ minLength: 1, maxLength: 50 }), metadata: fc.string() }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ hash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('gc'), input: fc.record({ olderThan: fc.string(), keepVersions: fc.integer({ min: 1, max: 1000 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

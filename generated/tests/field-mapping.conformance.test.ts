@@ -335,11 +335,11 @@ describe('FieldMapping functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('map'), input: fc.record({ mappingId: fc.string({ minLength: 1, maxLength: 20 }), sourceField: fc.string({ minLength: 1, maxLength: 20 }), destField: fc.string({ minLength: 1, maxLength: 20 }), transform: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('apply'), input: fc.record({ record: fc.string({ minLength: 1, maxLength: 20 }), mappingId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('reverse'), input: fc.record({ record: fc.string({ minLength: 1, maxLength: 20 }), mappingId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('autoDiscover'), input: fc.record({ sourceSchema: fc.string({ minLength: 1, maxLength: 20 }), destSchema: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('validate'), input: fc.record({ mappingId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('map'), input: fc.record({ mappingId: fc.string({ minLength: 1, maxLength: 50 }), sourceField: fc.string({ minLength: 1, maxLength: 50 }), destField: fc.string({ minLength: 1, maxLength: 50 }), transform: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('apply'), input: fc.record({ record: fc.string({ minLength: 1, maxLength: 50 }), mappingId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('reverse'), input: fc.record({ record: fc.string({ minLength: 1, maxLength: 50 }), mappingId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('autoDiscover'), input: fc.record({ sourceSchema: fc.string({ minLength: 1, maxLength: 50 }), destSchema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('validate'), input: fc.record({ mappingId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -366,11 +366,11 @@ describe('FieldMapping functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('map'), input: fc.record({ mappingId: fc.string({ minLength: 1, maxLength: 20 }), sourceField: fc.string({ minLength: 1, maxLength: 20 }), destField: fc.string({ minLength: 1, maxLength: 20 }), transform: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('apply'), input: fc.record({ record: fc.string({ minLength: 1, maxLength: 20 }), mappingId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('reverse'), input: fc.record({ record: fc.string({ minLength: 1, maxLength: 20 }), mappingId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('autoDiscover'), input: fc.record({ sourceSchema: fc.string({ minLength: 1, maxLength: 20 }), destSchema: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('validate'), input: fc.record({ mappingId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('map'), input: fc.record({ mappingId: fc.string({ minLength: 1, maxLength: 50 }), sourceField: fc.string({ minLength: 1, maxLength: 50 }), destField: fc.string({ minLength: 1, maxLength: 50 }), transform: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('apply'), input: fc.record({ record: fc.string({ minLength: 1, maxLength: 50 }), mappingId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('reverse'), input: fc.record({ record: fc.string({ minLength: 1, maxLength: 50 }), mappingId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('autoDiscover'), input: fc.record({ sourceSchema: fc.string({ minLength: 1, maxLength: 50 }), destSchema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('validate'), input: fc.record({ mappingId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

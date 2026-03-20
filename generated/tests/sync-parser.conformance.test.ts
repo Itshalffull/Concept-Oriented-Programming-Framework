@@ -50,7 +50,7 @@ describe('SyncParser imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('parse'), input: fc.record({ source: fc.string({ minLength: 1, maxLength: 20 }), manifests: fc.string() }) }),
+              fc.record({ action: fc.constant('parse'), input: fc.record({ source: fc.string({ minLength: 1, maxLength: 50 }), manifests: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

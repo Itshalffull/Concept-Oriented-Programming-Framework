@@ -216,7 +216,7 @@ describe('Execution functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('schedule'), input: fc.record({ sourceRef: fc.string({ minLength: 1, maxLength: 20 }), actions: fc.string(), executor: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('schedule'), input: fc.record({ sourceRef: fc.string({ minLength: 1, maxLength: 50 }), actions: fc.string(), executor: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('execute'), input: fc.record({ execution: fc.string() }) }),
               fc.record({ action: fc.constant('rollback'), input: fc.record({ execution: fc.string() }) }),
             ),
@@ -245,7 +245,7 @@ describe('Execution functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('schedule'), input: fc.record({ sourceRef: fc.string({ minLength: 1, maxLength: 20 }), actions: fc.string(), executor: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('schedule'), input: fc.record({ sourceRef: fc.string({ minLength: 1, maxLength: 50 }), actions: fc.string(), executor: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('execute'), input: fc.record({ execution: fc.string() }) }),
               fc.record({ action: fc.constant('rollback'), input: fc.record({ execution: fc.string() }) }),
             ),

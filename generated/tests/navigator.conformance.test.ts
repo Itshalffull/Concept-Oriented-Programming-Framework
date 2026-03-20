@@ -458,13 +458,13 @@ describe('Navigator functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ nav: fc.string(), name: fc.string({ minLength: 1, maxLength: 20 }), targetConcept: fc.string({ minLength: 1, maxLength: 20 }), targetView: fc.string({ minLength: 1, maxLength: 20 }), paramsSchema: fc.string(), meta: fc.string() }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ nav: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }), targetConcept: fc.string({ minLength: 1, maxLength: 50 }), targetView: fc.string({ minLength: 1, maxLength: 50 }), paramsSchema: fc.string(), meta: fc.string() }) }),
               fc.record({ action: fc.constant('go'), input: fc.record({ nav: fc.string(), params: fc.string() }) }),
               fc.record({ action: fc.constant('back'), input: fc.record({ nav: fc.string() }) }),
               fc.record({ action: fc.constant('forward'), input: fc.record({ nav: fc.string() }) }),
               fc.record({ action: fc.constant('replace'), input: fc.record({ nav: fc.string(), params: fc.string() }) }),
-              fc.record({ action: fc.constant('addGuard'), input: fc.record({ nav: fc.string(), guard: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('removeGuard'), input: fc.record({ nav: fc.string(), guard: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('addGuard'), input: fc.record({ nav: fc.string(), guard: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('removeGuard'), input: fc.record({ nav: fc.string(), guard: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -491,13 +491,13 @@ describe('Navigator functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ nav: fc.string(), name: fc.string({ minLength: 1, maxLength: 20 }), targetConcept: fc.string({ minLength: 1, maxLength: 20 }), targetView: fc.string({ minLength: 1, maxLength: 20 }), paramsSchema: fc.string(), meta: fc.string() }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ nav: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }), targetConcept: fc.string({ minLength: 1, maxLength: 50 }), targetView: fc.string({ minLength: 1, maxLength: 50 }), paramsSchema: fc.string(), meta: fc.string() }) }),
               fc.record({ action: fc.constant('go'), input: fc.record({ nav: fc.string(), params: fc.string() }) }),
               fc.record({ action: fc.constant('back'), input: fc.record({ nav: fc.string() }) }),
               fc.record({ action: fc.constant('forward'), input: fc.record({ nav: fc.string() }) }),
               fc.record({ action: fc.constant('replace'), input: fc.record({ nav: fc.string(), params: fc.string() }) }),
-              fc.record({ action: fc.constant('addGuard'), input: fc.record({ nav: fc.string(), guard: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('removeGuard'), input: fc.record({ nav: fc.string(), guard: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('addGuard'), input: fc.record({ nav: fc.string(), guard: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('removeGuard'), input: fc.record({ nav: fc.string(), guard: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

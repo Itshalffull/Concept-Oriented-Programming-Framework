@@ -277,9 +277,9 @@ describe('QuadraticVoting functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('configure'), input: fc.record({ creditBudget: fc.string() }) }),
-              fc.record({ action: fc.constant('allocateCredits'), input: fc.record({ config: fc.string(), voter: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('castVotes'), input: fc.record({ config: fc.string(), voter: fc.string({ minLength: 1, maxLength: 20 }), issue: fc.string({ minLength: 1, maxLength: 20 }), numberOfVotes: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('count'), input: fc.record({ config: fc.string(), issue: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('allocateCredits'), input: fc.record({ config: fc.string(), voter: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('castVotes'), input: fc.record({ config: fc.string(), voter: fc.string({ minLength: 1, maxLength: 50 }), issue: fc.string({ minLength: 1, maxLength: 50 }), numberOfVotes: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('count'), input: fc.record({ config: fc.string(), issue: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -307,9 +307,9 @@ describe('QuadraticVoting functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('configure'), input: fc.record({ creditBudget: fc.string() }) }),
-              fc.record({ action: fc.constant('allocateCredits'), input: fc.record({ config: fc.string(), voter: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('castVotes'), input: fc.record({ config: fc.string(), voter: fc.string({ minLength: 1, maxLength: 20 }), issue: fc.string({ minLength: 1, maxLength: 20 }), numberOfVotes: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('count'), input: fc.record({ config: fc.string(), issue: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('allocateCredits'), input: fc.record({ config: fc.string(), voter: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('castVotes'), input: fc.record({ config: fc.string(), voter: fc.string({ minLength: 1, maxLength: 50 }), issue: fc.string({ minLength: 1, maxLength: 50 }), numberOfVotes: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('count'), input: fc.record({ config: fc.string(), issue: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

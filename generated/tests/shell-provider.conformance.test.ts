@@ -83,7 +83,7 @@ describe('ShellProvider imperative handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('register'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('execute'), input: fc.record({ command: fc.string({ minLength: 1, maxLength: 20 }), args: fc.string({ minLength: 1, maxLength: 20 }), env: fc.string({ minLength: 1, maxLength: 20 }), cwd: fc.string({ minLength: 1, maxLength: 20 }), timeout: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('execute'), input: fc.record({ command: fc.string({ minLength: 1, maxLength: 50 }), args: fc.string({ minLength: 1, maxLength: 50 }), env: fc.string({ minLength: 1, maxLength: 50 }), cwd: fc.string({ minLength: 1, maxLength: 50 }), timeout: fc.integer({ min: 1, max: 1000 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -111,7 +111,7 @@ describe('ShellProvider imperative handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('register'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('execute'), input: fc.record({ command: fc.string({ minLength: 1, maxLength: 20 }), args: fc.string({ minLength: 1, maxLength: 20 }), env: fc.string({ minLength: 1, maxLength: 20 }), cwd: fc.string({ minLength: 1, maxLength: 20 }), timeout: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('execute'), input: fc.record({ command: fc.string({ minLength: 1, maxLength: 50 }), args: fc.string({ minLength: 1, maxLength: 50 }), env: fc.string({ minLength: 1, maxLength: 50 }), cwd: fc.string({ minLength: 1, maxLength: 50 }), timeout: fc.integer({ min: 1, max: 1000 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },

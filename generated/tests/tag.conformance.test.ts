@@ -331,11 +331,11 @@ describe('Tag functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('addTag'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 20 }), tag: fc.string() }) }),
-              fc.record({ action: fc.constant('removeTag'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 20 }), tag: fc.string() }) }),
+              fc.record({ action: fc.constant('addTag'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 50 }), tag: fc.string() }) }),
+              fc.record({ action: fc.constant('removeTag'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 50 }), tag: fc.string() }) }),
               fc.record({ action: fc.constant('getByTag'), input: fc.record({ tag: fc.string() }) }),
               fc.record({ action: fc.constant('getChildren'), input: fc.record({ tag: fc.string() }) }),
-              fc.record({ action: fc.constant('rename'), input: fc.record({ tag: fc.string(), name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('rename'), input: fc.record({ tag: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -362,11 +362,11 @@ describe('Tag functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('addTag'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 20 }), tag: fc.string() }) }),
-              fc.record({ action: fc.constant('removeTag'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 20 }), tag: fc.string() }) }),
+              fc.record({ action: fc.constant('addTag'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 50 }), tag: fc.string() }) }),
+              fc.record({ action: fc.constant('removeTag'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 50 }), tag: fc.string() }) }),
               fc.record({ action: fc.constant('getByTag'), input: fc.record({ tag: fc.string() }) }),
               fc.record({ action: fc.constant('getChildren'), input: fc.record({ tag: fc.string() }) }),
-              fc.record({ action: fc.constant('rename'), input: fc.record({ tag: fc.string(), name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('rename'), input: fc.record({ tag: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

@@ -273,9 +273,9 @@ describe('AppTemplate functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('list'), input: fc.record({ category: fc.string() }) }),
-              fc.record({ action: fc.constant('detail'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('detail'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('customize'), input: fc.record({ template: fc.string(), add: fc.string(), remove: fc.string(), features: fc.string() }) }),
-              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), description: fc.string({ minLength: 1, maxLength: 20 }), category: fc.string({ minLength: 1, maxLength: 20 }), modules: fc.string(), syncs: fc.string() }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), category: fc.string({ minLength: 1, maxLength: 50 }), modules: fc.string(), syncs: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -303,9 +303,9 @@ describe('AppTemplate functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('list'), input: fc.record({ category: fc.string() }) }),
-              fc.record({ action: fc.constant('detail'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('detail'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('customize'), input: fc.record({ template: fc.string(), add: fc.string(), remove: fc.string(), features: fc.string() }) }),
-              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), description: fc.string({ minLength: 1, maxLength: 20 }), category: fc.string({ minLength: 1, maxLength: 20 }), modules: fc.string(), syncs: fc.string() }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), category: fc.string({ minLength: 1, maxLength: 50 }), modules: fc.string(), syncs: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

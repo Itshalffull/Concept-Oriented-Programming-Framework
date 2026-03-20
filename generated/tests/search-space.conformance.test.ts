@@ -136,11 +136,11 @@ describe('SearchSpace imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('index'), input: fc.record({ scope_id: fc.string({ minLength: 1, maxLength: 20 }), provider: fc.string({ minLength: 1, maxLength: 20 }), entity_id: fc.string({ minLength: 1, maxLength: 20 }), data: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('tombstone'), input: fc.record({ scope_id: fc.string({ minLength: 1, maxLength: 20 }), provider: fc.string({ minLength: 1, maxLength: 20 }), entity_id: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('query'), input: fc.record({ scope_id: fc.string({ minLength: 1, maxLength: 20 }), provider: fc.string({ minLength: 1, maxLength: 20 }), query_expr: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('clear'), input: fc.record({ scope_id: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('materialize'), input: fc.record({ scope_id: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('index'), input: fc.record({ scope_id: fc.string({ minLength: 1, maxLength: 50 }), provider: fc.string({ minLength: 1, maxLength: 50 }), entity_id: fc.string({ minLength: 1, maxLength: 50 }), data: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('tombstone'), input: fc.record({ scope_id: fc.string({ minLength: 1, maxLength: 50 }), provider: fc.string({ minLength: 1, maxLength: 50 }), entity_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('query'), input: fc.record({ scope_id: fc.string({ minLength: 1, maxLength: 50 }), provider: fc.string({ minLength: 1, maxLength: 50 }), query_expr: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('clear'), input: fc.record({ scope_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('materialize'), input: fc.record({ scope_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -166,11 +166,11 @@ describe('SearchSpace imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('index'), input: fc.record({ scope_id: fc.string({ minLength: 1, maxLength: 20 }), provider: fc.string({ minLength: 1, maxLength: 20 }), entity_id: fc.string({ minLength: 1, maxLength: 20 }), data: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('tombstone'), input: fc.record({ scope_id: fc.string({ minLength: 1, maxLength: 20 }), provider: fc.string({ minLength: 1, maxLength: 20 }), entity_id: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('query'), input: fc.record({ scope_id: fc.string({ minLength: 1, maxLength: 20 }), provider: fc.string({ minLength: 1, maxLength: 20 }), query_expr: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('clear'), input: fc.record({ scope_id: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('materialize'), input: fc.record({ scope_id: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('index'), input: fc.record({ scope_id: fc.string({ minLength: 1, maxLength: 50 }), provider: fc.string({ minLength: 1, maxLength: 50 }), entity_id: fc.string({ minLength: 1, maxLength: 50 }), data: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('tombstone'), input: fc.record({ scope_id: fc.string({ minLength: 1, maxLength: 50 }), provider: fc.string({ minLength: 1, maxLength: 50 }), entity_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('query'), input: fc.record({ scope_id: fc.string({ minLength: 1, maxLength: 50 }), provider: fc.string({ minLength: 1, maxLength: 50 }), query_expr: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('clear'), input: fc.record({ scope_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('materialize'), input: fc.record({ scope_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

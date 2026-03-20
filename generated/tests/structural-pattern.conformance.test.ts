@@ -216,8 +216,8 @@ describe('StructuralPattern functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ syntax: fc.string({ minLength: 1, maxLength: 20 }), source: fc.string({ minLength: 1, maxLength: 20 }), language: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('match'), input: fc.record({ pattern: fc.string(), tree: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ syntax: fc.string({ minLength: 1, maxLength: 50 }), source: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('match'), input: fc.record({ pattern: fc.string(), tree: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('matchProject'), input: fc.record({ pattern: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -245,8 +245,8 @@ describe('StructuralPattern functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ syntax: fc.string({ minLength: 1, maxLength: 20 }), source: fc.string({ minLength: 1, maxLength: 20 }), language: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('match'), input: fc.record({ pattern: fc.string(), tree: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ syntax: fc.string({ minLength: 1, maxLength: 50 }), source: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('match'), input: fc.record({ pattern: fc.string(), tree: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('matchProject'), input: fc.record({ pattern: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

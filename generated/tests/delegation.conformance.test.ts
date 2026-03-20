@@ -220,9 +220,9 @@ describe('Delegation functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('delegate'), input: fc.record({ from: fc.string({ minLength: 1, maxLength: 20 }), to: fc.string({ minLength: 1, maxLength: 20 }), domain: fc.string(), transitive: fc.boolean() }) }),
+              fc.record({ action: fc.constant('delegate'), input: fc.record({ from: fc.string({ minLength: 1, maxLength: 50 }), to: fc.string({ minLength: 1, maxLength: 50 }), domain: fc.string(), transitive: fc.boolean() }) }),
               fc.record({ action: fc.constant('undelegate'), input: fc.record({ delegation: fc.string() }) }),
-              fc.record({ action: fc.constant('getEffectiveWeight'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 20 }), domain: fc.string() }) }),
+              fc.record({ action: fc.constant('getEffectiveWeight'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), domain: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -249,9 +249,9 @@ describe('Delegation functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('delegate'), input: fc.record({ from: fc.string({ minLength: 1, maxLength: 20 }), to: fc.string({ minLength: 1, maxLength: 20 }), domain: fc.string(), transitive: fc.boolean() }) }),
+              fc.record({ action: fc.constant('delegate'), input: fc.record({ from: fc.string({ minLength: 1, maxLength: 50 }), to: fc.string({ minLength: 1, maxLength: 50 }), domain: fc.string(), transitive: fc.boolean() }) }),
               fc.record({ action: fc.constant('undelegate'), input: fc.record({ delegation: fc.string() }) }),
-              fc.record({ action: fc.constant('getEffectiveWeight'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 20 }), domain: fc.string() }) }),
+              fc.record({ action: fc.constant('getEffectiveWeight'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), domain: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

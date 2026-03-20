@@ -274,10 +274,10 @@ describe('OptimisticApproval functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('assert'), input: fc.record({ asserter: fc.string({ minLength: 1, maxLength: 20 }), payload: fc.string({ minLength: 1, maxLength: 20 }), bond: fc.string(), challengePeriodHours: fc.string() }) }),
-              fc.record({ action: fc.constant('challenge'), input: fc.record({ assertion: fc.string(), challenger: fc.string({ minLength: 1, maxLength: 20 }), bond: fc.string(), evidence: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('assert'), input: fc.record({ asserter: fc.string({ minLength: 1, maxLength: 50 }), payload: fc.string({ minLength: 1, maxLength: 50 }), bond: fc.string(), challengePeriodHours: fc.string() }) }),
+              fc.record({ action: fc.constant('challenge'), input: fc.record({ assertion: fc.string(), challenger: fc.string({ minLength: 1, maxLength: 50 }), bond: fc.string(), evidence: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('finalize'), input: fc.record({ assertion: fc.string() }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ assertion: fc.string(), outcome: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ assertion: fc.string(), outcome: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -304,10 +304,10 @@ describe('OptimisticApproval functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('assert'), input: fc.record({ asserter: fc.string({ minLength: 1, maxLength: 20 }), payload: fc.string({ minLength: 1, maxLength: 20 }), bond: fc.string(), challengePeriodHours: fc.string() }) }),
-              fc.record({ action: fc.constant('challenge'), input: fc.record({ assertion: fc.string(), challenger: fc.string({ minLength: 1, maxLength: 20 }), bond: fc.string(), evidence: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('assert'), input: fc.record({ asserter: fc.string({ minLength: 1, maxLength: 50 }), payload: fc.string({ minLength: 1, maxLength: 50 }), bond: fc.string(), challengePeriodHours: fc.string() }) }),
+              fc.record({ action: fc.constant('challenge'), input: fc.record({ assertion: fc.string(), challenger: fc.string({ minLength: 1, maxLength: 50 }), bond: fc.string(), evidence: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('finalize'), input: fc.record({ assertion: fc.string() }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ assertion: fc.string(), outcome: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ assertion: fc.string(), outcome: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

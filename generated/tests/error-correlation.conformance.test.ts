@@ -390,10 +390,10 @@ describe('ErrorCorrelation functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('record'), input: fc.record({ flowId: fc.string({ minLength: 1, maxLength: 20 }), errorKind: fc.string({ minLength: 1, maxLength: 20 }), message: fc.string({ minLength: 1, maxLength: 20 }), rawEvent: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByEntity'), input: fc.record({ symbol: fc.string({ minLength: 1, maxLength: 20 }), since: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByKind'), input: fc.record({ errorKind: fc.string({ minLength: 1, maxLength: 20 }), since: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('errorHotspots'), input: fc.record({ since: fc.string({ minLength: 1, maxLength: 20 }), topN: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('record'), input: fc.record({ flowId: fc.string({ minLength: 1, maxLength: 50 }), errorKind: fc.string({ minLength: 1, maxLength: 50 }), message: fc.string({ minLength: 1, maxLength: 50 }), rawEvent: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByEntity'), input: fc.record({ symbol: fc.string({ minLength: 1, maxLength: 50 }), since: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByKind'), input: fc.record({ errorKind: fc.string({ minLength: 1, maxLength: 50 }), since: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('errorHotspots'), input: fc.record({ since: fc.string({ minLength: 1, maxLength: 50 }), topN: fc.integer({ min: 1, max: 1000 }) }) }),
               fc.record({ action: fc.constant('rootCause'), input: fc.record({ error: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ error: fc.string() }) }),
             ),
@@ -422,10 +422,10 @@ describe('ErrorCorrelation functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('record'), input: fc.record({ flowId: fc.string({ minLength: 1, maxLength: 20 }), errorKind: fc.string({ minLength: 1, maxLength: 20 }), message: fc.string({ minLength: 1, maxLength: 20 }), rawEvent: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByEntity'), input: fc.record({ symbol: fc.string({ minLength: 1, maxLength: 20 }), since: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByKind'), input: fc.record({ errorKind: fc.string({ minLength: 1, maxLength: 20 }), since: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('errorHotspots'), input: fc.record({ since: fc.string({ minLength: 1, maxLength: 20 }), topN: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('record'), input: fc.record({ flowId: fc.string({ minLength: 1, maxLength: 50 }), errorKind: fc.string({ minLength: 1, maxLength: 50 }), message: fc.string({ minLength: 1, maxLength: 50 }), rawEvent: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByEntity'), input: fc.record({ symbol: fc.string({ minLength: 1, maxLength: 50 }), since: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByKind'), input: fc.record({ errorKind: fc.string({ minLength: 1, maxLength: 50 }), since: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('errorHotspots'), input: fc.record({ since: fc.string({ minLength: 1, maxLength: 50 }), topN: fc.integer({ min: 1, max: 1000 }) }) }),
               fc.record({ action: fc.constant('rootCause'), input: fc.record({ error: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ error: fc.string() }) }),
             ),

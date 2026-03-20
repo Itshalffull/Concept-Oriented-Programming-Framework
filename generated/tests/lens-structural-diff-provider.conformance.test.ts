@@ -53,7 +53,7 @@ describe('LensStructuralDiffProvider imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('analyze'), input: fc.record({ oldSchema: fc.string({ minLength: 1, maxLength: 20 }), newSchema: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('analyze'), input: fc.record({ oldSchema: fc.string({ minLength: 1, maxLength: 50 }), newSchema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

@@ -273,10 +273,10 @@ describe('AutomationRule functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ rule: fc.string(), trigger: fc.string({ minLength: 1, maxLength: 20 }), conditions: fc.string({ minLength: 1, maxLength: 20 }), actions: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ rule: fc.string(), trigger: fc.string({ minLength: 1, maxLength: 50 }), conditions: fc.string({ minLength: 1, maxLength: 50 }), actions: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('enable'), input: fc.record({ rule: fc.string() }) }),
               fc.record({ action: fc.constant('disable'), input: fc.record({ rule: fc.string() }) }),
-              fc.record({ action: fc.constant('execute'), input: fc.record({ rule: fc.string(), context: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('execute'), input: fc.record({ rule: fc.string(), context: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -303,10 +303,10 @@ describe('AutomationRule functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ rule: fc.string(), trigger: fc.string({ minLength: 1, maxLength: 20 }), conditions: fc.string({ minLength: 1, maxLength: 20 }), actions: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ rule: fc.string(), trigger: fc.string({ minLength: 1, maxLength: 50 }), conditions: fc.string({ minLength: 1, maxLength: 50 }), actions: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('enable'), input: fc.record({ rule: fc.string() }) }),
               fc.record({ action: fc.constant('disable'), input: fc.record({ rule: fc.string() }) }),
-              fc.record({ action: fc.constant('execute'), input: fc.record({ rule: fc.string(), context: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('execute'), input: fc.record({ rule: fc.string(), context: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

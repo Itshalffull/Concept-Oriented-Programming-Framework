@@ -456,13 +456,13 @@ describe('InlineAnnotation functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('annotate'), input: fc.record({ contentRef: fc.string({ minLength: 1, maxLength: 20 }), changeType: fc.string({ minLength: 1, maxLength: 20 }), scope: fc.string(), author: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('annotate'), input: fc.record({ contentRef: fc.string({ minLength: 1, maxLength: 50 }), changeType: fc.string({ minLength: 1, maxLength: 50 }), scope: fc.string(), author: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('accept'), input: fc.record({ annotationId: fc.string() }) }),
               fc.record({ action: fc.constant('reject'), input: fc.record({ annotationId: fc.string() }) }),
-              fc.record({ action: fc.constant('acceptAll'), input: fc.record({ contentRef: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('rejectAll'), input: fc.record({ contentRef: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('toggleTracking'), input: fc.record({ contentRef: fc.string({ minLength: 1, maxLength: 20 }), enabled: fc.boolean() }) }),
-              fc.record({ action: fc.constant('listPending'), input: fc.record({ contentRef: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('acceptAll'), input: fc.record({ contentRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('rejectAll'), input: fc.record({ contentRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('toggleTracking'), input: fc.record({ contentRef: fc.string({ minLength: 1, maxLength: 50 }), enabled: fc.boolean() }) }),
+              fc.record({ action: fc.constant('listPending'), input: fc.record({ contentRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -489,13 +489,13 @@ describe('InlineAnnotation functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('annotate'), input: fc.record({ contentRef: fc.string({ minLength: 1, maxLength: 20 }), changeType: fc.string({ minLength: 1, maxLength: 20 }), scope: fc.string(), author: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('annotate'), input: fc.record({ contentRef: fc.string({ minLength: 1, maxLength: 50 }), changeType: fc.string({ minLength: 1, maxLength: 50 }), scope: fc.string(), author: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('accept'), input: fc.record({ annotationId: fc.string() }) }),
               fc.record({ action: fc.constant('reject'), input: fc.record({ annotationId: fc.string() }) }),
-              fc.record({ action: fc.constant('acceptAll'), input: fc.record({ contentRef: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('rejectAll'), input: fc.record({ contentRef: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('toggleTracking'), input: fc.record({ contentRef: fc.string({ minLength: 1, maxLength: 20 }), enabled: fc.boolean() }) }),
-              fc.record({ action: fc.constant('listPending'), input: fc.record({ contentRef: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('acceptAll'), input: fc.record({ contentRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('rejectAll'), input: fc.record({ contentRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('toggleTracking'), input: fc.record({ contentRef: fc.string({ minLength: 1, maxLength: 50 }), enabled: fc.boolean() }) }),
+              fc.record({ action: fc.constant('listPending'), input: fc.record({ contentRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

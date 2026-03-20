@@ -390,9 +390,9 @@ describe('Rollout functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('begin'), input: fc.record({ plan: fc.string({ minLength: 1, maxLength: 20 }), strategy: fc.string({ minLength: 1, maxLength: 20 }), steps: fc.string() }) }),
+              fc.record({ action: fc.constant('begin'), input: fc.record({ plan: fc.string({ minLength: 1, maxLength: 50 }), strategy: fc.string({ minLength: 1, maxLength: 50 }), steps: fc.string() }) }),
               fc.record({ action: fc.constant('advance'), input: fc.record({ rollout: fc.string() }) }),
-              fc.record({ action: fc.constant('pause'), input: fc.record({ rollout: fc.string(), reason: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('pause'), input: fc.record({ rollout: fc.string(), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('resume'), input: fc.record({ rollout: fc.string() }) }),
               fc.record({ action: fc.constant('abort'), input: fc.record({ rollout: fc.string() }) }),
               fc.record({ action: fc.constant('status'), input: fc.record({ rollout: fc.string() }) }),
@@ -422,9 +422,9 @@ describe('Rollout functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('begin'), input: fc.record({ plan: fc.string({ minLength: 1, maxLength: 20 }), strategy: fc.string({ minLength: 1, maxLength: 20 }), steps: fc.string() }) }),
+              fc.record({ action: fc.constant('begin'), input: fc.record({ plan: fc.string({ minLength: 1, maxLength: 50 }), strategy: fc.string({ minLength: 1, maxLength: 50 }), steps: fc.string() }) }),
               fc.record({ action: fc.constant('advance'), input: fc.record({ rollout: fc.string() }) }),
-              fc.record({ action: fc.constant('pause'), input: fc.record({ rollout: fc.string(), reason: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('pause'), input: fc.record({ rollout: fc.string(), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('resume'), input: fc.record({ rollout: fc.string() }) }),
               fc.record({ action: fc.constant('abort'), input: fc.record({ rollout: fc.string() }) }),
               fc.record({ action: fc.constant('status'), input: fc.record({ rollout: fc.string() }) }),

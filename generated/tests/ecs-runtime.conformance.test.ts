@@ -334,10 +334,10 @@ describe('EcsRuntime functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('provision'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), cpu: fc.integer({ min: 0, max: 1000 }), memory: fc.integer({ min: 0, max: 1000 }), cluster: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('deploy'), input: fc.record({ service: fc.string(), imageUri: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('setTrafficWeight'), input: fc.record({ service: fc.string(), weight: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('rollback'), input: fc.record({ service: fc.string(), targetTaskDefinition: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('provision'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), cpu: fc.integer({ min: 1, max: 1000 }), memory: fc.integer({ min: 1, max: 1000 }), cluster: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('deploy'), input: fc.record({ service: fc.string(), imageUri: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setTrafficWeight'), input: fc.record({ service: fc.string(), weight: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('rollback'), input: fc.record({ service: fc.string(), targetTaskDefinition: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('destroy'), input: fc.record({ service: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -365,10 +365,10 @@ describe('EcsRuntime functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('provision'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), cpu: fc.integer({ min: 0, max: 1000 }), memory: fc.integer({ min: 0, max: 1000 }), cluster: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('deploy'), input: fc.record({ service: fc.string(), imageUri: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('setTrafficWeight'), input: fc.record({ service: fc.string(), weight: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('rollback'), input: fc.record({ service: fc.string(), targetTaskDefinition: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('provision'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), cpu: fc.integer({ min: 1, max: 1000 }), memory: fc.integer({ min: 1, max: 1000 }), cluster: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('deploy'), input: fc.record({ service: fc.string(), imageUri: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setTrafficWeight'), input: fc.record({ service: fc.string(), weight: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('rollback'), input: fc.record({ service: fc.string(), targetTaskDefinition: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('destroy'), input: fc.record({ service: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

@@ -217,7 +217,7 @@ describe('CondorcetSchulze functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('configure'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('count'), input: fc.record({ config: fc.string(), rankedBallots: fc.string({ minLength: 1, maxLength: 20 }), weights: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('count'), input: fc.record({ config: fc.string(), rankedBallots: fc.string({ minLength: 1, maxLength: 50 }), weights: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('getPairwiseMatrix'), input: fc.record({ config: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -246,7 +246,7 @@ describe('CondorcetSchulze functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('configure'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('count'), input: fc.record({ config: fc.string(), rankedBallots: fc.string({ minLength: 1, maxLength: 20 }), weights: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('count'), input: fc.record({ config: fc.string(), rankedBallots: fc.string({ minLength: 1, maxLength: 50 }), weights: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('getPairwiseMatrix'), input: fc.record({ config: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

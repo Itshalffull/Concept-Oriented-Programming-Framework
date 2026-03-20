@@ -275,10 +275,10 @@ describe('ContractChecker functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('check'), input: fc.record({ checker: fc.string(), widget: fc.string({ minLength: 1, maxLength: 20 }), concept: fc.string({ minLength: 1, maxLength: 20 }), contractVersion: fc.string() }) }),
-              fc.record({ action: fc.constant('checkAll'), input: fc.record({ checker: fc.string(), concept: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('checkSuite'), input: fc.record({ checker: fc.string(), suite: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('suggest'), input: fc.record({ checker: fc.string(), widget: fc.string({ minLength: 1, maxLength: 20 }), concept: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('check'), input: fc.record({ checker: fc.string(), widget: fc.string({ minLength: 1, maxLength: 50 }), concept: fc.string({ minLength: 1, maxLength: 50 }), contractVersion: fc.string() }) }),
+              fc.record({ action: fc.constant('checkAll'), input: fc.record({ checker: fc.string(), concept: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('checkSuite'), input: fc.record({ checker: fc.string(), suite: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('suggest'), input: fc.record({ checker: fc.string(), widget: fc.string({ minLength: 1, maxLength: 50 }), concept: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -305,10 +305,10 @@ describe('ContractChecker functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('check'), input: fc.record({ checker: fc.string(), widget: fc.string({ minLength: 1, maxLength: 20 }), concept: fc.string({ minLength: 1, maxLength: 20 }), contractVersion: fc.string() }) }),
-              fc.record({ action: fc.constant('checkAll'), input: fc.record({ checker: fc.string(), concept: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('checkSuite'), input: fc.record({ checker: fc.string(), suite: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('suggest'), input: fc.record({ checker: fc.string(), widget: fc.string({ minLength: 1, maxLength: 20 }), concept: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('check'), input: fc.record({ checker: fc.string(), widget: fc.string({ minLength: 1, maxLength: 50 }), concept: fc.string({ minLength: 1, maxLength: 50 }), contractVersion: fc.string() }) }),
+              fc.record({ action: fc.constant('checkAll'), input: fc.record({ checker: fc.string(), concept: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('checkSuite'), input: fc.record({ checker: fc.string(), suite: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('suggest'), input: fc.record({ checker: fc.string(), widget: fc.string({ minLength: 1, maxLength: 50 }), concept: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

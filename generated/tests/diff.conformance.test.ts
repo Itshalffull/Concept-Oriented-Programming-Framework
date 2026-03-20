@@ -217,7 +217,7 @@ describe('Diff functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('registerProvider'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), contentTypes: fc.string() }) }),
+              fc.record({ action: fc.constant('registerProvider'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), contentTypes: fc.string() }) }),
               fc.record({ action: fc.constant('diff'), input: fc.record({ contentA: fc.string(), contentB: fc.string(), algorithm: fc.string() }) }),
               fc.record({ action: fc.constant('patch'), input: fc.record({ content: fc.string(), editScript: fc.string() }) }),
             ),
@@ -246,7 +246,7 @@ describe('Diff functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('registerProvider'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), contentTypes: fc.string() }) }),
+              fc.record({ action: fc.constant('registerProvider'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), contentTypes: fc.string() }) }),
               fc.record({ action: fc.constant('diff'), input: fc.record({ contentA: fc.string(), contentB: fc.string(), algorithm: fc.string() }) }),
               fc.record({ action: fc.constant('patch'), input: fc.record({ content: fc.string(), editScript: fc.string() }) }),
             ),

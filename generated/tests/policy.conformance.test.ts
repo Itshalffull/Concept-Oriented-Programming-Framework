@@ -332,11 +332,11 @@ describe('Policy functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ attributes: fc.string({ minLength: 1, maxLength: 20 }), deontic: fc.string({ minLength: 1, maxLength: 20 }), aim: fc.string({ minLength: 1, maxLength: 20 }), conditions: fc.string({ minLength: 1, maxLength: 20 }), orElse: fc.string(), domain: fc.string() }) }),
-              fc.record({ action: fc.constant('evaluate'), input: fc.record({ policy: fc.string(), context: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ attributes: fc.string({ minLength: 1, maxLength: 50 }), deontic: fc.string({ minLength: 1, maxLength: 50 }), aim: fc.string({ minLength: 1, maxLength: 50 }), conditions: fc.string({ minLength: 1, maxLength: 50 }), orElse: fc.string(), domain: fc.string() }) }),
+              fc.record({ action: fc.constant('evaluate'), input: fc.record({ policy: fc.string(), context: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('suspend'), input: fc.record({ policy: fc.string() }) }),
               fc.record({ action: fc.constant('repeal'), input: fc.record({ policy: fc.string() }) }),
-              fc.record({ action: fc.constant('modify'), input: fc.record({ policy: fc.string(), field: fc.string({ minLength: 1, maxLength: 20 }), newValue: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('modify'), input: fc.record({ policy: fc.string(), field: fc.string({ minLength: 1, maxLength: 50 }), newValue: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -363,11 +363,11 @@ describe('Policy functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ attributes: fc.string({ minLength: 1, maxLength: 20 }), deontic: fc.string({ minLength: 1, maxLength: 20 }), aim: fc.string({ minLength: 1, maxLength: 20 }), conditions: fc.string({ minLength: 1, maxLength: 20 }), orElse: fc.string(), domain: fc.string() }) }),
-              fc.record({ action: fc.constant('evaluate'), input: fc.record({ policy: fc.string(), context: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ attributes: fc.string({ minLength: 1, maxLength: 50 }), deontic: fc.string({ minLength: 1, maxLength: 50 }), aim: fc.string({ minLength: 1, maxLength: 50 }), conditions: fc.string({ minLength: 1, maxLength: 50 }), orElse: fc.string(), domain: fc.string() }) }),
+              fc.record({ action: fc.constant('evaluate'), input: fc.record({ policy: fc.string(), context: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('suspend'), input: fc.record({ policy: fc.string() }) }),
               fc.record({ action: fc.constant('repeal'), input: fc.record({ policy: fc.string() }) }),
-              fc.record({ action: fc.constant('modify'), input: fc.record({ policy: fc.string(), field: fc.string({ minLength: 1, maxLength: 20 }), newValue: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('modify'), input: fc.record({ policy: fc.string(), field: fc.string({ minLength: 1, maxLength: 50 }), newValue: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

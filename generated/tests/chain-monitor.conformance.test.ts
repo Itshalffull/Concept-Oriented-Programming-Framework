@@ -228,9 +228,9 @@ describe('ChainMonitor functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('awaitFinality'), input: fc.record({ txHash: fc.string({ minLength: 1, maxLength: 20 }), level: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('subscribe'), input: fc.record({ chainId: fc.integer({ min: 0, max: 1000 }), rpcUrl: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('onBlock'), input: fc.record({ chainId: fc.integer({ min: 0, max: 1000 }), blockNumber: fc.integer({ min: 0, max: 1000 }), blockHash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('awaitFinality'), input: fc.record({ txHash: fc.string({ minLength: 1, maxLength: 50 }), level: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('subscribe'), input: fc.record({ chainId: fc.integer({ min: 1, max: 1000 }), rpcUrl: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('onBlock'), input: fc.record({ chainId: fc.integer({ min: 1, max: 1000 }), blockNumber: fc.integer({ min: 1, max: 1000 }), blockHash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -257,9 +257,9 @@ describe('ChainMonitor functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('awaitFinality'), input: fc.record({ txHash: fc.string({ minLength: 1, maxLength: 20 }), level: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('subscribe'), input: fc.record({ chainId: fc.integer({ min: 0, max: 1000 }), rpcUrl: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('onBlock'), input: fc.record({ chainId: fc.integer({ min: 0, max: 1000 }), blockNumber: fc.integer({ min: 0, max: 1000 }), blockHash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('awaitFinality'), input: fc.record({ txHash: fc.string({ minLength: 1, maxLength: 50 }), level: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('subscribe'), input: fc.record({ chainId: fc.integer({ min: 1, max: 1000 }), rpcUrl: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('onBlock'), input: fc.record({ chainId: fc.integer({ min: 1, max: 1000 }), blockNumber: fc.integer({ min: 1, max: 1000 }), blockHash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

@@ -274,9 +274,9 @@ describe('ResourceGrantPolicy functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('setGrant'), input: fc.record({ grant: fc.string(), scope: fc.string({ minLength: 1, maxLength: 20 }), resourcePattern: fc.string({ minLength: 1, maxLength: 20 }), actionName: fc.string({ minLength: 1, maxLength: 20 }), roles: fc.string() }) }),
-              fc.record({ action: fc.constant('getGrant'), input: fc.record({ scope: fc.string({ minLength: 1, maxLength: 20 }), resourcePattern: fc.string({ minLength: 1, maxLength: 20 }), actionName: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ scope: fc.string({ minLength: 1, maxLength: 20 }), resource: fc.string({ minLength: 1, maxLength: 20 }), actionName: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('setGrant'), input: fc.record({ grant: fc.string(), scope: fc.string({ minLength: 1, maxLength: 50 }), resourcePattern: fc.string({ minLength: 1, maxLength: 50 }), actionName: fc.string({ minLength: 1, maxLength: 50 }), roles: fc.string() }) }),
+              fc.record({ action: fc.constant('getGrant'), input: fc.record({ scope: fc.string({ minLength: 1, maxLength: 50 }), resourcePattern: fc.string({ minLength: 1, maxLength: 50 }), actionName: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ scope: fc.string({ minLength: 1, maxLength: 50 }), resource: fc.string({ minLength: 1, maxLength: 50 }), actionName: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({ scope: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -304,9 +304,9 @@ describe('ResourceGrantPolicy functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('setGrant'), input: fc.record({ grant: fc.string(), scope: fc.string({ minLength: 1, maxLength: 20 }), resourcePattern: fc.string({ minLength: 1, maxLength: 20 }), actionName: fc.string({ minLength: 1, maxLength: 20 }), roles: fc.string() }) }),
-              fc.record({ action: fc.constant('getGrant'), input: fc.record({ scope: fc.string({ minLength: 1, maxLength: 20 }), resourcePattern: fc.string({ minLength: 1, maxLength: 20 }), actionName: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ scope: fc.string({ minLength: 1, maxLength: 20 }), resource: fc.string({ minLength: 1, maxLength: 20 }), actionName: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('setGrant'), input: fc.record({ grant: fc.string(), scope: fc.string({ minLength: 1, maxLength: 50 }), resourcePattern: fc.string({ minLength: 1, maxLength: 50 }), actionName: fc.string({ minLength: 1, maxLength: 50 }), roles: fc.string() }) }),
+              fc.record({ action: fc.constant('getGrant'), input: fc.record({ scope: fc.string({ minLength: 1, maxLength: 50 }), resourcePattern: fc.string({ minLength: 1, maxLength: 50 }), actionName: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ scope: fc.string({ minLength: 1, maxLength: 50 }), resource: fc.string({ minLength: 1, maxLength: 50 }), actionName: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({ scope: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

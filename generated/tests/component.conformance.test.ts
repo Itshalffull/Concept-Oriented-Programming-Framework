@@ -333,11 +333,11 @@ describe('Component functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ component: fc.string(), config: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('render'), input: fc.record({ component: fc.string(), context: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('place'), input: fc.record({ component: fc.string(), region: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ component: fc.string(), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('render'), input: fc.record({ component: fc.string(), context: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('place'), input: fc.record({ component: fc.string(), region: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('setVisibility'), input: fc.record({ component: fc.string(), visible: fc.boolean() }) }),
-              fc.record({ action: fc.constant('evaluateVisibility'), input: fc.record({ component: fc.string(), context: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('evaluateVisibility'), input: fc.record({ component: fc.string(), context: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -364,11 +364,11 @@ describe('Component functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ component: fc.string(), config: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('render'), input: fc.record({ component: fc.string(), context: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('place'), input: fc.record({ component: fc.string(), region: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ component: fc.string(), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('render'), input: fc.record({ component: fc.string(), context: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('place'), input: fc.record({ component: fc.string(), region: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('setVisibility'), input: fc.record({ component: fc.string(), visible: fc.boolean() }) }),
-              fc.record({ action: fc.constant('evaluateVisibility'), input: fc.record({ component: fc.string(), context: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('evaluateVisibility'), input: fc.record({ component: fc.string(), context: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

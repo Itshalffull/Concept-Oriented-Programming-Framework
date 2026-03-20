@@ -229,7 +229,7 @@ describe('DevServer functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('start'), input: fc.record({ port: fc.integer({ min: 0, max: 1000 }), watchDirs: fc.string() }) }),
+              fc.record({ action: fc.constant('start'), input: fc.record({ port: fc.integer({ min: 1, max: 1000 }), watchDirs: fc.string() }) }),
               fc.record({ action: fc.constant('stop'), input: fc.record({ session: fc.string() }) }),
               fc.record({ action: fc.constant('status'), input: fc.record({ session: fc.string() }) }),
             ),
@@ -258,7 +258,7 @@ describe('DevServer functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('start'), input: fc.record({ port: fc.integer({ min: 0, max: 1000 }), watchDirs: fc.string() }) }),
+              fc.record({ action: fc.constant('start'), input: fc.record({ port: fc.integer({ min: 1, max: 1000 }), watchDirs: fc.string() }) }),
               fc.record({ action: fc.constant('stop'), input: fc.record({ session: fc.string() }) }),
               fc.record({ action: fc.constant('status'), input: fc.record({ session: fc.string() }) }),
             ),

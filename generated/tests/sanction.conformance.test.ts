@@ -334,11 +334,11 @@ describe('Sanction functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('impose'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 20 }), severity: fc.string({ minLength: 1, maxLength: 20 }), consequence: fc.string({ minLength: 1, maxLength: 20 }), reason: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('impose'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 50 }), severity: fc.string({ minLength: 1, maxLength: 50 }), consequence: fc.string({ minLength: 1, maxLength: 50 }), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('escalate'), input: fc.record({ sanction: fc.string() }) }),
               fc.record({ action: fc.constant('appeal'), input: fc.record({ sanction: fc.string() }) }),
               fc.record({ action: fc.constant('pardon'), input: fc.record({ sanction: fc.string() }) }),
-              fc.record({ action: fc.constant('reward'), input: fc.record({ recipient: fc.string({ minLength: 1, maxLength: 20 }), rewardType: fc.string({ minLength: 1, maxLength: 20 }), amount: fc.string(), reason: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('reward'), input: fc.record({ recipient: fc.string({ minLength: 1, maxLength: 50 }), rewardType: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -365,11 +365,11 @@ describe('Sanction functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('impose'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 20 }), severity: fc.string({ minLength: 1, maxLength: 20 }), consequence: fc.string({ minLength: 1, maxLength: 20 }), reason: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('impose'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 50 }), severity: fc.string({ minLength: 1, maxLength: 50 }), consequence: fc.string({ minLength: 1, maxLength: 50 }), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('escalate'), input: fc.record({ sanction: fc.string() }) }),
               fc.record({ action: fc.constant('appeal'), input: fc.record({ sanction: fc.string() }) }),
               fc.record({ action: fc.constant('pardon'), input: fc.record({ sanction: fc.string() }) }),
-              fc.record({ action: fc.constant('reward'), input: fc.record({ recipient: fc.string({ minLength: 1, maxLength: 20 }), rewardType: fc.string({ minLength: 1, maxLength: 20 }), amount: fc.string(), reason: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('reward'), input: fc.record({ recipient: fc.string({ minLength: 1, maxLength: 50 }), rewardType: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

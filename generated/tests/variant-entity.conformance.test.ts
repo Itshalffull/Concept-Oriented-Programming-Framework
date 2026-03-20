@@ -97,7 +97,7 @@ describe('VariantEntity imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ action: fc.string({ minLength: 1, maxLength: 20 }), tag: fc.string({ minLength: 1, maxLength: 20 }), fields: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ action: fc.string({ minLength: 1, maxLength: 50 }), tag: fc.string({ minLength: 1, maxLength: 50 }), fields: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('matchingSyncs'), input: fc.record({ variant: fc.string() }) }),
               fc.record({ action: fc.constant('isDead'), input: fc.record({ variant: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ variant: fc.string() }) }),
@@ -126,7 +126,7 @@ describe('VariantEntity imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ action: fc.string({ minLength: 1, maxLength: 20 }), tag: fc.string({ minLength: 1, maxLength: 20 }), fields: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ action: fc.string({ minLength: 1, maxLength: 50 }), tag: fc.string({ minLength: 1, maxLength: 50 }), fields: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('matchingSyncs'), input: fc.record({ variant: fc.string() }) }),
               fc.record({ action: fc.constant('isDead'), input: fc.record({ variant: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ variant: fc.string() }) }),

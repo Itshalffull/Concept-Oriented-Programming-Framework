@@ -283,7 +283,7 @@ describe('Lockfile functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('write'), input: fc.record({ project_hash: fc.string({ minLength: 1, maxLength: 20 }), entries: fc.string(), metadata: fc.string() }) }),
+              fc.record({ action: fc.constant('write'), input: fc.record({ project_hash: fc.string({ minLength: 1, maxLength: 50 }), entries: fc.string(), metadata: fc.string() }) }),
               fc.record({ action: fc.constant('read'), input: fc.record({ lockfile: fc.string() }) }),
               fc.record({ action: fc.constant('verify'), input: fc.record({ lockfile: fc.string() }) }),
               fc.record({ action: fc.constant('diff'), input: fc.record({ old_lockfile: fc.string(), new_lockfile: fc.string() }) }),
@@ -313,7 +313,7 @@ describe('Lockfile functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('write'), input: fc.record({ project_hash: fc.string({ minLength: 1, maxLength: 20 }), entries: fc.string(), metadata: fc.string() }) }),
+              fc.record({ action: fc.constant('write'), input: fc.record({ project_hash: fc.string({ minLength: 1, maxLength: 50 }), entries: fc.string(), metadata: fc.string() }) }),
               fc.record({ action: fc.constant('read'), input: fc.record({ lockfile: fc.string() }) }),
               fc.record({ action: fc.constant('verify'), input: fc.record({ lockfile: fc.string() }) }),
               fc.record({ action: fc.constant('diff'), input: fc.record({ old_lockfile: fc.string(), new_lockfile: fc.string() }) }),

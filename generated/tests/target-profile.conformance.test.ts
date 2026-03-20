@@ -209,7 +209,7 @@ describe('TargetProfile imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('setBackendLanguages'), input: fc.record({ profile: fc.string(), languages: fc.string() }) }),
               fc.record({ action: fc.constant('setFrontendFrameworks'), input: fc.record({ profile: fc.string(), frameworks: fc.string() }) }),
               fc.record({ action: fc.constant('setApiInterfaces'), input: fc.record({ profile: fc.string(), interfaces: fc.string() }) }),
@@ -245,7 +245,7 @@ describe('TargetProfile imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('setBackendLanguages'), input: fc.record({ profile: fc.string(), languages: fc.string() }) }),
               fc.record({ action: fc.constant('setFrontendFrameworks'), input: fc.record({ profile: fc.string(), frameworks: fc.string() }) }),
               fc.record({ action: fc.constant('setApiInterfaces'), input: fc.record({ profile: fc.string(), interfaces: fc.string() }) }),

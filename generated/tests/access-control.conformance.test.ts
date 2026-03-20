@@ -241,9 +241,9 @@ describe('AccessControl functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('check'), input: fc.record({ resource: fc.string({ minLength: 1, maxLength: 20 }), action: fc.string({ minLength: 1, maxLength: 20 }), context: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('orIf'), input: fc.record({ left: fc.string({ minLength: 1, maxLength: 20 }), right: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('andIf'), input: fc.record({ left: fc.string({ minLength: 1, maxLength: 20 }), right: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('check'), input: fc.record({ resource: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), context: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('orIf'), input: fc.record({ left: fc.string({ minLength: 1, maxLength: 50 }), right: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('andIf'), input: fc.record({ left: fc.string({ minLength: 1, maxLength: 50 }), right: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -270,9 +270,9 @@ describe('AccessControl functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('check'), input: fc.record({ resource: fc.string({ minLength: 1, maxLength: 20 }), action: fc.string({ minLength: 1, maxLength: 20 }), context: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('orIf'), input: fc.record({ left: fc.string({ minLength: 1, maxLength: 20 }), right: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('andIf'), input: fc.record({ left: fc.string({ minLength: 1, maxLength: 20 }), right: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('check'), input: fc.record({ resource: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), context: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('orIf'), input: fc.record({ left: fc.string({ minLength: 1, maxLength: 50 }), right: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('andIf'), input: fc.record({ left: fc.string({ minLength: 1, maxLength: 50 }), right: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

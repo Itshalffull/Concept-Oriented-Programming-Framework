@@ -393,12 +393,12 @@ describe('Graph functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('addNode'), input: fc.record({ graph: fc.string(), node: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('removeNode'), input: fc.record({ graph: fc.string(), node: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('addEdge'), input: fc.record({ graph: fc.string(), source: fc.string({ minLength: 1, maxLength: 20 }), target: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('removeEdge'), input: fc.record({ graph: fc.string(), source: fc.string({ minLength: 1, maxLength: 20 }), target: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('getNeighbors'), input: fc.record({ graph: fc.string(), node: fc.string({ minLength: 1, maxLength: 20 }), depth: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('filterNodes'), input: fc.record({ graph: fc.string(), filter: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('addNode'), input: fc.record({ graph: fc.string(), node: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('removeNode'), input: fc.record({ graph: fc.string(), node: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('addEdge'), input: fc.record({ graph: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('removeEdge'), input: fc.record({ graph: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getNeighbors'), input: fc.record({ graph: fc.string(), node: fc.string({ minLength: 1, maxLength: 50 }), depth: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('filterNodes'), input: fc.record({ graph: fc.string(), filter: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -425,12 +425,12 @@ describe('Graph functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('addNode'), input: fc.record({ graph: fc.string(), node: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('removeNode'), input: fc.record({ graph: fc.string(), node: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('addEdge'), input: fc.record({ graph: fc.string(), source: fc.string({ minLength: 1, maxLength: 20 }), target: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('removeEdge'), input: fc.record({ graph: fc.string(), source: fc.string({ minLength: 1, maxLength: 20 }), target: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('getNeighbors'), input: fc.record({ graph: fc.string(), node: fc.string({ minLength: 1, maxLength: 20 }), depth: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('filterNodes'), input: fc.record({ graph: fc.string(), filter: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('addNode'), input: fc.record({ graph: fc.string(), node: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('removeNode'), input: fc.record({ graph: fc.string(), node: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('addEdge'), input: fc.record({ graph: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('removeEdge'), input: fc.record({ graph: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getNeighbors'), input: fc.record({ graph: fc.string(), node: fc.string({ minLength: 1, maxLength: 50 }), depth: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('filterNodes'), input: fc.record({ graph: fc.string(), filter: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

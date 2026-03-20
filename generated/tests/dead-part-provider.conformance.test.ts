@@ -160,7 +160,7 @@ describe('DeadPartProvider functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('analyze'), input: fc.record({ analysis: fc.string(), program: fc.string({ minLength: 1, maxLength: 20 }), parts: fc.string(), instructions: fc.string() }) }),
+              fc.record({ action: fc.constant('analyze'), input: fc.record({ analysis: fc.string(), program: fc.string({ minLength: 1, maxLength: 50 }), parts: fc.string(), instructions: fc.string() }) }),
               fc.record({ action: fc.constant('getResults'), input: fc.record({ analysis: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -188,7 +188,7 @@ describe('DeadPartProvider functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('analyze'), input: fc.record({ analysis: fc.string(), program: fc.string({ minLength: 1, maxLength: 20 }), parts: fc.string(), instructions: fc.string() }) }),
+              fc.record({ action: fc.constant('analyze'), input: fc.record({ analysis: fc.string(), program: fc.string({ minLength: 1, maxLength: 50 }), parts: fc.string(), instructions: fc.string() }) }),
               fc.record({ action: fc.constant('getResults'), input: fc.record({ analysis: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

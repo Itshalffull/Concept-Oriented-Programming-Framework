@@ -224,6 +224,15 @@ export interface ActionDecl {
   description?: string;
   params: ParamDecl[];
   variants: ReturnVariant[];
+  /** Named input fixtures for testing and documentation. */
+  fixtures: FixtureDecl[];
+}
+
+export interface FixtureDecl {
+  name: string;
+  input: Record<string, unknown>;
+  /** Expected variant, e.g. 'ok' or 'error'. Defaults to 'ok'. */
+  expectedVariant: string;
 }
 
 export interface ParamDecl {
@@ -520,12 +529,19 @@ export type ResolvedType =
   | { kind: 'map'; keyType: ResolvedType; inner: ResolvedType }
   | { kind: 'record'; fields: FieldSchema[] };
 
+export interface FixtureSchema {
+  name: string;
+  input: Record<string, unknown>;
+  expectedVariant: string;
+}
+
 export interface ActionSchema {
   name: string;
   /** Action-level description propagated from concept spec. */
   description?: string;
   params: ActionParamSchema[];
   variants: VariantSchema[];
+  fixtures: FixtureSchema[];
 }
 
 export interface ActionParamSchema {

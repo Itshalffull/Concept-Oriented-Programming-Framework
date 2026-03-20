@@ -189,12 +189,12 @@ describe('Lens imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ lens: fc.string(), relation: fc.string({ minLength: 1, maxLength: 20 }), key: fc.string({ minLength: 1, maxLength: 20 }), field: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('fromRelation'), input: fc.record({ lens: fc.string(), relation: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ lens: fc.string(), relation: fc.string({ minLength: 1, maxLength: 50 }), key: fc.string({ minLength: 1, maxLength: 50 }), field: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('fromRelation'), input: fc.record({ lens: fc.string(), relation: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('compose'), input: fc.record({ outer: fc.string(), inner: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ lens: fc.string() }) }),
               fc.record({ action: fc.constant('decompose'), input: fc.record({ lens: fc.string() }) }),
-              fc.record({ action: fc.constant('validate'), input: fc.record({ lens: fc.string(), conceptSpec: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('validate'), input: fc.record({ lens: fc.string(), conceptSpec: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -221,12 +221,12 @@ describe('Lens imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ lens: fc.string(), relation: fc.string({ minLength: 1, maxLength: 20 }), key: fc.string({ minLength: 1, maxLength: 20 }), field: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('fromRelation'), input: fc.record({ lens: fc.string(), relation: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ lens: fc.string(), relation: fc.string({ minLength: 1, maxLength: 50 }), key: fc.string({ minLength: 1, maxLength: 50 }), field: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('fromRelation'), input: fc.record({ lens: fc.string(), relation: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('compose'), input: fc.record({ outer: fc.string(), inner: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ lens: fc.string() }) }),
               fc.record({ action: fc.constant('decompose'), input: fc.record({ lens: fc.string() }) }),
-              fc.record({ action: fc.constant('validate'), input: fc.record({ lens: fc.string(), conceptSpec: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('validate'), input: fc.record({ lens: fc.string(), conceptSpec: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -253,12 +253,12 @@ describe('Lens imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ lens: fc.string(), relation: fc.string({ minLength: 1, maxLength: 20 }), key: fc.string({ minLength: 1, maxLength: 20 }), field: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('fromRelation'), input: fc.record({ lens: fc.string(), relation: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ lens: fc.string(), relation: fc.string({ minLength: 1, maxLength: 50 }), key: fc.string({ minLength: 1, maxLength: 50 }), field: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('fromRelation'), input: fc.record({ lens: fc.string(), relation: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('compose'), input: fc.record({ outer: fc.string(), inner: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ lens: fc.string() }) }),
               fc.record({ action: fc.constant('decompose'), input: fc.record({ lens: fc.string() }) }),
-              fc.record({ action: fc.constant('validate'), input: fc.record({ lens: fc.string(), conceptSpec: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('validate'), input: fc.record({ lens: fc.string(), conceptSpec: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },

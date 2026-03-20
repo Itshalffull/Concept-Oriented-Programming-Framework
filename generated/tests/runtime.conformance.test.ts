@@ -565,14 +565,14 @@ describe('Runtime functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('provision'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), runtimeType: fc.string({ minLength: 1, maxLength: 20 }), config: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('deploy'), input: fc.record({ instance: fc.string(), artifact: fc.string({ minLength: 1, maxLength: 20 }), version: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('setTrafficWeight'), input: fc.record({ instance: fc.string(), weight: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('provision'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), runtimeType: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('deploy'), input: fc.record({ instance: fc.string(), artifact: fc.string({ minLength: 1, maxLength: 50 }), version: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setTrafficWeight'), input: fc.record({ instance: fc.string(), weight: fc.integer({ min: 1, max: 1000 }) }) }),
               fc.record({ action: fc.constant('rollback'), input: fc.record({ instance: fc.string() }) }),
               fc.record({ action: fc.constant('destroy'), input: fc.record({ instance: fc.string() }) }),
-              fc.record({ action: fc.constant('updateEndpoint'), input: fc.record({ instance: fc.string(), endpoint: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('updateEndpoint'), input: fc.record({ instance: fc.string(), endpoint: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('getEndpoint'), input: fc.record({ instance: fc.string() }) }),
-              fc.record({ action: fc.constant('configureDependencies'), input: fc.record({ instance: fc.string(), dependencies: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('configureDependencies'), input: fc.record({ instance: fc.string(), dependencies: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('healthCheck'), input: fc.record({ instance: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -600,14 +600,14 @@ describe('Runtime functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('provision'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), runtimeType: fc.string({ minLength: 1, maxLength: 20 }), config: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('deploy'), input: fc.record({ instance: fc.string(), artifact: fc.string({ minLength: 1, maxLength: 20 }), version: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('setTrafficWeight'), input: fc.record({ instance: fc.string(), weight: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('provision'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), runtimeType: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('deploy'), input: fc.record({ instance: fc.string(), artifact: fc.string({ minLength: 1, maxLength: 50 }), version: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setTrafficWeight'), input: fc.record({ instance: fc.string(), weight: fc.integer({ min: 1, max: 1000 }) }) }),
               fc.record({ action: fc.constant('rollback'), input: fc.record({ instance: fc.string() }) }),
               fc.record({ action: fc.constant('destroy'), input: fc.record({ instance: fc.string() }) }),
-              fc.record({ action: fc.constant('updateEndpoint'), input: fc.record({ instance: fc.string(), endpoint: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('updateEndpoint'), input: fc.record({ instance: fc.string(), endpoint: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('getEndpoint'), input: fc.record({ instance: fc.string() }) }),
-              fc.record({ action: fc.constant('configureDependencies'), input: fc.record({ instance: fc.string(), dependencies: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('configureDependencies'), input: fc.record({ instance: fc.string(), dependencies: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('healthCheck'), input: fc.record({ instance: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

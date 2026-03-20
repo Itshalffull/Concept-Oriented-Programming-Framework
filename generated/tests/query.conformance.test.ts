@@ -390,12 +390,12 @@ describe('Query functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('parse'), input: fc.record({ query: fc.string(), expression: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('parse'), input: fc.record({ query: fc.string(), expression: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('execute'), input: fc.record({ query: fc.string() }) }),
               fc.record({ action: fc.constant('subscribe'), input: fc.record({ query: fc.string() }) }),
-              fc.record({ action: fc.constant('addFilter'), input: fc.record({ query: fc.string(), filter: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('addSort'), input: fc.record({ query: fc.string(), sort: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('setScope'), input: fc.record({ query: fc.string(), scope: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('addFilter'), input: fc.record({ query: fc.string(), filter: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('addSort'), input: fc.record({ query: fc.string(), sort: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setScope'), input: fc.record({ query: fc.string(), scope: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -422,12 +422,12 @@ describe('Query functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('parse'), input: fc.record({ query: fc.string(), expression: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('parse'), input: fc.record({ query: fc.string(), expression: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('execute'), input: fc.record({ query: fc.string() }) }),
               fc.record({ action: fc.constant('subscribe'), input: fc.record({ query: fc.string() }) }),
-              fc.record({ action: fc.constant('addFilter'), input: fc.record({ query: fc.string(), filter: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('addSort'), input: fc.record({ query: fc.string(), sort: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('setScope'), input: fc.record({ query: fc.string(), scope: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('addFilter'), input: fc.record({ query: fc.string(), filter: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('addSort'), input: fc.record({ query: fc.string(), sort: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setScope'), input: fc.record({ query: fc.string(), scope: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

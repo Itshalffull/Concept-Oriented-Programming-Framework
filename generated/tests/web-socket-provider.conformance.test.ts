@@ -130,10 +130,10 @@ describe('WebSocketProvider imperative handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('register'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('configure'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), url: fc.string({ minLength: 1, maxLength: 20 }), protocols: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('send'), input: fc.record({ connection: fc.string({ minLength: 1, maxLength: 20 }), message: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('receive'), input: fc.record({ connection: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('close'), input: fc.record({ connection: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), url: fc.string({ minLength: 1, maxLength: 50 }), protocols: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('send'), input: fc.record({ connection: fc.string({ minLength: 1, maxLength: 50 }), message: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('receive'), input: fc.record({ connection: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('close'), input: fc.record({ connection: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -161,10 +161,10 @@ describe('WebSocketProvider imperative handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('register'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('configure'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), url: fc.string({ minLength: 1, maxLength: 20 }), protocols: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('send'), input: fc.record({ connection: fc.string({ minLength: 1, maxLength: 20 }), message: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('receive'), input: fc.record({ connection: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('close'), input: fc.record({ connection: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), url: fc.string({ minLength: 1, maxLength: 50 }), protocols: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('send'), input: fc.record({ connection: fc.string({ minLength: 1, maxLength: 50 }), message: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('receive'), input: fc.record({ connection: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('close'), input: fc.record({ connection: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },

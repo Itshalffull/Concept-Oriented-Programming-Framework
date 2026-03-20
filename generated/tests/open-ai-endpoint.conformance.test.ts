@@ -90,8 +90,8 @@ describe('OpenAiEndpoint imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), apiKey: fc.string({ minLength: 1, maxLength: 20 }), model: fc.string({ minLength: 1, maxLength: 20 }), baseUrl: fc.string({ minLength: 1, maxLength: 20 }), dimensions: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), apiKey: fc.string({ minLength: 1, maxLength: 50 }), model: fc.string({ minLength: 1, maxLength: 50 }), baseUrl: fc.string({ minLength: 1, maxLength: 50 }), dimensions: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -118,8 +118,8 @@ describe('OpenAiEndpoint imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), apiKey: fc.string({ minLength: 1, maxLength: 20 }), model: fc.string({ minLength: 1, maxLength: 20 }), baseUrl: fc.string({ minLength: 1, maxLength: 20 }), dimensions: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), apiKey: fc.string({ minLength: 1, maxLength: 50 }), model: fc.string({ minLength: 1, maxLength: 50 }), baseUrl: fc.string({ minLength: 1, maxLength: 50 }), dimensions: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },

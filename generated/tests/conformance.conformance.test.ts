@@ -338,11 +338,11 @@ describe('Conformance functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('generate'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), specPath: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('verify'), input: fc.record({ suite: fc.string(), language: fc.string({ minLength: 1, maxLength: 20 }), artifactLocation: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('registerDeviation'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), language: fc.string({ minLength: 1, maxLength: 20 }), requirement: fc.string({ minLength: 1, maxLength: 20 }), reason: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('generate'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), specPath: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('verify'), input: fc.record({ suite: fc.string(), language: fc.string({ minLength: 1, maxLength: 50 }), artifactLocation: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('registerDeviation'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string({ minLength: 1, maxLength: 50 }), requirement: fc.string({ minLength: 1, maxLength: 50 }), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('matrix'), input: fc.record({ concepts: fc.string() }) }),
-              fc.record({ action: fc.constant('traceability'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('traceability'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -369,11 +369,11 @@ describe('Conformance functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('generate'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), specPath: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('verify'), input: fc.record({ suite: fc.string(), language: fc.string({ minLength: 1, maxLength: 20 }), artifactLocation: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('registerDeviation'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), language: fc.string({ minLength: 1, maxLength: 20 }), requirement: fc.string({ minLength: 1, maxLength: 20 }), reason: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('generate'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), specPath: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('verify'), input: fc.record({ suite: fc.string(), language: fc.string({ minLength: 1, maxLength: 50 }), artifactLocation: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('registerDeviation'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string({ minLength: 1, maxLength: 50 }), requirement: fc.string({ minLength: 1, maxLength: 50 }), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('matrix'), input: fc.record({ concepts: fc.string() }) }),
-              fc.record({ action: fc.constant('traceability'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('traceability'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

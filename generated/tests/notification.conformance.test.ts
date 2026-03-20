@@ -463,13 +463,13 @@ describe('Notification functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('registerChannel'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), config: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('defineTemplate'), input: fc.record({ notification: fc.string(), template: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('subscribe'), input: fc.record({ user: fc.string({ minLength: 1, maxLength: 20 }), eventType: fc.string({ minLength: 1, maxLength: 20 }), channel: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('unsubscribe'), input: fc.record({ user: fc.string({ minLength: 1, maxLength: 20 }), eventType: fc.string({ minLength: 1, maxLength: 20 }), channel: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('notify'), input: fc.record({ notification: fc.string(), user: fc.string({ minLength: 1, maxLength: 20 }), template: fc.string({ minLength: 1, maxLength: 20 }), data: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('registerChannel'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('defineTemplate'), input: fc.record({ notification: fc.string(), template: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('subscribe'), input: fc.record({ user: fc.string({ minLength: 1, maxLength: 50 }), eventType: fc.string({ minLength: 1, maxLength: 50 }), channel: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('unsubscribe'), input: fc.record({ user: fc.string({ minLength: 1, maxLength: 50 }), eventType: fc.string({ minLength: 1, maxLength: 50 }), channel: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('notify'), input: fc.record({ notification: fc.string(), user: fc.string({ minLength: 1, maxLength: 50 }), template: fc.string({ minLength: 1, maxLength: 50 }), data: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('markRead'), input: fc.record({ notification: fc.string() }) }),
-              fc.record({ action: fc.constant('getUnread'), input: fc.record({ user: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('getUnread'), input: fc.record({ user: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -496,13 +496,13 @@ describe('Notification functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('registerChannel'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), config: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('defineTemplate'), input: fc.record({ notification: fc.string(), template: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('subscribe'), input: fc.record({ user: fc.string({ minLength: 1, maxLength: 20 }), eventType: fc.string({ minLength: 1, maxLength: 20 }), channel: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('unsubscribe'), input: fc.record({ user: fc.string({ minLength: 1, maxLength: 20 }), eventType: fc.string({ minLength: 1, maxLength: 20 }), channel: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('notify'), input: fc.record({ notification: fc.string(), user: fc.string({ minLength: 1, maxLength: 20 }), template: fc.string({ minLength: 1, maxLength: 20 }), data: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('registerChannel'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('defineTemplate'), input: fc.record({ notification: fc.string(), template: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('subscribe'), input: fc.record({ user: fc.string({ minLength: 1, maxLength: 50 }), eventType: fc.string({ minLength: 1, maxLength: 50 }), channel: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('unsubscribe'), input: fc.record({ user: fc.string({ minLength: 1, maxLength: 50 }), eventType: fc.string({ minLength: 1, maxLength: 50 }), channel: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('notify'), input: fc.record({ notification: fc.string(), user: fc.string({ minLength: 1, maxLength: 50 }), template: fc.string({ minLength: 1, maxLength: 50 }), data: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('markRead'), input: fc.record({ notification: fc.string() }) }),
-              fc.record({ action: fc.constant('getUnread'), input: fc.record({ user: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('getUnread'), input: fc.record({ user: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

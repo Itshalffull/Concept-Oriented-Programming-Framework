@@ -283,10 +283,10 @@ describe('ZkSyncProvider functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ rpc_url: fc.string({ minLength: 1, maxLength: 20 }), diamond_proxy: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ rpc_url: fc.string({ minLength: 1, maxLength: 50 }), diamond_proxy: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('poll'), input: fc.record({ provider: fc.string() }) }),
-              fc.record({ action: fc.constant('checkFinality'), input: fc.record({ provider: fc.string(), tx_hash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('getBatchProof'), input: fc.record({ provider: fc.string(), batch_number: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('checkFinality'), input: fc.record({ provider: fc.string(), tx_hash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getBatchProof'), input: fc.record({ provider: fc.string(), batch_number: fc.integer({ min: 1, max: 1000 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -313,10 +313,10 @@ describe('ZkSyncProvider functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ rpc_url: fc.string({ minLength: 1, maxLength: 20 }), diamond_proxy: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ rpc_url: fc.string({ minLength: 1, maxLength: 50 }), diamond_proxy: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('poll'), input: fc.record({ provider: fc.string() }) }),
-              fc.record({ action: fc.constant('checkFinality'), input: fc.record({ provider: fc.string(), tx_hash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('getBatchProof'), input: fc.record({ provider: fc.string(), batch_number: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('checkFinality'), input: fc.record({ provider: fc.string(), tx_hash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getBatchProof'), input: fc.record({ provider: fc.string(), batch_number: fc.integer({ min: 1, max: 1000 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

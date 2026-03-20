@@ -167,7 +167,7 @@ describe('DeploymentValidator functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('parse'), input: fc.record({ raw: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('parse'), input: fc.record({ raw: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('validate'), input: fc.record({ manifest: fc.string(), concepts: fc.string(), syncs: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

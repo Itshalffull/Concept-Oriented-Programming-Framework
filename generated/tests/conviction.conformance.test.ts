@@ -274,9 +274,9 @@ describe('Conviction functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('registerProposal'), input: fc.record({ proposalRef: fc.string({ minLength: 1, maxLength: 20 }), requestedFunds: fc.string(), totalFunds: fc.string() }) }),
-              fc.record({ action: fc.constant('stake'), input: fc.record({ proposal: fc.string(), staker: fc.string({ minLength: 1, maxLength: 20 }), amount: fc.string() }) }),
-              fc.record({ action: fc.constant('unstake'), input: fc.record({ proposal: fc.string(), staker: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('registerProposal'), input: fc.record({ proposalRef: fc.string({ minLength: 1, maxLength: 50 }), requestedFunds: fc.string(), totalFunds: fc.string() }) }),
+              fc.record({ action: fc.constant('stake'), input: fc.record({ proposal: fc.string(), staker: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string() }) }),
+              fc.record({ action: fc.constant('unstake'), input: fc.record({ proposal: fc.string(), staker: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('updateConviction'), input: fc.record({ proposal: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -304,9 +304,9 @@ describe('Conviction functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('registerProposal'), input: fc.record({ proposalRef: fc.string({ minLength: 1, maxLength: 20 }), requestedFunds: fc.string(), totalFunds: fc.string() }) }),
-              fc.record({ action: fc.constant('stake'), input: fc.record({ proposal: fc.string(), staker: fc.string({ minLength: 1, maxLength: 20 }), amount: fc.string() }) }),
-              fc.record({ action: fc.constant('unstake'), input: fc.record({ proposal: fc.string(), staker: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('registerProposal'), input: fc.record({ proposalRef: fc.string({ minLength: 1, maxLength: 50 }), requestedFunds: fc.string(), totalFunds: fc.string() }) }),
+              fc.record({ action: fc.constant('stake'), input: fc.record({ proposal: fc.string(), staker: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string() }) }),
+              fc.record({ action: fc.constant('unstake'), input: fc.record({ proposal: fc.string(), staker: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('updateConviction'), input: fc.record({ proposal: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

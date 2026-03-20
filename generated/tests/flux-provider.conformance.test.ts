@@ -217,9 +217,9 @@ describe('FluxProvider functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('emit'), input: fc.record({ plan: fc.string({ minLength: 1, maxLength: 20 }), repo: fc.string({ minLength: 1, maxLength: 20 }), path: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('emit'), input: fc.record({ plan: fc.string({ minLength: 1, maxLength: 50 }), repo: fc.string({ minLength: 1, maxLength: 50 }), path: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('reconciliationStatus'), input: fc.record({ kustomization: fc.string() }) }),
-              fc.record({ action: fc.constant('helmRelease'), input: fc.record({ kustomization: fc.string(), chart: fc.string({ minLength: 1, maxLength: 20 }), values: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('helmRelease'), input: fc.record({ kustomization: fc.string(), chart: fc.string({ minLength: 1, maxLength: 50 }), values: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -246,9 +246,9 @@ describe('FluxProvider functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('emit'), input: fc.record({ plan: fc.string({ minLength: 1, maxLength: 20 }), repo: fc.string({ minLength: 1, maxLength: 20 }), path: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('emit'), input: fc.record({ plan: fc.string({ minLength: 1, maxLength: 50 }), repo: fc.string({ minLength: 1, maxLength: 50 }), path: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('reconciliationStatus'), input: fc.record({ kustomization: fc.string() }) }),
-              fc.record({ action: fc.constant('helmRelease'), input: fc.record({ kustomization: fc.string(), chart: fc.string({ minLength: 1, maxLength: 20 }), values: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('helmRelease'), input: fc.record({ kustomization: fc.string(), chart: fc.string({ minLength: 1, maxLength: 50 }), values: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

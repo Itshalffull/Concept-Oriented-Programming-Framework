@@ -101,7 +101,7 @@ describe('WidgetGen functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('generate'), input: fc.record({ gen: fc.string(), target: fc.string({ minLength: 1, maxLength: 20 }), widgetAst: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('generate'), input: fc.record({ gen: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }), widgetAst: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -128,7 +128,7 @@ describe('WidgetGen functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('generate'), input: fc.record({ gen: fc.string(), target: fc.string({ minLength: 1, maxLength: 20 }), widgetAst: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('generate'), input: fc.record({ gen: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }), widgetAst: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

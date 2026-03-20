@@ -408,11 +408,11 @@ describe('ToolDiscovery functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), briefDescription: fc.string({ minLength: 1, maxLength: 20 }), fullDescription: fc.string({ minLength: 1, maxLength: 20 }), category: fc.string({ minLength: 1, maxLength: 20 }), concept: fc.string({ minLength: 1, maxLength: 20 }), action: fc.string({ minLength: 1, maxLength: 20 }), inputSchema: fc.string({ minLength: 1, maxLength: 20 }), alwaysLoaded: fc.boolean() }) }),
-              fc.record({ action: fc.constant('searchTools'), input: fc.record({ query: fc.string({ minLength: 1, maxLength: 20 }), limit: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), briefDescription: fc.string({ minLength: 1, maxLength: 50 }), fullDescription: fc.string({ minLength: 1, maxLength: 50 }), category: fc.string({ minLength: 1, maxLength: 50 }), concept: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), inputSchema: fc.string({ minLength: 1, maxLength: 50 }), alwaysLoaded: fc.boolean() }) }),
+              fc.record({ action: fc.constant('searchTools'), input: fc.record({ query: fc.string({ minLength: 1, maxLength: 50 }), limit: fc.integer({ min: 1, max: 1000 }) }) }),
               fc.record({ action: fc.constant('describeTools'), input: fc.record({ tools: fc.string() }) }),
               fc.record({ action: fc.constant('listCategories'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('getCategory'), input: fc.record({ category: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('getCategory'), input: fc.record({ category: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('getAlwaysLoaded'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -440,11 +440,11 @@ describe('ToolDiscovery functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), briefDescription: fc.string({ minLength: 1, maxLength: 20 }), fullDescription: fc.string({ minLength: 1, maxLength: 20 }), category: fc.string({ minLength: 1, maxLength: 20 }), concept: fc.string({ minLength: 1, maxLength: 20 }), action: fc.string({ minLength: 1, maxLength: 20 }), inputSchema: fc.string({ minLength: 1, maxLength: 20 }), alwaysLoaded: fc.boolean() }) }),
-              fc.record({ action: fc.constant('searchTools'), input: fc.record({ query: fc.string({ minLength: 1, maxLength: 20 }), limit: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), briefDescription: fc.string({ minLength: 1, maxLength: 50 }), fullDescription: fc.string({ minLength: 1, maxLength: 50 }), category: fc.string({ minLength: 1, maxLength: 50 }), concept: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), inputSchema: fc.string({ minLength: 1, maxLength: 50 }), alwaysLoaded: fc.boolean() }) }),
+              fc.record({ action: fc.constant('searchTools'), input: fc.record({ query: fc.string({ minLength: 1, maxLength: 50 }), limit: fc.integer({ min: 1, max: 1000 }) }) }),
               fc.record({ action: fc.constant('describeTools'), input: fc.record({ tools: fc.string() }) }),
               fc.record({ action: fc.constant('listCategories'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('getCategory'), input: fc.record({ category: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('getCategory'), input: fc.record({ category: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('getAlwaysLoaded'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },

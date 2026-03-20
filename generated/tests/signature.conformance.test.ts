@@ -274,10 +274,10 @@ describe('Signature functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), input_fields: fc.string(), output_fields: fc.string(), instruction: fc.string(), module_type: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('compile'), input: fc.record({ signature: fc.string(), model_id: fc.string({ minLength: 1, maxLength: 20 }), examples: fc.string() }) }),
-              fc.record({ action: fc.constant('execute'), input: fc.record({ signature: fc.string(), model_id: fc.string({ minLength: 1, maxLength: 20 }), inputs: fc.string() }) }),
-              fc.record({ action: fc.constant('recompile'), input: fc.record({ signature: fc.string(), target_model: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), input_fields: fc.string(), output_fields: fc.string(), instruction: fc.string(), module_type: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('compile'), input: fc.record({ signature: fc.string(), model_id: fc.string({ minLength: 1, maxLength: 50 }), examples: fc.string() }) }),
+              fc.record({ action: fc.constant('execute'), input: fc.record({ signature: fc.string(), model_id: fc.string({ minLength: 1, maxLength: 50 }), inputs: fc.string() }) }),
+              fc.record({ action: fc.constant('recompile'), input: fc.record({ signature: fc.string(), target_model: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -304,10 +304,10 @@ describe('Signature functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), input_fields: fc.string(), output_fields: fc.string(), instruction: fc.string(), module_type: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('compile'), input: fc.record({ signature: fc.string(), model_id: fc.string({ minLength: 1, maxLength: 20 }), examples: fc.string() }) }),
-              fc.record({ action: fc.constant('execute'), input: fc.record({ signature: fc.string(), model_id: fc.string({ minLength: 1, maxLength: 20 }), inputs: fc.string() }) }),
-              fc.record({ action: fc.constant('recompile'), input: fc.record({ signature: fc.string(), target_model: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), input_fields: fc.string(), output_fields: fc.string(), instruction: fc.string(), module_type: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('compile'), input: fc.record({ signature: fc.string(), model_id: fc.string({ minLength: 1, maxLength: 50 }), examples: fc.string() }) }),
+              fc.record({ action: fc.constant('execute'), input: fc.record({ signature: fc.string(), model_id: fc.string({ minLength: 1, maxLength: 50 }), inputs: fc.string() }) }),
+              fc.record({ action: fc.constant('recompile'), input: fc.record({ signature: fc.string(), target_model: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

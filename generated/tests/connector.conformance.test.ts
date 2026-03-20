@@ -334,11 +334,11 @@ describe('Connector functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configure'), input: fc.record({ sourceId: fc.string({ minLength: 1, maxLength: 20 }), protocolId: fc.string({ minLength: 1, maxLength: 20 }), config: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('read'), input: fc.record({ connectorId: fc.string({ minLength: 1, maxLength: 20 }), query: fc.string({ minLength: 1, maxLength: 20 }), options: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('write'), input: fc.record({ connectorId: fc.string({ minLength: 1, maxLength: 20 }), data: fc.string({ minLength: 1, maxLength: 20 }), options: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('test'), input: fc.record({ connectorId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('discover'), input: fc.record({ connectorId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ sourceId: fc.string({ minLength: 1, maxLength: 50 }), protocolId: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('read'), input: fc.record({ connectorId: fc.string({ minLength: 1, maxLength: 50 }), query: fc.string({ minLength: 1, maxLength: 50 }), options: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('write'), input: fc.record({ connectorId: fc.string({ minLength: 1, maxLength: 50 }), data: fc.string({ minLength: 1, maxLength: 50 }), options: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('test'), input: fc.record({ connectorId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('discover'), input: fc.record({ connectorId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -365,11 +365,11 @@ describe('Connector functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configure'), input: fc.record({ sourceId: fc.string({ minLength: 1, maxLength: 20 }), protocolId: fc.string({ minLength: 1, maxLength: 20 }), config: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('read'), input: fc.record({ connectorId: fc.string({ minLength: 1, maxLength: 20 }), query: fc.string({ minLength: 1, maxLength: 20 }), options: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('write'), input: fc.record({ connectorId: fc.string({ minLength: 1, maxLength: 20 }), data: fc.string({ minLength: 1, maxLength: 20 }), options: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('test'), input: fc.record({ connectorId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('discover'), input: fc.record({ connectorId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ sourceId: fc.string({ minLength: 1, maxLength: 50 }), protocolId: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('read'), input: fc.record({ connectorId: fc.string({ minLength: 1, maxLength: 50 }), query: fc.string({ minLength: 1, maxLength: 50 }), options: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('write'), input: fc.record({ connectorId: fc.string({ minLength: 1, maxLength: 50 }), data: fc.string({ minLength: 1, maxLength: 50 }), options: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('test'), input: fc.record({ connectorId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('discover'), input: fc.record({ connectorId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

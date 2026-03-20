@@ -389,12 +389,12 @@ describe('GraphAnalysis functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('analyze'), input: fc.record({ graph: fc.string({ minLength: 1, maxLength: 20 }), algorithm: fc.string({ minLength: 1, maxLength: 20 }), config: fc.string() }) }),
-              fc.record({ action: fc.constant('register'), input: fc.record({ algorithm: fc.string({ minLength: 1, maxLength: 20 }), category: fc.string({ minLength: 1, maxLength: 20 }), provider: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('analyze'), input: fc.record({ graph: fc.string({ minLength: 1, maxLength: 50 }), algorithm: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string() }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ algorithm: fc.string({ minLength: 1, maxLength: 50 }), category: fc.string({ minLength: 1, maxLength: 50 }), provider: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('getResult'), input: fc.record({ result: fc.string() }) }),
-              fc.record({ action: fc.constant('listResults'), input: fc.record({ graph: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('listResults'), input: fc.record({ graph: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('listAlgorithms'), input: fc.record({ category: fc.string() }) }),
-              fc.record({ action: fc.constant('clearResults'), input: fc.record({ graph: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('clearResults'), input: fc.record({ graph: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -421,12 +421,12 @@ describe('GraphAnalysis functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('analyze'), input: fc.record({ graph: fc.string({ minLength: 1, maxLength: 20 }), algorithm: fc.string({ minLength: 1, maxLength: 20 }), config: fc.string() }) }),
-              fc.record({ action: fc.constant('register'), input: fc.record({ algorithm: fc.string({ minLength: 1, maxLength: 20 }), category: fc.string({ minLength: 1, maxLength: 20 }), provider: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('analyze'), input: fc.record({ graph: fc.string({ minLength: 1, maxLength: 50 }), algorithm: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string() }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ algorithm: fc.string({ minLength: 1, maxLength: 50 }), category: fc.string({ minLength: 1, maxLength: 50 }), provider: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('getResult'), input: fc.record({ result: fc.string() }) }),
-              fc.record({ action: fc.constant('listResults'), input: fc.record({ graph: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('listResults'), input: fc.record({ graph: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('listAlgorithms'), input: fc.record({ category: fc.string() }) }),
-              fc.record({ action: fc.constant('clearResults'), input: fc.record({ graph: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('clearResults'), input: fc.record({ graph: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

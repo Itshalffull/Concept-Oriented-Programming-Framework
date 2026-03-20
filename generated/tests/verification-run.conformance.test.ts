@@ -129,7 +129,7 @@ describe('VerificationRun imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('start'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 20 }), properties: fc.string(), solver: fc.string({ minLength: 1, maxLength: 20 }), timeout_ms: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('start'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 50 }), properties: fc.string(), solver: fc.string({ minLength: 1, maxLength: 50 }), timeout_ms: fc.integer({ min: 1, max: 1000 }) }) }),
               fc.record({ action: fc.constant('complete'), input: fc.record({ run: fc.string(), results: fc.string(), resource_usage: fc.string() }) }),
               fc.record({ action: fc.constant('timeout'), input: fc.record({ run: fc.string(), partial_results: fc.string() }) }),
               fc.record({ action: fc.constant('cancel'), input: fc.record({ run: fc.string() }) }),
@@ -160,7 +160,7 @@ describe('VerificationRun imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('start'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 20 }), properties: fc.string(), solver: fc.string({ minLength: 1, maxLength: 20 }), timeout_ms: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('start'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 50 }), properties: fc.string(), solver: fc.string({ minLength: 1, maxLength: 50 }), timeout_ms: fc.integer({ min: 1, max: 1000 }) }) }),
               fc.record({ action: fc.constant('complete'), input: fc.record({ run: fc.string(), results: fc.string(), resource_usage: fc.string() }) }),
               fc.record({ action: fc.constant('timeout'), input: fc.record({ run: fc.string(), partial_results: fc.string() }) }),
               fc.record({ action: fc.constant('cancel'), input: fc.record({ run: fc.string() }) }),

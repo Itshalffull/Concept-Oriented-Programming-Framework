@@ -279,7 +279,7 @@ describe('Projection functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('project'), input: fc.record({ manifest: fc.string({ minLength: 1, maxLength: 20 }), annotations: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('project'), input: fc.record({ manifest: fc.string({ minLength: 1, maxLength: 50 }), annotations: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('validate'), input: fc.record({ projection: fc.string() }) }),
               fc.record({ action: fc.constant('diff'), input: fc.record({ projection: fc.string(), previous: fc.string() }) }),
               fc.record({ action: fc.constant('inferResources'), input: fc.record({ projection: fc.string() }) }),
@@ -309,7 +309,7 @@ describe('Projection functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('project'), input: fc.record({ manifest: fc.string({ minLength: 1, maxLength: 20 }), annotations: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('project'), input: fc.record({ manifest: fc.string({ minLength: 1, maxLength: 50 }), annotations: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('validate'), input: fc.record({ projection: fc.string() }) }),
               fc.record({ action: fc.constant('diff'), input: fc.record({ projection: fc.string(), previous: fc.string() }) }),
               fc.record({ action: fc.constant('inferResources'), input: fc.record({ projection: fc.string() }) }),

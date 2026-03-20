@@ -333,10 +333,10 @@ describe('GcfRuntime functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('provision'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), projectId: fc.string({ minLength: 1, maxLength: 20 }), region: fc.string({ minLength: 1, maxLength: 20 }), runtime: fc.string({ minLength: 1, maxLength: 20 }), triggerType: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('deploy'), input: fc.record({ function: fc.string(), sourceArchive: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('setTrafficWeight'), input: fc.record({ function: fc.string(), weight: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('rollback'), input: fc.record({ function: fc.string(), targetVersion: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('provision'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), projectId: fc.string({ minLength: 1, maxLength: 50 }), region: fc.string({ minLength: 1, maxLength: 50 }), runtime: fc.string({ minLength: 1, maxLength: 50 }), triggerType: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('deploy'), input: fc.record({ function: fc.string(), sourceArchive: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setTrafficWeight'), input: fc.record({ function: fc.string(), weight: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('rollback'), input: fc.record({ function: fc.string(), targetVersion: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('destroy'), input: fc.record({ function: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -364,10 +364,10 @@ describe('GcfRuntime functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('provision'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), projectId: fc.string({ minLength: 1, maxLength: 20 }), region: fc.string({ minLength: 1, maxLength: 20 }), runtime: fc.string({ minLength: 1, maxLength: 20 }), triggerType: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('deploy'), input: fc.record({ function: fc.string(), sourceArchive: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('setTrafficWeight'), input: fc.record({ function: fc.string(), weight: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('rollback'), input: fc.record({ function: fc.string(), targetVersion: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('provision'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), projectId: fc.string({ minLength: 1, maxLength: 50 }), region: fc.string({ minLength: 1, maxLength: 50 }), runtime: fc.string({ minLength: 1, maxLength: 50 }), triggerType: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('deploy'), input: fc.record({ function: fc.string(), sourceArchive: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setTrafficWeight'), input: fc.record({ function: fc.string(), weight: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('rollback'), input: fc.record({ function: fc.string(), targetVersion: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('destroy'), input: fc.record({ function: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

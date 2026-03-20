@@ -273,10 +273,10 @@ describe('Template functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ template: fc.string(), body: fc.string({ minLength: 1, maxLength: 20 }), variables: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('instantiate'), input: fc.record({ template: fc.string(), values: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('registerTrigger'), input: fc.record({ template: fc.string(), trigger: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('mergeProperties'), input: fc.record({ template: fc.string(), properties: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ template: fc.string(), body: fc.string({ minLength: 1, maxLength: 50 }), variables: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('instantiate'), input: fc.record({ template: fc.string(), values: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('registerTrigger'), input: fc.record({ template: fc.string(), trigger: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('mergeProperties'), input: fc.record({ template: fc.string(), properties: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -303,10 +303,10 @@ describe('Template functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ template: fc.string(), body: fc.string({ minLength: 1, maxLength: 20 }), variables: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('instantiate'), input: fc.record({ template: fc.string(), values: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('registerTrigger'), input: fc.record({ template: fc.string(), trigger: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('mergeProperties'), input: fc.record({ template: fc.string(), properties: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ template: fc.string(), body: fc.string({ minLength: 1, maxLength: 50 }), variables: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('instantiate'), input: fc.record({ template: fc.string(), values: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('registerTrigger'), input: fc.record({ template: fc.string(), trigger: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('mergeProperties'), input: fc.record({ template: fc.string(), properties: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

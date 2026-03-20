@@ -276,8 +276,8 @@ describe('Version functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('snapshot'), input: fc.record({ version: fc.string(), entity: fc.string({ minLength: 1, maxLength: 20 }), data: fc.string({ minLength: 1, maxLength: 20 }), author: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('listVersions'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('snapshot'), input: fc.record({ version: fc.string(), entity: fc.string({ minLength: 1, maxLength: 50 }), data: fc.string({ minLength: 1, maxLength: 50 }), author: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('listVersions'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('rollback'), input: fc.record({ version: fc.string() }) }),
               fc.record({ action: fc.constant('diff'), input: fc.record({ versionA: fc.string(), versionB: fc.string() }) }),
             ),
@@ -306,8 +306,8 @@ describe('Version functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('snapshot'), input: fc.record({ version: fc.string(), entity: fc.string({ minLength: 1, maxLength: 20 }), data: fc.string({ minLength: 1, maxLength: 20 }), author: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('listVersions'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('snapshot'), input: fc.record({ version: fc.string(), entity: fc.string({ minLength: 1, maxLength: 50 }), data: fc.string({ minLength: 1, maxLength: 50 }), author: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('listVersions'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('rollback'), input: fc.record({ version: fc.string() }) }),
               fc.record({ action: fc.constant('diff'), input: fc.record({ versionA: fc.string(), versionB: fc.string() }) }),
             ),

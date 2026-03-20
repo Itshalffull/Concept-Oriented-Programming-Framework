@@ -216,7 +216,7 @@ describe('WidgetRegistry functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ entry: fc.string(), widget: fc.string({ minLength: 1, maxLength: 20 }), interactor: fc.string({ minLength: 1, maxLength: 20 }), concept: fc.string(), suite: fc.string(), tags: fc.string(), specificity: fc.integer({ min: 0, max: 1000 }), contractVersion: fc.integer({ min: 0, max: 1000 }), contractSlots: fc.string({ minLength: 1, maxLength: 20 }), contractActions: fc.string({ minLength: 1, maxLength: 20 }), secondaryRoles: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ entry: fc.string(), widget: fc.string({ minLength: 1, maxLength: 50 }), interactor: fc.string({ minLength: 1, maxLength: 50 }), concept: fc.string(), suite: fc.string(), tags: fc.string(), specificity: fc.integer({ min: 1, max: 1000 }), contractVersion: fc.integer({ min: 1, max: 1000 }), contractSlots: fc.string({ minLength: 1, maxLength: 50 }), contractActions: fc.string({ minLength: 1, maxLength: 50 }), secondaryRoles: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('query'), input: fc.record({ concept: fc.string(), suite: fc.string(), interactor: fc.string() }) }),
               fc.record({ action: fc.constant('remove'), input: fc.record({ entry: fc.string() }) }),
             ),
@@ -245,7 +245,7 @@ describe('WidgetRegistry functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ entry: fc.string(), widget: fc.string({ minLength: 1, maxLength: 20 }), interactor: fc.string({ minLength: 1, maxLength: 20 }), concept: fc.string(), suite: fc.string(), tags: fc.string(), specificity: fc.integer({ min: 0, max: 1000 }), contractVersion: fc.integer({ min: 0, max: 1000 }), contractSlots: fc.string({ minLength: 1, maxLength: 20 }), contractActions: fc.string({ minLength: 1, maxLength: 20 }), secondaryRoles: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ entry: fc.string(), widget: fc.string({ minLength: 1, maxLength: 50 }), interactor: fc.string({ minLength: 1, maxLength: 50 }), concept: fc.string(), suite: fc.string(), tags: fc.string(), specificity: fc.integer({ min: 1, max: 1000 }), contractVersion: fc.integer({ min: 1, max: 1000 }), contractSlots: fc.string({ minLength: 1, maxLength: 50 }), contractActions: fc.string({ minLength: 1, maxLength: 50 }), secondaryRoles: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('query'), input: fc.record({ concept: fc.string(), suite: fc.string(), interactor: fc.string() }) }),
               fc.record({ action: fc.constant('remove'), input: fc.record({ entry: fc.string() }) }),
             ),

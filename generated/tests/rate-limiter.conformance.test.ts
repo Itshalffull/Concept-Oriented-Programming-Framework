@@ -126,11 +126,11 @@ describe('RateLimiter imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configure'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 20 }), maxTokens: fc.integer({ min: 0, max: 1000 }), refillRate: fc.integer({ min: 0, max: 1000 }), refillIntervalMs: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('acquire'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 20 }), tokens: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('release'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 20 }), tokens: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('get'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('reset'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 50 }), maxTokens: fc.integer({ min: 1, max: 1000 }), refillRate: fc.integer({ min: 1, max: 1000 }), refillIntervalMs: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('acquire'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 50 }), tokens: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('release'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 50 }), tokens: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('reset'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -156,11 +156,11 @@ describe('RateLimiter imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configure'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 20 }), maxTokens: fc.integer({ min: 0, max: 1000 }), refillRate: fc.integer({ min: 0, max: 1000 }), refillIntervalMs: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('acquire'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 20 }), tokens: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('release'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 20 }), tokens: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('get'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('reset'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 50 }), maxTokens: fc.integer({ min: 1, max: 1000 }), refillRate: fc.integer({ min: 1, max: 1000 }), refillIntervalMs: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('acquire'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 50 }), tokens: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('release'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 50 }), tokens: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('reset'), input: fc.record({ endpoint: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

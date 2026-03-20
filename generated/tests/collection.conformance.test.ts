@@ -333,11 +333,11 @@ describe('Collection functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ collection: fc.string(), type: fc.string({ minLength: 1, maxLength: 20 }), schema: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('addMember'), input: fc.record({ collection: fc.string(), member: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('removeMember'), input: fc.record({ collection: fc.string(), member: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ collection: fc.string(), type: fc.string({ minLength: 1, maxLength: 50 }), schema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('addMember'), input: fc.record({ collection: fc.string(), member: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('removeMember'), input: fc.record({ collection: fc.string(), member: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('getMembers'), input: fc.record({ collection: fc.string() }) }),
-              fc.record({ action: fc.constant('setSchema'), input: fc.record({ collection: fc.string(), schema: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('setSchema'), input: fc.record({ collection: fc.string(), schema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -364,11 +364,11 @@ describe('Collection functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ collection: fc.string(), type: fc.string({ minLength: 1, maxLength: 20 }), schema: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('addMember'), input: fc.record({ collection: fc.string(), member: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('removeMember'), input: fc.record({ collection: fc.string(), member: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ collection: fc.string(), type: fc.string({ minLength: 1, maxLength: 50 }), schema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('addMember'), input: fc.record({ collection: fc.string(), member: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('removeMember'), input: fc.record({ collection: fc.string(), member: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('getMembers'), input: fc.record({ collection: fc.string() }) }),
-              fc.record({ action: fc.constant('setSchema'), input: fc.record({ collection: fc.string(), schema: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('setSchema'), input: fc.record({ collection: fc.string(), schema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

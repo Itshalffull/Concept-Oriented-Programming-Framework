@@ -21,6 +21,7 @@ import type {
   QuantifierBinding,
   QuantifierDomain,
   ActionContract,
+  FixtureDecl,
 } from '../../../runtime/types.js';
 
 // --- Token Types ---
@@ -69,6 +70,7 @@ const KEYWORDS = new Set([
   'then', 'and', 'when', 'in', 'none',
   'example', 'forall', 'always', 'never', 'eventually',
   'given', 'exists', 'ensures', 'not', 'old', 'where',
+  'fixture',
 ]);
 
 // These are only keywords inside type expressions. Everywhere else
@@ -762,10 +764,30 @@ class Parser {
       }
 
       const variants: ReturnVariant[] = [];
+      const fixtures: FixtureDecl[] = [];
 
       while (this.peek().type !== 'RBRACE' && this.peek().type !== 'EOF') {
         this.skipSeps();
         if (this.peek().type === 'RBRACE') break;
+
+        // Parse fixture declarations: fixture <name> { key: value, ... } [-> variant]
+        if (this.peek().type === 'KEYWORD' && this.peek().value === 'fixture') {
+          this.advance(); // consume 'fixture'
+          const fixtureName = this.expectIdent().value;
+          this.expect('LBRACE');
+          const input = this.parseFixtureObject();
+          this.expect('RBRACE');
+
+          let expectedVariant = 'ok';
+          if (this.peek().type === 'ARROW') {
+            this.advance();
+            expectedVariant = this.expectIdent().value;
+          }
+
+          fixtures.push({ name: fixtureName, input, expectedVariant });
+          this.skipSeps();
+          continue;
+        }
 
         this.expect('ARROW');
         const variantName = this.expectIdent().value;
@@ -801,7 +823,7 @@ class Parser {
       }
 
       this.expect('RBRACE');
-      const actionDecl: ActionDecl = { name, params, variants };
+      const actionDecl: ActionDecl = { name, params, variants, fixtures };
       if (actionDescription) {
         actionDecl.description = actionDescription;
       }
@@ -811,6 +833,72 @@ class Parser {
 
     this.expect('RBRACE');
     return actions;
+  }
+
+  /**
+   * Parse a fixture object literal: key: value, key: value
+   * Values: strings, numbers, booleans, arrays, nested objects.
+   * Stops at RBRACE (caller consumes it).
+   */
+  private parseFixtureObject(): Record<string, unknown> {
+    const obj: Record<string, unknown> = {};
+    this.skipSeps();
+    if (this.peek().type === 'RBRACE') return obj;
+
+    while (this.peek().type !== 'RBRACE' && this.peek().type !== 'EOF') {
+      this.skipSeps();
+      if (this.peek().type === 'RBRACE') break;
+      const key = this.expectIdent().value;
+      this.expect('COLON');
+      obj[key] = this.parseFixtureValue();
+      // optional comma
+      if (this.peek().type === 'COMMA') this.advance();
+      this.skipSeps();
+    }
+    return obj;
+  }
+
+  private parseFixtureValue(): unknown {
+    const tok = this.peek();
+    // String literal
+    if (tok.type === 'STRING') {
+      this.advance();
+      return tok.value;
+    }
+    // Number
+    if (tok.type === 'NUMBER') {
+      this.advance();
+      return Number(tok.value);
+    }
+    // Boolean / null
+    if (tok.type === 'IDENT' || tok.type === 'KEYWORD') {
+      if (tok.value === 'true') { this.advance(); return true; }
+      if (tok.value === 'false') { this.advance(); return false; }
+      if (tok.value === 'null' || tok.value === 'none') { this.advance(); return null; }
+    }
+    // Array: [val, val, ...]
+    if (tok.type === 'LBRACKET') {
+      this.advance();
+      const arr: unknown[] = [];
+      this.skipSeps();
+      while (this.peek().type !== 'RBRACKET' && this.peek().type !== 'EOF') {
+        arr.push(this.parseFixtureValue());
+        if (this.peek().type === 'COMMA') this.advance();
+        this.skipSeps();
+      }
+      this.expect('RBRACKET');
+      return arr;
+    }
+    // Nested object: { key: val, ... }
+    if (tok.type === 'LBRACE') {
+      this.advance();
+      const nested = this.parseFixtureObject();
+      this.expect('RBRACE');
+      return nested;
+    }
+    // Fallback: treat as string
+    this.advance();
+    return tok.value;
   }
 
   private parseParamList(typeParams: string[]): ParamDecl[] {

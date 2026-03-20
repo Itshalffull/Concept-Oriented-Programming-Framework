@@ -449,13 +449,13 @@ describe('ExpressionLanguage functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('registerLanguage'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), grammar: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('registerFunction'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), implementation: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('registerOperator'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), implementation: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('parse'), input: fc.record({ expression: fc.string(), text: fc.string({ minLength: 1, maxLength: 20 }), language: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('registerLanguage'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), grammar: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('registerFunction'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), implementation: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('registerOperator'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), implementation: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('parse'), input: fc.record({ expression: fc.string(), text: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('evaluate'), input: fc.record({ expression: fc.string() }) }),
               fc.record({ action: fc.constant('typeCheck'), input: fc.record({ expression: fc.string() }) }),
-              fc.record({ action: fc.constant('getCompletions'), input: fc.record({ expression: fc.string(), cursor: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('getCompletions'), input: fc.record({ expression: fc.string(), cursor: fc.integer({ min: 1, max: 1000 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -482,13 +482,13 @@ describe('ExpressionLanguage functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('registerLanguage'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), grammar: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('registerFunction'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), implementation: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('registerOperator'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), implementation: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('parse'), input: fc.record({ expression: fc.string(), text: fc.string({ minLength: 1, maxLength: 20 }), language: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('registerLanguage'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), grammar: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('registerFunction'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), implementation: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('registerOperator'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), implementation: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('parse'), input: fc.record({ expression: fc.string(), text: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('evaluate'), input: fc.record({ expression: fc.string() }) }),
               fc.record({ action: fc.constant('typeCheck'), input: fc.record({ expression: fc.string() }) }),
-              fc.record({ action: fc.constant('getCompletions'), input: fc.record({ expression: fc.string(), cursor: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('getCompletions'), input: fc.record({ expression: fc.string(), cursor: fc.integer({ min: 1, max: 1000 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

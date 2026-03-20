@@ -216,8 +216,8 @@ describe('DisclosurePolicy functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 20 }), audience: fc.string({ minLength: 1, maxLength: 20 }), timing: fc.string({ minLength: 1, maxLength: 20 }), scope: fc.string() }) }),
-              fc.record({ action: fc.constant('evaluate'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 20 }), requester: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 50 }), audience: fc.string({ minLength: 1, maxLength: 50 }), timing: fc.string({ minLength: 1, maxLength: 50 }), scope: fc.string() }) }),
+              fc.record({ action: fc.constant('evaluate'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 50 }), requester: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('suspend'), input: fc.record({ policy: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -245,8 +245,8 @@ describe('DisclosurePolicy functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 20 }), audience: fc.string({ minLength: 1, maxLength: 20 }), timing: fc.string({ minLength: 1, maxLength: 20 }), scope: fc.string() }) }),
-              fc.record({ action: fc.constant('evaluate'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 20 }), requester: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 50 }), audience: fc.string({ minLength: 1, maxLength: 50 }), timing: fc.string({ minLength: 1, maxLength: 50 }), scope: fc.string() }) }),
+              fc.record({ action: fc.constant('evaluate'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 50 }), requester: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('suspend'), input: fc.record({ policy: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

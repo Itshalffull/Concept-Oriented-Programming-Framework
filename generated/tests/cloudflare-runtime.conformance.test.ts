@@ -334,10 +334,10 @@ describe('CloudflareRuntime functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('provision'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), accountId: fc.string({ minLength: 1, maxLength: 20 }), routes: fc.string() }) }),
-              fc.record({ action: fc.constant('deploy'), input: fc.record({ worker: fc.string(), scriptContent: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('setTrafficWeight'), input: fc.record({ worker: fc.string(), weight: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('rollback'), input: fc.record({ worker: fc.string(), targetVersion: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('provision'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), accountId: fc.string({ minLength: 1, maxLength: 50 }), routes: fc.string() }) }),
+              fc.record({ action: fc.constant('deploy'), input: fc.record({ worker: fc.string(), scriptContent: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setTrafficWeight'), input: fc.record({ worker: fc.string(), weight: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('rollback'), input: fc.record({ worker: fc.string(), targetVersion: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('destroy'), input: fc.record({ worker: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -365,10 +365,10 @@ describe('CloudflareRuntime functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('provision'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), accountId: fc.string({ minLength: 1, maxLength: 20 }), routes: fc.string() }) }),
-              fc.record({ action: fc.constant('deploy'), input: fc.record({ worker: fc.string(), scriptContent: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('setTrafficWeight'), input: fc.record({ worker: fc.string(), weight: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('rollback'), input: fc.record({ worker: fc.string(), targetVersion: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('provision'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), accountId: fc.string({ minLength: 1, maxLength: 50 }), routes: fc.string() }) }),
+              fc.record({ action: fc.constant('deploy'), input: fc.record({ worker: fc.string(), scriptContent: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setTrafficWeight'), input: fc.record({ worker: fc.string(), weight: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('rollback'), input: fc.record({ worker: fc.string(), targetVersion: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('destroy'), input: fc.record({ worker: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

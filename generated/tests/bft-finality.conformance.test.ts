@@ -274,10 +274,10 @@ describe('BFTFinality functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configureCommittee'), input: fc.record({ validators: fc.string(), faultTolerance: fc.string(), protocol: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('proposeFinality'), input: fc.record({ committee: fc.string(), operationRef: fc.string({ minLength: 1, maxLength: 20 }), proposer: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('vote'), input: fc.record({ committee: fc.string(), roundNumber: fc.integer({ min: 0, max: 1000 }), validator: fc.string({ minLength: 1, maxLength: 20 }), approve: fc.boolean() }) }),
-              fc.record({ action: fc.constant('checkConsensus'), input: fc.record({ committee: fc.string(), roundNumber: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('configureCommittee'), input: fc.record({ validators: fc.string(), faultTolerance: fc.string(), protocol: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('proposeFinality'), input: fc.record({ committee: fc.string(), operationRef: fc.string({ minLength: 1, maxLength: 50 }), proposer: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('vote'), input: fc.record({ committee: fc.string(), roundNumber: fc.integer({ min: 1, max: 1000 }), validator: fc.string({ minLength: 1, maxLength: 50 }), approve: fc.boolean() }) }),
+              fc.record({ action: fc.constant('checkConsensus'), input: fc.record({ committee: fc.string(), roundNumber: fc.integer({ min: 1, max: 1000 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -304,10 +304,10 @@ describe('BFTFinality functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configureCommittee'), input: fc.record({ validators: fc.string(), faultTolerance: fc.string(), protocol: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('proposeFinality'), input: fc.record({ committee: fc.string(), operationRef: fc.string({ minLength: 1, maxLength: 20 }), proposer: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('vote'), input: fc.record({ committee: fc.string(), roundNumber: fc.integer({ min: 0, max: 1000 }), validator: fc.string({ minLength: 1, maxLength: 20 }), approve: fc.boolean() }) }),
-              fc.record({ action: fc.constant('checkConsensus'), input: fc.record({ committee: fc.string(), roundNumber: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('configureCommittee'), input: fc.record({ validators: fc.string(), faultTolerance: fc.string(), protocol: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('proposeFinality'), input: fc.record({ committee: fc.string(), operationRef: fc.string({ minLength: 1, maxLength: 50 }), proposer: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('vote'), input: fc.record({ committee: fc.string(), roundNumber: fc.integer({ min: 1, max: 1000 }), validator: fc.string({ minLength: 1, maxLength: 50 }), approve: fc.boolean() }) }),
+              fc.record({ action: fc.constant('checkConsensus'), input: fc.record({ committee: fc.string(), roundNumber: fc.integer({ min: 1, max: 1000 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

@@ -336,11 +336,11 @@ describe('Resource functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('upsert'), input: fc.record({ locator: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }), digest: fc.string({ minLength: 1, maxLength: 20 }), lastModified: fc.string(), size: fc.string() }) }),
-              fc.record({ action: fc.constant('get'), input: fc.record({ locator: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('upsert'), input: fc.record({ locator: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), digest: fc.string({ minLength: 1, maxLength: 50 }), lastModified: fc.string(), size: fc.string() }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ locator: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({ kind: fc.string() }) }),
-              fc.record({ action: fc.constant('remove'), input: fc.record({ locator: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('diff'), input: fc.record({ locator: fc.string({ minLength: 1, maxLength: 20 }), oldDigest: fc.string({ minLength: 1, maxLength: 20 }), newDigest: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('remove'), input: fc.record({ locator: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('diff'), input: fc.record({ locator: fc.string({ minLength: 1, maxLength: 50 }), oldDigest: fc.string({ minLength: 1, maxLength: 50 }), newDigest: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -367,11 +367,11 @@ describe('Resource functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('upsert'), input: fc.record({ locator: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }), digest: fc.string({ minLength: 1, maxLength: 20 }), lastModified: fc.string(), size: fc.string() }) }),
-              fc.record({ action: fc.constant('get'), input: fc.record({ locator: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('upsert'), input: fc.record({ locator: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), digest: fc.string({ minLength: 1, maxLength: 50 }), lastModified: fc.string(), size: fc.string() }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ locator: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({ kind: fc.string() }) }),
-              fc.record({ action: fc.constant('remove'), input: fc.record({ locator: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('diff'), input: fc.record({ locator: fc.string({ minLength: 1, maxLength: 20 }), oldDigest: fc.string({ minLength: 1, maxLength: 20 }), newDigest: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('remove'), input: fc.record({ locator: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('diff'), input: fc.record({ locator: fc.string({ minLength: 1, maxLength: 50 }), oldDigest: fc.string({ minLength: 1, maxLength: 50 }), newDigest: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

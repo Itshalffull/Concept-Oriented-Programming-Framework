@@ -401,12 +401,12 @@ describe('Registry functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('publish'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), namespace: fc.string({ minLength: 1, maxLength: 20 }), version: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string(), artifact_hash: fc.string({ minLength: 1, maxLength: 20 }), dependencies: fc.string(), metadata: fc.string() }) }),
+              fc.record({ action: fc.constant('publish'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), namespace: fc.string({ minLength: 1, maxLength: 50 }), version: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string(), artifact_hash: fc.string({ minLength: 1, maxLength: 50 }), dependencies: fc.string(), metadata: fc.string() }) }),
               fc.record({ action: fc.constant('yank'), input: fc.record({ module: fc.string() }) }),
-              fc.record({ action: fc.constant('lookup'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), namespace: fc.string({ minLength: 1, maxLength: 20 }), version_range: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('search'), input: fc.record({ query: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string(), namespace: fc.string() }) }),
-              fc.record({ action: fc.constant('listVersions'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), namespace: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolveCapability'), input: fc.record({ capability: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('lookup'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), namespace: fc.string({ minLength: 1, maxLength: 50 }), version_range: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('search'), input: fc.record({ query: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string(), namespace: fc.string() }) }),
+              fc.record({ action: fc.constant('listVersions'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), namespace: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolveCapability'), input: fc.record({ capability: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -433,12 +433,12 @@ describe('Registry functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('publish'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), namespace: fc.string({ minLength: 1, maxLength: 20 }), version: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string(), artifact_hash: fc.string({ minLength: 1, maxLength: 20 }), dependencies: fc.string(), metadata: fc.string() }) }),
+              fc.record({ action: fc.constant('publish'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), namespace: fc.string({ minLength: 1, maxLength: 50 }), version: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string(), artifact_hash: fc.string({ minLength: 1, maxLength: 50 }), dependencies: fc.string(), metadata: fc.string() }) }),
               fc.record({ action: fc.constant('yank'), input: fc.record({ module: fc.string() }) }),
-              fc.record({ action: fc.constant('lookup'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), namespace: fc.string({ minLength: 1, maxLength: 20 }), version_range: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('search'), input: fc.record({ query: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string(), namespace: fc.string() }) }),
-              fc.record({ action: fc.constant('listVersions'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), namespace: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('resolveCapability'), input: fc.record({ capability: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('lookup'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), namespace: fc.string({ minLength: 1, maxLength: 50 }), version_range: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('search'), input: fc.record({ query: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string(), namespace: fc.string() }) }),
+              fc.record({ action: fc.constant('listVersions'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), namespace: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolveCapability'), input: fc.record({ capability: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

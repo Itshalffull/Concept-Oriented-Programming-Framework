@@ -160,7 +160,7 @@ describe('A11yAuditProvider functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('audit'), input: fc.record({ audit: fc.string(), program: fc.string({ minLength: 1, maxLength: 20 }), instructions: fc.string(), parts: fc.string() }) }),
+              fc.record({ action: fc.constant('audit'), input: fc.record({ audit: fc.string(), program: fc.string({ minLength: 1, maxLength: 50 }), instructions: fc.string(), parts: fc.string() }) }),
               fc.record({ action: fc.constant('getFindings'), input: fc.record({ audit: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -188,7 +188,7 @@ describe('A11yAuditProvider functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('audit'), input: fc.record({ audit: fc.string(), program: fc.string({ minLength: 1, maxLength: 20 }), instructions: fc.string(), parts: fc.string() }) }),
+              fc.record({ action: fc.constant('audit'), input: fc.record({ audit: fc.string(), program: fc.string({ minLength: 1, maxLength: 50 }), instructions: fc.string(), parts: fc.string() }) }),
               fc.record({ action: fc.constant('getFindings'), input: fc.record({ audit: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

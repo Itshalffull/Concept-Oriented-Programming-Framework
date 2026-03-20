@@ -277,9 +277,9 @@ describe('StakeWeight functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('configure'), input: fc.record({ minimumStake: fc.string(), cooldownPeriod: fc.string() }) }),
-              fc.record({ action: fc.constant('stake'), input: fc.record({ vault: fc.string(), participant: fc.string({ minLength: 1, maxLength: 20 }), amount: fc.string(), lockDurationHours: fc.string() }) }),
-              fc.record({ action: fc.constant('unstake'), input: fc.record({ vault: fc.string(), participant: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('getWeight'), input: fc.record({ vault: fc.string(), participant: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('stake'), input: fc.record({ vault: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), lockDurationHours: fc.string() }) }),
+              fc.record({ action: fc.constant('unstake'), input: fc.record({ vault: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getWeight'), input: fc.record({ vault: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

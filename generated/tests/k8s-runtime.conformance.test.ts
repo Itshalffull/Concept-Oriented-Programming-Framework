@@ -334,10 +334,10 @@ describe('K8sRuntime functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('provision'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), namespace: fc.string({ minLength: 1, maxLength: 20 }), cluster: fc.string({ minLength: 1, maxLength: 20 }), replicas: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('deploy'), input: fc.record({ deployment: fc.string(), imageUri: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('setTrafficWeight'), input: fc.record({ deployment: fc.string(), weight: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('rollback'), input: fc.record({ deployment: fc.string(), targetRevision: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('provision'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), namespace: fc.string({ minLength: 1, maxLength: 50 }), cluster: fc.string({ minLength: 1, maxLength: 50 }), replicas: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('deploy'), input: fc.record({ deployment: fc.string(), imageUri: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setTrafficWeight'), input: fc.record({ deployment: fc.string(), weight: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('rollback'), input: fc.record({ deployment: fc.string(), targetRevision: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('destroy'), input: fc.record({ deployment: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -365,10 +365,10 @@ describe('K8sRuntime functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('provision'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }), namespace: fc.string({ minLength: 1, maxLength: 20 }), cluster: fc.string({ minLength: 1, maxLength: 20 }), replicas: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('deploy'), input: fc.record({ deployment: fc.string(), imageUri: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('setTrafficWeight'), input: fc.record({ deployment: fc.string(), weight: fc.integer({ min: 0, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('rollback'), input: fc.record({ deployment: fc.string(), targetRevision: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('provision'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), namespace: fc.string({ minLength: 1, maxLength: 50 }), cluster: fc.string({ minLength: 1, maxLength: 50 }), replicas: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('deploy'), input: fc.record({ deployment: fc.string(), imageUri: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setTrafficWeight'), input: fc.record({ deployment: fc.string(), weight: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('rollback'), input: fc.record({ deployment: fc.string(), targetRevision: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('destroy'), input: fc.record({ deployment: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

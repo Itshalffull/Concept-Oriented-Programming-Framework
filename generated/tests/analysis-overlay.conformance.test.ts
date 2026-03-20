@@ -335,11 +335,11 @@ describe('AnalysisOverlay functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('apply'), input: fc.record({ canvas: fc.string({ minLength: 1, maxLength: 20 }), result: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }), config: fc.string() }) }),
+              fc.record({ action: fc.constant('apply'), input: fc.record({ canvas: fc.string({ minLength: 1, maxLength: 50 }), result: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string() }) }),
               fc.record({ action: fc.constant('remove'), input: fc.record({ overlay: fc.string() }) }),
               fc.record({ action: fc.constant('toggle'), input: fc.record({ overlay: fc.string() }) }),
-              fc.record({ action: fc.constant('listOverlays'), input: fc.record({ canvas: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('updateConfig'), input: fc.record({ overlay: fc.string(), config: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('listOverlays'), input: fc.record({ canvas: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('updateConfig'), input: fc.record({ overlay: fc.string(), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -366,11 +366,11 @@ describe('AnalysisOverlay functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('apply'), input: fc.record({ canvas: fc.string({ minLength: 1, maxLength: 20 }), result: fc.string({ minLength: 1, maxLength: 20 }), kind: fc.string({ minLength: 1, maxLength: 20 }), config: fc.string() }) }),
+              fc.record({ action: fc.constant('apply'), input: fc.record({ canvas: fc.string({ minLength: 1, maxLength: 50 }), result: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string() }) }),
               fc.record({ action: fc.constant('remove'), input: fc.record({ overlay: fc.string() }) }),
               fc.record({ action: fc.constant('toggle'), input: fc.record({ overlay: fc.string() }) }),
-              fc.record({ action: fc.constant('listOverlays'), input: fc.record({ canvas: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('updateConfig'), input: fc.record({ overlay: fc.string(), config: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('listOverlays'), input: fc.record({ canvas: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('updateConfig'), input: fc.record({ overlay: fc.string(), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

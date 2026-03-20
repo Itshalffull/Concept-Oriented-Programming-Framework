@@ -276,7 +276,7 @@ describe('TestSelection functional handler', () => {
             fc.oneof(
               fc.record({ action: fc.constant('analyze'), input: fc.record({ changedSources: fc.string(), testType: fc.string() }) }),
               fc.record({ action: fc.constant('select'), input: fc.record({ affectedTests: fc.string(), budget: fc.string() }) }),
-              fc.record({ action: fc.constant('record'), input: fc.record({ testId: fc.string({ minLength: 1, maxLength: 20 }), language: fc.string({ minLength: 1, maxLength: 20 }), testType: fc.string({ minLength: 1, maxLength: 20 }), coveredSources: fc.string(), duration: fc.integer({ min: 0, max: 1000 }), passed: fc.boolean() }) }),
+              fc.record({ action: fc.constant('record'), input: fc.record({ testId: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string({ minLength: 1, maxLength: 50 }), testType: fc.string({ minLength: 1, maxLength: 50 }), coveredSources: fc.string(), duration: fc.integer({ min: 1, max: 1000 }), passed: fc.boolean() }) }),
               fc.record({ action: fc.constant('statistics'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -306,7 +306,7 @@ describe('TestSelection functional handler', () => {
             fc.oneof(
               fc.record({ action: fc.constant('analyze'), input: fc.record({ changedSources: fc.string(), testType: fc.string() }) }),
               fc.record({ action: fc.constant('select'), input: fc.record({ affectedTests: fc.string(), budget: fc.string() }) }),
-              fc.record({ action: fc.constant('record'), input: fc.record({ testId: fc.string({ minLength: 1, maxLength: 20 }), language: fc.string({ minLength: 1, maxLength: 20 }), testType: fc.string({ minLength: 1, maxLength: 20 }), coveredSources: fc.string(), duration: fc.integer({ min: 0, max: 1000 }), passed: fc.boolean() }) }),
+              fc.record({ action: fc.constant('record'), input: fc.record({ testId: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string({ minLength: 1, maxLength: 50 }), testType: fc.string({ minLength: 1, maxLength: 50 }), coveredSources: fc.string(), duration: fc.integer({ min: 1, max: 1000 }), passed: fc.boolean() }) }),
               fc.record({ action: fc.constant('statistics'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },

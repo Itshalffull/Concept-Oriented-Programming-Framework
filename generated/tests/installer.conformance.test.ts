@@ -111,10 +111,10 @@ describe('Installer imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('stage'), input: fc.record({ lockfile_entries: fc.string(), project_root: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('stage'), input: fc.record({ lockfile_entries: fc.string(), project_root: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('activate'), input: fc.record({ installation: fc.string() }) }),
               fc.record({ action: fc.constant('rollback'), input: fc.record({ installation: fc.string() }) }),
-              fc.record({ action: fc.constant('clean'), input: fc.record({ keep_generations: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('clean'), input: fc.record({ keep_generations: fc.integer({ min: 1, max: 1000 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -140,10 +140,10 @@ describe('Installer imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('stage'), input: fc.record({ lockfile_entries: fc.string(), project_root: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('stage'), input: fc.record({ lockfile_entries: fc.string(), project_root: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('activate'), input: fc.record({ installation: fc.string() }) }),
               fc.record({ action: fc.constant('rollback'), input: fc.record({ installation: fc.string() }) }),
-              fc.record({ action: fc.constant('clean'), input: fc.record({ keep_generations: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('clean'), input: fc.record({ keep_generations: fc.integer({ min: 1, max: 1000 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

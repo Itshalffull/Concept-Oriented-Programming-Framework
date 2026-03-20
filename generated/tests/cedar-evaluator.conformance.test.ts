@@ -216,9 +216,9 @@ describe('CedarEvaluator functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('loadPolicies'), input: fc.record({ policies: fc.string({ minLength: 1, maxLength: 20 }), schema: fc.string() }) }),
-              fc.record({ action: fc.constant('authorize'), input: fc.record({ store: fc.string(), principal: fc.string({ minLength: 1, maxLength: 20 }), action: fc.string({ minLength: 1, maxLength: 20 }), resource: fc.string({ minLength: 1, maxLength: 20 }), context: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('verify'), input: fc.record({ store: fc.string(), property: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('loadPolicies'), input: fc.record({ policies: fc.string({ minLength: 1, maxLength: 50 }), schema: fc.string() }) }),
+              fc.record({ action: fc.constant('authorize'), input: fc.record({ store: fc.string(), principal: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), resource: fc.string({ minLength: 1, maxLength: 50 }), context: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('verify'), input: fc.record({ store: fc.string(), property: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

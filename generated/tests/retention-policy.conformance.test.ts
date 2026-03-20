@@ -399,11 +399,11 @@ describe('RetentionPolicy functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('setRetention'), input: fc.record({ recordType: fc.string({ minLength: 1, maxLength: 20 }), period: fc.integer({ min: 0, max: 1000 }), unit: fc.string({ minLength: 1, maxLength: 20 }), dispositionAction: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('applyHold'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), scope: fc.string({ minLength: 1, maxLength: 20 }), reason: fc.string({ minLength: 1, maxLength: 20 }), issuer: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('releaseHold'), input: fc.record({ holdId: fc.string(), releasedBy: fc.string({ minLength: 1, maxLength: 20 }), reason: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('checkDisposition'), input: fc.record({ record: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('dispose'), input: fc.record({ record: fc.string({ minLength: 1, maxLength: 20 }), disposedBy: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('setRetention'), input: fc.record({ recordType: fc.string({ minLength: 1, maxLength: 50 }), period: fc.integer({ min: 1, max: 1000 }), unit: fc.string({ minLength: 1, maxLength: 50 }), dispositionAction: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('applyHold'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), scope: fc.string({ minLength: 1, maxLength: 50 }), reason: fc.string({ minLength: 1, maxLength: 50 }), issuer: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('releaseHold'), input: fc.record({ holdId: fc.string(), releasedBy: fc.string({ minLength: 1, maxLength: 50 }), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('checkDisposition'), input: fc.record({ record: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('dispose'), input: fc.record({ record: fc.string({ minLength: 1, maxLength: 50 }), disposedBy: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('auditLog'), input: fc.record({ record: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -431,11 +431,11 @@ describe('RetentionPolicy functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('setRetention'), input: fc.record({ recordType: fc.string({ minLength: 1, maxLength: 20 }), period: fc.integer({ min: 0, max: 1000 }), unit: fc.string({ minLength: 1, maxLength: 20 }), dispositionAction: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('applyHold'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), scope: fc.string({ minLength: 1, maxLength: 20 }), reason: fc.string({ minLength: 1, maxLength: 20 }), issuer: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('releaseHold'), input: fc.record({ holdId: fc.string(), releasedBy: fc.string({ minLength: 1, maxLength: 20 }), reason: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('checkDisposition'), input: fc.record({ record: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('dispose'), input: fc.record({ record: fc.string({ minLength: 1, maxLength: 20 }), disposedBy: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('setRetention'), input: fc.record({ recordType: fc.string({ minLength: 1, maxLength: 50 }), period: fc.integer({ min: 1, max: 1000 }), unit: fc.string({ minLength: 1, maxLength: 50 }), dispositionAction: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('applyHold'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), scope: fc.string({ minLength: 1, maxLength: 50 }), reason: fc.string({ minLength: 1, maxLength: 50 }), issuer: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('releaseHold'), input: fc.record({ holdId: fc.string(), releasedBy: fc.string({ minLength: 1, maxLength: 50 }), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('checkDisposition'), input: fc.record({ record: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('dispose'), input: fc.record({ record: fc.string({ minLength: 1, maxLength: 50 }), disposedBy: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('auditLog'), input: fc.record({ record: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

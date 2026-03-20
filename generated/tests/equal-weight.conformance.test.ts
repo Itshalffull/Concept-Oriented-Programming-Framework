@@ -159,7 +159,7 @@ describe('EqualWeight functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('configure'), input: fc.record({ weightValue: fc.string() }) }),
-              fc.record({ action: fc.constant('getWeight'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('getWeight'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -187,7 +187,7 @@ describe('EqualWeight functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('configure'), input: fc.record({ weightValue: fc.string() }) }),
-              fc.record({ action: fc.constant('getWeight'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('getWeight'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

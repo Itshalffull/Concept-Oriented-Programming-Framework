@@ -216,8 +216,8 @@ describe('Polity functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('establish'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), purpose: fc.string({ minLength: 1, maxLength: 20 }), values: fc.string(), scope: fc.string() }) }),
-              fc.record({ action: fc.constant('amend'), input: fc.record({ polity: fc.string(), field: fc.string({ minLength: 1, maxLength: 20 }), newValue: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('establish'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), purpose: fc.string({ minLength: 1, maxLength: 50 }), values: fc.string(), scope: fc.string() }) }),
+              fc.record({ action: fc.constant('amend'), input: fc.record({ polity: fc.string(), field: fc.string({ minLength: 1, maxLength: 50 }), newValue: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('dissolve'), input: fc.record({ polity: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -245,8 +245,8 @@ describe('Polity functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('establish'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), purpose: fc.string({ minLength: 1, maxLength: 20 }), values: fc.string(), scope: fc.string() }) }),
-              fc.record({ action: fc.constant('amend'), input: fc.record({ polity: fc.string(), field: fc.string({ minLength: 1, maxLength: 20 }), newValue: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('establish'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), purpose: fc.string({ minLength: 1, maxLength: 50 }), values: fc.string(), scope: fc.string() }) }),
+              fc.record({ action: fc.constant('amend'), input: fc.record({ polity: fc.string(), field: fc.string({ minLength: 1, maxLength: 50 }), newValue: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('dissolve'), input: fc.record({ polity: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

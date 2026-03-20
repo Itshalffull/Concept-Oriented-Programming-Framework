@@ -344,11 +344,11 @@ describe('DataQuality functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('validate'), input: fc.record({ item: fc.string({ minLength: 1, maxLength: 20 }), rulesetId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('quarantine'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 20 }), violations: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('release'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('profile'), input: fc.record({ datasetQuery: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('reconcile'), input: fc.record({ field: fc.string({ minLength: 1, maxLength: 20 }), knowledgeBase: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('validate'), input: fc.record({ item: fc.string({ minLength: 1, maxLength: 50 }), rulesetId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('quarantine'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 50 }), violations: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('release'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('profile'), input: fc.record({ datasetQuery: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('reconcile'), input: fc.record({ field: fc.string({ minLength: 1, maxLength: 50 }), knowledgeBase: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -375,11 +375,11 @@ describe('DataQuality functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('validate'), input: fc.record({ item: fc.string({ minLength: 1, maxLength: 20 }), rulesetId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('quarantine'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 20 }), violations: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('release'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('profile'), input: fc.record({ datasetQuery: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('reconcile'), input: fc.record({ field: fc.string({ minLength: 1, maxLength: 20 }), knowledgeBase: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('validate'), input: fc.record({ item: fc.string({ minLength: 1, maxLength: 50 }), rulesetId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('quarantine'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 50 }), violations: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('release'), input: fc.record({ itemId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('profile'), input: fc.record({ datasetQuery: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('reconcile'), input: fc.record({ field: fc.string({ minLength: 1, maxLength: 50 }), knowledgeBase: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

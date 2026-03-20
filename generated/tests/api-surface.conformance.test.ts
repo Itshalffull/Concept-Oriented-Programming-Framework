@@ -160,7 +160,7 @@ describe('ApiSurface functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('compose'), input: fc.record({ suite: fc.string({ minLength: 1, maxLength: 20 }), target: fc.string({ minLength: 1, maxLength: 20 }), outputs: fc.string() }) }),
+              fc.record({ action: fc.constant('compose'), input: fc.record({ suite: fc.string({ minLength: 1, maxLength: 50 }), target: fc.string({ minLength: 1, maxLength: 50 }), outputs: fc.string() }) }),
               fc.record({ action: fc.constant('entrypoint'), input: fc.record({ surface: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -188,7 +188,7 @@ describe('ApiSurface functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('compose'), input: fc.record({ suite: fc.string({ minLength: 1, maxLength: 20 }), target: fc.string({ minLength: 1, maxLength: 20 }), outputs: fc.string() }) }),
+              fc.record({ action: fc.constant('compose'), input: fc.record({ suite: fc.string({ minLength: 1, maxLength: 50 }), target: fc.string({ minLength: 1, maxLength: 50 }), outputs: fc.string() }) }),
               fc.record({ action: fc.constant('entrypoint'), input: fc.record({ surface: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

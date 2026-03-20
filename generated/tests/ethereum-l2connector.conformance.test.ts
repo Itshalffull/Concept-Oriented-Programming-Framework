@@ -284,8 +284,8 @@ describe('EthereumL2Connector functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('read'), input: fc.record({ connector: fc.string(), query: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('write'), input: fc.record({ connector: fc.string(), data: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('read'), input: fc.record({ connector: fc.string(), query: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('write'), input: fc.record({ connector: fc.string(), data: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('test'), input: fc.record({ connector: fc.string() }) }),
               fc.record({ action: fc.constant('discover'), input: fc.record({ connector: fc.string() }) }),
             ),
@@ -314,8 +314,8 @@ describe('EthereumL2Connector functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('read'), input: fc.record({ connector: fc.string(), query: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('write'), input: fc.record({ connector: fc.string(), data: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('read'), input: fc.record({ connector: fc.string(), query: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('write'), input: fc.record({ connector: fc.string(), data: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('test'), input: fc.record({ connector: fc.string() }) }),
               fc.record({ action: fc.constant('discover'), input: fc.record({ connector: fc.string() }) }),
             ),

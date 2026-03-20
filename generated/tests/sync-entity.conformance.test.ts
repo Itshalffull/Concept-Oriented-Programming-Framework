@@ -457,10 +457,10 @@ describe('SyncEntity functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), source: fc.string({ minLength: 1, maxLength: 20 }), compiled: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByConcept'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findTriggerableBy'), input: fc.record({ action: fc.string({ minLength: 1, maxLength: 20 }), variant: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('chainFrom'), input: fc.record({ action: fc.string({ minLength: 1, maxLength: 20 }), variant: fc.string({ minLength: 1, maxLength: 20 }), depth: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), source: fc.string({ minLength: 1, maxLength: 50 }), compiled: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByConcept'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findTriggerableBy'), input: fc.record({ action: fc.string({ minLength: 1, maxLength: 50 }), variant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('chainFrom'), input: fc.record({ action: fc.string({ minLength: 1, maxLength: 50 }), variant: fc.string({ minLength: 1, maxLength: 50 }), depth: fc.integer({ min: 1, max: 1000 }) }) }),
               fc.record({ action: fc.constant('findDeadEnds'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('findOrphanVariants'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ sync: fc.string() }) }),
@@ -490,10 +490,10 @@ describe('SyncEntity functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 20 }), source: fc.string({ minLength: 1, maxLength: 20 }), compiled: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findByConcept'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('findTriggerableBy'), input: fc.record({ action: fc.string({ minLength: 1, maxLength: 20 }), variant: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('chainFrom'), input: fc.record({ action: fc.string({ minLength: 1, maxLength: 20 }), variant: fc.string({ minLength: 1, maxLength: 20 }), depth: fc.integer({ min: 0, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), source: fc.string({ minLength: 1, maxLength: 50 }), compiled: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByConcept'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findTriggerableBy'), input: fc.record({ action: fc.string({ minLength: 1, maxLength: 50 }), variant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('chainFrom'), input: fc.record({ action: fc.string({ minLength: 1, maxLength: 50 }), variant: fc.string({ minLength: 1, maxLength: 50 }), depth: fc.integer({ min: 1, max: 1000 }) }) }),
               fc.record({ action: fc.constant('findDeadEnds'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('findOrphanVariants'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ sync: fc.string() }) }),

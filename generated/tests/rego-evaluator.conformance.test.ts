@@ -216,9 +216,9 @@ describe('RegoEvaluator functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('loadBundle'), input: fc.record({ policySource: fc.string({ minLength: 1, maxLength: 20 }), dataSource: fc.string({ minLength: 1, maxLength: 20 }), packageName: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('evaluate'), input: fc.record({ bundle: fc.string(), input: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('updateData'), input: fc.record({ bundle: fc.string(), newData: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('loadBundle'), input: fc.record({ policySource: fc.string({ minLength: 1, maxLength: 50 }), dataSource: fc.string({ minLength: 1, maxLength: 50 }), packageName: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('evaluate'), input: fc.record({ bundle: fc.string(), input: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('updateData'), input: fc.record({ bundle: fc.string(), newData: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -245,9 +245,9 @@ describe('RegoEvaluator functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('loadBundle'), input: fc.record({ policySource: fc.string({ minLength: 1, maxLength: 20 }), dataSource: fc.string({ minLength: 1, maxLength: 20 }), packageName: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('evaluate'), input: fc.record({ bundle: fc.string(), input: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('updateData'), input: fc.record({ bundle: fc.string(), newData: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('loadBundle'), input: fc.record({ policySource: fc.string({ minLength: 1, maxLength: 50 }), dataSource: fc.string({ minLength: 1, maxLength: 50 }), packageName: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('evaluate'), input: fc.record({ bundle: fc.string(), input: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('updateData'), input: fc.record({ bundle: fc.string(), newData: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

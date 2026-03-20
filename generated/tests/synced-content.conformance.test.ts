@@ -274,7 +274,7 @@ describe('SyncedContent functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('createReference'), input: fc.record({ ref: fc.string(), original: fc.string() }) }),
-              fc.record({ action: fc.constant('editOriginal'), input: fc.record({ original: fc.string(), content: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('editOriginal'), input: fc.record({ original: fc.string(), content: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('deleteReference'), input: fc.record({ ref: fc.string() }) }),
               fc.record({ action: fc.constant('convertToIndependent'), input: fc.record({ ref: fc.string() }) }),
             ),
@@ -304,7 +304,7 @@ describe('SyncedContent functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('createReference'), input: fc.record({ ref: fc.string(), original: fc.string() }) }),
-              fc.record({ action: fc.constant('editOriginal'), input: fc.record({ original: fc.string(), content: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('editOriginal'), input: fc.record({ original: fc.string(), content: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('deleteReference'), input: fc.record({ ref: fc.string() }) }),
               fc.record({ action: fc.constant('convertToIndependent'), input: fc.record({ ref: fc.string() }) }),
             ),

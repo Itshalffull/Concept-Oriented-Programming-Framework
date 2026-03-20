@@ -393,12 +393,12 @@ describe('PageAsRecord functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ page: fc.string(), schema: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('setProperty'), input: fc.record({ page: fc.string(), key: fc.string({ minLength: 1, maxLength: 20 }), value: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('getProperty'), input: fc.record({ page: fc.string(), key: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('appendToBody'), input: fc.record({ page: fc.string(), content: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('attachToSchema'), input: fc.record({ page: fc.string(), schema: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('convertFromFreeform'), input: fc.record({ page: fc.string(), schema: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ page: fc.string(), schema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setProperty'), input: fc.record({ page: fc.string(), key: fc.string({ minLength: 1, maxLength: 50 }), value: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getProperty'), input: fc.record({ page: fc.string(), key: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('appendToBody'), input: fc.record({ page: fc.string(), content: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('attachToSchema'), input: fc.record({ page: fc.string(), schema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('convertFromFreeform'), input: fc.record({ page: fc.string(), schema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -425,12 +425,12 @@ describe('PageAsRecord functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ page: fc.string(), schema: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('setProperty'), input: fc.record({ page: fc.string(), key: fc.string({ minLength: 1, maxLength: 20 }), value: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('getProperty'), input: fc.record({ page: fc.string(), key: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('appendToBody'), input: fc.record({ page: fc.string(), content: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('attachToSchema'), input: fc.record({ page: fc.string(), schema: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('convertFromFreeform'), input: fc.record({ page: fc.string(), schema: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ page: fc.string(), schema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setProperty'), input: fc.record({ page: fc.string(), key: fc.string({ minLength: 1, maxLength: 50 }), value: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getProperty'), input: fc.record({ page: fc.string(), key: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('appendToBody'), input: fc.record({ page: fc.string(), content: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('attachToSchema'), input: fc.record({ page: fc.string(), schema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('convertFromFreeform'), input: fc.record({ page: fc.string(), schema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

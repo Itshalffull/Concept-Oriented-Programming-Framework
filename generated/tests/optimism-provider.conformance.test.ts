@@ -283,10 +283,10 @@ describe('OptimismProvider functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ rpc_url: fc.string({ minLength: 1, maxLength: 20 }), l1_bridge_address: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ rpc_url: fc.string({ minLength: 1, maxLength: 50 }), l1_bridge_address: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('poll'), input: fc.record({ provider: fc.string() }) }),
-              fc.record({ action: fc.constant('checkFinality'), input: fc.record({ provider: fc.string(), tx_hash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('relayMessage'), input: fc.record({ provider: fc.string(), message_hash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('checkFinality'), input: fc.record({ provider: fc.string(), tx_hash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('relayMessage'), input: fc.record({ provider: fc.string(), message_hash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -313,10 +313,10 @@ describe('OptimismProvider functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ rpc_url: fc.string({ minLength: 1, maxLength: 20 }), l1_bridge_address: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ rpc_url: fc.string({ minLength: 1, maxLength: 50 }), l1_bridge_address: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('poll'), input: fc.record({ provider: fc.string() }) }),
-              fc.record({ action: fc.constant('checkFinality'), input: fc.record({ provider: fc.string(), tx_hash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('relayMessage'), input: fc.record({ provider: fc.string(), message_hash: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('checkFinality'), input: fc.record({ provider: fc.string(), tx_hash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('relayMessage'), input: fc.record({ provider: fc.string(), message_hash: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

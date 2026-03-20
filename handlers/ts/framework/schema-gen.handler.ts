@@ -144,6 +144,11 @@ function buildActionSchemas(ast: ConceptAST): ActionSchema[] {
         })),
         prose: v.description,
       })),
+      fixtures: (action.fixtures || []).map(f => ({
+        name: f.name,
+        input: f.input,
+        expectedVariant: f.expectedVariant,
+      })),
     };
     if (action.description) {
       schema.description = action.description;

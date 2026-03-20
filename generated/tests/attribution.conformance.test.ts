@@ -332,11 +332,11 @@ describe('Attribution functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('attribute'), input: fc.record({ contentRef: fc.string({ minLength: 1, maxLength: 20 }), region: fc.string(), agent: fc.string({ minLength: 1, maxLength: 20 }), changeRef: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('blame'), input: fc.record({ contentRef: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('history'), input: fc.record({ contentRef: fc.string({ minLength: 1, maxLength: 20 }), region: fc.string() }) }),
-              fc.record({ action: fc.constant('setOwnership'), input: fc.record({ pattern: fc.string({ minLength: 1, maxLength: 20 }), owners: fc.string() }) }),
-              fc.record({ action: fc.constant('queryOwners'), input: fc.record({ path: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('attribute'), input: fc.record({ contentRef: fc.string({ minLength: 1, maxLength: 50 }), region: fc.string(), agent: fc.string({ minLength: 1, maxLength: 50 }), changeRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('blame'), input: fc.record({ contentRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('history'), input: fc.record({ contentRef: fc.string({ minLength: 1, maxLength: 50 }), region: fc.string() }) }),
+              fc.record({ action: fc.constant('setOwnership'), input: fc.record({ pattern: fc.string({ minLength: 1, maxLength: 50 }), owners: fc.string() }) }),
+              fc.record({ action: fc.constant('queryOwners'), input: fc.record({ path: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -363,11 +363,11 @@ describe('Attribution functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('attribute'), input: fc.record({ contentRef: fc.string({ minLength: 1, maxLength: 20 }), region: fc.string(), agent: fc.string({ minLength: 1, maxLength: 20 }), changeRef: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('blame'), input: fc.record({ contentRef: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('history'), input: fc.record({ contentRef: fc.string({ minLength: 1, maxLength: 20 }), region: fc.string() }) }),
-              fc.record({ action: fc.constant('setOwnership'), input: fc.record({ pattern: fc.string({ minLength: 1, maxLength: 20 }), owners: fc.string() }) }),
-              fc.record({ action: fc.constant('queryOwners'), input: fc.record({ path: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('attribute'), input: fc.record({ contentRef: fc.string({ minLength: 1, maxLength: 50 }), region: fc.string(), agent: fc.string({ minLength: 1, maxLength: 50 }), changeRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('blame'), input: fc.record({ contentRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('history'), input: fc.record({ contentRef: fc.string({ minLength: 1, maxLength: 50 }), region: fc.string() }) }),
+              fc.record({ action: fc.constant('setOwnership'), input: fc.record({ pattern: fc.string({ minLength: 1, maxLength: 50 }), owners: fc.string() }) }),
+              fc.record({ action: fc.constant('queryOwners'), input: fc.record({ path: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

@@ -399,12 +399,12 @@ describe('ContentNode functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ node: fc.string(), type: fc.string({ minLength: 1, maxLength: 20 }), content: fc.string({ minLength: 1, maxLength: 20 }), createdBy: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('update'), input: fc.record({ node: fc.string(), content: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ node: fc.string(), type: fc.string({ minLength: 1, maxLength: 50 }), content: fc.string({ minLength: 1, maxLength: 50 }), createdBy: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('update'), input: fc.record({ node: fc.string(), content: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('delete'), input: fc.record({ node: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ node: fc.string() }) }),
-              fc.record({ action: fc.constant('setMetadata'), input: fc.record({ node: fc.string(), metadata: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('changeType'), input: fc.record({ node: fc.string(), type: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('setMetadata'), input: fc.record({ node: fc.string(), metadata: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('changeType'), input: fc.record({ node: fc.string(), type: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -431,12 +431,12 @@ describe('ContentNode functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ node: fc.string(), type: fc.string({ minLength: 1, maxLength: 20 }), content: fc.string({ minLength: 1, maxLength: 20 }), createdBy: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('update'), input: fc.record({ node: fc.string(), content: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ node: fc.string(), type: fc.string({ minLength: 1, maxLength: 50 }), content: fc.string({ minLength: 1, maxLength: 50 }), createdBy: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('update'), input: fc.record({ node: fc.string(), content: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('delete'), input: fc.record({ node: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ node: fc.string() }) }),
-              fc.record({ action: fc.constant('setMetadata'), input: fc.record({ node: fc.string(), metadata: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('changeType'), input: fc.record({ node: fc.string(), type: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('setMetadata'), input: fc.record({ node: fc.string(), metadata: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('changeType'), input: fc.record({ node: fc.string(), type: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

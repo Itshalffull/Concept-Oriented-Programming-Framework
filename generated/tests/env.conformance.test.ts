@@ -218,7 +218,7 @@ describe('Env functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('resolve'), input: fc.record({ environment: fc.string() }) }),
-              fc.record({ action: fc.constant('promote'), input: fc.record({ fromEnv: fc.string(), toEnv: fc.string(), suiteName: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('promote'), input: fc.record({ fromEnv: fc.string(), toEnv: fc.string(), suiteName: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('diff'), input: fc.record({ envA: fc.string(), envB: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -247,7 +247,7 @@ describe('Env functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('resolve'), input: fc.record({ environment: fc.string() }) }),
-              fc.record({ action: fc.constant('promote'), input: fc.record({ fromEnv: fc.string(), toEnv: fc.string(), suiteName: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('promote'), input: fc.record({ fromEnv: fc.string(), toEnv: fc.string(), suiteName: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('diff'), input: fc.record({ envA: fc.string(), envB: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

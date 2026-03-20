@@ -413,12 +413,12 @@ describe('StatusGate functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('report'), input: fc.record({ target: fc.string({ minLength: 1, maxLength: 20 }), context: fc.string({ minLength: 1, maxLength: 20 }), status: fc.string({ minLength: 1, maxLength: 20 }), details: fc.string({ minLength: 1, maxLength: 20 }), provider: fc.string({ minLength: 1, maxLength: 20 }), url: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('update'), input: fc.record({ gate: fc.string(), status: fc.string({ minLength: 1, maxLength: 20 }), details: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('complete'), input: fc.record({ gate: fc.string(), final_status: fc.string({ minLength: 1, maxLength: 20 }), details: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('configure'), input: fc.record({ provider: fc.string({ minLength: 1, maxLength: 20 }), url: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('report'), input: fc.record({ target: fc.string({ minLength: 1, maxLength: 50 }), context: fc.string({ minLength: 1, maxLength: 50 }), status: fc.string({ minLength: 1, maxLength: 50 }), details: fc.string({ minLength: 1, maxLength: 50 }), provider: fc.string({ minLength: 1, maxLength: 50 }), url: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('update'), input: fc.record({ gate: fc.string(), status: fc.string({ minLength: 1, maxLength: 50 }), details: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('complete'), input: fc.record({ gate: fc.string(), final_status: fc.string({ minLength: 1, maxLength: 50 }), details: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ provider: fc.string({ minLength: 1, maxLength: 50 }), url: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('get_status'), input: fc.record({ gate: fc.string() }) }),
-              fc.record({ action: fc.constant('list'), input: fc.record({ target: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('list'), input: fc.record({ target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -445,12 +445,12 @@ describe('StatusGate functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('report'), input: fc.record({ target: fc.string({ minLength: 1, maxLength: 20 }), context: fc.string({ minLength: 1, maxLength: 20 }), status: fc.string({ minLength: 1, maxLength: 20 }), details: fc.string({ minLength: 1, maxLength: 20 }), provider: fc.string({ minLength: 1, maxLength: 20 }), url: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('update'), input: fc.record({ gate: fc.string(), status: fc.string({ minLength: 1, maxLength: 20 }), details: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('complete'), input: fc.record({ gate: fc.string(), final_status: fc.string({ minLength: 1, maxLength: 20 }), details: fc.string({ minLength: 1, maxLength: 20 }) }) }),
-              fc.record({ action: fc.constant('configure'), input: fc.record({ provider: fc.string({ minLength: 1, maxLength: 20 }), url: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('report'), input: fc.record({ target: fc.string({ minLength: 1, maxLength: 50 }), context: fc.string({ minLength: 1, maxLength: 50 }), status: fc.string({ minLength: 1, maxLength: 50 }), details: fc.string({ minLength: 1, maxLength: 50 }), provider: fc.string({ minLength: 1, maxLength: 50 }), url: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('update'), input: fc.record({ gate: fc.string(), status: fc.string({ minLength: 1, maxLength: 50 }), details: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('complete'), input: fc.record({ gate: fc.string(), final_status: fc.string({ minLength: 1, maxLength: 50 }), details: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ provider: fc.string({ minLength: 1, maxLength: 50 }), url: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('get_status'), input: fc.record({ gate: fc.string() }) }),
-              fc.record({ action: fc.constant('list'), input: fc.record({ target: fc.string({ minLength: 1, maxLength: 20 }) }) }),
+              fc.record({ action: fc.constant('list'), input: fc.record({ target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
