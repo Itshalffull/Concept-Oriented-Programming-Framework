@@ -1,58 +1,10 @@
 // Auto-generated entrypoint for suite "clef-devtools", target "mcp"
-import { specParserModule } from './spec-parser/spec-parser.module';
-import { schemaGenModule } from './schema-gen/schema-gen.module';
-import { syncParserModule } from './sync-parser/sync-parser.module';
-import { syncCompilerModule } from './sync-compiler/sync-compiler.module';
-import { flowTraceModule } from './flow-trace/flow-trace.module';
-import { deploymentValidatorModule } from './deployment-validator/deployment-validator.module';
-import { suiteManagerModule } from './suite-manager/suite-manager.module';
-import { suiteScaffoldGenModule } from './suite-scaffold-gen/suite-scaffold-gen.module';
-import { deployScaffoldGenModule } from './deploy-scaffold-gen/deploy-scaffold-gen.module';
-import { interfaceScaffoldGenModule } from './interface-scaffold-gen/interface-scaffold-gen.module';
-import { conceptScaffoldGenModule } from './concept-scaffold-gen/concept-scaffold-gen.module';
-import { syncScaffoldGenModule } from './sync-scaffold-gen/sync-scaffold-gen.module';
-import { handlerScaffoldGenModule } from './handler-scaffold-gen/handler-scaffold-gen.module';
-import { storageAdapterScaffoldGenModule } from './storage-adapter-scaffold-gen/storage-adapter-scaffold-gen.module';
-import { transportAdapterScaffoldGenModule } from './transport-adapter-scaffold-gen/transport-adapter-scaffold-gen.module';
-import { surfaceComponentScaffoldGenModule } from './surface-component-scaffold-gen/surface-component-scaffold-gen.module';
-import { surfaceThemeScaffoldGenModule } from './surface-theme-scaffold-gen/surface-theme-scaffold-gen.module';
-import { derivedScaffoldGenModule } from './derived-scaffold-gen/derived-scaffold-gen.module';
-import { generatorModule } from './generator/generator.module';
-import { apiSurfaceModule } from './api-surface/api-surface.module';
-import { symbolModule } from './symbol/symbol.module';
-import { symbolOccurrenceModule } from './symbol-occurrence/symbol-occurrence.module';
-import { scopeGraphModule } from './scope-graph/scope-graph.module';
-import { symbolRelationshipModule } from './symbol-relationship/symbol-relationship.module';
-import { dependenceGraphModule } from './dependence-graph/dependence-graph.module';
-import { dataFlowPathModule } from './data-flow-path/data-flow-path.module';
-import { programSliceModule } from './program-slice/program-slice.module';
-import { analysisRuleModule } from './analysis-rule/analysis-rule.module';
-import { semanticEmbeddingModule } from './semantic-embedding/semantic-embedding.module';
-import { branchModule } from './branch/branch.module';
-import { changeStreamModule } from './change-stream/change-stream.module';
-import { contentHashModule } from './content-hash/content-hash.module';
-import { dAGHistoryModule } from './daghistory/daghistory.module';
-import { diffModule } from './diff/diff.module';
-import { mergeModule } from './merge/merge.module';
-import { patchModule } from './patch/patch.module';
-import { refModule } from './ref/ref.module';
-import { retentionPolicyModule } from './retention-policy/retention-policy.module';
-import { schemaEvolutionModule } from './schema-evolution/schema-evolution.module';
-import { temporalVersionModule } from './temporal-version/temporal-version.module';
-import { attributionModule } from './attribution/attribution.module';
-import { causalClockModule } from './causal-clock/causal-clock.module';
-import { conflictResolutionModule } from './conflict-resolution/conflict-resolution.module';
-import { inlineAnnotationModule } from './inline-annotation/inline-annotation.module';
-import { pessimisticLockModule } from './pessimistic-lock/pessimistic-lock.module';
-import { replicaModule } from './replica/replica.module';
-import { signatureModule } from './signature/signature.module';
-import { programAnalysisModule } from './program-analysis/program-analysis.module';
-import { commutativityProviderModule } from './commutativity-provider/commutativity-provider.module';
-import { parallelismProviderModule } from './parallelism-provider/parallelism-provider.module';
-import { deadBranchProviderModule } from './dead-branch-provider/dead-branch-provider.module';
-import { invariantExtractionProviderModule } from './invariant-extraction-provider/invariant-extraction-provider.module';
-import { lensExtractionProviderModule } from './lens-extraction-provider/lens-extraction-provider.module';
-import { variantExtractionProviderModule } from './variant-extraction-provider/variant-extraction-provider.module';
-import { transportEffectProviderModule } from './transport-effect-provider/transport-effect-provider.module';
+import { bootMcpServer } from '../../handlers/ts/framework/mcp-server.handler';
 
-export const modules = [specParserModule, schemaGenModule, syncParserModule, syncCompilerModule, flowTraceModule, deploymentValidatorModule, suiteManagerModule, suiteScaffoldGenModule, deployScaffoldGenModule, interfaceScaffoldGenModule, conceptScaffoldGenModule, syncScaffoldGenModule, handlerScaffoldGenModule, storageAdapterScaffoldGenModule, transportAdapterScaffoldGenModule, surfaceComponentScaffoldGenModule, surfaceThemeScaffoldGenModule, derivedScaffoldGenModule, generatorModule, apiSurfaceModule, symbolModule, symbolOccurrenceModule, scopeGraphModule, symbolRelationshipModule, dependenceGraphModule, dataFlowPathModule, programSliceModule, analysisRuleModule, semanticEmbeddingModule, branchModule, changeStreamModule, contentHashModule, dAGHistoryModule, diffModule, mergeModule, patchModule, refModule, retentionPolicyModule, schemaEvolutionModule, temporalVersionModule, attributionModule, causalClockModule, conflictResolutionModule, inlineAnnotationModule, pessimisticLockModule, replicaModule, signatureModule, programAnalysisModule, commutativityProviderModule, parallelismProviderModule, deadBranchProviderModule, invariantExtractionProviderModule, lensExtractionProviderModule, variantExtractionProviderModule, transportEffectProviderModule];
+const manifestPath = process.argv[2];
+if (!manifestPath) {
+  console.error('Usage: tsx <entrypoint> <manifest-path>');
+  process.exit(1);
+}
+
+await bootMcpServer(manifestPath);
