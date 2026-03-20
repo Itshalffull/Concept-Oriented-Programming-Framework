@@ -732,25 +732,39 @@ async function interfaceGenerate(
   let copiedCount = 0;
 
   for (const [targetName, targetConfig] of Object.entries(targets)) {
-    // Handle copies: duplicate target output to additional directories
+    // Handle copies: mirror entire target output directory to copy destinations
     const copies = targetConfig?.copies as string[] | undefined;
     if (copies && copies.length > 0) {
       const targetOutputDir = manifest.targetOutputDirs[targetName];
       if (targetOutputDir) {
         const srcDir = resolve(projectDir, targetOutputDir);
-        for (const copyDest of copies) {
-          const destDir = resolve(projectDir, copyDest);
-          // Copy all files written for this target
-          for (const entry of newManifestEntries) {
-            if (entry.target === targetName) {
-              const relFromSrc = relative(srcDir, entry.path);
-              if (relFromSrc.startsWith('..')) continue;
-              const destPath = join(destDir, relFromSrc);
-              mkdirSync(dirname(destPath), { recursive: true });
-              const content = readFileSync(entry.path, 'utf-8');
-              writeFileSync(destPath, content);
-              copiedCount++;
+        if (existsSync(srcDir)) {
+          for (const copyDest of copies) {
+            const destDir = resolve(projectDir, copyDest);
+            // Recursively copy all files from source to destination
+            const srcFiles = findFiles(srcDir, '');
+            // findFiles only matches extensions, so walk manually for all files
+            function copyDir(src: string, dest: string): void {
+              if (!existsSync(src)) return;
+              let entries;
+              try { entries = readdirSync(src); } catch { return; }
+              for (const entry of entries) {
+                const srcPath = join(src, entry);
+                const destPath = join(dest, entry);
+                try {
+                  const stat = statSync(srcPath);
+                  if (stat.isDirectory()) {
+                    mkdirSync(destPath, { recursive: true });
+                    copyDir(srcPath, destPath);
+                  } else {
+                    mkdirSync(dirname(destPath), { recursive: true });
+                    writeFileSync(destPath, readFileSync(srcPath));
+                    copiedCount++;
+                  }
+                } catch { /* skip inaccessible */ }
+              }
             }
+            copyDir(srcDir, destDir);
           }
         }
       }
