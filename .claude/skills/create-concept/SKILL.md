@@ -116,6 +116,33 @@ Every variant description MUST be a clear, concise explanation of *when this out
 
 5. **One sentence is often enough** — Don't pad descriptions. If "No session exists with this identifier." fully explains the variant, stop there.
 
+### Step 4b: Add Fixtures to Actions
+
+Every action should declare **fixtures** — named input examples that serve as test seeds and documentation. Fixtures appear inside the action block, after variants:
+
+```
+action create(name: String, config: String, tags: list String) {
+  -> ok(id: T)
+  -> error(message: String)
+  -> invalid(message: String)
+  fixture valid { name: "my-item", config: "{\"timeout\": 30}", tags: ["alpha", "beta"] }
+  fixture minimal { name: "x", config: "{}", tags: [] }
+  fixture missingName { config: "{}" } -> error
+  fixture badJson { name: "test", config: "not-json" } -> invalid
+}
+```
+
+**Fixture rules:**
+1. **At least one `ok` fixture** per action — the happy path with realistic inputs
+2. **Negative fixtures** for each error variant — append `-> error`, `-> invalid`, etc.
+3. **Match what the handler expects** — if the handler calls `JSON.parse(input.config)`, the fixture value must be valid JSON (or intentionally invalid for error fixtures)
+4. **Use realistic values** — not `"test"` or `"foo"`, but values that exercise the handler's real logic
+5. **Cover edge cases the fuzzer can't find** — structured formats (JSON strings, paths, URIs) that random strings will never produce
+
+**Fixture values support**: strings (`"text"`), numbers (`42`), booleans (`true`/`false`), arrays (`[1, 2]`), nested objects (`{ key: "value" }`), and `none` for null.
+
+See [references/concept-grammar.md](references/concept-grammar.md) for full fixture syntax.
+
 ### Step 5: Write the Operational Principle (Invariants)
 
 Read [references/invariant-design.md](references/invariant-design.md) for invariant patterns, anti-patterns, and detailed guidance.
@@ -233,6 +260,7 @@ Run through this final checklist:
 - [ ] **Not coupled** — No references to other concept types (use type params instead)
 - [ ] **Not under-specified** — All state fields are covered by actions
 - [ ] **Not missing invariants** — At least one operational principle for EVERY concept (domain and framework)
+- [ ] **Not missing fixtures** — Every action has at least one `ok` fixture and one negative fixture per error variant
 - [ ] **Proper naming** — Actions use verb-first names, variants use lowercase tags
 - [ ] **Not a derived concept** — If the abstraction has no independent state and is really a composition of existing concepts + syncs, use `/create-derived-concept` instead
 

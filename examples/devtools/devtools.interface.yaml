@@ -7308,8 +7308,14 @@ project-instructions:
 
     **Concepts** (`.concept` files in `specs/`)
     Independent state machines following Jackson's methodology. Each concept has
-    purpose, state, actions with typed variants, and invariants. Concepts never
-    depend on each other — all wiring goes through syncs.
+    purpose, state, actions with typed variants, fixtures, and invariants.
+    Concepts never depend on each other — all wiring goes through syncs.
+    - **Fixtures**: Named input examples declared inside action blocks after
+      variants. Syntax: `fixture <name> { key: value, ... } [-> variant]`.
+      Omitting `-> variant` defaults to `ok`. Used for deterministic behavioral
+      tests (assert expected variant) and as default inputs for structural tests.
+      Every action should have at least one `ok` fixture and negative fixtures
+      for each error variant. See `concept-grammar.md` for full syntax.
     - Parser: `handlers/ts/framework/parser.ts`
     - Kernel types: `kernel/src/types.ts` (ConceptAST, ConceptManifest)
 
@@ -7417,8 +7423,26 @@ project-instructions:
     ### Running Tests
 
     ```bash
-    npx vitest run                    # Run all tests
-    npx vitest run tests/some.test.ts # Run specific test
+    npx vitest run                          # Run all tests
+    npx vitest run tests/some.test.ts       # Run specific test
+    npx vitest run generated/tests/         # Conformance tests only
+    ```
+
+    ### Code Generation
+
+    ```bash
+    # Generate code from concept specs (TypeScript, Rust, Swift, etc.)
+    npx tsx cli/src/main.ts generate
+    npx tsx cli/src/main.ts generate --concept Foo --target typescript
+
+    # Regenerate conformance tests from concept specs
+    npx tsx scripts/generate-all-tests.ts
+
+    # Regenerate interface bindings (MCP tools, CLI commands, skills, CLAUDE.md)
+    npx tsx --tsconfig tsconfig.json -e "
+      const { interfaceCommand } = await import('./cli/src/commands/interface.ts');
+      await interfaceCommand(['generate'], { manifest: 'examples/devtools/devtools.interface.yaml' });
+    "
     ```
 
     ---
