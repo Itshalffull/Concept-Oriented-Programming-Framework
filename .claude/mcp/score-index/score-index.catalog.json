@@ -1,0 +1,106 @@
+[
+  {
+    "name": "score_index_upsert_concept",
+    "briefDescription": "Insert or update a concept entry in the index .",
+    "category": "ScoreIndex",
+    "concept": "ScoreIndex",
+    "action": "upsertConcept",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "score_index_upsert_sync",
+    "briefDescription": "Insert or update a sync entry in the index .",
+    "category": "ScoreIndex",
+    "concept": "ScoreIndex",
+    "action": "upsertSync",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "score_index_upsert_symbol",
+    "briefDescription": "Insert or update a symbol entry in the index .",
+    "category": "ScoreIndex",
+    "concept": "ScoreIndex",
+    "action": "upsertSymbol",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "score_index_upsert_file",
+    "briefDescription": "Insert or update a file entry in the index .",
+    "category": "ScoreIndex",
+    "concept": "ScoreIndex",
+    "action": "upsertFile",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "score_index_upsert_handler",
+    "briefDescription": "Insert or update a handler entry in the index .",
+    "category": "ScoreIndex",
+    "concept": "ScoreIndex",
+    "action": "upsertHandler",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "score_index_upsert_widget_impl",
+    "briefDescription": "Insert or update a widget implementation entry in the index .",
+    "category": "ScoreIndex",
+    "concept": "ScoreIndex",
+    "action": "upsertWidgetImpl",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "score_index_upsert_theme_impl",
+    "briefDescription": "Insert or update a theme implementation entry in the index .",
+    "category": "ScoreIndex",
+    "concept": "ScoreIndex",
+    "action": "upsertThemeImpl",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "score_index_upsert_deployment",
+    "briefDescription": "Insert or update a deployment entry in the index .",
+    "category": "ScoreIndex",
+    "concept": "ScoreIndex",
+    "action": "upsertDeployment",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "score_index_upsert_suite_manifest",
+    "briefDescription": "Insert or update a suite manifest entry in the index .",
+    "category": "ScoreIndex",
+    "concept": "ScoreIndex",
+    "action": "upsertSuiteManifest",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "score_index_upsert_interface",
+    "briefDescription": "Insert or update an interface entry in the index .",
+    "category": "ScoreIndex",
+    "concept": "ScoreIndex",
+    "action": "upsertInterface",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "score_index_remove_by_file",
+    "briefDescription": "Remove all index entries associated with a file .",
+    "category": "ScoreIndex",
+    "concept": "ScoreIndex",
+    "action": "removeByFile",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "score_index_clear",
+    "briefDescription": "Clear all index entries .",
+    "category": "ScoreIndex",
+    "concept": "ScoreIndex",
+    "action": "clear",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "score_index_stats",
+    "briefDescription": "Return current index statistics .",
+    "category": "ScoreIndex",
+    "concept": "ScoreIndex",
+    "action": "stats",
+    "alwaysLoaded": false
+  }
+]

@@ -5,13 +5,13 @@
 import { Command } from 'commander';
 
 export const devServerCommand = new Command('dev-server')
-  .description('Start , stop , and monitor a local development server that watches concept specs and syncs for changes and auto-recompiles');
+  .description('Coordinate the local development server lifecycle : start , stop , and query status . File watching is delegated to Resource ( change detection ) , recompilation is triggered by syncs ( Resource changes generation pipeline ) , and output is written through Emitter ( content addressed writes )');
 
 devServerCommand
   .command('start')
-  .description('Start a local development server that watches for changes and auto-recompiles .')
+  .description('Start the development server on the specified port . Registers watch directories with Resource for change detection . Recompilation is handled by syncs that react to Resource change events .')
   .requiredOption('--port <port>', 'Port')
-  .requiredOption('--watch-dirs <watchDirs>', 'Watch dirs')
+  .requiredOption('--watch-dirs <watchDirs>', 'Watch Dirs')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     try {
@@ -30,7 +30,7 @@ devServerCommand
 
 devServerCommand
   .command('stop')
-  .description('Stop the running development server .')
+  .description('Stop a running development server session and unregister watched resources .')
   .requiredOption('--session <session>', 'Session')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
@@ -50,7 +50,7 @@ devServerCommand
 
 devServerCommand
   .command('status')
-  .description('Check whether the dev server is running and view uptime stats .')
+  .description('Check the current status of a development server session .')
   .requiredOption('--session <session>', 'Session')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
@@ -70,6 +70,6 @@ devServerCommand
 
 export const devServerCommandTree = {
   group: 'dev-server',
-  description: 'Start , stop , and monitor a local development server that watches concept specs and syncs for changes and auto-recompiles',
+  description: 'Coordinate the local development server lifecycle : start , stop , and query status . File watching is delegated to Resource ( change detection ) , recompilation is triggered by syncs ( Resource changes generation pipeline ) , and output is written through Emitter ( content addressed writes )',
   commands: [{ action: 'start', command: 'start' }, { action: 'stop', command: 'stop' }, { action: 'status', command: 'status' }],
 };

@@ -1,0 +1,50 @@
+[
+  {
+    "name": "theme_entity_register",
+    "briefDescription": "Register a parsed theme spec as a semantic entity .",
+    "category": "ThemeEntity",
+    "concept": "ThemeEntity",
+    "action": "register",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "theme_entity_resolve_token",
+    "briefDescription": "Resolve a token path to its final value , following \n reference chains and ex...",
+    "category": "ThemeEntity",
+    "concept": "ThemeEntity",
+    "action": "resolveToken",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "theme_entity_contrast_audit",
+    "briefDescription": "Audit all color role pairings for WCAG contrast ratios .",
+    "category": "ThemeEntity",
+    "concept": "ThemeEntity",
+    "action": "contrastAudit",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "theme_entity_diff_themes",
+    "briefDescription": "Compare two themes token by token .",
+    "category": "ThemeEntity",
+    "concept": "ThemeEntity",
+    "action": "diffThemes",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "theme_entity_affected_widgets",
+    "briefDescription": "Find all widgets whose connect sections reference the \n changed token .",
+    "category": "ThemeEntity",
+    "concept": "ThemeEntity",
+    "action": "affectedWidgets",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "theme_entity_generated_outputs",
+    "briefDescription": "Return all generated files from this theme across \n platforms ( CSS , RN , DT...",
+    "category": "ThemeEntity",
+    "concept": "ThemeEntity",
+    "action": "generatedOutputs",
+    "alwaysLoaded": false
+  }
+]

@@ -1,7 +1,7 @@
 ---
 name: deployment-validator
 description: Parse and validate deployment manifests against compiled concepts and syncs . Produce deployment plans with transport assignments , runtime mappings , and sync to engine bindings
-argument-hint: $ARGUMENTS
+argument-hint: [command] [raw]
 allowed-tools: Read, Grep, Glob, Edit, Write, Bash
 ---
 
@@ -11,94 +11,21 @@ allowed-tools: Read, Grep, Glob, Edit, Write, Bash
 
 # DeploymentValidator
 
-Validate deployment manifest **$ARGUMENTS** against compiled concepts and syncs, checking runtime mappings, engine assignments, and transport configuration.
+Parse and validate deployment manifests against compiled concepts and syncs . Produce deployment plans with transport assignments , runtime mappings , and sync to engine bindings
 
+## Commands
 
-> **When to use:** Use when configuring deployment manifests that map concepts to runtimes, assign syncs to engines, set up transport adapters, and validate capability requirements.
+### parse
+Parse YAML deployment manifest into structured form . 
+ Validate basic structure ( required fields , known runtime types ) .
 
+**Arguments:** `$0` **raw** (string)
 
-## Design Principles
-
-- **Declarative Deployment:** The deployment manifest declares intent (what runs where), not imperative steps — the framework resolves transport and engine assignments.
-- **Capability Matching:** Each runtime declares capabilities (storage types, transport protocols) and the validator checks that every concept's needs are met.
-
-## Step-by-Step Process
-
-### Step 1: Validate Deployment Manifest
-
-Validate that deployment manifests correctly map concepts to runtimes, assign syncs to engines, and satisfy capability requirements.
+### validate
+Cross reference manifest against compiled concepts and syncs . 
+ Check : all referenced concepts have specs , all syncs reference 
+ valid concepts , capability requirements met by runtimes , 
+ transport configs are valid , engine hierarchy is acyclic . 
+ Produce a DeploymentPlan with concrete transport assignments .
 
 **Arguments:** `$0` **manifest** (M), `$1` **concepts** (conceptmanifest[]), `$2` **syncs** (compiledsync[])
-
-**Checklist:**
-- [ ] Every concept mapped to a runtime?
-- [ ] Sync engine assignments cover all syncs?
-- [ ] Transport adapters match concept locations?
-- [ ] Capability requirements satisfied by target runtimes?
-
-**Examples:**
-*Validate deployment manifest*
-```bash
-clef deploy --validate app.deploy.yaml
-```
-
-## References
-
-- [Deployment configuration guide](references/deployment-guide.md)
-- [Transport adapter configuration](references/transport-adapters.md)
-## Supporting Materials
-
-- [Deployment configuration walkthrough](examples/configure-deployment.md)
-## Quick Reference
-
-| Section | Purpose | Required |
-|---------|---------|----------|
-| runtimes | Map concepts to execution environments | Yes |
-| engines | Assign sync engines to sync groups | Yes |
-| transports | Configure cross-runtime communication | If multi-runtime |
-| capabilities | Declare runtime capabilities | Recommended |
-
-
-## Anti-Patterns
-
-### Missing transport for cross-runtime sync
-Two concepts in different runtimes connected by a sync but no transport adapter configured.
-
-**Bad:**
-```
-runtimes:
-  api: { concepts: [User] }
-  worker: { concepts: [Email] }
-syncs:
-  - SendWelcome  # User -> Email, but no transport!
-
-```
-
-**Good:**
-```
-runtimes:
-  api: { concepts: [User] }
-  worker: { concepts: [Email] }
-transports:
-  api-to-worker: { type: http, from: api, to: worker }
-syncs:
-  - SendWelcome  # Now has a transport path
-
-```
-## Validation
-
-*Validate deployment manifest:*
-```bash
-npx tsx cli/src/index.ts deploy --validate
-```
-*Run deployment validator tests:*
-```bash
-npx vitest run tests/deployment-validator.test.ts
-```
-## Related Skills
-
-| Skill | When to Use |
-| --- | --- |
-| `/concept-validator` | Validate concept specs before deployment |
-| `/cache-build` | Pre-compile artifacts for faster deployment |
-| `/suite-lifecycle` | Manage suites that bundle deployed concepts |

@@ -1,0 +1,42 @@
+[
+  {
+    "name": "temporal_version_record",
+    "briefDescription": "Version recorded with current system timestamp as systemFrom .",
+    "category": "TemporalVersion",
+    "concept": "TemporalVersion",
+    "action": "record",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "temporal_version_as_of",
+    "briefDescription": "Returns the version active at the given system and or valid time .",
+    "category": "TemporalVersion",
+    "concept": "TemporalVersion",
+    "action": "asOf",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "temporal_version_between",
+    "briefDescription": "Returns all versions active within the range on the \n given dimension system ...",
+    "category": "TemporalVersion",
+    "concept": "TemporalVersion",
+    "action": "between",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "temporal_version_current",
+    "briefDescription": "Returns the currently active version .",
+    "category": "TemporalVersion",
+    "concept": "TemporalVersion",
+    "action": "current",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "temporal_version_supersede",
+    "briefDescription": "Creates a new version .",
+    "category": "TemporalVersion",
+    "concept": "TemporalVersion",
+    "action": "supersede",
+    "alwaysLoaded": false
+  }
+]

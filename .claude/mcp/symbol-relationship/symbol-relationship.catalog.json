@@ -1,0 +1,18 @@
+[
+  {
+    "name": "symbol_relationship_add",
+    "briefDescription": "Create a typed relationship between two symbols .",
+    "category": "SymbolRelationship",
+    "concept": "SymbolRelationship",
+    "action": "add",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "symbol_relationship_transitive_closure",
+    "briefDescription": "Follow relationships of a given kind transitively from \n a starting symbol .",
+    "category": "SymbolRelationship",
+    "concept": "SymbolRelationship",
+    "action": "transitiveClosure",
+    "alwaysLoaded": false
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "name": "dev_server_start",
+    "briefDescription": "Development server started .",
+    "category": "DevServer",
+    "concept": "DevServer",
+    "action": "start",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "dev_server_stop",
+    "briefDescription": "Server stopped cleanly .",
+    "category": "DevServer",
+    "concept": "DevServer",
+    "action": "stop",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "dev_server_status",
+    "briefDescription": "Server is running with current stats .",
+    "category": "DevServer",
+    "concept": "DevServer",
+    "action": "status",
+    "alwaysLoaded": false
+  }
+]

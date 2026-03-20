@@ -1,0 +1,50 @@
+[
+  {
+    "name": "inline_annotation_annotate",
+    "briefDescription": "Annotation embedded in content with status pending .",
+    "category": "InlineAnnotation",
+    "concept": "InlineAnnotation",
+    "action": "annotate",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "inline_annotation_accept",
+    "briefDescription": "Annotation wrapper removed .",
+    "category": "InlineAnnotation",
+    "concept": "InlineAnnotation",
+    "action": "accept",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "inline_annotation_reject",
+    "briefDescription": "Annotation wrapper and change content removed .",
+    "category": "InlineAnnotation",
+    "concept": "InlineAnnotation",
+    "action": "reject",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "inline_annotation_accept_all",
+    "briefDescription": "All pending annotations accepted .",
+    "category": "InlineAnnotation",
+    "concept": "InlineAnnotation",
+    "action": "acceptAll",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "inline_annotation_reject_all",
+    "briefDescription": "All pending annotations rejected .",
+    "category": "InlineAnnotation",
+    "concept": "InlineAnnotation",
+    "action": "rejectAll",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "inline_annotation_toggle_tracking",
+    "briefDescription": "Tracking enabled or disabled for this document .",
+    "category": "InlineAnnotation",
+    "concept": "InlineAnnotation",
+    "action": "toggleTracking",
+    "alwaysLoaded": false
+  }
+]

@@ -1,0 +1,34 @@
+[
+  {
+    "name": "interactor_entity_register",
+    "briefDescription": "Register an interactor type with its classification \n properties ( dataType ,...",
+    "category": "InteractorEntity",
+    "concept": "InteractorEntity",
+    "action": "register",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "interactor_entity_matching_widgets",
+    "briefDescription": "Find widgets that satisfy this interactor s affordance \n requirements in the ...",
+    "category": "InteractorEntity",
+    "concept": "InteractorEntity",
+    "action": "matchingWidgets",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "interactor_entity_classified_fields",
+    "briefDescription": "Find all concept state fields that classify as this \n interactor type .",
+    "category": "InteractorEntity",
+    "concept": "InteractorEntity",
+    "action": "classifiedFields",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "interactor_entity_coverage_report",
+    "briefDescription": "Generate an affordance coverage report across all \n interactors which have ma...",
+    "category": "InteractorEntity",
+    "concept": "InteractorEntity",
+    "action": "coverageReport",
+    "alwaysLoaded": false
+  }
+]

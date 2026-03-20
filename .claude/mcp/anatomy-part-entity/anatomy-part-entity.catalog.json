@@ -1,0 +1,10 @@
+[
+  {
+    "name": "anatomy_part_entity_register",
+    "briefDescription": "Register an anatomy part extracted from a widget spec .",
+    "category": "AnatomyPartEntity",
+    "concept": "AnatomyPartEntity",
+    "action": "register",
+    "alwaysLoaded": false
+  }
+]

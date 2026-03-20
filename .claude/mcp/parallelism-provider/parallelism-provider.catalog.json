@@ -1,0 +1,10 @@
+[
+  {
+    "name": "parallelism_provider_analyze",
+    "briefDescription": "Walk the instruction list .",
+    "category": "ParallelismProvider",
+    "concept": "ParallelismProvider",
+    "action": "analyze",
+    "alwaysLoaded": false
+  }
+]

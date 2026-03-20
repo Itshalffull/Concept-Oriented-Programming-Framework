@@ -1,0 +1,18 @@
+[
+  {
+    "name": "token_remap_provider_register",
+    "briefDescription": "Return static metadata for PluginRegistry .",
+    "category": "TokenRemapProvider",
+    "concept": "TokenRemapProvider",
+    "action": "register",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "token_remap_provider_apply",
+    "briefDescription": "Walk the instruction sequence and rewrite token path references \n per the map...",
+    "category": "TokenRemapProvider",
+    "concept": "TokenRemapProvider",
+    "action": "apply",
+    "alwaysLoaded": false
+  }
+]

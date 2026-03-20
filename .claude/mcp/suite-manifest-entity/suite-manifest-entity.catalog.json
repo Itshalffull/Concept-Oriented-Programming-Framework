@@ -1,0 +1,58 @@
+[
+  {
+    "name": "suite_manifest_entity_register",
+    "briefDescription": "Register a parsed suite manifest .",
+    "category": "SuiteManifestEntity",
+    "concept": "SuiteManifestEntity",
+    "action": "register",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "suite_manifest_entity_concepts",
+    "briefDescription": "Return all concepts in this suite with their spec paths \n and type parameter ...",
+    "category": "SuiteManifestEntity",
+    "concept": "SuiteManifestEntity",
+    "action": "concepts",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "suite_manifest_entity_syncs",
+    "briefDescription": "Return all syncs in this suite with their tiers .",
+    "category": "SuiteManifestEntity",
+    "concept": "SuiteManifestEntity",
+    "action": "syncs",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "suite_manifest_entity_dependency_graph",
+    "briefDescription": "Return the full suite dependency graph across all \n registered suites .",
+    "category": "SuiteManifestEntity",
+    "concept": "SuiteManifestEntity",
+    "action": "dependencyGraph",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "suite_manifest_entity_transitive_dependencies",
+    "briefDescription": "Return all direct and transitive suite dependencies .",
+    "category": "SuiteManifestEntity",
+    "concept": "SuiteManifestEntity",
+    "action": "transitiveDependencies",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "suite_manifest_entity_validate_dependencies",
+    "briefDescription": "Validate that all declared dependencies are registered \n and version constrai...",
+    "category": "SuiteManifestEntity",
+    "concept": "SuiteManifestEntity",
+    "action": "validateDependencies",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "suite_manifest_entity_cross_suite_conflicts",
+    "briefDescription": "No conflicting concept names or type parameter mismatches \n across suites .",
+    "category": "SuiteManifestEntity",
+    "concept": "SuiteManifestEntity",
+    "action": "crossSuiteConflicts",
+    "alwaysLoaded": false
+  }
+]

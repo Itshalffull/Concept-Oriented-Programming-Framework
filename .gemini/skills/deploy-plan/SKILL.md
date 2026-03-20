@@ -13,57 +13,34 @@ allowed-tools: Read, Grep, Glob, Edit, Write, Bash
 
 Compute , validate , and execute deployment plans for suites . Constructs a dependency graph from concept specs , syncs , and the deploy manifest , then executes operations in topological order with parallelism on independent branches
 
-## Design Principles
+## Commands
 
-- **Sync-Driven Orchestration:** DeployPlan never calls runtime providers directly. It emits completions that the sync engine routes to the correct provider via routing syncs (route-to-vercel.sync, route-to-lambda.sync, etc.).
-- **Provider Agnostic:** The deploy plan handler contains zero provider-specific code. All provider logic lives in the provider handlers (VercelRuntime, LambdaRuntime, etc.).
-
-## Step-by-Step Process
-
-### Step 1: Create Deployment Plan
-
-Parse a deploy.yaml manifest, resolve environment overlays, and construct the deployment DAG. The plan is stored for inspection before execution. The ValidateBeforeExecute sync automatically triggers validation.
+### plan
+Parse the deploy manifest , resolve environment overlays , 
+ construct the deploy DAG . Return the plan for inspection 
+ before execution . Graph returned as serialized JSON .
 
 **Arguments:** `$0` **manifest** (string), `$1` **environment** (string)
 
-**Checklist:**
-- [ ] Manifest YAML/JSON is valid?
-- [ ] All runtimes have a type defined?
-- [ ] All concepts reference valid runtimes?
-- [ ] No circular dependencies in the DAG?
-
-### Step 2: Validate Deployment Plan
-
-Validate pre-deployment invariants: sync completeness, transport compatibility, storage migration safety, and dependency ordering. The ExecuteAfterValidation sync triggers artifact builds.
+### validate
+All pre deployment invariants pass : sync completeness , 
+ transport compatibility , storage migration safety , 
+ dependency ordering . Warnings for non blocking issues .
 
 **Arguments:** `$0` **plan** (D)
 
-### Step 3: Execute Deployment
-
-Execute the deployment plan. The sync engine routes Runtime/provision to the correct provider (e.g., route-to-vercel.sync routes runtimeType 'vercel' to VercelRuntime/provision). Progress is tracked in the plan's DAG.
-
-**Arguments:** `$0` **plan** (D)
-
-**Checklist:**
-- [ ] Plan has been validated?
-- [ ] Environment variables set (VERCEL_TOKEN, etc.)?
-- [ ] Source directories exist for each app?
-
-### Step 4: Check Deployment Status
-
-Query the current execution status of a deployment plan, including phase, progress, active nodes, completed nodes, and failed nodes.
+### execute
+All nodes in the deploy graph executed successfully . 
+ Progressive delivery completed if configured .
 
 **Arguments:** `$0` **plan** (D)
 
-### Step 5: Rollback Deployment
-
-Reverse a deployment by executing compensating actions in reverse dependency order. Runtime/rollback is routed to providers via syncs.
+### rollback
+Compensating actions executed in reverse dependency order .
 
 **Arguments:** `$0` **plan** (D)
 
-## Related Skills
+### status
+Current execution status of an in progress deployment .
 
-| Skill | When to Use |
-| --- | --- |
-| `/create-deployment` | Generate the deploy.yaml manifest that this plan reads |
-| `/deployment-config` | Validate manifests before planning |
+**Arguments:** `$0` **plan** (D)

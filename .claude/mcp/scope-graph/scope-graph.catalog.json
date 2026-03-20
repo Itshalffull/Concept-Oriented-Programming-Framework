@@ -1,0 +1,34 @@
+[
+  {
+    "name": "scope_graph_build",
+    "briefDescription": "Build a scope graph from a parsed syntax tree .",
+    "category": "ScopeGraph",
+    "concept": "ScopeGraph",
+    "action": "build",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "scope_graph_resolve_reference",
+    "briefDescription": "Resolve a name reference within a scope to its declaration \n symbol , followi...",
+    "category": "ScopeGraph",
+    "concept": "ScopeGraph",
+    "action": "resolveReference",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "scope_graph_visible_symbols",
+    "briefDescription": "Return all symbols visible from a given scope , including \n inherited and imp...",
+    "category": "ScopeGraph",
+    "concept": "ScopeGraph",
+    "action": "visibleSymbols",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "scope_graph_resolve_cross_file",
+    "briefDescription": "Attempt to resolve all unresolved references in this graph \n by searching oth...",
+    "category": "ScopeGraph",
+    "concept": "ScopeGraph",
+    "action": "resolveCrossFile",
+    "alwaysLoaded": false
+  }
+]

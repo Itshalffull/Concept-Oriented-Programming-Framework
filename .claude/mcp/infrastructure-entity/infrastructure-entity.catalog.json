@@ -1,0 +1,26 @@
+[
+  {
+    "name": "infrastructure_entity_register",
+    "briefDescription": "Register a storage or transport adapter .",
+    "category": "InfrastructureEntity",
+    "concept": "InfrastructureEntity",
+    "action": "register",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "infrastructure_entity_shared_backends",
+    "briefDescription": "Group concepts by shared storage transport backend .",
+    "category": "InfrastructureEntity",
+    "concept": "InfrastructureEntity",
+    "action": "sharedBackends",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "infrastructure_entity_network_topology",
+    "briefDescription": "Return the transport network topology which runtimes \n connect to which via w...",
+    "category": "InfrastructureEntity",
+    "concept": "InfrastructureEntity",
+    "action": "networkTopology",
+    "alwaysLoaded": false
+  }
+]

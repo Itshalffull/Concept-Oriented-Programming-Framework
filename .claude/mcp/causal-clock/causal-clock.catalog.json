@@ -1,0 +1,34 @@
+[
+  {
+    "name": "causal_clock_tick",
+    "briefDescription": "Increments this replica s position in the vector clock .",
+    "category": "CausalClock",
+    "concept": "CausalClock",
+    "action": "tick",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "causal_clock_merge",
+    "briefDescription": "Returns the component wise maximum of the two clocks .",
+    "category": "CausalClock",
+    "concept": "CausalClock",
+    "action": "merge",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "causal_clock_compare",
+    "briefDescription": "a happened before b .",
+    "category": "CausalClock",
+    "concept": "CausalClock",
+    "action": "compare",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "causal_clock_dominates",
+    "briefDescription": "Returns whether a strictly dominates b \n a >= b component wise and a != b .",
+    "category": "CausalClock",
+    "concept": "CausalClock",
+    "action": "dominates",
+    "alwaysLoaded": false
+  }
+]

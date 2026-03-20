@@ -1,0 +1,18 @@
+[
+  {
+    "name": "a11y_adapt_provider_register",
+    "briefDescription": "Return static metadata for PluginRegistry .",
+    "category": "A11yAdaptProvider",
+    "concept": "A11yAdaptProvider",
+    "action": "register",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "a11y_adapt_provider_apply",
+    "briefDescription": "Apply modifications to matching instructions first , then \n insert additions ...",
+    "category": "A11yAdaptProvider",
+    "concept": "A11yAdaptProvider",
+    "action": "apply",
+    "alwaysLoaded": false
+  }
+]

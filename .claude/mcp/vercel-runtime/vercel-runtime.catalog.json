@@ -1,0 +1,42 @@
+[
+  {
+    "name": "vercel_runtime_provision",
+    "briefDescription": "Vercel project created with specified framework .",
+    "category": "VercelRuntime",
+    "concept": "VercelRuntime",
+    "action": "provision",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "vercel_runtime_deploy",
+    "briefDescription": "Build completed and deployment created .",
+    "category": "VercelRuntime",
+    "concept": "VercelRuntime",
+    "action": "deploy",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "vercel_runtime_set_traffic_weight",
+    "briefDescription": "Traffic split between current and previous deployments .",
+    "category": "VercelRuntime",
+    "concept": "VercelRuntime",
+    "action": "setTrafficWeight",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "vercel_runtime_rollback",
+    "briefDescription": "Production alias pointed to previous deployment .",
+    "category": "VercelRuntime",
+    "concept": "VercelRuntime",
+    "action": "rollback",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "vercel_runtime_destroy",
+    "briefDescription": "Project and all deployments deleted .",
+    "category": "VercelRuntime",
+    "concept": "VercelRuntime",
+    "action": "destroy",
+    "alwaysLoaded": false
+  }
+]

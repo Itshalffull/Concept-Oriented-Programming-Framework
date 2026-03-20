@@ -13,80 +13,250 @@ allowed-tools: Read, Grep, Glob, Bash
 
 Unified facade over the five Score suites ( parse , symbol , semantic , analysis , discovery ) providing a single LLM friendly surface for querying any Clef project s structure , symbols , semantics , data flows , and search indexes . Every Clef app gets ScoreApi registered automatically LLMs can immediately ask questions about the codebase without configuration . Actions are designed for natural language invocation : parameter names read as English , results are structured for tool use consumption , and error variants include actionable suggestions
 
-## Design Principles
+## Commands
 
-- **Query, Don't Grep:** Score provides structured queries — use them instead of raw file reading.
-- **Concepts Are Independent:** No concept references another — all coupling is through syncs.
-- **Variants Over Exceptions:** Every action outcome is an explicit named variant.
+### listFiles
+List all files in the project matching a glob pattern . 
+ Returns path , detected language , role ( source , generated , 
+ config , test , doc ) , and file size . Use * for all files .
 
-## Step-by-Step Process
+**Arguments:** `$0` **pattern** (string)
 
-### Step 1: Survey the Architecture
+### getFileTree
+Get a hierarchical tree view of the project starting at 
+ the given path . Depth controls recursion level ( 0 = full ) . 
+ Tree is formatted as an indented text tree suitable for 
+ display in chat or tool output .
 
-List all concepts to understand the application's domain model and concept graph.
+**Arguments:** `$0` **path** (string), `$1` **depth** (int)
 
-### Step 2: Inspect a Concept
+### getFileContent
+Read a file s content along with its detected language 
+ and the names of top level definitions it contains .
 
-Get full details of a concept — purpose, type parameters, actions, state fields, invariants.
+**Arguments:** `$0` **path** (string)
+
+### getDefinitions
+Extract all definition units from a file functions , 
+ classes , types , concept actions , sync rules , etc . Each 
+ entry includes the definition name , its kind , the line 
+ number , and the source span .
+
+**Arguments:** `$0` **path** (string)
+
+### matchPattern
+Run a structural pattern query ( tree sitter query syntax ) 
+ across all files of the given language . Returns matching 
+ locations with surrounding context .
+
+**Arguments:** `$0` **pattern** (string), `$1` **language** (string)
+
+### findSymbol
+Find all symbols matching the given name . Returns the 
+ symbol kind ( function , type , concept , action , field , etc . ) , 
+ defining file , line number , and enclosing scope .
 
 **Arguments:** `$0` **name** (string)
 
-### Step 3: Map the Sync Network
-
-List all syncs to understand cross-concept coordination rules.
-
-### Step 4: Trace Action Flows
-
-Follow the chain of effects from any starting action through syncs to downstream actions.
-
-**Arguments:** `$0` **startConcept** (string), `$1` **startAction** (string)
-
-### Step 5: Search the Codebase
-
-Use natural language search across the project. Combines embeddings, text, and symbols.
-
-**Arguments:** `$0` **query** (string), `$1` **limit** (int)
-
-### Step 6: Analyze Dependencies
-
-Trace dependencies and dependents to understand impact before making changes.
+### getReferences
+Find all references to a symbol across the project . 
+ Returns the definition location and all reference 
+ locations with their reference kind ( read , write , call , 
+ import , type use ) .
 
 **Arguments:** `$0` **symbol** (string)
 
-## Anti-Patterns
+### getScope
+Get the scope at a specific file location . Returns the 
+ scope name , all symbols visible in that scope , and the 
+ parent scope if any .
 
-### Bypassing Score for raw file access
-Reading .concept files directly instead of using Score queries — misses parsing, validation, and cross-references.
+**Arguments:** `$0` **file** (string), `$1` **line** (int)
 
-**Bad:**
-```
-# Manually grep for concept actions
-grep -r "action create" repertoire/
+### getRelationships
+Get typed relationships involving a symbol implements , 
+ extends , overrides , calls , imports , depends on , etc .
 
-```
+**Arguments:** `$0` **symbol** (string)
 
-**Good:**
-```
-# Use Score API
-score listConcepts
-score getConcept --name User
-score getFlow --from User/create
+### listConcepts
+List all concepts in the project with their purpose , 
+ action names , state field names , and defining file path . 
+ This is the primary entry point for understanding a 
+ Clef application s architecture .
 
-```
+### getConcept
+Get complete details of a concept its purpose , type 
+ parameters , actions with params and variants , state 
+ fields with types and relation groups , invariants , and 
+ source file .
 
-### Assuming concept coupling
-Looking for direct references between concepts — concepts are independent by design.
+**Arguments:** `$0` **name** (string)
 
-**Bad:**
-```
-# Wrong: searching for concept-to-concept imports
-grep "import.*from.*User" repertoire/profile/
+### getAction
+Get full details of a concept action parameters with 
+ types , all variants with their fields and prose , and the 
+ action description .
 
-```
+**Arguments:** `$0` **concept** (string), `$1` **action** (string)
 
-**Good:**
-```
-# Right: find syncs that connect User and Profile
-score listSyncs --involves User,Profile
+### listSyncs
+List all sync rules in the project with their annotation 
+ ( eager , eventual , local ) , trigger patterns , effect actions , 
+ and source file .
 
-```
+### getSync
+Get full details of a sync rule the when clause with 
+ pattern matched concept action bindings , optional where 
+ clause with queries and filters , and then clause with 
+ invoked concept action bindings .
+
+**Arguments:** `$0` **name** (string)
+
+### getFlow
+Trace the static flow graph starting from a concept 
+ action . Shows the chain of sync firings and concept 
+ action invocations that would occur . Useful for 
+ understanding side effects and cross concept coordination .
+
+**Arguments:** `$0` **startConcept** (string), `$1` **startAction** (string)
+
+### getHandler
+Get the handler implementation for a concept in a given 
+ language . Returns source file , action method locations , 
+ dependency list , and storage collection usage .
+
+**Arguments:** `$0` **concept** (string), `$1` **language** (string)
+
+### getActionSource
+Get the source code of a specific action method in the 
+ concept s handler . Returns the method body and its exact 
+ file location .
+
+**Arguments:** `$0` **concept** (string), `$1` **action** (string)
+
+### listHandlers
+List all registered handlers with their concept , language , 
+ source file , number of implemented actions , and line count .
+
+### implementationGaps
+Find all concept actions that are declared in specs but 
+ have no handler implementation . Returns concept name , 
+ action name , and the spec file where it s declared .
+
+### resolveStackTrace
+Parse a stack trace and resolve each frame to handler 
+ entities , concept names , action methods , and exact AST 
+ nodes where possible . For frames within handlers , astNode 
+ is the precise code construct at that position ( e . g . , 
+ AwaitExpression , ReturnStatement , IfStatement ) and 
+ astAncestors is the chain up to the method root .
+
+**Arguments:** `$0` **stackTrace** (string)
+
+### getWidgetImpl
+Get the generated widget implementation for a given 
+ framework . Returns component name , rendered parts mapping , 
+ and props interface .
+
+**Arguments:** `$0` **widget** (string), `$1` **framework** (string)
+
+### getThemeImpl
+Get the generated theme implementation for a given 
+ platform . Returns source file and token count .
+
+**Arguments:** `$0` **theme** (string), `$1` **platform** (string)
+
+### getDeployment
+Get a deployment manifest s topology runtimes , concept 
+ assignments , and transport storage bindings .
+
+**Arguments:** `$0` **name** (string)
+
+### getDeploymentTopology
+Get the full deployment topology as a traversable graph .
+
+**Arguments:** `$0` **name** (string)
+
+### getDeploymentHealth
+Get current operational health of a deployment .
+
+**Arguments:** `$0` **name** (string)
+
+### listSuites
+List all registered suites .
+
+### getSuite
+Get full details of a suite manifest .
+
+**Arguments:** `$0` **name** (string)
+
+### listInterfaces
+List all registered interface manifests .
+
+### getEndpoints
+List all generated endpoints for a target ( rest , graphql , grpc ) .
+
+**Arguments:** `$0` **interface** (string), `$1` **target** (string)
+
+### traceEndpoint
+Trace an API endpoint back to the concept , action , and 
+ handler that implements it .
+
+**Arguments:** `$0` **target** (string), `$1` **path** (string), `$2` **method** (string)
+
+### getDependencies
+Get direct and transitive dependencies of a symbol . 
+ Shows what a symbol depends on ( imports , calls , reads ) .
+
+**Arguments:** `$0` **symbol** (string)
+
+### getDependents
+Get direct and transitive dependents of a symbol . 
+ Shows what depends on this symbol ( reverse dependencies ) . 
+ Useful for impact analysis .
+
+**Arguments:** `$0` **symbol** (string)
+
+### getImpact
+Analyze the impact of changing a file . Returns directly 
+ affected files and transitively affected files with the 
+ reason for impact ( import , sync reference , type dependency , 
+ generated from , etc . ) .
+
+**Arguments:** `$0` **file** (string)
+
+### getDataFlow
+Find data flow paths between two symbols . Shows how data 
+ moves from one point to another through the program . 
+ Useful for understanding action chains and sync propagation .
+
+**Arguments:** `$0` **from** (string), `$1` **to** (string)
+
+### search
+Search the project using natural language . Combines 
+ semantic embedding similarity , trigram text search , and 
+ symbol aware indexing for best results . Returns ranked 
+ matches with relevance score and context snippet .
+
+**Arguments:** `$0` **query** (string), `$1` **limit** (int)
+
+### explain
+Generate a natural language explanation of a symbol 
+ what it is , where it s defined , what uses it , and its 
+ key relationships . Designed for LLM consumption : the 
+ summary is a complete sentence suitable for embedding 
+ in a response .
+
+**Arguments:** `$0` **symbol** (string)
+
+### status
+Get the current status of the Score index . Returns 
+ counts of indexed entities and the last indexing time .
+
+### reindex
+Force a full reindex of the project . Parses all files , 
+ extracts symbols , builds semantic graph , indexes handler 
+ implementations , widget implementations , theme implementations , 
+ computes analysis overlays , and generates embeddings . Returns 
+ counts and duration in milliseconds .

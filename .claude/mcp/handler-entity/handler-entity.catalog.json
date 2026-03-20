@@ -1,0 +1,74 @@
+[
+  {
+    "name": "handler_entity_register",
+    "briefDescription": "Register a handler implementation .",
+    "category": "HandlerEntity",
+    "concept": "HandlerEntity",
+    "action": "register",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "handler_entity_implementation_gaps",
+    "briefDescription": "Compare declared actions in the ConceptEntity against \n implemented methods i...",
+    "category": "HandlerEntity",
+    "concept": "HandlerEntity",
+    "action": "implementationGaps",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "handler_entity_resolve_stack_frame",
+    "briefDescription": "Given a stack frame location ( file , line , col ) , resolve it \n to the hand...",
+    "category": "HandlerEntity",
+    "concept": "HandlerEntity",
+    "action": "resolveStackFrame",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "handler_entity_resolve_to_ast_node",
+    "briefDescription": "Resolve a position within a handler to the innermost AST node \n and its ances...",
+    "category": "HandlerEntity",
+    "concept": "HandlerEntity",
+    "action": "resolveToAstNode",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "handler_entity_resolve_stack_trace",
+    "briefDescription": "Parse a full stack trace and resolve each frame to handler \n entities where p...",
+    "category": "HandlerEntity",
+    "concept": "HandlerEntity",
+    "action": "resolveStackTrace",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "handler_entity_trace_to_variant_return",
+    "briefDescription": "Find all variant return points in an action method every \n return { variant : ..",
+    "category": "HandlerEntity",
+    "concept": "HandlerEntity",
+    "action": "traceToVariantReturn",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "handler_entity_trace_to_storage_calls",
+    "briefDescription": "Find all storage operations in an action method \n storage .",
+    "category": "HandlerEntity",
+    "concept": "HandlerEntity",
+    "action": "traceToStorageCalls",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "handler_entity_diff_from_spec",
+    "briefDescription": "Compare the handler implementation against its concept spec \n to find drift m...",
+    "category": "HandlerEntity",
+    "concept": "HandlerEntity",
+    "action": "diffFromSpec",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "handler_entity_source_for_action",
+    "briefDescription": "Convenience action : given a concept and action name , return \n the handler s...",
+    "category": "HandlerEntity",
+    "concept": "HandlerEntity",
+    "action": "sourceForAction",
+    "alwaysLoaded": false
+  }
+]

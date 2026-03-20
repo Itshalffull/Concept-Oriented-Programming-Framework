@@ -1,0 +1,18 @@
+[
+  {
+    "name": "enrichment_renderer_register",
+    "briefDescription": "Handler registered .",
+    "category": "EnrichmentRenderer",
+    "concept": "EnrichmentRenderer",
+    "action": "register",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "enrichment_renderer_render",
+    "briefDescription": "Rendered output with sections assembled in order .",
+    "category": "EnrichmentRenderer",
+    "concept": "EnrichmentRenderer",
+    "action": "render",
+    "alwaysLoaded": false
+  }
+]

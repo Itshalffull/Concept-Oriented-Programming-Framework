@@ -1,0 +1,26 @@
+[
+  {
+    "name": "functional_handler_register",
+    "briefDescription": "Register a functional handler for the given concept and action , \n declaring ...",
+    "category": "FunctionalHandler",
+    "concept": "FunctionalHandler",
+    "action": "register",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "functional_handler_build",
+    "briefDescription": "Invoke the handler s factory function with the given input and \n return the r...",
+    "category": "FunctionalHandler",
+    "concept": "FunctionalHandler",
+    "action": "build",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "functional_handler_validate_purity",
+    "briefDescription": "The program s structural effects are consistent with the handler s \n declared...",
+    "category": "FunctionalHandler",
+    "concept": "FunctionalHandler",
+    "action": "validatePurity",
+    "alwaysLoaded": false
+  }
+]

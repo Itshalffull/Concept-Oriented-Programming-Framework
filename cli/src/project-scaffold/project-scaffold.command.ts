@@ -5,16 +5,16 @@
 import { Command } from 'commander';
 
 export const projectScaffoldCommand = new Command('project-scaffold')
-  .description('Initialize a new CLEF project with standard directory structure , example concept spec , and configuration files');
+  .description('Initialize new Clef projects with the standard directory structure , example concept specs , and configuration files');
 
 projectScaffoldCommand
-  .command('init')
-  .description('Create a new CLEF project directory with specs , syncs , implementations , and configuration files .')
-  .argument('<name>', 'Project name')
+  .command('scaffold')
+  .description('Create a new Clef project directory with specs , syncs , implementations , and configuration files . Generates an example concept and sync to get started .')
+  .requiredOption('--name <name>', 'Name')
   .option('--json', 'Output as JSON')
-  .action(async (name, opts) => {
+  .action(async (opts) => {
     try {
-      const result = await globalThis.kernel.invokeConcept('urn:clef/ProjectScaffold', 'scaffold', { name, ...opts });
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ProjectScaffold', 'scaffold', opts);
       if (result.variant !== 'ok') {
         console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
         process.exitCode = 1;
@@ -29,6 +29,6 @@ projectScaffoldCommand
 
 export const projectScaffoldCommandTree = {
   group: 'project-scaffold',
-  description: 'Initialize a new CLEF project with standard directory structure , example concept spec , and configuration files',
-  commands: [{ action: 'scaffold', command: 'init' }],
+  description: 'Initialize new Clef projects with the standard directory structure , example concept specs , and configuration files',
+  commands: [{ action: 'scaffold', command: 'scaffold' }],
 };

@@ -1,0 +1,42 @@
+[
+  {
+    "name": "lens_create",
+    "briefDescription": "Construct a lens from up to three path segments : relation ( required ) , \n k...",
+    "category": "Lens",
+    "concept": "Lens",
+    "action": "create",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "lens_from_relation",
+    "briefDescription": "Construct a relation level lens that focuses on an entire \n storage relation ...",
+    "category": "Lens",
+    "concept": "Lens",
+    "action": "fromRelation",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "lens_compose",
+    "briefDescription": "Create a new lens by composing outer and inner , concatenating \n their path s...",
+    "category": "Lens",
+    "concept": "Lens",
+    "action": "compose",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "lens_decompose",
+    "briefDescription": "Break the lens into its constituent path segments as a \n JSON array of { type...",
+    "category": "Lens",
+    "concept": "Lens",
+    "action": "decompose",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "lens_validate",
+    "briefDescription": "The lens path segments reference valid state declarations \n in the given conc...",
+    "category": "Lens",
+    "concept": "Lens",
+    "action": "validate",
+    "alwaysLoaded": false
+  }
+]

@@ -1,0 +1,34 @@
+[
+  {
+    "name": "program_interpreter_register",
+    "briefDescription": "Register an interpreter bound to the named storage backend \n operating in the...",
+    "category": "ProgramInterpreter",
+    "concept": "ProgramInterpreter",
+    "action": "register",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "program_interpreter_execute",
+    "briefDescription": "Run the program instruction by instruction against the backend .",
+    "category": "ProgramInterpreter",
+    "concept": "ProgramInterpreter",
+    "action": "execute",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "program_interpreter_dry_run",
+    "briefDescription": "Execute the program against a snapshot without persisting any \n mutations .",
+    "category": "ProgramInterpreter",
+    "concept": "ProgramInterpreter",
+    "action": "dryRun",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "program_interpreter_rollback",
+    "briefDescription": "Reverse the mutations from a previous execution by applying \n compensating op...",
+    "category": "ProgramInterpreter",
+    "concept": "ProgramInterpreter",
+    "action": "rollback",
+    "alwaysLoaded": false
+  }
+]

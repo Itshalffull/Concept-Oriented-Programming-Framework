@@ -1,0 +1,34 @@
+[
+  {
+    "name": "program_cache_store",
+    "briefDescription": "Result cached under the given program and state hashes .",
+    "category": "ProgramCache",
+    "concept": "ProgramCache",
+    "action": "store",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "program_cache_invalidate_by_state",
+    "briefDescription": "Remove all entries whose stateHash matches , returning the count \n of evicted...",
+    "category": "ProgramCache",
+    "concept": "ProgramCache",
+    "action": "invalidateByState",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "program_cache_invalidate_by_program",
+    "briefDescription": "Remove all entries for the given program hash , returning the \n count of evic...",
+    "category": "ProgramCache",
+    "concept": "ProgramCache",
+    "action": "invalidateByProgram",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "program_cache_stats",
+    "briefDescription": "Return aggregate cache statistics : total entries , hit rate \n as a percentag...",
+    "category": "ProgramCache",
+    "concept": "ProgramCache",
+    "action": "stats",
+    "alwaysLoaded": false
+  }
+]

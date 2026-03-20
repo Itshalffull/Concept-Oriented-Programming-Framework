@@ -1,0 +1,10 @@
+[
+  {
+    "name": "lens_structural_diff_provider_analyze",
+    "briefDescription": "Parse both schemas as JSON arrays of state field declarations , \n compute str...",
+    "category": "LensStructuralDiffProvider",
+    "concept": "LensStructuralDiffProvider",
+    "action": "analyze",
+    "alwaysLoaded": false
+  }
+]

@@ -25,6 +25,7 @@ import {
 import { emitterHandler } from '../../../handlers/ts/framework/emitter.handler.js';
 import { surfaceHandler } from '../../../handlers/ts/framework/surface.handler.js';
 import { createInMemoryStorage } from '../../../runtime/adapters/storage.js';
+import { PERFORM_HANDLER } from '../../../runtime/functional-compat.js';
 import type { ConceptManifest, ConceptAST } from '../../../runtime/types.js';
 
 /** Recursively find files matching an extension under a directory. */
@@ -512,9 +513,91 @@ async function interfaceGenerate(
   const providerCount = Object.keys(providers).length;
   console.log(`  Loaded ${providerCount} provider handler(s)`);
 
-  // 4. Create generator with providers and run
+  // 4. Create generator with providers and wire transport effects
   const generatorHandler = await createInterfaceGeneratorHandler(providers);
   const generatorStorage = createInMemoryStorage();
+
+  // Wire transport effects: when the generator's StorageProgram calls
+  // perform('interface-gen', 'generateAll', payload), this callback
+  // dispatches to each target provider, collects the files, and returns.
+  (generatorHandler as Record<string | symbol, unknown>)[PERFORM_HANDLER] = async (
+    protocol: string,
+    operation: string,
+    payload: Record<string, unknown>,
+  ): Promise<Record<string, unknown>> => {
+    if (protocol !== 'interface-gen' || operation !== 'generateAll') {
+      return { files: [], errors: [`Unknown effect: ${protocol}:${operation}`] };
+    }
+
+    const effectProjections = JSON.parse((payload.projections as string) || '[]') as Array<{
+      conceptName: string;
+      conceptManifest: string;
+    }>;
+    const effectManifestYaml = JSON.parse((payload.manifestYaml as string) || '{}') as Record<string, unknown>;
+
+    // Build target → provider mapping from registration metadata
+    const targetToProvider: Record<string, string> = {};
+    for (const [name, provider] of Object.entries(providers)) {
+      if (!provider.register) continue;
+      try {
+        const meta = await provider.register({}, createInMemoryStorage());
+        if (meta?.variant === 'ok' && meta.targetKey) {
+          targetToProvider[meta.targetKey as string] = name;
+        }
+      } catch { /* skip */ }
+    }
+
+    // Only dispatch to targets declared in the manifest
+    const manifestTargets = (effectManifestYaml.targets as Record<string, unknown>) || {};
+    const allGenFiles: GeneratedFile[] = [];
+    const genErrors: string[] = [];
+
+    for (const [targetKey, targetConfig] of Object.entries(manifestTargets)) {
+      const providerName = targetToProvider[targetKey];
+      if (!providerName) continue;
+      const provider = providers[providerName];
+      if (!provider?.generate) continue;
+
+      for (const proj of effectProjections) {
+        try {
+          const providerStorage = createInMemoryStorage();
+          const result = await provider.generate(
+            {
+              projection: JSON.stringify(proj),
+              config: JSON.stringify(targetConfig || {}),
+              providerName,
+              target: targetKey,
+            },
+            providerStorage,
+          );
+
+          if (result.variant === 'ok' && result.files) {
+            const files = result.files as GeneratedFile[];
+            // Prefix file paths with target key for output dir resolution
+            for (const f of files) {
+              allGenFiles.push({
+                path: f.path.startsWith(targetKey + '/') ? f.path : `${targetKey}/${f.path}`,
+                content: f.content as string,
+              });
+            }
+          } else if (result.variant !== 'ok') {
+            genErrors.push(`${providerName}/${proj.conceptName}: ${result.variant}`);
+          }
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : String(err);
+          genErrors.push(`${providerName}/${proj.conceptName}: ${msg}`);
+        }
+      }
+    }
+
+    return {
+      files: allGenFiles,
+      filesGenerated: allGenFiles.length,
+      filesUnchanged: 0,
+      duration: 0,
+      errors: genErrors,
+    };
+  };
 
   // Plan
   const planResult = await generatorHandler.plan(

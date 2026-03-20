@@ -1,0 +1,42 @@
+[
+  {
+    "name": "daghistory_append",
+    "briefDescription": "New node appended to DAG with given parents .",
+    "category": "DAGHistory",
+    "concept": "DAGHistory",
+    "action": "append",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "daghistory_ancestors",
+    "briefDescription": "Topologically ordered list of all ancestor nodes .",
+    "category": "DAGHistory",
+    "concept": "DAGHistory",
+    "action": "ancestors",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "daghistory_common_ancestor",
+    "briefDescription": "Nearest common ancestor of nodes a and b .",
+    "category": "DAGHistory",
+    "concept": "DAGHistory",
+    "action": "commonAncestor",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "daghistory_descendants",
+    "briefDescription": "All descendant nodes in topological order .",
+    "category": "DAGHistory",
+    "concept": "DAGHistory",
+    "action": "descendants",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "daghistory_between",
+    "briefDescription": "Nodes on the path from ancestor to descendant , inclusive .",
+    "category": "DAGHistory",
+    "concept": "DAGHistory",
+    "action": "between",
+    "alwaysLoaded": false
+  }
+]

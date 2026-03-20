@@ -49,5 +49,5 @@ export { generateId, timestamp } from './types.js';
 
 // --- Functional handler support ---
 export { interpret } from './interpreter.js';
-export type { ExecutionResult } from './interpreter.js';
-export { wrapFunctional, autoInterpret } from './functional-compat.js';
+export type { ExecutionResult, PerformHandler, InterpretOptions } from './interpreter.js';
+export { wrapFunctional, autoInterpret, PERFORM_HANDLER } from './functional-compat.js';

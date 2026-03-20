@@ -1,0 +1,66 @@
+[
+  {
+    "name": "storage_program_create",
+    "briefDescription": "Initialize an empty program ready to receive instructions .",
+    "category": "StorageProgram",
+    "concept": "StorageProgram",
+    "action": "create",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "storage_program_put",
+    "briefDescription": "Append a Put instruction that writes a record to the given \n relation at the ...",
+    "category": "StorageProgram",
+    "concept": "StorageProgram",
+    "action": "put",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "storage_program_del",
+    "briefDescription": "Append a Del instruction that removes a record from the given \n relation at t...",
+    "category": "StorageProgram",
+    "concept": "StorageProgram",
+    "action": "del",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "storage_program_branch",
+    "briefDescription": "Append a conditional branch whose arms are themselves \n StoragePrograms , ena...",
+    "category": "StorageProgram",
+    "concept": "StorageProgram",
+    "action": "branch",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "storage_program_pure",
+    "briefDescription": "Terminate the program with a return value consisting of a \n variant tag and o...",
+    "category": "StorageProgram",
+    "concept": "StorageProgram",
+    "action": "pure",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "storage_program_compose",
+    "briefDescription": "Monadic bind : create a new program that runs first , binds its \n terminal va...",
+    "category": "StorageProgram",
+    "concept": "StorageProgram",
+    "action": "compose",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "storage_program_put_lens",
+    "briefDescription": "Append a PutLens instruction that writes through a typed lens \n reference .",
+    "category": "StorageProgram",
+    "concept": "StorageProgram",
+    "action": "putLens",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "storage_program_modify_lens",
+    "briefDescription": "Append a ModifyLens instruction that reads through a lens , \n applies a trans...",
+    "category": "StorageProgram",
+    "concept": "StorageProgram",
+    "action": "modifyLens",
+    "alwaysLoaded": false
+  }
+]

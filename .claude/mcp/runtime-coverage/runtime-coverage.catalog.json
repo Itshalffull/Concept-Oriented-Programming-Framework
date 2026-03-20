@@ -1,0 +1,74 @@
+[
+  {
+    "name": "runtime_coverage_record",
+    "briefDescription": "Record that a static entity was exercised .",
+    "category": "RuntimeCoverage",
+    "concept": "RuntimeCoverage",
+    "action": "record",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "runtime_coverage_coverage_report",
+    "briefDescription": "Coverage report for the given entity kind .",
+    "category": "RuntimeCoverage",
+    "concept": "RuntimeCoverage",
+    "action": "coverageReport",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "runtime_coverage_variant_coverage",
+    "briefDescription": "Variant coverage for a specific concept .",
+    "category": "RuntimeCoverage",
+    "concept": "RuntimeCoverage",
+    "action": "variantCoverage",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "runtime_coverage_sync_coverage",
+    "briefDescription": "Sync coverage report .",
+    "category": "RuntimeCoverage",
+    "concept": "RuntimeCoverage",
+    "action": "syncCoverage",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "runtime_coverage_widget_state_coverage",
+    "briefDescription": "FSM state and transition coverage for a widget .",
+    "category": "RuntimeCoverage",
+    "concept": "RuntimeCoverage",
+    "action": "widgetStateCoverage",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "runtime_coverage_widget_lifecycle_report",
+    "briefDescription": "Full widget lifecycle report : mount unmount counts , \n active instances , re...",
+    "category": "RuntimeCoverage",
+    "concept": "RuntimeCoverage",
+    "action": "widgetLifecycleReport",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "runtime_coverage_widget_render_trace",
+    "briefDescription": "Per instance render trace : every render with timestamp , \n duration , trigge...",
+    "category": "RuntimeCoverage",
+    "concept": "RuntimeCoverage",
+    "action": "widgetRenderTrace",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "runtime_coverage_widget_comparison",
+    "briefDescription": "Rank all widgets by render performance .",
+    "category": "RuntimeCoverage",
+    "concept": "RuntimeCoverage",
+    "action": "widgetComparison",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "runtime_coverage_dead_at_runtime",
+    "briefDescription": "Return all static entities of the given kind that \n have never been exercised...",
+    "category": "RuntimeCoverage",
+    "concept": "RuntimeCoverage",
+    "action": "deadAtRuntime",
+    "alwaysLoaded": false
+  }
+]

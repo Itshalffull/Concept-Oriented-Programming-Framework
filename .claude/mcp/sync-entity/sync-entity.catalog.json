@@ -1,0 +1,18 @@
+[
+  {
+    "name": "sync_entity_register",
+    "briefDescription": "Register a parsed and compiled sync rule as a semantic \n entity .",
+    "category": "SyncEntity",
+    "concept": "SyncEntity",
+    "action": "register",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "sync_entity_chain_from",
+    "briefDescription": "Trace the static sync chain from an action variant , \n following when then wh...",
+    "category": "SyncEntity",
+    "concept": "SyncEntity",
+    "action": "chainFrom",
+    "alwaysLoaded": false
+  }
+]

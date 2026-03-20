@@ -13,48 +13,43 @@ allowed-tools: Read, Grep, Glob, Bash
 
 Registry and dispatcher for composable render program transformations . Manages named transforms with kind based routing to provider concepts through sync wiring the functorial mapping hub that makes theme switching , a11y variants , and style adaptations composable first class operations without hardcoding transform logic
 
-## Design Principles
+## Commands
 
-- **Functorial Composition:** Theme switching and a11y variants are composable transformations over render programs — not separate code paths. apply(p, compose([f,g])) = apply(apply(p, f), g).
-- **Provider Dispatch via Syncs:** Transform kinds (token-remap, a11y-adapt, etc.) are registered as providers and dispatched through sync wiring — zero hardcoding.
-
-## Step-by-Step Process
-
-### Step 1: Register Transform Kind
-
-Register a transform kind provider (token-remap, a11y-adapt, bind-rewrite, custom).
+### registerKind
+Register a transform kind provider . Called by provider 
+ registration syncs to declare that a provider exists for 
+ this kind ( token remap , a11y adapt , bind rewrite , custom ) .
 
 **Arguments:** `$0` **kind** (string)
 
-### Step 2: Register a Named Transform
-
-Register a named transform instance with a kind and spec configuration.
+### register
+Register a named transform with a kind and a serialized 
+ rewrite specification . The spec structure is defined by 
+ the provider for that kind .
 
 **Arguments:** `$0` **name** (string), `$1` **kind** (string), `$2` **spec** (string)
 
-### Step 3: Apply Transform (Functor fmap)
-
-Apply a transform to a render program. Satisfies functor identity law: apply(p, kind, emptySpec) = p.
+### apply
+Dispatch the transform application to the appropriate 
+ provider based on kind . The provider applies the spec to 
+ the program and returns the transformed result . Satisfies 
+ the functor identity law : apply ( p , kind , emptySpec ) = p .
 
 **Arguments:** `$0` **program** (string), `$1` **kind** (string), `$2` **spec** (string)
 
-**Checklist:**
-- [ ] Transform satisfies functor identity law (empty spec = identity)?
-- [ ] Composed transforms satisfy functor composition law?
-- [ ] Accessibility transforms preserve WCAG compliance?
-- [ ] Theme token remaps cover all referenced tokens?
-
-### Step 4: Compose Transforms (Functor Composition)
-
-Compose multiple transforms. Satisfies functor composition law: apply(p, compose([f, g])) = apply(apply(p, f), g).
+### compose
+Combine multiple named transforms into a single composite 
+ transform . The result applies all transforms in sequence . 
+ Satisfies the functor composition law : 
+ apply ( p , compose ( [ f , g ] ) ) = apply ( apply ( p , f ) , g ) .
 
 **Arguments:** `$0` **transforms** (string)
 
-## References
+### list
+Return all registered transforms as a serialized JSON 
+ array of { name , kind } objects .
 
-- [Render transform provider reference](references/render-transform-providers.md)
-## Related Skills
+### get
+Return the full details of a registered transform .
 
-| Skill | When to Use |
-| --- | --- |
-| `/functional-handler-builder` | StorageProgram monad — the handler-side equivalent of render program transforms |
+**Arguments:** `$0` **name** (string)

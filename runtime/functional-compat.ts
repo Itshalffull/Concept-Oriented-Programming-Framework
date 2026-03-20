@@ -11,8 +11,11 @@
 
 import type { ConceptHandler, ConceptStorage } from './types.ts';
 import type { FunctionalConceptHandler } from './functional-handler.ts';
-import { interpret } from './interpreter.ts';
+import { interpret, type PerformHandler } from './interpreter.ts';
 import { createInMemoryStorage } from './adapters/storage.ts';
+
+/** Symbol used to attach a PerformHandler to an autoInterpret-wrapped handler. */
+export const PERFORM_HANDLER = Symbol.for('clef:onPerform');
 
 /**
  * Wrap a FunctionalConceptHandler as a ConceptHandler.
@@ -43,11 +46,22 @@ export function wrapFunctional(handler: FunctionalConceptHandler): ConceptHandle
  *
  * This allows a single export to serve both functional callers and
  * legacy imperative test code without any import changes.
+ *
+ * To wire transport effects, set `handler[PERFORM_HANDLER] = myPerformFn`
+ * before calling actions. The interpreter will call it for perform/performFrom
+ * instructions. The handler itself never knows what's behind the callback —
+ * it could be a sync engine, a direct function, or a concept chain.
  */
 export function autoInterpret(handler: FunctionalConceptHandler): FunctionalConceptHandler & ConceptHandler {
+  // Mutable slot for the perform handler — set externally via PERFORM_HANDLER symbol
+  let onPerform: PerformHandler | undefined;
+
   return new Proxy(handler, {
-    get(target, prop: string) {
-      const action = target[prop];
+    get(target, prop: string | symbol) {
+      // Allow reading/writing the perform handler via symbol
+      if (prop === PERFORM_HANDLER) return onPerform;
+
+      const action = target[prop as string];
       if (typeof action !== 'function') return action;
 
       // Return a function that checks argument count at call time
@@ -58,7 +72,7 @@ export function autoInterpret(handler: FunctionalConceptHandler): FunctionalConc
 
         // If storage was passed, auto-interpret (imperative compat mode)
         if (storage !== undefined) {
-          return interpret(program, storage).then(result => ({
+          return interpret(program, storage, { onPerform }).then(result => ({
             variant: result.variant,
             ...result.output,
           }));
@@ -67,7 +81,7 @@ export function autoInterpret(handler: FunctionalConceptHandler): FunctionalConc
         // If called with zero args and program is already terminated
         // (e.g. register()), auto-interpret with a no-op storage
         if (args.length === 0 && program && program.terminated) {
-          return interpret(program, createInMemoryStorage()).then(result => ({
+          return interpret(program, createInMemoryStorage(), { onPerform }).then(result => ({
             variant: result.variant,
             ...result.output,
           }));
@@ -76,6 +90,13 @@ export function autoInterpret(handler: FunctionalConceptHandler): FunctionalConc
         // No storage — return the raw StorageProgram (functional mode)
         return program;
       };
+    },
+    set(_target, prop: string | symbol, value: unknown) {
+      if (prop === PERFORM_HANDLER) {
+        onPerform = value as PerformHandler | undefined;
+        return true;
+      }
+      return false;
     },
   }) as FunctionalConceptHandler & ConceptHandler;
 }
