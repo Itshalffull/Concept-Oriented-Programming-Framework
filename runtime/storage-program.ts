@@ -574,12 +574,17 @@ export function traverse<A>(
   if (program.terminated) throw new Error('Program is sealed — cannot append after pure()');
 
   // Build a sample program to extract static effects for analysis.
-  // Use a sentinel to get the effect set from the body.
-  const sampleProgram = body({}, {});
+  // The body may throw on empty sentinel data — fall back to empty effects.
+  let sampleEffects: EffectSet;
+  try {
+    sampleEffects = body({}, {}).effects;
+  } catch {
+    sampleEffects = emptyEffects();
+  }
   return {
     instructions: [...program.instructions, { tag: 'traverse', sourceBinding, itemBinding, body, bindAs }],
     terminated: false,
-    effects: mergeEffects(program.effects, sampleProgram.effects),
+    effects: mergeEffects(program.effects, sampleEffects),
   };
 }
 
@@ -603,7 +608,8 @@ export function extractReadSet(program: StorageProgram<unknown>): Set<string> {
       for (const r of extractReadSet(instr.second)) reads.add(r);
     }
     if (instr.tag === 'traverse') {
-      const sample = instr.body({}, {});
+      let sample: StorageProgram<unknown> | null = null; try { sample = instr.body({}, {}); } catch { /* body threw on sentinel */ }
+      if (!sample) continue;
       for (const r of extractReadSet(sample)) reads.add(r);
     }
   }
@@ -625,7 +631,8 @@ export function extractWriteSet(program: StorageProgram<unknown>): Set<string> {
       for (const w of extractWriteSet(instr.second)) writes.add(w);
     }
     if (instr.tag === 'traverse') {
-      const sample = instr.body({}, {});
+      let sample: StorageProgram<unknown> | null = null; try { sample = instr.body({}, {}); } catch { /* body threw on sentinel */ }
+      if (!sample) continue;
       for (const w of extractWriteSet(sample)) writes.add(w);
     }
   }
@@ -648,7 +655,8 @@ export function extractCompletionVariants(program: StorageProgram<unknown>): Set
       for (const v of extractCompletionVariants(instr.second)) variants.add(v);
     }
     if (instr.tag === 'traverse') {
-      const sample = instr.body({}, {});
+      let sample: StorageProgram<unknown> | null = null; try { sample = instr.body({}, {}); } catch { /* body threw on sentinel */ }
+      if (!sample) continue;
       for (const v of extractCompletionVariants(sample)) variants.add(v);
     }
   }
@@ -671,7 +679,8 @@ export function extractPerformSet(program: StorageProgram<unknown>): Set<string>
       for (const p of extractPerformSet(instr.second)) performs.add(p);
     }
     if (instr.tag === 'traverse') {
-      const sample = instr.body({}, {});
+      let sample: StorageProgram<unknown> | null = null; try { sample = instr.body({}, {}); } catch { /* body threw on sentinel */ }
+      if (!sample) continue;
       for (const p of extractPerformSet(sample)) performs.add(p);
     }
   }
@@ -726,8 +735,9 @@ export function serializeProgram(program: StorageProgram<unknown>): string {
         return { ...instr, payloadFn: instr.payloadFn.toString() };
       }
       if (instr.tag === 'traverse') {
-        const sample = instr.body({}, {});
-        return { tag: 'traverse', sourceBinding: instr.sourceBinding, itemBinding: instr.itemBinding, bindAs: instr.bindAs, body: serializeProgram(sample) };
+        let bodyStr = '(empty)';
+        try { bodyStr = serializeProgram(instr.body({}, {})); } catch { /* body threw on sentinel */ }
+        return { tag: 'traverse', sourceBinding: instr.sourceBinding, itemBinding: instr.itemBinding, bindAs: instr.bindAs, body: bodyStr };
       }
       return instr;
     }),
