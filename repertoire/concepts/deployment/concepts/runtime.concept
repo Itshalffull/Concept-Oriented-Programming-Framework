@@ -122,6 +122,9 @@ concept Runtime [I] {
       -> notfound(instance: I) {
         No instance exists with this identifier.
       }
+
+      fixture get_endpoint { instance: "rt-abc123" }
+      fixture get_endpoint_missing { instance: "" } -> error
     }
 
     action configureDependencies(instance: I, dependencies: String) {
@@ -136,6 +139,9 @@ concept Runtime [I] {
       -> configFailed(instance: I, reason: String) {
         Provider could not configure environment variables.
       }
+
+      fixture configure_deps { instance: "rt-abc123", dependencies: "{\"auth\":{\"env\":\"AUTH_URL\",\"url\":\"https://auth.svc:8080\"}}" }
+      fixture configure_deps_missing { instance: "", dependencies: "{}" } -> error
     }
 
     action healthCheck(instance: I) {

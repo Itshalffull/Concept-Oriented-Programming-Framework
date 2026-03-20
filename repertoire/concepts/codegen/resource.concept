@@ -71,6 +71,9 @@ concept Resource [R] {
       -> notFound(locator: String) {
         No resource registered at this locator.
       }
+
+      fixture remove_existing { locator: "./specs/password.concept" }
+      fixture remove_missing { locator: "./specs/nonexistent.concept" } -> notFound
     }
 
     action diff(locator: String, oldDigest: String, newDigest: String) {
@@ -85,6 +88,9 @@ concept Resource [R] {
         Cannot determine change type — no kind-specific differ
         registered for this resource kind.
       }
+
+      fixture diff_concept { locator: "./specs/password.concept", oldDigest: "sha256-abc123", newDigest: "sha256-def456" } -> unknown
+      fixture diff_config { locator: "./configs/build.yaml", oldDigest: "sha256-111", newDigest: "sha256-222" } -> unknown
     }
   }
 
