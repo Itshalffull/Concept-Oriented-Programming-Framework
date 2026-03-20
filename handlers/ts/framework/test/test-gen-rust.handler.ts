@@ -45,6 +45,22 @@ function defaultInput(params: Array<{ name: string; type: string }>): string {
   }).join(', ');
 }
 
+function fixtureInputRust(input: Record<string, unknown>): string {
+  return Object.entries(input)
+    .map(([k, v]) => {
+      if (typeof v === 'string') return `${toSnake(k)}: "${v}".to_string()`;
+      if (typeof v === 'boolean') return `${toSnake(k)}: ${v}`;
+      if (typeof v === 'number') return `${toSnake(k)}: ${v}`;
+      return `${toSnake(k)}: serde_json::json!(${JSON.stringify(v)}).to_string()`;
+    }).join(', ');
+}
+
+function bestInput(action: TestPlanAction): string {
+  const okFixture = action.fixtures?.find(f => f.expectedVariant === 'ok');
+  if (okFixture) return fixtureInputRust(okFixture.input);
+  return defaultInput(action.params);
+}
+
 function renderRustTests(plan: TestPlan): string {
   const modName = toSnake(plan.conceptName);
   const lines: string[] = [];
@@ -172,7 +188,7 @@ function renderRustTests(plan: TestPlan): string {
     }
     if (plan.actions.length > 0) {
       const action = plan.actions[0];
-      const input = defaultInput(action.params);
+      const input = bestInput(action);
       lines.push(`    let result = ${toSnake(action.name)}(${input});`);
       lines.push('    assert!(result.variant.len() > 0);');
     }
@@ -199,7 +215,7 @@ function renderRustTests(plan: TestPlan): string {
 
 function renderRustActionTests(lines: string[], _modName: string, action: TestPlanAction): void {
   const fnBase = toSnake(action.name);
-  const input = defaultInput(action.params);
+  const input = bestInput(action);
 
   lines.push('#[test]');
   lines.push(`fn test_${fnBase}_returns_valid_variant() {`);
@@ -209,6 +225,16 @@ function renderRustActionTests(lines: string[], _modName: string, action: TestPl
   lines.push(`    assert!([${validVariants}].contains(&result.variant.as_str()));`);
   lines.push('}');
   lines.push('');
+
+  for (const fixture of (action.fixtures || [])) {
+    const fInput = fixtureInputRust(fixture.input);
+    lines.push('#[test]');
+    lines.push(`fn test_${fnBase}_fixture_${toSnake(fixture.name)}() {`);
+    lines.push(`    let result = ${fnBase}(${fInput});`);
+    lines.push(`    assert_eq!(result.variant, "${fixture.expectedVariant}");`);
+    lines.push('}');
+    lines.push('');
+  }
 }
 
 export const testGenRustHandler: FunctionalConceptHandler = {

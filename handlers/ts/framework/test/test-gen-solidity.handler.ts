@@ -32,6 +32,33 @@ function toPascal(name: string): string {
   return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
+function defaultInput(params: Array<{ name: string; type: string }>): string {
+  return params.map(p => {
+    const t = p.type.toLowerCase();
+    if (t === 'string') return `"test_${p.name}"`;
+    if (t === 'int' || t === 'number') return '1';
+    if (t === 'bool' || t === 'boolean') return 'true';
+    return '"test"';
+  }).join(', ');
+}
+
+function fixtureInputSolidity(input: Record<string, unknown>): string {
+  return Object.entries(input)
+    .map(([k, v]) => {
+      void k;
+      if (typeof v === 'string') return `"${v}"`;
+      if (typeof v === 'boolean') return `${v}`;
+      if (typeof v === 'number') return `${v}`;
+      return `"${JSON.stringify(v).replace(/"/g, '\\"')}"`;
+    }).join(', ');
+}
+
+function bestInput(action: TestPlanAction): string {
+  const okFixture = action.fixtures?.find(f => f.expectedVariant === 'ok');
+  if (okFixture) return fixtureInputSolidity(okFixture.input);
+  return defaultInput(action.params);
+}
+
 function renderSolidityTests(plan: TestPlan): string {
   const contractName = `${toPascal(plan.conceptName)}ConformanceTest`;
   const targetContract = toPascal(plan.conceptName);
@@ -156,6 +183,18 @@ function renderSolidityActionTest(lines: string[], action: TestPlanAction): void
   lines.push('        assertTrue(true);');
   lines.push('    }');
   lines.push('');
+
+  for (const fixture of (action.fixtures || [])) {
+    const fInput = fixtureInputSolidity(fixture.input);
+    const fName = fixture.name.replace(/[^a-zA-Z0-9]/g, '_');
+    lines.push(`    function test_${action.name}_fixture_${fName}() public {`);
+    lines.push(`        // Fixture: ${fixture.name}`);
+    lines.push(`        // target.${action.name}(${fInput})`);
+    lines.push(`        // Expected variant: ${fixture.expectedVariant}`);
+    lines.push('        assertTrue(true);');
+    lines.push('    }');
+    lines.push('');
+  }
 }
 
 export const testGenSolidityHandler: FunctionalConceptHandler = {

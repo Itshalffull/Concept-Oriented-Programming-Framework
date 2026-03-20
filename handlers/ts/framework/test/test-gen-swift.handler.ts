@@ -46,6 +46,22 @@ function defaultInput(params: Array<{ name: string; type: string }>): string {
   }).join(', ');
 }
 
+function fixtureInputSwift(input: Record<string, unknown>): string {
+  return Object.entries(input)
+    .map(([k, v]) => {
+      if (typeof v === 'string') return `${k}: "${v}"`;
+      if (typeof v === 'boolean') return `${k}: ${v}`;
+      if (typeof v === 'number') return `${k}: ${v}`;
+      return `${k}: "${JSON.stringify(v).replace(/"/g, '\\"')}"`;
+    }).join(', ');
+}
+
+function bestInput(action: TestPlanAction): string {
+  const okFixture = action.fixtures?.find(f => f.expectedVariant === 'ok');
+  if (okFixture) return fixtureInputSwift(okFixture.input);
+  return defaultInput(action.params);
+}
+
 function renderSwiftTests(plan: TestPlan): string {
   const className = `${toPascal(plan.conceptName)}ConformanceTests`;
   const lines: string[] = [];
@@ -128,7 +144,7 @@ function renderSwiftTests(plan: TestPlan): string {
     lines.push(`    func test${toPascal(inv.kind)}_${fnName}() {`);
     if (plan.actions.length > 0) {
       const action = plan.actions[0];
-      const input = defaultInput(action.params);
+      const input = bestInput(action);
       lines.push(`        let result = ${toCamel(plan.conceptName)}.${toCamel(action.name)}(${input})`);
       lines.push('        XCTAssertFalse(result.variant.isEmpty)');
     }
@@ -144,7 +160,7 @@ function renderSwiftTests(plan: TestPlan): string {
 }
 
 function renderSwiftActionTests(lines: string[], conceptName: string, action: TestPlanAction): void {
-  const input = defaultInput(action.params);
+  const input = bestInput(action);
 
   lines.push(`    func test${toPascal(action.name)}_returnsValidVariant() {`);
   lines.push(`        let result = ${toCamel(conceptName)}.${toCamel(action.name)}(${input})`);
@@ -153,6 +169,16 @@ function renderSwiftActionTests(lines: string[], conceptName: string, action: Te
   lines.push(`        XCTAssertTrue([${validVariants}].contains(result.variant))`);
   lines.push('    }');
   lines.push('');
+
+  for (const fixture of (action.fixtures || [])) {
+    const fInput = fixtureInputSwift(fixture.input);
+    const fName = fixture.name.replace(/[^a-zA-Z0-9]/g, '_');
+    lines.push(`    func test${toPascal(action.name)}_fixture_${fName}() {`);
+    lines.push(`        let result = ${toCamel(conceptName)}.${toCamel(action.name)}(${fInput})`);
+    lines.push(`        XCTAssertEqual(result.variant, "${fixture.expectedVariant}")`);
+    lines.push('    }');
+    lines.push('');
+  }
 }
 
 export const testGenSwiftHandler: FunctionalConceptHandler = {
