@@ -37,13 +37,13 @@ concept QuadraticWeight [QW] {
     }
   }
 
-  example "configure-then-computeWeight": {
+  example "configure-then-compute": {
 
-    after configure(tokenSource: _, scalingFactor: 1.0) -> configured(config: qw)
+    after configure(baseSource: "token-balance") -> configured(config: qw)
 
-        then computeWeight(config: qw, balance: 100.0) -> weight(value: 10.0)
+        then compute(participant: p, balance: 100.0) -> weight(participant: p, balance: 100.0, sqrtWeight: 10.0)
 
-        // √100 = 10
+        // sqrt(100) = 10
 
   }
 

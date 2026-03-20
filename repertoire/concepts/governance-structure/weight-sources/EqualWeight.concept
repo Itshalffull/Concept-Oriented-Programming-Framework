@@ -34,9 +34,9 @@ concept EqualWeight [EW] {
 
   example "configure-then-getWeight": {
 
-    after configure(weightValue: 1.0) -> configured(config: ew)
+    after configure(weightPerPerson: 1.0) -> configured(config: ew)
 
-        then getWeight(config: ew, participant: _) -> weight(participant: _, value: 1.0)
+        then getWeight(config: ew, participant: _) -> weight(participant: _, weight: 1.0)
 
   }
 
