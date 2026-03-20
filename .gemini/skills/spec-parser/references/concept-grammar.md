@@ -131,6 +131,39 @@ actions {
 (`T`), constructors (`list T`, `option T`, `set T`), records,
 and enums.
 
+## Fixtures
+
+Named input examples declared inside action blocks, after variants.
+
+**Syntax**: `fixture <name> { <key>: <value>, ... } [after <dep>, ...] [-> <variant>]`
+
+```
+action create(name: String, config: String) {
+  -> ok(item: T) { Created. }
+  -> error(message: String) { Failed. }
+  fixture create_valid { name: "my-item", config: "{}" }
+  fixture create_empty { name: "" } -> error
+}
+
+action get(name: String) {
+  -> ok(item: T) { Found. }
+  -> notfound(message: String) { Not found. }
+  fixture get_existing { name: "my-item" } after create_valid
+  fixture get_missing { name: "nonexistent" } -> error
+}
+```
+
+- **name**: identifier describing the scenario
+- **input object**: `{ key: value, ... }` with strings, numbers, booleans, arrays, nested objects, `none`
+- **after** (optional): comma-separated fixture names that must run first to seed storage
+- **expected variant** (optional): `-> error`, `-> notfound`, etc. Defaults to `ok`
+
+**Rules:**
+- Every action needs at least one `ok` fixture and one negative fixture per error variant
+- Use `after` for reader actions that need data from a prior write action
+- Fixture values must match handler expectations (JSON strings for `JSON.parse` params, arrays for iterable params)
+- The `after` chain resolves transitively
+
 ## Invariant Block (singular, repeatable)
 
 Each invariant is its own `invariant { ... }` block. The keyword

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-20T22:48:13.346Z",
+  "generatedAt": "2026-03-20T22:54:17.836Z",
   "files": [
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/spec-parser/spec-parser.commands.ts",
@@ -22,7 +22,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/spec-parser/references/concept-grammar.md",
       "relativePath": "claude-skills/spec-parser/references/concept-grammar.md",
-      "hash": "9abfe576991e8ad119c5dcc227d4d3051f8a6ceae315c74ed37e62cde261db9e",
+      "hash": "6ba710d34d6dab12541e05f12119d93a3dca76c74ef47517080d5b3754455e29",
       "target": "claude-skills"
     },
     {
