@@ -4,15 +4,19 @@
 
 import { Command } from 'commander';
 
-export const transportAdapterScaffoldGenCommand = new Command('transport-adapter-scaffold-gen')
-  .description('Generate ConceptTransport adapter implementation scaffolds for various communication protocols : HTTP , WebSocket , Worker , and in process');
+export const transportAdapterScaffoldGenCommand = new Command('scaffold-transport')
+  .description('Generate transport adapter for a communication protocol.');
 
 transportAdapterScaffoldGenCommand
-  .command('generate')
-  .description('Generate a transport adapter with invoke , query , and health methods for the specified protocol .')
-  .requiredOption('--name <name>', 'Name')
-  .requiredOption('--protocol <protocol>', 'Protocol')
+  .command('transport')
+  .description('Scaffold a transport adapter with invoke, query, and health methods.')
+  .requiredOption('-n, --name <name>', 'Adapter class name (PascalCase)')
+  .option('-p, --protocol <value>', 'Protocol type (http|websocket|worker|in-process)')
   .option('--json', 'Output as JSON')
+  .addHelpText('after', '\nExamples:')
+  .addHelpText('after', '  clef scaffold transport --name ApiTransport --protocol http  # Generate an HTTP adapter')
+  .addHelpText('after', '  clef scaffold transport --name RealtimeTransport --protocol websocket --base-url ws://localhost:3000  # Generate a WebSocket adapter')
+  .addHelpText('after', '  clef scaffold transport --name TestTransport --protocol in-process  # Generate an in-process adapter for tests')
   .action(async (opts) => {
     try {
       const result = await globalThis.kernel.invokeConcept('urn:clef/TransportAdapterScaffoldGen', 'generate', opts);
@@ -30,9 +34,9 @@ transportAdapterScaffoldGenCommand
 
 transportAdapterScaffoldGenCommand
   .command('preview')
-  .description('Dry run : compute output files without writing . Uses Emitter content addressing to classify each file as new , changed , or unchanged .')
-  .requiredOption('--name <name>', 'Name')
-  .requiredOption('--protocol <protocol>', 'Protocol')
+  .description('Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change.')
+  .requiredOption('-n, --name <name>', 'Adapter class name (PascalCase)')
+  .option('-p, --protocol <value>', 'Protocol type (http|websocket|worker|in-process)')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     try {
@@ -69,7 +73,7 @@ transportAdapterScaffoldGenCommand
   });
 
 export const transportAdapterScaffoldGenCommandTree = {
-  group: 'transport-adapter-scaffold-gen',
-  description: 'Generate ConceptTransport adapter implementation scaffolds for various communication protocols : HTTP , WebSocket , Worker , and in process',
-  commands: [{ action: 'generate', command: 'generate' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
+  group: 'scaffold-transport',
+  description: 'Generate transport adapter for a communication protocol.',
+  commands: [{ action: 'generate', command: 'transport' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

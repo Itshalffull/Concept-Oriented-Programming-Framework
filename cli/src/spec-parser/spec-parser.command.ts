@@ -8,7 +8,7 @@ export const specParserCommand = new Command('spec-parser')
   .description('Parse . concept files into structured ASTs');
 
 specParserCommand
-  .command('parse')
+  .command('check')
   .description('Tokenize the source string , then run the recursive descent parser to produce a ConceptAST . Assign a unique spec ID . Store the spec reference and its AST .')
   .requiredOption('--source <source>', 'Source')
   .option('--json', 'Output as JSON')
@@ -30,5 +30,5 @@ specParserCommand
 export const specParserCommandTree = {
   group: 'spec-parser',
   description: 'Parse . concept files into structured ASTs',
-  commands: [{ action: 'parse', command: 'parse' }],
+  commands: [{ action: 'parse', command: 'check' }],
 };

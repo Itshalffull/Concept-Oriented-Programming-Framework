@@ -4,16 +4,19 @@
 
 import { Command } from 'commander';
 
-export const interfaceScaffoldGenCommand = new Command('interface-scaffold-gen')
-  .description('Generate interface manifest ( interface . yaml ) scaffolds with target configurations , SDK settings , spec output options , and per concept overrides');
+export const interfaceScaffoldGenCommand = new Command('scaffold-interface')
+  .description('Generate interface manifest (interface.yaml).');
 
 interfaceScaffoldGenCommand
-  .command('generate')
-  .description('Generate an interface . yaml manifest with target specific defaults , SDK configurations , and concept overrides .')
-  .requiredOption('--name <name>', 'Name')
-  .requiredOption('--targets <targets>', 'Targets')
-  .requiredOption('--sdks <sdks>', 'Sdks')
+  .command('interface')
+  .description('Scaffold an interface.yaml with targets, SDKs, and concept overrides.')
+  .requiredOption('-n, --name <name>', 'Interface name')
+  .option('-t, --targets <targets>', 'Comma-separated targets (rest, graphql, grpc, cli, mcp, claude-skills)', 'rest')
+  .option('-s, --sdks <sdks>', 'Comma-separated SDK languages (typescript, python, go, rust, java, swift)', 'typescript')
   .option('--json', 'Output as JSON')
+  .addHelpText('after', '\nExamples:')
+  .addHelpText('after', '  clef scaffold interface --name my-api --targets rest,graphql --sdks typescript,python  # Scaffold a REST + GraphQL interface')
+  .addHelpText('after', '  clef scaffold interface --name my-api --targets rest,graphql,grpc,cli,mcp,claude-skills  # Scaffold a full-stack interface')
   .action(async (opts) => {
     try {
       const result = await globalThis.kernel.invokeConcept('urn:clef/InterfaceScaffoldGen', 'generate', opts);
@@ -31,9 +34,9 @@ interfaceScaffoldGenCommand
 
 interfaceScaffoldGenCommand
   .command('preview')
-  .description('Dry run : compute output files without writing . Uses Emitter content addressing to classify each file as new , changed , or unchanged .')
-  .requiredOption('--name <name>', 'Name')
-  .requiredOption('--targets <targets>', 'Targets')
+  .description('Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change.')
+  .requiredOption('-n, --name <name>', 'Interface name')
+  .option('-t, --targets <targets>', 'Comma-separated targets')
   .requiredOption('--sdks <sdks>', 'Sdks')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
@@ -71,7 +74,7 @@ interfaceScaffoldGenCommand
   });
 
 export const interfaceScaffoldGenCommandTree = {
-  group: 'interface-scaffold-gen',
-  description: 'Generate interface manifest ( interface . yaml ) scaffolds with target configurations , SDK settings , spec output options , and per concept overrides',
-  commands: [{ action: 'generate', command: 'generate' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
+  group: 'scaffold-interface',
+  description: 'Generate interface manifest (interface.yaml).',
+  commands: [{ action: 'generate', command: 'interface' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

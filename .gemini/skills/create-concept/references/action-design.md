@@ -8,6 +8,7 @@ Every action in a Clef concept follows this structure:
 action <name>(<param>: <Type>, ...) {
   -> <variant>(<field>: <Type>, ...) { <prose description> }
   -> <variant>(<field>: <Type>, ...) { <prose description> }
+  fixture <name> { <key>: <value>, ... } [-> <variant>]
 }
 ```
 
@@ -16,6 +17,7 @@ An action:
 2. Reads and/or modifies concept state
 3. Returns one of several possible **variants** (a discriminated union)
 4. Each variant has its own fields and a prose description
+5. Declares **fixtures** — named input examples used for testing and documentation
 
 ## Naming Conventions
 

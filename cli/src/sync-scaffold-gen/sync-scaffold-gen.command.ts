@@ -4,18 +4,22 @@
 
 import { Command } from 'commander';
 
-export const syncScaffoldGenCommand = new Command('sync-scaffold-gen')
-  .description('Generate synchronization rule ( . sync ) file scaffolds from provided configuration including trigger patterns , guard conditions , and effect actions');
+export const syncScaffoldGenCommand = new Command('scaffold-sync')
+  .description('Generate synchronization rule (.sync) file with filter/guard conditions and multi-then.');
 
 syncScaffoldGenCommand
-  .command('generate')
-  .description('Generate a well formed . sync file with when where then clauses from the provided trigger and effect configurations . Supports condition types : bind , query , any , not , compare , filter ( filter by expression ) , and guard ( boolean guard ) . Supports multiple then blocks for grouping effects ( no ordering implied ) .')
-  .requiredOption('--name <name>', 'Name')
+  .command('sync')
+  .description('Scaffold a .sync file with when/where/then clauses, filter/guard conditions, and multiple then blocks.')
+  .requiredOption('-n, --name <name>', 'PascalCase sync name')
   .requiredOption('--trigger <trigger>', 'Trigger')
-  .requiredOption('--conditions <conditions>', 'Conditions')
+  .option('--conditions <conditions>', 'Comma-separated condition types to scaffold (query, not, filter, guard)')
   .requiredOption('--effects <effects>', 'Effects')
   .requiredOption('--then-blocks <thenBlocks>', 'Then Blocks')
   .option('--json', 'Output as JSON')
+  .addHelpText('after', '\nExamples:')
+  .addHelpText('after', '  clef scaffold sync --name CreateProfile --from User/create --to Profile/init  # Scaffold a sync between two concepts')
+  .addHelpText('after', '  clef scaffold sync --name ValidateOrder --tier required  # Scaffold a required sync')
+  .addHelpText('after', '  clef scaffold sync --name LargeOrderAlert --from Order/place --to Alert/send --conditions filter,guard  # Scaffold with filter and guard conditions')
   .action(async (opts) => {
     try {
       const result = await globalThis.kernel.invokeConcept('urn:clef/SyncScaffoldGen', 'generate', opts);
@@ -33,8 +37,8 @@ syncScaffoldGenCommand
 
 syncScaffoldGenCommand
   .command('preview')
-  .description('Dry run : compute output files without writing . Uses Emitter content addressing to classify each file as new , changed , or unchanged .')
-  .requiredOption('--name <name>', 'Name')
+  .description('Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change.')
+  .requiredOption('-n, --name <name>', 'PascalCase sync name')
   .requiredOption('--trigger <trigger>', 'Trigger')
   .requiredOption('--conditions <conditions>', 'Conditions')
   .requiredOption('--effects <effects>', 'Effects')
@@ -75,7 +79,7 @@ syncScaffoldGenCommand
   });
 
 export const syncScaffoldGenCommandTree = {
-  group: 'sync-scaffold-gen',
-  description: 'Generate synchronization rule ( . sync ) file scaffolds from provided configuration including trigger patterns , guard conditions , and effect actions',
-  commands: [{ action: 'generate', command: 'generate' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
+  group: 'scaffold-sync',
+  description: 'Generate synchronization rule (.sync) file with filter/guard conditions and multi-then.',
+  commands: [{ action: 'generate', command: 'sync' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

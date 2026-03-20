@@ -8,7 +8,7 @@ export const projectScaffoldCommand = new Command('project-scaffold')
   .description('Initialize new Clef projects with the standard directory structure , example concept specs , and configuration files');
 
 projectScaffoldCommand
-  .command('scaffold')
+  .command('init')
   .description('Create a new Clef project directory with specs , syncs , implementations , and configuration files . Generates an example concept and sync to get started .')
   .requiredOption('--name <name>', 'Name')
   .option('--json', 'Output as JSON')
@@ -30,5 +30,5 @@ projectScaffoldCommand
 export const projectScaffoldCommandTree = {
   group: 'project-scaffold',
   description: 'Initialize new Clef projects with the standard directory structure , example concept specs , and configuration files',
-  commands: [{ action: 'scaffold', command: 'scaffold' }],
+  commands: [{ action: 'scaffold', command: 'init' }],
 };

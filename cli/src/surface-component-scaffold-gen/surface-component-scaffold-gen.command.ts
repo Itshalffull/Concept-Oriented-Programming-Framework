@@ -4,22 +4,26 @@
 
 import { Command } from 'commander';
 
-export const surfaceComponentScaffoldGenCommand = new Command('surface-component-scaffold-gen')
-  .description('Generate Clef Surface headless component scaffolds including widget specifications with anatomy , state machines , accessibility , affordance bindings , props , connect mappings , compose declarations , and invariants . Follows the Zag . js Ark UI pattern where behavior and rendering agree on part names');
+export const surfaceComponentScaffoldGenCommand = new Command('scaffold-component')
+  .description('Generate Clef Surface headless component (.widget, anatomy, machine, suite).');
 
 surfaceComponentScaffoldGenCommand
-  .command('generate')
-  .description('Generate a complete Clef Surface component scaffold with widget spec ( . widget file including purpose , anatomy , states , accessibility , affordance , props , connect , compose , and invariant blocks ) , anatomy concept , machine implementation , and suite manifest .')
-  .requiredOption('--name <name>', 'Name')
-  .requiredOption('--parts <parts>', 'Parts')
-  .requiredOption('--states <states>', 'States')
-  .requiredOption('--events <events>', 'Events')
-  .requiredOption('--role <role>', 'Role')
+  .command('component')
+  .description('Scaffold a .widget spec with anatomy, states, accessibility, affordance, props, connect, and compose.')
+  .requiredOption('-n, --name <name>', 'PascalCase component name')
+  .option('-p, --parts <parts>', 'Comma-separated anatomy part names', 'root,trigger,content')
+  .option('-s, --states <states>', 'Comma-separated FSM state names', 'idle,active')
+  .option('-e, --events <events>', 'Comma-separated FSM event names', 'open,close')
+  .option('--role <role>', 'ARIA role for accessibility', 'widget')
   .requiredOption('--requires <requires>', 'Requires')
   .requiredOption('--affordance <affordance>', 'Affordance')
-  .requiredOption('--props <props>', 'Props')
-  .requiredOption('--compose <compose>', 'Compose')
+  .option('--props <props>', 'Comma-separated prop declarations (name:Type:default)')
+  .option('--compose <compose>', 'Comma-separated widget names to compose into parts (e.g. FocusTrap:content)')
   .option('--json', 'Output as JSON')
+  .addHelpText('after', '\nExamples:')
+  .addHelpText('after', '  clef scaffold component --name Dialog --parts root,trigger,backdrop,content,title,closeTrigger --states closed,open --events open,close,escape --role dialog  # Generate a dialog component')
+  .addHelpText('after', '  clef scaffold component --name Tabs --parts root,list,trigger,content,indicator --states idle,focused,selected --events focus,select,blur  # Generate a tabs component')
+  .addHelpText('after', '  clef scaffold component --name Card --parts root,header,body,footer --slots header,footer --compose FocusTrap:body  # Generate with slots and compose')
   .action(async (opts) => {
     try {
       const result = await globalThis.kernel.invokeConcept('urn:clef/SurfaceComponentScaffoldGen', 'generate', opts);
@@ -37,9 +41,9 @@ surfaceComponentScaffoldGenCommand
 
 surfaceComponentScaffoldGenCommand
   .command('preview')
-  .description('Dry run : compute output files without writing . Uses Emitter content addressing to classify each file as new , changed , or unchanged .')
-  .requiredOption('--name <name>', 'Name')
-  .requiredOption('--parts <parts>', 'Parts')
+  .description('Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change.')
+  .requiredOption('-n, --name <name>', 'PascalCase component name')
+  .option('-p, --parts <parts>', 'Comma-separated anatomy part names')
   .requiredOption('--states <states>', 'States')
   .requiredOption('--events <events>', 'Events')
   .requiredOption('--role <role>', 'Role')
@@ -83,7 +87,7 @@ surfaceComponentScaffoldGenCommand
   });
 
 export const surfaceComponentScaffoldGenCommandTree = {
-  group: 'surface-component-scaffold-gen',
-  description: 'Generate Clef Surface headless component scaffolds including widget specifications with anatomy , state machines , accessibility , affordance bindings , props , connect mappings , compose declarations , and invariants . Follows the Zag . js Ark UI pattern where behavior and rendering agree on part names',
-  commands: [{ action: 'generate', command: 'generate' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
+  group: 'scaffold-component',
+  description: 'Generate Clef Surface headless component (.widget, anatomy, machine, suite).',
+  commands: [{ action: 'generate', command: 'component' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

@@ -4,22 +4,27 @@
 
 import { Command } from 'commander';
 
-export const surfaceThemeScaffoldGenCommand = new Command('surface-theme-scaffold-gen')
-  .description('Generate Clef Surface design system theme scaffolds including palette ( oklch color scales ) , typography ( modular ratio ) , spacing tokens , motion definitions ( with reduced motion ) , elevation scale , radius tokens , and light dark theme manifests . Supports theme extension via extends . Follows WCAG accessibility guidelines for contrast ratios');
+export const surfaceThemeScaffoldGenCommand = new Command('scaffold-theme')
+  .description('Generate Clef Surface design system theme (.theme) with oklch palette, typography, spacing, motion, elevation, radius.');
 
 surfaceThemeScaffoldGenCommand
-  .command('generate')
-  .description('Generate a complete Clef Surface theme scaffold ( . theme file ) with purpose , palette ( oklch colors ) , typography ( fonts , scale , weights , line heights , tracking ) , spacing ( base multiplier ) , motion ( durations , easing , reduced motion ) , elevation ( shadow layers ) , and radius tokens . Supports extends for theme variants .')
-  .requiredOption('--name <name>', 'Name')
+  .command('theme')
+  .description('Scaffold a .theme file with oklch palette, typography, spacing, motion, elevation, and radius tokens.')
+  .requiredOption('-n, --name <name>', 'Theme name (kebab-case)')
   .requiredOption('--primary-color <primaryColor>', 'Primary Color')
   .requiredOption('--font-family <fontFamily>', 'Font Family')
   .requiredOption('--base-size <baseSize>', 'Base Size')
-  .requiredOption('--scale <scale>', 'Scale')
+  .option('--scale <scale>', 'Modular ratio for type scale', '1.25')
   .requiredOption('--secondary-color <secondaryColor>', 'Secondary Color')
   .requiredOption('--border-radius <borderRadius>', 'Border Radius')
-  .requiredOption('--mode <mode>', 'Mode')
-  .requiredOption('--extends <extends>', 'Extends')
+  .option('-m, --mode <value>', 'Theme mode (light|dark|both)', 'both')
+  .option('--extends <extends>', 'Base theme name to extend (for theme variants)')
   .option('--json', 'Output as JSON')
+  .addHelpText('after', '\nExamples:')
+  .addHelpText('after', '  clef scaffold theme --name ocean  # Generate a theme with defaults')
+  .addHelpText('after', '  clef scaffold theme --name brand --primary 220 --font \'Inter, sans-serif\' --base-size 18  # Generate a custom theme')
+  .addHelpText('after', '  clef scaffold theme --name print --mode light  # Generate a light-only theme')
+  .addHelpText('after', '  clef scaffold theme --name ocean-compact --extends ocean --base-size 14  # Generate a theme variant')
   .action(async (opts) => {
     try {
       const result = await globalThis.kernel.invokeConcept('urn:clef/SurfaceThemeScaffoldGen', 'generate', opts);
@@ -37,8 +42,8 @@ surfaceThemeScaffoldGenCommand
 
 surfaceThemeScaffoldGenCommand
   .command('preview')
-  .description('Dry run : compute output files without writing . Uses Emitter content addressing to classify each file as new , changed , or unchanged .')
-  .requiredOption('--name <name>', 'Name')
+  .description('Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change.')
+  .requiredOption('-n, --name <name>', 'Theme name (kebab-case)')
   .requiredOption('--primary-color <primaryColor>', 'Primary Color')
   .requiredOption('--font-family <fontFamily>', 'Font Family')
   .requiredOption('--base-size <baseSize>', 'Base Size')
@@ -83,7 +88,7 @@ surfaceThemeScaffoldGenCommand
   });
 
 export const surfaceThemeScaffoldGenCommandTree = {
-  group: 'surface-theme-scaffold-gen',
-  description: 'Generate Clef Surface design system theme scaffolds including palette ( oklch color scales ) , typography ( modular ratio ) , spacing tokens , motion definitions ( with reduced motion ) , elevation scale , radius tokens , and light dark theme manifests . Supports theme extension via extends . Follows WCAG accessibility guidelines for contrast ratios',
-  commands: [{ action: 'generate', command: 'generate' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
+  group: 'scaffold-theme',
+  description: 'Generate Clef Surface design system theme (.theme) with oklch palette, typography, spacing, motion, elevation, radius.',
+  commands: [{ action: 'generate', command: 'theme' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

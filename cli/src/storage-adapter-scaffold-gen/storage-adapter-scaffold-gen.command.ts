@@ -4,15 +4,19 @@
 
 import { Command } from 'commander';
 
-export const storageAdapterScaffoldGenCommand = new Command('storage-adapter-scaffold-gen')
-  .description('Generate ConceptStorage adapter implementation scaffolds for various persistence backends : SQLite , PostgreSQL , Redis , DynamoDB , and in memory');
+export const storageAdapterScaffoldGenCommand = new Command('scaffold-storage')
+  .description('Generate ConceptStorage adapter for a persistence backend.');
 
 storageAdapterScaffoldGenCommand
-  .command('generate')
-  .description('Generate a complete ConceptStorage adapter with put , get , find , del , and delMany methods for the specified backend .')
-  .requiredOption('--name <name>', 'Name')
-  .requiredOption('--backend <backend>', 'Backend')
+  .command('storage')
+  .description('Scaffold a ConceptStorage adapter with put, get, find, del, and delMany methods.')
+  .requiredOption('-n, --name <name>', 'Adapter class name (PascalCase)')
+  .option('-b, --backend <value>', 'Backend type (sqlite|postgresql|redis|dynamodb|memory)')
   .option('--json', 'Output as JSON')
+  .addHelpText('after', '\nExamples:')
+  .addHelpText('after', '  clef scaffold storage --name AppStorage --backend postgresql  # Generate a PostgreSQL adapter')
+  .addHelpText('after', '  clef scaffold storage --name CacheStorage --backend redis  # Generate a Redis adapter')
+  .addHelpText('after', '  clef scaffold storage --name TestStorage --backend memory  # Generate an in-memory adapter for tests')
   .action(async (opts) => {
     try {
       const result = await globalThis.kernel.invokeConcept('urn:clef/StorageAdapterScaffoldGen', 'generate', opts);
@@ -30,9 +34,9 @@ storageAdapterScaffoldGenCommand
 
 storageAdapterScaffoldGenCommand
   .command('preview')
-  .description('Dry run : compute output files without writing . Uses Emitter content addressing to classify each file as new , changed , or unchanged .')
-  .requiredOption('--name <name>', 'Name')
-  .requiredOption('--backend <backend>', 'Backend')
+  .description('Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change.')
+  .requiredOption('-n, --name <name>', 'Adapter class name (PascalCase)')
+  .option('-b, --backend <value>', 'Backend type (sqlite|postgresql|redis|dynamodb|memory)')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     try {
@@ -69,7 +73,7 @@ storageAdapterScaffoldGenCommand
   });
 
 export const storageAdapterScaffoldGenCommandTree = {
-  group: 'storage-adapter-scaffold-gen',
-  description: 'Generate ConceptStorage adapter implementation scaffolds for various persistence backends : SQLite , PostgreSQL , Redis , DynamoDB , and in memory',
-  commands: [{ action: 'generate', command: 'generate' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
+  group: 'scaffold-storage',
+  description: 'Generate ConceptStorage adapter for a persistence backend.',
+  commands: [{ action: 'generate', command: 'storage' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

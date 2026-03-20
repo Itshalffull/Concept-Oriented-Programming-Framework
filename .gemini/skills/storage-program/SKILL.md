@@ -13,74 +13,184 @@ allowed-tools: Read, Grep, Glob, Bash
 
 Build sequences of storage instructions as inspectable , composable data . A StorageProgram describes what a handler intends to do without executing side effects . Programs can be logged , diffed , serialized , composed , and handed to an interpreter or analyzer
 
-## Commands
+## Design Principles
 
-### create
-Initialize an empty program ready to receive instructions .
+- **Programs Are Data, Not Effects:** A StorageProgram is a pure data structure describing operations. No side effects occur until the interpreter executes it. This enables inspection, analysis, caching, and replay.
+- **Structural Effect Tracking:** Effects (reads, writes, completions, transport) are accumulated during DSL construction in O(1). Purity is a first-class, build-time property — not a post-hoc analysis.
+- **Lens Over Strings:** Use typed lenses (relation/at/field) instead of raw string keys. Lenses compose, invert, and enable DataFlowPath analysis, schema migration, and change impact detection.
+- **Applicative Parallelism (Haxl/Stitch Pattern):** Independent get/find operations that don't share bindings can be batched into a single round-trip. The ParallelismProvider detects these automatically.
+- **Algebraic Effect Coverage:** Use complete() instead of pure() for terminal values. This tracks completion variants structurally, enabling CompletionCoverage to verify every variant has a matching sync handler.
+
+## Step-by-Step Process
+
+### Step 1: Build a Storage Program
+
+Construct a StorageProgram<A> using the free monad DSL — a pure data description of storage operations with no side effects.
 
 **Arguments:** `$0` **program** (P)
 
-### get
-Append a Get instruction that reads a single record by key . 
- The fetched value will be bound to the bindAs name during 
- interpretation .
+**Checklist:**
+- [ ] Program uses the DSL (createProgram, get, put, etc.) — never calls storage directly?
+- [ ] All read operations bind a result name for downstream use?
+- [ ] Program terminates with complete() or pure()?
+- [ ] Declared purity matches actual effects (pure < read-only < read-write)?
+- [ ] Completion variants match the concept spec's declared variants?
+- [ ] Lenses used for state field access where possible?
+- [ ] Independent reads identified for applicative parallelism?
+
+### Step 2: Read State via Get/Find
+
+Append get() or find() instructions to read from concept storage. Each binds a result name for downstream use.
 
 **Arguments:** `$0` **program** (P), `$1` **relation** (string), `$2` **key** (string), `$3` **bindAs** (string)
 
-### find
-Append a Find instruction that queries records matching the 
- criteria filter . Results are bound to bindAs during interpretation .
+### Step 3: Write State via Put/Merge/Del
 
-**Arguments:** `$0` **program** (P), `$1` **relation** (string), `$2` **criteria** (string), `$3` **bindAs** (string)
-
-### put
-Append a Put instruction that writes a record to the given 
- relation at the given key .
+Append put(), merge(), or del() instructions to write concept storage. Write effects are tracked structurally.
 
 **Arguments:** `$0` **program** (P), `$1` **relation** (string), `$2` **key** (string), `$3` **value** (string)
 
-### del
-Append a Del instruction that removes a record from the given 
- relation at the given key .
+### Step 4: Access State via Lenses
 
-**Arguments:** `$0` **program** (P), `$1` **relation** (string), `$2` **key** (string)
-
-### branch
-Append a conditional branch whose arms are themselves 
- StoragePrograms , enabling nested control flow within 
- a single program tree .
-
-**Arguments:** `$0` **program** (P), `$1` **condition** (string), `$2` **thenBranch** (P), `$3` **elseBranch** (P)
-
-### pure
-Terminate the program with a return value consisting of a 
- variant tag and output fields . No further instructions may 
- be appended after pure .
-
-**Arguments:** `$0` **program** (P), `$1` **variant** (string), `$2` **output** (string)
-
-### compose
-Monadic bind : create a new program that runs first , binds its 
- terminal value to bindAs , then continues with second .
-
-**Arguments:** `$0` **first** (P), `$1` **second** (P), `$2` **bindAs** (string)
-
-### getLens
-Append a GetLens instruction that reads through a typed lens 
- reference . The lens encodes relation , key , and field segments 
- as a StateLens . The fetched value is bound to bindAs .
+Use typed, composable lenses instead of raw string keys: relation('users').at(id).field('email'). Lenses enable impact analysis and automatic migration scripts.
 
 **Arguments:** `$0` **program** (P), `$1` **lens** (string), `$2` **bindAs** (string)
 
-### putLens
-Append a PutLens instruction that writes through a typed lens 
- reference . The lens encodes the target location as a StateLens .
+### Step 5: Branch on Conditions
 
-**Arguments:** `$0` **program** (P), `$1` **lens** (string), `$2` **value** (string)
+Use branch() for conditional logic — effects from both arms are merged conservatively for purity analysis.
 
-### modifyLens
-Append a ModifyLens instruction that reads through a lens , 
- applies a transformation function , and writes back through 
- the same lens . This is a read modify write operation .
+**Arguments:** `$0` **program** (P), `$1` **condition** (string), `$2` **thenBranch** (P), `$3` **elseBranch** (P)
 
-**Arguments:** `$0` **program** (P), `$1` **lens** (string), `$2` **fn** (string)
+### Step 6: Terminate with Variant Completion
+
+Use complete(variant, output) to terminate the program with a tracked completion variant for algebraic effect coverage.
+
+### Step 7: Compose Programs (Monadic Bind)
+
+Use compose(first, bindAs, second) for monadic bind — run first, bind result, then run second. Effects are merged.
+
+**Arguments:** `$0` **first** (P), `$1` **second** (P), `$2` **bindAs** (string)
+
+## References
+
+- [StorageProgram DSL reference](references/storage-program-dsl.md)
+- [Program analysis providers](references/monadic-analysis.md)
+## StorageProgram DSL Quick Reference
+
+| Operation | DSL Function | Effect Tracking |
+|-----------|-------------|-----------------|
+| Read one | `get(p, rel, key, bind)` | reads += rel |
+| Query | `find(p, rel, criteria, bind)` | reads += rel |
+| Write | `put(p, rel, key, value)` | writes += rel |
+| Partial update | `merge(p, rel, key, fields)` | reads += rel, writes += rel |
+| Delete | `del(p, rel, key)` | writes += rel |
+| Lens read | `getLens(p, lens, bind)` | reads += lens.relation |
+| Lens write | `putLens(p, lens, value)` | writes += lens.relation |
+| Lens modify | `modifyLens(p, lens, fn)` | reads += rel, writes += rel |
+| Branch | `branch(p, cond, then, else)` | union of both arms |
+| Transport | `perform(p, proto, op, payload, bind)` | performs += proto:op |
+| Complete | `complete(p, variant, out)` | completionVariants += variant |
+| Bind | `compose(first, bind, second)` | union of both programs |
+
+
+## Anti-Patterns
+
+### Calling storage directly in a functional handler
+Functional handlers must return StoragePrograms, never call storage.get()/put() directly.
+
+**Bad:**
+```
+const createUser: FunctionalConceptHandler = {
+  create(input) {
+    // WRONG: directly calling storage
+    const existing = await storage.find('user', { email });
+    await storage.put('user', id, data);
+    return { variant: 'ok', user: id };
+  },
+};
+
+```
+
+**Good:**
+```
+const createUser: FunctionalConceptHandler = {
+  create(input) {
+    let p = createProgram();
+    p = find(p, 'user', { email }, 'existing');
+    return branch(p,
+      (b) => (b.existing as unknown[]).length > 0,
+      complete(createProgram(), 'error', { message: 'email taken' }),
+      complete(put(createProgram(), 'user', id, data), 'ok', { user: id })
+    );
+  },
+};
+
+```
+
+### Declaring wrong purity level
+Claiming read-only but the program actually writes — purity validation catches this at build time.
+
+**Bad:**
+```
+{ id: 'user-create', concept: 'User', action: 'create',
+  purity: 'read-only',  // WRONG: create writes!
+  factory: createUser }
+
+```
+
+**Good:**
+```
+{ id: 'user-create', concept: 'User', action: 'create',
+  purity: 'read-write',  // Correct: create writes user relation
+  factory: createUser }
+
+```
+
+### Using string keys instead of lenses
+Raw string keys lose type safety, composability, and impact analysis.
+
+**Bad:**
+```
+p = get(p, 'user', userId, 'record');
+// No type checking, no migration support, no impact analysis
+
+```
+
+**Good:**
+```
+const userLens = at(relation('user'), userId);
+p = getLens(p, userLens, 'record');
+// Typed, composable, enables automatic migration scripts
+
+```
+## Validation
+
+*Run monadic handler tests:*
+```bash
+npx vitest run tests/monadic-handlers.test.ts
+```
+*Run effect typing tests:*
+```bash
+npx vitest run tests/effect-typing.test.ts
+```
+*Run parallelism provider tests:*
+```bash
+npx vitest run tests/parallelism-provider.test.ts
+```
+*Run lens tests:*
+```bash
+npx vitest run tests/lens.test.ts
+```
+*Run algebraic effects tests:*
+```bash
+npx vitest run tests/algebraic-effects.test.ts
+```
+## Related Skills
+
+| Skill | When to Use |
+| --- | --- |
+| `/implementation-builder` | Imperative handler style (ConceptHandler with async/await) |
+| `/concept-designer` | Design the concept spec that functional handlers implement |
+| `/sync-designer` | Write syncs — CompletionCoverage verifies all variants have sync handlers |
+| `/score-navigator` | Score queries for navigating monadic handler entities |

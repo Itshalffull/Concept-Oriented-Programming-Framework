@@ -4,21 +4,25 @@
 
 import { Command } from 'commander';
 
-export const derivedScaffoldGenCommand = new Command('derived-scaffold-gen')
-  .description('Generate derived concept specification ( . derived ) file scaffolds from provided configuration including name , type parameters , composed concepts , syncs boundary , surface actions , surface queries , and operational principle');
+export const derivedScaffoldGenCommand = new Command('scaffold-derived')
+  .description('Generate derived concept specification (.derived) scaffold.');
 
 derivedScaffoldGenCommand
-  .command('generate')
-  .description('Generate a well formed . derived file with purpose block , composes list , syncs boundary , surface actions ( matches , entry triggers , derivedContext forms ) , surface queries ( inline arrow and block reads : forms ) , and principle block . SurfaceAction supports three match types : action : matches on Concept action with optional field bindings and on conditions entry : entry triggers form with optional match on fields and trigger list derivedContext : matches on a derivedContext tag for derived of derived composition SurfaceQuery supports two forms : Inline : query name ( params ) -> Concept action ( args ) Block : query name ( params ) { reads : Concept action ( arg : binding ) }')
-  .requiredOption('--name <name>', 'Name')
+  .command('derived')
+  .description('Scaffold a derived concept with purpose, composes, syncs, surface, and principle.')
+  .requiredOption('-n, --name <name>', 'PascalCase derived concept name')
   .requiredOption('--type-param <typeParam>', 'Type Param')
   .requiredOption('--purpose <purpose>', 'Purpose')
-  .requiredOption('--composes <composes>', 'Composes')
-  .requiredOption('--syncs <syncs>', 'Syncs')
+  .option('-c, --composes <composes>', 'Comma-separated PascalCase concept names to compose')
+  .option('-s, --syncs <syncs>', 'Comma-separated sync-name:tier pairs (e.g. my-sync:required)')
   .requiredOption('--surface-actions <surfaceActions>', 'Surface Actions')
   .requiredOption('--surface-queries <surfaceQueries>', 'Surface Queries')
   .requiredOption('--principle <principle>', 'Principle')
   .option('--json', 'Output as JSON')
+  .addHelpText('after', '\nExamples:')
+  .addHelpText('after', '  clef scaffold derived --name Registration  # Generate a basic derived concept')
+  .addHelpText('after', '  clef scaffold derived --name Registration --composes User,Email,Profile --syncs user-welcome:required,profile-init:recommended  # Generate with composed concepts and syncs')
+  .addHelpText('after', '  clef scaffold derived --name TaskBoard --composes Task,Label,Assignment  # Generate derived-of-derived')
   .action(async (opts) => {
     try {
       const result = await globalThis.kernel.invokeConcept('urn:clef/DerivedScaffoldGen', 'generate', opts);
@@ -36,8 +40,8 @@ derivedScaffoldGenCommand
 
 derivedScaffoldGenCommand
   .command('preview')
-  .description('Dry run : compute output files without writing . Uses Emitter content addressing to classify each file as new , changed , or unchanged .')
-  .requiredOption('--name <name>', 'Name')
+  .description('Dry-run: compute output files without writing.')
+  .requiredOption('-n, --name <name>', 'PascalCase derived concept name')
   .requiredOption('--type-param <typeParam>', 'Type Param')
   .requiredOption('--purpose <purpose>', 'Purpose')
   .requiredOption('--composes <composes>', 'Composes')
@@ -81,7 +85,7 @@ derivedScaffoldGenCommand
   });
 
 export const derivedScaffoldGenCommandTree = {
-  group: 'derived-scaffold-gen',
-  description: 'Generate derived concept specification ( . derived ) file scaffolds from provided configuration including name , type parameters , composed concepts , syncs boundary , surface actions , surface queries , and operational principle',
-  commands: [{ action: 'generate', command: 'generate' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
+  group: 'scaffold-derived',
+  description: 'Generate derived concept specification (.derived) scaffold.',
+  commands: [{ action: 'generate', command: 'derived' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

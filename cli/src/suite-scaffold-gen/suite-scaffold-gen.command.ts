@@ -4,16 +4,20 @@
 
 import { Command } from 'commander';
 
-export const suiteScaffoldGenCommand = new Command('suite-scaffold-gen')
-  .description('Generate suite manifest ( suite . yaml ) scaffolds and directory structures for new Clef suites from provided configuration');
+export const suiteScaffoldGenCommand = new Command('scaffold-suite')
+  .description('Generate suite manifest (suite.yaml) and directory structure.');
 
 suiteScaffoldGenCommand
-  .command('generate')
-  .description('Generate a suite . yaml manifest and directory structure including stub concept specs and sync placeholders .')
-  .requiredOption('--name <name>', 'Name')
-  .requiredOption('--description <description>', 'Description')
-  .requiredOption('--concepts <concepts>', 'Concepts')
+  .command('suite')
+  .description('Scaffold a new CLEF suite with suite.yaml, concept stubs, and sync directories.')
+  .requiredOption('-n, --name <name>', 'Suite name (kebab-case)')
+  .option('-d, --description <description>', 'Suite description')
+  .option('-c, --concepts <concepts>', 'Comma-separated PascalCase concept names')
   .option('--json', 'Output as JSON')
+  .addHelpText('after', '\nExamples:')
+  .addHelpText('after', '  clef scaffold suite --name auth --concepts User,Session,Password  # Scaffold a basic suite')
+  .addHelpText('after', '  clef scaffold suite --name web3 --concepts Token,Wallet --domain  # Scaffold a domain suite with infrastructure')
+  .addHelpText('after', '  clef scaffold suite --name auth --concepts User --syncs ValidateSession:required,RefreshExpired:recommended  # Scaffold with syncs')
   .action(async (opts) => {
     try {
       const result = await globalThis.kernel.invokeConcept('urn:clef/SuiteScaffoldGen', 'generate', opts);
@@ -31,10 +35,10 @@ suiteScaffoldGenCommand
 
 suiteScaffoldGenCommand
   .command('preview')
-  .description('Dry run : compute output files without writing . Uses Emitter content addressing to classify each file as new , changed , or unchanged .')
-  .requiredOption('--name <name>', 'Name')
+  .description('Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change.')
+  .requiredOption('-n, --name <name>', 'Suite name (kebab-case)')
   .requiredOption('--description <description>', 'Description')
-  .requiredOption('--concepts <concepts>', 'Concepts')
+  .option('-c, --concepts <concepts>', 'Comma-separated PascalCase concept names')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     try {
@@ -71,7 +75,7 @@ suiteScaffoldGenCommand
   });
 
 export const suiteScaffoldGenCommandTree = {
-  group: 'suite-scaffold-gen',
-  description: 'Generate suite manifest ( suite . yaml ) scaffolds and directory structures for new Clef suites from provided configuration',
-  commands: [{ action: 'generate', command: 'generate' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
+  group: 'scaffold-suite',
+  description: 'Generate suite manifest (suite.yaml) and directory structure.',
+  commands: [{ action: 'generate', command: 'suite' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

@@ -4,16 +4,19 @@
 
 import { Command } from 'commander';
 
-export const handlerScaffoldGenCommand = new Command('handler-scaffold-gen')
-  .description('Generate TypeScript concept handler ( . handler . ts ) implementation scaffolds from provided configuration including concept name , action signatures , and storage patterns . Defaults to functional ( StorageProgram ) style ; falls back to imperative style only when explicitly requested . Optionally generates a conformance test file');
+export const handlerScaffoldGenCommand = new Command('scaffold-handler')
+  .description('Generate TypeScript concept handler (.handler.ts) and conformance test.');
 
 handlerScaffoldGenCommand
-  .command('generate')
-  .description('Generate a handler implementation with typed action methods , input extraction , and storage patterns . Defaults to functional ( StorageProgram ) style ; pass style = imperative for the imperative fallback . Optionally generates a conformance test .')
+  .command('handler')
+  .description('Scaffold a .handler.ts handler with register(), typed actions, and a conformance test.')
   .requiredOption('--concept-name <conceptName>', 'Concept Name')
-  .requiredOption('--actions <actions>', 'Actions')
+  .option('-a, --actions <actions>', 'Comma-separated action signatures (name:param1:Type1,name:param2:Type2)')
   .requiredOption('--style <style>', 'Style')
   .option('--json', 'Output as JSON')
+  .addHelpText('after', '\nExamples:')
+  .addHelpText('after', '  clef scaffold handler --concept User --actions create:name:String,update:name:String,delete:id:String  # Scaffold a handler')
+  .addHelpText('after', '  clef scaffold handler --concept Bookmark --input-kind BookmarkInput --output-kind BookmarkResult  # Scaffold with kind metadata')
   .action(async (opts) => {
     try {
       const result = await globalThis.kernel.invokeConcept('urn:clef/HandlerScaffoldGen', 'generate', opts);
@@ -31,7 +34,7 @@ handlerScaffoldGenCommand
 
 handlerScaffoldGenCommand
   .command('preview')
-  .description('Dry run : compute output files without writing . Uses Emitter content addressing to classify each file as new , changed , or unchanged .')
+  .description('Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change.')
   .requiredOption('--concept-name <conceptName>', 'Concept Name')
   .requiredOption('--actions <actions>', 'Actions')
   .option('--json', 'Output as JSON')
@@ -70,7 +73,7 @@ handlerScaffoldGenCommand
   });
 
 export const handlerScaffoldGenCommandTree = {
-  group: 'handler-scaffold-gen',
-  description: 'Generate TypeScript concept handler ( . handler . ts ) implementation scaffolds from provided configuration including concept name , action signatures , and storage patterns . Defaults to functional ( StorageProgram ) style ; falls back to imperative style only when explicitly requested . Optionally generates a conformance test file',
-  commands: [{ action: 'generate', command: 'generate' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
+  group: 'scaffold-handler',
+  description: 'Generate TypeScript concept handler (.handler.ts) and conformance test.',
+  commands: [{ action: 'generate', command: 'handler' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

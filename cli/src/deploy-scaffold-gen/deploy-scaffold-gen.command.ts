@@ -4,16 +4,20 @@
 
 import { Command } from 'commander';
 
-export const deployScaffoldGenCommand = new Command('deploy-scaffold-gen')
-  .description('Generate deployment manifest ( deploy . yaml ) scaffolds from provided configuration including runtimes , concepts , and infrastructure settings');
+export const deployScaffoldGenCommand = new Command('scaffold-deploy')
+  .description('Generate deployment manifest (deploy.yaml).');
 
 deployScaffoldGenCommand
-  .command('generate')
-  .description('Generate a deploy . yaml manifest with runtime configs , infrastructure declarations , and concept assignments .')
+  .command('deploy')
+  .description('Scaffold a deploy.yaml with runtimes, infrastructure, and concept assignments.')
   .requiredOption('--app-name <appName>', 'App Name')
-  .requiredOption('--runtimes <runtimes>', 'Runtimes')
-  .requiredOption('--concepts <concepts>', 'Concepts')
+  .option('-r, --runtimes <runtimes>', 'Runtime declarations (name:type:transport:storage, comma-separated)')
+  .option('-c, --concepts <concepts>', 'Concept assignments (Name:runtime, comma-separated)')
   .option('--json', 'Output as JSON')
+  .addHelpText('after', '\nExamples:')
+  .addHelpText('after', '  clef scaffold deploy --app my-app  # Scaffold a basic deploy manifest')
+  .addHelpText('after', '  clef scaffold deploy --app conduit --runtimes api:node:http:postgresql,worker:node:sqs:redis --iac terraform  # Scaffold with custom runtimes')
+  .addHelpText('after', '  clef scaffold deploy --app conduit --concepts User:api,Article:api,Email:worker  # Scaffold with concept assignments')
   .action(async (opts) => {
     try {
       const result = await globalThis.kernel.invokeConcept('urn:clef/DeployScaffoldGen', 'generate', opts);
@@ -31,7 +35,7 @@ deployScaffoldGenCommand
 
 deployScaffoldGenCommand
   .command('preview')
-  .description('Dry run : compute output files without writing . Uses Emitter content addressing to classify each file as new , changed , or unchanged .')
+  .description('Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change.')
   .requiredOption('--app-name <appName>', 'App Name')
   .requiredOption('--runtimes <runtimes>', 'Runtimes')
   .requiredOption('--concepts <concepts>', 'Concepts')
@@ -71,7 +75,7 @@ deployScaffoldGenCommand
   });
 
 export const deployScaffoldGenCommandTree = {
-  group: 'deploy-scaffold-gen',
-  description: 'Generate deployment manifest ( deploy . yaml ) scaffolds from provided configuration including runtimes , concepts , and infrastructure settings',
-  commands: [{ action: 'generate', command: 'generate' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
+  group: 'scaffold-deploy',
+  description: 'Generate deployment manifest (deploy.yaml).',
+  commands: [{ action: 'generate', command: 'deploy' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

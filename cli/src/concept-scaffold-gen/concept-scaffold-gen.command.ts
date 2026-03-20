@@ -4,21 +4,26 @@
 
 import { Command } from 'commander';
 
-export const conceptScaffoldGenCommand = new Command('concept-scaffold-gen')
-  .description('Generate concept specification ( . concept ) file scaffolds from provided configuration including name , type parameters , state fields , actions , and invariants');
+export const conceptScaffoldGenCommand = new Command('scaffold-concept')
+  .description('Generate concept specification (.concept) file with annotations, state groups, and capabilities.');
 
 conceptScaffoldGenCommand
-  .command('generate')
-  .description('Generate a well formed . concept file with state declarations , typed action signatures , variant returns , and a register ( ) action for PluginRegistry discovery .')
-  .requiredOption('--name <name>', 'Name')
+  .command('concept')
+  .description('Scaffold a .concept file with annotations, state (groups, enums, records), actions, capabilities, and register().')
+  .requiredOption('-n, --name <name>', 'PascalCase concept name')
   .requiredOption('--type-param <typeParam>', 'Type Param')
-  .requiredOption('--purpose <purpose>', 'Purpose')
+  .option('--purpose <purpose>', 'Purpose description')
   .requiredOption('--state-fields <stateFields>', 'State Fields')
-  .requiredOption('--actions <actions>', 'Actions')
-  .requiredOption('--version <version>', 'Version')
-  .requiredOption('--gate <gate>', 'Gate')
-  .requiredOption('--capabilities <capabilities>', 'Capabilities')
+  .option('-a, --actions <actions>', 'Comma-separated action names')
+  .option('--version <version>', 'Spec version number for @version annotation')
+  .option('--gate <gate>', 'Add @gate annotation for async-gated concepts')
+  .option('--capabilities <capabilities>', 'Comma-separated capability names for capabilities block')
   .option('--json', 'Output as JSON')
+  .addHelpText('after', '\nExamples:')
+  .addHelpText('after', '  clef scaffold concept --name User --actions create,update,delete  # Scaffold a basic concept')
+  .addHelpText('after', '  clef scaffold concept --name Article --param A --category domain  # Scaffold with custom type parameter')
+  .addHelpText('after', '  clef scaffold concept --name Bookmark --purpose \'Save and organize references.\'  # Scaffold with purpose')
+  .addHelpText('after', '  clef scaffold concept --name Approval --version 2 --gate --capabilities search,export,bulk  # Scaffold with version, gate, and capabilities')
   .action(async (opts) => {
     try {
       const result = await globalThis.kernel.invokeConcept('urn:clef/ConceptScaffoldGen', 'generate', opts);
@@ -36,8 +41,8 @@ conceptScaffoldGenCommand
 
 conceptScaffoldGenCommand
   .command('preview')
-  .description('Dry run : compute output files without writing . Uses Emitter content addressing to classify each file as new , changed , or unchanged .')
-  .requiredOption('--name <name>', 'Name')
+  .description('Dry-run: compute output files without writing. Uses Emitter content-addressing to show what would change.')
+  .requiredOption('-n, --name <name>', 'PascalCase concept name')
   .requiredOption('--type-param <typeParam>', 'Type Param')
   .requiredOption('--purpose <purpose>', 'Purpose')
   .requiredOption('--state-fields <stateFields>', 'State Fields')
@@ -81,7 +86,7 @@ conceptScaffoldGenCommand
   });
 
 export const conceptScaffoldGenCommandTree = {
-  group: 'concept-scaffold-gen',
-  description: 'Generate concept specification ( . concept ) file scaffolds from provided configuration including name , type parameters , state fields , actions , and invariants',
-  commands: [{ action: 'generate', command: 'generate' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
+  group: 'scaffold-concept',
+  description: 'Generate concept specification (.concept) file with annotations, state groups, and capabilities.',
+  commands: [{ action: 'generate', command: 'concept' }, { action: 'preview', command: 'preview' }, { action: 'register', command: 'register' }],
 };

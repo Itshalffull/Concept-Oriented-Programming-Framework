@@ -13,29 +13,37 @@ allowed-tools: Read, Grep, Glob, Bash
 
 Manage Vercel project deployments . Owns project configurations , deployment URLs , edge regions , and serverless function settings
 
-## Commands
+## Step-by-Step Process
 
-### provision
-Vercel project created with specified framework .
+### Step 1: Provision Vercel Project
+
+Create a Vercel project via the Vercel REST API. Requires VERCEL_TOKEN env var. The project is created with the specified framework (nextjs, etc.).
 
 **Arguments:** `$0` **concept** (string), `$1` **teamId** (string), `$2` **framework** (string)
 
-### deploy
-Build completed and deployment created .
+**Checklist:**
+- [ ] VERCEL_TOKEN environment variable set?
+- [ ] VERCEL_TEAM_ID set (if using team scope)?
+- [ ] Project name is URL-safe?
+
+### Step 2: Deploy to Vercel
+
+Deploy the source directory to Vercel using the Vercel CLI. The deployment URL is captured and stored for traffic management and rollback.
 
 **Arguments:** `$0` **project** (V), `$1` **sourceDirectory** (string)
 
-### setTrafficWeight
-Traffic split between current and previous deployments .
+**Checklist:**
+- [ ] Source directory exists and contains package.json?
+- [ ] next build succeeds locally?
 
-**Arguments:** `$0` **project** (V), `$1` **weight** (int)
+### Step 3: Rollback Vercel Deployment
 
-### rollback
-Production alias pointed to previous deployment .
+Roll back to a previous deployment by pointing the production alias to the target deployment ID.
 
 **Arguments:** `$0` **project** (V), `$1` **targetDeploymentId** (string)
 
-### destroy
-Project and all deployments deleted .
+### Step 4: Destroy Vercel Project
+
+Delete the Vercel project and all its deployments.
 
 **Arguments:** `$0` **project** (V)
