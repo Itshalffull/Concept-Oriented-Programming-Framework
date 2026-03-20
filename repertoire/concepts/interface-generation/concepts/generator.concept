@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept Generator [G] {
 
@@ -37,6 +38,11 @@ concept Generator [G] {
       -> projectionFailed(concept: String, reason: String) {
         One or more concept projections failed.
       }
+
+      fixture with_valid_manifest { suite: "commerce", interfaceManifest: "{\"targets\":[\"rest\",\"graphql\"],\"concepts\":[\"Order\",\"Product\"],\"outputDir\":\"generated/commerce\"}" }
+      fixture no_targets { suite: "empty-suite", interfaceManifest: "{\"targets\":[]}" }
+      fixture empty_suite { suite: "", interfaceManifest: "{}" } -> error
+      fixture missing_provider { suite: "analytics", interfaceManifest: "{\"targets\":[\"custom-unknown\"]}" }
     }
 
     action generate(plan: G) {
@@ -51,6 +57,9 @@ concept Generator [G] {
         Breaking changes detected. Use --breaking flag to proceed.
         Lists the specific changes for review.
       }
+
+      fixture valid_plan { plan: "plan-commerce-12345" }
+      fixture missing_plan { plan: "" } -> error
     }
 
     action regenerate(plan: G, targets: list String) {
@@ -58,6 +67,9 @@ concept Generator [G] {
         Regenerate only the specified targets. Uses cached
         projections if concept specs have not changed.
       }
+
+      fixture regenerate_rest_only { plan: "plan-commerce-12345", targets: ["rest"] }
+      fixture missing_plan_regen { plan: "", targets: ["rest"] } -> error
     }
   }
 

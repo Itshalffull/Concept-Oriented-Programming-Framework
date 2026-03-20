@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept SchemaEvolution [S] {
 
@@ -31,6 +32,9 @@ concept SchemaEvolution [S] {
       -> invalidCompatibility(message: String) {
         Compatibility mode is not one of the allowed values.
       }
+
+      fixture register_user_schema { subject: "user-profile", schema: "[{\"name\":\"email\",\"type\":\"string\",\"required\":true}]", compatibility: "backward" }
+      fixture invalid_compat_mode { subject: "user-profile", schema: "[]", compatibility: "bogus" } -> error
     }
 
     action check(oldSchema: Bytes, newSchema: Bytes, mode: String) {
@@ -40,6 +44,9 @@ concept SchemaEvolution [S] {
       -> incompatible(reasons: list String) {
         Specific fields or types violate the compatibility constraint.
       }
+
+      fixture check_backward { oldSchema: "[{\"name\":\"email\",\"type\":\"string\"}]", newSchema: "[{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"age\",\"type\":\"int\"}]", mode: "backward" }
+      fixture empty_mode { oldSchema: "[]", newSchema: "[]", mode: "" } -> error
     }
 
     action upcast(data: Bytes, fromVersion: Int, toVersion: Int, subject: String) {
@@ -52,6 +59,9 @@ concept SchemaEvolution [S] {
       -> notFound(message: String) {
         Subject or version not found.
       }
+
+      fixture upcast_v1_to_v2 { data: "{\"email\":\"alice@example.com\"}", fromVersion: 1, toVersion: 2, subject: "user-profile" }
+      fixture upcast_missing_subject { data: "{}", fromVersion: 1, toVersion: 2, subject: "" } -> error
     }
 
     action resolve(readerSchema: Bytes, writerSchema: Bytes) {
@@ -61,6 +71,9 @@ concept SchemaEvolution [S] {
       -> incompatible(reasons: list String) {
         Schemas cannot be reconciled.
       }
+
+      fixture resolve_schemas { readerSchema: "[{\"name\":\"email\",\"type\":\"string\"}]", writerSchema: "[{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"phone\",\"type\":\"string\"}]" }
+      fixture resolve_unparseable { readerSchema: "not-json", writerSchema: "not-json" } -> error
     }
 
     action getSchema(subject: String, version: Int) {
@@ -70,6 +83,9 @@ concept SchemaEvolution [S] {
       -> notFound(message: String) {
         Subject or version not found.
       }
+
+      fixture get_existing { subject: "user-profile", version: 1 }
+      fixture get_missing { subject: "nonexistent-subject", version: 99 } -> error
     }
   }
 

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Spec [D] {
 
@@ -28,6 +29,10 @@ concept Spec [D] {
       -> formatError(format: String, reason: String) {
         Provider-specific spec generation failure.
       }
+
+      fixture openapi_spec { projections: ["user", "order"], format: "openapi", config: "{\"kit\":\"commerce\",\"version\":\"1.0.0\"}" }
+      fixture asyncapi_spec { projections: ["notification"], format: "asyncapi", config: "{}" }
+      fixture unknown_format { projections: ["user"], format: "unknown-fmt", config: "{}" } -> error
     }
 
     action validate(document: D) {
@@ -38,6 +43,9 @@ concept Spec [D] {
       -> invalid(document: D, errors: list String) {
         Spec has structural errors.
       }
+
+      fixture valid_document { document: "spec-openapi-commerce-12345" }
+      fixture missing_document { document: "" } -> error
     }
   }
 

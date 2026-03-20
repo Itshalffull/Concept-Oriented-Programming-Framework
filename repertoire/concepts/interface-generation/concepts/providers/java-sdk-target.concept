@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept JavaSdkTarget [S] {
 
@@ -24,6 +25,10 @@ concept JavaSdkTarget [S] {
         variants to sealed interface cases. Generate client
         class, model classes, and pom.xml.
       }
+
+      fixture with_default_config { projection: "invoice-projection", config: "{}" }
+      fixture with_custom_group { projection: "payment-projection", config: "{\"groupId\":\"com.example.sdk\",\"artifactId\":\"payment-java-sdk\",\"javaVersion\":\"21\"}" }
+      fixture empty_projection { projection: "", config: "{}" } -> error
     }
   }
 

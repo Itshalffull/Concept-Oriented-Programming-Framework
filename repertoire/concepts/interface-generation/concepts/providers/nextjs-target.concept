@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept NextjsTarget [R] {
 
@@ -41,6 +42,10 @@ concept NextjsTarget [R] {
         Action cannot be unambiguously mapped to an HTTP method.
         Manual annotation required in the interface manifest.
       }
+
+      fixture with_valid_projection { projection: "{\"conceptManifest\":{\"name\":\"User\",\"actions\":[]}}", config: "{}" }
+      fixture with_custom_base_path { projection: "{\"conceptManifest\":{\"name\":\"Order\",\"actions\":[]}}", config: "{\"basePath\":\"/api/orders\"}" }
+      fixture missing_manifest { projection: "{}", config: "{}" } -> error
     }
 
     action validate(route: R) {
@@ -51,6 +56,9 @@ concept NextjsTarget [R] {
       -> pathConflict(route: R, conflicting: String, reason: String) {
         Two actions map to the same HTTP method and path.
       }
+
+      fixture valid_route { route: "nextjs-user-route-1" }
+      fixture missing_route { route: "" } -> error
     }
 
     action listRoutes(concept: String) {
@@ -58,6 +66,9 @@ concept NextjsTarget [R] {
         Return all generated routes for a concept with their
         HTTP methods.
       }
+
+      fixture list_user_routes { concept: "User" }
+      fixture empty_concept { concept: "" } -> error
     }
   }
 

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept EcsRuntime [S] {
 
@@ -37,6 +38,10 @@ concept EcsRuntime [S] {
       -> clusterNotFound(cluster: String) {
         Named cluster does not exist.
       }
+
+      fixture provision_fargate { concept: "OrderService", cpu: 256, memory: 512, cluster: "prod-cluster" }
+      fixture provision_large { concept: "DataPipeline", cpu: 1024, memory: 2048, cluster: "compute-cluster" }
+      fixture provision_no_cluster { concept: "ApiGateway", cpu: 256, memory: 512, cluster: "" } -> error
     }
 
     action deploy(service: S, imageUri: String) {
@@ -51,18 +56,27 @@ concept EcsRuntime [S] {
         New tasks failed health checks. ECS rolled back
         to previous task definition automatically.
       }
+
+      fixture deploy_ecr { service: "svc-abc123", imageUri: "123456789.dkr.ecr.us-east-1.amazonaws.com/order-service:v2" }
+      fixture deploy_missing_service { service: "", imageUri: "ecr.aws/app:latest" } -> error
     }
 
     action setTrafficWeight(service: S, weight: Int) {
       -> ok(service: S) {
         ALB target group weight updated for canary.
       }
+
+      fixture traffic_canary { service: "svc-abc123", weight: 20 }
+      fixture traffic_no_service { service: "", weight: 50 } -> error
     }
 
     action rollback(service: S, targetTaskDefinition: String) {
       -> ok(service: S) {
         Service updated to previous task definition.
       }
+
+      fixture rollback_previous_td { service: "svc-abc123", targetTaskDefinition: "td-prev-001" }
+      fixture rollback_empty_td { service: "svc-abc123", targetTaskDefinition: "" } -> error
     }
 
     action destroy(service: S) {
@@ -72,6 +86,9 @@ concept EcsRuntime [S] {
       -> drainTimeout(service: S, activeConnections: Int) {
         Connections still draining after timeout.
       }
+
+      fixture destroy_valid { service: "svc-abc123" }
+      fixture destroy_missing { service: "" } -> error
     }
   }
 

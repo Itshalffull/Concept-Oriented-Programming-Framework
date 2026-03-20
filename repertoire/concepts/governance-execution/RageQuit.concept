@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept RageQuit [RQ] {
 
@@ -24,7 +25,7 @@ concept RageQuit [RQ] {
   }
 
   actions {
-    action initiate(member: String, sharesToBurn: Float) {
+    action initiate(member: String, shares: Float, loot: Float) {
       -> initiated(exit: RQ) {
         A rage quit is initiated. The proportional claim is calculated
         based on shares / totalShares ratio applied to treasury balances.
@@ -35,12 +36,19 @@ concept RageQuit [RQ] {
       -> window_closed() {
         The rage quit window (e.g., grace period) has expired.
       }
+
+      fixture initiate_exit { member: "0xAliceDaoMember", shares: 150.0, loot: 50.0 }
+      fixture initiate_whale { member: "0xBobWhale", shares: 5000.0, loot: 200.0 }
+      fixture initiate_empty_member { member: "", shares: 100.0, loot: 0.0 } -> error
     }
 
-    action calculateClaim(exit: RQ, treasuryBalances: String) {
+    action calculateClaim(exit: RQ) {
       -> calculated(exit: RQ, claims: String) {
         The proportional claim across all treasury tokens is computed.
       }
+
+      fixture calculate_claim { exit: "rq-001" }
+      fixture calculate_not_found { exit: "rq-nonexistent" } -> error
     }
 
     action claim(exit: RQ) {
@@ -51,6 +59,9 @@ concept RageQuit [RQ] {
       -> not_calculated(exit: RQ) {
         The claim has not been calculated yet.
       }
+
+      fixture claim_calculated { exit: "rq-001" }
+      fixture claim_not_found { exit: "rq-nonexistent" } -> error
     }
   }
 

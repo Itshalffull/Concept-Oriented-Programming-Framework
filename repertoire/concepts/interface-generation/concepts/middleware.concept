@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Middleware [M] {
 
@@ -45,6 +46,10 @@ concept Middleware [M] {
         Two requested traits conflict (e.g. @streaming and
         @paginated on the same action).
       }
+
+      fixture resolve_auth_rest { traits: ["auth"], target: "rest" }
+      fixture resolve_multi_traits { traits: ["auth", "validation"], target: "grpc" }
+      fixture resolve_missing_trait { traits: ["nonexistent-trait"], target: "rest" } -> error
     }
 
     action inject(output: String, middlewares: list String, target: String) {
@@ -55,6 +60,10 @@ concept Middleware [M] {
         For CLI: add pre-command hooks.
         For MCP: add tool middleware.
       }
+
+      fixture inject_single { output: "app.get('/api', handler)", middlewares: ["bearer-check"], target: "rest" }
+      fixture inject_multiple { output: "server.addService(svc)", middlewares: ["auth-interceptor", "logging"], target: "grpc" }
+      fixture inject_empty { output: "", middlewares: [], target: "rest" } -> error
     }
 
     action register(trait: String, target: String, implementation: String, position: String) {
@@ -65,6 +74,10 @@ concept Middleware [M] {
       -> duplicateRegistration(trait: String, target: String) {
         Implementation already registered. Use replace instead.
       }
+
+      fixture register_bearer { trait: "auth", target: "rest", implementation: "bearer-check", position: "auth" }
+      fixture register_logging { trait: "logging", target: "grpc", implementation: "grpc-logger", position: "before-auth" }
+      fixture register_empty_trait { trait: "", target: "rest", implementation: "noop", position: "auth" } -> error
     }
   }
 

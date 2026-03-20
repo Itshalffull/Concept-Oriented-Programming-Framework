@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Guard [GD] {
 
@@ -20,13 +21,17 @@ concept Guard [GD] {
   }
 
   actions {
-    action register(name: String, checkType: String, condition: String, targetAction: String) {
+    action register(name: String, targetAction: String, checkType: String, condition: String) {
       -> registered(guard: GD) {
         A new guard is registered and enabled.
       }
+
+      fixture register_balance_guard { name: "balance-check", targetAction: "transfer", checkType: "Pre", condition: "balance > amount" }
+      fixture register_rate_limit { name: "rate-limiter", targetAction: "execute", checkType: "Both", condition: "requests_per_minute < 100" }
+      fixture register_empty_name { name: "", targetAction: "transfer", checkType: "Pre", condition: "true" } -> error
     }
 
-    action checkPre(guard: GD, context: String) {
+    action checkPre(guard: GD) {
       -> passed(guard: GD) {
         The pre-execution check passed.
       }
@@ -36,23 +41,35 @@ concept Guard [GD] {
       -> disabled(guard: GD) {
         The guard is disabled and does not apply.
       }
+
+      fixture checkpre_allowed { guard: "guard-001" }
+      fixture checkpre_disabled { guard: "guard-disabled-001" } -> error
     }
 
-    action checkPost(guard: GD, context: String, result: String) {
+    action checkPost(guard: GD) {
       -> passed(guard: GD) {
         The post-execution check passed.
       }
       -> revert(guard: GD, reason: String) {
         The post-execution check failed. The action should be reverted.
       }
+
+      fixture checkpost_passed { guard: "guard-001" }
+      fixture checkpost_disabled { guard: "guard-disabled-001" } -> error
     }
 
     action enable(guard: GD) {
       -> enabled(guard: GD) { The guard is activated. }
+
+      fixture enable_guard { guard: "guard-001" }
+      fixture enable_not_found { guard: "guard-nonexistent" } -> error
     }
 
     action disable(guard: GD) {
       -> disabled(guard: GD) { The guard is deactivated. }
+
+      fixture disable_guard { guard: "guard-001" }
+      fixture disable_not_found { guard: "guard-nonexistent" } -> error
     }
   }
 

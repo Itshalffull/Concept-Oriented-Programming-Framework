@@ -76,6 +76,10 @@ concept BFTFinality [BF] {
       -> byzantine_detected(committee: BF, evidence: String) {
         Conflicting votes detected from a validator.
       }
+
+      fixture check_consensus_reached { committee: "bft-001", roundNumber: 1 }
+      fixture check_consensus_insufficient { committee: "bft-001", roundNumber: 2 }
+      fixture check_consensus_unknown_round { committee: "bft-001", roundNumber: 9999 } -> error
     }
   }
 

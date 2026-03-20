@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept ContractTest [P] {
 
@@ -41,6 +42,10 @@ concept ContractTest [P] {
       -> specError(concept: String, message: String) {
         Spec couldn't be parsed or has no cross-target actions.
       }
+
+      fixture generate_password { concept: "password", specPath: "./specs/password.concept" }
+      fixture generate_missing_concept { concept: "", specPath: "./specs/password.concept" } -> specError
+      fixture generate_missing_path { concept: "password", specPath: "" } -> specError
     }
 
     action verify(contract: P, producerArtifact: String, producerLanguage: String, consumerArtifact: String, consumerLanguage: String) {
@@ -60,6 +65,10 @@ concept ContractTest [P] {
       -> consumerUnavailable(language: String, reason: String) {
         Consumer artifact couldn't be loaded or started.
       }
+
+      fixture verify_rust_ts { contract: "ctr-pwd-001", producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" }
+      fixture verify_no_producer { contract: "ctr-pwd-001", producerArtifact: "", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" } -> producerUnavailable
+      fixture verify_no_consumer { contract: "ctr-pwd-001", producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: "", consumerLanguage: "typescript" } -> consumerUnavailable
     }
 
     action matrix(concepts: option list String) {
@@ -71,6 +80,9 @@ concept ContractTest [P] {
         Shows which language pairs have been verified
         for which concepts.
       }
+
+      fixture matrix_all {}
+      fixture matrix_filtered { concepts: ["password", "auth"] }
     }
 
     action canDeploy(concept: String, language: String) {
@@ -83,6 +95,9 @@ concept ContractTest [P] {
         Some contract pairs are unverified or stale.
         Deployment may be unsafe.
       }
+
+      fixture can_deploy_ts { concept: "password", language: "typescript" }
+      fixture can_deploy_rust { concept: "password", language: "rust" }
     }
   }
 

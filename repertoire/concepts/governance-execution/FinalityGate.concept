@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 @gate
 concept FinalityGate [FG] {
@@ -22,14 +23,18 @@ concept FinalityGate [FG] {
   }
 
   actions {
-    action submit(operationRef: String, provider: String) {
+    action submit(operationRef: String, providerRef: String) {
       -> submitted(gate: FG) {
         A finality gate is created in Pending status.
         The provider is queried asynchronously for finality.
       }
+
+      fixture submit_chain_finality { operationRef: "gov-prop-300", providerRef: "chain-finality-eth" }
+      fixture submit_bft_finality { operationRef: "gov-prop-301", providerRef: "bft-committee-alpha" }
+      fixture submit_missing_ref { operationRef: "", providerRef: "chain-finality-eth" } -> error
     }
 
-    action confirm(gate: FG) {
+    action confirm(gate: FG, proof: String) {
       -> finalized(gate: FG) {
         The external system has confirmed finality.
       }
@@ -42,6 +47,9 @@ concept FinalityGate [FG] {
       -> timeout(gate: FG) {
         The finality check timed out.
       }
+
+      fixture confirm_finalized { gate: "finality-001", proof: "block-hash-0xabc123" }
+      fixture confirm_not_found { gate: "finality-nonexistent", proof: "some-proof" } -> error
     }
   }
 

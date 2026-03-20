@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept PulumiProvider [P] {
 
@@ -29,6 +30,9 @@ concept PulumiProvider [P] {
         One file per resource group for compute, storage, and
         transport.
       }
+
+      fixture generate_plan { plan: "dp-001-auth-suite" }
+      fixture generate_empty_plan { plan: "" } -> error
     }
 
     action preview(stack: P) {
@@ -38,6 +42,9 @@ concept PulumiProvider [P] {
       -> backendUnreachable(backend: String) {
         State backend such as S3 or Pulumi Cloud is inaccessible.
       }
+
+      fixture preview_existing { stack: "stack-abc123" }
+      fixture preview_missing_stack { stack: "" } -> error
     }
 
     action apply(stack: P) {
@@ -54,6 +61,9 @@ concept PulumiProvider [P] {
         Apply partially succeeded. Stack state may have
         pending operations.
       }
+
+      fixture apply_stack { stack: "stack-abc123" }
+      fixture apply_missing_stack { stack: "" } -> error
     }
 
     action teardown(stack: P) {
@@ -63,6 +73,9 @@ concept PulumiProvider [P] {
       -> protectedResource(stack: P, resource: String) {
         Resource has protect true. Must be unprotected first.
       }
+
+      fixture teardown_stack { stack: "stack-abc123" }
+      fixture teardown_missing { stack: "" } -> error
     }
   }
 

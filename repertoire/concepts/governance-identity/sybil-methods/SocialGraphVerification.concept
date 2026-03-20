@@ -1,4 +1,5 @@
 @version(1)
+# @fixtures-added
 concept SocialGraphVerification [SG] {
 
   purpose {
@@ -10,12 +11,11 @@ concept SocialGraphVerification [SG] {
   state {
     vouches: set SG
     voucher: SG -> String
-    vouchee: SG -> String
+    candidate: SG -> String
     vouchedAt: SG -> DateTime
     config {
-      minVouches: SG -> Int
-      trustAnchors: SG -> set String
-      clusterThreshold: SG -> Float
+      minimumVouchers: SG -> Int
+      trustAlgorithm: SG -> String
     }
   }
 
@@ -24,42 +24,53 @@ concept SocialGraphVerification [SG] {
   }
 
   actions {
-    action configure(minVouches: Int, trustAnchors: set String, clusterThreshold: Float) {
+    action configure(minimumVouchers: option Int, trustAlgorithm: option String) {
       -> configured(config: SG) {
-        MinVouches is the minimum endorsements needed. TrustAnchors
-        are pre-trusted founding members. ClusterThreshold sets the
-        minimum graph connectivity score to pass.
+        MinimumVouchers is the minimum endorsements needed (default 3).
+        TrustAlgorithm is the scoring algorithm (default "count").
       }
+
+      fixture configure_default { minimumVouchers: 3, trustAlgorithm: "count" }
+      fixture configure_empty { } -> error
     }
 
-    action vouch(voucher: String, vouchee: String) {
-      -> vouched(vouch: SG) {
+    action addVouch(config: SG, voucher: String, candidate: String) {
+      -> vouched(voucher: String, candidate: String) {
         A vouching edge is added to the graph.
       }
-      -> self_vouch(participant: String) {
+      -> self_vouch(voucher: String) {
         Cannot vouch for oneself.
       }
-      -> already_vouched(voucher: String, vouchee: String) {
+      -> already_vouched(voucher: String, candidate: String) {
         This vouch already exists.
       }
+
+      fixture vouch_alice_for_bob { config: "sg-cfg-1", voucher: "alice", candidate: "bob" }
+      fixture vouch_self { config: "sg-cfg-1", voucher: "alice", candidate: "alice" } -> error
     }
 
-    action analyze(participant: String) {
-      -> trusted(participant: String, connectivityScore: Float, vouchCount: Int) {
-        The participant is sufficiently connected to the trust graph.
-      }
-      -> suspicious(participant: String, connectivityScore: Float, reason: String) {
-        The participant's graph position suggests potential sybil behavior.
-      }
-      -> insufficient_vouches(participant: String, have: Int, need: Int) {
-        The participant has too few vouches.
-      }
-    }
-
-    action revokeVouch(voucher: String, vouchee: String) {
-      -> revoked(voucher: String, vouchee: String) {
+    action revokeVouch(config: SG, voucher: String, candidate: String) {
+      -> revoked(voucher: String, candidate: String) {
         The vouch is removed.
       }
+      -> not_found(voucher: String, candidate: String) {
+        The vouch does not exist.
+      }
+
+      fixture revoke_existing_vouch { config: "sg-cfg-1", voucher: "alice", candidate: "bob" }
+      fixture revoke_nonexistent { config: "sg-cfg-1", voucher: "alice", candidate: "unknown" } -> error
+    }
+
+    action verify(config: SG, candidate: String) {
+      -> verified(candidate: String, voucherCount: Int, trustScore: Float) {
+        The candidate is sufficiently connected to the trust graph.
+      }
+      -> insufficient(candidate: String, voucherCount: Int, required: Int, trustScore: Float) {
+        The candidate has too few vouches.
+      }
+
+      fixture verify_well_connected { config: "sg-cfg-1", candidate: "bob" }
+      fixture verify_no_vouches { config: "sg-cfg-1", candidate: "unknown-candidate" } -> error
     }
   }
 

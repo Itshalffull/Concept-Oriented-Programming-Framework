@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept GrpcTarget [G] {
 
@@ -50,6 +51,11 @@ concept GrpcTarget [G] {
         Typical causes include recursive types without
         indirection or unsupported collection nesting.
       }
+
+      fixture with_default_config { projection: "payment-projection", config: "{}" }
+      fixture with_java_package { projection: "catalog-projection", config: "{\"protoPackage\":\"com.example.catalog\",\"goPackage\":\"github.com/example/catalog\",\"javaPackage\":\"com.example.catalog\"}" }
+      fixture empty_projection { projection: "", config: "{}" } -> error
+      fixture proto_incompatible { projection: "tree-projection", config: "{\"protoIncompatible\":\"RecursiveTree\"}" }
     }
 
     action validate(service: G) {
@@ -63,6 +69,9 @@ concept GrpcTarget [G] {
         Proto field number assignment conflicts with a
         previously generated version.
       }
+
+      fixture valid_service { service: "grpc-payment-12345" }
+      fixture missing_service { service: "" } -> error
     }
 
     action listRpcs(concept: String) {
@@ -70,6 +79,9 @@ concept GrpcTarget [G] {
         Return all generated RPC methods for a concept with
         their streaming modes, including hierarchy RPCs.
       }
+
+      fixture list_payment_rpcs { concept: "Payment" }
+      fixture empty_concept { concept: "" } -> error
     }
   }
 

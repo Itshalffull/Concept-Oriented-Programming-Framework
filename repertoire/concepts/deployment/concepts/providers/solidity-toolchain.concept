@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept SolidityToolchain [L] {
 
@@ -33,6 +34,11 @@ concept SolidityToolchain [L] {
       -> evmVersionUnsupported(requested: String, supported: list String) {
         Requested EVM version not supported by installed solc.
       }
+
+      fixture resolve_shanghai { platform: "shanghai", versionConstraint: ">=0.8.20" }
+      fixture resolve_cancun { platform: "cancun" }
+      fixture resolve_unsupported_evm { platform: "prague" } -> error
+      fixture resolve_empty_platform { platform: "" } -> error
     }
 
     action register() {
@@ -43,6 +49,8 @@ concept SolidityToolchain [L] {
         capabilities: ["solc-select", "foundry-detection",
         "hardhat-detection"]
       }
+
+      fixture register_valid {}
     }
   }
 

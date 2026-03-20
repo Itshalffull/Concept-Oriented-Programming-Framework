@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept ConceptLibraryTarget [D] {
 
@@ -45,6 +46,10 @@ concept ConceptLibraryTarget [D] {
       -> noSuites(reason: String) {
         No suite manifests found in the repertoire directory.
       }
+
+      fixture with_output_path { config: "{\"outputPath\":\"docs/reference/concept-library.md\"}" }
+      fixture with_custom_root { config: "{\"outputPath\":\"output/library.md\",\"projectRoot\":\"/workspace/project\"}" }
+      fixture empty_config { config: "" } -> error
     }
 
     action validate(document: D) {
@@ -54,6 +59,9 @@ concept ConceptLibraryTarget [D] {
       -> missingSection(document: D, section: String) {
         A required section is missing from the document.
       }
+
+      fixture valid_document { document: "concept-library-12345" }
+      fixture missing_document { document: "" } -> error
     }
   }
 

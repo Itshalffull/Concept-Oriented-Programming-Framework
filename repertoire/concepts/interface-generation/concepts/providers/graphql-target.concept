@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept GraphqlTarget [Q] {
 
@@ -53,6 +54,11 @@ concept GraphqlTarget [Q] {
         Type cannot be federated due to conflicting key
         directives or ownership boundaries across subgraphs.
       }
+
+      fixture with_default_config { projection: "order-projection", config: "{}" }
+      fixture with_relay_and_federation { projection: "product-projection", config: "{\"relay\":true,\"federation\":true,\"subscriptions\":true}" }
+      fixture empty_projection { projection: "", config: "{}" } -> error
+      fixture federation_conflict { projection: "item-projection", config: "{\"federation\":true,\"federationConflict\":true}" }
     }
 
     action validate(type: Q) {
@@ -66,6 +72,9 @@ concept GraphqlTarget [Q] {
         Type graph contains a cycle that would cause infinite
         nesting in the schema.
       }
+
+      fixture valid_type { type: "graphql-order-12345" }
+      fixture missing_type { type: "" } -> error
     }
 
     action listOperations(concept: String) {
@@ -73,6 +82,9 @@ concept GraphqlTarget [Q] {
         Return all generated operations for a concept grouped
         by operation type, including hierarchy traversal queries.
       }
+
+      fixture list_order_operations { concept: "Order" }
+      fixture empty_concept { concept: "" } -> error
     }
   }
 

@@ -102,6 +102,9 @@ concept Branch [B] {
       -> notFound(message: String) {
         b1 or b2 not found.
       }
+
+      fixture find_divergence { b1: "branch-1", b2: "branch-2" }
+      fixture divergence_missing { b1: "branch-nonexistent", b2: "branch-1" } -> error
     }
 
     action archive(branch: B) {
@@ -111,6 +114,9 @@ concept Branch [B] {
       -> notFound(message: String) {
         Branch not found.
       }
+
+      fixture archive_old { branch: "branch-1" }
+      fixture archive_missing { branch: "branch-nonexistent" } -> error
     }
   }
 

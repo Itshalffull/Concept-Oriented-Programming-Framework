@@ -46,6 +46,9 @@ concept GitOps [G] {
       -> failed(manifest: G, reason: String) {
         Controller reported reconciliation failure.
       }
+
+      fixture reconciliation_found { manifest: "go-manifest-001" }
+      fixture reconciliation_missing { manifest: "go-nonexistent" } -> failed
     }
   }
 

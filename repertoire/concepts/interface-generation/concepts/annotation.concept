@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(3)
 concept Annotation [N] {
 
@@ -21,10 +22,10 @@ concept Annotation [N] {
   }
 
   actions {
-    action annotate(concept: String, scope: String, content: String) {
+    action annotate(concept: String, scope: String, metadata: String) {
       description {
         Attach opaque metadata to a concept-level or action-level
-        scope. The content string is JSON from the interface
+        scope. The metadata string is JSON from the interface
         manifest — its internal structure is not constrained by
         this concept. Targets interpret keys they recognize
         (e.g. tool-permissions, examples, design-principles,
@@ -39,6 +40,11 @@ concept Annotation [N] {
       -> invalidScope(scope: String) {
         The scope references an action not found in the concept.
       }
+
+      fixture annotate_concept_level { concept: "ScoreApi", scope: "concept", metadata: "{\"tool-permissions\":[\"Read\",\"Bash\"],\"examples\":[\"score create MyScore\"]}" }
+      fixture annotate_action_level { concept: "ScoreApi", scope: "listConcepts", metadata: "{\"examples\":[\"score list\"]}" }
+      fixture annotate_invalid_metadata { concept: "ScoreApi", scope: "concept", metadata: "not-valid-json" } -> error
+      fixture annotate_empty_scope { concept: "ScoreApi", scope: "", metadata: "{}" } -> error
     }
 
     action resolve(concept: String) {
@@ -54,6 +60,9 @@ concept Annotation [N] {
       -> notFound(concept: String) {
         No annotations exist for the specified concept.
       }
+
+      fixture resolve_existing { concept: "ScoreApi" }
+      fixture resolve_unknown { concept: "NonExistentConcept" } -> error
     }
   }
 

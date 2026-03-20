@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept TemporalVersion [V] {
 
@@ -30,6 +31,9 @@ concept TemporalVersion [V] {
       -> invalidHash(message: String) {
         contentHash not found in ContentHash store.
       }
+
+      fixture record_version { contentHash: "sha256:abc123def456", validFrom: "2025-01-01T00:00:00Z", validTo: null, metadata: "{\"author\":\"alice\"}" }
+      fixture record_empty_hash { contentHash: "", validFrom: null, validTo: null, metadata: "" } -> error
     }
 
     action asOf(systemTime: option String, validTime: option String) {
@@ -39,6 +43,10 @@ concept TemporalVersion [V] {
       -> notFound(message: String) {
         No version active at the specified times.
       }
+
+      fixture query_system_time { systemTime: "2025-06-15T12:00:00Z", validTime: null }
+      fixture query_both_times { systemTime: "2025-06-15T12:00:00Z", validTime: "2025-01-01T00:00:00Z" }
+      fixture query_far_future { systemTime: "2099-01-01T00:00:00Z", validTime: null } -> error
     }
 
     action between(start: String, end: String, dimension: String) {
@@ -49,6 +57,9 @@ concept TemporalVersion [V] {
       -> invalidDimension(message: String) {
         Dimension must be "system" or "valid".
       }
+
+      fixture between_system { start: "2025-01-01T00:00:00Z", end: "2025-12-31T23:59:59Z", dimension: "system" }
+      fixture between_invalid_dim { start: "2025-01-01T00:00:00Z", end: "2025-12-31T23:59:59Z", dimension: "bogus" } -> error
     }
 
     action current() {
@@ -58,6 +69,8 @@ concept TemporalVersion [V] {
       -> empty(message: String) {
         No versions recorded yet.
       }
+
+      fixture valid {}
     }
 
     action supersede(versionId: V, contentHash: String) {
@@ -67,6 +80,9 @@ concept TemporalVersion [V] {
       -> notFound(message: String) {
         versionId not found.
       }
+
+      fixture supersede_existing { versionId: "temporal-version-1", contentHash: "sha256:newcontent789" }
+      fixture supersede_empty_hash { versionId: "temporal-version-1", contentHash: "" } -> error
     }
   }
 

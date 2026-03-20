@@ -1,4 +1,5 @@
 @version(1)
+# @fixtures-added
 concept Attestation [A] {
 
   purpose {
@@ -28,6 +29,9 @@ concept Attestation [A] {
         A new attestation is recorded with the given schema, attester,
         recipient, and data. Revoked is set to false.
       }
+
+      fixture attest_kyc { schema: "kyc-identity", attester: "civic-authority", recipient: "alice", data: "{\"level\":\"basic\"}", expiry: "2027-12-31T00:00:00Z" }
+      fixture attest_empty_schema { schema: "", attester: "civic-authority", recipient: "alice", data: "{}" } -> error
     }
 
     action revoke(attestation: A, revoker: String) {
@@ -41,6 +45,9 @@ concept Attestation [A] {
       -> unauthorized(revoker: String) {
         The revoker is not the original attester.
       }
+
+      fixture revoke_by_attester { attestation: "attest-1001", revoker: "civic-authority" }
+      fixture revoke_unauthorized { attestation: "attest-1001", revoker: "mallory" } -> error
     }
 
     action verify(attestation: A) {
@@ -56,6 +63,9 @@ concept Attestation [A] {
       -> not_found(attestation: A) {
         The attestation does not exist.
       }
+
+      fixture verify_valid { attestation: "attest-1001" }
+      fixture verify_nonexistent { attestation: "attest-nonexistent" } -> error
     }
   }
 

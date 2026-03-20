@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ApiSurface [S] {
 
@@ -41,12 +42,19 @@ concept ApiSurface [S] {
       -> cyclicDependency(target: String, cycle: list String) {
         Shared type resolution found a cycle.
       }
+
+      fixture rest_surface { suite: "commerce", target: "rest", outputs: ["order-output", "product-output"] }
+      fixture graphql_surface { suite: "commerce", target: "graphql", outputs: ["user-output"] }
+      fixture empty_outputs { suite: "commerce", target: "rest", outputs: [] } -> error
     }
 
     action entrypoint(surface: S) {
       -> ok(content: String) {
         Return the composed entrypoint file content.
       }
+
+      fixture valid_surface { surface: "api-surface-1" }
+      fixture missing_surface { surface: "" } -> error
     }
   }
 

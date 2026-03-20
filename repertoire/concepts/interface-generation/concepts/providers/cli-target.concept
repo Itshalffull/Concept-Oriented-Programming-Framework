@@ -77,6 +77,9 @@ concept CliTarget [C] {
         Two actions in the same command subtree define flags
         with the same name but different types.
       }
+
+      fixture valid_command { command: "cli-task-12345" }
+      fixture missing_command { command: "" } -> error
     }
 
     action listCommands(concept: String) {
@@ -84,6 +87,9 @@ concept CliTarget [C] {
         Return all generated commands and subcommands for
         a concept, including the full command tree hierarchy.
       }
+
+      fixture list_task_commands { concept: "Task" }
+      fixture empty_concept { concept: "" } -> error
     }
   }
 

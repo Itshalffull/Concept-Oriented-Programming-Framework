@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept SwiftBuilder [S] {
 
@@ -48,6 +49,10 @@ concept SwiftBuilder [S] {
         Compilation succeeded but linking failed.
         Common for missing platform SDKs.
       }
+
+      fixture build_release { source: "./generated/swift/auth", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: { mode: "release", features: ["logging"] } }
+      fixture build_debug { source: "./generated/swift/session", toolchainPath: "/usr/bin/swiftc", platform: "macos-arm64", config: { mode: "debug" } }
+      fixture build_no_source { source: "", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: { mode: "release" } } -> error
     }
 
     action test(build: S, toolchainPath: String, invocation: option { command: String, args: list String, outputFormat: String, configFile: option String, env: option String }, testType: option String) {
@@ -61,6 +66,10 @@ concept SwiftBuilder [S] {
       -> testFailure(passed: Int, failed: Int, failures: list { test: String, message: String }, testType: String) {
         Some tests failed.
       }
+
+      fixture test_unit { build: "swb-abc123", toolchainPath: "/usr/bin/swiftc", testType: "unit" }
+      fixture test_with_invocation { build: "swb-abc123", toolchainPath: "/usr/bin/swiftc", invocation: { command: "swift test", args: ["--parallel"], outputFormat: "swift-test-json", configFile: "Package.swift" }, testType: "unit" }
+      fixture test_missing_build { build: "", toolchainPath: "/usr/bin/swiftc", testType: "unit" } -> error
     }
 
     action package(build: S, format: String) {
@@ -74,6 +83,10 @@ concept SwiftBuilder [S] {
       -> formatUnsupported(format: String) {
         Requested format not available for this target.
       }
+
+      fixture package_framework { build: "swb-abc123", format: "framework" }
+      fixture package_xcframework { build: "swb-abc123", format: "xcframework" }
+      fixture package_unsupported { build: "swb-abc123", format: "deb" } -> error
     }
 
     action register() {
@@ -84,6 +97,8 @@ concept SwiftBuilder [S] {
         capabilities: ["framework", "xcframework", "binary",
         "library"]
       }
+
+      fixture register_valid {}
     }
   }
 

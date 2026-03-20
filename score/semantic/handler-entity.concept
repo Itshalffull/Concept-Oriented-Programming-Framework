@@ -1,4 +1,5 @@
 @version(1)
+# @fixtures-added
 concept HandlerEntity [H] {
 
   purpose {

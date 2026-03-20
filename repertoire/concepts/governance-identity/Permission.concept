@@ -1,4 +1,5 @@
 @version(1)
+# @fixtures-added
 concept Permission [P] {
 
   purpose {
@@ -30,6 +31,9 @@ concept Permission [P] {
       -> already_granted(permission: P) {
         This exact permission already exists.
       }
+
+      fixture grant_read_articles { who: "alice", where: "articles", what: "read", condition: "", grantedBy: "admin" }
+      fixture grant_empty_who { who: "", where: "articles", what: "read", grantedBy: "admin" } -> error
     }
 
     action revoke(permission: P) {
@@ -39,6 +43,9 @@ concept Permission [P] {
       -> not_found(permission: P) {
         The permission does not exist.
       }
+
+      fixture revoke_existing { permission: "alice:articles:read" }
+      fixture revoke_nonexistent { permission: "nonexistent:perm:key" } -> error
     }
 
     action check(who: String, where: String, what: String) {
@@ -48,6 +55,9 @@ concept Permission [P] {
       -> denied(who: String, where: String, what: String) {
         No matching permission exists, or the condition is not satisfied.
       }
+
+      fixture check_allowed { who: "alice", where: "articles", what: "read" }
+      fixture check_denied { who: "unknown-user", where: "articles", what: "delete" } -> error
     }
   }
 

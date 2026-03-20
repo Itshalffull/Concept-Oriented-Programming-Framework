@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 @gate
 concept Timelock [TL] {
@@ -26,6 +27,10 @@ concept Timelock [TL] {
       -> queued(lock: TL) {
         An operation is queued. ETA = now + delay. Grace = ETA + gracePeriod.
       }
+
+      fixture schedule_transfer { operationHash: "0xdeadbeef", payload: "{\"action\":\"transfer\",\"to\":\"0x123\"}", delayHours: 48.0, gracePeriodHours: 24.0 }
+      fixture schedule_upgrade { operationHash: "0xcafebabe", payload: "{\"action\":\"upgrade\",\"version\":\"2.0\"}", delayHours: 72.0, gracePeriodHours: 12.0 }
+      fixture schedule_missing_hash { operationHash: "", payload: "{}", delayHours: 24.0, gracePeriodHours: 12.0 } -> error
     }
 
     action execute(lock: TL) {
@@ -41,15 +46,21 @@ concept Timelock [TL] {
       -> already_executed(lock: TL) {
         The operation has already been executed.
       }
+
+      fixture execute_ready { lock: "timelock-001" }
+      fixture execute_not_found { lock: "timelock-nonexistent" } -> error
     }
 
-    action cancel(lock: TL) {
+    action cancel(lock: TL, reason: String) {
       -> cancelled(lock: TL) {
         The queued operation is cancelled before execution.
       }
       -> not_cancellable(lock: TL) {
         The operation has already been executed or expired.
       }
+
+      fixture cancel_queued { lock: "timelock-001", reason: "Governance vote rejected proposal" }
+      fixture cancel_not_found { lock: "timelock-nonexistent", reason: "cleanup" } -> error
     }
   }
 

@@ -1,4 +1,5 @@
 @version(1)
+# @fixtures-added
 concept ProofOfPersonhood [PP] {
 
   purpose {
@@ -22,34 +23,55 @@ concept ProofOfPersonhood [PP] {
   }
 
   actions {
-    action verify(participant: String, method: String, proofHash: String, verifier: String, expiryDays: option Float) {
-      -> verified(verification: PP) {
-        The participant is verified as a unique human.
+    action requestVerification(candidate: String, method: String, expiryDays: option Float) {
+      -> verification_requested(verification: PP) {
+        A verification request is created for the candidate.
       }
-      -> invalid_proof(participant: String, reason: String) {
-        The proof is invalid or insufficient.
-      }
-      -> already_verified(participant: String) {
-        The participant already has an active verification.
-      }
+
+      fixture request_biometric { candidate: "alice", method: "Biometric", expiryDays: 365 }
+      fixture request_empty_candidate { candidate: "", method: "Biometric" } -> error
     }
 
-    action checkStatus(participant: String) {
-      -> valid(expiresAt: option DateTime) {
-        The participant has a current, non-expired verification.
+    action confirmVerification(verification: PP) {
+      -> verified(verification: PP, candidate: String) {
+        The verification is confirmed; the candidate is verified as a unique human.
       }
-      -> expired(expiredAt: DateTime) {
+      -> already_verified(verification: PP) {
+        The verification has already been confirmed.
+      }
+      -> not_found(verification: PP) {
+        The verification request does not exist.
+      }
+
+      fixture confirm_valid { verification: "pop-1001" }
+      fixture confirm_nonexistent { verification: "pop-nonexistent" } -> error
+    }
+
+    action rejectVerification(verification: PP, reason: String) {
+      -> rejected(verification: PP, reason: String) {
+        The verification is rejected with a reason.
+      }
+      -> not_found(verification: PP) {
+        The verification request does not exist.
+      }
+
+      fixture reject_with_reason { verification: "pop-1001", reason: "Fraudulent proof submission" }
+      fixture reject_nonexistent { verification: "pop-nonexistent", reason: "Invalid" } -> error
+    }
+
+    action checkStatus(verification: PP) {
+      -> status(verification: PP, candidate: String) {
+        Returns the current status of the verification.
+      }
+      -> expired(verification: PP, candidate: String) {
         The verification has expired and must be renewed.
       }
-      -> not_verified() {
-        No verification exists for this participant.
+      -> not_found(verification: PP) {
+        No verification exists.
       }
-    }
 
-    action revoke(participant: String, reason: String) {
-      -> revoked(participant: String) {
-        The verification is invalidated.
-      }
+      fixture check_valid_status { verification: "pop-1001" }
+      fixture check_nonexistent { verification: "pop-nonexistent" } -> error
     }
   }
 

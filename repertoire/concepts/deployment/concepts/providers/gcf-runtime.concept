@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept GcfRuntime [G] {
 
@@ -35,6 +36,10 @@ concept GcfRuntime [G] {
       -> triggerConflict(triggerType: String, existing: String) {
         Trigger type conflicts with existing function.
       }
+
+      fixture provision_http { concept: "UserService", projectId: "my-gcp-project", region: "us-central1", runtime: "nodejs20", triggerType: "http" }
+      fixture provision_pubsub { concept: "NotificationWorker", projectId: "events-project", region: "europe-west1", runtime: "python311", triggerType: "pubsub" }
+      fixture provision_empty_concept { concept: "", projectId: "proj", region: "us-central1", runtime: "nodejs20", triggerType: "http" } -> error
     }
 
     action deploy(function: G, sourceArchive: String) {
@@ -44,24 +49,36 @@ concept GcfRuntime [G] {
       -> buildFailed(function: G, errors: list String) {
         Cloud Build failed during function build.
       }
+
+      fixture deploy_gcs { function: "gcf-abc123", sourceArchive: "gs://deploy-bucket/user-service.zip" }
+      fixture deploy_missing_function { function: "", sourceArchive: "gs://bucket/code.zip" } -> error
     }
 
     action setTrafficWeight(function: G, weight: Int) {
       -> ok(function: G) {
         Traffic split updated between function versions.
       }
+
+      fixture traffic_split { function: "gcf-abc123", weight: 75 }
+      fixture traffic_no_function { function: "", weight: 50 } -> error
     }
 
     action rollback(function: G, targetVersion: String) {
       -> ok(function: G, restoredVersion: String) {
         Traffic routed to specified previous version.
       }
+
+      fixture rollback_to_v1 { function: "gcf-abc123", targetVersion: "1" }
+      fixture rollback_empty_version { function: "gcf-abc123", targetVersion: "" } -> error
     }
 
     action destroy(function: G) {
       -> ok(function: G) {
         Function and triggers deleted.
       }
+
+      fixture destroy_valid { function: "gcf-abc123" }
+      fixture destroy_missing { function: "" } -> error
     }
   }
 

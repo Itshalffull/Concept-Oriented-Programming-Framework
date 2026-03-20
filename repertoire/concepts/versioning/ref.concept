@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept Ref [R] {
 
@@ -25,6 +26,9 @@ concept Ref [R] {
       -> invalidHash(message: String) {
         Hash does not exist in ContentHash store.
       }
+
+      fixture create_head { name: "HEAD", hash: "sha256:abc123def456" }
+      fixture empty_ref_name { name: "", hash: "sha256:abc123" } -> error
     }
 
     action update(name: String, newHash: String, expectedOldHash: String) {
@@ -39,6 +43,9 @@ concept Ref [R] {
         Current hash differs from expectedOldHash.
         Compare-and-swap failed.
       }
+
+      fixture update_head { name: "HEAD", newHash: "sha256:newdef456", expectedOldHash: "sha256:abc123def456" }
+      fixture update_empty_name { name: "", newHash: "sha256:abc", expectedOldHash: "sha256:def" } -> error
     }
 
     action delete(name: String) {
@@ -51,6 +58,9 @@ concept Ref [R] {
       -> protected(message: String) {
         Ref is protected and cannot be deleted.
       }
+
+      fixture delete_tag { name: "tags/v1.0" }
+      fixture delete_empty_name { name: "" } -> error
     }
 
     action resolve(name: String) {
@@ -60,6 +70,9 @@ concept Ref [R] {
       -> notFound(message: String) {
         No ref with that name.
       }
+
+      fixture resolve_head { name: "HEAD" }
+      fixture resolve_missing { name: "nonexistent-ref" } -> error
     }
 
     action log(name: String) {
@@ -69,6 +82,9 @@ concept Ref [R] {
       -> notFound(message: String) {
         No ref with that name.
       }
+
+      fixture log_head { name: "HEAD" }
+      fixture log_missing { name: "nonexistent-ref" } -> error
     }
   }
 

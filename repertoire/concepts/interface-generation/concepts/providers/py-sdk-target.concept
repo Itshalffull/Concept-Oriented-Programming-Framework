@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept PySdkTarget [S] {
 
@@ -23,6 +24,10 @@ concept PySdkTarget [S] {
         dataclasses with discriminator field. Generate client
         class, models module, pyproject.toml, py.typed marker.
       }
+
+      fixture with_default_config { projection: "analytics-projection", config: "{}" }
+      fixture with_custom_package { projection: "auth-projection", config: "{\"packageName\":\"auth_sdk\",\"asyncSupport\":true}" }
+      fixture empty_projection { projection: "", config: "{}" } -> error
     }
   }
 

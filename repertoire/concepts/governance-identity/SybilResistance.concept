@@ -1,4 +1,5 @@
 @version(1)
+# @fixtures-added
 concept SybilResistance [S] {
 
   purpose {
@@ -33,6 +34,9 @@ concept SybilResistance [S] {
       -> already_verified(candidate: String) {
         Candidate is already in the verified set.
       }
+
+      fixture verify_alice { candidate: "alice", method: "biometric", evidence: "fingerprint-hash-abc123" }
+      fixture verify_empty_candidate { candidate: "", method: "biometric", evidence: "hash" } -> error
     }
 
     action challenge(targetId: S, challenger: String, evidence: String) {
@@ -42,6 +46,9 @@ concept SybilResistance [S] {
       -> invalid_target(targetId: S) {
         The target is not in the verified set.
       }
+
+      fixture challenge_verified_user { targetId: "alice", challenger: "bob", evidence: "duplicate-account-evidence" }
+      fixture challenge_invalid_target { targetId: "nonexistent", challenger: "bob", evidence: "some-evidence" } -> error
     }
 
     action resolveChallenge(challengeId: S, outcome: String) {
@@ -54,6 +61,9 @@ concept SybilResistance [S] {
       -> not_found(challengeId: S) {
         The challenge does not exist.
       }
+
+      fixture resolve_upheld { challengeId: "challenge-1001", outcome: "upheld" }
+      fixture resolve_nonexistent { challengeId: "challenge-nonexistent", outcome: "upheld" } -> error
     }
   }
 

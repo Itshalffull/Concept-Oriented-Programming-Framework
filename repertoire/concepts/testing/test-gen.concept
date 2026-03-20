@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(3)
 concept TestGen [T] {
 
@@ -55,6 +56,11 @@ concept TestGen [T] {
         Concept has no parseable invariants, or no provider is
         registered for the requested language.
       }
+
+      fixture generate_typescript { concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }
+      fixture generate_rust { concept_ref: "clef/concept/Auth", language: "rust", invariant_version: "v2" }
+      fixture invalid_language { concept_ref: "clef/concept/Password", language: "python", invariant_version: "v1" } -> invalid
+      fixture missing_ref { concept_ref: "", language: "typescript", invariant_version: "v1" } -> invalid
     }
 
     action buildTestPlan(concept_ref: String, concept_data: String) {
@@ -70,6 +76,9 @@ concept TestGen [T] {
       -> invalid(message: String) {
         concept_ref or concept_data missing or malformed.
       }
+
+      fixture build_plan_basic { concept_ref: "clef/concept/User", concept_data: "{\"name\":\"User\",\"actions\":[],\"invariants\":[]}" }
+      fixture build_plan_missing_ref { concept_ref: "", concept_data: "{}" } -> invalid
     }
 
     action regenerate(generation: T) {
@@ -80,12 +89,18 @@ concept TestGen [T] {
       -> notfound(generation: T) {
         No generation record exists with this identifier.
       }
+
+      fixture regenerate_existing { generation: "tg-abc123" }
+      fixture regenerate_missing { generation: "tg-nonexistent" }
     }
 
     action list(concept_ref: option String, language: option String) {
       -> ok(generations: list T) {
         Filtered listing of generation records. All params optional.
       }
+
+      fixture list_all {}
+      fixture list_by_concept { concept_ref: "clef/concept/Password" }
     }
 
     action configure(generation: T, num_runs: option Int, fuzz_duration_s: option Int, shrink_enabled: option Bool, stateful_test_depth: option Int) {
@@ -96,6 +111,9 @@ concept TestGen [T] {
       -> notfound(generation: T) {
         No generation record exists with this identifier.
       }
+
+      fixture configure_runs { generation: "tg-abc123", num_runs: 50000 }
+      fixture configure_fuzz { generation: "tg-abc123", fuzz_duration_s: 120, shrink_enabled: true }
     }
 
     action coverage(concept_ref: String) {
@@ -106,6 +124,9 @@ concept TestGen [T] {
         per invariant kind (example, forall, always, never,
         eventually, requires_ensures).
       }
+
+      fixture coverage_password { concept_ref: "clef/concept/Password" }
+      fixture coverage_missing { concept_ref: "" }
     }
   }
 

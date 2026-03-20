@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept OpenApiTarget [O] {
 
@@ -35,6 +36,10 @@ concept OpenApiTarget [O] {
         are generated for tree-structured resources with
         shared $ref schemas and tree query parameters.
       }
+
+      fixture with_multiple_projections { projections: ["user-projection", "order-projection"], config: "{}" }
+      fixture with_custom_title { projections: ["product-projection"], config: "{\"title\":\"Commerce API\",\"apiVersion\":\"2.0.0\"}" }
+      fixture empty_projections { projections: [], config: "{}" } -> error
     }
   }
 

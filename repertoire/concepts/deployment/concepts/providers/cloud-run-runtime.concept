@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept CloudRunRuntime [C] {
 
@@ -38,6 +39,10 @@ concept CloudRunRuntime [C] {
       -> regionUnavailable(region: String) {
         Cloud Run is not available in the requested region.
       }
+
+      fixture provision_standard { concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: 1, memory: 512 }
+      fixture provision_high_mem { concept: "MLService", projectId: "ml-project", region: "us-east1", cpu: 2, memory: 2048 }
+      fixture provision_empty_concept { concept: "", projectId: "proj", region: "us-central1", cpu: 1, memory: 256 } -> error
     }
 
     action deploy(service: C, imageUri: String) {
@@ -48,24 +53,36 @@ concept CloudRunRuntime [C] {
       -> imageNotFound(imageUri: String) {
         Container image not found in registry.
       }
+
+      fixture deploy_gcr { service: "svc-abc123", imageUri: "gcr.io/my-gcp-project/user-api:v3" }
+      fixture deploy_missing_service { service: "", imageUri: "gcr.io/proj/app:latest" } -> error
     }
 
     action setTrafficWeight(service: C, weight: Int) {
       -> ok(service: C) {
         Traffic split updated between current and previous revisions.
       }
+
+      fixture traffic_split { service: "svc-abc123", weight: 50 }
+      fixture traffic_no_service { service: "", weight: 100 } -> error
     }
 
     action rollback(service: C, targetRevision: String) {
       -> ok(service: C, restoredRevision: String) {
         Traffic routed to specified previous revision.
       }
+
+      fixture rollback_to_rev { service: "svc-abc123", targetRevision: "rev-20250101" }
+      fixture rollback_empty_revision { service: "svc-abc123", targetRevision: "" } -> error
     }
 
     action destroy(service: C) {
       -> ok(service: C) {
         Service and all revisions deleted.
       }
+
+      fixture destroy_valid { service: "svc-abc123" }
+      fixture destroy_missing { service: "" } -> error
     }
   }
 

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept LocalRuntime [L] {
 
@@ -30,30 +31,46 @@ concept LocalRuntime [L] {
       -> portInUse(port: Int, existingPid: Int) {
         Requested port is already in use.
       }
+
+      fixture provision_node { concept: "ApiServer", command: "node server.js", port: 3000 }
+      fixture provision_python { concept: "Worker", command: "python main.py", port: 8080 }
+      fixture provision_empty_concept { concept: "", command: "node index.js", port: 4000 } -> error
     }
 
     action deploy(process: L, command: String) {
       -> ok(process: L, pid: Int) {
         Process restarted with new command.
       }
+
+      fixture deploy_restart { process: "proc-abc123", command: "node server.js --production" }
+      fixture deploy_missing_process { process: "", command: "node app.js" } -> error
     }
 
     action setTrafficWeight(process: L, weight: Int) {
       -> ok(process: L) {
         Traffic weight has no effect locally. Always 100.
       }
+
+      fixture traffic_local { process: "proc-abc123", weight: 100 }
+      fixture traffic_no_process { process: "", weight: 50 } -> error
     }
 
     action rollback(process: L, previousCommand: String) {
       -> ok(process: L, pid: Int) {
         Process restarted with previous command.
       }
+
+      fixture rollback_previous { process: "proc-abc123", previousCommand: "node server.js" }
+      fixture rollback_missing_process { process: "", previousCommand: "node old.js" } -> error
     }
 
     action destroy(process: L) {
       -> ok(process: L) {
         Process killed and port released.
       }
+
+      fixture destroy_valid { process: "proc-abc123" }
+      fixture destroy_missing { process: "" } -> error
     }
   }
 

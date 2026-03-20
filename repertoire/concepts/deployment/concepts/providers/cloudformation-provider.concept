@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept CloudFormationProvider [C] {
 
@@ -28,6 +29,9 @@ concept CloudFormationProvider [C] {
       -> ok(stack: C, files: list String) {
         CloudFormation YAML template generated from deploy plan.
       }
+
+      fixture generate_plan { plan: "dp-002-payment-service" }
+      fixture generate_empty_plan { plan: "" } -> error
     }
 
     action preview(stack: C) {
@@ -37,6 +41,9 @@ concept CloudFormationProvider [C] {
       -> changeSetEmpty(stack: C) {
         No changes detected between template and current stack.
       }
+
+      fixture preview_existing { stack: "stack-abc123" }
+      fixture preview_missing_stack { stack: "" } -> error
     }
 
     action apply(stack: C) {
@@ -52,6 +59,9 @@ concept CloudFormationProvider [C] {
       -> insufficientCapabilities(stack: C, required: list String) {
         Stack requires IAM capabilities not specified in the request.
       }
+
+      fixture apply_stack { stack: "stack-abc123" }
+      fixture apply_missing_stack { stack: "" } -> error
     }
 
     action teardown(stack: C) {
@@ -61,6 +71,9 @@ concept CloudFormationProvider [C] {
       -> deletionFailed(stack: C, resource: String, reason: String) {
         Stack deletion failed on a specific resource.
       }
+
+      fixture teardown_stack { stack: "stack-abc123" }
+      fixture teardown_missing { stack: "" } -> error
     }
   }
 

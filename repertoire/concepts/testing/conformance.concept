@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept Conformance [C] {
 
@@ -48,6 +49,10 @@ concept Conformance [C] {
       -> specError(concept: String, message: String) {
         Spec couldn't be parsed or has ambiguous requirements.
       }
+
+      fixture generate_password { concept: "password", specPath: "./specs/password.concept" }
+      fixture generate_missing_concept { concept: "", specPath: "./specs/password.concept" } -> specError
+      fixture generate_missing_spec { concept: "password", specPath: "" } -> specError
     }
 
     action verify(suite: C, language: String, artifactLocation: String) {
@@ -64,6 +69,10 @@ concept Conformance [C] {
         A known deviation — the language can't express this
         requirement. Recorded, not treated as failure.
       }
+
+      fixture verify_ts { suite: "csuite-pwd-001", language: "typescript", artifactLocation: ".clef-artifacts/ts/password" }
+      fixture verify_rust { suite: "csuite-pwd-001", language: "rust", artifactLocation: ".clef-artifacts/rust/password" }
+      fixture verify_missing_suite { suite: "csuite-nonexistent", language: "typescript", artifactLocation: ".clef-artifacts/ts/password" } -> failure
     }
 
     action registerDeviation(concept: String, language: String, requirement: String, reason: String) {
@@ -73,6 +82,9 @@ concept Conformance [C] {
         so the conformance test for optional return values
         uses a different assertion shape.
       }
+
+      fixture deviation_solidity { concept: "password", language: "solidity", requirement: "req-password-003", reason: "Solidity cannot express Option<T> natively" }
+      fixture deviation_swift { concept: "auth", language: "swift", requirement: "req-auth-002", reason: "Swift throws instead of returning error variant" }
     }
 
     action matrix(concepts: option list String) {
