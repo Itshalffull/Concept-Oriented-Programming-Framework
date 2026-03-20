@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept VariantEntity [V] {
 
@@ -28,6 +29,9 @@ concept VariantEntity [V] {
         Register a variant extracted from an action in a concept
         spec. Fields is serialized JSON array of { name, typeExpr }.
       }
+      fixture register_ok { action: "Article/create", tag: "ok", fields: "[{\"name\":\"article\",\"typeExpr\":\"A\"}]" }
+      fixture register_error { action: "User/login", tag: "invalidCredentials", fields: "[]" }
+      fixture register_empty_action { action: "", tag: "ok", fields: "[]" } -> error
     }
 
     action matchingSyncs(variant: V) {
@@ -35,6 +39,8 @@ concept VariantEntity [V] {
         Return all syncs whose when-pattern matches this variant's
         tag. Results as serialized JSON array.
       }
+      fixture matching_valid { variant: "variant-entity-1" }
+      fixture matching_missing { variant: "nonexistent-id" } -> error
     }
 
     action isDead(variant: V) {

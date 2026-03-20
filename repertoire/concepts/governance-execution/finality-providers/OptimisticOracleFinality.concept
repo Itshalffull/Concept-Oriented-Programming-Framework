@@ -46,7 +46,7 @@ concept OptimisticOracleFinality [OO] {
       }
 
       fixture challenge_pending { assertion: "oo-001", challenger: "watchdog-carol", bond: 200.0, evidence: "Invalid state transition detected" }
-      fixture challenge_nonexistent { assertion: "oo-missing", challenger: "watchdog-carol", bond: 200.0, evidence: "N/A" } -> error
+      fixture challenge_already_resolved { assertion: "oo-finalized", challenger: "watchdog-carol", bond: 200.0, evidence: "N/A" } -> expired
     }
 
     action resolve(assertion: OO, validAssertion: Bool) {
@@ -60,7 +60,7 @@ concept OptimisticOracleFinality [OO] {
 
       fixture resolve_valid { assertion: "oo-001", validAssertion: true }
       fixture resolve_invalid { assertion: "oo-001", validAssertion: false }
-      fixture resolve_nonexistent { assertion: "oo-missing", validAssertion: true } -> error
+      fixture resolve_rejected { assertion: "oo-002", validAssertion: false } -> rejected
     }
 
     action checkExpiry(assertion: OO) {
@@ -72,7 +72,7 @@ concept OptimisticOracleFinality [OO] {
       }
 
       fixture check_expired { assertion: "oo-001" }
-      fixture check_nonexistent { assertion: "oo-missing" } -> error
+      fixture check_still_pending { assertion: "oo-recent" } -> still_pending
     }
   }
 

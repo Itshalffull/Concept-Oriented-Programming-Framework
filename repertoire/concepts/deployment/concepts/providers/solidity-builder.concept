@@ -44,6 +44,9 @@ concept SolidityBuilder [L] {
       -> pragmaMismatch(required: String, installed: String) {
         Contract's Solidity pragma doesn't match compiler.
       }
+
+      fixture build_contract { source: "./contracts/Token.sol", toolchainPath: "/usr/local/bin/solc", platform: "evm-shanghai", config: { mode: "release" } }
+      fixture build_missing_source { source: "", toolchainPath: "", platform: "evm", config: { mode: "debug" } } -> error
     }
 
     action test(build: L, toolchainPath: String, invocation: option { command: String, args: list String, outputFormat: String, configFile: option String, env: option String }, testType: option String) {
@@ -57,6 +60,9 @@ concept SolidityBuilder [L] {
       -> testFailure(passed: Int, failed: Int, failures: list { test: String, message: String }, testType: String) {
         Some tests failed. Includes gas usage in test output.
       }
+
+      fixture test_contract { build: "solb-001", toolchainPath: "/usr/local/bin/solc", testType: "unit" }
+      fixture test_missing_build { build: "nonexistent", toolchainPath: "/usr/local/bin/solc", testType: "unit" } -> error
     }
 
     action package(build: L, format: String) {
@@ -69,6 +75,9 @@ concept SolidityBuilder [L] {
       -> formatUnsupported(format: String) {
         Requested format not available.
       }
+
+      fixture package_abi { build: "solb-001", format: "abi-bundle" }
+      fixture package_unsupported { build: "solb-001", format: "invalid-format" } -> error
     }
 
     action register() {
@@ -79,6 +88,8 @@ concept SolidityBuilder [L] {
         capabilities: ["abi-bundle", "hardhat-artifacts",
         "foundry-out"]
       }
+
+      fixture valid {}
     }
   }
 

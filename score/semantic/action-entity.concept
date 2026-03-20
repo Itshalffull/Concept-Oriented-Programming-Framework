@@ -91,6 +91,8 @@ concept ActionEntity [A] {
       -> notfound() {
         Action does not exist.
       }
+      fixture get_valid { action: "action-entity-1" }
+      fixture get_missing { action: "nonexistent-id" } -> error
     }
   }
 

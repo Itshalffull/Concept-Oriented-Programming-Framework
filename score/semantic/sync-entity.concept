@@ -103,6 +103,9 @@ concept SyncEntity [Y] {
       -> notfound() {
         Sync does not exist.
       }
+
+      fixture get_existing { sync: "sync-entity-1" }
+      fixture get_nonexistent { sync: "sync-entity-missing" } -> error
     }
   }
 

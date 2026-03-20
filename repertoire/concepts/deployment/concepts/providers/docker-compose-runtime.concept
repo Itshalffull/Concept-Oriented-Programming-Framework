@@ -58,12 +58,18 @@ concept DockerComposeRuntime [D] {
       -> ok(service: D, restoredImage: String) {
         Service reverted to previous image.
       }
+
+      fixture rollback_image { service: "dc-001", targetImage: "user-service:v1.0.0" }
+      fixture rollback_empty { service: "dc-001", targetImage: "" } -> error
     }
 
     action destroy(service: D) {
       -> ok(service: D) {
         Container stopped and removed.
       }
+
+      fixture destroy_service { service: "dc-001" }
+      fixture destroy_empty { service: "" } -> error
     }
   }
 

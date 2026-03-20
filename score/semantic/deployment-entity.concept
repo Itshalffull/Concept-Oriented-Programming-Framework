@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept DeploymentEntity [D] {
 
@@ -42,6 +43,10 @@ concept DeploymentEntity [D] {
       -> alreadyRegistered(existing: D) {
         A deployment with this name is already registered.
       }
+
+      fixture register_prod { name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }
+      fixture register_staging { name: "conduit-staging", source: "deploy/conduit-staging.deploy.yaml", manifest: "{}" }
+      fixture register_empty_name { name: "", source: "deploy/empty.deploy.yaml", manifest: "{}" } -> error
     }
 
     action get(name: String) {
@@ -51,6 +56,9 @@ concept DeploymentEntity [D] {
       -> notfound() {
         No deployment with this name exists.
       }
+
+      fixture get_existing { name: "conduit-prod" }
+      fixture get_nonexistent { name: "no-such-deployment" } -> error
     }
 
     action listRuntimes(deployment: D) {
