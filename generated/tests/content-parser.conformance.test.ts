@@ -250,7 +250,7 @@ describe('ContentParser functional handler', () => {
 
   describe('extractRefs', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contentParserHandler.extractRefs({ content: "doc-1" });
+      const program = contentParserHandler.extractRefs({ content: {"type":"ref","fixture":"register_markdown","field":"name"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -258,21 +258,21 @@ describe('ContentParser functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contentParserHandler.extractRefs({ content: "doc-1" });
+      const program = contentParserHandler.extractRefs({ content: {"type":"ref","fixture":"register_markdown","field":"name"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contentParserHandler.extractRefs({ content: "doc-1" });
+      const program = contentParserHandler.extractRefs({ content: {"type":"ref","fixture":"register_markdown","field":"name"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contentParserHandler.extractRefs({ content: "doc-1" });
+      const program = contentParserHandler.extractRefs({ content: {"type":"ref","fixture":"register_markdown","field":"name"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -285,7 +285,7 @@ describe('ContentParser functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contentParserHandler.extractRefs({ content: "doc-1" });
+      const program = contentParserHandler.extractRefs({ content: {"type":"ref","fixture":"register_markdown","field":"name"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -293,7 +293,7 @@ describe('ContentParser functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof contentParserHandler.extractRefs !== 'function') return;
-      const result = await interpret(contentParserHandler.extractRefs({ content: "doc-1" }), storage);
+      const result = await interpret(contentParserHandler.extractRefs({ content: {"type":"ref","fixture":"register_markdown","field":"name"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -304,12 +304,7 @@ describe('ContentParser functional handler', () => {
       if (typeof contentParserHandler.extractRefs !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_markdown = await interpret(contentParserHandler.registerFormat({ name: "markdown", grammar: "{\"block\":\"paragraph\"}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_markdown?.output ?? {}));
-      const _fixtureInput = { content: "doc-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(contentParserHandler.extractRefs({ ..._fixtureInput }), storage);
+      const result = await interpret(contentParserHandler.extractRefs({ content: afterResult_register_markdown?.output?.["name"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -324,7 +319,7 @@ describe('ContentParser functional handler', () => {
 
   describe('extractTags', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contentParserHandler.extractTags({ content: "doc-1" });
+      const program = contentParserHandler.extractTags({ content: {"type":"ref","fixture":"register_markdown","field":"name"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -332,21 +327,21 @@ describe('ContentParser functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contentParserHandler.extractTags({ content: "doc-1" });
+      const program = contentParserHandler.extractTags({ content: {"type":"ref","fixture":"register_markdown","field":"name"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contentParserHandler.extractTags({ content: "doc-1" });
+      const program = contentParserHandler.extractTags({ content: {"type":"ref","fixture":"register_markdown","field":"name"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contentParserHandler.extractTags({ content: "doc-1" });
+      const program = contentParserHandler.extractTags({ content: {"type":"ref","fixture":"register_markdown","field":"name"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -359,7 +354,7 @@ describe('ContentParser functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contentParserHandler.extractTags({ content: "doc-1" });
+      const program = contentParserHandler.extractTags({ content: {"type":"ref","fixture":"register_markdown","field":"name"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -367,7 +362,7 @@ describe('ContentParser functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof contentParserHandler.extractTags !== 'function') return;
-      const result = await interpret(contentParserHandler.extractTags({ content: "doc-1" }), storage);
+      const result = await interpret(contentParserHandler.extractTags({ content: {"type":"ref","fixture":"register_markdown","field":"name"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -378,12 +373,7 @@ describe('ContentParser functional handler', () => {
       if (typeof contentParserHandler.extractTags !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_markdown = await interpret(contentParserHandler.registerFormat({ name: "markdown", grammar: "{\"block\":\"paragraph\"}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_markdown?.output ?? {}));
-      const _fixtureInput = { content: "doc-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(contentParserHandler.extractTags({ ..._fixtureInput }), storage);
+      const result = await interpret(contentParserHandler.extractTags({ content: afterResult_register_markdown?.output?.["name"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -398,7 +388,7 @@ describe('ContentParser functional handler', () => {
 
   describe('extractProperties', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contentParserHandler.extractProperties({ content: "doc-1" });
+      const program = contentParserHandler.extractProperties({ content: {"type":"ref","fixture":"register_markdown","field":"name"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -406,21 +396,21 @@ describe('ContentParser functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contentParserHandler.extractProperties({ content: "doc-1" });
+      const program = contentParserHandler.extractProperties({ content: {"type":"ref","fixture":"register_markdown","field":"name"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contentParserHandler.extractProperties({ content: "doc-1" });
+      const program = contentParserHandler.extractProperties({ content: {"type":"ref","fixture":"register_markdown","field":"name"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contentParserHandler.extractProperties({ content: "doc-1" });
+      const program = contentParserHandler.extractProperties({ content: {"type":"ref","fixture":"register_markdown","field":"name"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -433,7 +423,7 @@ describe('ContentParser functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contentParserHandler.extractProperties({ content: "doc-1" });
+      const program = contentParserHandler.extractProperties({ content: {"type":"ref","fixture":"register_markdown","field":"name"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -441,7 +431,7 @@ describe('ContentParser functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof contentParserHandler.extractProperties !== 'function') return;
-      const result = await interpret(contentParserHandler.extractProperties({ content: "doc-1" }), storage);
+      const result = await interpret(contentParserHandler.extractProperties({ content: {"type":"ref","fixture":"register_markdown","field":"name"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -452,12 +442,7 @@ describe('ContentParser functional handler', () => {
       if (typeof contentParserHandler.extractProperties !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_markdown = await interpret(contentParserHandler.registerFormat({ name: "markdown", grammar: "{\"block\":\"paragraph\"}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_markdown?.output ?? {}));
-      const _fixtureInput = { content: "doc-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(contentParserHandler.extractProperties({ ..._fixtureInput }), storage);
+      const result = await interpret(contentParserHandler.extractProperties({ content: afterResult_register_markdown?.output?.["name"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

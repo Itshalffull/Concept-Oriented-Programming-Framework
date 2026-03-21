@@ -170,7 +170,7 @@ describe('IaC functional handler', () => {
 
   describe('apply', () => {
     it('builds a valid StorageProgram', () => {
-      const program = iaCHandler.apply({ plan: "dp-001", provider: "pulumi" });
+      const program = iaCHandler.apply({ plan: {"type":"ref","fixture":"emit_pulumi","field":"output"}, provider: "pulumi" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -178,21 +178,21 @@ describe('IaC functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = iaCHandler.apply({ plan: "dp-001", provider: "pulumi" });
+      const program = iaCHandler.apply({ plan: {"type":"ref","fixture":"emit_pulumi","field":"output"}, provider: "pulumi" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = iaCHandler.apply({ plan: "dp-001", provider: "pulumi" });
+      const program = iaCHandler.apply({ plan: {"type":"ref","fixture":"emit_pulumi","field":"output"}, provider: "pulumi" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = iaCHandler.apply({ plan: "dp-001", provider: "pulumi" });
+      const program = iaCHandler.apply({ plan: {"type":"ref","fixture":"emit_pulumi","field":"output"}, provider: "pulumi" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -205,7 +205,7 @@ describe('IaC functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = iaCHandler.apply({ plan: "dp-001", provider: "pulumi" });
+      const program = iaCHandler.apply({ plan: {"type":"ref","fixture":"emit_pulumi","field":"output"}, provider: "pulumi" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -213,7 +213,7 @@ describe('IaC functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof iaCHandler.apply !== 'function') return;
-      const result = await interpret(iaCHandler.apply({ plan: "dp-001", provider: "pulumi" }), storage);
+      const result = await interpret(iaCHandler.apply({ plan: {"type":"ref","fixture":"emit_pulumi","field":"output"}, provider: "pulumi" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -224,12 +224,7 @@ describe('IaC functional handler', () => {
       if (typeof iaCHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_emit_pulumi = await interpret(iaCHandler.emit({ plan: "dp-001", provider: "pulumi" }), storage);
-      const _pool = Object.assign({}, (afterResult_emit_pulumi?.output ?? {}));
-      const _fixtureInput = { plan: "dp-001", provider: "pulumi" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(iaCHandler.apply({ ..._fixtureInput }), storage);
+      const result = await interpret(iaCHandler.apply({ plan: afterResult_emit_pulumi?.output?.["output"], provider: "pulumi" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -324,7 +319,7 @@ describe('IaC functional handler', () => {
 
   describe('teardown', () => {
     it('builds a valid StorageProgram', () => {
-      const program = iaCHandler.teardown({ plan: "dp-001", provider: "pulumi" });
+      const program = iaCHandler.teardown({ plan: {"type":"ref","fixture":"emit_pulumi","field":"output"}, provider: "pulumi" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -332,21 +327,21 @@ describe('IaC functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = iaCHandler.teardown({ plan: "dp-001", provider: "pulumi" });
+      const program = iaCHandler.teardown({ plan: {"type":"ref","fixture":"emit_pulumi","field":"output"}, provider: "pulumi" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = iaCHandler.teardown({ plan: "dp-001", provider: "pulumi" });
+      const program = iaCHandler.teardown({ plan: {"type":"ref","fixture":"emit_pulumi","field":"output"}, provider: "pulumi" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = iaCHandler.teardown({ plan: "dp-001", provider: "pulumi" });
+      const program = iaCHandler.teardown({ plan: {"type":"ref","fixture":"emit_pulumi","field":"output"}, provider: "pulumi" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -359,7 +354,7 @@ describe('IaC functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = iaCHandler.teardown({ plan: "dp-001", provider: "pulumi" });
+      const program = iaCHandler.teardown({ plan: {"type":"ref","fixture":"emit_pulumi","field":"output"}, provider: "pulumi" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -367,7 +362,7 @@ describe('IaC functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof iaCHandler.teardown !== 'function') return;
-      const result = await interpret(iaCHandler.teardown({ plan: "dp-001", provider: "pulumi" }), storage);
+      const result = await interpret(iaCHandler.teardown({ plan: {"type":"ref","fixture":"emit_pulumi","field":"output"}, provider: "pulumi" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -378,12 +373,7 @@ describe('IaC functional handler', () => {
       if (typeof iaCHandler.teardown !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_emit_pulumi = await interpret(iaCHandler.emit({ plan: "dp-001", provider: "pulumi" }), storage);
-      const _pool = Object.assign({}, (afterResult_emit_pulumi?.output ?? {}));
-      const _fixtureInput = { plan: "dp-001", provider: "pulumi" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(iaCHandler.teardown({ ..._fixtureInput }), storage);
+      const result = await interpret(iaCHandler.teardown({ plan: afterResult_emit_pulumi?.output?.["output"], provider: "pulumi" }), storage);
       expect(result.variant).toBe('ok');
     });
 

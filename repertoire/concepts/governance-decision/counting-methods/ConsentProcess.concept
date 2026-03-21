@@ -41,7 +41,7 @@ concept ConsentProcess [CP] {
         Presenting → Clarifying → Reacting → ObjectionRound.
       }
 
-      fixture advance_to_clarifying { process: "consent-001" } after initiate_budget_proposal
+      fixture advance_to_clarifying { process: $initiate_budget_proposal.id } after initiate_budget_proposal
       fixture advance_missing_process { process: "consent-nonexistent" } -> error
     }
 
@@ -54,7 +54,7 @@ concept ConsentProcess [CP] {
         Objections can only be raised during ObjectionRound.
       }
 
-      fixture raise_paramount { process: "consent-001", objector: "alice", reason: "Exceeds annual budget limit", isParamount: true } after initiate_budget_proposal
+      fixture raise_paramount { process: $initiate_budget_proposal.id, objector: "alice", reason: "Exceeds annual budget limit", isParamount: true } after initiate_budget_proposal
       fixture raise_during_wrong_phase { process: "consent-001", objector: "bob", reason: "Unclear scope", isParamount: false } -> error
     }
 
@@ -65,7 +65,7 @@ concept ConsentProcess [CP] {
         a new objection round begins on the amended proposal.
       }
 
-      fixture integrate_first_objection { process: "consent-001", objectionIndex: 0, amendment: "Cap budget at 80% of original request" } after initiate_budget_proposal
+      fixture integrate_first_objection { process: $initiate_budget_proposal.id, objectionIndex: 0, amendment: "Cap budget at 80% of original request" } after initiate_budget_proposal
       fixture integrate_missing_objection { process: "consent-001", objectionIndex: 99, amendment: "N/A" } -> error
     }
 
@@ -77,7 +77,7 @@ concept ConsentProcess [CP] {
         Paramount objections remain that could not be integrated.
       }
 
-      fixture resolve_clean { process: "consent-001" } after initiate_budget_proposal
+      fixture resolve_clean { process: $initiate_budget_proposal.id } after initiate_budget_proposal
       fixture resolve_missing_process { process: "consent-nonexistent" } -> error
     }
   }

@@ -102,7 +102,7 @@ describe('AttestationSybil functional handler', () => {
 
   describe('submitAttestation', () => {
     it('builds a valid StorageProgram', () => {
-      const program = attestationSybilHandler.submitAttestation({ config: "att-sybil-1", candidate: "alice", attestationRef: "att-ref-001", schema: "kyc-basic", attester: "civic-authority", expiresAt: "2027-12-31T00:00:00Z" });
+      const program = attestationSybilHandler.submitAttestation({ config: {"type":"ref","fixture":"configure_kyc","field":"id"}, candidate: "alice", attestationRef: {"type":"ref","fixture":"configure_kyc","field":"id"}, schema: "kyc-basic", attester: "civic-authority", expiresAt: "2027-12-31T00:00:00Z" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('AttestationSybil functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = attestationSybilHandler.submitAttestation({ config: "att-sybil-1", candidate: "alice", attestationRef: "att-ref-001", schema: "kyc-basic", attester: "civic-authority", expiresAt: "2027-12-31T00:00:00Z" });
+      const program = attestationSybilHandler.submitAttestation({ config: {"type":"ref","fixture":"configure_kyc","field":"id"}, candidate: "alice", attestationRef: {"type":"ref","fixture":"configure_kyc","field":"id"}, schema: "kyc-basic", attester: "civic-authority", expiresAt: "2027-12-31T00:00:00Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = attestationSybilHandler.submitAttestation({ config: "att-sybil-1", candidate: "alice", attestationRef: "att-ref-001", schema: "kyc-basic", attester: "civic-authority", expiresAt: "2027-12-31T00:00:00Z" });
+      const program = attestationSybilHandler.submitAttestation({ config: {"type":"ref","fixture":"configure_kyc","field":"id"}, candidate: "alice", attestationRef: {"type":"ref","fixture":"configure_kyc","field":"id"}, schema: "kyc-basic", attester: "civic-authority", expiresAt: "2027-12-31T00:00:00Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = attestationSybilHandler.submitAttestation({ config: "att-sybil-1", candidate: "alice", attestationRef: "att-ref-001", schema: "kyc-basic", attester: "civic-authority", expiresAt: "2027-12-31T00:00:00Z" });
+      const program = attestationSybilHandler.submitAttestation({ config: {"type":"ref","fixture":"configure_kyc","field":"id"}, candidate: "alice", attestationRef: {"type":"ref","fixture":"configure_kyc","field":"id"}, schema: "kyc-basic", attester: "civic-authority", expiresAt: "2027-12-31T00:00:00Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('AttestationSybil functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = attestationSybilHandler.submitAttestation({ config: "att-sybil-1", candidate: "alice", attestationRef: "att-ref-001", schema: "kyc-basic", attester: "civic-authority", expiresAt: "2027-12-31T00:00:00Z" });
+      const program = attestationSybilHandler.submitAttestation({ config: {"type":"ref","fixture":"configure_kyc","field":"id"}, candidate: "alice", attestationRef: {"type":"ref","fixture":"configure_kyc","field":"id"}, schema: "kyc-basic", attester: "civic-authority", expiresAt: "2027-12-31T00:00:00Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('AttestationSybil functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof attestationSybilHandler.submitAttestation !== 'function') return;
-      const result = await interpret(attestationSybilHandler.submitAttestation({ config: "att-sybil-1", candidate: "alice", attestationRef: "att-ref-001", schema: "kyc-basic", attester: "civic-authority", expiresAt: "2027-12-31T00:00:00Z" }), storage);
+      const result = await interpret(attestationSybilHandler.submitAttestation({ config: {"type":"ref","fixture":"configure_kyc","field":"id"}, candidate: "alice", attestationRef: {"type":"ref","fixture":"configure_kyc","field":"id"}, schema: "kyc-basic", attester: "civic-authority", expiresAt: "2027-12-31T00:00:00Z" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('AttestationSybil functional handler', () => {
       if (typeof attestationSybilHandler.submitAttestation !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_configure_kyc = await interpret(attestationSybilHandler.configure({ requiredSchema: "kyc-basic", requiredAttester: "civic-authority" }), storage);
-      const _pool = Object.assign({}, (afterResult_configure_kyc?.output ?? {}));
-      const _fixtureInput = { config: "att-sybil-1", candidate: "alice", attestationRef: "att-ref-001", schema: "kyc-basic", attester: "civic-authority", expiresAt: "2027-12-31T00:00:00Z" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(attestationSybilHandler.submitAttestation({ ..._fixtureInput }), storage);
+      const result = await interpret(attestationSybilHandler.submitAttestation({ config: afterResult_configure_kyc?.output?.["id"], candidate: "alice", attestationRef: afterResult_configure_kyc?.output?.["id"], schema: "kyc-basic", attester: "civic-authority", expiresAt: "2027-12-31T00:00:00Z" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,7 +171,7 @@ describe('AttestationSybil functional handler', () => {
 
   describe('verify', () => {
     it('builds a valid StorageProgram', () => {
-      const program = attestationSybilHandler.verify({ config: "att-sybil-1", candidate: "alice" });
+      const program = attestationSybilHandler.verify({ config: {"type":"ref","fixture":"configure_kyc","field":"id"}, candidate: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +179,21 @@ describe('AttestationSybil functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = attestationSybilHandler.verify({ config: "att-sybil-1", candidate: "alice" });
+      const program = attestationSybilHandler.verify({ config: {"type":"ref","fixture":"configure_kyc","field":"id"}, candidate: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = attestationSybilHandler.verify({ config: "att-sybil-1", candidate: "alice" });
+      const program = attestationSybilHandler.verify({ config: {"type":"ref","fixture":"configure_kyc","field":"id"}, candidate: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = attestationSybilHandler.verify({ config: "att-sybil-1", candidate: "alice" });
+      const program = attestationSybilHandler.verify({ config: {"type":"ref","fixture":"configure_kyc","field":"id"}, candidate: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +206,7 @@ describe('AttestationSybil functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = attestationSybilHandler.verify({ config: "att-sybil-1", candidate: "alice" });
+      const program = attestationSybilHandler.verify({ config: {"type":"ref","fixture":"configure_kyc","field":"id"}, candidate: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,7 +214,7 @@ describe('AttestationSybil functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof attestationSybilHandler.verify !== 'function') return;
-      const result = await interpret(attestationSybilHandler.verify({ config: "att-sybil-1", candidate: "alice" }), storage);
+      const result = await interpret(attestationSybilHandler.verify({ config: {"type":"ref","fixture":"configure_kyc","field":"id"}, candidate: "alice" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -230,12 +225,7 @@ describe('AttestationSybil functional handler', () => {
       if (typeof attestationSybilHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_configure_kyc = await interpret(attestationSybilHandler.configure({ requiredSchema: "kyc-basic", requiredAttester: "civic-authority" }), storage);
-      const _pool = Object.assign({}, (afterResult_configure_kyc?.output ?? {}));
-      const _fixtureInput = { config: "att-sybil-1", candidate: "alice" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(attestationSybilHandler.verify({ ..._fixtureInput }), storage);
+      const result = await interpret(attestationSybilHandler.verify({ config: afterResult_configure_kyc?.output?.["id"], candidate: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -177,7 +177,7 @@ describe('TerraformProvider functional handler', () => {
 
   describe('apply', () => {
     it('builds a valid StorageProgram', () => {
-      const program = terraformProviderHandler.apply({ workspace: "ws-prod-001" });
+      const program = terraformProviderHandler.apply({ workspace: {"type":"ref","fixture":"generate_plan","field":"workspace"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -185,21 +185,21 @@ describe('TerraformProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = terraformProviderHandler.apply({ workspace: "ws-prod-001" });
+      const program = terraformProviderHandler.apply({ workspace: {"type":"ref","fixture":"generate_plan","field":"workspace"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = terraformProviderHandler.apply({ workspace: "ws-prod-001" });
+      const program = terraformProviderHandler.apply({ workspace: {"type":"ref","fixture":"generate_plan","field":"workspace"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = terraformProviderHandler.apply({ workspace: "ws-prod-001" });
+      const program = terraformProviderHandler.apply({ workspace: {"type":"ref","fixture":"generate_plan","field":"workspace"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -212,7 +212,7 @@ describe('TerraformProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = terraformProviderHandler.apply({ workspace: "ws-prod-001" });
+      const program = terraformProviderHandler.apply({ workspace: {"type":"ref","fixture":"generate_plan","field":"workspace"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -220,7 +220,7 @@ describe('TerraformProvider functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof terraformProviderHandler.apply !== 'function') return;
-      const result = await interpret(terraformProviderHandler.apply({ workspace: "ws-prod-001" }), storage);
+      const result = await interpret(terraformProviderHandler.apply({ workspace: {"type":"ref","fixture":"generate_plan","field":"workspace"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -231,12 +231,7 @@ describe('TerraformProvider functional handler', () => {
       if (typeof terraformProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_generate_plan = await interpret(terraformProviderHandler.generate({ plan: "dp-001" }), storage);
-      const _pool = Object.assign({}, (afterResult_generate_plan?.output ?? {}));
-      const _fixtureInput = { workspace: "ws-prod-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(terraformProviderHandler.apply({ ..._fixtureInput }), storage);
+      const result = await interpret(terraformProviderHandler.apply({ workspace: afterResult_generate_plan?.output?.["workspace"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -251,7 +246,7 @@ describe('TerraformProvider functional handler', () => {
 
   describe('teardown', () => {
     it('builds a valid StorageProgram', () => {
-      const program = terraformProviderHandler.teardown({ workspace: "ws-prod-001" });
+      const program = terraformProviderHandler.teardown({ workspace: {"type":"ref","fixture":"generate_plan","field":"workspace"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -259,21 +254,21 @@ describe('TerraformProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = terraformProviderHandler.teardown({ workspace: "ws-prod-001" });
+      const program = terraformProviderHandler.teardown({ workspace: {"type":"ref","fixture":"generate_plan","field":"workspace"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = terraformProviderHandler.teardown({ workspace: "ws-prod-001" });
+      const program = terraformProviderHandler.teardown({ workspace: {"type":"ref","fixture":"generate_plan","field":"workspace"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = terraformProviderHandler.teardown({ workspace: "ws-prod-001" });
+      const program = terraformProviderHandler.teardown({ workspace: {"type":"ref","fixture":"generate_plan","field":"workspace"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -286,7 +281,7 @@ describe('TerraformProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = terraformProviderHandler.teardown({ workspace: "ws-prod-001" });
+      const program = terraformProviderHandler.teardown({ workspace: {"type":"ref","fixture":"generate_plan","field":"workspace"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -294,7 +289,7 @@ describe('TerraformProvider functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof terraformProviderHandler.teardown !== 'function') return;
-      const result = await interpret(terraformProviderHandler.teardown({ workspace: "ws-prod-001" }), storage);
+      const result = await interpret(terraformProviderHandler.teardown({ workspace: {"type":"ref","fixture":"generate_plan","field":"workspace"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -305,12 +300,7 @@ describe('TerraformProvider functional handler', () => {
       if (typeof terraformProviderHandler.teardown !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_generate_plan = await interpret(terraformProviderHandler.generate({ plan: "dp-001" }), storage);
-      const _pool = Object.assign({}, (afterResult_generate_plan?.output ?? {}));
-      const _fixtureInput = { workspace: "ws-prod-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(terraformProviderHandler.teardown({ ..._fixtureInput }), storage);
+      const result = await interpret(terraformProviderHandler.teardown({ workspace: afterResult_generate_plan?.output?.["workspace"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

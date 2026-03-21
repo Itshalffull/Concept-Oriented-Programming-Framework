@@ -273,7 +273,7 @@ describe('VersionSpace functional handler', () => {
 
   describe('write', () => {
     it('builds a valid StorageProgram', () => {
-      const program = versionSpaceHandler.write({ space: "vs-redesign", entity_id: "article-42", fields: "{\"title\":\"New Title\"}" });
+      const program = versionSpaceHandler.write({ space: "vs-redesign", entity_id: {"type":"ref","fixture":"fork_from_base","field":"space"}, fields: "{\"title\":\"New Title\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -281,21 +281,21 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = versionSpaceHandler.write({ space: "vs-redesign", entity_id: "article-42", fields: "{\"title\":\"New Title\"}" });
+      const program = versionSpaceHandler.write({ space: "vs-redesign", entity_id: {"type":"ref","fixture":"fork_from_base","field":"space"}, fields: "{\"title\":\"New Title\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = versionSpaceHandler.write({ space: "vs-redesign", entity_id: "article-42", fields: "{\"title\":\"New Title\"}" });
+      const program = versionSpaceHandler.write({ space: "vs-redesign", entity_id: {"type":"ref","fixture":"fork_from_base","field":"space"}, fields: "{\"title\":\"New Title\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = versionSpaceHandler.write({ space: "vs-redesign", entity_id: "article-42", fields: "{\"title\":\"New Title\"}" });
+      const program = versionSpaceHandler.write({ space: "vs-redesign", entity_id: {"type":"ref","fixture":"fork_from_base","field":"space"}, fields: "{\"title\":\"New Title\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -308,7 +308,7 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = versionSpaceHandler.write({ space: "vs-redesign", entity_id: "article-42", fields: "{\"title\":\"New Title\"}" });
+      const program = versionSpaceHandler.write({ space: "vs-redesign", entity_id: {"type":"ref","fixture":"fork_from_base","field":"space"}, fields: "{\"title\":\"New Title\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -316,7 +316,7 @@ describe('VersionSpace functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof versionSpaceHandler.write !== 'function') return;
-      const result = await interpret(versionSpaceHandler.write({ space: "vs-redesign", entity_id: "article-42", fields: "{\"title\":\"New Title\"}" }), storage);
+      const result = await interpret(versionSpaceHandler.write({ space: "vs-redesign", entity_id: {"type":"ref","fixture":"fork_from_base","field":"space"}, fields: "{\"title\":\"New Title\"}" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -327,12 +327,7 @@ describe('VersionSpace functional handler', () => {
       if (typeof versionSpaceHandler.write !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
-      const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
-      const _fixtureInput = { space: "vs-redesign", entity_id: "article-42", fields: "{\"title\":\"New Title\"}" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(versionSpaceHandler.write({ ..._fixtureInput }), storage);
+      const result = await interpret(versionSpaceHandler.write({ space: "vs-redesign", entity_id: afterResult_fork_from_base?.output?.["space"], fields: "{\"title\":\"New Title\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -340,12 +335,7 @@ describe('VersionSpace functional handler', () => {
       if (typeof versionSpaceHandler.write !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
-      const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
-      const _fixtureInput = { space: "vs-nonexistent", entity_id: "article-42", fields: "{}" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(versionSpaceHandler.write({ ..._fixtureInput }), storage);
+      const result = await interpret(versionSpaceHandler.write({ space: "vs-nonexistent", entity_id: afterResult_fork_from_base?.output?.["space"], fields: "{}" }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('read_only'));
     });
@@ -434,7 +424,7 @@ describe('VersionSpace functional handler', () => {
 
   describe('delete_in_space', () => {
     it('builds a valid StorageProgram', () => {
-      const program = versionSpaceHandler.delete_in_space({ space: "vs-redesign", entity_id: "article-42" });
+      const program = versionSpaceHandler.delete_in_space({ space: "vs-redesign", entity_id: {"type":"ref","fixture":"fork_from_base","field":"space"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -442,21 +432,21 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = versionSpaceHandler.delete_in_space({ space: "vs-redesign", entity_id: "article-42" });
+      const program = versionSpaceHandler.delete_in_space({ space: "vs-redesign", entity_id: {"type":"ref","fixture":"fork_from_base","field":"space"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = versionSpaceHandler.delete_in_space({ space: "vs-redesign", entity_id: "article-42" });
+      const program = versionSpaceHandler.delete_in_space({ space: "vs-redesign", entity_id: {"type":"ref","fixture":"fork_from_base","field":"space"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = versionSpaceHandler.delete_in_space({ space: "vs-redesign", entity_id: "article-42" });
+      const program = versionSpaceHandler.delete_in_space({ space: "vs-redesign", entity_id: {"type":"ref","fixture":"fork_from_base","field":"space"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -469,7 +459,7 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = versionSpaceHandler.delete_in_space({ space: "vs-redesign", entity_id: "article-42" });
+      const program = versionSpaceHandler.delete_in_space({ space: "vs-redesign", entity_id: {"type":"ref","fixture":"fork_from_base","field":"space"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -477,7 +467,7 @@ describe('VersionSpace functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof versionSpaceHandler.delete_in_space !== 'function') return;
-      const result = await interpret(versionSpaceHandler.delete_in_space({ space: "vs-redesign", entity_id: "article-42" }), storage);
+      const result = await interpret(versionSpaceHandler.delete_in_space({ space: "vs-redesign", entity_id: {"type":"ref","fixture":"fork_from_base","field":"space"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -488,12 +478,7 @@ describe('VersionSpace functional handler', () => {
       if (typeof versionSpaceHandler.delete_in_space !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
-      const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
-      const _fixtureInput = { space: "vs-redesign", entity_id: "article-42" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(versionSpaceHandler.delete_in_space({ ..._fixtureInput }), storage);
+      const result = await interpret(versionSpaceHandler.delete_in_space({ space: "vs-redesign", entity_id: afterResult_fork_from_base?.output?.["space"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -501,12 +486,7 @@ describe('VersionSpace functional handler', () => {
       if (typeof versionSpaceHandler.delete_in_space !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
-      const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
-      const _fixtureInput = { space: "vs-redesign", entity_id: "article-999" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(versionSpaceHandler.delete_in_space({ ..._fixtureInput }), storage);
+      const result = await interpret(versionSpaceHandler.delete_in_space({ space: "vs-redesign", entity_id: afterResult_fork_from_base?.output?.["space"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -514,7 +494,7 @@ describe('VersionSpace functional handler', () => {
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = versionSpaceHandler.resolve({ space: "vs-redesign", entity_id: "article-42" });
+      const program = versionSpaceHandler.resolve({ space: "vs-redesign", entity_id: {"type":"ref","fixture":"fork_from_base","field":"space"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -522,21 +502,21 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = versionSpaceHandler.resolve({ space: "vs-redesign", entity_id: "article-42" });
+      const program = versionSpaceHandler.resolve({ space: "vs-redesign", entity_id: {"type":"ref","fixture":"fork_from_base","field":"space"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = versionSpaceHandler.resolve({ space: "vs-redesign", entity_id: "article-42" });
+      const program = versionSpaceHandler.resolve({ space: "vs-redesign", entity_id: {"type":"ref","fixture":"fork_from_base","field":"space"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = versionSpaceHandler.resolve({ space: "vs-redesign", entity_id: "article-42" });
+      const program = versionSpaceHandler.resolve({ space: "vs-redesign", entity_id: {"type":"ref","fixture":"fork_from_base","field":"space"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -549,7 +529,7 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = versionSpaceHandler.resolve({ space: "vs-redesign", entity_id: "article-42" });
+      const program = versionSpaceHandler.resolve({ space: "vs-redesign", entity_id: {"type":"ref","fixture":"fork_from_base","field":"space"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -557,7 +537,7 @@ describe('VersionSpace functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof versionSpaceHandler.resolve !== 'function') return;
-      const result = await interpret(versionSpaceHandler.resolve({ space: "vs-redesign", entity_id: "article-42" }), storage);
+      const result = await interpret(versionSpaceHandler.resolve({ space: "vs-redesign", entity_id: {"type":"ref","fixture":"fork_from_base","field":"space"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -568,12 +548,7 @@ describe('VersionSpace functional handler', () => {
       if (typeof versionSpaceHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
-      const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
-      const _fixtureInput = { space: "vs-redesign", entity_id: "article-42" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(versionSpaceHandler.resolve({ ..._fixtureInput }), storage);
+      const result = await interpret(versionSpaceHandler.resolve({ space: "vs-redesign", entity_id: afterResult_fork_from_base?.output?.["space"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -581,12 +556,7 @@ describe('VersionSpace functional handler', () => {
       if (typeof versionSpaceHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
-      const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
-      const _fixtureInput = { space: "vs-redesign", entity_id: "article-99" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(versionSpaceHandler.resolve({ ..._fixtureInput }), storage);
+      const result = await interpret(versionSpaceHandler.resolve({ space: "vs-redesign", entity_id: afterResult_fork_from_base?.output?.["space"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -819,7 +789,7 @@ describe('VersionSpace functional handler', () => {
 
   describe('cherry_pick', () => {
     it('builds a valid StorageProgram', () => {
-      const program = versionSpaceHandler.cherry_pick({ source: "vs-alpha", target: "vs-beta", entity_id: "article-42" });
+      const program = versionSpaceHandler.cherry_pick({ source: "vs-alpha", target: "vs-beta", entity_id: {"type":"ref","fixture":"fork_from_base","field":"space"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -827,21 +797,21 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = versionSpaceHandler.cherry_pick({ source: "vs-alpha", target: "vs-beta", entity_id: "article-42" });
+      const program = versionSpaceHandler.cherry_pick({ source: "vs-alpha", target: "vs-beta", entity_id: {"type":"ref","fixture":"fork_from_base","field":"space"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = versionSpaceHandler.cherry_pick({ source: "vs-alpha", target: "vs-beta", entity_id: "article-42" });
+      const program = versionSpaceHandler.cherry_pick({ source: "vs-alpha", target: "vs-beta", entity_id: {"type":"ref","fixture":"fork_from_base","field":"space"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = versionSpaceHandler.cherry_pick({ source: "vs-alpha", target: "vs-beta", entity_id: "article-42" });
+      const program = versionSpaceHandler.cherry_pick({ source: "vs-alpha", target: "vs-beta", entity_id: {"type":"ref","fixture":"fork_from_base","field":"space"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -854,7 +824,7 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = versionSpaceHandler.cherry_pick({ source: "vs-alpha", target: "vs-beta", entity_id: "article-42" });
+      const program = versionSpaceHandler.cherry_pick({ source: "vs-alpha", target: "vs-beta", entity_id: {"type":"ref","fixture":"fork_from_base","field":"space"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -862,7 +832,7 @@ describe('VersionSpace functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof versionSpaceHandler.cherry_pick !== 'function') return;
-      const result = await interpret(versionSpaceHandler.cherry_pick({ source: "vs-alpha", target: "vs-beta", entity_id: "article-42" }), storage);
+      const result = await interpret(versionSpaceHandler.cherry_pick({ source: "vs-alpha", target: "vs-beta", entity_id: {"type":"ref","fixture":"fork_from_base","field":"space"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -873,12 +843,7 @@ describe('VersionSpace functional handler', () => {
       if (typeof versionSpaceHandler.cherry_pick !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
-      const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
-      const _fixtureInput = { source: "vs-alpha", target: "vs-beta", entity_id: "article-42" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(versionSpaceHandler.cherry_pick({ ..._fixtureInput }), storage);
+      const result = await interpret(versionSpaceHandler.cherry_pick({ source: "vs-alpha", target: "vs-beta", entity_id: afterResult_fork_from_base?.output?.["space"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

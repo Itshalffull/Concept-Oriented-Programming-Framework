@@ -183,7 +183,7 @@ describe('StateField functional handler', () => {
 
   describe('traceToGenerated', () => {
     it('builds a valid StorageProgram', () => {
-      const program = stateFieldHandler.traceToGenerated({ field: "state-field-1" });
+      const program = stateFieldHandler.traceToGenerated({ field: {"type":"ref","fixture":"register_title","field":"field"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -191,21 +191,21 @@ describe('StateField functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = stateFieldHandler.traceToGenerated({ field: "state-field-1" });
+      const program = stateFieldHandler.traceToGenerated({ field: {"type":"ref","fixture":"register_title","field":"field"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = stateFieldHandler.traceToGenerated({ field: "state-field-1" });
+      const program = stateFieldHandler.traceToGenerated({ field: {"type":"ref","fixture":"register_title","field":"field"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = stateFieldHandler.traceToGenerated({ field: "state-field-1" });
+      const program = stateFieldHandler.traceToGenerated({ field: {"type":"ref","fixture":"register_title","field":"field"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -218,7 +218,7 @@ describe('StateField functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = stateFieldHandler.traceToGenerated({ field: "state-field-1" });
+      const program = stateFieldHandler.traceToGenerated({ field: {"type":"ref","fixture":"register_title","field":"field"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -226,7 +226,7 @@ describe('StateField functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof stateFieldHandler.traceToGenerated !== 'function') return;
-      const result = await interpret(stateFieldHandler.traceToGenerated({ field: "state-field-1" }), storage);
+      const result = await interpret(stateFieldHandler.traceToGenerated({ field: {"type":"ref","fixture":"register_title","field":"field"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -237,12 +237,7 @@ describe('StateField functional handler', () => {
       if (typeof stateFieldHandler.traceToGenerated !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_title = await interpret(stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_title?.output ?? {}));
-      const _fixtureInput = { field: "state-field-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(stateFieldHandler.traceToGenerated({ ..._fixtureInput }), storage);
+      const result = await interpret(stateFieldHandler.traceToGenerated({ field: afterResult_register_title?.output?.["field"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -263,7 +258,7 @@ describe('StateField functional handler', () => {
 
   describe('traceToStorage', () => {
     it('builds a valid StorageProgram', () => {
-      const program = stateFieldHandler.traceToStorage({ field: "state-field-1" });
+      const program = stateFieldHandler.traceToStorage({ field: {"type":"ref","fixture":"register_title","field":"field"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -271,21 +266,21 @@ describe('StateField functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = stateFieldHandler.traceToStorage({ field: "state-field-1" });
+      const program = stateFieldHandler.traceToStorage({ field: {"type":"ref","fixture":"register_title","field":"field"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = stateFieldHandler.traceToStorage({ field: "state-field-1" });
+      const program = stateFieldHandler.traceToStorage({ field: {"type":"ref","fixture":"register_title","field":"field"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = stateFieldHandler.traceToStorage({ field: "state-field-1" });
+      const program = stateFieldHandler.traceToStorage({ field: {"type":"ref","fixture":"register_title","field":"field"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -298,7 +293,7 @@ describe('StateField functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = stateFieldHandler.traceToStorage({ field: "state-field-1" });
+      const program = stateFieldHandler.traceToStorage({ field: {"type":"ref","fixture":"register_title","field":"field"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -306,7 +301,7 @@ describe('StateField functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof stateFieldHandler.traceToStorage !== 'function') return;
-      const result = await interpret(stateFieldHandler.traceToStorage({ field: "state-field-1" }), storage);
+      const result = await interpret(stateFieldHandler.traceToStorage({ field: {"type":"ref","fixture":"register_title","field":"field"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -317,12 +312,7 @@ describe('StateField functional handler', () => {
       if (typeof stateFieldHandler.traceToStorage !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_title = await interpret(stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_title?.output ?? {}));
-      const _fixtureInput = { field: "state-field-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(stateFieldHandler.traceToStorage({ ..._fixtureInput }), storage);
+      const result = await interpret(stateFieldHandler.traceToStorage({ field: afterResult_register_title?.output?.["field"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -343,7 +333,7 @@ describe('StateField functional handler', () => {
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = stateFieldHandler.get({ field: "state-field-1" });
+      const program = stateFieldHandler.get({ field: {"type":"ref","fixture":"register_title","field":"field"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -351,21 +341,21 @@ describe('StateField functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = stateFieldHandler.get({ field: "state-field-1" });
+      const program = stateFieldHandler.get({ field: {"type":"ref","fixture":"register_title","field":"field"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = stateFieldHandler.get({ field: "state-field-1" });
+      const program = stateFieldHandler.get({ field: {"type":"ref","fixture":"register_title","field":"field"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = stateFieldHandler.get({ field: "state-field-1" });
+      const program = stateFieldHandler.get({ field: {"type":"ref","fixture":"register_title","field":"field"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -378,7 +368,7 @@ describe('StateField functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = stateFieldHandler.get({ field: "state-field-1" });
+      const program = stateFieldHandler.get({ field: {"type":"ref","fixture":"register_title","field":"field"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -386,7 +376,7 @@ describe('StateField functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof stateFieldHandler.get !== 'function') return;
-      const result = await interpret(stateFieldHandler.get({ field: "state-field-1" }), storage);
+      const result = await interpret(stateFieldHandler.get({ field: {"type":"ref","fixture":"register_title","field":"field"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -397,12 +387,7 @@ describe('StateField functional handler', () => {
       if (typeof stateFieldHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_title = await interpret(stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_title?.output ?? {}));
-      const _fixtureInput = { field: "state-field-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(stateFieldHandler.get({ ..._fixtureInput }), storage);
+      const result = await interpret(stateFieldHandler.get({ field: afterResult_register_title?.output?.["field"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -417,12 +402,7 @@ describe('StateField functional handler', () => {
       if (typeof stateFieldHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_title = await interpret(stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_title?.output ?? {}));
-      const _fixtureInput = { field: "state-field-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(stateFieldHandler.get({ ..._fixtureInput }), storage);
+      const result = await interpret(stateFieldHandler.get({ field: afterResult_register_title?.output?.["field"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

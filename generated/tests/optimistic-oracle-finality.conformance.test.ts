@@ -59,7 +59,7 @@ describe('OptimisticOracleFinality imperative handler', () => {
   describe('challenge', () => {
     it('produces a result', async () => {
       if (typeof optimisticOracleFinalityHandler.challenge !== 'function') return;
-      const result = await optimisticOracleFinalityHandler.challenge({ assertion: "oo-001", challenger: "watchdog-carol", bond: "200.0", evidence: "Invalid state transition detected" }, storage);
+      const result = await optimisticOracleFinalityHandler.challenge({ assertion: {"type":"ref","fixture":"assert_standard","field":"id"}, challenger: "watchdog-carol", bond: "200.0", evidence: "Invalid state transition detected" }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -70,12 +70,7 @@ describe('OptimisticOracleFinality imperative handler', () => {
       if (typeof optimisticOracleFinalityHandler.challenge !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_assert_standard = await optimisticOracleFinalityHandler.assertFinality({ operationRef: "proposal-001", asserter: "validator-alice", bond: "100.0", challengeWindowHours: "48.0" }, storage);
-      const _pool = Object.assign({}, (afterResult_assert_standard?.output ?? {}));
-      const _fixtureInput = { assertion: "oo-001", challenger: "watchdog-carol", bond: "200.0", evidence: "Invalid state transition detected" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await optimisticOracleFinalityHandler.challenge({ ..._fixtureInput }, storage);
+      const result = await optimisticOracleFinalityHandler.challenge({ assertion: afterResult_assert_standard?.output?.["id"], challenger: "watchdog-carol", bond: "200.0", evidence: "Invalid state transition detected" }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -92,7 +87,7 @@ describe('OptimisticOracleFinality imperative handler', () => {
   describe('resolve', () => {
     it('produces a result', async () => {
       if (typeof optimisticOracleFinalityHandler.resolve !== 'function') return;
-      const result = await optimisticOracleFinalityHandler.resolve({ assertion: "oo-001", validAssertion: "true" }, storage);
+      const result = await optimisticOracleFinalityHandler.resolve({ assertion: {"type":"ref","fixture":"assert_standard","field":"id"}, validAssertion: "true" }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -103,12 +98,7 @@ describe('OptimisticOracleFinality imperative handler', () => {
       if (typeof optimisticOracleFinalityHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_assert_standard = await optimisticOracleFinalityHandler.assertFinality({ operationRef: "proposal-001", asserter: "validator-alice", bond: "100.0", challengeWindowHours: "48.0" }, storage);
-      const _pool = Object.assign({}, (afterResult_assert_standard?.output ?? {}));
-      const _fixtureInput = { assertion: "oo-001", validAssertion: "true" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await optimisticOracleFinalityHandler.resolve({ ..._fixtureInput }, storage);
+      const result = await optimisticOracleFinalityHandler.resolve({ assertion: afterResult_assert_standard?.output?.["id"], validAssertion: "true" }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -116,12 +106,7 @@ describe('OptimisticOracleFinality imperative handler', () => {
       if (typeof optimisticOracleFinalityHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_assert_standard = await optimisticOracleFinalityHandler.assertFinality({ operationRef: "proposal-001", asserter: "validator-alice", bond: "100.0", challengeWindowHours: "48.0" }, storage);
-      const _pool = Object.assign({}, (afterResult_assert_standard?.output ?? {}));
-      const _fixtureInput = { assertion: "oo-001", validAssertion: "false" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await optimisticOracleFinalityHandler.resolve({ ..._fixtureInput }, storage);
+      const result = await optimisticOracleFinalityHandler.resolve({ assertion: afterResult_assert_standard?.output?.["id"], validAssertion: "false" }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -138,7 +123,7 @@ describe('OptimisticOracleFinality imperative handler', () => {
   describe('checkExpiry', () => {
     it('produces a result', async () => {
       if (typeof optimisticOracleFinalityHandler.checkExpiry !== 'function') return;
-      const result = await optimisticOracleFinalityHandler.checkExpiry({ assertion: "oo-001" }, storage);
+      const result = await optimisticOracleFinalityHandler.checkExpiry({ assertion: {"type":"ref","fixture":"assert_standard","field":"id"} }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -149,12 +134,7 @@ describe('OptimisticOracleFinality imperative handler', () => {
       if (typeof optimisticOracleFinalityHandler.checkExpiry !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_assert_standard = await optimisticOracleFinalityHandler.assertFinality({ operationRef: "proposal-001", asserter: "validator-alice", bond: "100.0", challengeWindowHours: "48.0" }, storage);
-      const _pool = Object.assign({}, (afterResult_assert_standard?.output ?? {}));
-      const _fixtureInput = { assertion: "oo-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await optimisticOracleFinalityHandler.checkExpiry({ ..._fixtureInput }, storage);
+      const result = await optimisticOracleFinalityHandler.checkExpiry({ assertion: afterResult_assert_standard?.output?.["id"] }, storage);
       expect(result.variant).toBe('ok');
     });
 

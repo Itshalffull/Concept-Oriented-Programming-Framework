@@ -109,7 +109,7 @@ describe('TypeScriptBuilder functional handler', () => {
 
   describe('test', () => {
     it('builds a valid StorageProgram', () => {
-      const program = typeScriptBuilderHandler.test({ build: "tsb-001", toolchainPath: "/usr/local/bin/tsc", testType: "unit" });
+      const program = typeScriptBuilderHandler.test({ build: {"type":"ref","fixture":"build_node_release","field":"build"}, toolchainPath: "/usr/local/bin/tsc", testType: "unit" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -117,21 +117,21 @@ describe('TypeScriptBuilder functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = typeScriptBuilderHandler.test({ build: "tsb-001", toolchainPath: "/usr/local/bin/tsc", testType: "unit" });
+      const program = typeScriptBuilderHandler.test({ build: {"type":"ref","fixture":"build_node_release","field":"build"}, toolchainPath: "/usr/local/bin/tsc", testType: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = typeScriptBuilderHandler.test({ build: "tsb-001", toolchainPath: "/usr/local/bin/tsc", testType: "unit" });
+      const program = typeScriptBuilderHandler.test({ build: {"type":"ref","fixture":"build_node_release","field":"build"}, toolchainPath: "/usr/local/bin/tsc", testType: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = typeScriptBuilderHandler.test({ build: "tsb-001", toolchainPath: "/usr/local/bin/tsc", testType: "unit" });
+      const program = typeScriptBuilderHandler.test({ build: {"type":"ref","fixture":"build_node_release","field":"build"}, toolchainPath: "/usr/local/bin/tsc", testType: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -144,7 +144,7 @@ describe('TypeScriptBuilder functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = typeScriptBuilderHandler.test({ build: "tsb-001", toolchainPath: "/usr/local/bin/tsc", testType: "unit" });
+      const program = typeScriptBuilderHandler.test({ build: {"type":"ref","fixture":"build_node_release","field":"build"}, toolchainPath: "/usr/local/bin/tsc", testType: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -152,7 +152,7 @@ describe('TypeScriptBuilder functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof typeScriptBuilderHandler.test !== 'function') return;
-      const result = await interpret(typeScriptBuilderHandler.test({ build: "tsb-001", toolchainPath: "/usr/local/bin/tsc", testType: "unit" }), storage);
+      const result = await interpret(typeScriptBuilderHandler.test({ build: {"type":"ref","fixture":"build_node_release","field":"build"}, toolchainPath: "/usr/local/bin/tsc", testType: "unit" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -163,12 +163,7 @@ describe('TypeScriptBuilder functional handler', () => {
       if (typeof typeScriptBuilderHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_build_node_release = await interpret(typeScriptBuilderHandler.build({ source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: {"mode":"release"} }), storage);
-      const _pool = Object.assign({}, (afterResult_build_node_release?.output ?? {}));
-      const _fixtureInput = { build: "tsb-001", toolchainPath: "/usr/local/bin/tsc", testType: "unit" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(typeScriptBuilderHandler.test({ ..._fixtureInput }), storage);
+      const result = await interpret(typeScriptBuilderHandler.test({ build: afterResult_build_node_release?.output?.["build"], toolchainPath: "/usr/local/bin/tsc", testType: "unit" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,12 +171,7 @@ describe('TypeScriptBuilder functional handler', () => {
       if (typeof typeScriptBuilderHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_build_node_release = await interpret(typeScriptBuilderHandler.build({ source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: {"mode":"release"} }), storage);
-      const _pool = Object.assign({}, (afterResult_build_node_release?.output ?? {}));
-      const _fixtureInput = { build: "tsb-001", toolchainPath: "/usr/local/bin/tsc", invocation: {"command":"npx vitest run","args":["--reporter=json"],"outputFormat":"vitest-json"}, testType: "unit" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(typeScriptBuilderHandler.test({ ..._fixtureInput }), storage);
+      const result = await interpret(typeScriptBuilderHandler.test({ build: afterResult_build_node_release?.output?.["build"], toolchainPath: "/usr/local/bin/tsc", invocation: {"command":"npx vitest run","args":["--reporter=json"],"outputFormat":"vitest-json"}, testType: "unit" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -196,7 +186,7 @@ describe('TypeScriptBuilder functional handler', () => {
 
   describe('package', () => {
     it('builds a valid StorageProgram', () => {
-      const program = typeScriptBuilderHandler.package({ build: "tsb-001", format: "npm" });
+      const program = typeScriptBuilderHandler.package({ build: {"type":"ref","fixture":"build_node_release","field":"build"}, format: "npm" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -204,21 +194,21 @@ describe('TypeScriptBuilder functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = typeScriptBuilderHandler.package({ build: "tsb-001", format: "npm" });
+      const program = typeScriptBuilderHandler.package({ build: {"type":"ref","fixture":"build_node_release","field":"build"}, format: "npm" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = typeScriptBuilderHandler.package({ build: "tsb-001", format: "npm" });
+      const program = typeScriptBuilderHandler.package({ build: {"type":"ref","fixture":"build_node_release","field":"build"}, format: "npm" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = typeScriptBuilderHandler.package({ build: "tsb-001", format: "npm" });
+      const program = typeScriptBuilderHandler.package({ build: {"type":"ref","fixture":"build_node_release","field":"build"}, format: "npm" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -231,7 +221,7 @@ describe('TypeScriptBuilder functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = typeScriptBuilderHandler.package({ build: "tsb-001", format: "npm" });
+      const program = typeScriptBuilderHandler.package({ build: {"type":"ref","fixture":"build_node_release","field":"build"}, format: "npm" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -239,7 +229,7 @@ describe('TypeScriptBuilder functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof typeScriptBuilderHandler.package !== 'function') return;
-      const result = await interpret(typeScriptBuilderHandler.package({ build: "tsb-001", format: "npm" }), storage);
+      const result = await interpret(typeScriptBuilderHandler.package({ build: {"type":"ref","fixture":"build_node_release","field":"build"}, format: "npm" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -250,12 +240,7 @@ describe('TypeScriptBuilder functional handler', () => {
       if (typeof typeScriptBuilderHandler.package !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_build_node_release = await interpret(typeScriptBuilderHandler.build({ source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: {"mode":"release"} }), storage);
-      const _pool = Object.assign({}, (afterResult_build_node_release?.output ?? {}));
-      const _fixtureInput = { build: "tsb-001", format: "npm" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(typeScriptBuilderHandler.package({ ..._fixtureInput }), storage);
+      const result = await interpret(typeScriptBuilderHandler.package({ build: afterResult_build_node_release?.output?.["build"], format: "npm" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -263,12 +248,7 @@ describe('TypeScriptBuilder functional handler', () => {
       if (typeof typeScriptBuilderHandler.package !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_build_node_release = await interpret(typeScriptBuilderHandler.build({ source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: {"mode":"release"} }), storage);
-      const _pool = Object.assign({}, (afterResult_build_node_release?.output ?? {}));
-      const _fixtureInput = { build: "tsb-001", format: "bundle" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(typeScriptBuilderHandler.package({ ..._fixtureInput }), storage);
+      const result = await interpret(typeScriptBuilderHandler.package({ build: afterResult_build_node_release?.output?.["build"], format: "bundle" }), storage);
       expect(result.variant).toBe('ok');
     });
 

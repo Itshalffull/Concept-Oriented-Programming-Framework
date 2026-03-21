@@ -102,7 +102,7 @@ describe('Provenance functional handler', () => {
 
   describe('trace', () => {
     it('builds a valid StorageProgram', () => {
-      const program = provenanceHandler.trace({ entityId: "item-1" });
+      const program = provenanceHandler.trace({ entityId: {"type":"ref","fixture":"record_capture","field":"recordId"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('Provenance functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = provenanceHandler.trace({ entityId: "item-1" });
+      const program = provenanceHandler.trace({ entityId: {"type":"ref","fixture":"record_capture","field":"recordId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = provenanceHandler.trace({ entityId: "item-1" });
+      const program = provenanceHandler.trace({ entityId: {"type":"ref","fixture":"record_capture","field":"recordId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = provenanceHandler.trace({ entityId: "item-1" });
+      const program = provenanceHandler.trace({ entityId: {"type":"ref","fixture":"record_capture","field":"recordId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('Provenance functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = provenanceHandler.trace({ entityId: "item-1" });
+      const program = provenanceHandler.trace({ entityId: {"type":"ref","fixture":"record_capture","field":"recordId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('Provenance functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof provenanceHandler.trace !== 'function') return;
-      const result = await interpret(provenanceHandler.trace({ entityId: "item-1" }), storage);
+      const result = await interpret(provenanceHandler.trace({ entityId: {"type":"ref","fixture":"record_capture","field":"recordId"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('Provenance functional handler', () => {
       if (typeof provenanceHandler.trace !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_record_capture = await interpret(provenanceHandler.record({ entity: "item-1", activity: "capture", agent: "system", inputs: "" }), storage);
-      const _pool = Object.assign({}, (afterResult_record_capture?.output ?? {}));
-      const _fixtureInput = { entityId: "item-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(provenanceHandler.trace({ ..._fixtureInput }), storage);
+      const result = await interpret(provenanceHandler.trace({ entityId: afterResult_record_capture?.output?.["recordId"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -396,7 +391,7 @@ describe('Provenance functional handler', () => {
 
   describe('reproduce', () => {
     it('builds a valid StorageProgram', () => {
-      const program = provenanceHandler.reproduce({ entityId: "item-1" });
+      const program = provenanceHandler.reproduce({ entityId: {"type":"ref","fixture":"record_capture","field":"recordId"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -404,21 +399,21 @@ describe('Provenance functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = provenanceHandler.reproduce({ entityId: "item-1" });
+      const program = provenanceHandler.reproduce({ entityId: {"type":"ref","fixture":"record_capture","field":"recordId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = provenanceHandler.reproduce({ entityId: "item-1" });
+      const program = provenanceHandler.reproduce({ entityId: {"type":"ref","fixture":"record_capture","field":"recordId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = provenanceHandler.reproduce({ entityId: "item-1" });
+      const program = provenanceHandler.reproduce({ entityId: {"type":"ref","fixture":"record_capture","field":"recordId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -431,7 +426,7 @@ describe('Provenance functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = provenanceHandler.reproduce({ entityId: "item-1" });
+      const program = provenanceHandler.reproduce({ entityId: {"type":"ref","fixture":"record_capture","field":"recordId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -439,7 +434,7 @@ describe('Provenance functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof provenanceHandler.reproduce !== 'function') return;
-      const result = await interpret(provenanceHandler.reproduce({ entityId: "item-1" }), storage);
+      const result = await interpret(provenanceHandler.reproduce({ entityId: {"type":"ref","fixture":"record_capture","field":"recordId"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -450,12 +445,7 @@ describe('Provenance functional handler', () => {
       if (typeof provenanceHandler.reproduce !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_record_capture = await interpret(provenanceHandler.record({ entity: "item-1", activity: "capture", agent: "system", inputs: "" }), storage);
-      const _pool = Object.assign({}, (afterResult_record_capture?.output ?? {}));
-      const _fixtureInput = { entityId: "item-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(provenanceHandler.reproduce({ ..._fixtureInput }), storage);
+      const result = await interpret(provenanceHandler.reproduce({ entityId: afterResult_record_capture?.output?.["recordId"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

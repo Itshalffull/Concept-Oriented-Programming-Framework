@@ -472,7 +472,7 @@ describe('RuntimeFlow functional handler', () => {
 
   describe('sourceLocations', () => {
     it('builds a valid StorageProgram', () => {
-      const program = runtimeFlowHandler.sourceLocations({ flow: "runtime-flow-1" });
+      const program = runtimeFlowHandler.sourceLocations({ flow: {"type":"ref","fixture":"correlate_flow","field":"flow"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -480,21 +480,21 @@ describe('RuntimeFlow functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = runtimeFlowHandler.sourceLocations({ flow: "runtime-flow-1" });
+      const program = runtimeFlowHandler.sourceLocations({ flow: {"type":"ref","fixture":"correlate_flow","field":"flow"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = runtimeFlowHandler.sourceLocations({ flow: "runtime-flow-1" });
+      const program = runtimeFlowHandler.sourceLocations({ flow: {"type":"ref","fixture":"correlate_flow","field":"flow"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = runtimeFlowHandler.sourceLocations({ flow: "runtime-flow-1" });
+      const program = runtimeFlowHandler.sourceLocations({ flow: {"type":"ref","fixture":"correlate_flow","field":"flow"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -507,7 +507,7 @@ describe('RuntimeFlow functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = runtimeFlowHandler.sourceLocations({ flow: "runtime-flow-1" });
+      const program = runtimeFlowHandler.sourceLocations({ flow: {"type":"ref","fixture":"correlate_flow","field":"flow"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -515,7 +515,7 @@ describe('RuntimeFlow functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof runtimeFlowHandler.sourceLocations !== 'function') return;
-      const result = await interpret(runtimeFlowHandler.sourceLocations({ flow: "runtime-flow-1" }), storage);
+      const result = await interpret(runtimeFlowHandler.sourceLocations({ flow: {"type":"ref","fixture":"correlate_flow","field":"flow"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -526,12 +526,7 @@ describe('RuntimeFlow functional handler', () => {
       if (typeof runtimeFlowHandler.sourceLocations !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_correlate_flow = await interpret(runtimeFlowHandler.correlate({ flowId: "f-123" }), storage);
-      const _pool = Object.assign({}, (afterResult_correlate_flow?.output ?? {}));
-      const _fixtureInput = { flow: "runtime-flow-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(runtimeFlowHandler.sourceLocations({ ..._fixtureInput }), storage);
+      const result = await interpret(runtimeFlowHandler.sourceLocations({ flow: afterResult_correlate_flow?.output?.["flow"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -546,7 +541,7 @@ describe('RuntimeFlow functional handler', () => {
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = runtimeFlowHandler.get({ flow: "runtime-flow-1" });
+      const program = runtimeFlowHandler.get({ flow: {"type":"ref","fixture":"correlate_flow","field":"flow"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -554,21 +549,21 @@ describe('RuntimeFlow functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = runtimeFlowHandler.get({ flow: "runtime-flow-1" });
+      const program = runtimeFlowHandler.get({ flow: {"type":"ref","fixture":"correlate_flow","field":"flow"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = runtimeFlowHandler.get({ flow: "runtime-flow-1" });
+      const program = runtimeFlowHandler.get({ flow: {"type":"ref","fixture":"correlate_flow","field":"flow"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = runtimeFlowHandler.get({ flow: "runtime-flow-1" });
+      const program = runtimeFlowHandler.get({ flow: {"type":"ref","fixture":"correlate_flow","field":"flow"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -581,7 +576,7 @@ describe('RuntimeFlow functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = runtimeFlowHandler.get({ flow: "runtime-flow-1" });
+      const program = runtimeFlowHandler.get({ flow: {"type":"ref","fixture":"correlate_flow","field":"flow"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -589,7 +584,7 @@ describe('RuntimeFlow functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof runtimeFlowHandler.get !== 'function') return;
-      const result = await interpret(runtimeFlowHandler.get({ flow: "runtime-flow-1" }), storage);
+      const result = await interpret(runtimeFlowHandler.get({ flow: {"type":"ref","fixture":"correlate_flow","field":"flow"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -600,12 +595,7 @@ describe('RuntimeFlow functional handler', () => {
       if (typeof runtimeFlowHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_correlate_flow = await interpret(runtimeFlowHandler.correlate({ flowId: "f-123" }), storage);
-      const _pool = Object.assign({}, (afterResult_correlate_flow?.output ?? {}));
-      const _fixtureInput = { flow: "runtime-flow-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(runtimeFlowHandler.get({ ..._fixtureInput }), storage);
+      const result = await interpret(runtimeFlowHandler.get({ flow: afterResult_correlate_flow?.output?.["flow"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

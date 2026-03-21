@@ -38,7 +38,7 @@ concept TokenBalance [TB] {
         All token balances are cached at the given block reference.
       }
 
-      fixture snapshot_block { config: "tb-cfg-001", blockRef: "18000000" } after configure_gov_token
+      fixture snapshot_block { config: $configure_gov_token.id, blockRef: "18000000" } after configure_gov_token
       fixture snapshot_empty_ref { config: "tb-cfg-001", blockRef: "" } -> error
     }
 
@@ -47,7 +47,7 @@ concept TokenBalance [TB] {
         Sets the participant's token balance for the given config.
       }
 
-      fixture set_balance_alice { config: "tb-cfg-001", participant: "alice", balance: 500.0 } after configure_gov_token
+      fixture set_balance_alice { config: $configure_gov_token.id, participant: "alice", balance: 500.0 } after configure_gov_token
       fixture set_balance_zero { config: "tb-cfg-001", participant: "alice", balance: 0.0 } -> error
     }
 
@@ -60,8 +60,8 @@ concept TokenBalance [TB] {
         The specified snapshot does not exist.
       }
 
-      fixture get_live_balance { config: "tb-cfg-001", participant: "alice" } after configure_gov_token
-      fixture get_snapshot_balance { config: "tb-cfg-001", participant: "alice", snapshot: "tb-snap-001" } after configure_gov_token
+      fixture get_live_balance { config: $configure_gov_token.id, participant: "alice" } after configure_gov_token
+      fixture get_snapshot_balance { config: $configure_gov_token.id, participant: "alice", snapshot: $configure_gov_token.id } after configure_gov_token
     }
   }
 

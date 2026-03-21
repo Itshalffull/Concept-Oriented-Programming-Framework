@@ -250,7 +250,7 @@ describe('Treasury functional handler', () => {
 
   describe('releaseAllocation', () => {
     it('builds a valid StorageProgram', () => {
-      const program = treasuryHandler.releaseAllocation({ allocation: "alloc-001" });
+      const program = treasuryHandler.releaseAllocation({ allocation: {"type":"ref","fixture":"deposit_eth","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -258,21 +258,21 @@ describe('Treasury functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = treasuryHandler.releaseAllocation({ allocation: "alloc-001" });
+      const program = treasuryHandler.releaseAllocation({ allocation: {"type":"ref","fixture":"deposit_eth","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = treasuryHandler.releaseAllocation({ allocation: "alloc-001" });
+      const program = treasuryHandler.releaseAllocation({ allocation: {"type":"ref","fixture":"deposit_eth","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = treasuryHandler.releaseAllocation({ allocation: "alloc-001" });
+      const program = treasuryHandler.releaseAllocation({ allocation: {"type":"ref","fixture":"deposit_eth","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -285,7 +285,7 @@ describe('Treasury functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = treasuryHandler.releaseAllocation({ allocation: "alloc-001" });
+      const program = treasuryHandler.releaseAllocation({ allocation: {"type":"ref","fixture":"deposit_eth","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -293,7 +293,7 @@ describe('Treasury functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof treasuryHandler.releaseAllocation !== 'function') return;
-      const result = await interpret(treasuryHandler.releaseAllocation({ allocation: "alloc-001" }), storage);
+      const result = await interpret(treasuryHandler.releaseAllocation({ allocation: {"type":"ref","fixture":"deposit_eth","field":"id"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -304,12 +304,7 @@ describe('Treasury functional handler', () => {
       if (typeof treasuryHandler.releaseAllocation !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_deposit_eth = await interpret(treasuryHandler.deposit({ vault: "dao-treasury", token: "ETH", amount: "100.0" }), storage);
-      const _pool = Object.assign({}, (afterResult_deposit_eth?.output ?? {}));
-      const _fixtureInput = { allocation: "alloc-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(treasuryHandler.releaseAllocation({ ..._fixtureInput }), storage);
+      const result = await interpret(treasuryHandler.releaseAllocation({ allocation: afterResult_deposit_eth?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

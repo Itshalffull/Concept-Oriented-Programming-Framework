@@ -86,7 +86,7 @@ concept Registry [M] {
         The specified module does not exist in the registry.
       }
 
-      fixture yank_existing_module { module: "mod-1" } after publish_concept_module
+      fixture yank_existing_module { module: $publish_concept_module.module } after publish_concept_module
       fixture yank_nonexistent { module: "mod-nonexistent" } -> error
     }
 

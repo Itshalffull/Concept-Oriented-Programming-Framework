@@ -116,7 +116,7 @@ describe('Generator functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = generatorHandler.generate({ plan: "plan-commerce-12345" });
+      const program = generatorHandler.generate({ plan: {"type":"ref","fixture":"with_valid_manifest","field":"plan"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -124,21 +124,21 @@ describe('Generator functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = generatorHandler.generate({ plan: "plan-commerce-12345" });
+      const program = generatorHandler.generate({ plan: {"type":"ref","fixture":"with_valid_manifest","field":"plan"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = generatorHandler.generate({ plan: "plan-commerce-12345" });
+      const program = generatorHandler.generate({ plan: {"type":"ref","fixture":"with_valid_manifest","field":"plan"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = generatorHandler.generate({ plan: "plan-commerce-12345" });
+      const program = generatorHandler.generate({ plan: {"type":"ref","fixture":"with_valid_manifest","field":"plan"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -151,7 +151,7 @@ describe('Generator functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = generatorHandler.generate({ plan: "plan-commerce-12345" });
+      const program = generatorHandler.generate({ plan: {"type":"ref","fixture":"with_valid_manifest","field":"plan"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -159,7 +159,7 @@ describe('Generator functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof generatorHandler.generate !== 'function') return;
-      const result = await interpret(generatorHandler.generate({ plan: "plan-commerce-12345" }), storage);
+      const result = await interpret(generatorHandler.generate({ plan: {"type":"ref","fixture":"with_valid_manifest","field":"plan"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -170,12 +170,7 @@ describe('Generator functional handler', () => {
       if (typeof generatorHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_with_valid_manifest = await interpret(generatorHandler.plan({ suite: "commerce", interfaceManifest: "{\"targets\":[\"rest\",\"graphql\"],\"concepts\":[\"Order\",\"Product\"],\"outputDir\":\"generated/commerce\"}" }), storage);
-      const _pool = Object.assign({}, (afterResult_with_valid_manifest?.output ?? {}));
-      const _fixtureInput = { plan: "plan-commerce-12345" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(generatorHandler.generate({ ..._fixtureInput }), storage);
+      const result = await interpret(generatorHandler.generate({ plan: afterResult_with_valid_manifest?.output?.["plan"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -190,7 +185,7 @@ describe('Generator functional handler', () => {
 
   describe('regenerate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = generatorHandler.regenerate({ plan: "plan-commerce-12345", targets: ["rest"] });
+      const program = generatorHandler.regenerate({ plan: {"type":"ref","fixture":"with_valid_manifest","field":"plan"}, targets: ["rest"] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -198,21 +193,21 @@ describe('Generator functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = generatorHandler.regenerate({ plan: "plan-commerce-12345", targets: ["rest"] });
+      const program = generatorHandler.regenerate({ plan: {"type":"ref","fixture":"with_valid_manifest","field":"plan"}, targets: ["rest"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = generatorHandler.regenerate({ plan: "plan-commerce-12345", targets: ["rest"] });
+      const program = generatorHandler.regenerate({ plan: {"type":"ref","fixture":"with_valid_manifest","field":"plan"}, targets: ["rest"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = generatorHandler.regenerate({ plan: "plan-commerce-12345", targets: ["rest"] });
+      const program = generatorHandler.regenerate({ plan: {"type":"ref","fixture":"with_valid_manifest","field":"plan"}, targets: ["rest"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -225,7 +220,7 @@ describe('Generator functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = generatorHandler.regenerate({ plan: "plan-commerce-12345", targets: ["rest"] });
+      const program = generatorHandler.regenerate({ plan: {"type":"ref","fixture":"with_valid_manifest","field":"plan"}, targets: ["rest"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -233,7 +228,7 @@ describe('Generator functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof generatorHandler.regenerate !== 'function') return;
-      const result = await interpret(generatorHandler.regenerate({ plan: "plan-commerce-12345", targets: ["rest"] }), storage);
+      const result = await interpret(generatorHandler.regenerate({ plan: {"type":"ref","fixture":"with_valid_manifest","field":"plan"}, targets: ["rest"] }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -244,12 +239,7 @@ describe('Generator functional handler', () => {
       if (typeof generatorHandler.regenerate !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_with_valid_manifest = await interpret(generatorHandler.plan({ suite: "commerce", interfaceManifest: "{\"targets\":[\"rest\",\"graphql\"],\"concepts\":[\"Order\",\"Product\"],\"outputDir\":\"generated/commerce\"}" }), storage);
-      const _pool = Object.assign({}, (afterResult_with_valid_manifest?.output ?? {}));
-      const _fixtureInput = { plan: "plan-commerce-12345", targets: ["rest"] } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(generatorHandler.regenerate({ ..._fixtureInput }), storage);
+      const result = await interpret(generatorHandler.regenerate({ plan: afterResult_with_valid_manifest?.output?.["plan"], targets: ["rest"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

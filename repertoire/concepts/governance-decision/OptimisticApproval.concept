@@ -48,7 +48,7 @@ concept OptimisticApproval [O] {
         The assertion is already being challenged.
       }
 
-      fixture challenge_pending { assertion: "assertion-001", challenger: "bob", bond: 100.0, evidence: "Transaction exceeds approved limit" } after assert_valid
+      fixture challenge_pending { assertion: $assert_valid.id, challenger: "bob", bond: 100.0, evidence: "Transaction exceeds approved limit" } after assert_valid
       fixture challenge_expired { assertion: "assertion-expired", challenger: "bob", bond: 50.0, evidence: "Too late" } -> error
     }
 
@@ -64,7 +64,7 @@ concept OptimisticApproval [O] {
         The assertion is currently being challenged and cannot finalize.
       }
 
-      fixture finalize_unchallenged { assertion: "assertion-001" } after assert_valid
+      fixture finalize_unchallenged { assertion: $assert_valid.id } after assert_valid
       fixture finalize_missing { assertion: "assertion-nonexistent" } -> error
     }
 
@@ -78,7 +78,7 @@ concept OptimisticApproval [O] {
         Asserter's bond is forfeited.
       }
 
-      fixture resolve_in_favor { assertion: "assertion-001", outcome: "approved" } after assert_valid
+      fixture resolve_in_favor { assertion: $assert_valid.id, outcome: "approved" } after assert_valid
       fixture resolve_missing { assertion: "assertion-nonexistent", outcome: "rejected" } -> error
     }
   }

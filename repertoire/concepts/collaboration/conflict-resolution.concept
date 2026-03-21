@@ -60,7 +60,7 @@ concept ConflictResolution [V] {
       -> noPolicy(message: String) {
         No policy registered for this conflict type.
       }
-      fixture resolve_with_policy { conflictId: "conflict-1", policyOverride: "last-writer-wins" } after register_lww
+      fixture resolve_with_policy { conflictId: $register_lww.policy, policyOverride: "last-writer-wins" } after register_lww
       fixture resolve_missing_conflict { conflictId: "nonexistent", policyOverride: "" } -> error
     }
 
@@ -71,7 +71,7 @@ concept ConflictResolution [V] {
       -> notPending(message: String) {
         Conflict not found or already resolved.
       }
-      fixture manual_resolve_valid { conflictId: "conflict-1", chosen: "v1-abc" } after register_lww
+      fixture manual_resolve_valid { conflictId: $register_lww.policy, chosen: "v1-abc" } after register_lww
       fixture manual_resolve_missing { conflictId: "nonexistent", chosen: "v1-abc" } -> error
     }
   }

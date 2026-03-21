@@ -54,7 +54,7 @@ concept PessimisticLock [L] {
         Caller is not the current lock holder.
       }
 
-      fixture checkin_existing_lock { lockId: "pessimistic-lock-1" } after checkout_with_duration
+      fixture checkin_existing_lock { lockId: $checkout_with_duration.lockId } after checkout_with_duration
       fixture checkin_nonexistent { lockId: "pessimistic-lock-nonexistent" } -> error
     }
 
@@ -69,7 +69,7 @@ concept PessimisticLock [L] {
         Breaker lacks authority to break this lock.
       }
 
-      fixture break_existing_lock { lockId: "pessimistic-lock-1", breaker: "admin@example.com", reason: "Emergency release for blocked deployment" } after checkout_with_duration
+      fixture break_existing_lock { lockId: $checkout_with_duration.lockId, breaker: "admin@example.com", reason: "Emergency release for blocked deployment" } after checkout_with_duration
       fixture break_nonexistent_lock { lockId: "pessimistic-lock-nonexistent", breaker: "admin@example.com", reason: "cleanup" } -> error
     }
 
@@ -84,7 +84,7 @@ concept PessimisticLock [L] {
         Caller is not the current lock holder.
       }
 
-      fixture renew_existing_lock { lockId: "pessimistic-lock-1", additionalDuration: 1800 } after checkout_with_duration
+      fixture renew_existing_lock { lockId: $checkout_with_duration.lockId, additionalDuration: 1800 } after checkout_with_duration
       fixture renew_nonexistent { lockId: "pessimistic-lock-nonexistent", additionalDuration: 600 } -> error
     }
 

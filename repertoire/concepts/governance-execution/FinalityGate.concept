@@ -48,7 +48,7 @@ concept FinalityGate [FG] {
         The finality check timed out.
       }
 
-      fixture confirm_finalized { gate: "finality-001", proof: "block-hash-0xabc123" } after submit_chain_finality
+      fixture confirm_finalized { gate: $submit_chain_finality.id, proof: "block-hash-0xabc123" } after submit_chain_finality
       fixture confirm_not_found { gate: "finality-nonexistent", proof: "some-proof" } -> error
     }
   }

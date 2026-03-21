@@ -102,7 +102,7 @@ describe('Article functional handler', () => {
 
   describe('update', () => {
     it('builds a valid StorageProgram', () => {
-      const program = articleHandler.update({ article: "art-001", title: "Updated Title", description: "Revised description", body: "Updated body content." });
+      const program = articleHandler.update({ article: {"type":"ref","fixture":"create_ok","field":"article"}, title: "Updated Title", description: "Revised description", body: "Updated body content." });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('Article functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = articleHandler.update({ article: "art-001", title: "Updated Title", description: "Revised description", body: "Updated body content." });
+      const program = articleHandler.update({ article: {"type":"ref","fixture":"create_ok","field":"article"}, title: "Updated Title", description: "Revised description", body: "Updated body content." });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = articleHandler.update({ article: "art-001", title: "Updated Title", description: "Revised description", body: "Updated body content." });
+      const program = articleHandler.update({ article: {"type":"ref","fixture":"create_ok","field":"article"}, title: "Updated Title", description: "Revised description", body: "Updated body content." });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = articleHandler.update({ article: "art-001", title: "Updated Title", description: "Revised description", body: "Updated body content." });
+      const program = articleHandler.update({ article: {"type":"ref","fixture":"create_ok","field":"article"}, title: "Updated Title", description: "Revised description", body: "Updated body content." });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('Article functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = articleHandler.update({ article: "art-001", title: "Updated Title", description: "Revised description", body: "Updated body content." });
+      const program = articleHandler.update({ article: {"type":"ref","fixture":"create_ok","field":"article"}, title: "Updated Title", description: "Revised description", body: "Updated body content." });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('Article functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof articleHandler.update !== 'function') return;
-      const result = await interpret(articleHandler.update({ article: "art-001", title: "Updated Title", description: "Revised description", body: "Updated body content." }), storage);
+      const result = await interpret(articleHandler.update({ article: {"type":"ref","fixture":"create_ok","field":"article"}, title: "Updated Title", description: "Revised description", body: "Updated body content." }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('Article functional handler', () => {
       if (typeof articleHandler.update !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_ok = await interpret(articleHandler.create({ article: "art-001", title: "Introduction to Concept Programming", description: "A primer on concept-oriented design", body: "Concept programming separates concerns into independent modules.", author: "alice" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_ok?.output ?? {}));
-      const _fixtureInput = { article: "art-001", title: "Updated Title", description: "Revised description", body: "Updated body content." } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(articleHandler.update({ ..._fixtureInput }), storage);
+      const result = await interpret(articleHandler.update({ article: afterResult_create_ok?.output?.["article"], title: "Updated Title", description: "Revised description", body: "Updated body content." }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -177,7 +172,7 @@ describe('Article functional handler', () => {
 
   describe('delete', () => {
     it('builds a valid StorageProgram', () => {
-      const program = articleHandler.delete({ article: "art-001" });
+      const program = articleHandler.delete({ article: {"type":"ref","fixture":"create_ok","field":"article"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -185,21 +180,21 @@ describe('Article functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = articleHandler.delete({ article: "art-001" });
+      const program = articleHandler.delete({ article: {"type":"ref","fixture":"create_ok","field":"article"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = articleHandler.delete({ article: "art-001" });
+      const program = articleHandler.delete({ article: {"type":"ref","fixture":"create_ok","field":"article"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = articleHandler.delete({ article: "art-001" });
+      const program = articleHandler.delete({ article: {"type":"ref","fixture":"create_ok","field":"article"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -212,7 +207,7 @@ describe('Article functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = articleHandler.delete({ article: "art-001" });
+      const program = articleHandler.delete({ article: {"type":"ref","fixture":"create_ok","field":"article"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -220,7 +215,7 @@ describe('Article functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof articleHandler.delete !== 'function') return;
-      const result = await interpret(articleHandler.delete({ article: "art-001" }), storage);
+      const result = await interpret(articleHandler.delete({ article: {"type":"ref","fixture":"create_ok","field":"article"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -231,12 +226,7 @@ describe('Article functional handler', () => {
       if (typeof articleHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_ok = await interpret(articleHandler.create({ article: "art-001", title: "Introduction to Concept Programming", description: "A primer on concept-oriented design", body: "Concept programming separates concerns into independent modules.", author: "alice" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_ok?.output ?? {}));
-      const _fixtureInput = { article: "art-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(articleHandler.delete({ ..._fixtureInput }), storage);
+      const result = await interpret(articleHandler.delete({ article: afterResult_create_ok?.output?.["article"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -252,7 +242,7 @@ describe('Article functional handler', () => {
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = articleHandler.get({ article: "art-001" });
+      const program = articleHandler.get({ article: {"type":"ref","fixture":"create_ok","field":"article"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -260,21 +250,21 @@ describe('Article functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = articleHandler.get({ article: "art-001" });
+      const program = articleHandler.get({ article: {"type":"ref","fixture":"create_ok","field":"article"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = articleHandler.get({ article: "art-001" });
+      const program = articleHandler.get({ article: {"type":"ref","fixture":"create_ok","field":"article"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = articleHandler.get({ article: "art-001" });
+      const program = articleHandler.get({ article: {"type":"ref","fixture":"create_ok","field":"article"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -287,7 +277,7 @@ describe('Article functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = articleHandler.get({ article: "art-001" });
+      const program = articleHandler.get({ article: {"type":"ref","fixture":"create_ok","field":"article"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -295,7 +285,7 @@ describe('Article functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof articleHandler.get !== 'function') return;
-      const result = await interpret(articleHandler.get({ article: "art-001" }), storage);
+      const result = await interpret(articleHandler.get({ article: {"type":"ref","fixture":"create_ok","field":"article"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -306,12 +296,7 @@ describe('Article functional handler', () => {
       if (typeof articleHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_ok = await interpret(articleHandler.create({ article: "art-001", title: "Introduction to Concept Programming", description: "A primer on concept-oriented design", body: "Concept programming separates concerns into independent modules.", author: "alice" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_ok?.output ?? {}));
-      const _fixtureInput = { article: "art-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(articleHandler.get({ ..._fixtureInput }), storage);
+      const result = await interpret(articleHandler.get({ article: afterResult_create_ok?.output?.["article"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

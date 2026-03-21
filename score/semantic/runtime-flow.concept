@@ -103,7 +103,7 @@ concept RuntimeFlow [F] {
         Results as serialized JSON array of
         { step, file, line, col, symbol }.
       }
-      fixture locations_flow { flow: "runtime-flow-1" } after correlate_flow
+      fixture locations_flow { flow: $correlate_flow.flow } after correlate_flow
       fixture locations_missing { flow: "nonexistent" } -> error
     }
 
@@ -114,7 +114,7 @@ concept RuntimeFlow [F] {
       -> notfound() {
         Flow does not exist.
       }
-      fixture get_flow { flow: "runtime-flow-1" } after correlate_flow
+      fixture get_flow { flow: $correlate_flow.flow } after correlate_flow
       fixture get_missing { flow: "nonexistent" } -> error
     }
   }

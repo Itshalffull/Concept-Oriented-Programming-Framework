@@ -196,7 +196,7 @@ describe('InterfaceEntity functional handler', () => {
 
   describe('listEndpoints', () => {
     it('builds a valid StorageProgram', () => {
-      const program = interfaceEntityHandler.listEndpoints({ interface: "iface-uuid-1", target: "rest" });
+      const program = interfaceEntityHandler.listEndpoints({ interface: {"type":"ref","fixture":"register_conduit_api","field":"interface"}, target: "rest" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -204,21 +204,21 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = interfaceEntityHandler.listEndpoints({ interface: "iface-uuid-1", target: "rest" });
+      const program = interfaceEntityHandler.listEndpoints({ interface: {"type":"ref","fixture":"register_conduit_api","field":"interface"}, target: "rest" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = interfaceEntityHandler.listEndpoints({ interface: "iface-uuid-1", target: "rest" });
+      const program = interfaceEntityHandler.listEndpoints({ interface: {"type":"ref","fixture":"register_conduit_api","field":"interface"}, target: "rest" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = interfaceEntityHandler.listEndpoints({ interface: "iface-uuid-1", target: "rest" });
+      const program = interfaceEntityHandler.listEndpoints({ interface: {"type":"ref","fixture":"register_conduit_api","field":"interface"}, target: "rest" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -231,7 +231,7 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = interfaceEntityHandler.listEndpoints({ interface: "iface-uuid-1", target: "rest" });
+      const program = interfaceEntityHandler.listEndpoints({ interface: {"type":"ref","fixture":"register_conduit_api","field":"interface"}, target: "rest" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -239,7 +239,7 @@ describe('InterfaceEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof interfaceEntityHandler.listEndpoints !== 'function') return;
-      const result = await interpret(interfaceEntityHandler.listEndpoints({ interface: "iface-uuid-1", target: "rest" }), storage);
+      const result = await interpret(interfaceEntityHandler.listEndpoints({ interface: {"type":"ref","fixture":"register_conduit_api","field":"interface"}, target: "rest" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -250,12 +250,7 @@ describe('InterfaceEntity functional handler', () => {
       if (typeof interfaceEntityHandler.listEndpoints !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_conduit_api = await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_conduit_api?.output ?? {}));
-      const _fixtureInput = { interface: "iface-uuid-1", target: "rest" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(interfaceEntityHandler.listEndpoints({ ..._fixtureInput }), storage);
+      const result = await interpret(interfaceEntityHandler.listEndpoints({ interface: afterResult_register_conduit_api?.output?.["interface"], target: "rest" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -270,7 +265,7 @@ describe('InterfaceEntity functional handler', () => {
 
   describe('listCommands', () => {
     it('builds a valid StorageProgram', () => {
-      const program = interfaceEntityHandler.listCommands({ interface: "iface-uuid-1" });
+      const program = interfaceEntityHandler.listCommands({ interface: {"type":"ref","fixture":"register_conduit_api","field":"interface"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -278,21 +273,21 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = interfaceEntityHandler.listCommands({ interface: "iface-uuid-1" });
+      const program = interfaceEntityHandler.listCommands({ interface: {"type":"ref","fixture":"register_conduit_api","field":"interface"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = interfaceEntityHandler.listCommands({ interface: "iface-uuid-1" });
+      const program = interfaceEntityHandler.listCommands({ interface: {"type":"ref","fixture":"register_conduit_api","field":"interface"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = interfaceEntityHandler.listCommands({ interface: "iface-uuid-1" });
+      const program = interfaceEntityHandler.listCommands({ interface: {"type":"ref","fixture":"register_conduit_api","field":"interface"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -305,7 +300,7 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = interfaceEntityHandler.listCommands({ interface: "iface-uuid-1" });
+      const program = interfaceEntityHandler.listCommands({ interface: {"type":"ref","fixture":"register_conduit_api","field":"interface"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -313,7 +308,7 @@ describe('InterfaceEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof interfaceEntityHandler.listCommands !== 'function') return;
-      const result = await interpret(interfaceEntityHandler.listCommands({ interface: "iface-uuid-1" }), storage);
+      const result = await interpret(interfaceEntityHandler.listCommands({ interface: {"type":"ref","fixture":"register_conduit_api","field":"interface"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -324,12 +319,7 @@ describe('InterfaceEntity functional handler', () => {
       if (typeof interfaceEntityHandler.listCommands !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_conduit_api = await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_conduit_api?.output ?? {}));
-      const _fixtureInput = { interface: "iface-uuid-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(interfaceEntityHandler.listCommands({ ..._fixtureInput }), storage);
+      const result = await interpret(interfaceEntityHandler.listCommands({ interface: afterResult_register_conduit_api?.output?.["interface"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -344,7 +334,7 @@ describe('InterfaceEntity functional handler', () => {
 
   describe('listTools', () => {
     it('builds a valid StorageProgram', () => {
-      const program = interfaceEntityHandler.listTools({ interface: "iface-uuid-1" });
+      const program = interfaceEntityHandler.listTools({ interface: {"type":"ref","fixture":"register_conduit_api","field":"interface"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -352,21 +342,21 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = interfaceEntityHandler.listTools({ interface: "iface-uuid-1" });
+      const program = interfaceEntityHandler.listTools({ interface: {"type":"ref","fixture":"register_conduit_api","field":"interface"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = interfaceEntityHandler.listTools({ interface: "iface-uuid-1" });
+      const program = interfaceEntityHandler.listTools({ interface: {"type":"ref","fixture":"register_conduit_api","field":"interface"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = interfaceEntityHandler.listTools({ interface: "iface-uuid-1" });
+      const program = interfaceEntityHandler.listTools({ interface: {"type":"ref","fixture":"register_conduit_api","field":"interface"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -379,7 +369,7 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = interfaceEntityHandler.listTools({ interface: "iface-uuid-1" });
+      const program = interfaceEntityHandler.listTools({ interface: {"type":"ref","fixture":"register_conduit_api","field":"interface"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -387,7 +377,7 @@ describe('InterfaceEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof interfaceEntityHandler.listTools !== 'function') return;
-      const result = await interpret(interfaceEntityHandler.listTools({ interface: "iface-uuid-1" }), storage);
+      const result = await interpret(interfaceEntityHandler.listTools({ interface: {"type":"ref","fixture":"register_conduit_api","field":"interface"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -398,12 +388,7 @@ describe('InterfaceEntity functional handler', () => {
       if (typeof interfaceEntityHandler.listTools !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_conduit_api = await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_conduit_api?.output ?? {}));
-      const _fixtureInput = { interface: "iface-uuid-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(interfaceEntityHandler.listTools({ ..._fixtureInput }), storage);
+      const result = await interpret(interfaceEntityHandler.listTools({ interface: afterResult_register_conduit_api?.output?.["interface"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -418,7 +403,7 @@ describe('InterfaceEntity functional handler', () => {
 
   describe('listSkills', () => {
     it('builds a valid StorageProgram', () => {
-      const program = interfaceEntityHandler.listSkills({ interface: "iface-uuid-1" });
+      const program = interfaceEntityHandler.listSkills({ interface: {"type":"ref","fixture":"register_conduit_api","field":"interface"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -426,21 +411,21 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = interfaceEntityHandler.listSkills({ interface: "iface-uuid-1" });
+      const program = interfaceEntityHandler.listSkills({ interface: {"type":"ref","fixture":"register_conduit_api","field":"interface"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = interfaceEntityHandler.listSkills({ interface: "iface-uuid-1" });
+      const program = interfaceEntityHandler.listSkills({ interface: {"type":"ref","fixture":"register_conduit_api","field":"interface"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = interfaceEntityHandler.listSkills({ interface: "iface-uuid-1" });
+      const program = interfaceEntityHandler.listSkills({ interface: {"type":"ref","fixture":"register_conduit_api","field":"interface"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -453,7 +438,7 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = interfaceEntityHandler.listSkills({ interface: "iface-uuid-1" });
+      const program = interfaceEntityHandler.listSkills({ interface: {"type":"ref","fixture":"register_conduit_api","field":"interface"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -461,7 +446,7 @@ describe('InterfaceEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof interfaceEntityHandler.listSkills !== 'function') return;
-      const result = await interpret(interfaceEntityHandler.listSkills({ interface: "iface-uuid-1" }), storage);
+      const result = await interpret(interfaceEntityHandler.listSkills({ interface: {"type":"ref","fixture":"register_conduit_api","field":"interface"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -472,12 +457,7 @@ describe('InterfaceEntity functional handler', () => {
       if (typeof interfaceEntityHandler.listSkills !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_conduit_api = await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_conduit_api?.output ?? {}));
-      const _fixtureInput = { interface: "iface-uuid-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(interfaceEntityHandler.listSkills({ ..._fixtureInput }), storage);
+      const result = await interpret(interfaceEntityHandler.listSkills({ interface: afterResult_register_conduit_api?.output?.["interface"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -815,7 +795,7 @@ describe('InterfaceEntity functional handler', () => {
 
   describe('generatedSchemas', () => {
     it('builds a valid StorageProgram', () => {
-      const program = interfaceEntityHandler.generatedSchemas({ interface: "iface-uuid-1" });
+      const program = interfaceEntityHandler.generatedSchemas({ interface: {"type":"ref","fixture":"register_conduit_api","field":"interface"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -823,21 +803,21 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = interfaceEntityHandler.generatedSchemas({ interface: "iface-uuid-1" });
+      const program = interfaceEntityHandler.generatedSchemas({ interface: {"type":"ref","fixture":"register_conduit_api","field":"interface"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = interfaceEntityHandler.generatedSchemas({ interface: "iface-uuid-1" });
+      const program = interfaceEntityHandler.generatedSchemas({ interface: {"type":"ref","fixture":"register_conduit_api","field":"interface"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = interfaceEntityHandler.generatedSchemas({ interface: "iface-uuid-1" });
+      const program = interfaceEntityHandler.generatedSchemas({ interface: {"type":"ref","fixture":"register_conduit_api","field":"interface"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -850,7 +830,7 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = interfaceEntityHandler.generatedSchemas({ interface: "iface-uuid-1" });
+      const program = interfaceEntityHandler.generatedSchemas({ interface: {"type":"ref","fixture":"register_conduit_api","field":"interface"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -858,7 +838,7 @@ describe('InterfaceEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof interfaceEntityHandler.generatedSchemas !== 'function') return;
-      const result = await interpret(interfaceEntityHandler.generatedSchemas({ interface: "iface-uuid-1" }), storage);
+      const result = await interpret(interfaceEntityHandler.generatedSchemas({ interface: {"type":"ref","fixture":"register_conduit_api","field":"interface"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -869,12 +849,7 @@ describe('InterfaceEntity functional handler', () => {
       if (typeof interfaceEntityHandler.generatedSchemas !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_conduit_api = await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_conduit_api?.output ?? {}));
-      const _fixtureInput = { interface: "iface-uuid-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(interfaceEntityHandler.generatedSchemas({ ..._fixtureInput }), storage);
+      const result = await interpret(interfaceEntityHandler.generatedSchemas({ interface: afterResult_register_conduit_api?.output?.["interface"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

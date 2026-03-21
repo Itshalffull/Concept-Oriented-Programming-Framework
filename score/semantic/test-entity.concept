@@ -148,8 +148,8 @@ concept TestEntity [T] {
         pass, fail, skip, error.
       }
 
-      fixture record_pass { test: "test-001", result: "pass", duration: 150 } after register_conformance_test
-      fixture record_empty_result { test: "test-001", result: "", duration: 0 } after register_conformance_test
+      fixture record_pass { test: $register_conformance_test.test, result: "pass", duration: 150 } after register_conformance_test
+      fixture record_empty_result { test: $register_conformance_test.test, result: "", duration: 0 } after register_conformance_test
     }
   }
 

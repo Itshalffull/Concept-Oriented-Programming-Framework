@@ -102,7 +102,7 @@ describe('Lockfile functional handler', () => {
 
   describe('read', () => {
     it('builds a valid StorageProgram', () => {
-      const program = lockfileHandler.read({ lockfile: "lock-1" });
+      const program = lockfileHandler.read({ lockfile: {"type":"ref","fixture":"write_valid_lockfile","field":"lockfile"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('Lockfile functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = lockfileHandler.read({ lockfile: "lock-1" });
+      const program = lockfileHandler.read({ lockfile: {"type":"ref","fixture":"write_valid_lockfile","field":"lockfile"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = lockfileHandler.read({ lockfile: "lock-1" });
+      const program = lockfileHandler.read({ lockfile: {"type":"ref","fixture":"write_valid_lockfile","field":"lockfile"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = lockfileHandler.read({ lockfile: "lock-1" });
+      const program = lockfileHandler.read({ lockfile: {"type":"ref","fixture":"write_valid_lockfile","field":"lockfile"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('Lockfile functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = lockfileHandler.read({ lockfile: "lock-1" });
+      const program = lockfileHandler.read({ lockfile: {"type":"ref","fixture":"write_valid_lockfile","field":"lockfile"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('Lockfile functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof lockfileHandler.read !== 'function') return;
-      const result = await interpret(lockfileHandler.read({ lockfile: "lock-1" }), storage);
+      const result = await interpret(lockfileHandler.read({ lockfile: {"type":"ref","fixture":"write_valid_lockfile","field":"lockfile"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('Lockfile functional handler', () => {
       if (typeof lockfileHandler.read !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_write_valid_lockfile = await interpret(lockfileHandler.write({ project_hash: "sha256:manifest-hash-001", entries: [{"module_id":"lodash","version":"4.17.21","content_hash":"sha256:abc123","artifact_url":"https://registry.example.com/lodash.tgz","integrity":"sha256:abc123","features_enabled":[],"dependencies":[]}], metadata: {"resolver_version":"1.0.0","resolved_at":"2026-01-15T10:00:00Z","registry_snapshot":"snap-001"} }), storage);
-      const _pool = Object.assign({}, (afterResult_write_valid_lockfile?.output ?? {}));
-      const _fixtureInput = { lockfile: "lock-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(lockfileHandler.read({ ..._fixtureInput }), storage);
+      const result = await interpret(lockfileHandler.read({ lockfile: afterResult_write_valid_lockfile?.output?.["lockfile"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,7 +171,7 @@ describe('Lockfile functional handler', () => {
 
   describe('verify', () => {
     it('builds a valid StorageProgram', () => {
-      const program = lockfileHandler.verify({ lockfile: "lock-1" });
+      const program = lockfileHandler.verify({ lockfile: {"type":"ref","fixture":"write_valid_lockfile","field":"lockfile"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +179,21 @@ describe('Lockfile functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = lockfileHandler.verify({ lockfile: "lock-1" });
+      const program = lockfileHandler.verify({ lockfile: {"type":"ref","fixture":"write_valid_lockfile","field":"lockfile"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = lockfileHandler.verify({ lockfile: "lock-1" });
+      const program = lockfileHandler.verify({ lockfile: {"type":"ref","fixture":"write_valid_lockfile","field":"lockfile"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = lockfileHandler.verify({ lockfile: "lock-1" });
+      const program = lockfileHandler.verify({ lockfile: {"type":"ref","fixture":"write_valid_lockfile","field":"lockfile"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +206,7 @@ describe('Lockfile functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = lockfileHandler.verify({ lockfile: "lock-1" });
+      const program = lockfileHandler.verify({ lockfile: {"type":"ref","fixture":"write_valid_lockfile","field":"lockfile"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,7 +214,7 @@ describe('Lockfile functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof lockfileHandler.verify !== 'function') return;
-      const result = await interpret(lockfileHandler.verify({ lockfile: "lock-1" }), storage);
+      const result = await interpret(lockfileHandler.verify({ lockfile: {"type":"ref","fixture":"write_valid_lockfile","field":"lockfile"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -230,12 +225,7 @@ describe('Lockfile functional handler', () => {
       if (typeof lockfileHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_write_valid_lockfile = await interpret(lockfileHandler.write({ project_hash: "sha256:manifest-hash-001", entries: [{"module_id":"lodash","version":"4.17.21","content_hash":"sha256:abc123","artifact_url":"https://registry.example.com/lodash.tgz","integrity":"sha256:abc123","features_enabled":[],"dependencies":[]}], metadata: {"resolver_version":"1.0.0","resolved_at":"2026-01-15T10:00:00Z","registry_snapshot":"snap-001"} }), storage);
-      const _pool = Object.assign({}, (afterResult_write_valid_lockfile?.output ?? {}));
-      const _fixtureInput = { lockfile: "lock-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(lockfileHandler.verify({ ..._fixtureInput }), storage);
+      const result = await interpret(lockfileHandler.verify({ lockfile: afterResult_write_valid_lockfile?.output?.["lockfile"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

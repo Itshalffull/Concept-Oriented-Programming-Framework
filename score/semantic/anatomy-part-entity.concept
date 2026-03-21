@@ -76,7 +76,7 @@ concept AnatomyPartEntity [A] {
         Part does not exist.
       }
 
-      fixture get_existing_part { part: "anatomy-part-entity-1" } after register_dialog_root
+      fixture get_existing_part { part: $register_dialog_root.part } after register_dialog_root
       fixture get_nonexistent_part { part: "nonexistent-part" } -> error
     }
   }

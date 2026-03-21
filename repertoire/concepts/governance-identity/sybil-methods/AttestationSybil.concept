@@ -38,7 +38,7 @@ concept AttestationSybil [AS] {
         The candidate submits an attestation credential for verification.
       }
 
-      fixture submit_valid_attestation { config: "att-sybil-1", candidate: "alice", attestationRef: "att-ref-001", schema: "kyc-basic", attester: "civic-authority", expiresAt: "2027-12-31T00:00:00Z" } after configure_kyc
+      fixture submit_valid_attestation { config: $configure_kyc.id, candidate: "alice", attestationRef: $configure_kyc.id, schema: "kyc-basic", attester: "civic-authority", expiresAt: "2027-12-31T00:00:00Z" } after configure_kyc
       fixture submit_missing_candidate { config: "att-sybil-1", candidate: "", attestationRef: "att-ref-002", schema: "kyc-basic", attester: "civic-authority" } -> error
     }
 
@@ -63,7 +63,7 @@ concept AttestationSybil [AS] {
         The configuration does not exist.
       }
 
-      fixture verify_alice { config: "att-sybil-1", candidate: "alice" } after configure_kyc
+      fixture verify_alice { config: $configure_kyc.id, candidate: "alice" } after configure_kyc
       fixture verify_missing_config { config: "nonexistent", candidate: "alice" } -> error
     }
   }

@@ -102,7 +102,7 @@ describe('CloudflareRuntime functional handler', () => {
 
   describe('deploy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = cloudflareRuntimeHandler.deploy({ worker: "wkr-001", scriptContent: "export default { fetch() { return new Response('OK') } }" });
+      const program = cloudflareRuntimeHandler.deploy({ worker: {"type":"ref","fixture":"provision_worker","field":"worker"}, scriptContent: "export default { fetch() { return new Response('OK') } }" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('CloudflareRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = cloudflareRuntimeHandler.deploy({ worker: "wkr-001", scriptContent: "export default { fetch() { return new Response('OK') } }" });
+      const program = cloudflareRuntimeHandler.deploy({ worker: {"type":"ref","fixture":"provision_worker","field":"worker"}, scriptContent: "export default { fetch() { return new Response('OK') } }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = cloudflareRuntimeHandler.deploy({ worker: "wkr-001", scriptContent: "export default { fetch() { return new Response('OK') } }" });
+      const program = cloudflareRuntimeHandler.deploy({ worker: {"type":"ref","fixture":"provision_worker","field":"worker"}, scriptContent: "export default { fetch() { return new Response('OK') } }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = cloudflareRuntimeHandler.deploy({ worker: "wkr-001", scriptContent: "export default { fetch() { return new Response('OK') } }" });
+      const program = cloudflareRuntimeHandler.deploy({ worker: {"type":"ref","fixture":"provision_worker","field":"worker"}, scriptContent: "export default { fetch() { return new Response('OK') } }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('CloudflareRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = cloudflareRuntimeHandler.deploy({ worker: "wkr-001", scriptContent: "export default { fetch() { return new Response('OK') } }" });
+      const program = cloudflareRuntimeHandler.deploy({ worker: {"type":"ref","fixture":"provision_worker","field":"worker"}, scriptContent: "export default { fetch() { return new Response('OK') } }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('CloudflareRuntime functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof cloudflareRuntimeHandler.deploy !== 'function') return;
-      const result = await interpret(cloudflareRuntimeHandler.deploy({ worker: "wkr-001", scriptContent: "export default { fetch() { return new Response('OK') } }" }), storage);
+      const result = await interpret(cloudflareRuntimeHandler.deploy({ worker: {"type":"ref","fixture":"provision_worker","field":"worker"}, scriptContent: "export default { fetch() { return new Response('OK') } }" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('CloudflareRuntime functional handler', () => {
       if (typeof cloudflareRuntimeHandler.deploy !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_provision_worker = await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
-      const _pool = Object.assign({}, (afterResult_provision_worker?.output ?? {}));
-      const _fixtureInput = { worker: "wkr-001", scriptContent: "export default { fetch() { return new Response('OK') } }" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(cloudflareRuntimeHandler.deploy({ ..._fixtureInput }), storage);
+      const result = await interpret(cloudflareRuntimeHandler.deploy({ worker: afterResult_provision_worker?.output?.["worker"], scriptContent: "export default { fetch() { return new Response('OK') } }" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,7 +171,7 @@ describe('CloudflareRuntime functional handler', () => {
 
   describe('setTrafficWeight', () => {
     it('builds a valid StorageProgram', () => {
-      const program = cloudflareRuntimeHandler.setTrafficWeight({ worker: "wkr-001", weight: "50" });
+      const program = cloudflareRuntimeHandler.setTrafficWeight({ worker: {"type":"ref","fixture":"provision_worker","field":"worker"}, weight: "50" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +179,21 @@ describe('CloudflareRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = cloudflareRuntimeHandler.setTrafficWeight({ worker: "wkr-001", weight: "50" });
+      const program = cloudflareRuntimeHandler.setTrafficWeight({ worker: {"type":"ref","fixture":"provision_worker","field":"worker"}, weight: "50" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = cloudflareRuntimeHandler.setTrafficWeight({ worker: "wkr-001", weight: "50" });
+      const program = cloudflareRuntimeHandler.setTrafficWeight({ worker: {"type":"ref","fixture":"provision_worker","field":"worker"}, weight: "50" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = cloudflareRuntimeHandler.setTrafficWeight({ worker: "wkr-001", weight: "50" });
+      const program = cloudflareRuntimeHandler.setTrafficWeight({ worker: {"type":"ref","fixture":"provision_worker","field":"worker"}, weight: "50" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +206,7 @@ describe('CloudflareRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = cloudflareRuntimeHandler.setTrafficWeight({ worker: "wkr-001", weight: "50" });
+      const program = cloudflareRuntimeHandler.setTrafficWeight({ worker: {"type":"ref","fixture":"provision_worker","field":"worker"}, weight: "50" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,7 +214,7 @@ describe('CloudflareRuntime functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof cloudflareRuntimeHandler.setTrafficWeight !== 'function') return;
-      const result = await interpret(cloudflareRuntimeHandler.setTrafficWeight({ worker: "wkr-001", weight: "50" }), storage);
+      const result = await interpret(cloudflareRuntimeHandler.setTrafficWeight({ worker: {"type":"ref","fixture":"provision_worker","field":"worker"}, weight: "50" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -230,12 +225,7 @@ describe('CloudflareRuntime functional handler', () => {
       if (typeof cloudflareRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_provision_worker = await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
-      const _pool = Object.assign({}, (afterResult_provision_worker?.output ?? {}));
-      const _fixtureInput = { worker: "wkr-001", weight: "50" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(cloudflareRuntimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
+      const result = await interpret(cloudflareRuntimeHandler.setTrafficWeight({ worker: afterResult_provision_worker?.output?.["worker"], weight: "50" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -243,12 +233,7 @@ describe('CloudflareRuntime functional handler', () => {
       if (typeof cloudflareRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_provision_worker = await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
-      const _pool = Object.assign({}, (afterResult_provision_worker?.output ?? {}));
-      const _fixtureInput = { worker: "wkr-001", weight: "-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(cloudflareRuntimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
+      const result = await interpret(cloudflareRuntimeHandler.setTrafficWeight({ worker: afterResult_provision_worker?.output?.["worker"], weight: "-1" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -256,7 +241,7 @@ describe('CloudflareRuntime functional handler', () => {
 
   describe('rollback', () => {
     it('builds a valid StorageProgram', () => {
-      const program = cloudflareRuntimeHandler.rollback({ worker: "wkr-001", targetVersion: "1" });
+      const program = cloudflareRuntimeHandler.rollback({ worker: {"type":"ref","fixture":"provision_worker","field":"worker"}, targetVersion: "1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -264,21 +249,21 @@ describe('CloudflareRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = cloudflareRuntimeHandler.rollback({ worker: "wkr-001", targetVersion: "1" });
+      const program = cloudflareRuntimeHandler.rollback({ worker: {"type":"ref","fixture":"provision_worker","field":"worker"}, targetVersion: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = cloudflareRuntimeHandler.rollback({ worker: "wkr-001", targetVersion: "1" });
+      const program = cloudflareRuntimeHandler.rollback({ worker: {"type":"ref","fixture":"provision_worker","field":"worker"}, targetVersion: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = cloudflareRuntimeHandler.rollback({ worker: "wkr-001", targetVersion: "1" });
+      const program = cloudflareRuntimeHandler.rollback({ worker: {"type":"ref","fixture":"provision_worker","field":"worker"}, targetVersion: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -291,7 +276,7 @@ describe('CloudflareRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = cloudflareRuntimeHandler.rollback({ worker: "wkr-001", targetVersion: "1" });
+      const program = cloudflareRuntimeHandler.rollback({ worker: {"type":"ref","fixture":"provision_worker","field":"worker"}, targetVersion: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -299,7 +284,7 @@ describe('CloudflareRuntime functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof cloudflareRuntimeHandler.rollback !== 'function') return;
-      const result = await interpret(cloudflareRuntimeHandler.rollback({ worker: "wkr-001", targetVersion: "1" }), storage);
+      const result = await interpret(cloudflareRuntimeHandler.rollback({ worker: {"type":"ref","fixture":"provision_worker","field":"worker"}, targetVersion: "1" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -310,12 +295,7 @@ describe('CloudflareRuntime functional handler', () => {
       if (typeof cloudflareRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_provision_worker = await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
-      const _pool = Object.assign({}, (afterResult_provision_worker?.output ?? {}));
-      const _fixtureInput = { worker: "wkr-001", targetVersion: "1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(cloudflareRuntimeHandler.rollback({ ..._fixtureInput }), storage);
+      const result = await interpret(cloudflareRuntimeHandler.rollback({ worker: afterResult_provision_worker?.output?.["worker"], targetVersion: "1" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -323,12 +303,7 @@ describe('CloudflareRuntime functional handler', () => {
       if (typeof cloudflareRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_provision_worker = await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
-      const _pool = Object.assign({}, (afterResult_provision_worker?.output ?? {}));
-      const _fixtureInput = { worker: "wkr-001", targetVersion: "" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(cloudflareRuntimeHandler.rollback({ ..._fixtureInput }), storage);
+      const result = await interpret(cloudflareRuntimeHandler.rollback({ worker: afterResult_provision_worker?.output?.["worker"], targetVersion: "" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -336,7 +311,7 @@ describe('CloudflareRuntime functional handler', () => {
 
   describe('destroy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = cloudflareRuntimeHandler.destroy({ worker: "wkr-001" });
+      const program = cloudflareRuntimeHandler.destroy({ worker: {"type":"ref","fixture":"provision_worker","field":"worker"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -344,21 +319,21 @@ describe('CloudflareRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = cloudflareRuntimeHandler.destroy({ worker: "wkr-001" });
+      const program = cloudflareRuntimeHandler.destroy({ worker: {"type":"ref","fixture":"provision_worker","field":"worker"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = cloudflareRuntimeHandler.destroy({ worker: "wkr-001" });
+      const program = cloudflareRuntimeHandler.destroy({ worker: {"type":"ref","fixture":"provision_worker","field":"worker"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = cloudflareRuntimeHandler.destroy({ worker: "wkr-001" });
+      const program = cloudflareRuntimeHandler.destroy({ worker: {"type":"ref","fixture":"provision_worker","field":"worker"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -371,7 +346,7 @@ describe('CloudflareRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = cloudflareRuntimeHandler.destroy({ worker: "wkr-001" });
+      const program = cloudflareRuntimeHandler.destroy({ worker: {"type":"ref","fixture":"provision_worker","field":"worker"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -379,7 +354,7 @@ describe('CloudflareRuntime functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof cloudflareRuntimeHandler.destroy !== 'function') return;
-      const result = await interpret(cloudflareRuntimeHandler.destroy({ worker: "wkr-001" }), storage);
+      const result = await interpret(cloudflareRuntimeHandler.destroy({ worker: {"type":"ref","fixture":"provision_worker","field":"worker"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -390,12 +365,7 @@ describe('CloudflareRuntime functional handler', () => {
       if (typeof cloudflareRuntimeHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_provision_worker = await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
-      const _pool = Object.assign({}, (afterResult_provision_worker?.output ?? {}));
-      const _fixtureInput = { worker: "wkr-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(cloudflareRuntimeHandler.destroy({ ..._fixtureInput }), storage);
+      const result = await interpret(cloudflareRuntimeHandler.destroy({ worker: afterResult_provision_worker?.output?.["worker"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

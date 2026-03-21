@@ -109,7 +109,7 @@ describe('MediaAsset functional handler', () => {
 
   describe('extractMetadata', () => {
     it('builds a valid StorageProgram', () => {
-      const program = mediaAssetHandler.extractMetadata({ asset: "img-001" });
+      const program = mediaAssetHandler.extractMetadata({ asset: {"type":"ref","fixture":"create_image","field":"asset"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -117,21 +117,21 @@ describe('MediaAsset functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = mediaAssetHandler.extractMetadata({ asset: "img-001" });
+      const program = mediaAssetHandler.extractMetadata({ asset: {"type":"ref","fixture":"create_image","field":"asset"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = mediaAssetHandler.extractMetadata({ asset: "img-001" });
+      const program = mediaAssetHandler.extractMetadata({ asset: {"type":"ref","fixture":"create_image","field":"asset"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = mediaAssetHandler.extractMetadata({ asset: "img-001" });
+      const program = mediaAssetHandler.extractMetadata({ asset: {"type":"ref","fixture":"create_image","field":"asset"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -144,7 +144,7 @@ describe('MediaAsset functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = mediaAssetHandler.extractMetadata({ asset: "img-001" });
+      const program = mediaAssetHandler.extractMetadata({ asset: {"type":"ref","fixture":"create_image","field":"asset"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -152,7 +152,7 @@ describe('MediaAsset functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof mediaAssetHandler.extractMetadata !== 'function') return;
-      const result = await interpret(mediaAssetHandler.extractMetadata({ asset: "img-001" }), storage);
+      const result = await interpret(mediaAssetHandler.extractMetadata({ asset: {"type":"ref","fixture":"create_image","field":"asset"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -163,12 +163,7 @@ describe('MediaAsset functional handler', () => {
       if (typeof mediaAssetHandler.extractMetadata !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_image = await interpret(mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_image?.output ?? {}));
-      const _fixtureInput = { asset: "img-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(mediaAssetHandler.extractMetadata({ ..._fixtureInput }), storage);
+      const result = await interpret(mediaAssetHandler.extractMetadata({ asset: afterResult_create_image?.output?.["asset"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -184,7 +179,7 @@ describe('MediaAsset functional handler', () => {
 
   describe('generateThumbnail', () => {
     it('builds a valid StorageProgram', () => {
-      const program = mediaAssetHandler.generateThumbnail({ asset: "img-001" });
+      const program = mediaAssetHandler.generateThumbnail({ asset: {"type":"ref","fixture":"create_image","field":"asset"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -192,21 +187,21 @@ describe('MediaAsset functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = mediaAssetHandler.generateThumbnail({ asset: "img-001" });
+      const program = mediaAssetHandler.generateThumbnail({ asset: {"type":"ref","fixture":"create_image","field":"asset"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = mediaAssetHandler.generateThumbnail({ asset: "img-001" });
+      const program = mediaAssetHandler.generateThumbnail({ asset: {"type":"ref","fixture":"create_image","field":"asset"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = mediaAssetHandler.generateThumbnail({ asset: "img-001" });
+      const program = mediaAssetHandler.generateThumbnail({ asset: {"type":"ref","fixture":"create_image","field":"asset"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -219,7 +214,7 @@ describe('MediaAsset functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = mediaAssetHandler.generateThumbnail({ asset: "img-001" });
+      const program = mediaAssetHandler.generateThumbnail({ asset: {"type":"ref","fixture":"create_image","field":"asset"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -227,7 +222,7 @@ describe('MediaAsset functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof mediaAssetHandler.generateThumbnail !== 'function') return;
-      const result = await interpret(mediaAssetHandler.generateThumbnail({ asset: "img-001" }), storage);
+      const result = await interpret(mediaAssetHandler.generateThumbnail({ asset: {"type":"ref","fixture":"create_image","field":"asset"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -238,12 +233,7 @@ describe('MediaAsset functional handler', () => {
       if (typeof mediaAssetHandler.generateThumbnail !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_image = await interpret(mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_image?.output ?? {}));
-      const _fixtureInput = { asset: "img-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(mediaAssetHandler.generateThumbnail({ ..._fixtureInput }), storage);
+      const result = await interpret(mediaAssetHandler.generateThumbnail({ asset: afterResult_create_image?.output?.["asset"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -259,7 +249,7 @@ describe('MediaAsset functional handler', () => {
 
   describe('getMedia', () => {
     it('builds a valid StorageProgram', () => {
-      const program = mediaAssetHandler.getMedia({ asset: "img-001" });
+      const program = mediaAssetHandler.getMedia({ asset: {"type":"ref","fixture":"create_image","field":"asset"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -267,21 +257,21 @@ describe('MediaAsset functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = mediaAssetHandler.getMedia({ asset: "img-001" });
+      const program = mediaAssetHandler.getMedia({ asset: {"type":"ref","fixture":"create_image","field":"asset"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = mediaAssetHandler.getMedia({ asset: "img-001" });
+      const program = mediaAssetHandler.getMedia({ asset: {"type":"ref","fixture":"create_image","field":"asset"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = mediaAssetHandler.getMedia({ asset: "img-001" });
+      const program = mediaAssetHandler.getMedia({ asset: {"type":"ref","fixture":"create_image","field":"asset"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -294,7 +284,7 @@ describe('MediaAsset functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = mediaAssetHandler.getMedia({ asset: "img-001" });
+      const program = mediaAssetHandler.getMedia({ asset: {"type":"ref","fixture":"create_image","field":"asset"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +292,7 @@ describe('MediaAsset functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof mediaAssetHandler.getMedia !== 'function') return;
-      const result = await interpret(mediaAssetHandler.getMedia({ asset: "img-001" }), storage);
+      const result = await interpret(mediaAssetHandler.getMedia({ asset: {"type":"ref","fixture":"create_image","field":"asset"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -313,12 +303,7 @@ describe('MediaAsset functional handler', () => {
       if (typeof mediaAssetHandler.getMedia !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_image = await interpret(mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_image?.output ?? {}));
-      const _fixtureInput = { asset: "img-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(mediaAssetHandler.getMedia({ ..._fixtureInput }), storage);
+      const result = await interpret(mediaAssetHandler.getMedia({ asset: afterResult_create_image?.output?.["asset"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

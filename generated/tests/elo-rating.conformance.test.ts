@@ -102,7 +102,7 @@ describe('EloRating functional handler', () => {
 
   describe('recordOutcome', () => {
     it('builds a valid StorageProgram', () => {
-      const program = eloRatingHandler.recordOutcome({ config: "elo-001", winner: "alice", loser: "bob" });
+      const program = eloRatingHandler.recordOutcome({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, winner: "alice", loser: "bob" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('EloRating functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = eloRatingHandler.recordOutcome({ config: "elo-001", winner: "alice", loser: "bob" });
+      const program = eloRatingHandler.recordOutcome({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, winner: "alice", loser: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = eloRatingHandler.recordOutcome({ config: "elo-001", winner: "alice", loser: "bob" });
+      const program = eloRatingHandler.recordOutcome({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, winner: "alice", loser: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = eloRatingHandler.recordOutcome({ config: "elo-001", winner: "alice", loser: "bob" });
+      const program = eloRatingHandler.recordOutcome({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, winner: "alice", loser: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('EloRating functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = eloRatingHandler.recordOutcome({ config: "elo-001", winner: "alice", loser: "bob" });
+      const program = eloRatingHandler.recordOutcome({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, winner: "alice", loser: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('EloRating functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof eloRatingHandler.recordOutcome !== 'function') return;
-      const result = await interpret(eloRatingHandler.recordOutcome({ config: "elo-001", winner: "alice", loser: "bob" }), storage);
+      const result = await interpret(eloRatingHandler.recordOutcome({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, winner: "alice", loser: "bob" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('EloRating functional handler', () => {
       if (typeof eloRatingHandler.recordOutcome !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_configure_standard = await interpret(eloRatingHandler.configure({ kFactor: "32.0", initialRating: "1500.0" }), storage);
-      const _pool = Object.assign({}, (afterResult_configure_standard?.output ?? {}));
-      const _fixtureInput = { config: "elo-001", winner: "alice", loser: "bob" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(eloRatingHandler.recordOutcome({ ..._fixtureInput }), storage);
+      const result = await interpret(eloRatingHandler.recordOutcome({ config: afterResult_configure_standard?.output?.["id"], winner: "alice", loser: "bob" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,7 +171,7 @@ describe('EloRating functional handler', () => {
 
   describe('recordDraw', () => {
     it('builds a valid StorageProgram', () => {
-      const program = eloRatingHandler.recordDraw({ config: "elo-001", participantA: "alice", participantB: "bob" });
+      const program = eloRatingHandler.recordDraw({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, participantA: "alice", participantB: "bob" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +179,21 @@ describe('EloRating functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = eloRatingHandler.recordDraw({ config: "elo-001", participantA: "alice", participantB: "bob" });
+      const program = eloRatingHandler.recordDraw({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, participantA: "alice", participantB: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = eloRatingHandler.recordDraw({ config: "elo-001", participantA: "alice", participantB: "bob" });
+      const program = eloRatingHandler.recordDraw({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, participantA: "alice", participantB: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = eloRatingHandler.recordDraw({ config: "elo-001", participantA: "alice", participantB: "bob" });
+      const program = eloRatingHandler.recordDraw({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, participantA: "alice", participantB: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +206,7 @@ describe('EloRating functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = eloRatingHandler.recordDraw({ config: "elo-001", participantA: "alice", participantB: "bob" });
+      const program = eloRatingHandler.recordDraw({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, participantA: "alice", participantB: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,7 +214,7 @@ describe('EloRating functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof eloRatingHandler.recordDraw !== 'function') return;
-      const result = await interpret(eloRatingHandler.recordDraw({ config: "elo-001", participantA: "alice", participantB: "bob" }), storage);
+      const result = await interpret(eloRatingHandler.recordDraw({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, participantA: "alice", participantB: "bob" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -230,12 +225,7 @@ describe('EloRating functional handler', () => {
       if (typeof eloRatingHandler.recordDraw !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_configure_standard = await interpret(eloRatingHandler.configure({ kFactor: "32.0", initialRating: "1500.0" }), storage);
-      const _pool = Object.assign({}, (afterResult_configure_standard?.output ?? {}));
-      const _fixtureInput = { config: "elo-001", participantA: "alice", participantB: "bob" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(eloRatingHandler.recordDraw({ ..._fixtureInput }), storage);
+      const result = await interpret(eloRatingHandler.recordDraw({ config: afterResult_configure_standard?.output?.["id"], participantA: "alice", participantB: "bob" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -250,7 +240,7 @@ describe('EloRating functional handler', () => {
 
   describe('getRating', () => {
     it('builds a valid StorageProgram', () => {
-      const program = eloRatingHandler.getRating({ config: "elo-001", participant: "alice" });
+      const program = eloRatingHandler.getRating({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, participant: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -258,21 +248,21 @@ describe('EloRating functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = eloRatingHandler.getRating({ config: "elo-001", participant: "alice" });
+      const program = eloRatingHandler.getRating({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = eloRatingHandler.getRating({ config: "elo-001", participant: "alice" });
+      const program = eloRatingHandler.getRating({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = eloRatingHandler.getRating({ config: "elo-001", participant: "alice" });
+      const program = eloRatingHandler.getRating({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -285,7 +275,7 @@ describe('EloRating functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = eloRatingHandler.getRating({ config: "elo-001", participant: "alice" });
+      const program = eloRatingHandler.getRating({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -293,7 +283,7 @@ describe('EloRating functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof eloRatingHandler.getRating !== 'function') return;
-      const result = await interpret(eloRatingHandler.getRating({ config: "elo-001", participant: "alice" }), storage);
+      const result = await interpret(eloRatingHandler.getRating({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, participant: "alice" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -304,12 +294,7 @@ describe('EloRating functional handler', () => {
       if (typeof eloRatingHandler.getRating !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_configure_standard = await interpret(eloRatingHandler.configure({ kFactor: "32.0", initialRating: "1500.0" }), storage);
-      const _pool = Object.assign({}, (afterResult_configure_standard?.output ?? {}));
-      const _fixtureInput = { config: "elo-001", participant: "alice" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(eloRatingHandler.getRating({ ..._fixtureInput }), storage);
+      const result = await interpret(eloRatingHandler.getRating({ config: afterResult_configure_standard?.output?.["id"], participant: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });
 

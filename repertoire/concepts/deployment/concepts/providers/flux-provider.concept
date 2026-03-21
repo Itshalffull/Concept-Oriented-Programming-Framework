@@ -52,7 +52,7 @@ concept FluxProvider [F] {
         Flux reconciliation failed.
       }
 
-      fixture reconcile_ks { kustomization: "ks-prod-001" } after emit_prod
+      fixture reconcile_ks { kustomization: $emit_prod.kustomization } after emit_prod
       fixture reconcile_nonexistent { kustomization: "" } -> error
     }
 
@@ -64,8 +64,8 @@ concept FluxProvider [F] {
         Helm chart not found in the configured source.
       }
 
-      fixture helm_nginx { kustomization: "ks-prod-001", chart: "nginx-ingress", values: "{\"replicas\": 3}" } after emit_prod
-      fixture helm_empty_chart { kustomization: "ks-prod-001", chart: "", values: "{}" } after emit_prod -> error
+      fixture helm_nginx { kustomization: $emit_prod.kustomization, chart: "nginx-ingress", values: "{\"replicas\": 3}" } after emit_prod
+      fixture helm_empty_chart { kustomization: $emit_prod.kustomization, chart: "", values: "{}" } after emit_prod -> error
     }
   }
 

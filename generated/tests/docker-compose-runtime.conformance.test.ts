@@ -102,7 +102,7 @@ describe('DockerComposeRuntime functional handler', () => {
 
   describe('deploy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dockerComposeRuntimeHandler.deploy({ service: "dc-001", imageUri: "user-service:latest" });
+      const program = dockerComposeRuntimeHandler.deploy({ service: {"type":"ref","fixture":"provision_service","field":"service"}, imageUri: "user-service:latest" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('DockerComposeRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dockerComposeRuntimeHandler.deploy({ service: "dc-001", imageUri: "user-service:latest" });
+      const program = dockerComposeRuntimeHandler.deploy({ service: {"type":"ref","fixture":"provision_service","field":"service"}, imageUri: "user-service:latest" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dockerComposeRuntimeHandler.deploy({ service: "dc-001", imageUri: "user-service:latest" });
+      const program = dockerComposeRuntimeHandler.deploy({ service: {"type":"ref","fixture":"provision_service","field":"service"}, imageUri: "user-service:latest" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dockerComposeRuntimeHandler.deploy({ service: "dc-001", imageUri: "user-service:latest" });
+      const program = dockerComposeRuntimeHandler.deploy({ service: {"type":"ref","fixture":"provision_service","field":"service"}, imageUri: "user-service:latest" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('DockerComposeRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dockerComposeRuntimeHandler.deploy({ service: "dc-001", imageUri: "user-service:latest" });
+      const program = dockerComposeRuntimeHandler.deploy({ service: {"type":"ref","fixture":"provision_service","field":"service"}, imageUri: "user-service:latest" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('DockerComposeRuntime functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof dockerComposeRuntimeHandler.deploy !== 'function') return;
-      const result = await interpret(dockerComposeRuntimeHandler.deploy({ service: "dc-001", imageUri: "user-service:latest" }), storage);
+      const result = await interpret(dockerComposeRuntimeHandler.deploy({ service: {"type":"ref","fixture":"provision_service","field":"service"}, imageUri: "user-service:latest" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('DockerComposeRuntime functional handler', () => {
       if (typeof dockerComposeRuntimeHandler.deploy !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_provision_service = await interpret(dockerComposeRuntimeHandler.provision({ concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }), storage);
-      const _pool = Object.assign({}, (afterResult_provision_service?.output ?? {}));
-      const _fixtureInput = { service: "dc-001", imageUri: "user-service:latest" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(dockerComposeRuntimeHandler.deploy({ ..._fixtureInput }), storage);
+      const result = await interpret(dockerComposeRuntimeHandler.deploy({ service: afterResult_provision_service?.output?.["service"], imageUri: "user-service:latest" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,7 +171,7 @@ describe('DockerComposeRuntime functional handler', () => {
 
   describe('setTrafficWeight', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dockerComposeRuntimeHandler.setTrafficWeight({ service: "dc-001", weight: "100" });
+      const program = dockerComposeRuntimeHandler.setTrafficWeight({ service: {"type":"ref","fixture":"provision_service","field":"service"}, weight: "100" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +179,21 @@ describe('DockerComposeRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dockerComposeRuntimeHandler.setTrafficWeight({ service: "dc-001", weight: "100" });
+      const program = dockerComposeRuntimeHandler.setTrafficWeight({ service: {"type":"ref","fixture":"provision_service","field":"service"}, weight: "100" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dockerComposeRuntimeHandler.setTrafficWeight({ service: "dc-001", weight: "100" });
+      const program = dockerComposeRuntimeHandler.setTrafficWeight({ service: {"type":"ref","fixture":"provision_service","field":"service"}, weight: "100" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dockerComposeRuntimeHandler.setTrafficWeight({ service: "dc-001", weight: "100" });
+      const program = dockerComposeRuntimeHandler.setTrafficWeight({ service: {"type":"ref","fixture":"provision_service","field":"service"}, weight: "100" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +206,7 @@ describe('DockerComposeRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dockerComposeRuntimeHandler.setTrafficWeight({ service: "dc-001", weight: "100" });
+      const program = dockerComposeRuntimeHandler.setTrafficWeight({ service: {"type":"ref","fixture":"provision_service","field":"service"}, weight: "100" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,7 +214,7 @@ describe('DockerComposeRuntime functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof dockerComposeRuntimeHandler.setTrafficWeight !== 'function') return;
-      const result = await interpret(dockerComposeRuntimeHandler.setTrafficWeight({ service: "dc-001", weight: "100" }), storage);
+      const result = await interpret(dockerComposeRuntimeHandler.setTrafficWeight({ service: {"type":"ref","fixture":"provision_service","field":"service"}, weight: "100" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -230,12 +225,7 @@ describe('DockerComposeRuntime functional handler', () => {
       if (typeof dockerComposeRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_provision_service = await interpret(dockerComposeRuntimeHandler.provision({ concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }), storage);
-      const _pool = Object.assign({}, (afterResult_provision_service?.output ?? {}));
-      const _fixtureInput = { service: "dc-001", weight: "100" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(dockerComposeRuntimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
+      const result = await interpret(dockerComposeRuntimeHandler.setTrafficWeight({ service: afterResult_provision_service?.output?.["service"], weight: "100" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -243,12 +233,7 @@ describe('DockerComposeRuntime functional handler', () => {
       if (typeof dockerComposeRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_provision_service = await interpret(dockerComposeRuntimeHandler.provision({ concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }), storage);
-      const _pool = Object.assign({}, (afterResult_provision_service?.output ?? {}));
-      const _fixtureInput = { service: "dc-001", weight: "-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(dockerComposeRuntimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
+      const result = await interpret(dockerComposeRuntimeHandler.setTrafficWeight({ service: afterResult_provision_service?.output?.["service"], weight: "-1" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -256,7 +241,7 @@ describe('DockerComposeRuntime functional handler', () => {
 
   describe('rollback', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dockerComposeRuntimeHandler.rollback({ service: "dc-001", targetImage: "user-service:v1.0.0" });
+      const program = dockerComposeRuntimeHandler.rollback({ service: {"type":"ref","fixture":"provision_service","field":"service"}, targetImage: "user-service:v1.0.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -264,21 +249,21 @@ describe('DockerComposeRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dockerComposeRuntimeHandler.rollback({ service: "dc-001", targetImage: "user-service:v1.0.0" });
+      const program = dockerComposeRuntimeHandler.rollback({ service: {"type":"ref","fixture":"provision_service","field":"service"}, targetImage: "user-service:v1.0.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dockerComposeRuntimeHandler.rollback({ service: "dc-001", targetImage: "user-service:v1.0.0" });
+      const program = dockerComposeRuntimeHandler.rollback({ service: {"type":"ref","fixture":"provision_service","field":"service"}, targetImage: "user-service:v1.0.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dockerComposeRuntimeHandler.rollback({ service: "dc-001", targetImage: "user-service:v1.0.0" });
+      const program = dockerComposeRuntimeHandler.rollback({ service: {"type":"ref","fixture":"provision_service","field":"service"}, targetImage: "user-service:v1.0.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -291,7 +276,7 @@ describe('DockerComposeRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dockerComposeRuntimeHandler.rollback({ service: "dc-001", targetImage: "user-service:v1.0.0" });
+      const program = dockerComposeRuntimeHandler.rollback({ service: {"type":"ref","fixture":"provision_service","field":"service"}, targetImage: "user-service:v1.0.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -299,7 +284,7 @@ describe('DockerComposeRuntime functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof dockerComposeRuntimeHandler.rollback !== 'function') return;
-      const result = await interpret(dockerComposeRuntimeHandler.rollback({ service: "dc-001", targetImage: "user-service:v1.0.0" }), storage);
+      const result = await interpret(dockerComposeRuntimeHandler.rollback({ service: {"type":"ref","fixture":"provision_service","field":"service"}, targetImage: "user-service:v1.0.0" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -310,12 +295,7 @@ describe('DockerComposeRuntime functional handler', () => {
       if (typeof dockerComposeRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_provision_service = await interpret(dockerComposeRuntimeHandler.provision({ concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }), storage);
-      const _pool = Object.assign({}, (afterResult_provision_service?.output ?? {}));
-      const _fixtureInput = { service: "dc-001", targetImage: "user-service:v1.0.0" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(dockerComposeRuntimeHandler.rollback({ ..._fixtureInput }), storage);
+      const result = await interpret(dockerComposeRuntimeHandler.rollback({ service: afterResult_provision_service?.output?.["service"], targetImage: "user-service:v1.0.0" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -323,12 +303,7 @@ describe('DockerComposeRuntime functional handler', () => {
       if (typeof dockerComposeRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_provision_service = await interpret(dockerComposeRuntimeHandler.provision({ concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }), storage);
-      const _pool = Object.assign({}, (afterResult_provision_service?.output ?? {}));
-      const _fixtureInput = { service: "dc-001", targetImage: "" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(dockerComposeRuntimeHandler.rollback({ ..._fixtureInput }), storage);
+      const result = await interpret(dockerComposeRuntimeHandler.rollback({ service: afterResult_provision_service?.output?.["service"], targetImage: "" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -336,7 +311,7 @@ describe('DockerComposeRuntime functional handler', () => {
 
   describe('destroy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dockerComposeRuntimeHandler.destroy({ service: "dc-001" });
+      const program = dockerComposeRuntimeHandler.destroy({ service: {"type":"ref","fixture":"provision_service","field":"service"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -344,21 +319,21 @@ describe('DockerComposeRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dockerComposeRuntimeHandler.destroy({ service: "dc-001" });
+      const program = dockerComposeRuntimeHandler.destroy({ service: {"type":"ref","fixture":"provision_service","field":"service"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dockerComposeRuntimeHandler.destroy({ service: "dc-001" });
+      const program = dockerComposeRuntimeHandler.destroy({ service: {"type":"ref","fixture":"provision_service","field":"service"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dockerComposeRuntimeHandler.destroy({ service: "dc-001" });
+      const program = dockerComposeRuntimeHandler.destroy({ service: {"type":"ref","fixture":"provision_service","field":"service"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -371,7 +346,7 @@ describe('DockerComposeRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dockerComposeRuntimeHandler.destroy({ service: "dc-001" });
+      const program = dockerComposeRuntimeHandler.destroy({ service: {"type":"ref","fixture":"provision_service","field":"service"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -379,7 +354,7 @@ describe('DockerComposeRuntime functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof dockerComposeRuntimeHandler.destroy !== 'function') return;
-      const result = await interpret(dockerComposeRuntimeHandler.destroy({ service: "dc-001" }), storage);
+      const result = await interpret(dockerComposeRuntimeHandler.destroy({ service: {"type":"ref","fixture":"provision_service","field":"service"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -390,12 +365,7 @@ describe('DockerComposeRuntime functional handler', () => {
       if (typeof dockerComposeRuntimeHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_provision_service = await interpret(dockerComposeRuntimeHandler.provision({ concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }), storage);
-      const _pool = Object.assign({}, (afterResult_provision_service?.output ?? {}));
-      const _fixtureInput = { service: "dc-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(dockerComposeRuntimeHandler.destroy({ ..._fixtureInput }), storage);
+      const result = await interpret(dockerComposeRuntimeHandler.destroy({ service: afterResult_provision_service?.output?.["service"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

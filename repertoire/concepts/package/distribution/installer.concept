@@ -53,7 +53,7 @@ concept Installer [I] {
         Activation failed: file system error or concurrent activation.
       }
 
-      fixture activate_staged { installation: "inst-1" } after stage_single_module
+      fixture activate_staged { installation: $stage_single_module.installation } after stage_single_module
       fixture activate_missing { installation: "inst-nonexistent" } -> error
     }
 
@@ -66,7 +66,7 @@ concept Installer [I] {
         No previous generation exists to roll back to.
       }
 
-      fixture rollback_with_previous { installation: "inst-2" } after stage_single_module
+      fixture rollback_with_previous { installation: $stage_single_module.installation } after stage_single_module
       fixture rollback_no_previous { installation: "inst-1" } -> error
     }
 

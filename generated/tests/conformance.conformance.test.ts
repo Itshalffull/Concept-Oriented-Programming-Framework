@@ -111,7 +111,7 @@ describe('Conformance functional handler', () => {
 
   describe('verify', () => {
     it('builds a valid StorageProgram', () => {
-      const program = conformanceHandler.verify({ suite: "csuite-pwd-001", language: "typescript", artifactLocation: ".clef-artifacts/ts/password" });
+      const program = conformanceHandler.verify({ suite: {"type":"ref","fixture":"generate_password","field":"suite"}, language: "typescript", artifactLocation: ".clef-artifacts/ts/password" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -119,21 +119,21 @@ describe('Conformance functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = conformanceHandler.verify({ suite: "csuite-pwd-001", language: "typescript", artifactLocation: ".clef-artifacts/ts/password" });
+      const program = conformanceHandler.verify({ suite: {"type":"ref","fixture":"generate_password","field":"suite"}, language: "typescript", artifactLocation: ".clef-artifacts/ts/password" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = conformanceHandler.verify({ suite: "csuite-pwd-001", language: "typescript", artifactLocation: ".clef-artifacts/ts/password" });
+      const program = conformanceHandler.verify({ suite: {"type":"ref","fixture":"generate_password","field":"suite"}, language: "typescript", artifactLocation: ".clef-artifacts/ts/password" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = conformanceHandler.verify({ suite: "csuite-pwd-001", language: "typescript", artifactLocation: ".clef-artifacts/ts/password" });
+      const program = conformanceHandler.verify({ suite: {"type":"ref","fixture":"generate_password","field":"suite"}, language: "typescript", artifactLocation: ".clef-artifacts/ts/password" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -146,7 +146,7 @@ describe('Conformance functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = conformanceHandler.verify({ suite: "csuite-pwd-001", language: "typescript", artifactLocation: ".clef-artifacts/ts/password" });
+      const program = conformanceHandler.verify({ suite: {"type":"ref","fixture":"generate_password","field":"suite"}, language: "typescript", artifactLocation: ".clef-artifacts/ts/password" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -154,7 +154,7 @@ describe('Conformance functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof conformanceHandler.verify !== 'function') return;
-      const result = await interpret(conformanceHandler.verify({ suite: "csuite-pwd-001", language: "typescript", artifactLocation: ".clef-artifacts/ts/password" }), storage);
+      const result = await interpret(conformanceHandler.verify({ suite: {"type":"ref","fixture":"generate_password","field":"suite"}, language: "typescript", artifactLocation: ".clef-artifacts/ts/password" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -165,12 +165,7 @@ describe('Conformance functional handler', () => {
       if (typeof conformanceHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_generate_password = await interpret(conformanceHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage);
-      const _pool = Object.assign({}, (afterResult_generate_password?.output ?? {}));
-      const _fixtureInput = { suite: "csuite-pwd-001", language: "typescript", artifactLocation: ".clef-artifacts/ts/password" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(conformanceHandler.verify({ ..._fixtureInput }), storage);
+      const result = await interpret(conformanceHandler.verify({ suite: afterResult_generate_password?.output?.["suite"], language: "typescript", artifactLocation: ".clef-artifacts/ts/password" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -178,12 +173,7 @@ describe('Conformance functional handler', () => {
       if (typeof conformanceHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_generate_password = await interpret(conformanceHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage);
-      const _pool = Object.assign({}, (afterResult_generate_password?.output ?? {}));
-      const _fixtureInput = { suite: "csuite-pwd-001", language: "rust", artifactLocation: ".clef-artifacts/rust/password" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(conformanceHandler.verify({ ..._fixtureInput }), storage);
+      const result = await interpret(conformanceHandler.verify({ suite: afterResult_generate_password?.output?.["suite"], language: "rust", artifactLocation: ".clef-artifacts/rust/password" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -199,7 +189,7 @@ describe('Conformance functional handler', () => {
 
   describe('registerDeviation', () => {
     it('builds a valid StorageProgram', () => {
-      const program = conformanceHandler.registerDeviation({ concept: "password", language: "solidity", requirement: "req-password-003", reason: "Solidity cannot express Option<T> natively" });
+      const program = conformanceHandler.registerDeviation({ concept: "password", language: "solidity", requirement: {"type":"ref","fixture":"generate_password","field":"suite"}, reason: "Solidity cannot express Option<T> natively" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -207,21 +197,21 @@ describe('Conformance functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = conformanceHandler.registerDeviation({ concept: "password", language: "solidity", requirement: "req-password-003", reason: "Solidity cannot express Option<T> natively" });
+      const program = conformanceHandler.registerDeviation({ concept: "password", language: "solidity", requirement: {"type":"ref","fixture":"generate_password","field":"suite"}, reason: "Solidity cannot express Option<T> natively" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = conformanceHandler.registerDeviation({ concept: "password", language: "solidity", requirement: "req-password-003", reason: "Solidity cannot express Option<T> natively" });
+      const program = conformanceHandler.registerDeviation({ concept: "password", language: "solidity", requirement: {"type":"ref","fixture":"generate_password","field":"suite"}, reason: "Solidity cannot express Option<T> natively" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = conformanceHandler.registerDeviation({ concept: "password", language: "solidity", requirement: "req-password-003", reason: "Solidity cannot express Option<T> natively" });
+      const program = conformanceHandler.registerDeviation({ concept: "password", language: "solidity", requirement: {"type":"ref","fixture":"generate_password","field":"suite"}, reason: "Solidity cannot express Option<T> natively" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -234,7 +224,7 @@ describe('Conformance functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = conformanceHandler.registerDeviation({ concept: "password", language: "solidity", requirement: "req-password-003", reason: "Solidity cannot express Option<T> natively" });
+      const program = conformanceHandler.registerDeviation({ concept: "password", language: "solidity", requirement: {"type":"ref","fixture":"generate_password","field":"suite"}, reason: "Solidity cannot express Option<T> natively" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -242,7 +232,7 @@ describe('Conformance functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof conformanceHandler.registerDeviation !== 'function') return;
-      const result = await interpret(conformanceHandler.registerDeviation({ concept: "password", language: "solidity", requirement: "req-password-003", reason: "Solidity cannot express Option<T> natively" }), storage);
+      const result = await interpret(conformanceHandler.registerDeviation({ concept: "password", language: "solidity", requirement: {"type":"ref","fixture":"generate_password","field":"suite"}, reason: "Solidity cannot express Option<T> natively" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -253,12 +243,7 @@ describe('Conformance functional handler', () => {
       if (typeof conformanceHandler.registerDeviation !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_generate_password = await interpret(conformanceHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage);
-      const _pool = Object.assign({}, (afterResult_generate_password?.output ?? {}));
-      const _fixtureInput = { concept: "password", language: "solidity", requirement: "req-password-003", reason: "Solidity cannot express Option<T> natively" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(conformanceHandler.registerDeviation({ ..._fixtureInput }), storage);
+      const result = await interpret(conformanceHandler.registerDeviation({ concept: "password", language: "solidity", requirement: afterResult_generate_password?.output?.["suite"], reason: "Solidity cannot express Option<T> natively" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -266,12 +251,7 @@ describe('Conformance functional handler', () => {
       if (typeof conformanceHandler.registerDeviation !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_generate_password = await interpret(conformanceHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage);
-      const _pool = Object.assign({}, (afterResult_generate_password?.output ?? {}));
-      const _fixtureInput = { concept: "auth", language: "swift", requirement: "req-auth-002", reason: "Swift throws instead of returning error variant" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(conformanceHandler.registerDeviation({ ..._fixtureInput }), storage);
+      const result = await interpret(conformanceHandler.registerDeviation({ concept: "auth", language: "swift", requirement: afterResult_generate_password?.output?.["suite"], reason: "Swift throws instead of returning error variant" }), storage);
       expect(result.variant).toBe('ok');
     });
 

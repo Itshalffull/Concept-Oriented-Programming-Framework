@@ -52,7 +52,7 @@ describe('StakeThreshold imperative handler', () => {
   describe('deposit', () => {
     it('produces a result', async () => {
       if (typeof stakeThresholdHandler.deposit !== 'function') return;
-      const result = await stakeThresholdHandler.deposit({ config: "stake-cfg-1", candidate: "alice", amount: "100.0" }, storage);
+      const result = await stakeThresholdHandler.deposit({ config: {"type":"ref","fixture":"configure_eth_stake","field":"id"}, candidate: "alice", amount: "100.0" }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -63,12 +63,7 @@ describe('StakeThreshold imperative handler', () => {
       if (typeof stakeThresholdHandler.deposit !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_configure_eth_stake = await stakeThresholdHandler.configure({ minimumStake: "100.0", token: "ETH", lockPeriodDays: "30" }, storage);
-      const _pool = Object.assign({}, (afterResult_configure_eth_stake?.output ?? {}));
-      const _fixtureInput = { config: "stake-cfg-1", candidate: "alice", amount: "100.0" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await stakeThresholdHandler.deposit({ ..._fixtureInput }, storage);
+      const result = await stakeThresholdHandler.deposit({ config: afterResult_configure_eth_stake?.output?.["id"], candidate: "alice", amount: "100.0" }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -84,7 +79,7 @@ describe('StakeThreshold imperative handler', () => {
   describe('check', () => {
     it('produces a result', async () => {
       if (typeof stakeThresholdHandler.check !== 'function') return;
-      const result = await stakeThresholdHandler.check({ config: "stake-cfg-1", candidate: "alice" }, storage);
+      const result = await stakeThresholdHandler.check({ config: {"type":"ref","fixture":"configure_eth_stake","field":"id"}, candidate: "alice" }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -95,12 +90,7 @@ describe('StakeThreshold imperative handler', () => {
       if (typeof stakeThresholdHandler.check !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_configure_eth_stake = await stakeThresholdHandler.configure({ minimumStake: "100.0", token: "ETH", lockPeriodDays: "30" }, storage);
-      const _pool = Object.assign({}, (afterResult_configure_eth_stake?.output ?? {}));
-      const _fixtureInput = { config: "stake-cfg-1", candidate: "alice" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await stakeThresholdHandler.check({ ..._fixtureInput }, storage);
+      const result = await stakeThresholdHandler.check({ config: afterResult_configure_eth_stake?.output?.["id"], candidate: "alice" }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -116,7 +106,7 @@ describe('StakeThreshold imperative handler', () => {
   describe('slash', () => {
     it('produces a result', async () => {
       if (typeof stakeThresholdHandler.slash !== 'function') return;
-      const result = await stakeThresholdHandler.slash({ config: "stake-cfg-1", candidate: "alice", amount: "50.0" }, storage);
+      const result = await stakeThresholdHandler.slash({ config: {"type":"ref","fixture":"configure_eth_stake","field":"id"}, candidate: "alice", amount: "50.0" }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -127,12 +117,7 @@ describe('StakeThreshold imperative handler', () => {
       if (typeof stakeThresholdHandler.slash !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_configure_eth_stake = await stakeThresholdHandler.configure({ minimumStake: "100.0", token: "ETH", lockPeriodDays: "30" }, storage);
-      const _pool = Object.assign({}, (afterResult_configure_eth_stake?.output ?? {}));
-      const _fixtureInput = { config: "stake-cfg-1", candidate: "alice", amount: "50.0" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await stakeThresholdHandler.slash({ ..._fixtureInput }, storage);
+      const result = await stakeThresholdHandler.slash({ config: afterResult_configure_eth_stake?.output?.["id"], candidate: "alice", amount: "50.0" }, storage);
       expect(result.variant).toBe('ok');
     });
 

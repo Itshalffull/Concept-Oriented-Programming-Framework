@@ -109,7 +109,7 @@ describe('Guard functional handler', () => {
 
   describe('checkPre', () => {
     it('builds a valid StorageProgram', () => {
-      const program = guardHandler.checkPre({ guard: "guard-001" });
+      const program = guardHandler.checkPre({ guard: {"type":"ref","fixture":"register_balance_guard","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -117,21 +117,21 @@ describe('Guard functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = guardHandler.checkPre({ guard: "guard-001" });
+      const program = guardHandler.checkPre({ guard: {"type":"ref","fixture":"register_balance_guard","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = guardHandler.checkPre({ guard: "guard-001" });
+      const program = guardHandler.checkPre({ guard: {"type":"ref","fixture":"register_balance_guard","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = guardHandler.checkPre({ guard: "guard-001" });
+      const program = guardHandler.checkPre({ guard: {"type":"ref","fixture":"register_balance_guard","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -144,7 +144,7 @@ describe('Guard functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = guardHandler.checkPre({ guard: "guard-001" });
+      const program = guardHandler.checkPre({ guard: {"type":"ref","fixture":"register_balance_guard","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -152,7 +152,7 @@ describe('Guard functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof guardHandler.checkPre !== 'function') return;
-      const result = await interpret(guardHandler.checkPre({ guard: "guard-001" }), storage);
+      const result = await interpret(guardHandler.checkPre({ guard: {"type":"ref","fixture":"register_balance_guard","field":"id"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -163,12 +163,7 @@ describe('Guard functional handler', () => {
       if (typeof guardHandler.checkPre !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_balance_guard = await interpret(guardHandler.register({ name: "balance-check", targetAction: "transfer", checkType: "Pre", condition: "balance > amount" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_balance_guard?.output ?? {}));
-      const _fixtureInput = { guard: "guard-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(guardHandler.checkPre({ ..._fixtureInput }), storage);
+      const result = await interpret(guardHandler.checkPre({ guard: afterResult_register_balance_guard?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -183,7 +178,7 @@ describe('Guard functional handler', () => {
 
   describe('checkPost', () => {
     it('builds a valid StorageProgram', () => {
-      const program = guardHandler.checkPost({ guard: "guard-001" });
+      const program = guardHandler.checkPost({ guard: {"type":"ref","fixture":"register_balance_guard","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -191,21 +186,21 @@ describe('Guard functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = guardHandler.checkPost({ guard: "guard-001" });
+      const program = guardHandler.checkPost({ guard: {"type":"ref","fixture":"register_balance_guard","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = guardHandler.checkPost({ guard: "guard-001" });
+      const program = guardHandler.checkPost({ guard: {"type":"ref","fixture":"register_balance_guard","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = guardHandler.checkPost({ guard: "guard-001" });
+      const program = guardHandler.checkPost({ guard: {"type":"ref","fixture":"register_balance_guard","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -218,7 +213,7 @@ describe('Guard functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = guardHandler.checkPost({ guard: "guard-001" });
+      const program = guardHandler.checkPost({ guard: {"type":"ref","fixture":"register_balance_guard","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -226,7 +221,7 @@ describe('Guard functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof guardHandler.checkPost !== 'function') return;
-      const result = await interpret(guardHandler.checkPost({ guard: "guard-001" }), storage);
+      const result = await interpret(guardHandler.checkPost({ guard: {"type":"ref","fixture":"register_balance_guard","field":"id"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -237,12 +232,7 @@ describe('Guard functional handler', () => {
       if (typeof guardHandler.checkPost !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_balance_guard = await interpret(guardHandler.register({ name: "balance-check", targetAction: "transfer", checkType: "Pre", condition: "balance > amount" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_balance_guard?.output ?? {}));
-      const _fixtureInput = { guard: "guard-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(guardHandler.checkPost({ ..._fixtureInput }), storage);
+      const result = await interpret(guardHandler.checkPost({ guard: afterResult_register_balance_guard?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -257,7 +247,7 @@ describe('Guard functional handler', () => {
 
   describe('enable', () => {
     it('builds a valid StorageProgram', () => {
-      const program = guardHandler.enable({ guard: "guard-001" });
+      const program = guardHandler.enable({ guard: {"type":"ref","fixture":"register_balance_guard","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -265,21 +255,21 @@ describe('Guard functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = guardHandler.enable({ guard: "guard-001" });
+      const program = guardHandler.enable({ guard: {"type":"ref","fixture":"register_balance_guard","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = guardHandler.enable({ guard: "guard-001" });
+      const program = guardHandler.enable({ guard: {"type":"ref","fixture":"register_balance_guard","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = guardHandler.enable({ guard: "guard-001" });
+      const program = guardHandler.enable({ guard: {"type":"ref","fixture":"register_balance_guard","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -292,7 +282,7 @@ describe('Guard functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = guardHandler.enable({ guard: "guard-001" });
+      const program = guardHandler.enable({ guard: {"type":"ref","fixture":"register_balance_guard","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -300,7 +290,7 @@ describe('Guard functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof guardHandler.enable !== 'function') return;
-      const result = await interpret(guardHandler.enable({ guard: "guard-001" }), storage);
+      const result = await interpret(guardHandler.enable({ guard: {"type":"ref","fixture":"register_balance_guard","field":"id"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -311,12 +301,7 @@ describe('Guard functional handler', () => {
       if (typeof guardHandler.enable !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_balance_guard = await interpret(guardHandler.register({ name: "balance-check", targetAction: "transfer", checkType: "Pre", condition: "balance > amount" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_balance_guard?.output ?? {}));
-      const _fixtureInput = { guard: "guard-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(guardHandler.enable({ ..._fixtureInput }), storage);
+      const result = await interpret(guardHandler.enable({ guard: afterResult_register_balance_guard?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -331,7 +316,7 @@ describe('Guard functional handler', () => {
 
   describe('disable', () => {
     it('builds a valid StorageProgram', () => {
-      const program = guardHandler.disable({ guard: "guard-001" });
+      const program = guardHandler.disable({ guard: {"type":"ref","fixture":"enable_guard","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -339,21 +324,21 @@ describe('Guard functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = guardHandler.disable({ guard: "guard-001" });
+      const program = guardHandler.disable({ guard: {"type":"ref","fixture":"enable_guard","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = guardHandler.disable({ guard: "guard-001" });
+      const program = guardHandler.disable({ guard: {"type":"ref","fixture":"enable_guard","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = guardHandler.disable({ guard: "guard-001" });
+      const program = guardHandler.disable({ guard: {"type":"ref","fixture":"enable_guard","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -366,7 +351,7 @@ describe('Guard functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = guardHandler.disable({ guard: "guard-001" });
+      const program = guardHandler.disable({ guard: {"type":"ref","fixture":"enable_guard","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -374,7 +359,7 @@ describe('Guard functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof guardHandler.disable !== 'function') return;
-      const result = await interpret(guardHandler.disable({ guard: "guard-001" }), storage);
+      const result = await interpret(guardHandler.disable({ guard: {"type":"ref","fixture":"enable_guard","field":"id"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -385,13 +370,8 @@ describe('Guard functional handler', () => {
       if (typeof guardHandler.disable !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_balance_guard = await interpret(guardHandler.register({ name: "balance-check", targetAction: "transfer", checkType: "Pre", condition: "balance > amount" }), storage);
-      const afterResult_enable_guard = await interpret(guardHandler.enable({ guard: "guard-001" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_balance_guard?.output ?? {}), (afterResult_enable_guard?.output ?? {}));
-      const _fixtureInput = { guard: "guard-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(guardHandler.disable({ ..._fixtureInput }), storage);
+      const afterResult_enable_guard = await interpret(guardHandler.enable({ guard: {"type":"ref","fixture":"register_balance_guard","field":"id"} }), storage);
+      const result = await interpret(guardHandler.disable({ guard: afterResult_enable_guard?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

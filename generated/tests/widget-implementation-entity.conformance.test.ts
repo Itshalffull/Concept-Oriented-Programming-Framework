@@ -431,7 +431,7 @@ describe('WidgetImplementationEntity functional handler', () => {
 
   describe('anatomyMapping', () => {
     it('builds a valid StorageProgram', () => {
-      const program = widgetImplementationEntityHandler.anatomyMapping({ impl: "impl-uuid-1" });
+      const program = widgetImplementationEntityHandler.anatomyMapping({ impl: {"type":"ref","fixture":"register_react_dialog","field":"impl"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -439,21 +439,21 @@ describe('WidgetImplementationEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = widgetImplementationEntityHandler.anatomyMapping({ impl: "impl-uuid-1" });
+      const program = widgetImplementationEntityHandler.anatomyMapping({ impl: {"type":"ref","fixture":"register_react_dialog","field":"impl"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = widgetImplementationEntityHandler.anatomyMapping({ impl: "impl-uuid-1" });
+      const program = widgetImplementationEntityHandler.anatomyMapping({ impl: {"type":"ref","fixture":"register_react_dialog","field":"impl"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = widgetImplementationEntityHandler.anatomyMapping({ impl: "impl-uuid-1" });
+      const program = widgetImplementationEntityHandler.anatomyMapping({ impl: {"type":"ref","fixture":"register_react_dialog","field":"impl"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -466,7 +466,7 @@ describe('WidgetImplementationEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = widgetImplementationEntityHandler.anatomyMapping({ impl: "impl-uuid-1" });
+      const program = widgetImplementationEntityHandler.anatomyMapping({ impl: {"type":"ref","fixture":"register_react_dialog","field":"impl"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -474,7 +474,7 @@ describe('WidgetImplementationEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof widgetImplementationEntityHandler.anatomyMapping !== 'function') return;
-      const result = await interpret(widgetImplementationEntityHandler.anatomyMapping({ impl: "impl-uuid-1" }), storage);
+      const result = await interpret(widgetImplementationEntityHandler.anatomyMapping({ impl: {"type":"ref","fixture":"register_react_dialog","field":"impl"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -485,12 +485,7 @@ describe('WidgetImplementationEntity functional handler', () => {
       if (typeof widgetImplementationEntityHandler.anatomyMapping !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_react_dialog = await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_react_dialog?.output ?? {}));
-      const _fixtureInput = { impl: "impl-uuid-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(widgetImplementationEntityHandler.anatomyMapping({ ..._fixtureInput }), storage);
+      const result = await interpret(widgetImplementationEntityHandler.anatomyMapping({ impl: afterResult_register_react_dialog?.output?.["impl"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -653,7 +648,7 @@ describe('WidgetImplementationEntity functional handler', () => {
 
   describe('resolveToAstNode', () => {
     it('builds a valid StorageProgram', () => {
-      const program = widgetImplementationEntityHandler.resolveToAstNode({ impl: "impl-uuid-1", line: "15", col: "4" });
+      const program = widgetImplementationEntityHandler.resolveToAstNode({ impl: {"type":"ref","fixture":"register_react_dialog","field":"impl"}, line: "15", col: "4" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -661,21 +656,21 @@ describe('WidgetImplementationEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = widgetImplementationEntityHandler.resolveToAstNode({ impl: "impl-uuid-1", line: "15", col: "4" });
+      const program = widgetImplementationEntityHandler.resolveToAstNode({ impl: {"type":"ref","fixture":"register_react_dialog","field":"impl"}, line: "15", col: "4" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = widgetImplementationEntityHandler.resolveToAstNode({ impl: "impl-uuid-1", line: "15", col: "4" });
+      const program = widgetImplementationEntityHandler.resolveToAstNode({ impl: {"type":"ref","fixture":"register_react_dialog","field":"impl"}, line: "15", col: "4" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = widgetImplementationEntityHandler.resolveToAstNode({ impl: "impl-uuid-1", line: "15", col: "4" });
+      const program = widgetImplementationEntityHandler.resolveToAstNode({ impl: {"type":"ref","fixture":"register_react_dialog","field":"impl"}, line: "15", col: "4" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -688,7 +683,7 @@ describe('WidgetImplementationEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = widgetImplementationEntityHandler.resolveToAstNode({ impl: "impl-uuid-1", line: "15", col: "4" });
+      const program = widgetImplementationEntityHandler.resolveToAstNode({ impl: {"type":"ref","fixture":"register_react_dialog","field":"impl"}, line: "15", col: "4" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -696,7 +691,7 @@ describe('WidgetImplementationEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof widgetImplementationEntityHandler.resolveToAstNode !== 'function') return;
-      const result = await interpret(widgetImplementationEntityHandler.resolveToAstNode({ impl: "impl-uuid-1", line: "15", col: "4" }), storage);
+      const result = await interpret(widgetImplementationEntityHandler.resolveToAstNode({ impl: {"type":"ref","fixture":"register_react_dialog","field":"impl"}, line: "15", col: "4" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -707,12 +702,7 @@ describe('WidgetImplementationEntity functional handler', () => {
       if (typeof widgetImplementationEntityHandler.resolveToAstNode !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_react_dialog = await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_react_dialog?.output ?? {}));
-      const _fixtureInput = { impl: "impl-uuid-1", line: "15", col: "4" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(widgetImplementationEntityHandler.resolveToAstNode({ ..._fixtureInput }), storage);
+      const result = await interpret(widgetImplementationEntityHandler.resolveToAstNode({ impl: afterResult_register_react_dialog?.output?.["impl"], line: "15", col: "4" }), storage);
       expect(result.variant).toBe('ok');
     });
 

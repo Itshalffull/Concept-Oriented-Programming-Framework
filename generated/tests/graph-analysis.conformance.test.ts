@@ -198,7 +198,7 @@ describe('GraphAnalysis functional handler', () => {
 
   describe('getResult', () => {
     it('builds a valid StorageProgram', () => {
-      const program = graphAnalysisHandler.getResult({ result: "result-001" });
+      const program = graphAnalysisHandler.getResult({ result: {"type":"ref","fixture":"pagerank_analysis","field":"result"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -206,21 +206,21 @@ describe('GraphAnalysis functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = graphAnalysisHandler.getResult({ result: "result-001" });
+      const program = graphAnalysisHandler.getResult({ result: {"type":"ref","fixture":"pagerank_analysis","field":"result"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = graphAnalysisHandler.getResult({ result: "result-001" });
+      const program = graphAnalysisHandler.getResult({ result: {"type":"ref","fixture":"pagerank_analysis","field":"result"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = graphAnalysisHandler.getResult({ result: "result-001" });
+      const program = graphAnalysisHandler.getResult({ result: {"type":"ref","fixture":"pagerank_analysis","field":"result"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -233,7 +233,7 @@ describe('GraphAnalysis functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = graphAnalysisHandler.getResult({ result: "result-001" });
+      const program = graphAnalysisHandler.getResult({ result: {"type":"ref","fixture":"pagerank_analysis","field":"result"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -241,7 +241,7 @@ describe('GraphAnalysis functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof graphAnalysisHandler.getResult !== 'function') return;
-      const result = await interpret(graphAnalysisHandler.getResult({ result: "result-001" }), storage);
+      const result = await interpret(graphAnalysisHandler.getResult({ result: {"type":"ref","fixture":"pagerank_analysis","field":"result"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -252,12 +252,7 @@ describe('GraphAnalysis functional handler', () => {
       if (typeof graphAnalysisHandler.getResult !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_pagerank_analysis = await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null }), storage);
-      const _pool = Object.assign({}, (afterResult_pagerank_analysis?.output ?? {}));
-      const _fixtureInput = { result: "result-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(graphAnalysisHandler.getResult({ ..._fixtureInput }), storage);
+      const result = await interpret(graphAnalysisHandler.getResult({ result: afterResult_pagerank_analysis?.output?.["result"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

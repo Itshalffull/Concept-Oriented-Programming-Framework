@@ -59,7 +59,7 @@ concept ContentParser [C] {
         No AST cached for this content.
       }
 
-      fixture extract_refs { content: "doc-1" } after register_markdown
+      fixture extract_refs { content: $register_markdown.name } after register_markdown
       fixture extract_refs_missing { content: "nonexistent" } -> error
     }
 
@@ -71,7 +71,7 @@ concept ContentParser [C] {
         No AST cached for this content.
       }
 
-      fixture extract_tags { content: "doc-1" } after register_markdown
+      fixture extract_tags { content: $register_markdown.name } after register_markdown
       fixture extract_tags_missing { content: "nonexistent" } -> error
     }
 
@@ -83,7 +83,7 @@ concept ContentParser [C] {
         No AST cached for this content.
       }
 
-      fixture extract_props { content: "doc-1" } after register_markdown
+      fixture extract_props { content: $register_markdown.name } after register_markdown
       fixture extract_props_missing { content: "nonexistent" } -> error
     }
 

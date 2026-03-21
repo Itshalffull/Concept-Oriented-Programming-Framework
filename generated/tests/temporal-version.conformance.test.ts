@@ -154,7 +154,7 @@ describe('TemporalVersion imperative handler', () => {
   describe('supersede', () => {
     it('produces a result', async () => {
       if (typeof temporalVersionHandler.supersede !== 'function') return;
-      const result = await temporalVersionHandler.supersede({ versionId: "temporal-version-1", contentHash: "sha256:newcontent789" }, storage);
+      const result = await temporalVersionHandler.supersede({ versionId: {"type":"ref","fixture":"record_version","field":"versionId"}, contentHash: "sha256:newcontent789" }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -165,12 +165,7 @@ describe('TemporalVersion imperative handler', () => {
       if (typeof temporalVersionHandler.supersede !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_record_version = await temporalVersionHandler.record({ contentHash: "sha256:abc123def456", validFrom: "2025-01-01T00:00:00Z", validTo: null, metadata: "{\"author\":\"alice\"}" }, storage);
-      const _pool = Object.assign({}, (afterResult_record_version?.output ?? {}));
-      const _fixtureInput = { versionId: "temporal-version-1", contentHash: "sha256:newcontent789" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await temporalVersionHandler.supersede({ ..._fixtureInput }, storage);
+      const result = await temporalVersionHandler.supersede({ versionId: afterResult_record_version?.output?.["versionId"], contentHash: "sha256:newcontent789" }, storage);
       expect(result.variant).toBe('ok');
     });
 

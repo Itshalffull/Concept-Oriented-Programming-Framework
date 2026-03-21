@@ -38,8 +38,8 @@ concept BordaCount [BD] {
         Multiple candidates have identical Borda scores.
       }
 
-      fixture borda_three_voters { config: "borda-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]},{\"voter\":\"carol\",\"ranking\":[\"A\",\"C\",\"B\"]}]", weights: "{}" } after standard_scheme
-      fixture borda_no_ballots { config: "borda-001", rankedBallots: "[]", weights: "{}" } after standard_scheme -> error
+      fixture borda_three_voters { config: $standard_scheme.id, rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]},{\"voter\":\"carol\",\"ranking\":[\"A\",\"C\",\"B\"]}]", weights: "{}" } after standard_scheme
+      fixture borda_no_ballots { config: $standard_scheme.id, rankedBallots: "[]", weights: "{}" } after standard_scheme -> error
     }
   }
 

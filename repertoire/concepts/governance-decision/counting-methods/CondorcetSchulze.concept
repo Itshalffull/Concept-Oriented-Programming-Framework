@@ -40,8 +40,8 @@ concept CondorcetSchulze [CS] {
         distinguish. Rare with real ballots.
       }
 
-      fixture condorcet_clear_winner { config: "condorcet-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"A\",\"C\",\"B\"]},{\"voter\":\"carol\",\"ranking\":[\"B\",\"A\",\"C\"]}]", weights: "{}" } after default_config
-      fixture condorcet_empty_ballots { config: "condorcet-001", rankedBallots: "[]", weights: "{}" } after default_config -> error
+      fixture condorcet_clear_winner { config: $default_config.id, rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"A\",\"C\",\"B\"]},{\"voter\":\"carol\",\"ranking\":[\"B\",\"A\",\"C\"]}]", weights: "{}" } after default_config
+      fixture condorcet_empty_ballots { config: $default_config.id, rankedBallots: "[]", weights: "{}" } after default_config -> error
     }
 
     action getPairwiseMatrix(config: CS) {
@@ -49,7 +49,7 @@ concept CondorcetSchulze [CS] {
         Returns the full pairwise comparison matrix from the last count.
       }
 
-      fixture get_matrix { config: "condorcet-001" } after default_config
+      fixture get_matrix { config: $default_config.id } after default_config
       fixture get_matrix_missing { config: "condorcet-nonexistent" } -> error
     }
   }

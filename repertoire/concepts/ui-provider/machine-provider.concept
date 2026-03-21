@@ -44,8 +44,8 @@ concept MachineProvider [P] {
       }
       -> notfound(message: String) { Widget not registered. }
       -> invalid(message: String) { Context malformed. }
-      fixture spawn_dialog { provider: "mp-1", widget: "dialog", context: "{}" } after init_default
-      fixture spawn_empty_widget { provider: "mp-1", widget: "", context: "{}" } after init_default -> error
+      fixture spawn_dialog { provider: $init_default.provider, widget: "dialog", context: "{}" } after init_default
+      fixture spawn_empty_widget { provider: $init_default.provider, widget: "", context: "{}" } after init_default -> error
     }
 
     action send(provider: P, machine: String, event: String) {
@@ -56,7 +56,7 @@ concept MachineProvider [P] {
       }
       -> invalid(message: String) { Event not handled in current state. }
       -> guarded(machine: String, guard: String) { Guard blocked transition. }
-      fixture send_open { provider: "mp-1", machine: "machine-1", event: "OPEN" } after init_default
+      fixture send_open { provider: $init_default.provider, machine: $init_default.provider, event: "OPEN" } after init_default
       fixture send_missing_machine { provider: "mp-1", machine: "nonexistent", event: "OPEN" } -> error
     }
 
@@ -67,7 +67,7 @@ concept MachineProvider [P] {
         ARIA roles, event handlers, data-state, visibility.
       }
       -> notfound(message: String) { Machine not found. }
-      fixture connect_valid { provider: "mp-1", machine: "machine-1" } after init_default
+      fixture connect_valid { provider: $init_default.provider, machine: $init_default.provider } after init_default
       fixture connect_missing { provider: "mp-1", machine: "nonexistent" } -> error
     }
 
@@ -77,7 +77,7 @@ concept MachineProvider [P] {
         decrement active count.
       }
       -> notfound(message: String) { Machine not found. }
-      fixture destroy_valid { provider: "mp-1", machine: "machine-1" } after init_default
+      fixture destroy_valid { provider: $init_default.provider, machine: $init_default.provider } after init_default
       fixture destroy_missing { provider: "mp-1", machine: "nonexistent" } -> error
     }
   }

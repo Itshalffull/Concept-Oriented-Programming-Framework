@@ -81,7 +81,7 @@ concept TemporalVersion [V] {
         versionId not found.
       }
 
-      fixture supersede_existing { versionId: "temporal-version-1", contentHash: "sha256:newcontent789" } after record_version
+      fixture supersede_existing { versionId: $record_version.versionId, contentHash: "sha256:newcontent789" } after record_version
       fixture supersede_empty_hash { versionId: "temporal-version-1", contentHash: "" } -> error
     }
   }

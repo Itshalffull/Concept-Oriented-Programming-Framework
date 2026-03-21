@@ -29,8 +29,8 @@ concept JsonExportProvider [C] {
       }
       -> error(message: String) { Export failed. }
 
-      fixture basic_export { canvas_id: "canvas-1", options: none } after valid
-      fixture with_embed { canvas_id: "canvas-1", options: { embed_data: true } } after valid
+      fixture basic_export { canvas_id: $valid.name, options: none } after valid
+      fixture with_embed { canvas_id: $valid.name, options: { embed_data: true } } after valid
       fixture empty_canvas_id { canvas_id: "", options: none } -> error
     }
 

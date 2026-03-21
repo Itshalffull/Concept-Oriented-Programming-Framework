@@ -45,8 +45,8 @@ concept ViewportProvider [P] {
         Report current dimensions. Computes active breakpoint and
         orientation from the configured breakpoint thresholds.
       }
-      fixture observe_desktop { provider: "vp-1", width: 1920, height: 1080 } after init_default
-      fixture observe_mobile { provider: "vp-1", width: 375, height: 812 } after init_default
+      fixture observe_desktop { provider: $init_default.provider, width: 1920, height: 1080 } after init_default
+      fixture observe_mobile { provider: $init_default.provider, width: 375, height: 812 } after init_default
     }
 
     action getBreakpoint(provider: P) {
@@ -56,7 +56,7 @@ concept ViewportProvider [P] {
       -> notInitialized(message: String) {
         Provider not yet initialized or no observation recorded.
       }
-      fixture get_breakpoint_valid { provider: "vp-1" } after init_default
+      fixture get_breakpoint_valid { provider: $init_default.provider } after init_default
       fixture get_breakpoint_missing { provider: "nonexistent" } -> error
     }
 
@@ -68,7 +68,7 @@ concept ViewportProvider [P] {
       -> invalid(message: String) {
         Breakpoint values must be ascending positive integers.
       }
-      fixture set_breakpoints_custom { provider: "vp-1", breakpoints: "sm:480,md:768,lg:1024" } after init_default
+      fixture set_breakpoints_custom { provider: $init_default.provider, breakpoints: "sm:480,md:768,lg:1024" } after init_default
       fixture set_breakpoints_invalid { provider: "vp-1", breakpoints: "not json" } -> error
     }
   }

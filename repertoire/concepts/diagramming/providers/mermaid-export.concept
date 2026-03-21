@@ -29,8 +29,8 @@ concept MermaidExportProvider [C] {
       }
       -> error(message: String) { Export failed. }
 
-      fixture default_direction { canvas_id: "canvas-1", options: none } after valid
-      fixture left_to_right { canvas_id: "canvas-1", options: { direction: "LR" } } after valid
+      fixture default_direction { canvas_id: $valid.name, options: none } after valid
+      fixture left_to_right { canvas_id: $valid.name, options: { direction: "LR" } } after valid
       fixture empty_canvas_id { canvas_id: "", options: none } -> error
     }
 

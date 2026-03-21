@@ -193,7 +193,7 @@ describe('Host functional handler', () => {
 
   describe('trackResource', () => {
     it('builds a valid StorageProgram', () => {
-      const program = hostHandler.trackResource({ host: "W-1", kind: "binding", ref: "bind-1" });
+      const program = hostHandler.trackResource({ host: "W-1", kind: "binding", ref: {"type":"ref","fixture":"mount_article_list","field":"host"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -201,21 +201,21 @@ describe('Host functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = hostHandler.trackResource({ host: "W-1", kind: "binding", ref: "bind-1" });
+      const program = hostHandler.trackResource({ host: "W-1", kind: "binding", ref: {"type":"ref","fixture":"mount_article_list","field":"host"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = hostHandler.trackResource({ host: "W-1", kind: "binding", ref: "bind-1" });
+      const program = hostHandler.trackResource({ host: "W-1", kind: "binding", ref: {"type":"ref","fixture":"mount_article_list","field":"host"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = hostHandler.trackResource({ host: "W-1", kind: "binding", ref: "bind-1" });
+      const program = hostHandler.trackResource({ host: "W-1", kind: "binding", ref: {"type":"ref","fixture":"mount_article_list","field":"host"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -228,7 +228,7 @@ describe('Host functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = hostHandler.trackResource({ host: "W-1", kind: "binding", ref: "bind-1" });
+      const program = hostHandler.trackResource({ host: "W-1", kind: "binding", ref: {"type":"ref","fixture":"mount_article_list","field":"host"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -236,7 +236,7 @@ describe('Host functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof hostHandler.trackResource !== 'function') return;
-      const result = await interpret(hostHandler.trackResource({ host: "W-1", kind: "binding", ref: "bind-1" }), storage);
+      const result = await interpret(hostHandler.trackResource({ host: "W-1", kind: "binding", ref: {"type":"ref","fixture":"mount_article_list","field":"host"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -247,12 +247,7 @@ describe('Host functional handler', () => {
       if (typeof hostHandler.trackResource !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_mount_article_list = await interpret(hostHandler.mount({ host: "W-1", concept: "urn:app/Article", view: "list", level: "page", zone: "primary" }), storage);
-      const _pool = Object.assign({}, (afterResult_mount_article_list?.output ?? {}));
-      const _fixtureInput = { host: "W-1", kind: "binding", ref: "bind-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(hostHandler.trackResource({ ..._fixtureInput }), storage);
+      const result = await interpret(hostHandler.trackResource({ host: "W-1", kind: "binding", ref: afterResult_mount_article_list?.output?.["host"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -260,12 +255,7 @@ describe('Host functional handler', () => {
       if (typeof hostHandler.trackResource !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_mount_article_list = await interpret(hostHandler.mount({ host: "W-1", concept: "urn:app/Article", view: "list", level: "page", zone: "primary" }), storage);
-      const _pool = Object.assign({}, (afterResult_mount_article_list?.output ?? {}));
-      const _fixtureInput = { host: "W-1", kind: "machine", ref: "machine-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(hostHandler.trackResource({ ..._fixtureInput }), storage);
+      const result = await interpret(hostHandler.trackResource({ host: "W-1", kind: "machine", ref: afterResult_mount_article_list?.output?.["host"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -34,8 +34,8 @@ concept CircularLayoutProvider [C] {
         Layout computation failed or provider not available.
       }
 
-      fixture four_items { canvas: "canvas-1", items: ["a", "b", "c", "d"], config: none } after valid
-      fixture two_items { canvas: "canvas-1", items: ["a", "b"], config: none } after valid
+      fixture four_items { canvas: $valid.name, items: ["a", "b", "c", "d"], config: none } after valid
+      fixture two_items { canvas: $valid.name, items: ["a", "b"], config: none } after valid
       fixture missing_canvas { canvas: "", items: ["a"], config: none } -> error
     }
   }

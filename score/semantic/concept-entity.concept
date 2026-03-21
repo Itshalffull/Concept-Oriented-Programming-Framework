@@ -81,7 +81,7 @@ concept ConceptEntity [E] {
         Provenance lookup. Results as serialized JSON array.
       }
 
-      fixture artifacts_for_article { entity: "concept-entity-1" } after register_article
+      fixture artifacts_for_article { entity: $register_article.entity } after register_article
       fixture artifacts_nonexistent { entity: "nonexistent-entity" } -> error
     }
 
@@ -92,7 +92,7 @@ concept ConceptEntity [E] {
         Results as serialized JSON array.
       }
 
-      fixture syncs_for_article { entity: "concept-entity-1" } after register_article
+      fixture syncs_for_article { entity: $register_article.entity } after register_article
       fixture syncs_nonexistent { entity: "nonexistent-entity" } -> error
     }
 
@@ -106,7 +106,7 @@ concept ConceptEntity [E] {
         requirements or type parameter mismatches.
       }
 
-      fixture compatible_concepts { a: "concept-entity-1", b: "concept-entity-2" } after register_article
+      fixture compatible_concepts { a: $register_article.entity, b: $register_article.entity } after register_article
       fixture incompatible_missing { a: "nonexistent-a", b: "nonexistent-b" } -> error
     }
   }

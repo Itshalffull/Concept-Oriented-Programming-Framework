@@ -102,7 +102,7 @@ describe('Deliberation functional handler', () => {
 
   describe('addEntry', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deliberationHandler.addEntry({ thread: "thread-001", author: "alice", content: "The budget increase is justified by projected revenue growth", entryType: "argument", parentEntry: null });
+      const program = deliberationHandler.addEntry({ thread: {"type":"ref","fixture":"open_budget_thread","field":"id"}, author: "alice", content: "The budget increase is justified by projected revenue growth", entryType: "argument", parentEntry: null });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('Deliberation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deliberationHandler.addEntry({ thread: "thread-001", author: "alice", content: "The budget increase is justified by projected revenue growth", entryType: "argument", parentEntry: null });
+      const program = deliberationHandler.addEntry({ thread: {"type":"ref","fixture":"open_budget_thread","field":"id"}, author: "alice", content: "The budget increase is justified by projected revenue growth", entryType: "argument", parentEntry: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deliberationHandler.addEntry({ thread: "thread-001", author: "alice", content: "The budget increase is justified by projected revenue growth", entryType: "argument", parentEntry: null });
+      const program = deliberationHandler.addEntry({ thread: {"type":"ref","fixture":"open_budget_thread","field":"id"}, author: "alice", content: "The budget increase is justified by projected revenue growth", entryType: "argument", parentEntry: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deliberationHandler.addEntry({ thread: "thread-001", author: "alice", content: "The budget increase is justified by projected revenue growth", entryType: "argument", parentEntry: null });
+      const program = deliberationHandler.addEntry({ thread: {"type":"ref","fixture":"open_budget_thread","field":"id"}, author: "alice", content: "The budget increase is justified by projected revenue growth", entryType: "argument", parentEntry: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('Deliberation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deliberationHandler.addEntry({ thread: "thread-001", author: "alice", content: "The budget increase is justified by projected revenue growth", entryType: "argument", parentEntry: null });
+      const program = deliberationHandler.addEntry({ thread: {"type":"ref","fixture":"open_budget_thread","field":"id"}, author: "alice", content: "The budget increase is justified by projected revenue growth", entryType: "argument", parentEntry: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('Deliberation functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof deliberationHandler.addEntry !== 'function') return;
-      const result = await interpret(deliberationHandler.addEntry({ thread: "thread-001", author: "alice", content: "The budget increase is justified by projected revenue growth", entryType: "argument", parentEntry: null }), storage);
+      const result = await interpret(deliberationHandler.addEntry({ thread: {"type":"ref","fixture":"open_budget_thread","field":"id"}, author: "alice", content: "The budget increase is justified by projected revenue growth", entryType: "argument", parentEntry: null }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('Deliberation functional handler', () => {
       if (typeof deliberationHandler.addEntry !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_open_budget_thread = await interpret(deliberationHandler.open({ proposalRef: "proposal-budget-2026" }), storage);
-      const _pool = Object.assign({}, (afterResult_open_budget_thread?.output ?? {}));
-      const _fixtureInput = { thread: "thread-001", author: "alice", content: "The budget increase is justified by projected revenue growth", entryType: "argument", parentEntry: null } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(deliberationHandler.addEntry({ ..._fixtureInput }), storage);
+      const result = await interpret(deliberationHandler.addEntry({ thread: afterResult_open_budget_thread?.output?.["id"], author: "alice", content: "The budget increase is justified by projected revenue growth", entryType: "argument", parentEntry: null }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -169,12 +164,7 @@ describe('Deliberation functional handler', () => {
       if (typeof deliberationHandler.addEntry !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_open_budget_thread = await interpret(deliberationHandler.open({ proposalRef: "proposal-budget-2026" }), storage);
-      const _pool = Object.assign({}, (afterResult_open_budget_thread?.output ?? {}));
-      const _fixtureInput = { thread: "thread-001", author: "bob", content: "Revenue projections may be overly optimistic", entryType: "response", parentEntry: "entry-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(deliberationHandler.addEntry({ ..._fixtureInput }), storage);
+      const result = await interpret(deliberationHandler.addEntry({ thread: afterResult_open_budget_thread?.output?.["id"], author: "bob", content: "Revenue projections may be overly optimistic", entryType: "response", parentEntry: afterResult_open_budget_thread?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -189,7 +179,7 @@ describe('Deliberation functional handler', () => {
 
   describe('signal', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deliberationHandler.signal({ thread: "thread-001", signaller: "carol", signal: "agree" });
+      const program = deliberationHandler.signal({ thread: {"type":"ref","fixture":"open_budget_thread","field":"id"}, signaller: "carol", signal: "agree" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -197,21 +187,21 @@ describe('Deliberation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deliberationHandler.signal({ thread: "thread-001", signaller: "carol", signal: "agree" });
+      const program = deliberationHandler.signal({ thread: {"type":"ref","fixture":"open_budget_thread","field":"id"}, signaller: "carol", signal: "agree" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deliberationHandler.signal({ thread: "thread-001", signaller: "carol", signal: "agree" });
+      const program = deliberationHandler.signal({ thread: {"type":"ref","fixture":"open_budget_thread","field":"id"}, signaller: "carol", signal: "agree" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deliberationHandler.signal({ thread: "thread-001", signaller: "carol", signal: "agree" });
+      const program = deliberationHandler.signal({ thread: {"type":"ref","fixture":"open_budget_thread","field":"id"}, signaller: "carol", signal: "agree" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -224,7 +214,7 @@ describe('Deliberation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deliberationHandler.signal({ thread: "thread-001", signaller: "carol", signal: "agree" });
+      const program = deliberationHandler.signal({ thread: {"type":"ref","fixture":"open_budget_thread","field":"id"}, signaller: "carol", signal: "agree" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -232,7 +222,7 @@ describe('Deliberation functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof deliberationHandler.signal !== 'function') return;
-      const result = await interpret(deliberationHandler.signal({ thread: "thread-001", signaller: "carol", signal: "agree" }), storage);
+      const result = await interpret(deliberationHandler.signal({ thread: {"type":"ref","fixture":"open_budget_thread","field":"id"}, signaller: "carol", signal: "agree" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -243,12 +233,7 @@ describe('Deliberation functional handler', () => {
       if (typeof deliberationHandler.signal !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_open_budget_thread = await interpret(deliberationHandler.open({ proposalRef: "proposal-budget-2026" }), storage);
-      const _pool = Object.assign({}, (afterResult_open_budget_thread?.output ?? {}));
-      const _fixtureInput = { thread: "thread-001", signaller: "carol", signal: "agree" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(deliberationHandler.signal({ ..._fixtureInput }), storage);
+      const result = await interpret(deliberationHandler.signal({ thread: afterResult_open_budget_thread?.output?.["id"], signaller: "carol", signal: "agree" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -263,7 +248,7 @@ describe('Deliberation functional handler', () => {
 
   describe('close', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deliberationHandler.close({ thread: "thread-001" });
+      const program = deliberationHandler.close({ thread: {"type":"ref","fixture":"open_budget_thread","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -271,21 +256,21 @@ describe('Deliberation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deliberationHandler.close({ thread: "thread-001" });
+      const program = deliberationHandler.close({ thread: {"type":"ref","fixture":"open_budget_thread","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deliberationHandler.close({ thread: "thread-001" });
+      const program = deliberationHandler.close({ thread: {"type":"ref","fixture":"open_budget_thread","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deliberationHandler.close({ thread: "thread-001" });
+      const program = deliberationHandler.close({ thread: {"type":"ref","fixture":"open_budget_thread","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -298,7 +283,7 @@ describe('Deliberation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deliberationHandler.close({ thread: "thread-001" });
+      const program = deliberationHandler.close({ thread: {"type":"ref","fixture":"open_budget_thread","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -306,7 +291,7 @@ describe('Deliberation functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof deliberationHandler.close !== 'function') return;
-      const result = await interpret(deliberationHandler.close({ thread: "thread-001" }), storage);
+      const result = await interpret(deliberationHandler.close({ thread: {"type":"ref","fixture":"open_budget_thread","field":"id"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -317,12 +302,7 @@ describe('Deliberation functional handler', () => {
       if (typeof deliberationHandler.close !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_open_budget_thread = await interpret(deliberationHandler.open({ proposalRef: "proposal-budget-2026" }), storage);
-      const _pool = Object.assign({}, (afterResult_open_budget_thread?.output ?? {}));
-      const _fixtureInput = { thread: "thread-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(deliberationHandler.close({ ..._fixtureInput }), storage);
+      const result = await interpret(deliberationHandler.close({ thread: afterResult_open_budget_thread?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

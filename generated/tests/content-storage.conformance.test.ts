@@ -102,7 +102,7 @@ describe('ContentStorage functional handler', () => {
 
   describe('load', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contentStorageHandler.load({ record: "user-profile-1" });
+      const program = contentStorageHandler.load({ record: {"type":"ref","fixture":"save_record","field":"record"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('ContentStorage functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contentStorageHandler.load({ record: "user-profile-1" });
+      const program = contentStorageHandler.load({ record: {"type":"ref","fixture":"save_record","field":"record"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contentStorageHandler.load({ record: "user-profile-1" });
+      const program = contentStorageHandler.load({ record: {"type":"ref","fixture":"save_record","field":"record"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contentStorageHandler.load({ record: "user-profile-1" });
+      const program = contentStorageHandler.load({ record: {"type":"ref","fixture":"save_record","field":"record"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('ContentStorage functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contentStorageHandler.load({ record: "user-profile-1" });
+      const program = contentStorageHandler.load({ record: {"type":"ref","fixture":"save_record","field":"record"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('ContentStorage functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof contentStorageHandler.load !== 'function') return;
-      const result = await interpret(contentStorageHandler.load({ record: "user-profile-1" }), storage);
+      const result = await interpret(contentStorageHandler.load({ record: {"type":"ref","fixture":"save_record","field":"record"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('ContentStorage functional handler', () => {
       if (typeof contentStorageHandler.load !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_save_record = await interpret(contentStorageHandler.save({ record: "user-profile-1", data: "{\"name\":\"Alice\",\"email\":\"alice@example.com\"}" }), storage);
-      const _pool = Object.assign({}, (afterResult_save_record?.output ?? {}));
-      const _fixtureInput = { record: "user-profile-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(contentStorageHandler.load({ ..._fixtureInput }), storage);
+      const result = await interpret(contentStorageHandler.load({ record: afterResult_save_record?.output?.["record"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,7 +171,7 @@ describe('ContentStorage functional handler', () => {
 
   describe('delete', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contentStorageHandler.delete({ record: "user-profile-1" });
+      const program = contentStorageHandler.delete({ record: {"type":"ref","fixture":"save_record","field":"record"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +179,21 @@ describe('ContentStorage functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contentStorageHandler.delete({ record: "user-profile-1" });
+      const program = contentStorageHandler.delete({ record: {"type":"ref","fixture":"save_record","field":"record"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contentStorageHandler.delete({ record: "user-profile-1" });
+      const program = contentStorageHandler.delete({ record: {"type":"ref","fixture":"save_record","field":"record"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contentStorageHandler.delete({ record: "user-profile-1" });
+      const program = contentStorageHandler.delete({ record: {"type":"ref","fixture":"save_record","field":"record"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +206,7 @@ describe('ContentStorage functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contentStorageHandler.delete({ record: "user-profile-1" });
+      const program = contentStorageHandler.delete({ record: {"type":"ref","fixture":"save_record","field":"record"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,7 +214,7 @@ describe('ContentStorage functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof contentStorageHandler.delete !== 'function') return;
-      const result = await interpret(contentStorageHandler.delete({ record: "user-profile-1" }), storage);
+      const result = await interpret(contentStorageHandler.delete({ record: {"type":"ref","fixture":"save_record","field":"record"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -230,12 +225,7 @@ describe('ContentStorage functional handler', () => {
       if (typeof contentStorageHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_save_record = await interpret(contentStorageHandler.save({ record: "user-profile-1", data: "{\"name\":\"Alice\",\"email\":\"alice@example.com\"}" }), storage);
-      const _pool = Object.assign({}, (afterResult_save_record?.output ?? {}));
-      const _fixtureInput = { record: "user-profile-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(contentStorageHandler.delete({ ..._fixtureInput }), storage);
+      const result = await interpret(contentStorageHandler.delete({ record: afterResult_save_record?.output?.["record"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -324,7 +314,7 @@ describe('ContentStorage functional handler', () => {
 
   describe('generateSchema', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contentStorageHandler.generateSchema({ record: "user-profile-1" });
+      const program = contentStorageHandler.generateSchema({ record: {"type":"ref","fixture":"save_record","field":"record"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -332,21 +322,21 @@ describe('ContentStorage functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contentStorageHandler.generateSchema({ record: "user-profile-1" });
+      const program = contentStorageHandler.generateSchema({ record: {"type":"ref","fixture":"save_record","field":"record"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contentStorageHandler.generateSchema({ record: "user-profile-1" });
+      const program = contentStorageHandler.generateSchema({ record: {"type":"ref","fixture":"save_record","field":"record"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contentStorageHandler.generateSchema({ record: "user-profile-1" });
+      const program = contentStorageHandler.generateSchema({ record: {"type":"ref","fixture":"save_record","field":"record"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -359,7 +349,7 @@ describe('ContentStorage functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contentStorageHandler.generateSchema({ record: "user-profile-1" });
+      const program = contentStorageHandler.generateSchema({ record: {"type":"ref","fixture":"save_record","field":"record"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -367,7 +357,7 @@ describe('ContentStorage functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof contentStorageHandler.generateSchema !== 'function') return;
-      const result = await interpret(contentStorageHandler.generateSchema({ record: "user-profile-1" }), storage);
+      const result = await interpret(contentStorageHandler.generateSchema({ record: {"type":"ref","fixture":"save_record","field":"record"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -378,12 +368,7 @@ describe('ContentStorage functional handler', () => {
       if (typeof contentStorageHandler.generateSchema !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_save_record = await interpret(contentStorageHandler.save({ record: "user-profile-1", data: "{\"name\":\"Alice\",\"email\":\"alice@example.com\"}" }), storage);
-      const _pool = Object.assign({}, (afterResult_save_record?.output ?? {}));
-      const _fixtureInput = { record: "user-profile-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(contentStorageHandler.generateSchema({ ..._fixtureInput }), storage);
+      const result = await interpret(contentStorageHandler.generateSchema({ record: afterResult_save_record?.output?.["record"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

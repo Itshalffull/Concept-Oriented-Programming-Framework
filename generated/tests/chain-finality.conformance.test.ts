@@ -109,7 +109,7 @@ describe('ChainFinality functional handler', () => {
 
   describe('checkFinality', () => {
     it('builds a valid StorageProgram', () => {
-      const program = chainFinalityHandler.checkFinality({ entry: "chain-001", currentBlock: "19500020" });
+      const program = chainFinalityHandler.checkFinality({ entry: {"type":"ref","fixture":"track_eth_tx","field":"id"}, currentBlock: "19500020" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -117,21 +117,21 @@ describe('ChainFinality functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = chainFinalityHandler.checkFinality({ entry: "chain-001", currentBlock: "19500020" });
+      const program = chainFinalityHandler.checkFinality({ entry: {"type":"ref","fixture":"track_eth_tx","field":"id"}, currentBlock: "19500020" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = chainFinalityHandler.checkFinality({ entry: "chain-001", currentBlock: "19500020" });
+      const program = chainFinalityHandler.checkFinality({ entry: {"type":"ref","fixture":"track_eth_tx","field":"id"}, currentBlock: "19500020" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = chainFinalityHandler.checkFinality({ entry: "chain-001", currentBlock: "19500020" });
+      const program = chainFinalityHandler.checkFinality({ entry: {"type":"ref","fixture":"track_eth_tx","field":"id"}, currentBlock: "19500020" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -144,7 +144,7 @@ describe('ChainFinality functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = chainFinalityHandler.checkFinality({ entry: "chain-001", currentBlock: "19500020" });
+      const program = chainFinalityHandler.checkFinality({ entry: {"type":"ref","fixture":"track_eth_tx","field":"id"}, currentBlock: "19500020" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -152,7 +152,7 @@ describe('ChainFinality functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof chainFinalityHandler.checkFinality !== 'function') return;
-      const result = await interpret(chainFinalityHandler.checkFinality({ entry: "chain-001", currentBlock: "19500020" }), storage);
+      const result = await interpret(chainFinalityHandler.checkFinality({ entry: {"type":"ref","fixture":"track_eth_tx","field":"id"}, currentBlock: "19500020" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -163,12 +163,7 @@ describe('ChainFinality functional handler', () => {
       if (typeof chainFinalityHandler.checkFinality !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_track_eth_tx = await interpret(chainFinalityHandler.track({ operationRef: "gov-prop-101", txHash: "0xabc123def456", chainId: "ethereum-mainnet", requiredConfirmations: "12", submittedBlock: "19500000" }), storage);
-      const _pool = Object.assign({}, (afterResult_track_eth_tx?.output ?? {}));
-      const _fixtureInput = { entry: "chain-001", currentBlock: "19500020" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(chainFinalityHandler.checkFinality({ ..._fixtureInput }), storage);
+      const result = await interpret(chainFinalityHandler.checkFinality({ entry: afterResult_track_eth_tx?.output?.["id"], currentBlock: "19500020" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,12 +171,7 @@ describe('ChainFinality functional handler', () => {
       if (typeof chainFinalityHandler.checkFinality !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_track_eth_tx = await interpret(chainFinalityHandler.track({ operationRef: "gov-prop-101", txHash: "0xabc123def456", chainId: "ethereum-mainnet", requiredConfirmations: "12", submittedBlock: "19500000" }), storage);
-      const _pool = Object.assign({}, (afterResult_track_eth_tx?.output ?? {}));
-      const _fixtureInput = { entry: "chain-001", currentBlock: "19500005" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(chainFinalityHandler.checkFinality({ ..._fixtureInput }), storage);
+      const result = await interpret(chainFinalityHandler.checkFinality({ entry: afterResult_track_eth_tx?.output?.["id"], currentBlock: "19500005" }), storage);
       expect(result.variant).toBe('ok');
     });
 

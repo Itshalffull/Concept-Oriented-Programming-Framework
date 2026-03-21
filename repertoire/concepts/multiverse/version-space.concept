@@ -108,8 +108,8 @@ concept VersionSpace [V] {
         The user has viewer role and cannot write in this space.
       }
 
-      fixture write_override { space: "vs-redesign", entity_id: "article-42", fields: "{\"title\":\"New Title\"}" } after fork_from_base
-      fixture write_missing_space { space: "vs-nonexistent", entity_id: "article-42", fields: "{}" } after fork_from_base -> read_only
+      fixture write_override { space: "vs-redesign", entity_id: $fork_from_base.space, fields: "{\"title\":\"New Title\"}" } after fork_from_base
+      fixture write_missing_space { space: "vs-nonexistent", entity_id: $fork_from_base.space, fields: "{}" } after fork_from_base -> read_only
     }
 
     action create_in_space(space: V, fields: String) {
@@ -129,8 +129,8 @@ concept VersionSpace [V] {
         invisible when navigating within this space.
       }
 
-      fixture delete_entity { space: "vs-redesign", entity_id: "article-42" } after fork_from_base
-      fixture delete_nonexistent { space: "vs-redesign", entity_id: "article-999" } after fork_from_base
+      fixture delete_entity { space: "vs-redesign", entity_id: $fork_from_base.space } after fork_from_base
+      fixture delete_nonexistent { space: "vs-redesign", entity_id: $fork_from_base.space } after fork_from_base
     }
 
     action resolve(space: V, entity_id: String) {
@@ -145,8 +145,8 @@ concept VersionSpace [V] {
         has been deleted in this space.
       }
 
-      fixture resolve_overridden { space: "vs-redesign", entity_id: "article-42" } after fork_from_base
-      fixture resolve_base_fallback { space: "vs-redesign", entity_id: "article-99" } after fork_from_base
+      fixture resolve_overridden { space: "vs-redesign", entity_id: $fork_from_base.space } after fork_from_base
+      fixture resolve_base_fallback { space: "vs-redesign", entity_id: $fork_from_base.space } after fork_from_base
     }
 
     action propose(space: V, target: V, message: String) {
@@ -206,7 +206,7 @@ concept VersionSpace [V] {
         The target already has a different override for this entity.
       }
 
-      fixture cherry_pick_exists { source: "vs-alpha", target: "vs-beta", entity_id: "article-42" } after fork_from_base
+      fixture cherry_pick_exists { source: "vs-alpha", target: "vs-beta", entity_id: $fork_from_base.space } after fork_from_base
       fixture cherry_pick_not_overridden { source: "vs-alpha", target: "vs-beta", entity_id: "article-999" } -> not_overridden
     }
 

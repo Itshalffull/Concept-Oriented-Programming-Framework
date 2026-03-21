@@ -102,7 +102,7 @@ describe('Signature functional handler', () => {
 
   describe('compile', () => {
     it('builds a valid StorageProgram', () => {
-      const program = signatureHandler.compile({ signature: "sig-qa-1", model_id: "gpt-4o", examples: [{"input":"What is AI?","output":"Artificial Intelligence"}] });
+      const program = signatureHandler.compile({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, model_id: "gpt-4o", examples: [{"input":"What is AI?","output":"Artificial Intelligence"}] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('Signature functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = signatureHandler.compile({ signature: "sig-qa-1", model_id: "gpt-4o", examples: [{"input":"What is AI?","output":"Artificial Intelligence"}] });
+      const program = signatureHandler.compile({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, model_id: "gpt-4o", examples: [{"input":"What is AI?","output":"Artificial Intelligence"}] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = signatureHandler.compile({ signature: "sig-qa-1", model_id: "gpt-4o", examples: [{"input":"What is AI?","output":"Artificial Intelligence"}] });
+      const program = signatureHandler.compile({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, model_id: "gpt-4o", examples: [{"input":"What is AI?","output":"Artificial Intelligence"}] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = signatureHandler.compile({ signature: "sig-qa-1", model_id: "gpt-4o", examples: [{"input":"What is AI?","output":"Artificial Intelligence"}] });
+      const program = signatureHandler.compile({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, model_id: "gpt-4o", examples: [{"input":"What is AI?","output":"Artificial Intelligence"}] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('Signature functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = signatureHandler.compile({ signature: "sig-qa-1", model_id: "gpt-4o", examples: [{"input":"What is AI?","output":"Artificial Intelligence"}] });
+      const program = signatureHandler.compile({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, model_id: "gpt-4o", examples: [{"input":"What is AI?","output":"Artificial Intelligence"}] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('Signature functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof signatureHandler.compile !== 'function') return;
-      const result = await interpret(signatureHandler.compile({ signature: "sig-qa-1", model_id: "gpt-4o", examples: [{"input":"What is AI?","output":"Artificial Intelligence"}] }), storage);
+      const result = await interpret(signatureHandler.compile({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, model_id: "gpt-4o", examples: [{"input":"What is AI?","output":"Artificial Intelligence"}] }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('Signature functional handler', () => {
       if (typeof signatureHandler.compile !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_define_qa_signature = await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage);
-      const _pool = Object.assign({}, (afterResult_define_qa_signature?.output ?? {}));
-      const _fixtureInput = { signature: "sig-qa-1", model_id: "gpt-4o", examples: [{"input":"What is AI?","output":"Artificial Intelligence"}] } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(signatureHandler.compile({ ..._fixtureInput }), storage);
+      const result = await interpret(signatureHandler.compile({ signature: afterResult_define_qa_signature?.output?.["signature"], model_id: "gpt-4o", examples: [{"input":"What is AI?","output":"Artificial Intelligence"}] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -169,12 +164,7 @@ describe('Signature functional handler', () => {
       if (typeof signatureHandler.compile !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_define_qa_signature = await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage);
-      const _pool = Object.assign({}, (afterResult_define_qa_signature?.output ?? {}));
-      const _fixtureInput = { signature: "sig-qa-1", model_id: "claude-3", examples: [] } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(signatureHandler.compile({ ..._fixtureInput }), storage);
+      const result = await interpret(signatureHandler.compile({ signature: afterResult_define_qa_signature?.output?.["signature"], model_id: afterResult_define_qa_signature?.output?.["signature"], examples: [] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -189,7 +179,7 @@ describe('Signature functional handler', () => {
 
   describe('execute', () => {
     it('builds a valid StorageProgram', () => {
-      const program = signatureHandler.execute({ signature: "sig-qa-1", model_id: "gpt-4o", inputs: [{"field":"context","value":"The sky is blue."},{"field":"question","value":"What color is the sky?"}] });
+      const program = signatureHandler.execute({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, model_id: "gpt-4o", inputs: [{"field":"context","value":"The sky is blue."},{"field":"question","value":"What color is the sky?"}] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -197,21 +187,21 @@ describe('Signature functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = signatureHandler.execute({ signature: "sig-qa-1", model_id: "gpt-4o", inputs: [{"field":"context","value":"The sky is blue."},{"field":"question","value":"What color is the sky?"}] });
+      const program = signatureHandler.execute({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, model_id: "gpt-4o", inputs: [{"field":"context","value":"The sky is blue."},{"field":"question","value":"What color is the sky?"}] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = signatureHandler.execute({ signature: "sig-qa-1", model_id: "gpt-4o", inputs: [{"field":"context","value":"The sky is blue."},{"field":"question","value":"What color is the sky?"}] });
+      const program = signatureHandler.execute({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, model_id: "gpt-4o", inputs: [{"field":"context","value":"The sky is blue."},{"field":"question","value":"What color is the sky?"}] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = signatureHandler.execute({ signature: "sig-qa-1", model_id: "gpt-4o", inputs: [{"field":"context","value":"The sky is blue."},{"field":"question","value":"What color is the sky?"}] });
+      const program = signatureHandler.execute({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, model_id: "gpt-4o", inputs: [{"field":"context","value":"The sky is blue."},{"field":"question","value":"What color is the sky?"}] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -224,7 +214,7 @@ describe('Signature functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = signatureHandler.execute({ signature: "sig-qa-1", model_id: "gpt-4o", inputs: [{"field":"context","value":"The sky is blue."},{"field":"question","value":"What color is the sky?"}] });
+      const program = signatureHandler.execute({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, model_id: "gpt-4o", inputs: [{"field":"context","value":"The sky is blue."},{"field":"question","value":"What color is the sky?"}] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -232,7 +222,7 @@ describe('Signature functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof signatureHandler.execute !== 'function') return;
-      const result = await interpret(signatureHandler.execute({ signature: "sig-qa-1", model_id: "gpt-4o", inputs: [{"field":"context","value":"The sky is blue."},{"field":"question","value":"What color is the sky?"}] }), storage);
+      const result = await interpret(signatureHandler.execute({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, model_id: "gpt-4o", inputs: [{"field":"context","value":"The sky is blue."},{"field":"question","value":"What color is the sky?"}] }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -243,12 +233,7 @@ describe('Signature functional handler', () => {
       if (typeof signatureHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_define_qa_signature = await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage);
-      const _pool = Object.assign({}, (afterResult_define_qa_signature?.output ?? {}));
-      const _fixtureInput = { signature: "sig-qa-1", model_id: "gpt-4o", inputs: [{"field":"context","value":"The sky is blue."},{"field":"question","value":"What color is the sky?"}] } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(signatureHandler.execute({ ..._fixtureInput }), storage);
+      const result = await interpret(signatureHandler.execute({ signature: afterResult_define_qa_signature?.output?.["signature"], model_id: "gpt-4o", inputs: [{"field":"context","value":"The sky is blue."},{"field":"question","value":"What color is the sky?"}] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -256,12 +241,7 @@ describe('Signature functional handler', () => {
       if (typeof signatureHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_define_qa_signature = await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage);
-      const _pool = Object.assign({}, (afterResult_define_qa_signature?.output ?? {}));
-      const _fixtureInput = { signature: "sig-qa-1", model_id: "unknown-model", inputs: [{"field":"context","value":"test"}] } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(signatureHandler.execute({ ..._fixtureInput }), storage);
+      const result = await interpret(signatureHandler.execute({ signature: afterResult_define_qa_signature?.output?.["signature"], model_id: "unknown-model", inputs: [{"field":"context","value":"test"}] }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -269,7 +249,7 @@ describe('Signature functional handler', () => {
 
   describe('recompile', () => {
     it('builds a valid StorageProgram', () => {
-      const program = signatureHandler.recompile({ signature: "sig-qa-1", target_model: "claude-3-opus" });
+      const program = signatureHandler.recompile({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, target_model: "claude-3-opus" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -277,21 +257,21 @@ describe('Signature functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = signatureHandler.recompile({ signature: "sig-qa-1", target_model: "claude-3-opus" });
+      const program = signatureHandler.recompile({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, target_model: "claude-3-opus" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = signatureHandler.recompile({ signature: "sig-qa-1", target_model: "claude-3-opus" });
+      const program = signatureHandler.recompile({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, target_model: "claude-3-opus" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = signatureHandler.recompile({ signature: "sig-qa-1", target_model: "claude-3-opus" });
+      const program = signatureHandler.recompile({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, target_model: "claude-3-opus" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -304,7 +284,7 @@ describe('Signature functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = signatureHandler.recompile({ signature: "sig-qa-1", target_model: "claude-3-opus" });
+      const program = signatureHandler.recompile({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, target_model: "claude-3-opus" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -312,7 +292,7 @@ describe('Signature functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof signatureHandler.recompile !== 'function') return;
-      const result = await interpret(signatureHandler.recompile({ signature: "sig-qa-1", target_model: "claude-3-opus" }), storage);
+      const result = await interpret(signatureHandler.recompile({ signature: {"type":"ref","fixture":"define_qa_signature","field":"signature"}, target_model: "claude-3-opus" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -323,12 +303,7 @@ describe('Signature functional handler', () => {
       if (typeof signatureHandler.recompile !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_define_qa_signature = await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage);
-      const _pool = Object.assign({}, (afterResult_define_qa_signature?.output ?? {}));
-      const _fixtureInput = { signature: "sig-qa-1", target_model: "claude-3-opus" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(signatureHandler.recompile({ ..._fixtureInput }), storage);
+      const result = await interpret(signatureHandler.recompile({ signature: afterResult_define_qa_signature?.output?.["signature"], target_model: "claude-3-opus" }), storage);
       expect(result.variant).toBe('ok');
     });
 

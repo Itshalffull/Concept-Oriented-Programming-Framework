@@ -102,7 +102,7 @@ describe('ContentNode functional handler', () => {
 
   describe('update', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contentNodeHandler.update({ node: "node-1", content: "Updated wiki content" });
+      const program = contentNodeHandler.update({ node: {"type":"ref","fixture":"create_page_node","field":"node"}, content: "Updated wiki content" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('ContentNode functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contentNodeHandler.update({ node: "node-1", content: "Updated wiki content" });
+      const program = contentNodeHandler.update({ node: {"type":"ref","fixture":"create_page_node","field":"node"}, content: "Updated wiki content" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contentNodeHandler.update({ node: "node-1", content: "Updated wiki content" });
+      const program = contentNodeHandler.update({ node: {"type":"ref","fixture":"create_page_node","field":"node"}, content: "Updated wiki content" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contentNodeHandler.update({ node: "node-1", content: "Updated wiki content" });
+      const program = contentNodeHandler.update({ node: {"type":"ref","fixture":"create_page_node","field":"node"}, content: "Updated wiki content" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('ContentNode functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contentNodeHandler.update({ node: "node-1", content: "Updated wiki content" });
+      const program = contentNodeHandler.update({ node: {"type":"ref","fixture":"create_page_node","field":"node"}, content: "Updated wiki content" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('ContentNode functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof contentNodeHandler.update !== 'function') return;
-      const result = await interpret(contentNodeHandler.update({ node: "node-1", content: "Updated wiki content" }), storage);
+      const result = await interpret(contentNodeHandler.update({ node: {"type":"ref","fixture":"create_page_node","field":"node"}, content: "Updated wiki content" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('ContentNode functional handler', () => {
       if (typeof contentNodeHandler.update !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_page_node = await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_page_node?.output ?? {}));
-      const _fixtureInput = { node: "node-1", content: "Updated wiki content" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(contentNodeHandler.update({ ..._fixtureInput }), storage);
+      const result = await interpret(contentNodeHandler.update({ node: afterResult_create_page_node?.output?.["node"], content: "Updated wiki content" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,7 +171,7 @@ describe('ContentNode functional handler', () => {
 
   describe('delete', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contentNodeHandler.delete({ node: "node-1" });
+      const program = contentNodeHandler.delete({ node: {"type":"ref","fixture":"create_page_node","field":"node"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +179,21 @@ describe('ContentNode functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contentNodeHandler.delete({ node: "node-1" });
+      const program = contentNodeHandler.delete({ node: {"type":"ref","fixture":"create_page_node","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contentNodeHandler.delete({ node: "node-1" });
+      const program = contentNodeHandler.delete({ node: {"type":"ref","fixture":"create_page_node","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contentNodeHandler.delete({ node: "node-1" });
+      const program = contentNodeHandler.delete({ node: {"type":"ref","fixture":"create_page_node","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +206,7 @@ describe('ContentNode functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contentNodeHandler.delete({ node: "node-1" });
+      const program = contentNodeHandler.delete({ node: {"type":"ref","fixture":"create_page_node","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,7 +214,7 @@ describe('ContentNode functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof contentNodeHandler.delete !== 'function') return;
-      const result = await interpret(contentNodeHandler.delete({ node: "node-1" }), storage);
+      const result = await interpret(contentNodeHandler.delete({ node: {"type":"ref","fixture":"create_page_node","field":"node"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -230,12 +225,7 @@ describe('ContentNode functional handler', () => {
       if (typeof contentNodeHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_page_node = await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_page_node?.output ?? {}));
-      const _fixtureInput = { node: "node-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(contentNodeHandler.delete({ ..._fixtureInput }), storage);
+      const result = await interpret(contentNodeHandler.delete({ node: afterResult_create_page_node?.output?.["node"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -250,7 +240,7 @@ describe('ContentNode functional handler', () => {
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contentNodeHandler.get({ node: "node-1" });
+      const program = contentNodeHandler.get({ node: {"type":"ref","fixture":"create_page_node","field":"node"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -258,21 +248,21 @@ describe('ContentNode functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contentNodeHandler.get({ node: "node-1" });
+      const program = contentNodeHandler.get({ node: {"type":"ref","fixture":"create_page_node","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contentNodeHandler.get({ node: "node-1" });
+      const program = contentNodeHandler.get({ node: {"type":"ref","fixture":"create_page_node","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contentNodeHandler.get({ node: "node-1" });
+      const program = contentNodeHandler.get({ node: {"type":"ref","fixture":"create_page_node","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -285,7 +275,7 @@ describe('ContentNode functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contentNodeHandler.get({ node: "node-1" });
+      const program = contentNodeHandler.get({ node: {"type":"ref","fixture":"create_page_node","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -293,7 +283,7 @@ describe('ContentNode functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof contentNodeHandler.get !== 'function') return;
-      const result = await interpret(contentNodeHandler.get({ node: "node-1" }), storage);
+      const result = await interpret(contentNodeHandler.get({ node: {"type":"ref","fixture":"create_page_node","field":"node"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -304,12 +294,7 @@ describe('ContentNode functional handler', () => {
       if (typeof contentNodeHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_page_node = await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_page_node?.output ?? {}));
-      const _fixtureInput = { node: "node-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(contentNodeHandler.get({ ..._fixtureInput }), storage);
+      const result = await interpret(contentNodeHandler.get({ node: afterResult_create_page_node?.output?.["node"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -324,7 +309,7 @@ describe('ContentNode functional handler', () => {
 
   describe('setMetadata', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contentNodeHandler.setMetadata({ node: "node-1", metadata: "{\"tags\":[\"important\"],\"priority\":\"high\"}" });
+      const program = contentNodeHandler.setMetadata({ node: {"type":"ref","fixture":"create_page_node","field":"node"}, metadata: "{\"tags\":[\"important\"],\"priority\":\"high\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -332,21 +317,21 @@ describe('ContentNode functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contentNodeHandler.setMetadata({ node: "node-1", metadata: "{\"tags\":[\"important\"],\"priority\":\"high\"}" });
+      const program = contentNodeHandler.setMetadata({ node: {"type":"ref","fixture":"create_page_node","field":"node"}, metadata: "{\"tags\":[\"important\"],\"priority\":\"high\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contentNodeHandler.setMetadata({ node: "node-1", metadata: "{\"tags\":[\"important\"],\"priority\":\"high\"}" });
+      const program = contentNodeHandler.setMetadata({ node: {"type":"ref","fixture":"create_page_node","field":"node"}, metadata: "{\"tags\":[\"important\"],\"priority\":\"high\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contentNodeHandler.setMetadata({ node: "node-1", metadata: "{\"tags\":[\"important\"],\"priority\":\"high\"}" });
+      const program = contentNodeHandler.setMetadata({ node: {"type":"ref","fixture":"create_page_node","field":"node"}, metadata: "{\"tags\":[\"important\"],\"priority\":\"high\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -359,7 +344,7 @@ describe('ContentNode functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contentNodeHandler.setMetadata({ node: "node-1", metadata: "{\"tags\":[\"important\"],\"priority\":\"high\"}" });
+      const program = contentNodeHandler.setMetadata({ node: {"type":"ref","fixture":"create_page_node","field":"node"}, metadata: "{\"tags\":[\"important\"],\"priority\":\"high\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -367,7 +352,7 @@ describe('ContentNode functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof contentNodeHandler.setMetadata !== 'function') return;
-      const result = await interpret(contentNodeHandler.setMetadata({ node: "node-1", metadata: "{\"tags\":[\"important\"],\"priority\":\"high\"}" }), storage);
+      const result = await interpret(contentNodeHandler.setMetadata({ node: {"type":"ref","fixture":"create_page_node","field":"node"}, metadata: "{\"tags\":[\"important\"],\"priority\":\"high\"}" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -378,12 +363,7 @@ describe('ContentNode functional handler', () => {
       if (typeof contentNodeHandler.setMetadata !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_page_node = await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_page_node?.output ?? {}));
-      const _fixtureInput = { node: "node-1", metadata: "{\"tags\":[\"important\"],\"priority\":\"high\"}" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(contentNodeHandler.setMetadata({ ..._fixtureInput }), storage);
+      const result = await interpret(contentNodeHandler.setMetadata({ node: afterResult_create_page_node?.output?.["node"], metadata: "{\"tags\":[\"important\"],\"priority\":\"high\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -404,7 +384,7 @@ describe('ContentNode functional handler', () => {
 
   describe('changeType', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contentNodeHandler.changeType({ node: "node-1", type: "document" });
+      const program = contentNodeHandler.changeType({ node: {"type":"ref","fixture":"create_page_node","field":"node"}, type: "document" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -412,21 +392,21 @@ describe('ContentNode functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contentNodeHandler.changeType({ node: "node-1", type: "document" });
+      const program = contentNodeHandler.changeType({ node: {"type":"ref","fixture":"create_page_node","field":"node"}, type: "document" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contentNodeHandler.changeType({ node: "node-1", type: "document" });
+      const program = contentNodeHandler.changeType({ node: {"type":"ref","fixture":"create_page_node","field":"node"}, type: "document" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contentNodeHandler.changeType({ node: "node-1", type: "document" });
+      const program = contentNodeHandler.changeType({ node: {"type":"ref","fixture":"create_page_node","field":"node"}, type: "document" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -439,7 +419,7 @@ describe('ContentNode functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contentNodeHandler.changeType({ node: "node-1", type: "document" });
+      const program = contentNodeHandler.changeType({ node: {"type":"ref","fixture":"create_page_node","field":"node"}, type: "document" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -447,7 +427,7 @@ describe('ContentNode functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof contentNodeHandler.changeType !== 'function') return;
-      const result = await interpret(contentNodeHandler.changeType({ node: "node-1", type: "document" }), storage);
+      const result = await interpret(contentNodeHandler.changeType({ node: {"type":"ref","fixture":"create_page_node","field":"node"}, type: "document" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -458,12 +438,7 @@ describe('ContentNode functional handler', () => {
       if (typeof contentNodeHandler.changeType !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_page_node = await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_page_node?.output ?? {}));
-      const _fixtureInput = { node: "node-1", type: "document" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(contentNodeHandler.changeType({ ..._fixtureInput }), storage);
+      const result = await interpret(contentNodeHandler.changeType({ node: afterResult_create_page_node?.output?.["node"], type: "document" }), storage);
       expect(result.variant).toBe('ok');
     });
 

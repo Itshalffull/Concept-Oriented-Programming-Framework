@@ -48,7 +48,7 @@ concept WidgetStateEntity [S] {
         Compute all states reachable from this state via
         transitions. Results as serialized JSON.
       }
-      fixture reachable_valid { widgetState: "widget-state-entity-1" } after register_closed
+      fixture reachable_valid { widgetState: $register_closed.widgetState } after register_closed
       fixture reachable_missing { widgetState: "nonexistent-id" } after register_closed
     }
 
@@ -82,7 +82,7 @@ concept WidgetStateEntity [S] {
       -> notfound() {
         State does not exist.
       }
-      fixture get_valid { widgetState: "widget-state-entity-1" } after register_closed
+      fixture get_valid { widgetState: $register_closed.widgetState } after register_closed
       fixture get_missing { widgetState: "nonexistent-id" } -> error
     }
   }

@@ -27,7 +27,7 @@ concept EqualWeight [EW] {
         Returns the fixed weight value.
       }
 
-      fixture get_alice { config: "ew-cfg-001", participant: "alice" } after configure_default
+      fixture get_alice { config: $configure_default.id, participant: "alice" } after configure_default
       fixture get_empty_participant { config: "ew-cfg-001", participant: "" } -> error
     }
   }

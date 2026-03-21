@@ -51,7 +51,7 @@ concept Publisher [U] {
         Signing key unavailable or signing process failed.
       }
 
-      fixture sign_existing { publication: "pub-1" } after package_library
+      fixture sign_existing { publication: $package_library.publication } after package_library
       fixture sign_missing { publication: "pub-nonexistent" } -> error
     }
 
@@ -62,7 +62,7 @@ concept Publisher [U] {
         commit hash, build timestamp, and computed SLSA level.
       }
 
-      fixture attest_ci_build { publication: "pub-1", builder: "github-actions", source_repo: "https://github.com/org/repo", source_commit: "abc123def456" } after package_library
+      fixture attest_ci_build { publication: $package_library.publication, builder: "github-actions", source_repo: "https://github.com/org/repo", source_commit: "abc123def456" } after package_library
       fixture attest_missing_pub { publication: "pub-nonexistent", builder: "ci", source_repo: "repo", source_commit: "000" } -> error
     }
 
@@ -72,7 +72,7 @@ concept Publisher [U] {
         Stores the SBOM in a standard format (SPDX or CycloneDX).
       }
 
-      fixture generate_sbom_existing { publication: "pub-1" } after package_library
+      fixture generate_sbom_existing { publication: $package_library.publication } after package_library
       fixture generate_sbom_missing { publication: "pub-nonexistent" } -> error
     }
 
@@ -91,7 +91,7 @@ concept Publisher [U] {
         Network or server error during upload.
       }
 
-      fixture upload_to_registry { publication: "pub-1", registry_url: "https://registry.example.com/api/v1" } after package_library
+      fixture upload_to_registry { publication: $package_library.publication, registry_url: "https://registry.example.com/api/v1" } after package_library
       fixture upload_missing_pub { publication: "pub-nonexistent", registry_url: "https://registry.example.com/api/v1" } -> error
     }
   }

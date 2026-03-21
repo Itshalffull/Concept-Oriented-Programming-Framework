@@ -52,7 +52,7 @@ describe('Installer imperative handler', () => {
   describe('activate', () => {
     it('produces a result', async () => {
       if (typeof installerHandler.activate !== 'function') return;
-      const result = await installerHandler.activate({ installation: "inst-1" }, storage);
+      const result = await installerHandler.activate({ installation: {"type":"ref","fixture":"stage_single_module","field":"installation"} }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -63,12 +63,7 @@ describe('Installer imperative handler', () => {
       if (typeof installerHandler.activate !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_stage_single_module = await installerHandler.stage({ lockfile_entries: [{"module_id":"auth","version":"1.0.0","content_hash":"sha256:abc123","target_path":"node_modules/auth","kind":"library"}], project_root: "/workspace/my-project" }, storage);
-      const _pool = Object.assign({}, (afterResult_stage_single_module?.output ?? {}));
-      const _fixtureInput = { installation: "inst-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await installerHandler.activate({ ..._fixtureInput }, storage);
+      const result = await installerHandler.activate({ installation: afterResult_stage_single_module?.output?.["installation"] }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -84,7 +79,7 @@ describe('Installer imperative handler', () => {
   describe('rollback', () => {
     it('produces a result', async () => {
       if (typeof installerHandler.rollback !== 'function') return;
-      const result = await installerHandler.rollback({ installation: "inst-2" }, storage);
+      const result = await installerHandler.rollback({ installation: {"type":"ref","fixture":"stage_single_module","field":"installation"} }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -95,12 +90,7 @@ describe('Installer imperative handler', () => {
       if (typeof installerHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_stage_single_module = await installerHandler.stage({ lockfile_entries: [{"module_id":"auth","version":"1.0.0","content_hash":"sha256:abc123","target_path":"node_modules/auth","kind":"library"}], project_root: "/workspace/my-project" }, storage);
-      const _pool = Object.assign({}, (afterResult_stage_single_module?.output ?? {}));
-      const _fixtureInput = { installation: "inst-2" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await installerHandler.rollback({ ..._fixtureInput }, storage);
+      const result = await installerHandler.rollback({ installation: afterResult_stage_single_module?.output?.["installation"] }, storage);
       expect(result.variant).toBe('ok');
     });
 

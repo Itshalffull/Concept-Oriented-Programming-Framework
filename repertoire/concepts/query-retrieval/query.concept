@@ -41,7 +41,7 @@ concept Query [Q] {
         No query registered with this identifier.
       }
 
-      fixture execute_parsed { query: "q-001" } after parse_status_filter
+      fixture execute_parsed { query: $parse_status_filter.query } after parse_status_filter
       fixture execute_missing { query: "q-nonexistent" } -> error
     }
 
@@ -54,7 +54,7 @@ concept Query [Q] {
         No query registered with this identifier.
       }
 
-      fixture subscribe_parsed { query: "q-001" } after parse_status_filter
+      fixture subscribe_parsed { query: $parse_status_filter.query } after parse_status_filter
       fixture subscribe_missing { query: "q-nonexistent" } -> error
     }
 
@@ -66,7 +66,7 @@ concept Query [Q] {
         No query registered with this identifier.
       }
 
-      fixture add_status_filter { query: "q-001", filter: "status = 'active'" } after parse_status_filter
+      fixture add_status_filter { query: $parse_status_filter.query, filter: "status = 'active'" } after parse_status_filter
       fixture add_filter_missing { query: "q-nonexistent", filter: "status = 'active'" } -> error
     }
 
@@ -78,7 +78,7 @@ concept Query [Q] {
         No query registered with this identifier.
       }
 
-      fixture add_date_sort { query: "q-001", sort: "createdAt DESC" } after parse_status_filter
+      fixture add_date_sort { query: $parse_status_filter.query, sort: "createdAt DESC" } after parse_status_filter
       fixture add_sort_missing { query: "q-nonexistent", sort: "name ASC" } -> error
     }
 
@@ -90,7 +90,7 @@ concept Query [Q] {
         No query registered with this identifier.
       }
 
-      fixture set_org_scope { query: "q-001", scope: "organization/acme" } after parse_status_filter
+      fixture set_org_scope { query: $parse_status_filter.query, scope: "organization/acme" } after parse_status_filter
       fixture set_scope_missing { query: "q-nonexistent", scope: "global" } -> error
     }
   }

@@ -102,7 +102,7 @@ describe('Property functional handler', () => {
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = propertyHandler.get({ entity: "page-1", key: "title" });
+      const program = propertyHandler.get({ entity: {"type":"ref","fixture":"set_title","field":"entity"}, key: "title" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('Property functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = propertyHandler.get({ entity: "page-1", key: "title" });
+      const program = propertyHandler.get({ entity: {"type":"ref","fixture":"set_title","field":"entity"}, key: "title" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = propertyHandler.get({ entity: "page-1", key: "title" });
+      const program = propertyHandler.get({ entity: {"type":"ref","fixture":"set_title","field":"entity"}, key: "title" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = propertyHandler.get({ entity: "page-1", key: "title" });
+      const program = propertyHandler.get({ entity: {"type":"ref","fixture":"set_title","field":"entity"}, key: "title" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('Property functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = propertyHandler.get({ entity: "page-1", key: "title" });
+      const program = propertyHandler.get({ entity: {"type":"ref","fixture":"set_title","field":"entity"}, key: "title" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('Property functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof propertyHandler.get !== 'function') return;
-      const result = await interpret(propertyHandler.get({ entity: "page-1", key: "title" }), storage);
+      const result = await interpret(propertyHandler.get({ entity: {"type":"ref","fixture":"set_title","field":"entity"}, key: "title" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('Property functional handler', () => {
       if (typeof propertyHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_set_title = await interpret(propertyHandler.set({ entity: "page-1", key: "title", value: "Hello World" }), storage);
-      const _pool = Object.assign({}, (afterResult_set_title?.output ?? {}));
-      const _fixtureInput = { entity: "page-1", key: "title" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(propertyHandler.get({ ..._fixtureInput }), storage);
+      const result = await interpret(propertyHandler.get({ entity: afterResult_set_title?.output?.["entity"], key: "title" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,7 +171,7 @@ describe('Property functional handler', () => {
 
   describe('delete', () => {
     it('builds a valid StorageProgram', () => {
-      const program = propertyHandler.delete({ entity: "page-1", key: "title" });
+      const program = propertyHandler.delete({ entity: {"type":"ref","fixture":"set_title","field":"entity"}, key: "title" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +179,21 @@ describe('Property functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = propertyHandler.delete({ entity: "page-1", key: "title" });
+      const program = propertyHandler.delete({ entity: {"type":"ref","fixture":"set_title","field":"entity"}, key: "title" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = propertyHandler.delete({ entity: "page-1", key: "title" });
+      const program = propertyHandler.delete({ entity: {"type":"ref","fixture":"set_title","field":"entity"}, key: "title" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = propertyHandler.delete({ entity: "page-1", key: "title" });
+      const program = propertyHandler.delete({ entity: {"type":"ref","fixture":"set_title","field":"entity"}, key: "title" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +206,7 @@ describe('Property functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = propertyHandler.delete({ entity: "page-1", key: "title" });
+      const program = propertyHandler.delete({ entity: {"type":"ref","fixture":"set_title","field":"entity"}, key: "title" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,7 +214,7 @@ describe('Property functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof propertyHandler.delete !== 'function') return;
-      const result = await interpret(propertyHandler.delete({ entity: "page-1", key: "title" }), storage);
+      const result = await interpret(propertyHandler.delete({ entity: {"type":"ref","fixture":"set_title","field":"entity"}, key: "title" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -230,12 +225,7 @@ describe('Property functional handler', () => {
       if (typeof propertyHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_set_title = await interpret(propertyHandler.set({ entity: "page-1", key: "title", value: "Hello World" }), storage);
-      const _pool = Object.assign({}, (afterResult_set_title?.output ?? {}));
-      const _fixtureInput = { entity: "page-1", key: "title" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(propertyHandler.delete({ ..._fixtureInput }), storage);
+      const result = await interpret(propertyHandler.delete({ entity: afterResult_set_title?.output?.["entity"], key: "title" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -250,7 +240,7 @@ describe('Property functional handler', () => {
 
   describe('listAll', () => {
     it('builds a valid StorageProgram', () => {
-      const program = propertyHandler.listAll({ entity: "page-1" });
+      const program = propertyHandler.listAll({ entity: {"type":"ref","fixture":"set_title","field":"entity"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -258,21 +248,21 @@ describe('Property functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = propertyHandler.listAll({ entity: "page-1" });
+      const program = propertyHandler.listAll({ entity: {"type":"ref","fixture":"set_title","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = propertyHandler.listAll({ entity: "page-1" });
+      const program = propertyHandler.listAll({ entity: {"type":"ref","fixture":"set_title","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = propertyHandler.listAll({ entity: "page-1" });
+      const program = propertyHandler.listAll({ entity: {"type":"ref","fixture":"set_title","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -285,7 +275,7 @@ describe('Property functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = propertyHandler.listAll({ entity: "page-1" });
+      const program = propertyHandler.listAll({ entity: {"type":"ref","fixture":"set_title","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -293,7 +283,7 @@ describe('Property functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof propertyHandler.listAll !== 'function') return;
-      const result = await interpret(propertyHandler.listAll({ entity: "page-1" }), storage);
+      const result = await interpret(propertyHandler.listAll({ entity: {"type":"ref","fixture":"set_title","field":"entity"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -304,12 +294,7 @@ describe('Property functional handler', () => {
       if (typeof propertyHandler.listAll !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_set_title = await interpret(propertyHandler.set({ entity: "page-1", key: "title", value: "Hello World" }), storage);
-      const _pool = Object.assign({}, (afterResult_set_title?.output ?? {}));
-      const _fixtureInput = { entity: "page-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(propertyHandler.listAll({ ..._fixtureInput }), storage);
+      const result = await interpret(propertyHandler.listAll({ entity: afterResult_set_title?.output?.["entity"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

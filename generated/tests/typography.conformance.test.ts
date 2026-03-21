@@ -214,7 +214,7 @@ describe('Typography functional handler', () => {
 
   describe('defineStyle', () => {
     it('builds a valid StorageProgram', () => {
-      const program = typographyHandler.defineStyle({ typography: "X-9", name: "heading-1", config: "{ \"fontSize\": 32, \"fontWeight\": 700, \"lineHeight\": 1.2, \"letterSpacing\": \"-0.02em\" }" });
+      const program = typographyHandler.defineStyle({ typography: "X-9", name: {"type":"ref","fixture":"scale_major_third","field":"typography"}, config: "{ \"fontSize\": 32, \"fontWeight\": 700, \"lineHeight\": 1.2, \"letterSpacing\": \"-0.02em\" }" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -222,21 +222,21 @@ describe('Typography functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = typographyHandler.defineStyle({ typography: "X-9", name: "heading-1", config: "{ \"fontSize\": 32, \"fontWeight\": 700, \"lineHeight\": 1.2, \"letterSpacing\": \"-0.02em\" }" });
+      const program = typographyHandler.defineStyle({ typography: "X-9", name: {"type":"ref","fixture":"scale_major_third","field":"typography"}, config: "{ \"fontSize\": 32, \"fontWeight\": 700, \"lineHeight\": 1.2, \"letterSpacing\": \"-0.02em\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = typographyHandler.defineStyle({ typography: "X-9", name: "heading-1", config: "{ \"fontSize\": 32, \"fontWeight\": 700, \"lineHeight\": 1.2, \"letterSpacing\": \"-0.02em\" }" });
+      const program = typographyHandler.defineStyle({ typography: "X-9", name: {"type":"ref","fixture":"scale_major_third","field":"typography"}, config: "{ \"fontSize\": 32, \"fontWeight\": 700, \"lineHeight\": 1.2, \"letterSpacing\": \"-0.02em\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = typographyHandler.defineStyle({ typography: "X-9", name: "heading-1", config: "{ \"fontSize\": 32, \"fontWeight\": 700, \"lineHeight\": 1.2, \"letterSpacing\": \"-0.02em\" }" });
+      const program = typographyHandler.defineStyle({ typography: "X-9", name: {"type":"ref","fixture":"scale_major_third","field":"typography"}, config: "{ \"fontSize\": 32, \"fontWeight\": 700, \"lineHeight\": 1.2, \"letterSpacing\": \"-0.02em\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -249,7 +249,7 @@ describe('Typography functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = typographyHandler.defineStyle({ typography: "X-9", name: "heading-1", config: "{ \"fontSize\": 32, \"fontWeight\": 700, \"lineHeight\": 1.2, \"letterSpacing\": \"-0.02em\" }" });
+      const program = typographyHandler.defineStyle({ typography: "X-9", name: {"type":"ref","fixture":"scale_major_third","field":"typography"}, config: "{ \"fontSize\": 32, \"fontWeight\": 700, \"lineHeight\": 1.2, \"letterSpacing\": \"-0.02em\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -257,7 +257,7 @@ describe('Typography functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof typographyHandler.defineStyle !== 'function') return;
-      const result = await interpret(typographyHandler.defineStyle({ typography: "X-9", name: "heading-1", config: "{ \"fontSize\": 32, \"fontWeight\": 700, \"lineHeight\": 1.2, \"letterSpacing\": \"-0.02em\" }" }), storage);
+      const result = await interpret(typographyHandler.defineStyle({ typography: "X-9", name: {"type":"ref","fixture":"scale_major_third","field":"typography"}, config: "{ \"fontSize\": 32, \"fontWeight\": 700, \"lineHeight\": 1.2, \"letterSpacing\": \"-0.02em\" }" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -268,12 +268,7 @@ describe('Typography functional handler', () => {
       if (typeof typographyHandler.defineStyle !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_scale_major_third = await interpret(typographyHandler.defineScale({ typography: "X-1", baseSize: "16.0", ratio: "1.25", steps: "6" }), storage);
-      const _pool = Object.assign({}, (afterResult_scale_major_third?.output ?? {}));
-      const _fixtureInput = { typography: "X-9", name: "heading-1", config: "{ \"fontSize\": 32, \"fontWeight\": 700, \"lineHeight\": 1.2, \"letterSpacing\": \"-0.02em\" }" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(typographyHandler.defineStyle({ ..._fixtureInput }), storage);
+      const result = await interpret(typographyHandler.defineStyle({ typography: "X-9", name: afterResult_scale_major_third?.output?.["typography"], config: "{ \"fontSize\": 32, \"fontWeight\": 700, \"lineHeight\": 1.2, \"letterSpacing\": \"-0.02em\" }" }), storage);
       expect(result.variant).toBe('ok');
     });
 

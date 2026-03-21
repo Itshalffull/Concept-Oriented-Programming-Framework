@@ -257,7 +257,7 @@ describe('CloudRunRuntime functional handler', () => {
 
   describe('rollback', () => {
     it('builds a valid StorageProgram', () => {
-      const program = cloudRunRuntimeHandler.rollback({ service: "svc-abc123", targetRevision: "rev-20250101" });
+      const program = cloudRunRuntimeHandler.rollback({ service: "svc-abc123", targetRevision: {"type":"ref","fixture":"provision_standard","field":"service"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -265,21 +265,21 @@ describe('CloudRunRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = cloudRunRuntimeHandler.rollback({ service: "svc-abc123", targetRevision: "rev-20250101" });
+      const program = cloudRunRuntimeHandler.rollback({ service: "svc-abc123", targetRevision: {"type":"ref","fixture":"provision_standard","field":"service"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = cloudRunRuntimeHandler.rollback({ service: "svc-abc123", targetRevision: "rev-20250101" });
+      const program = cloudRunRuntimeHandler.rollback({ service: "svc-abc123", targetRevision: {"type":"ref","fixture":"provision_standard","field":"service"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = cloudRunRuntimeHandler.rollback({ service: "svc-abc123", targetRevision: "rev-20250101" });
+      const program = cloudRunRuntimeHandler.rollback({ service: "svc-abc123", targetRevision: {"type":"ref","fixture":"provision_standard","field":"service"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -292,7 +292,7 @@ describe('CloudRunRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = cloudRunRuntimeHandler.rollback({ service: "svc-abc123", targetRevision: "rev-20250101" });
+      const program = cloudRunRuntimeHandler.rollback({ service: "svc-abc123", targetRevision: {"type":"ref","fixture":"provision_standard","field":"service"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -300,7 +300,7 @@ describe('CloudRunRuntime functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof cloudRunRuntimeHandler.rollback !== 'function') return;
-      const result = await interpret(cloudRunRuntimeHandler.rollback({ service: "svc-abc123", targetRevision: "rev-20250101" }), storage);
+      const result = await interpret(cloudRunRuntimeHandler.rollback({ service: "svc-abc123", targetRevision: {"type":"ref","fixture":"provision_standard","field":"service"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -311,12 +311,7 @@ describe('CloudRunRuntime functional handler', () => {
       if (typeof cloudRunRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_provision_standard = await interpret(cloudRunRuntimeHandler.provision({ concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: "1", memory: "512" }), storage);
-      const _pool = Object.assign({}, (afterResult_provision_standard?.output ?? {}));
-      const _fixtureInput = { service: "svc-abc123", targetRevision: "rev-20250101" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(cloudRunRuntimeHandler.rollback({ ..._fixtureInput }), storage);
+      const result = await interpret(cloudRunRuntimeHandler.rollback({ service: "svc-abc123", targetRevision: afterResult_provision_standard?.output?.["service"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

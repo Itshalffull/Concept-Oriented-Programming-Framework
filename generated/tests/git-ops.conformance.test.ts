@@ -110,7 +110,7 @@ describe('GitOps functional handler', () => {
 
   describe('reconciliationStatus', () => {
     it('builds a valid StorageProgram', () => {
-      const program = gitOpsHandler.reconciliationStatus({ manifest: "go-manifest-001" });
+      const program = gitOpsHandler.reconciliationStatus({ manifest: {"type":"ref","fixture":"emit_argocd","field":"manifest"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -118,21 +118,21 @@ describe('GitOps functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = gitOpsHandler.reconciliationStatus({ manifest: "go-manifest-001" });
+      const program = gitOpsHandler.reconciliationStatus({ manifest: {"type":"ref","fixture":"emit_argocd","field":"manifest"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = gitOpsHandler.reconciliationStatus({ manifest: "go-manifest-001" });
+      const program = gitOpsHandler.reconciliationStatus({ manifest: {"type":"ref","fixture":"emit_argocd","field":"manifest"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = gitOpsHandler.reconciliationStatus({ manifest: "go-manifest-001" });
+      const program = gitOpsHandler.reconciliationStatus({ manifest: {"type":"ref","fixture":"emit_argocd","field":"manifest"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -145,7 +145,7 @@ describe('GitOps functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = gitOpsHandler.reconciliationStatus({ manifest: "go-manifest-001" });
+      const program = gitOpsHandler.reconciliationStatus({ manifest: {"type":"ref","fixture":"emit_argocd","field":"manifest"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -153,7 +153,7 @@ describe('GitOps functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof gitOpsHandler.reconciliationStatus !== 'function') return;
-      const result = await interpret(gitOpsHandler.reconciliationStatus({ manifest: "go-manifest-001" }), storage);
+      const result = await interpret(gitOpsHandler.reconciliationStatus({ manifest: {"type":"ref","fixture":"emit_argocd","field":"manifest"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -164,12 +164,7 @@ describe('GitOps functional handler', () => {
       if (typeof gitOpsHandler.reconciliationStatus !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_emit_argocd = await interpret(gitOpsHandler.emit({ plan: "dp-001", controller: "argocd", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
-      const _pool = Object.assign({}, (afterResult_emit_argocd?.output ?? {}));
-      const _fixtureInput = { manifest: "go-manifest-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(gitOpsHandler.reconciliationStatus({ ..._fixtureInput }), storage);
+      const result = await interpret(gitOpsHandler.reconciliationStatus({ manifest: afterResult_emit_argocd?.output?.["manifest"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

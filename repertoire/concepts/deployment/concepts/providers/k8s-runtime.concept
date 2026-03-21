@@ -58,8 +58,8 @@ concept K8sRuntime [K] {
         Container exceeded memory limit and was killed (exit code 137).
       }
 
-      fixture deploy_image { deployment: "dep-001", imageUri: "registry.io/user-service:v1.2.0" } after provision_deployment
-      fixture deploy_empty_image { deployment: "dep-001", imageUri: "" } after provision_deployment
+      fixture deploy_image { deployment: $provision_deployment.deployment, imageUri: "registry.io/user-service:v1.2.0" } after provision_deployment
+      fixture deploy_empty_image { deployment: $provision_deployment.deployment, imageUri: "" } after provision_deployment
     }
 
     action setTrafficWeight(deployment: K, weight: Int) {
@@ -67,8 +67,8 @@ concept K8sRuntime [K] {
         Service traffic weight updated for canary.
       }
 
-      fixture set_canary_weight { deployment: "dep-001", weight: 25 } after provision_deployment
-      fixture set_invalid_weight { deployment: "dep-001", weight: -1 } after provision_deployment
+      fixture set_canary_weight { deployment: $provision_deployment.deployment, weight: 25 } after provision_deployment
+      fixture set_invalid_weight { deployment: $provision_deployment.deployment, weight: -1 } after provision_deployment
     }
 
     action rollback(deployment: K, targetRevision: String) {
@@ -76,8 +76,8 @@ concept K8sRuntime [K] {
         Deployment rolled back to specified revision.
       }
 
-      fixture rollback_to_rev1 { deployment: "dep-001", targetRevision: "1" } after provision_deployment
-      fixture rollback_empty_rev { deployment: "dep-001", targetRevision: "" } after provision_deployment
+      fixture rollback_to_rev1 { deployment: $provision_deployment.deployment, targetRevision: "1" } after provision_deployment
+      fixture rollback_empty_rev { deployment: $provision_deployment.deployment, targetRevision: "" } after provision_deployment
     }
 
     action destroy(deployment: K) {
@@ -85,7 +85,7 @@ concept K8sRuntime [K] {
         Deployment, Service, ConfigMap, and Ingress deleted.
       }
 
-      fixture destroy_deployment { deployment: "dep-001" } after provision_deployment
+      fixture destroy_deployment { deployment: $provision_deployment.deployment } after provision_deployment
       fixture destroy_empty { deployment: "" } -> error
     }
   }

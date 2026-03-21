@@ -109,7 +109,7 @@ describe('ApiSurface functional handler', () => {
 
   describe('entrypoint', () => {
     it('builds a valid StorageProgram', () => {
-      const program = apiSurfaceHandler.entrypoint({ surface: "api-surface-1" });
+      const program = apiSurfaceHandler.entrypoint({ surface: {"type":"ref","fixture":"rest_surface","field":"surface"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -117,21 +117,21 @@ describe('ApiSurface functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = apiSurfaceHandler.entrypoint({ surface: "api-surface-1" });
+      const program = apiSurfaceHandler.entrypoint({ surface: {"type":"ref","fixture":"rest_surface","field":"surface"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = apiSurfaceHandler.entrypoint({ surface: "api-surface-1" });
+      const program = apiSurfaceHandler.entrypoint({ surface: {"type":"ref","fixture":"rest_surface","field":"surface"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = apiSurfaceHandler.entrypoint({ surface: "api-surface-1" });
+      const program = apiSurfaceHandler.entrypoint({ surface: {"type":"ref","fixture":"rest_surface","field":"surface"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -144,7 +144,7 @@ describe('ApiSurface functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = apiSurfaceHandler.entrypoint({ surface: "api-surface-1" });
+      const program = apiSurfaceHandler.entrypoint({ surface: {"type":"ref","fixture":"rest_surface","field":"surface"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -152,7 +152,7 @@ describe('ApiSurface functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof apiSurfaceHandler.entrypoint !== 'function') return;
-      const result = await interpret(apiSurfaceHandler.entrypoint({ surface: "api-surface-1" }), storage);
+      const result = await interpret(apiSurfaceHandler.entrypoint({ surface: {"type":"ref","fixture":"rest_surface","field":"surface"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -163,12 +163,7 @@ describe('ApiSurface functional handler', () => {
       if (typeof apiSurfaceHandler.entrypoint !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_rest_surface = await interpret(apiSurfaceHandler.compose({ suite: "commerce", target: "rest", outputs: ["order-output","product-output"] }), storage);
-      const _pool = Object.assign({}, (afterResult_rest_surface?.output ?? {}));
-      const _fixtureInput = { surface: "api-surface-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(apiSurfaceHandler.entrypoint({ ..._fixtureInput }), storage);
+      const result = await interpret(apiSurfaceHandler.entrypoint({ surface: afterResult_rest_surface?.output?.["surface"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

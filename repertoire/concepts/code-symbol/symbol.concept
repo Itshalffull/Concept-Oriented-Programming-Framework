@@ -88,7 +88,7 @@ concept Symbol [S] {
         Symbol does not exist.
       }
 
-      fixture valid_rename { symbol: "symbol-1", newName: "updateUser" } after valid_register
+      fixture valid_rename { symbol: $valid_register.symbol, newName: "updateUser" } after valid_register
       fixture rename_nonexistent { symbol: "symbol-999", newName: "foo" } -> error
     }
 
@@ -100,7 +100,7 @@ concept Symbol [S] {
         Symbol does not exist.
       }
 
-      fixture valid_get { symbol: "symbol-1" } after valid_register
+      fixture valid_get { symbol: $valid_register.symbol } after valid_register
       fixture get_nonexistent { symbol: "symbol-999" } -> error
     }
   }

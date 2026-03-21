@@ -99,7 +99,7 @@ concept ThemeImplementationEntity [I] {
         Token path does not exist in this implementation.
       }
 
-      fixture resolve_color_primary { impl: "impl-001", tokenPath: "palette.primary.500" } after register_ocean_css
+      fixture resolve_color_primary { impl: $register_ocean_css.impl, tokenPath: "palette.primary.500" } after register_ocean_css
       fixture resolve_missing_token { impl: "impl-001", tokenPath: "nonexistent.token.path" } -> error
     }
 

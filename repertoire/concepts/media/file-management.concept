@@ -36,7 +36,7 @@ concept FileManagement [F] {
         The target file does not exist in storage.
       }
 
-      fixture add_usage_ok { file: "report.pdf", entity: "article-1" } after upload_pdf
+      fixture add_usage_ok { file: "report.pdf", entity: $upload_pdf.file } after upload_pdf
       fixture add_usage_missing { file: "ghost.txt", entity: "article-1" } -> notfound
     }
 
@@ -49,7 +49,7 @@ concept FileManagement [F] {
         The target file does not exist in storage.
       }
 
-      fixture remove_usage_ok { file: "report.pdf", entity: "article-1" } after upload_pdf
+      fixture remove_usage_ok { file: "report.pdf", entity: $upload_pdf.file } after upload_pdf
       fixture remove_usage_missing { file: "ghost.txt", entity: "article-1" } -> notfound
     }
 

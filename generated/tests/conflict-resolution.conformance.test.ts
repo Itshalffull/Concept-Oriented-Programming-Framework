@@ -182,7 +182,7 @@ describe('ConflictResolution functional handler', () => {
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = conflictResolutionHandler.resolve({ conflictId: "conflict-1", policyOverride: "last-writer-wins" });
+      const program = conflictResolutionHandler.resolve({ conflictId: {"type":"ref","fixture":"register_lww","field":"policy"}, policyOverride: "last-writer-wins" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -190,21 +190,21 @@ describe('ConflictResolution functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = conflictResolutionHandler.resolve({ conflictId: "conflict-1", policyOverride: "last-writer-wins" });
+      const program = conflictResolutionHandler.resolve({ conflictId: {"type":"ref","fixture":"register_lww","field":"policy"}, policyOverride: "last-writer-wins" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = conflictResolutionHandler.resolve({ conflictId: "conflict-1", policyOverride: "last-writer-wins" });
+      const program = conflictResolutionHandler.resolve({ conflictId: {"type":"ref","fixture":"register_lww","field":"policy"}, policyOverride: "last-writer-wins" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = conflictResolutionHandler.resolve({ conflictId: "conflict-1", policyOverride: "last-writer-wins" });
+      const program = conflictResolutionHandler.resolve({ conflictId: {"type":"ref","fixture":"register_lww","field":"policy"}, policyOverride: "last-writer-wins" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -217,7 +217,7 @@ describe('ConflictResolution functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = conflictResolutionHandler.resolve({ conflictId: "conflict-1", policyOverride: "last-writer-wins" });
+      const program = conflictResolutionHandler.resolve({ conflictId: {"type":"ref","fixture":"register_lww","field":"policy"}, policyOverride: "last-writer-wins" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -225,7 +225,7 @@ describe('ConflictResolution functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof conflictResolutionHandler.resolve !== 'function') return;
-      const result = await interpret(conflictResolutionHandler.resolve({ conflictId: "conflict-1", policyOverride: "last-writer-wins" }), storage);
+      const result = await interpret(conflictResolutionHandler.resolve({ conflictId: {"type":"ref","fixture":"register_lww","field":"policy"}, policyOverride: "last-writer-wins" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -236,12 +236,7 @@ describe('ConflictResolution functional handler', () => {
       if (typeof conflictResolutionHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_lww = await interpret(conflictResolutionHandler.registerPolicy({ name: "last-writer-wins", priority: "1" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_lww?.output ?? {}));
-      const _fixtureInput = { conflictId: "conflict-1", policyOverride: "last-writer-wins" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(conflictResolutionHandler.resolve({ ..._fixtureInput }), storage);
+      const result = await interpret(conflictResolutionHandler.resolve({ conflictId: afterResult_register_lww?.output?.["policy"], policyOverride: "last-writer-wins" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -256,7 +251,7 @@ describe('ConflictResolution functional handler', () => {
 
   describe('manualResolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = conflictResolutionHandler.manualResolve({ conflictId: "conflict-1", chosen: "v1-abc" });
+      const program = conflictResolutionHandler.manualResolve({ conflictId: {"type":"ref","fixture":"register_lww","field":"policy"}, chosen: "v1-abc" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -264,21 +259,21 @@ describe('ConflictResolution functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = conflictResolutionHandler.manualResolve({ conflictId: "conflict-1", chosen: "v1-abc" });
+      const program = conflictResolutionHandler.manualResolve({ conflictId: {"type":"ref","fixture":"register_lww","field":"policy"}, chosen: "v1-abc" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = conflictResolutionHandler.manualResolve({ conflictId: "conflict-1", chosen: "v1-abc" });
+      const program = conflictResolutionHandler.manualResolve({ conflictId: {"type":"ref","fixture":"register_lww","field":"policy"}, chosen: "v1-abc" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = conflictResolutionHandler.manualResolve({ conflictId: "conflict-1", chosen: "v1-abc" });
+      const program = conflictResolutionHandler.manualResolve({ conflictId: {"type":"ref","fixture":"register_lww","field":"policy"}, chosen: "v1-abc" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -291,7 +286,7 @@ describe('ConflictResolution functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = conflictResolutionHandler.manualResolve({ conflictId: "conflict-1", chosen: "v1-abc" });
+      const program = conflictResolutionHandler.manualResolve({ conflictId: {"type":"ref","fixture":"register_lww","field":"policy"}, chosen: "v1-abc" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -299,7 +294,7 @@ describe('ConflictResolution functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof conflictResolutionHandler.manualResolve !== 'function') return;
-      const result = await interpret(conflictResolutionHandler.manualResolve({ conflictId: "conflict-1", chosen: "v1-abc" }), storage);
+      const result = await interpret(conflictResolutionHandler.manualResolve({ conflictId: {"type":"ref","fixture":"register_lww","field":"policy"}, chosen: "v1-abc" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -310,12 +305,7 @@ describe('ConflictResolution functional handler', () => {
       if (typeof conflictResolutionHandler.manualResolve !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_lww = await interpret(conflictResolutionHandler.registerPolicy({ name: "last-writer-wins", priority: "1" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_lww?.output ?? {}));
-      const _fixtureInput = { conflictId: "conflict-1", chosen: "v1-abc" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(conflictResolutionHandler.manualResolve({ ..._fixtureInput }), storage);
+      const result = await interpret(conflictResolutionHandler.manualResolve({ conflictId: afterResult_register_lww?.output?.["policy"], chosen: "v1-abc" }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -29,8 +29,8 @@ concept DotExportProvider [C] {
       }
       -> error(message: String) { Export failed. }
 
-      fixture default_export { canvas_id: "canvas-1" } after valid
-      fixture with_engine { canvas_id: "canvas-2", options: { engine: "neato" } } after valid
+      fixture default_export { canvas_id: $valid.name } after valid
+      fixture with_engine { canvas_id: $valid.name, options: { engine: "neato" } } after valid
       fixture empty_canvas { canvas_id: "" } -> error
     }
 

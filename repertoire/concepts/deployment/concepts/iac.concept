@@ -66,7 +66,7 @@ concept IaC [R] {
         Apply failed entirely. No changes made.
       }
 
-      fixture apply_plan { plan: "dp-001", provider: "pulumi" } after emit_pulumi
+      fixture apply_plan { plan: $emit_pulumi.output, provider: "pulumi" } after emit_pulumi
       fixture apply_empty_plan { plan: "", provider: "" } after emit_pulumi
     }
 
@@ -92,7 +92,7 @@ concept IaC [R] {
         Some resources could not be destroyed.
       }
 
-      fixture teardown_plan { plan: "dp-001", provider: "pulumi" } after emit_pulumi
+      fixture teardown_plan { plan: $emit_pulumi.output, provider: "pulumi" } after emit_pulumi
       fixture teardown_empty { plan: "", provider: "" } after emit_pulumi
     }
   }

@@ -102,7 +102,7 @@ describe('Registry functional handler', () => {
 
   describe('yank', () => {
     it('builds a valid StorageProgram', () => {
-      const program = registryHandler.yank({ module: "mod-1" });
+      const program = registryHandler.yank({ module: {"type":"ref","fixture":"publish_concept_module","field":"module"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('Registry functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = registryHandler.yank({ module: "mod-1" });
+      const program = registryHandler.yank({ module: {"type":"ref","fixture":"publish_concept_module","field":"module"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = registryHandler.yank({ module: "mod-1" });
+      const program = registryHandler.yank({ module: {"type":"ref","fixture":"publish_concept_module","field":"module"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = registryHandler.yank({ module: "mod-1" });
+      const program = registryHandler.yank({ module: {"type":"ref","fixture":"publish_concept_module","field":"module"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('Registry functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = registryHandler.yank({ module: "mod-1" });
+      const program = registryHandler.yank({ module: {"type":"ref","fixture":"publish_concept_module","field":"module"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('Registry functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof registryHandler.yank !== 'function') return;
-      const result = await interpret(registryHandler.yank({ module: "mod-1" }), storage);
+      const result = await interpret(registryHandler.yank({ module: {"type":"ref","fixture":"publish_concept_module","field":"module"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('Registry functional handler', () => {
       if (typeof registryHandler.yank !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_publish_concept_module = await interpret(registryHandler.publish({ name: "auth", namespace: "clef", version: "1.0.0", kind: "concept", artifact_hash: "sha256:abc123def", dependencies: [], metadata: {"description":"Auth concept","license":"MIT","repository":"https://github.com/org/auth","authors":["dev@example.com"],"keywords":["auth","security"]} }), storage);
-      const _pool = Object.assign({}, (afterResult_publish_concept_module?.output ?? {}));
-      const _fixtureInput = { module: "mod-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(registryHandler.yank({ ..._fixtureInput }), storage);
+      const result = await interpret(registryHandler.yank({ module: afterResult_publish_concept_module?.output?.["module"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

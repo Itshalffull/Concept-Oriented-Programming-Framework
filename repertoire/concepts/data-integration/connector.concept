@@ -41,7 +41,7 @@ concept Connector [C] {
         The external system rejected the query or the connection timed out.
       }
 
-      fixture read_posts { connectorId: "conn-1", query: "{\"path\":\"/posts\"}", options: "{}" } after configure_rest
+      fixture read_posts { connectorId: $configure_rest.connectorId, query: "{\"path\":\"/posts\"}", options: "{}" } after configure_rest
       fixture read_missing_connector { connectorId: "conn-missing", query: "{}", options: "{}" } after configure_rest -> notfound
     }
 
@@ -56,7 +56,7 @@ concept Connector [C] {
         The external system rejected the write or the connection timed out.
       }
 
-      fixture write_records { connectorId: "conn-1", data: "[{\"title\":\"Post 1\"}]", options: "{}" } after configure_rest
+      fixture write_records { connectorId: $configure_rest.connectorId, data: "[{\"title\":\"Post 1\"}]", options: "{}" } after configure_rest
       fixture write_missing_connector { connectorId: "conn-missing", data: "[]", options: "{}" } after configure_rest -> notfound
     }
 
@@ -71,7 +71,7 @@ concept Connector [C] {
         The external system is unreachable or authentication was rejected.
       }
 
-      fixture test_existing { connectorId: "conn-1" } after configure_rest
+      fixture test_existing { connectorId: $configure_rest.connectorId } after configure_rest
       fixture test_missing { connectorId: "conn-missing" } -> notfound
     }
 
@@ -86,7 +86,7 @@ concept Connector [C] {
         The external system does not support schema introspection or the query failed.
       }
 
-      fixture discover_existing { connectorId: "conn-1" } after configure_rest
+      fixture discover_existing { connectorId: $configure_rest.connectorId } after configure_rest
       fixture discover_missing { connectorId: "conn-missing" } -> notfound
     }
   }

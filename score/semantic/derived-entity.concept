@@ -80,7 +80,7 @@ concept DerivedEntity [D] {
       -> notfound() {
         Entity not found.
       }
-      fixture tree_valid { entity: "derived-entity-1" } after register_trash
+      fixture tree_valid { entity: $register_trash.entity } after register_trash
       fixture tree_missing { entity: "nonexistent-id" } -> error
     }
 
@@ -93,7 +93,7 @@ concept DerivedEntity [D] {
       -> notfound() {
         Entity not found.
       }
-      fixture rollup_valid { entity: "derived-entity-1", flowId: "flow-abc-123" } after register_trash
+      fixture rollup_valid { entity: $register_trash.entity, flowId: $register_trash.entity } after register_trash
       fixture rollup_missing_entity { entity: "nonexistent-id", flowId: "flow-abc-123" } -> error
     }
   }

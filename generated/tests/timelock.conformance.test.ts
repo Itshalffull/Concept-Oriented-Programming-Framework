@@ -109,7 +109,7 @@ describe('Timelock functional handler', () => {
 
   describe('execute', () => {
     it('builds a valid StorageProgram', () => {
-      const program = timelockHandler.execute({ lock: "timelock-001" });
+      const program = timelockHandler.execute({ lock: {"type":"ref","fixture":"schedule_transfer","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -117,21 +117,21 @@ describe('Timelock functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = timelockHandler.execute({ lock: "timelock-001" });
+      const program = timelockHandler.execute({ lock: {"type":"ref","fixture":"schedule_transfer","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = timelockHandler.execute({ lock: "timelock-001" });
+      const program = timelockHandler.execute({ lock: {"type":"ref","fixture":"schedule_transfer","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = timelockHandler.execute({ lock: "timelock-001" });
+      const program = timelockHandler.execute({ lock: {"type":"ref","fixture":"schedule_transfer","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -144,7 +144,7 @@ describe('Timelock functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = timelockHandler.execute({ lock: "timelock-001" });
+      const program = timelockHandler.execute({ lock: {"type":"ref","fixture":"schedule_transfer","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -152,7 +152,7 @@ describe('Timelock functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof timelockHandler.execute !== 'function') return;
-      const result = await interpret(timelockHandler.execute({ lock: "timelock-001" }), storage);
+      const result = await interpret(timelockHandler.execute({ lock: {"type":"ref","fixture":"schedule_transfer","field":"id"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -163,12 +163,7 @@ describe('Timelock functional handler', () => {
       if (typeof timelockHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_schedule_transfer = await interpret(timelockHandler.schedule({ operationHash: "0xdeadbeef", payload: "{\"action\":\"transfer\",\"to\":\"0x123\"}", delayHours: "48.0", gracePeriodHours: "24.0" }), storage);
-      const _pool = Object.assign({}, (afterResult_schedule_transfer?.output ?? {}));
-      const _fixtureInput = { lock: "timelock-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(timelockHandler.execute({ ..._fixtureInput }), storage);
+      const result = await interpret(timelockHandler.execute({ lock: afterResult_schedule_transfer?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -183,7 +178,7 @@ describe('Timelock functional handler', () => {
 
   describe('cancel', () => {
     it('builds a valid StorageProgram', () => {
-      const program = timelockHandler.cancel({ lock: "timelock-001", reason: "Governance vote rejected proposal" });
+      const program = timelockHandler.cancel({ lock: {"type":"ref","fixture":"schedule_transfer","field":"id"}, reason: "Governance vote rejected proposal" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -191,21 +186,21 @@ describe('Timelock functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = timelockHandler.cancel({ lock: "timelock-001", reason: "Governance vote rejected proposal" });
+      const program = timelockHandler.cancel({ lock: {"type":"ref","fixture":"schedule_transfer","field":"id"}, reason: "Governance vote rejected proposal" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = timelockHandler.cancel({ lock: "timelock-001", reason: "Governance vote rejected proposal" });
+      const program = timelockHandler.cancel({ lock: {"type":"ref","fixture":"schedule_transfer","field":"id"}, reason: "Governance vote rejected proposal" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = timelockHandler.cancel({ lock: "timelock-001", reason: "Governance vote rejected proposal" });
+      const program = timelockHandler.cancel({ lock: {"type":"ref","fixture":"schedule_transfer","field":"id"}, reason: "Governance vote rejected proposal" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -218,7 +213,7 @@ describe('Timelock functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = timelockHandler.cancel({ lock: "timelock-001", reason: "Governance vote rejected proposal" });
+      const program = timelockHandler.cancel({ lock: {"type":"ref","fixture":"schedule_transfer","field":"id"}, reason: "Governance vote rejected proposal" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -226,7 +221,7 @@ describe('Timelock functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof timelockHandler.cancel !== 'function') return;
-      const result = await interpret(timelockHandler.cancel({ lock: "timelock-001", reason: "Governance vote rejected proposal" }), storage);
+      const result = await interpret(timelockHandler.cancel({ lock: {"type":"ref","fixture":"schedule_transfer","field":"id"}, reason: "Governance vote rejected proposal" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -237,12 +232,7 @@ describe('Timelock functional handler', () => {
       if (typeof timelockHandler.cancel !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_schedule_transfer = await interpret(timelockHandler.schedule({ operationHash: "0xdeadbeef", payload: "{\"action\":\"transfer\",\"to\":\"0x123\"}", delayHours: "48.0", gracePeriodHours: "24.0" }), storage);
-      const _pool = Object.assign({}, (afterResult_schedule_transfer?.output ?? {}));
-      const _fixtureInput = { lock: "timelock-001", reason: "Governance vote rejected proposal" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(timelockHandler.cancel({ ..._fixtureInput }), storage);
+      const result = await interpret(timelockHandler.cancel({ lock: afterResult_schedule_transfer?.output?.["id"], reason: "Governance vote rejected proposal" }), storage);
       expect(result.variant).toBe('ok');
     });
 

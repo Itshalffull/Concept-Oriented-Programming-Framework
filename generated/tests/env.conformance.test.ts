@@ -109,7 +109,7 @@ describe('Env functional handler', () => {
 
   describe('promote', () => {
     it('builds a valid StorageProgram', () => {
-      const program = envHandler.promote({ fromEnv: "env-staging-001", toEnv: "env-prod-001", suiteName: "auth-suite" });
+      const program = envHandler.promote({ fromEnv: {"type":"ref","fixture":"resolve_staging","field":"environment"}, toEnv: {"type":"ref","fixture":"resolve_staging","field":"environment"}, suiteName: "auth-suite" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -117,21 +117,21 @@ describe('Env functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = envHandler.promote({ fromEnv: "env-staging-001", toEnv: "env-prod-001", suiteName: "auth-suite" });
+      const program = envHandler.promote({ fromEnv: {"type":"ref","fixture":"resolve_staging","field":"environment"}, toEnv: {"type":"ref","fixture":"resolve_staging","field":"environment"}, suiteName: "auth-suite" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = envHandler.promote({ fromEnv: "env-staging-001", toEnv: "env-prod-001", suiteName: "auth-suite" });
+      const program = envHandler.promote({ fromEnv: {"type":"ref","fixture":"resolve_staging","field":"environment"}, toEnv: {"type":"ref","fixture":"resolve_staging","field":"environment"}, suiteName: "auth-suite" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = envHandler.promote({ fromEnv: "env-staging-001", toEnv: "env-prod-001", suiteName: "auth-suite" });
+      const program = envHandler.promote({ fromEnv: {"type":"ref","fixture":"resolve_staging","field":"environment"}, toEnv: {"type":"ref","fixture":"resolve_staging","field":"environment"}, suiteName: "auth-suite" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -144,7 +144,7 @@ describe('Env functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = envHandler.promote({ fromEnv: "env-staging-001", toEnv: "env-prod-001", suiteName: "auth-suite" });
+      const program = envHandler.promote({ fromEnv: {"type":"ref","fixture":"resolve_staging","field":"environment"}, toEnv: {"type":"ref","fixture":"resolve_staging","field":"environment"}, suiteName: "auth-suite" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -152,7 +152,7 @@ describe('Env functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof envHandler.promote !== 'function') return;
-      const result = await interpret(envHandler.promote({ fromEnv: "env-staging-001", toEnv: "env-prod-001", suiteName: "auth-suite" }), storage);
+      const result = await interpret(envHandler.promote({ fromEnv: {"type":"ref","fixture":"resolve_staging","field":"environment"}, toEnv: {"type":"ref","fixture":"resolve_staging","field":"environment"}, suiteName: "auth-suite" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -163,12 +163,7 @@ describe('Env functional handler', () => {
       if (typeof envHandler.promote !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_resolve_staging = await interpret(envHandler.resolve({ environment: "staging" }), storage);
-      const _pool = Object.assign({}, (afterResult_resolve_staging?.output ?? {}));
-      const _fixtureInput = { fromEnv: "env-staging-001", toEnv: "env-prod-001", suiteName: "auth-suite" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(envHandler.promote({ ..._fixtureInput }), storage);
+      const result = await interpret(envHandler.promote({ fromEnv: afterResult_resolve_staging?.output?.["environment"], toEnv: afterResult_resolve_staging?.output?.["environment"], suiteName: "auth-suite" }), storage);
       expect(result.variant).toBe('ok');
     });
 

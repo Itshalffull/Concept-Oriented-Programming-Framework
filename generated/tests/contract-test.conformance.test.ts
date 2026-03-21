@@ -111,7 +111,7 @@ describe('ContractTest functional handler', () => {
 
   describe('verify', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contractTestHandler.verify({ contract: "ctr-pwd-001", producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" });
+      const program = contractTestHandler.verify({ contract: {"type":"ref","fixture":"generate_password","field":"contract"}, producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -119,21 +119,21 @@ describe('ContractTest functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contractTestHandler.verify({ contract: "ctr-pwd-001", producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" });
+      const program = contractTestHandler.verify({ contract: {"type":"ref","fixture":"generate_password","field":"contract"}, producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contractTestHandler.verify({ contract: "ctr-pwd-001", producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" });
+      const program = contractTestHandler.verify({ contract: {"type":"ref","fixture":"generate_password","field":"contract"}, producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contractTestHandler.verify({ contract: "ctr-pwd-001", producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" });
+      const program = contractTestHandler.verify({ contract: {"type":"ref","fixture":"generate_password","field":"contract"}, producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -146,7 +146,7 @@ describe('ContractTest functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contractTestHandler.verify({ contract: "ctr-pwd-001", producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" });
+      const program = contractTestHandler.verify({ contract: {"type":"ref","fixture":"generate_password","field":"contract"}, producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -154,7 +154,7 @@ describe('ContractTest functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof contractTestHandler.verify !== 'function') return;
-      const result = await interpret(contractTestHandler.verify({ contract: "ctr-pwd-001", producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" }), storage);
+      const result = await interpret(contractTestHandler.verify({ contract: {"type":"ref","fixture":"generate_password","field":"contract"}, producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -165,12 +165,7 @@ describe('ContractTest functional handler', () => {
       if (typeof contractTestHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_generate_password = await interpret(contractTestHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage);
-      const _pool = Object.assign({}, (afterResult_generate_password?.output ?? {}));
-      const _fixtureInput = { contract: "ctr-pwd-001", producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(contractTestHandler.verify({ ..._fixtureInput }), storage);
+      const result = await interpret(contractTestHandler.verify({ contract: afterResult_generate_password?.output?.["contract"], producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" }), storage);
       expect(result.variant).toBe('ok');
     });
 

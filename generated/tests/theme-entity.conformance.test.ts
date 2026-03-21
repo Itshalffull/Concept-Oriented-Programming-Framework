@@ -176,7 +176,7 @@ describe('ThemeEntity functional handler', () => {
 
   describe('resolveToken', () => {
     it('builds a valid StorageProgram', () => {
-      const program = themeEntityHandler.resolveToken({ theme: "theme-entity-1", tokenPath: "palette.primary" });
+      const program = themeEntityHandler.resolveToken({ theme: {"type":"ref","fixture":"register_light","field":"entity"}, tokenPath: "palette.primary" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +184,21 @@ describe('ThemeEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = themeEntityHandler.resolveToken({ theme: "theme-entity-1", tokenPath: "palette.primary" });
+      const program = themeEntityHandler.resolveToken({ theme: {"type":"ref","fixture":"register_light","field":"entity"}, tokenPath: "palette.primary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = themeEntityHandler.resolveToken({ theme: "theme-entity-1", tokenPath: "palette.primary" });
+      const program = themeEntityHandler.resolveToken({ theme: {"type":"ref","fixture":"register_light","field":"entity"}, tokenPath: "palette.primary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = themeEntityHandler.resolveToken({ theme: "theme-entity-1", tokenPath: "palette.primary" });
+      const program = themeEntityHandler.resolveToken({ theme: {"type":"ref","fixture":"register_light","field":"entity"}, tokenPath: "palette.primary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +211,7 @@ describe('ThemeEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = themeEntityHandler.resolveToken({ theme: "theme-entity-1", tokenPath: "palette.primary" });
+      const program = themeEntityHandler.resolveToken({ theme: {"type":"ref","fixture":"register_light","field":"entity"}, tokenPath: "palette.primary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,7 +219,7 @@ describe('ThemeEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof themeEntityHandler.resolveToken !== 'function') return;
-      const result = await interpret(themeEntityHandler.resolveToken({ theme: "theme-entity-1", tokenPath: "palette.primary" }), storage);
+      const result = await interpret(themeEntityHandler.resolveToken({ theme: {"type":"ref","fixture":"register_light","field":"entity"}, tokenPath: "palette.primary" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -230,12 +230,7 @@ describe('ThemeEntity functional handler', () => {
       if (typeof themeEntityHandler.resolveToken !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_light = await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_light?.output ?? {}));
-      const _fixtureInput = { theme: "theme-entity-1", tokenPath: "palette.primary" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(themeEntityHandler.resolveToken({ ..._fixtureInput }), storage);
+      const result = await interpret(themeEntityHandler.resolveToken({ theme: afterResult_register_light?.output?.["entity"], tokenPath: "palette.primary" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -250,7 +245,7 @@ describe('ThemeEntity functional handler', () => {
 
   describe('contrastAudit', () => {
     it('builds a valid StorageProgram', () => {
-      const program = themeEntityHandler.contrastAudit({ theme: "theme-entity-1" });
+      const program = themeEntityHandler.contrastAudit({ theme: {"type":"ref","fixture":"register_light","field":"entity"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -258,21 +253,21 @@ describe('ThemeEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = themeEntityHandler.contrastAudit({ theme: "theme-entity-1" });
+      const program = themeEntityHandler.contrastAudit({ theme: {"type":"ref","fixture":"register_light","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = themeEntityHandler.contrastAudit({ theme: "theme-entity-1" });
+      const program = themeEntityHandler.contrastAudit({ theme: {"type":"ref","fixture":"register_light","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = themeEntityHandler.contrastAudit({ theme: "theme-entity-1" });
+      const program = themeEntityHandler.contrastAudit({ theme: {"type":"ref","fixture":"register_light","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -285,7 +280,7 @@ describe('ThemeEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = themeEntityHandler.contrastAudit({ theme: "theme-entity-1" });
+      const program = themeEntityHandler.contrastAudit({ theme: {"type":"ref","fixture":"register_light","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -293,7 +288,7 @@ describe('ThemeEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof themeEntityHandler.contrastAudit !== 'function') return;
-      const result = await interpret(themeEntityHandler.contrastAudit({ theme: "theme-entity-1" }), storage);
+      const result = await interpret(themeEntityHandler.contrastAudit({ theme: {"type":"ref","fixture":"register_light","field":"entity"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -304,12 +299,7 @@ describe('ThemeEntity functional handler', () => {
       if (typeof themeEntityHandler.contrastAudit !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_light = await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_light?.output ?? {}));
-      const _fixtureInput = { theme: "theme-entity-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(themeEntityHandler.contrastAudit({ ..._fixtureInput }), storage);
+      const result = await interpret(themeEntityHandler.contrastAudit({ theme: afterResult_register_light?.output?.["entity"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -392,7 +382,7 @@ describe('ThemeEntity functional handler', () => {
 
   describe('affectedWidgets', () => {
     it('builds a valid StorageProgram', () => {
-      const program = themeEntityHandler.affectedWidgets({ theme: "theme-entity-1", changedToken: "color.primary" });
+      const program = themeEntityHandler.affectedWidgets({ theme: {"type":"ref","fixture":"register_light","field":"entity"}, changedToken: "color.primary" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -400,21 +390,21 @@ describe('ThemeEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = themeEntityHandler.affectedWidgets({ theme: "theme-entity-1", changedToken: "color.primary" });
+      const program = themeEntityHandler.affectedWidgets({ theme: {"type":"ref","fixture":"register_light","field":"entity"}, changedToken: "color.primary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = themeEntityHandler.affectedWidgets({ theme: "theme-entity-1", changedToken: "color.primary" });
+      const program = themeEntityHandler.affectedWidgets({ theme: {"type":"ref","fixture":"register_light","field":"entity"}, changedToken: "color.primary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = themeEntityHandler.affectedWidgets({ theme: "theme-entity-1", changedToken: "color.primary" });
+      const program = themeEntityHandler.affectedWidgets({ theme: {"type":"ref","fixture":"register_light","field":"entity"}, changedToken: "color.primary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -427,7 +417,7 @@ describe('ThemeEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = themeEntityHandler.affectedWidgets({ theme: "theme-entity-1", changedToken: "color.primary" });
+      const program = themeEntityHandler.affectedWidgets({ theme: {"type":"ref","fixture":"register_light","field":"entity"}, changedToken: "color.primary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -435,7 +425,7 @@ describe('ThemeEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof themeEntityHandler.affectedWidgets !== 'function') return;
-      const result = await interpret(themeEntityHandler.affectedWidgets({ theme: "theme-entity-1", changedToken: "color.primary" }), storage);
+      const result = await interpret(themeEntityHandler.affectedWidgets({ theme: {"type":"ref","fixture":"register_light","field":"entity"}, changedToken: "color.primary" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -446,12 +436,7 @@ describe('ThemeEntity functional handler', () => {
       if (typeof themeEntityHandler.affectedWidgets !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_light = await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_light?.output ?? {}));
-      const _fixtureInput = { theme: "theme-entity-1", changedToken: "color.primary" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(themeEntityHandler.affectedWidgets({ ..._fixtureInput }), storage);
+      const result = await interpret(themeEntityHandler.affectedWidgets({ theme: afterResult_register_light?.output?.["entity"], changedToken: "color.primary" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -472,7 +457,7 @@ describe('ThemeEntity functional handler', () => {
 
   describe('generatedOutputs', () => {
     it('builds a valid StorageProgram', () => {
-      const program = themeEntityHandler.generatedOutputs({ theme: "theme-entity-1" });
+      const program = themeEntityHandler.generatedOutputs({ theme: {"type":"ref","fixture":"register_light","field":"entity"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -480,21 +465,21 @@ describe('ThemeEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = themeEntityHandler.generatedOutputs({ theme: "theme-entity-1" });
+      const program = themeEntityHandler.generatedOutputs({ theme: {"type":"ref","fixture":"register_light","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = themeEntityHandler.generatedOutputs({ theme: "theme-entity-1" });
+      const program = themeEntityHandler.generatedOutputs({ theme: {"type":"ref","fixture":"register_light","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = themeEntityHandler.generatedOutputs({ theme: "theme-entity-1" });
+      const program = themeEntityHandler.generatedOutputs({ theme: {"type":"ref","fixture":"register_light","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -507,7 +492,7 @@ describe('ThemeEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = themeEntityHandler.generatedOutputs({ theme: "theme-entity-1" });
+      const program = themeEntityHandler.generatedOutputs({ theme: {"type":"ref","fixture":"register_light","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -515,7 +500,7 @@ describe('ThemeEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof themeEntityHandler.generatedOutputs !== 'function') return;
-      const result = await interpret(themeEntityHandler.generatedOutputs({ theme: "theme-entity-1" }), storage);
+      const result = await interpret(themeEntityHandler.generatedOutputs({ theme: {"type":"ref","fixture":"register_light","field":"entity"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -526,12 +511,7 @@ describe('ThemeEntity functional handler', () => {
       if (typeof themeEntityHandler.generatedOutputs !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_light = await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_light?.output ?? {}));
-      const _fixtureInput = { theme: "theme-entity-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(themeEntityHandler.generatedOutputs({ ..._fixtureInput }), storage);
+      const result = await interpret(themeEntityHandler.generatedOutputs({ theme: afterResult_register_light?.output?.["entity"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

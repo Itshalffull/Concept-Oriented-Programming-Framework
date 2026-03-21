@@ -102,7 +102,7 @@ describe('Branch functional handler', () => {
 
   describe('advance', () => {
     it('builds a valid StorageProgram', () => {
-      const program = branchHandler.advance({ branch: "branch-1", newNode: "dag-history-2" });
+      const program = branchHandler.advance({ branch: {"type":"ref","fixture":"create_feature","field":"branch"}, newNode: {"type":"ref","fixture":"create_feature","field":"branch"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('Branch functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = branchHandler.advance({ branch: "branch-1", newNode: "dag-history-2" });
+      const program = branchHandler.advance({ branch: {"type":"ref","fixture":"create_feature","field":"branch"}, newNode: {"type":"ref","fixture":"create_feature","field":"branch"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = branchHandler.advance({ branch: "branch-1", newNode: "dag-history-2" });
+      const program = branchHandler.advance({ branch: {"type":"ref","fixture":"create_feature","field":"branch"}, newNode: {"type":"ref","fixture":"create_feature","field":"branch"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = branchHandler.advance({ branch: "branch-1", newNode: "dag-history-2" });
+      const program = branchHandler.advance({ branch: {"type":"ref","fixture":"create_feature","field":"branch"}, newNode: {"type":"ref","fixture":"create_feature","field":"branch"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('Branch functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = branchHandler.advance({ branch: "branch-1", newNode: "dag-history-2" });
+      const program = branchHandler.advance({ branch: {"type":"ref","fixture":"create_feature","field":"branch"}, newNode: {"type":"ref","fixture":"create_feature","field":"branch"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('Branch functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof branchHandler.advance !== 'function') return;
-      const result = await interpret(branchHandler.advance({ branch: "branch-1", newNode: "dag-history-2" }), storage);
+      const result = await interpret(branchHandler.advance({ branch: {"type":"ref","fixture":"create_feature","field":"branch"}, newNode: {"type":"ref","fixture":"create_feature","field":"branch"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('Branch functional handler', () => {
       if (typeof branchHandler.advance !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_feature = await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_feature?.output ?? {}));
-      const _fixtureInput = { branch: "branch-1", newNode: "dag-history-2" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(branchHandler.advance({ ..._fixtureInput }), storage);
+      const result = await interpret(branchHandler.advance({ branch: afterResult_create_feature?.output?.["branch"], newNode: afterResult_create_feature?.output?.["branch"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,7 +171,7 @@ describe('Branch functional handler', () => {
 
   describe('delete', () => {
     it('builds a valid StorageProgram', () => {
-      const program = branchHandler.delete({ branch: "branch-1" });
+      const program = branchHandler.delete({ branch: {"type":"ref","fixture":"create_feature","field":"branch"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +179,21 @@ describe('Branch functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = branchHandler.delete({ branch: "branch-1" });
+      const program = branchHandler.delete({ branch: {"type":"ref","fixture":"create_feature","field":"branch"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = branchHandler.delete({ branch: "branch-1" });
+      const program = branchHandler.delete({ branch: {"type":"ref","fixture":"create_feature","field":"branch"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = branchHandler.delete({ branch: "branch-1" });
+      const program = branchHandler.delete({ branch: {"type":"ref","fixture":"create_feature","field":"branch"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +206,7 @@ describe('Branch functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = branchHandler.delete({ branch: "branch-1" });
+      const program = branchHandler.delete({ branch: {"type":"ref","fixture":"create_feature","field":"branch"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,7 +214,7 @@ describe('Branch functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof branchHandler.delete !== 'function') return;
-      const result = await interpret(branchHandler.delete({ branch: "branch-1" }), storage);
+      const result = await interpret(branchHandler.delete({ branch: {"type":"ref","fixture":"create_feature","field":"branch"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -230,12 +225,7 @@ describe('Branch functional handler', () => {
       if (typeof branchHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_feature = await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_feature?.output ?? {}));
-      const _fixtureInput = { branch: "branch-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(branchHandler.delete({ ..._fixtureInput }), storage);
+      const result = await interpret(branchHandler.delete({ branch: afterResult_create_feature?.output?.["branch"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -250,7 +240,7 @@ describe('Branch functional handler', () => {
 
   describe('protect', () => {
     it('builds a valid StorageProgram', () => {
-      const program = branchHandler.protect({ branch: "branch-1" });
+      const program = branchHandler.protect({ branch: {"type":"ref","fixture":"create_feature","field":"branch"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -258,21 +248,21 @@ describe('Branch functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = branchHandler.protect({ branch: "branch-1" });
+      const program = branchHandler.protect({ branch: {"type":"ref","fixture":"create_feature","field":"branch"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = branchHandler.protect({ branch: "branch-1" });
+      const program = branchHandler.protect({ branch: {"type":"ref","fixture":"create_feature","field":"branch"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = branchHandler.protect({ branch: "branch-1" });
+      const program = branchHandler.protect({ branch: {"type":"ref","fixture":"create_feature","field":"branch"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -285,7 +275,7 @@ describe('Branch functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = branchHandler.protect({ branch: "branch-1" });
+      const program = branchHandler.protect({ branch: {"type":"ref","fixture":"create_feature","field":"branch"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -293,7 +283,7 @@ describe('Branch functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof branchHandler.protect !== 'function') return;
-      const result = await interpret(branchHandler.protect({ branch: "branch-1" }), storage);
+      const result = await interpret(branchHandler.protect({ branch: {"type":"ref","fixture":"create_feature","field":"branch"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -304,12 +294,7 @@ describe('Branch functional handler', () => {
       if (typeof branchHandler.protect !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_feature = await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_feature?.output ?? {}));
-      const _fixtureInput = { branch: "branch-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(branchHandler.protect({ ..._fixtureInput }), storage);
+      const result = await interpret(branchHandler.protect({ branch: afterResult_create_feature?.output?.["branch"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -324,7 +309,7 @@ describe('Branch functional handler', () => {
 
   describe('setUpstream', () => {
     it('builds a valid StorageProgram', () => {
-      const program = branchHandler.setUpstream({ branch: "branch-2", upstream: "branch-1" });
+      const program = branchHandler.setUpstream({ branch: {"type":"ref","fixture":"create_feature","field":"branch"}, upstream: {"type":"ref","fixture":"create_feature","field":"branch"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -332,21 +317,21 @@ describe('Branch functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = branchHandler.setUpstream({ branch: "branch-2", upstream: "branch-1" });
+      const program = branchHandler.setUpstream({ branch: {"type":"ref","fixture":"create_feature","field":"branch"}, upstream: {"type":"ref","fixture":"create_feature","field":"branch"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = branchHandler.setUpstream({ branch: "branch-2", upstream: "branch-1" });
+      const program = branchHandler.setUpstream({ branch: {"type":"ref","fixture":"create_feature","field":"branch"}, upstream: {"type":"ref","fixture":"create_feature","field":"branch"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = branchHandler.setUpstream({ branch: "branch-2", upstream: "branch-1" });
+      const program = branchHandler.setUpstream({ branch: {"type":"ref","fixture":"create_feature","field":"branch"}, upstream: {"type":"ref","fixture":"create_feature","field":"branch"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -359,7 +344,7 @@ describe('Branch functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = branchHandler.setUpstream({ branch: "branch-2", upstream: "branch-1" });
+      const program = branchHandler.setUpstream({ branch: {"type":"ref","fixture":"create_feature","field":"branch"}, upstream: {"type":"ref","fixture":"create_feature","field":"branch"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -367,7 +352,7 @@ describe('Branch functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof branchHandler.setUpstream !== 'function') return;
-      const result = await interpret(branchHandler.setUpstream({ branch: "branch-2", upstream: "branch-1" }), storage);
+      const result = await interpret(branchHandler.setUpstream({ branch: {"type":"ref","fixture":"create_feature","field":"branch"}, upstream: {"type":"ref","fixture":"create_feature","field":"branch"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -378,12 +363,7 @@ describe('Branch functional handler', () => {
       if (typeof branchHandler.setUpstream !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_feature = await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_feature?.output ?? {}));
-      const _fixtureInput = { branch: "branch-2", upstream: "branch-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(branchHandler.setUpstream({ ..._fixtureInput }), storage);
+      const result = await interpret(branchHandler.setUpstream({ branch: afterResult_create_feature?.output?.["branch"], upstream: afterResult_create_feature?.output?.["branch"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -398,7 +378,7 @@ describe('Branch functional handler', () => {
 
   describe('divergencePoint', () => {
     it('builds a valid StorageProgram', () => {
-      const program = branchHandler.divergencePoint({ b1: "branch-1", b2: "branch-2" });
+      const program = branchHandler.divergencePoint({ b1: {"type":"ref","fixture":"create_feature","field":"branch"}, b2: {"type":"ref","fixture":"create_feature","field":"branch"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -406,21 +386,21 @@ describe('Branch functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = branchHandler.divergencePoint({ b1: "branch-1", b2: "branch-2" });
+      const program = branchHandler.divergencePoint({ b1: {"type":"ref","fixture":"create_feature","field":"branch"}, b2: {"type":"ref","fixture":"create_feature","field":"branch"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = branchHandler.divergencePoint({ b1: "branch-1", b2: "branch-2" });
+      const program = branchHandler.divergencePoint({ b1: {"type":"ref","fixture":"create_feature","field":"branch"}, b2: {"type":"ref","fixture":"create_feature","field":"branch"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = branchHandler.divergencePoint({ b1: "branch-1", b2: "branch-2" });
+      const program = branchHandler.divergencePoint({ b1: {"type":"ref","fixture":"create_feature","field":"branch"}, b2: {"type":"ref","fixture":"create_feature","field":"branch"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -433,7 +413,7 @@ describe('Branch functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = branchHandler.divergencePoint({ b1: "branch-1", b2: "branch-2" });
+      const program = branchHandler.divergencePoint({ b1: {"type":"ref","fixture":"create_feature","field":"branch"}, b2: {"type":"ref","fixture":"create_feature","field":"branch"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -441,7 +421,7 @@ describe('Branch functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof branchHandler.divergencePoint !== 'function') return;
-      const result = await interpret(branchHandler.divergencePoint({ b1: "branch-1", b2: "branch-2" }), storage);
+      const result = await interpret(branchHandler.divergencePoint({ b1: {"type":"ref","fixture":"create_feature","field":"branch"}, b2: {"type":"ref","fixture":"create_feature","field":"branch"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -452,12 +432,7 @@ describe('Branch functional handler', () => {
       if (typeof branchHandler.divergencePoint !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_feature = await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_feature?.output ?? {}));
-      const _fixtureInput = { b1: "branch-1", b2: "branch-2" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(branchHandler.divergencePoint({ ..._fixtureInput }), storage);
+      const result = await interpret(branchHandler.divergencePoint({ b1: afterResult_create_feature?.output?.["branch"], b2: afterResult_create_feature?.output?.["branch"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -472,7 +447,7 @@ describe('Branch functional handler', () => {
 
   describe('archive', () => {
     it('builds a valid StorageProgram', () => {
-      const program = branchHandler.archive({ branch: "branch-1" });
+      const program = branchHandler.archive({ branch: {"type":"ref","fixture":"create_feature","field":"branch"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -480,21 +455,21 @@ describe('Branch functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = branchHandler.archive({ branch: "branch-1" });
+      const program = branchHandler.archive({ branch: {"type":"ref","fixture":"create_feature","field":"branch"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = branchHandler.archive({ branch: "branch-1" });
+      const program = branchHandler.archive({ branch: {"type":"ref","fixture":"create_feature","field":"branch"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = branchHandler.archive({ branch: "branch-1" });
+      const program = branchHandler.archive({ branch: {"type":"ref","fixture":"create_feature","field":"branch"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -507,7 +482,7 @@ describe('Branch functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = branchHandler.archive({ branch: "branch-1" });
+      const program = branchHandler.archive({ branch: {"type":"ref","fixture":"create_feature","field":"branch"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -515,7 +490,7 @@ describe('Branch functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof branchHandler.archive !== 'function') return;
-      const result = await interpret(branchHandler.archive({ branch: "branch-1" }), storage);
+      const result = await interpret(branchHandler.archive({ branch: {"type":"ref","fixture":"create_feature","field":"branch"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -526,12 +501,7 @@ describe('Branch functional handler', () => {
       if (typeof branchHandler.archive !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_feature = await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_feature?.output ?? {}));
-      const _fixtureInput = { branch: "branch-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(branchHandler.archive({ ..._fixtureInput }), storage);
+      const result = await interpret(branchHandler.archive({ branch: afterResult_create_feature?.output?.["branch"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

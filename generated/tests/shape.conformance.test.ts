@@ -102,7 +102,7 @@ describe('Shape functional handler', () => {
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = shapeHandler.resolve({ shapeId: "shape-1", element: "button" });
+      const program = shapeHandler.resolve({ shapeId: {"type":"ref","fixture":"configure_rounded","field":"shapeId"}, element: "button" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('Shape functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = shapeHandler.resolve({ shapeId: "shape-1", element: "button" });
+      const program = shapeHandler.resolve({ shapeId: {"type":"ref","fixture":"configure_rounded","field":"shapeId"}, element: "button" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = shapeHandler.resolve({ shapeId: "shape-1", element: "button" });
+      const program = shapeHandler.resolve({ shapeId: {"type":"ref","fixture":"configure_rounded","field":"shapeId"}, element: "button" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = shapeHandler.resolve({ shapeId: "shape-1", element: "button" });
+      const program = shapeHandler.resolve({ shapeId: {"type":"ref","fixture":"configure_rounded","field":"shapeId"}, element: "button" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('Shape functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = shapeHandler.resolve({ shapeId: "shape-1", element: "button" });
+      const program = shapeHandler.resolve({ shapeId: {"type":"ref","fixture":"configure_rounded","field":"shapeId"}, element: "button" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('Shape functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof shapeHandler.resolve !== 'function') return;
-      const result = await interpret(shapeHandler.resolve({ shapeId: "shape-1", element: "button" }), storage);
+      const result = await interpret(shapeHandler.resolve({ shapeId: {"type":"ref","fixture":"configure_rounded","field":"shapeId"}, element: "button" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('Shape functional handler', () => {
       if (typeof shapeHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_configure_rounded = await interpret(shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" }), storage);
-      const _pool = Object.assign({}, (afterResult_configure_rounded?.output ?? {}));
-      const _fixtureInput = { shapeId: "shape-1", element: "button" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(shapeHandler.resolve({ ..._fixtureInput }), storage);
+      const result = await interpret(shapeHandler.resolve({ shapeId: afterResult_configure_rounded?.output?.["shapeId"], element: "button" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -169,12 +164,7 @@ describe('Shape functional handler', () => {
       if (typeof shapeHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_configure_rounded = await interpret(shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" }), storage);
-      const _pool = Object.assign({}, (afterResult_configure_rounded?.output ?? {}));
-      const _fixtureInput = { shapeId: "shape-1", element: "card" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(shapeHandler.resolve({ ..._fixtureInput }), storage);
+      const result = await interpret(shapeHandler.resolve({ shapeId: afterResult_configure_rounded?.output?.["shapeId"], element: "card" }), storage);
       expect(result.variant).toBe('ok');
     });
 

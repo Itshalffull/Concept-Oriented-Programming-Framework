@@ -109,7 +109,7 @@ describe('Polity functional handler', () => {
 
   describe('amend', () => {
     it('builds a valid StorageProgram', () => {
-      const program = polityHandler.amend({ polity: "polity-1", field: "purpose", newValue: "Updated governance mission" });
+      const program = polityHandler.amend({ polity: {"type":"ref","fixture":"valid_establish","field":"id"}, field: "purpose", newValue: "Updated governance mission" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -117,21 +117,21 @@ describe('Polity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = polityHandler.amend({ polity: "polity-1", field: "purpose", newValue: "Updated governance mission" });
+      const program = polityHandler.amend({ polity: {"type":"ref","fixture":"valid_establish","field":"id"}, field: "purpose", newValue: "Updated governance mission" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = polityHandler.amend({ polity: "polity-1", field: "purpose", newValue: "Updated governance mission" });
+      const program = polityHandler.amend({ polity: {"type":"ref","fixture":"valid_establish","field":"id"}, field: "purpose", newValue: "Updated governance mission" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = polityHandler.amend({ polity: "polity-1", field: "purpose", newValue: "Updated governance mission" });
+      const program = polityHandler.amend({ polity: {"type":"ref","fixture":"valid_establish","field":"id"}, field: "purpose", newValue: "Updated governance mission" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -144,7 +144,7 @@ describe('Polity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = polityHandler.amend({ polity: "polity-1", field: "purpose", newValue: "Updated governance mission" });
+      const program = polityHandler.amend({ polity: {"type":"ref","fixture":"valid_establish","field":"id"}, field: "purpose", newValue: "Updated governance mission" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -152,7 +152,7 @@ describe('Polity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof polityHandler.amend !== 'function') return;
-      const result = await interpret(polityHandler.amend({ polity: "polity-1", field: "purpose", newValue: "Updated governance mission" }), storage);
+      const result = await interpret(polityHandler.amend({ polity: {"type":"ref","fixture":"valid_establish","field":"id"}, field: "purpose", newValue: "Updated governance mission" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -163,12 +163,7 @@ describe('Polity functional handler', () => {
       if (typeof polityHandler.amend !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_establish = await interpret(polityHandler.establish({ name: "Acme Co-op", purpose: "Democratic governance for Acme", values: ["transparency","equity"], scope: ["budgets","hiring"] }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_establish?.output ?? {}));
-      const _fixtureInput = { polity: "polity-1", field: "purpose", newValue: "Updated governance mission" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(polityHandler.amend({ ..._fixtureInput }), storage);
+      const result = await interpret(polityHandler.amend({ polity: afterResult_valid_establish?.output?.["id"], field: "purpose", newValue: "Updated governance mission" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -183,7 +178,7 @@ describe('Polity functional handler', () => {
 
   describe('dissolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = polityHandler.dissolve({ polity: "polity-1", reason: "Merger with partner org" });
+      const program = polityHandler.dissolve({ polity: {"type":"ref","fixture":"valid_establish","field":"id"}, reason: "Merger with partner org" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -191,21 +186,21 @@ describe('Polity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = polityHandler.dissolve({ polity: "polity-1", reason: "Merger with partner org" });
+      const program = polityHandler.dissolve({ polity: {"type":"ref","fixture":"valid_establish","field":"id"}, reason: "Merger with partner org" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = polityHandler.dissolve({ polity: "polity-1", reason: "Merger with partner org" });
+      const program = polityHandler.dissolve({ polity: {"type":"ref","fixture":"valid_establish","field":"id"}, reason: "Merger with partner org" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = polityHandler.dissolve({ polity: "polity-1", reason: "Merger with partner org" });
+      const program = polityHandler.dissolve({ polity: {"type":"ref","fixture":"valid_establish","field":"id"}, reason: "Merger with partner org" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -218,7 +213,7 @@ describe('Polity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = polityHandler.dissolve({ polity: "polity-1", reason: "Merger with partner org" });
+      const program = polityHandler.dissolve({ polity: {"type":"ref","fixture":"valid_establish","field":"id"}, reason: "Merger with partner org" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -226,7 +221,7 @@ describe('Polity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof polityHandler.dissolve !== 'function') return;
-      const result = await interpret(polityHandler.dissolve({ polity: "polity-1", reason: "Merger with partner org" }), storage);
+      const result = await interpret(polityHandler.dissolve({ polity: {"type":"ref","fixture":"valid_establish","field":"id"}, reason: "Merger with partner org" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -237,12 +232,7 @@ describe('Polity functional handler', () => {
       if (typeof polityHandler.dissolve !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_establish = await interpret(polityHandler.establish({ name: "Acme Co-op", purpose: "Democratic governance for Acme", values: ["transparency","equity"], scope: ["budgets","hiring"] }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_establish?.output ?? {}));
-      const _fixtureInput = { polity: "polity-1", reason: "Merger with partner org" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(polityHandler.dissolve({ ..._fixtureInput }), storage);
+      const result = await interpret(polityHandler.dissolve({ polity: afterResult_valid_establish?.output?.["id"], reason: "Merger with partner org" }), storage);
       expect(result.variant).toBe('ok');
     });
 

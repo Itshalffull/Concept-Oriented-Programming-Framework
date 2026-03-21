@@ -36,7 +36,7 @@ concept Role [R] {
         The member is assigned to the role.
       }
 
-      fixture assign_alice_admin { role: "role-1", member: "alice", assignedBy: "system" } after create_admin
+      fixture assign_alice_admin { role: $create_admin.id, member: "alice", assignedBy: "system" } after create_admin
       fixture assign_empty_member { role: "role-1", member: "", assignedBy: "system" } -> error
     }
 
@@ -48,7 +48,7 @@ concept Role [R] {
         The member does not hold this role.
       }
 
-      fixture revoke_alice { role: "role-1", member: "alice" } after create_admin
+      fixture revoke_alice { role: $create_admin.id, member: "alice" } after create_admin
       fixture revoke_unassigned { role: "role-1", member: "unknown-member" } -> error
     }
 
@@ -60,7 +60,7 @@ concept Role [R] {
         The member does not hold this role.
       }
 
-      fixture check_alice_admin { role: "role-1", member: "alice" } after create_admin
+      fixture check_alice_admin { role: $create_admin.id, member: "alice" } after create_admin
       fixture check_nonmember { role: "role-1", member: "unknown-member" } -> error
     }
 
@@ -69,7 +69,7 @@ concept Role [R] {
         The role is removed. All holders lose assignment.
       }
 
-      fixture dissolve_admin { role: "role-1" } after create_admin
+      fixture dissolve_admin { role: $create_admin.id } after create_admin
       fixture dissolve_nonexistent { role: "nonexistent-role" } -> error
     }
   }

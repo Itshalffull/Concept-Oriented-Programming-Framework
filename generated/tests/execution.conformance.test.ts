@@ -109,7 +109,7 @@ describe('Execution functional handler', () => {
 
   describe('execute', () => {
     it('builds a valid StorageProgram', () => {
-      const program = executionHandler.execute({ execution: "execution-001" });
+      const program = executionHandler.execute({ execution: {"type":"ref","fixture":"schedule_transfer","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -117,21 +117,21 @@ describe('Execution functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = executionHandler.execute({ execution: "execution-001" });
+      const program = executionHandler.execute({ execution: {"type":"ref","fixture":"schedule_transfer","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = executionHandler.execute({ execution: "execution-001" });
+      const program = executionHandler.execute({ execution: {"type":"ref","fixture":"schedule_transfer","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = executionHandler.execute({ execution: "execution-001" });
+      const program = executionHandler.execute({ execution: {"type":"ref","fixture":"schedule_transfer","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -144,7 +144,7 @@ describe('Execution functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = executionHandler.execute({ execution: "execution-001" });
+      const program = executionHandler.execute({ execution: {"type":"ref","fixture":"schedule_transfer","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -152,7 +152,7 @@ describe('Execution functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof executionHandler.execute !== 'function') return;
-      const result = await interpret(executionHandler.execute({ execution: "execution-001" }), storage);
+      const result = await interpret(executionHandler.execute({ execution: {"type":"ref","fixture":"schedule_transfer","field":"id"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -163,12 +163,7 @@ describe('Execution functional handler', () => {
       if (typeof executionHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_schedule_transfer = await interpret(executionHandler.schedule({ sourceRef: "proposal-001", actions: ["transfer(from: treasury, to: alice, amount: 100)"], executor: "governance-bot" }), storage);
-      const _pool = Object.assign({}, (afterResult_schedule_transfer?.output ?? {}));
-      const _fixtureInput = { execution: "execution-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(executionHandler.execute({ ..._fixtureInput }), storage);
+      const result = await interpret(executionHandler.execute({ execution: afterResult_schedule_transfer?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -184,7 +179,7 @@ describe('Execution functional handler', () => {
 
   describe('rollback', () => {
     it('builds a valid StorageProgram', () => {
-      const program = executionHandler.rollback({ execution: "execution-001" });
+      const program = executionHandler.rollback({ execution: {"type":"ref","fixture":"schedule_transfer","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -192,21 +187,21 @@ describe('Execution functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = executionHandler.rollback({ execution: "execution-001" });
+      const program = executionHandler.rollback({ execution: {"type":"ref","fixture":"schedule_transfer","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = executionHandler.rollback({ execution: "execution-001" });
+      const program = executionHandler.rollback({ execution: {"type":"ref","fixture":"schedule_transfer","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = executionHandler.rollback({ execution: "execution-001" });
+      const program = executionHandler.rollback({ execution: {"type":"ref","fixture":"schedule_transfer","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -219,7 +214,7 @@ describe('Execution functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = executionHandler.rollback({ execution: "execution-001" });
+      const program = executionHandler.rollback({ execution: {"type":"ref","fixture":"schedule_transfer","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -227,7 +222,7 @@ describe('Execution functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof executionHandler.rollback !== 'function') return;
-      const result = await interpret(executionHandler.rollback({ execution: "execution-001" }), storage);
+      const result = await interpret(executionHandler.rollback({ execution: {"type":"ref","fixture":"schedule_transfer","field":"id"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -238,12 +233,7 @@ describe('Execution functional handler', () => {
       if (typeof executionHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_schedule_transfer = await interpret(executionHandler.schedule({ sourceRef: "proposal-001", actions: ["transfer(from: treasury, to: alice, amount: 100)"], executor: "governance-bot" }), storage);
-      const _pool = Object.assign({}, (afterResult_schedule_transfer?.output ?? {}));
-      const _fixtureInput = { execution: "execution-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(executionHandler.rollback({ ..._fixtureInput }), storage);
+      const result = await interpret(executionHandler.rollback({ execution: afterResult_schedule_transfer?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

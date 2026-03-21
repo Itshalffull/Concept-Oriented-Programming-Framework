@@ -47,7 +47,7 @@ concept Execution [EX] {
         The executor does not have permission to perform these actions.
       }
 
-      fixture execute_pending { execution: "execution-001" } after schedule_transfer
+      fixture execute_pending { execution: $schedule_transfer.id } after schedule_transfer
       fixture execute_nonexistent { execution: "execution-missing" } -> failed
     }
 
@@ -59,7 +59,7 @@ concept Execution [EX] {
         The execution cannot be rolled back.
       }
 
-      fixture rollback_completed { execution: "execution-001" } after schedule_transfer
+      fixture rollback_completed { execution: $schedule_transfer.id } after schedule_transfer
       fixture rollback_nonexistent { execution: "execution-missing" } -> not_reversible
     }
   }

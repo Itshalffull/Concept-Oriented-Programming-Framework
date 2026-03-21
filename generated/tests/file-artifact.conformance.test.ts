@@ -102,7 +102,7 @@ describe('FileArtifact functional handler', () => {
 
   describe('setProvenance', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fileArtifactHandler.setProvenance({ artifact: "artifact-1", spec: "user.concept", generator: "clef-gen" });
+      const program = fileArtifactHandler.setProvenance({ artifact: {"type":"ref","fixture":"register_source","field":"artifact"}, spec: "user.concept", generator: "clef-gen" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('FileArtifact functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fileArtifactHandler.setProvenance({ artifact: "artifact-1", spec: "user.concept", generator: "clef-gen" });
+      const program = fileArtifactHandler.setProvenance({ artifact: {"type":"ref","fixture":"register_source","field":"artifact"}, spec: "user.concept", generator: "clef-gen" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fileArtifactHandler.setProvenance({ artifact: "artifact-1", spec: "user.concept", generator: "clef-gen" });
+      const program = fileArtifactHandler.setProvenance({ artifact: {"type":"ref","fixture":"register_source","field":"artifact"}, spec: "user.concept", generator: "clef-gen" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fileArtifactHandler.setProvenance({ artifact: "artifact-1", spec: "user.concept", generator: "clef-gen" });
+      const program = fileArtifactHandler.setProvenance({ artifact: {"type":"ref","fixture":"register_source","field":"artifact"}, spec: "user.concept", generator: "clef-gen" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('FileArtifact functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fileArtifactHandler.setProvenance({ artifact: "artifact-1", spec: "user.concept", generator: "clef-gen" });
+      const program = fileArtifactHandler.setProvenance({ artifact: {"type":"ref","fixture":"register_source","field":"artifact"}, spec: "user.concept", generator: "clef-gen" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('FileArtifact functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof fileArtifactHandler.setProvenance !== 'function') return;
-      const result = await interpret(fileArtifactHandler.setProvenance({ artifact: "artifact-1", spec: "user.concept", generator: "clef-gen" }), storage);
+      const result = await interpret(fileArtifactHandler.setProvenance({ artifact: {"type":"ref","fixture":"register_source","field":"artifact"}, spec: "user.concept", generator: "clef-gen" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('FileArtifact functional handler', () => {
       if (typeof fileArtifactHandler.setProvenance !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_source = await interpret(fileArtifactHandler.register({ node: "src/handler.ts", role: "source", language: "typescript" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_source?.output ?? {}));
-      const _fixtureInput = { artifact: "artifact-1", spec: "user.concept", generator: "clef-gen" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(fileArtifactHandler.setProvenance({ ..._fixtureInput }), storage);
+      const result = await interpret(fileArtifactHandler.setProvenance({ artifact: afterResult_register_source?.output?.["artifact"], spec: "user.concept", generator: "clef-gen" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -330,7 +325,7 @@ describe('FileArtifact functional handler', () => {
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fileArtifactHandler.get({ artifact: "artifact-1" });
+      const program = fileArtifactHandler.get({ artifact: {"type":"ref","fixture":"register_source","field":"artifact"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -338,21 +333,21 @@ describe('FileArtifact functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fileArtifactHandler.get({ artifact: "artifact-1" });
+      const program = fileArtifactHandler.get({ artifact: {"type":"ref","fixture":"register_source","field":"artifact"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fileArtifactHandler.get({ artifact: "artifact-1" });
+      const program = fileArtifactHandler.get({ artifact: {"type":"ref","fixture":"register_source","field":"artifact"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fileArtifactHandler.get({ artifact: "artifact-1" });
+      const program = fileArtifactHandler.get({ artifact: {"type":"ref","fixture":"register_source","field":"artifact"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -365,7 +360,7 @@ describe('FileArtifact functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fileArtifactHandler.get({ artifact: "artifact-1" });
+      const program = fileArtifactHandler.get({ artifact: {"type":"ref","fixture":"register_source","field":"artifact"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -373,7 +368,7 @@ describe('FileArtifact functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof fileArtifactHandler.get !== 'function') return;
-      const result = await interpret(fileArtifactHandler.get({ artifact: "artifact-1" }), storage);
+      const result = await interpret(fileArtifactHandler.get({ artifact: {"type":"ref","fixture":"register_source","field":"artifact"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -384,12 +379,7 @@ describe('FileArtifact functional handler', () => {
       if (typeof fileArtifactHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_source = await interpret(fileArtifactHandler.register({ node: "src/handler.ts", role: "source", language: "typescript" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_source?.output ?? {}));
-      const _fixtureInput = { artifact: "artifact-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(fileArtifactHandler.get({ ..._fixtureInput }), storage);
+      const result = await interpret(fileArtifactHandler.get({ artifact: afterResult_register_source?.output?.["artifact"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

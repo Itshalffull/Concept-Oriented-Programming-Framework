@@ -46,7 +46,7 @@ concept QuadraticVoting [QV] {
         Credits have already been allocated to this voter.
       }
 
-      fixture allocate_alice { config: "qv-001", voter: "alice" } after standard_budget
+      fixture allocate_alice { config: $standard_budget.id, voter: "alice" } after standard_budget
       fixture allocate_duplicate { config: "qv-001", voter: "alice" } -> error
     }
 
@@ -61,7 +61,7 @@ concept QuadraticVoting [QV] {
         The voter has not been allocated credits.
       }
 
-      fixture cast_five_votes { config: "qv-001", voter: "alice", issue: "budget-increase", numberOfVotes: 5 } after standard_budget
+      fixture cast_five_votes { config: $standard_budget.id, voter: "alice", issue: "budget-increase", numberOfVotes: 5 } after standard_budget
       fixture exceed_budget { config: "qv-001", voter: "alice", issue: "budget-increase", numberOfVotes: 20 } -> error
     }
 
@@ -73,7 +73,7 @@ concept QuadraticVoting [QV] {
         Multiple choices have equal vote totals.
       }
 
-      fixture tally_issue { config: "qv-001", issue: "budget-increase" } after standard_budget
+      fixture tally_issue { config: $standard_budget.id, issue: "budget-increase" } after standard_budget
       fixture tally_missing_session { config: "qv-nonexistent", issue: "budget-increase" } -> error
     }
   }

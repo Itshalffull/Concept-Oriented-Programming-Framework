@@ -109,7 +109,7 @@ describe('VaultProvider functional handler', () => {
 
   describe('renewLease', () => {
     it('builds a valid StorageProgram', () => {
-      const program = vaultProviderHandler.renewLease({ leaseId: "lease-abc-123" });
+      const program = vaultProviderHandler.renewLease({ leaseId: {"type":"ref","fixture":"fetch_db_password","field":"value"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -117,21 +117,21 @@ describe('VaultProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = vaultProviderHandler.renewLease({ leaseId: "lease-abc-123" });
+      const program = vaultProviderHandler.renewLease({ leaseId: {"type":"ref","fixture":"fetch_db_password","field":"value"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = vaultProviderHandler.renewLease({ leaseId: "lease-abc-123" });
+      const program = vaultProviderHandler.renewLease({ leaseId: {"type":"ref","fixture":"fetch_db_password","field":"value"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = vaultProviderHandler.renewLease({ leaseId: "lease-abc-123" });
+      const program = vaultProviderHandler.renewLease({ leaseId: {"type":"ref","fixture":"fetch_db_password","field":"value"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -144,7 +144,7 @@ describe('VaultProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = vaultProviderHandler.renewLease({ leaseId: "lease-abc-123" });
+      const program = vaultProviderHandler.renewLease({ leaseId: {"type":"ref","fixture":"fetch_db_password","field":"value"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -152,7 +152,7 @@ describe('VaultProvider functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof vaultProviderHandler.renewLease !== 'function') return;
-      const result = await interpret(vaultProviderHandler.renewLease({ leaseId: "lease-abc-123" }), storage);
+      const result = await interpret(vaultProviderHandler.renewLease({ leaseId: {"type":"ref","fixture":"fetch_db_password","field":"value"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -163,12 +163,7 @@ describe('VaultProvider functional handler', () => {
       if (typeof vaultProviderHandler.renewLease !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_fetch_db_password = await interpret(vaultProviderHandler.fetch({ path: "secret/data/db-password" }), storage);
-      const _pool = Object.assign({}, (afterResult_fetch_db_password?.output ?? {}));
-      const _fixtureInput = { leaseId: "lease-abc-123" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(vaultProviderHandler.renewLease({ ..._fixtureInput }), storage);
+      const result = await interpret(vaultProviderHandler.renewLease({ leaseId: afterResult_fetch_db_password?.output?.["value"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -20,29 +20,29 @@ concept Taxonomy [V] {
       -> ok() { Add a term to the vocabulary, optionally under a parent term. }
       -> notfound(message: String) { Vocabulary or parent term not found. }
 
-      fixture add_root_term { vocab: "vocab-topics-1", term: "science", parent: "" } after create_topics_vocab
-      fixture add_child_term { vocab: "vocab-topics-1", term: "physics", parent: "science" } after create_topics_vocab
+      fixture add_root_term { vocab: $create_topics_vocab.id, term: "science", parent: "" } after create_topics_vocab
+      fixture add_child_term { vocab: $create_topics_vocab.id, term: "physics", parent: "science" } after create_topics_vocab
       fixture add_term_missing_vocab { vocab: "nonexistent", term: "orphan", parent: "" } -> error
     }
     action setParent(vocab: V, term: String, parent: String) {
       -> ok() { Reassign the parent of an existing term. }
       -> notfound(message: String) { Vocabulary or term not found. }
 
-      fixture reassign_parent { vocab: "vocab-topics-1", term: "physics", parent: "natural-science" } after create_topics_vocab
+      fixture reassign_parent { vocab: $create_topics_vocab.id, term: "physics", parent: "natural-science" } after create_topics_vocab
       fixture set_parent_missing_vocab { vocab: "nonexistent", term: "orphan", parent: "root" } -> error
     }
     action tagEntity(entity: String, vocab: V, term: String) {
       -> ok() { Associate an entity with a term in the vocabulary. }
       -> notfound(message: String) { Vocabulary or term not found. }
 
-      fixture tag_page_with_term { entity: "page-1", vocab: "vocab-topics-1", term: "science" } after create_topics_vocab
+      fixture tag_page_with_term { entity: $create_topics_vocab.id, vocab: $create_topics_vocab.id, term: "science" } after create_topics_vocab
       fixture tag_missing_vocab { entity: "page-1", vocab: "nonexistent", term: "science" } -> error
     }
     action untagEntity(entity: String, vocab: V, term: String) {
       -> ok() { Remove the association between an entity and a term. }
       -> notfound(message: String) { Vocabulary, term, or association not found. }
 
-      fixture untag_page { entity: "page-1", vocab: "vocab-topics-1", term: "science" } after create_topics_vocab
+      fixture untag_page { entity: $create_topics_vocab.id, vocab: $create_topics_vocab.id, term: "science" } after create_topics_vocab
       fixture untag_missing_vocab { entity: "page-1", vocab: "nonexistent", term: "science" } -> error
     }
   }

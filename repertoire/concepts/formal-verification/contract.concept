@@ -47,7 +47,7 @@ concept Contract [C] {
         Contract does not exist.
       }
 
-      fixture valid_verify { id: "ct-001" } after valid_define
+      fixture valid_verify { id: $valid_define.id } after valid_define
       fixture verify_missing { id: "nonexistent" } -> notfound
     }
 
@@ -80,7 +80,7 @@ concept Contract [C] {
         Assumption not found in contract.
       }
 
-      fixture valid_discharge { id: "ct-001", assumption_ref: "user-exists-before-password" } after valid_define
+      fixture valid_discharge { id: $valid_define.id, assumption_ref: "user-exists-before-password" } after valid_define
       fixture discharge_missing { id: "nonexistent", assumption_ref: "some-assumption" } -> notfound
     }
 

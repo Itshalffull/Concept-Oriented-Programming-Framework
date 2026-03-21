@@ -103,7 +103,7 @@ describe('SyncPair functional handler', () => {
 
   describe('sync', () => {
     it('builds a valid StorageProgram', () => {
-      const program = syncPairHandler.sync({ pairId: "pair-1" });
+      const program = syncPairHandler.sync({ pairId: {"type":"ref","fixture":"link_records","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -111,21 +111,21 @@ describe('SyncPair functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = syncPairHandler.sync({ pairId: "pair-1" });
+      const program = syncPairHandler.sync({ pairId: {"type":"ref","fixture":"link_records","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = syncPairHandler.sync({ pairId: "pair-1" });
+      const program = syncPairHandler.sync({ pairId: {"type":"ref","fixture":"link_records","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = syncPairHandler.sync({ pairId: "pair-1" });
+      const program = syncPairHandler.sync({ pairId: {"type":"ref","fixture":"link_records","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -138,7 +138,7 @@ describe('SyncPair functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = syncPairHandler.sync({ pairId: "pair-1" });
+      const program = syncPairHandler.sync({ pairId: {"type":"ref","fixture":"link_records","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -146,7 +146,7 @@ describe('SyncPair functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof syncPairHandler.sync !== 'function') return;
-      const result = await interpret(syncPairHandler.sync({ pairId: "pair-1" }), storage);
+      const result = await interpret(syncPairHandler.sync({ pairId: {"type":"ref","fixture":"link_records","field":"id"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -157,12 +157,7 @@ describe('SyncPair functional handler', () => {
       if (typeof syncPairHandler.sync !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_link_records = await interpret(syncPairHandler.link({ pairId: "pair-1", idA: "local-42", idB: "remote-99" }), storage);
-      const _pool = Object.assign({}, (afterResult_link_records?.output ?? {}));
-      const _fixtureInput = { pairId: "pair-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(syncPairHandler.sync({ ..._fixtureInput }), storage);
+      const result = await interpret(syncPairHandler.sync({ pairId: afterResult_link_records?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -178,7 +173,7 @@ describe('SyncPair functional handler', () => {
 
   describe('detectConflicts', () => {
     it('builds a valid StorageProgram', () => {
-      const program = syncPairHandler.detectConflicts({ pairId: "pair-1" });
+      const program = syncPairHandler.detectConflicts({ pairId: {"type":"ref","fixture":"link_records","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -186,21 +181,21 @@ describe('SyncPair functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = syncPairHandler.detectConflicts({ pairId: "pair-1" });
+      const program = syncPairHandler.detectConflicts({ pairId: {"type":"ref","fixture":"link_records","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = syncPairHandler.detectConflicts({ pairId: "pair-1" });
+      const program = syncPairHandler.detectConflicts({ pairId: {"type":"ref","fixture":"link_records","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = syncPairHandler.detectConflicts({ pairId: "pair-1" });
+      const program = syncPairHandler.detectConflicts({ pairId: {"type":"ref","fixture":"link_records","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -213,7 +208,7 @@ describe('SyncPair functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = syncPairHandler.detectConflicts({ pairId: "pair-1" });
+      const program = syncPairHandler.detectConflicts({ pairId: {"type":"ref","fixture":"link_records","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -221,7 +216,7 @@ describe('SyncPair functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof syncPairHandler.detectConflicts !== 'function') return;
-      const result = await interpret(syncPairHandler.detectConflicts({ pairId: "pair-1" }), storage);
+      const result = await interpret(syncPairHandler.detectConflicts({ pairId: {"type":"ref","fixture":"link_records","field":"id"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -232,12 +227,7 @@ describe('SyncPair functional handler', () => {
       if (typeof syncPairHandler.detectConflicts !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_link_records = await interpret(syncPairHandler.link({ pairId: "pair-1", idA: "local-42", idB: "remote-99" }), storage);
-      const _pool = Object.assign({}, (afterResult_link_records?.output ?? {}));
-      const _fixtureInput = { pairId: "pair-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(syncPairHandler.detectConflicts({ ..._fixtureInput }), storage);
+      const result = await interpret(syncPairHandler.detectConflicts({ pairId: afterResult_link_records?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -253,7 +243,7 @@ describe('SyncPair functional handler', () => {
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = syncPairHandler.resolve({ conflictId: "conflict-1", resolution: "keep_local" });
+      const program = syncPairHandler.resolve({ conflictId: {"type":"ref","fixture":"link_records","field":"id"}, resolution: "keep_local" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -261,21 +251,21 @@ describe('SyncPair functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = syncPairHandler.resolve({ conflictId: "conflict-1", resolution: "keep_local" });
+      const program = syncPairHandler.resolve({ conflictId: {"type":"ref","fixture":"link_records","field":"id"}, resolution: "keep_local" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = syncPairHandler.resolve({ conflictId: "conflict-1", resolution: "keep_local" });
+      const program = syncPairHandler.resolve({ conflictId: {"type":"ref","fixture":"link_records","field":"id"}, resolution: "keep_local" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = syncPairHandler.resolve({ conflictId: "conflict-1", resolution: "keep_local" });
+      const program = syncPairHandler.resolve({ conflictId: {"type":"ref","fixture":"link_records","field":"id"}, resolution: "keep_local" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -288,7 +278,7 @@ describe('SyncPair functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = syncPairHandler.resolve({ conflictId: "conflict-1", resolution: "keep_local" });
+      const program = syncPairHandler.resolve({ conflictId: {"type":"ref","fixture":"link_records","field":"id"}, resolution: "keep_local" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -296,7 +286,7 @@ describe('SyncPair functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof syncPairHandler.resolve !== 'function') return;
-      const result = await interpret(syncPairHandler.resolve({ conflictId: "conflict-1", resolution: "keep_local" }), storage);
+      const result = await interpret(syncPairHandler.resolve({ conflictId: {"type":"ref","fixture":"link_records","field":"id"}, resolution: "keep_local" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -307,12 +297,7 @@ describe('SyncPair functional handler', () => {
       if (typeof syncPairHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_link_records = await interpret(syncPairHandler.link({ pairId: "pair-1", idA: "local-42", idB: "remote-99" }), storage);
-      const _pool = Object.assign({}, (afterResult_link_records?.output ?? {}));
-      const _fixtureInput = { conflictId: "conflict-1", resolution: "keep_local" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(syncPairHandler.resolve({ ..._fixtureInput }), storage);
+      const result = await interpret(syncPairHandler.resolve({ conflictId: afterResult_link_records?.output?.["id"], resolution: "keep_local" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -328,7 +313,7 @@ describe('SyncPair functional handler', () => {
 
   describe('unlink', () => {
     it('builds a valid StorageProgram', () => {
-      const program = syncPairHandler.unlink({ pairId: "pair-1", idA: "local-42" });
+      const program = syncPairHandler.unlink({ pairId: {"type":"ref","fixture":"link_records","field":"id"}, idA: {"type":"ref","fixture":"link_records","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -336,21 +321,21 @@ describe('SyncPair functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = syncPairHandler.unlink({ pairId: "pair-1", idA: "local-42" });
+      const program = syncPairHandler.unlink({ pairId: {"type":"ref","fixture":"link_records","field":"id"}, idA: {"type":"ref","fixture":"link_records","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = syncPairHandler.unlink({ pairId: "pair-1", idA: "local-42" });
+      const program = syncPairHandler.unlink({ pairId: {"type":"ref","fixture":"link_records","field":"id"}, idA: {"type":"ref","fixture":"link_records","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = syncPairHandler.unlink({ pairId: "pair-1", idA: "local-42" });
+      const program = syncPairHandler.unlink({ pairId: {"type":"ref","fixture":"link_records","field":"id"}, idA: {"type":"ref","fixture":"link_records","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -363,7 +348,7 @@ describe('SyncPair functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = syncPairHandler.unlink({ pairId: "pair-1", idA: "local-42" });
+      const program = syncPairHandler.unlink({ pairId: {"type":"ref","fixture":"link_records","field":"id"}, idA: {"type":"ref","fixture":"link_records","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -371,7 +356,7 @@ describe('SyncPair functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof syncPairHandler.unlink !== 'function') return;
-      const result = await interpret(syncPairHandler.unlink({ pairId: "pair-1", idA: "local-42" }), storage);
+      const result = await interpret(syncPairHandler.unlink({ pairId: {"type":"ref","fixture":"link_records","field":"id"}, idA: {"type":"ref","fixture":"link_records","field":"id"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -382,12 +367,7 @@ describe('SyncPair functional handler', () => {
       if (typeof syncPairHandler.unlink !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_link_records = await interpret(syncPairHandler.link({ pairId: "pair-1", idA: "local-42", idB: "remote-99" }), storage);
-      const _pool = Object.assign({}, (afterResult_link_records?.output ?? {}));
-      const _fixtureInput = { pairId: "pair-1", idA: "local-42" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(syncPairHandler.unlink({ ..._fixtureInput }), storage);
+      const result = await interpret(syncPairHandler.unlink({ pairId: afterResult_link_records?.output?.["id"], idA: afterResult_link_records?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -403,7 +383,7 @@ describe('SyncPair functional handler', () => {
 
   describe('getChangeLog', () => {
     it('builds a valid StorageProgram', () => {
-      const program = syncPairHandler.getChangeLog({ pairId: "pair-1", since: "2026-01-01T00:00:00Z" });
+      const program = syncPairHandler.getChangeLog({ pairId: {"type":"ref","fixture":"link_records","field":"id"}, since: "2026-01-01T00:00:00Z" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -411,21 +391,21 @@ describe('SyncPair functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = syncPairHandler.getChangeLog({ pairId: "pair-1", since: "2026-01-01T00:00:00Z" });
+      const program = syncPairHandler.getChangeLog({ pairId: {"type":"ref","fixture":"link_records","field":"id"}, since: "2026-01-01T00:00:00Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = syncPairHandler.getChangeLog({ pairId: "pair-1", since: "2026-01-01T00:00:00Z" });
+      const program = syncPairHandler.getChangeLog({ pairId: {"type":"ref","fixture":"link_records","field":"id"}, since: "2026-01-01T00:00:00Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = syncPairHandler.getChangeLog({ pairId: "pair-1", since: "2026-01-01T00:00:00Z" });
+      const program = syncPairHandler.getChangeLog({ pairId: {"type":"ref","fixture":"link_records","field":"id"}, since: "2026-01-01T00:00:00Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -438,7 +418,7 @@ describe('SyncPair functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = syncPairHandler.getChangeLog({ pairId: "pair-1", since: "2026-01-01T00:00:00Z" });
+      const program = syncPairHandler.getChangeLog({ pairId: {"type":"ref","fixture":"link_records","field":"id"}, since: "2026-01-01T00:00:00Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -446,7 +426,7 @@ describe('SyncPair functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof syncPairHandler.getChangeLog !== 'function') return;
-      const result = await interpret(syncPairHandler.getChangeLog({ pairId: "pair-1", since: "2026-01-01T00:00:00Z" }), storage);
+      const result = await interpret(syncPairHandler.getChangeLog({ pairId: {"type":"ref","fixture":"link_records","field":"id"}, since: "2026-01-01T00:00:00Z" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -457,12 +437,7 @@ describe('SyncPair functional handler', () => {
       if (typeof syncPairHandler.getChangeLog !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_link_records = await interpret(syncPairHandler.link({ pairId: "pair-1", idA: "local-42", idB: "remote-99" }), storage);
-      const _pool = Object.assign({}, (afterResult_link_records?.output ?? {}));
-      const _fixtureInput = { pairId: "pair-1", since: "2026-01-01T00:00:00Z" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(syncPairHandler.getChangeLog({ ..._fixtureInput }), storage);
+      const result = await interpret(syncPairHandler.getChangeLog({ pairId: afterResult_link_records?.output?.["id"], since: "2026-01-01T00:00:00Z" }), storage);
       expect(result.variant).toBe('ok');
     });
 

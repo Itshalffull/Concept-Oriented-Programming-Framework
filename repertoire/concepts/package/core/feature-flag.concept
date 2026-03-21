@@ -51,7 +51,7 @@ concept FeatureFlag [F] {
         The specified feature flag does not exist.
       }
 
-      fixture disable_existing_flag { flag: "flag-1" } after enable_existing_flag
+      fixture disable_existing_flag { flag: $enable_existing_flag.id } after enable_existing_flag
       fixture disable_nonexistent_flag { flag: "flag-nonexistent" } -> error
     }
 

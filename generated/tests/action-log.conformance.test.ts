@@ -102,7 +102,7 @@ describe('ActionLog functional handler', () => {
 
   describe('addEdge', () => {
     it('builds a valid StorageProgram', () => {
-      const program = actionLogHandler.addEdge({ from: "rec-001", to: "rec-002", sync: "UserToProfile" });
+      const program = actionLogHandler.addEdge({ from: {"type":"ref","fixture":"completion_record","field":"id"}, to: {"type":"ref","fixture":"completion_record","field":"id"}, sync: "UserToProfile" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('ActionLog functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = actionLogHandler.addEdge({ from: "rec-001", to: "rec-002", sync: "UserToProfile" });
+      const program = actionLogHandler.addEdge({ from: {"type":"ref","fixture":"completion_record","field":"id"}, to: {"type":"ref","fixture":"completion_record","field":"id"}, sync: "UserToProfile" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = actionLogHandler.addEdge({ from: "rec-001", to: "rec-002", sync: "UserToProfile" });
+      const program = actionLogHandler.addEdge({ from: {"type":"ref","fixture":"completion_record","field":"id"}, to: {"type":"ref","fixture":"completion_record","field":"id"}, sync: "UserToProfile" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = actionLogHandler.addEdge({ from: "rec-001", to: "rec-002", sync: "UserToProfile" });
+      const program = actionLogHandler.addEdge({ from: {"type":"ref","fixture":"completion_record","field":"id"}, to: {"type":"ref","fixture":"completion_record","field":"id"}, sync: "UserToProfile" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('ActionLog functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = actionLogHandler.addEdge({ from: "rec-001", to: "rec-002", sync: "UserToProfile" });
+      const program = actionLogHandler.addEdge({ from: {"type":"ref","fixture":"completion_record","field":"id"}, to: {"type":"ref","fixture":"completion_record","field":"id"}, sync: "UserToProfile" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('ActionLog functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof actionLogHandler.addEdge !== 'function') return;
-      const result = await interpret(actionLogHandler.addEdge({ from: "rec-001", to: "rec-002", sync: "UserToProfile" }), storage);
+      const result = await interpret(actionLogHandler.addEdge({ from: {"type":"ref","fixture":"completion_record","field":"id"}, to: {"type":"ref","fixture":"completion_record","field":"id"}, sync: "UserToProfile" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('ActionLog functional handler', () => {
       if (typeof actionLogHandler.addEdge !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_completion_record = await interpret(actionLogHandler.append({ record: {"flow":"flow-42","concept":"UserAuth","action":"login","type":"completion","variant":"ok"} }), storage);
-      const _pool = Object.assign({}, (afterResult_completion_record?.output ?? {}));
-      const _fixtureInput = { from: "rec-001", to: "rec-002", sync: "UserToProfile" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(actionLogHandler.addEdge({ ..._fixtureInput }), storage);
+      const result = await interpret(actionLogHandler.addEdge({ from: afterResult_completion_record?.output?.["id"], to: afterResult_completion_record?.output?.["id"], sync: "UserToProfile" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -169,12 +164,7 @@ describe('ActionLog functional handler', () => {
       if (typeof actionLogHandler.addEdge !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_completion_record = await interpret(actionLogHandler.append({ record: {"flow":"flow-42","concept":"UserAuth","action":"login","type":"completion","variant":"ok"} }), storage);
-      const _pool = Object.assign({}, (afterResult_completion_record?.output ?? {}));
-      const _fixtureInput = { from: "rec-010", to: "rec-011", sync: "PaymentToInvoice" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(actionLogHandler.addEdge({ ..._fixtureInput }), storage);
+      const result = await interpret(actionLogHandler.addEdge({ from: afterResult_completion_record?.output?.["id"], to: afterResult_completion_record?.output?.["id"], sync: "PaymentToInvoice" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -182,7 +172,7 @@ describe('ActionLog functional handler', () => {
 
   describe('query', () => {
     it('builds a valid StorageProgram', () => {
-      const program = actionLogHandler.query({ flow: "flow-42" });
+      const program = actionLogHandler.query({ flow: {"type":"ref","fixture":"completion_record","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -190,21 +180,21 @@ describe('ActionLog functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = actionLogHandler.query({ flow: "flow-42" });
+      const program = actionLogHandler.query({ flow: {"type":"ref","fixture":"completion_record","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = actionLogHandler.query({ flow: "flow-42" });
+      const program = actionLogHandler.query({ flow: {"type":"ref","fixture":"completion_record","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = actionLogHandler.query({ flow: "flow-42" });
+      const program = actionLogHandler.query({ flow: {"type":"ref","fixture":"completion_record","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -217,7 +207,7 @@ describe('ActionLog functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = actionLogHandler.query({ flow: "flow-42" });
+      const program = actionLogHandler.query({ flow: {"type":"ref","fixture":"completion_record","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -225,7 +215,7 @@ describe('ActionLog functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof actionLogHandler.query !== 'function') return;
-      const result = await interpret(actionLogHandler.query({ flow: "flow-42" }), storage);
+      const result = await interpret(actionLogHandler.query({ flow: {"type":"ref","fixture":"completion_record","field":"id"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -236,12 +226,7 @@ describe('ActionLog functional handler', () => {
       if (typeof actionLogHandler.query !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_completion_record = await interpret(actionLogHandler.append({ record: {"flow":"flow-42","concept":"UserAuth","action":"login","type":"completion","variant":"ok"} }), storage);
-      const _pool = Object.assign({}, (afterResult_completion_record?.output ?? {}));
-      const _fixtureInput = { flow: "flow-42" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(actionLogHandler.query({ ..._fixtureInput }), storage);
+      const result = await interpret(actionLogHandler.query({ flow: afterResult_completion_record?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

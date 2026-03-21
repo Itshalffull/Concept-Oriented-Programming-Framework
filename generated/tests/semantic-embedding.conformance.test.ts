@@ -270,7 +270,7 @@ describe('SemanticEmbedding functional handler', () => {
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = semanticEmbeddingHandler.get({ embedding: "semantic-embedding-1" });
+      const program = semanticEmbeddingHandler.get({ embedding: {"type":"ref","fixture":"compute_codebert","field":"embedding"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -278,21 +278,21 @@ describe('SemanticEmbedding functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = semanticEmbeddingHandler.get({ embedding: "semantic-embedding-1" });
+      const program = semanticEmbeddingHandler.get({ embedding: {"type":"ref","fixture":"compute_codebert","field":"embedding"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = semanticEmbeddingHandler.get({ embedding: "semantic-embedding-1" });
+      const program = semanticEmbeddingHandler.get({ embedding: {"type":"ref","fixture":"compute_codebert","field":"embedding"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = semanticEmbeddingHandler.get({ embedding: "semantic-embedding-1" });
+      const program = semanticEmbeddingHandler.get({ embedding: {"type":"ref","fixture":"compute_codebert","field":"embedding"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -305,7 +305,7 @@ describe('SemanticEmbedding functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = semanticEmbeddingHandler.get({ embedding: "semantic-embedding-1" });
+      const program = semanticEmbeddingHandler.get({ embedding: {"type":"ref","fixture":"compute_codebert","field":"embedding"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -313,7 +313,7 @@ describe('SemanticEmbedding functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof semanticEmbeddingHandler.get !== 'function') return;
-      const result = await interpret(semanticEmbeddingHandler.get({ embedding: "semantic-embedding-1" }), storage);
+      const result = await interpret(semanticEmbeddingHandler.get({ embedding: {"type":"ref","fixture":"compute_codebert","field":"embedding"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -324,12 +324,7 @@ describe('SemanticEmbedding functional handler', () => {
       if (typeof semanticEmbeddingHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_compute_codebert = await interpret(semanticEmbeddingHandler.compute({ unit: "def-123", model: "codeBERT" }), storage);
-      const _pool = Object.assign({}, (afterResult_compute_codebert?.output ?? {}));
-      const _fixtureInput = { embedding: "semantic-embedding-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(semanticEmbeddingHandler.get({ ..._fixtureInput }), storage);
+      const result = await interpret(semanticEmbeddingHandler.get({ embedding: afterResult_compute_codebert?.output?.["embedding"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

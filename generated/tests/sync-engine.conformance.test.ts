@@ -102,7 +102,7 @@ describe('SyncEngine functional handler', () => {
 
   describe('onCompletion', () => {
     it('builds a valid StorageProgram', () => {
-      const program = syncEngineHandler.onCompletion({ completion: {"id":"c-001","concept":"urn:clef/User","action":"create","input":{},"variant":"ok","output":{},"flow":"flow-001","timestamp":"2025-01-15T10:30:00Z"} });
+      const program = syncEngineHandler.onCompletion({ completion: {"id":{"type":"ref","fixture":"valid_register","field":"id"},"concept":"urn:clef/User","action":"create","input":{},"variant":"ok","output":{},"flow":{"type":"ref","fixture":"valid_register","field":"id"},"timestamp":"2025-01-15T10:30:00Z"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('SyncEngine functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = syncEngineHandler.onCompletion({ completion: {"id":"c-001","concept":"urn:clef/User","action":"create","input":{},"variant":"ok","output":{},"flow":"flow-001","timestamp":"2025-01-15T10:30:00Z"} });
+      const program = syncEngineHandler.onCompletion({ completion: {"id":{"type":"ref","fixture":"valid_register","field":"id"},"concept":"urn:clef/User","action":"create","input":{},"variant":"ok","output":{},"flow":{"type":"ref","fixture":"valid_register","field":"id"},"timestamp":"2025-01-15T10:30:00Z"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = syncEngineHandler.onCompletion({ completion: {"id":"c-001","concept":"urn:clef/User","action":"create","input":{},"variant":"ok","output":{},"flow":"flow-001","timestamp":"2025-01-15T10:30:00Z"} });
+      const program = syncEngineHandler.onCompletion({ completion: {"id":{"type":"ref","fixture":"valid_register","field":"id"},"concept":"urn:clef/User","action":"create","input":{},"variant":"ok","output":{},"flow":{"type":"ref","fixture":"valid_register","field":"id"},"timestamp":"2025-01-15T10:30:00Z"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = syncEngineHandler.onCompletion({ completion: {"id":"c-001","concept":"urn:clef/User","action":"create","input":{},"variant":"ok","output":{},"flow":"flow-001","timestamp":"2025-01-15T10:30:00Z"} });
+      const program = syncEngineHandler.onCompletion({ completion: {"id":{"type":"ref","fixture":"valid_register","field":"id"},"concept":"urn:clef/User","action":"create","input":{},"variant":"ok","output":{},"flow":{"type":"ref","fixture":"valid_register","field":"id"},"timestamp":"2025-01-15T10:30:00Z"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('SyncEngine functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = syncEngineHandler.onCompletion({ completion: {"id":"c-001","concept":"urn:clef/User","action":"create","input":{},"variant":"ok","output":{},"flow":"flow-001","timestamp":"2025-01-15T10:30:00Z"} });
+      const program = syncEngineHandler.onCompletion({ completion: {"id":{"type":"ref","fixture":"valid_register","field":"id"},"concept":"urn:clef/User","action":"create","input":{},"variant":"ok","output":{},"flow":{"type":"ref","fixture":"valid_register","field":"id"},"timestamp":"2025-01-15T10:30:00Z"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('SyncEngine functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof syncEngineHandler.onCompletion !== 'function') return;
-      const result = await interpret(syncEngineHandler.onCompletion({ completion: {"id":"c-001","concept":"urn:clef/User","action":"create","input":{},"variant":"ok","output":{},"flow":"flow-001","timestamp":"2025-01-15T10:30:00Z"} }), storage);
+      const result = await interpret(syncEngineHandler.onCompletion({ completion: {"id":{"type":"ref","fixture":"valid_register","field":"id"},"concept":"urn:clef/User","action":"create","input":{},"variant":"ok","output":{},"flow":{"type":"ref","fixture":"valid_register","field":"id"},"timestamp":"2025-01-15T10:30:00Z"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -157,7 +157,7 @@ describe('SyncEngine functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_register = await interpret(syncEngineHandler.registerSync({ sync: {"name":"OnUserCreate","annotations":["eager"],"when":[{"concept":"urn:clef/User","action":"create","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/Notification","action":"send","fields":[]}]} }), storage);
       const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
-      const _fixtureInput = { completion: {"id":"c-001","concept":"urn:clef/User","action":"create","input":{},"variant":"ok","output":{},"flow":"flow-001","timestamp":"2025-01-15T10:30:00Z"} } as Record<string, unknown>;
+      const _fixtureInput = { completion: {"id":{"type":"ref","fixture":"valid_register","field":"id"},"concept":"urn:clef/User","action":"create","input":{},"variant":"ok","output":{},"flow":{"type":"ref","fixture":"valid_register","field":"id"},"timestamp":"2025-01-15T10:30:00Z"} } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
@@ -243,7 +243,7 @@ describe('SyncEngine functional handler', () => {
 
   describe('queueSync', () => {
     it('builds a valid StorageProgram', () => {
-      const program = syncEngineHandler.queueSync({ sync: {"name":"EventualSync","annotations":["eventual"],"when":[{"concept":"urn:clef/A","action":"act","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/B","action":"do","fields":[]}]}, bindings: {}, flow: "flow-001" });
+      const program = syncEngineHandler.queueSync({ sync: {"name":"EventualSync","annotations":["eventual"],"when":[{"concept":"urn:clef/A","action":"act","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/B","action":"do","fields":[]}]}, bindings: {}, flow: {"type":"ref","fixture":"valid_register","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -251,21 +251,21 @@ describe('SyncEngine functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = syncEngineHandler.queueSync({ sync: {"name":"EventualSync","annotations":["eventual"],"when":[{"concept":"urn:clef/A","action":"act","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/B","action":"do","fields":[]}]}, bindings: {}, flow: "flow-001" });
+      const program = syncEngineHandler.queueSync({ sync: {"name":"EventualSync","annotations":["eventual"],"when":[{"concept":"urn:clef/A","action":"act","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/B","action":"do","fields":[]}]}, bindings: {}, flow: {"type":"ref","fixture":"valid_register","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = syncEngineHandler.queueSync({ sync: {"name":"EventualSync","annotations":["eventual"],"when":[{"concept":"urn:clef/A","action":"act","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/B","action":"do","fields":[]}]}, bindings: {}, flow: "flow-001" });
+      const program = syncEngineHandler.queueSync({ sync: {"name":"EventualSync","annotations":["eventual"],"when":[{"concept":"urn:clef/A","action":"act","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/B","action":"do","fields":[]}]}, bindings: {}, flow: {"type":"ref","fixture":"valid_register","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = syncEngineHandler.queueSync({ sync: {"name":"EventualSync","annotations":["eventual"],"when":[{"concept":"urn:clef/A","action":"act","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/B","action":"do","fields":[]}]}, bindings: {}, flow: "flow-001" });
+      const program = syncEngineHandler.queueSync({ sync: {"name":"EventualSync","annotations":["eventual"],"when":[{"concept":"urn:clef/A","action":"act","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/B","action":"do","fields":[]}]}, bindings: {}, flow: {"type":"ref","fixture":"valid_register","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -278,7 +278,7 @@ describe('SyncEngine functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = syncEngineHandler.queueSync({ sync: {"name":"EventualSync","annotations":["eventual"],"when":[{"concept":"urn:clef/A","action":"act","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/B","action":"do","fields":[]}]}, bindings: {}, flow: "flow-001" });
+      const program = syncEngineHandler.queueSync({ sync: {"name":"EventualSync","annotations":["eventual"],"when":[{"concept":"urn:clef/A","action":"act","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/B","action":"do","fields":[]}]}, bindings: {}, flow: {"type":"ref","fixture":"valid_register","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -286,7 +286,7 @@ describe('SyncEngine functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof syncEngineHandler.queueSync !== 'function') return;
-      const result = await interpret(syncEngineHandler.queueSync({ sync: {"name":"EventualSync","annotations":["eventual"],"when":[{"concept":"urn:clef/A","action":"act","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/B","action":"do","fields":[]}]}, bindings: {}, flow: "flow-001" }), storage);
+      const result = await interpret(syncEngineHandler.queueSync({ sync: {"name":"EventualSync","annotations":["eventual"],"when":[{"concept":"urn:clef/A","action":"act","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/B","action":"do","fields":[]}]}, bindings: {}, flow: {"type":"ref","fixture":"valid_register","field":"id"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -297,12 +297,7 @@ describe('SyncEngine functional handler', () => {
       if (typeof syncEngineHandler.queueSync !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_register = await interpret(syncEngineHandler.registerSync({ sync: {"name":"OnUserCreate","annotations":["eager"],"when":[{"concept":"urn:clef/User","action":"create","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/Notification","action":"send","fields":[]}]} }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
-      const _fixtureInput = { sync: {"name":"EventualSync","annotations":["eventual"],"when":[{"concept":"urn:clef/A","action":"act","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/B","action":"do","fields":[]}]}, bindings: {}, flow: "flow-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(syncEngineHandler.queueSync({ ..._fixtureInput }), storage);
+      const result = await interpret(syncEngineHandler.queueSync({ sync: {"name":"EventualSync","annotations":["eventual"],"when":[{"concept":"urn:clef/A","action":"act","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/B","action":"do","fields":[]}]}, bindings: {}, flow: afterResult_valid_register?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -38,8 +38,8 @@ concept ApprovalCounting [AC] {
         Multiple candidates have identical approval counts at the winner boundary.
       }
 
-      fixture count_approvals { config: "approval-001", approvalSets: "[{\"voter\":\"alice\",\"approvals\":[\"A\",\"B\"]},{\"voter\":\"bob\",\"approvals\":[\"B\",\"C\"]}]", weights: "{}" } after single_winner_unlimited
-      fixture count_no_ballots { config: "approval-001", approvalSets: "[]", weights: "{}" } after single_winner_unlimited -> error
+      fixture count_approvals { config: $single_winner_unlimited.id, approvalSets: "[{\"voter\":\"alice\",\"approvals\":[\"A\",\"B\"]},{\"voter\":\"bob\",\"approvals\":[\"B\",\"C\"]}]", weights: "{}" } after single_winner_unlimited
+      fixture count_no_ballots { config: $single_winner_unlimited.id, approvalSets: "[]", weights: "{}" } after single_winner_unlimited -> error
     }
   }
 

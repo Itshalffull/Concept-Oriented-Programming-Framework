@@ -48,7 +48,7 @@ concept DockerComposeIacProvider [I] {
         A port required by the compose file is already in use.
       }
 
-      fixture apply_compose { composeFile: "compose-001" } after generate_compose
+      fixture apply_compose { composeFile: $generate_compose.composeFile } after generate_compose
       fixture apply_empty { composeFile: "" } after generate_compose
     }
 
@@ -57,7 +57,7 @@ concept DockerComposeIacProvider [I] {
         Docker Compose down completed. All containers removed.
       }
 
-      fixture teardown_compose { composeFile: "compose-001" } after generate_compose
+      fixture teardown_compose { composeFile: $generate_compose.composeFile } after generate_compose
       fixture teardown_empty { composeFile: "" } -> error
     }
   }

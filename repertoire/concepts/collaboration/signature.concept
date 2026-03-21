@@ -53,7 +53,7 @@ concept Signature [G] {
         Signer not in the trusted set.
       }
 
-      fixture verify_valid_sig { contentHash: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", signatureId: "signature-1" } after sign_trusted_identity
+      fixture verify_valid_sig { contentHash: "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", signatureId: $sign_trusted_identity.signatureId } after sign_trusted_identity
       fixture verify_missing_sig { contentHash: "sha256:abc", signatureId: "signature-nonexistent" } -> error
     }
 

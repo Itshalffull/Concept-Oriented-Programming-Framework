@@ -109,7 +109,7 @@ describe('DAGHistory functional handler', () => {
 
   describe('ancestors', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dagHistoryHandler.ancestors({ nodeId: "dag-history-2" });
+      const program = dagHistoryHandler.ancestors({ nodeId: {"type":"ref","fixture":"append_root","field":"nodeId"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -117,21 +117,21 @@ describe('DAGHistory functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dagHistoryHandler.ancestors({ nodeId: "dag-history-2" });
+      const program = dagHistoryHandler.ancestors({ nodeId: {"type":"ref","fixture":"append_root","field":"nodeId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dagHistoryHandler.ancestors({ nodeId: "dag-history-2" });
+      const program = dagHistoryHandler.ancestors({ nodeId: {"type":"ref","fixture":"append_root","field":"nodeId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dagHistoryHandler.ancestors({ nodeId: "dag-history-2" });
+      const program = dagHistoryHandler.ancestors({ nodeId: {"type":"ref","fixture":"append_root","field":"nodeId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -144,7 +144,7 @@ describe('DAGHistory functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dagHistoryHandler.ancestors({ nodeId: "dag-history-2" });
+      const program = dagHistoryHandler.ancestors({ nodeId: {"type":"ref","fixture":"append_root","field":"nodeId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -152,7 +152,7 @@ describe('DAGHistory functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof dagHistoryHandler.ancestors !== 'function') return;
-      const result = await interpret(dagHistoryHandler.ancestors({ nodeId: "dag-history-2" }), storage);
+      const result = await interpret(dagHistoryHandler.ancestors({ nodeId: {"type":"ref","fixture":"append_root","field":"nodeId"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -163,12 +163,7 @@ describe('DAGHistory functional handler', () => {
       if (typeof dagHistoryHandler.ancestors !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_append_root = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
-      const _pool = Object.assign({}, (afterResult_append_root?.output ?? {}));
-      const _fixtureInput = { nodeId: "dag-history-2" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(dagHistoryHandler.ancestors({ ..._fixtureInput }), storage);
+      const result = await interpret(dagHistoryHandler.ancestors({ nodeId: afterResult_append_root?.output?.["nodeId"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -183,7 +178,7 @@ describe('DAGHistory functional handler', () => {
 
   describe('commonAncestor', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dagHistoryHandler.commonAncestor({ a: "dag-history-2", b: "dag-history-3" });
+      const program = dagHistoryHandler.commonAncestor({ a: {"type":"ref","fixture":"append_root","field":"nodeId"}, b: {"type":"ref","fixture":"append_root","field":"nodeId"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -191,21 +186,21 @@ describe('DAGHistory functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dagHistoryHandler.commonAncestor({ a: "dag-history-2", b: "dag-history-3" });
+      const program = dagHistoryHandler.commonAncestor({ a: {"type":"ref","fixture":"append_root","field":"nodeId"}, b: {"type":"ref","fixture":"append_root","field":"nodeId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dagHistoryHandler.commonAncestor({ a: "dag-history-2", b: "dag-history-3" });
+      const program = dagHistoryHandler.commonAncestor({ a: {"type":"ref","fixture":"append_root","field":"nodeId"}, b: {"type":"ref","fixture":"append_root","field":"nodeId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dagHistoryHandler.commonAncestor({ a: "dag-history-2", b: "dag-history-3" });
+      const program = dagHistoryHandler.commonAncestor({ a: {"type":"ref","fixture":"append_root","field":"nodeId"}, b: {"type":"ref","fixture":"append_root","field":"nodeId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -218,7 +213,7 @@ describe('DAGHistory functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dagHistoryHandler.commonAncestor({ a: "dag-history-2", b: "dag-history-3" });
+      const program = dagHistoryHandler.commonAncestor({ a: {"type":"ref","fixture":"append_root","field":"nodeId"}, b: {"type":"ref","fixture":"append_root","field":"nodeId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -226,7 +221,7 @@ describe('DAGHistory functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof dagHistoryHandler.commonAncestor !== 'function') return;
-      const result = await interpret(dagHistoryHandler.commonAncestor({ a: "dag-history-2", b: "dag-history-3" }), storage);
+      const result = await interpret(dagHistoryHandler.commonAncestor({ a: {"type":"ref","fixture":"append_root","field":"nodeId"}, b: {"type":"ref","fixture":"append_root","field":"nodeId"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -237,12 +232,7 @@ describe('DAGHistory functional handler', () => {
       if (typeof dagHistoryHandler.commonAncestor !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_append_root = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
-      const _pool = Object.assign({}, (afterResult_append_root?.output ?? {}));
-      const _fixtureInput = { a: "dag-history-2", b: "dag-history-3" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(dagHistoryHandler.commonAncestor({ ..._fixtureInput }), storage);
+      const result = await interpret(dagHistoryHandler.commonAncestor({ a: afterResult_append_root?.output?.["nodeId"], b: afterResult_append_root?.output?.["nodeId"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -257,7 +247,7 @@ describe('DAGHistory functional handler', () => {
 
   describe('descendants', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dagHistoryHandler.descendants({ nodeId: "dag-history-1" });
+      const program = dagHistoryHandler.descendants({ nodeId: {"type":"ref","fixture":"append_root","field":"nodeId"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -265,21 +255,21 @@ describe('DAGHistory functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dagHistoryHandler.descendants({ nodeId: "dag-history-1" });
+      const program = dagHistoryHandler.descendants({ nodeId: {"type":"ref","fixture":"append_root","field":"nodeId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dagHistoryHandler.descendants({ nodeId: "dag-history-1" });
+      const program = dagHistoryHandler.descendants({ nodeId: {"type":"ref","fixture":"append_root","field":"nodeId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dagHistoryHandler.descendants({ nodeId: "dag-history-1" });
+      const program = dagHistoryHandler.descendants({ nodeId: {"type":"ref","fixture":"append_root","field":"nodeId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -292,7 +282,7 @@ describe('DAGHistory functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dagHistoryHandler.descendants({ nodeId: "dag-history-1" });
+      const program = dagHistoryHandler.descendants({ nodeId: {"type":"ref","fixture":"append_root","field":"nodeId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -300,7 +290,7 @@ describe('DAGHistory functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof dagHistoryHandler.descendants !== 'function') return;
-      const result = await interpret(dagHistoryHandler.descendants({ nodeId: "dag-history-1" }), storage);
+      const result = await interpret(dagHistoryHandler.descendants({ nodeId: {"type":"ref","fixture":"append_root","field":"nodeId"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -311,12 +301,7 @@ describe('DAGHistory functional handler', () => {
       if (typeof dagHistoryHandler.descendants !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_append_root = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
-      const _pool = Object.assign({}, (afterResult_append_root?.output ?? {}));
-      const _fixtureInput = { nodeId: "dag-history-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(dagHistoryHandler.descendants({ ..._fixtureInput }), storage);
+      const result = await interpret(dagHistoryHandler.descendants({ nodeId: afterResult_append_root?.output?.["nodeId"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -331,7 +316,7 @@ describe('DAGHistory functional handler', () => {
 
   describe('between', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dagHistoryHandler.between({ from: "dag-history-1", to: "dag-history-3" });
+      const program = dagHistoryHandler.between({ from: {"type":"ref","fixture":"append_root","field":"nodeId"}, to: {"type":"ref","fixture":"append_root","field":"nodeId"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -339,21 +324,21 @@ describe('DAGHistory functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dagHistoryHandler.between({ from: "dag-history-1", to: "dag-history-3" });
+      const program = dagHistoryHandler.between({ from: {"type":"ref","fixture":"append_root","field":"nodeId"}, to: {"type":"ref","fixture":"append_root","field":"nodeId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dagHistoryHandler.between({ from: "dag-history-1", to: "dag-history-3" });
+      const program = dagHistoryHandler.between({ from: {"type":"ref","fixture":"append_root","field":"nodeId"}, to: {"type":"ref","fixture":"append_root","field":"nodeId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dagHistoryHandler.between({ from: "dag-history-1", to: "dag-history-3" });
+      const program = dagHistoryHandler.between({ from: {"type":"ref","fixture":"append_root","field":"nodeId"}, to: {"type":"ref","fixture":"append_root","field":"nodeId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -366,7 +351,7 @@ describe('DAGHistory functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dagHistoryHandler.between({ from: "dag-history-1", to: "dag-history-3" });
+      const program = dagHistoryHandler.between({ from: {"type":"ref","fixture":"append_root","field":"nodeId"}, to: {"type":"ref","fixture":"append_root","field":"nodeId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -374,7 +359,7 @@ describe('DAGHistory functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof dagHistoryHandler.between !== 'function') return;
-      const result = await interpret(dagHistoryHandler.between({ from: "dag-history-1", to: "dag-history-3" }), storage);
+      const result = await interpret(dagHistoryHandler.between({ from: {"type":"ref","fixture":"append_root","field":"nodeId"}, to: {"type":"ref","fixture":"append_root","field":"nodeId"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -385,12 +370,7 @@ describe('DAGHistory functional handler', () => {
       if (typeof dagHistoryHandler.between !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_append_root = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
-      const _pool = Object.assign({}, (afterResult_append_root?.output ?? {}));
-      const _fixtureInput = { from: "dag-history-1", to: "dag-history-3" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(dagHistoryHandler.between({ ..._fixtureInput }), storage);
+      const result = await interpret(dagHistoryHandler.between({ from: afterResult_append_root?.output?.["nodeId"], to: afterResult_append_root?.output?.["nodeId"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -405,7 +385,7 @@ describe('DAGHistory functional handler', () => {
 
   describe('getNode', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dagHistoryHandler.getNode({ nodeId: "dag-history-1" });
+      const program = dagHistoryHandler.getNode({ nodeId: {"type":"ref","fixture":"append_root","field":"nodeId"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -413,21 +393,21 @@ describe('DAGHistory functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dagHistoryHandler.getNode({ nodeId: "dag-history-1" });
+      const program = dagHistoryHandler.getNode({ nodeId: {"type":"ref","fixture":"append_root","field":"nodeId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dagHistoryHandler.getNode({ nodeId: "dag-history-1" });
+      const program = dagHistoryHandler.getNode({ nodeId: {"type":"ref","fixture":"append_root","field":"nodeId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dagHistoryHandler.getNode({ nodeId: "dag-history-1" });
+      const program = dagHistoryHandler.getNode({ nodeId: {"type":"ref","fixture":"append_root","field":"nodeId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -440,7 +420,7 @@ describe('DAGHistory functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dagHistoryHandler.getNode({ nodeId: "dag-history-1" });
+      const program = dagHistoryHandler.getNode({ nodeId: {"type":"ref","fixture":"append_root","field":"nodeId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -448,7 +428,7 @@ describe('DAGHistory functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof dagHistoryHandler.getNode !== 'function') return;
-      const result = await interpret(dagHistoryHandler.getNode({ nodeId: "dag-history-1" }), storage);
+      const result = await interpret(dagHistoryHandler.getNode({ nodeId: {"type":"ref","fixture":"append_root","field":"nodeId"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -459,12 +439,7 @@ describe('DAGHistory functional handler', () => {
       if (typeof dagHistoryHandler.getNode !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_append_root = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
-      const _pool = Object.assign({}, (afterResult_append_root?.output ?? {}));
-      const _fixtureInput = { nodeId: "dag-history-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(dagHistoryHandler.getNode({ ..._fixtureInput }), storage);
+      const result = await interpret(dagHistoryHandler.getNode({ nodeId: afterResult_append_root?.output?.["nodeId"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

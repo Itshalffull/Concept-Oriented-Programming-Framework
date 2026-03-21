@@ -104,7 +104,7 @@ concept SyncEntity [Y] {
         Sync does not exist.
       }
 
-      fixture get_existing { sync: "sync-entity-1" } after register_publish_sync
+      fixture get_existing { sync: $register_publish_sync.sync } after register_publish_sync
       fixture get_nonexistent { sync: "sync-entity-missing" } -> error
     }
   }

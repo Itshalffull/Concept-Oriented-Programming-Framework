@@ -202,7 +202,7 @@ describe('Capture functional handler', () => {
 
   describe('subscribe', () => {
     it('builds a valid StorageProgram', () => {
-      const program = captureHandler.subscribe({ sourceId: "src-1", schedule: "*/30 * * * *", mode: "api_poll" });
+      const program = captureHandler.subscribe({ sourceId: {"type":"ref","fixture":"clip_article","field":"itemId"}, schedule: "*/30 * * * *", mode: "api_poll" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -210,21 +210,21 @@ describe('Capture functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = captureHandler.subscribe({ sourceId: "src-1", schedule: "*/30 * * * *", mode: "api_poll" });
+      const program = captureHandler.subscribe({ sourceId: {"type":"ref","fixture":"clip_article","field":"itemId"}, schedule: "*/30 * * * *", mode: "api_poll" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = captureHandler.subscribe({ sourceId: "src-1", schedule: "*/30 * * * *", mode: "api_poll" });
+      const program = captureHandler.subscribe({ sourceId: {"type":"ref","fixture":"clip_article","field":"itemId"}, schedule: "*/30 * * * *", mode: "api_poll" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = captureHandler.subscribe({ sourceId: "src-1", schedule: "*/30 * * * *", mode: "api_poll" });
+      const program = captureHandler.subscribe({ sourceId: {"type":"ref","fixture":"clip_article","field":"itemId"}, schedule: "*/30 * * * *", mode: "api_poll" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -237,7 +237,7 @@ describe('Capture functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = captureHandler.subscribe({ sourceId: "src-1", schedule: "*/30 * * * *", mode: "api_poll" });
+      const program = captureHandler.subscribe({ sourceId: {"type":"ref","fixture":"clip_article","field":"itemId"}, schedule: "*/30 * * * *", mode: "api_poll" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -245,7 +245,7 @@ describe('Capture functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof captureHandler.subscribe !== 'function') return;
-      const result = await interpret(captureHandler.subscribe({ sourceId: "src-1", schedule: "*/30 * * * *", mode: "api_poll" }), storage);
+      const result = await interpret(captureHandler.subscribe({ sourceId: {"type":"ref","fixture":"clip_article","field":"itemId"}, schedule: "*/30 * * * *", mode: "api_poll" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -256,12 +256,7 @@ describe('Capture functional handler', () => {
       if (typeof captureHandler.subscribe !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_clip_article = await interpret(captureHandler.clip({ url: "https://example.com/article", mode: "web_article", metadata: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_clip_article?.output ?? {}));
-      const _fixtureInput = { sourceId: "src-1", schedule: "*/30 * * * *", mode: "api_poll" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(captureHandler.subscribe({ ..._fixtureInput }), storage);
+      const result = await interpret(captureHandler.subscribe({ sourceId: afterResult_clip_article?.output?.["itemId"], schedule: "*/30 * * * *", mode: "api_poll" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -282,12 +277,7 @@ describe('Capture functional handler', () => {
       if (typeof captureHandler.subscribe !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_clip_article = await interpret(captureHandler.clip({ url: "https://example.com/article", mode: "web_article", metadata: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_clip_article?.output ?? {}));
-      const _fixtureInput = { sourceId: "src-1", schedule: "invalid", mode: "api_poll" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(captureHandler.subscribe({ ..._fixtureInput }), storage);
+      const result = await interpret(captureHandler.subscribe({ sourceId: afterResult_clip_article?.output?.["itemId"], schedule: "invalid", mode: "api_poll" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -295,7 +285,7 @@ describe('Capture functional handler', () => {
 
   describe('detectChanges', () => {
     it('builds a valid StorageProgram', () => {
-      const program = captureHandler.detectChanges({ subscriptionId: "sub-1" });
+      const program = captureHandler.detectChanges({ subscriptionId: {"type":"ref","fixture":"clip_article","field":"itemId"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -303,21 +293,21 @@ describe('Capture functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = captureHandler.detectChanges({ subscriptionId: "sub-1" });
+      const program = captureHandler.detectChanges({ subscriptionId: {"type":"ref","fixture":"clip_article","field":"itemId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = captureHandler.detectChanges({ subscriptionId: "sub-1" });
+      const program = captureHandler.detectChanges({ subscriptionId: {"type":"ref","fixture":"clip_article","field":"itemId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = captureHandler.detectChanges({ subscriptionId: "sub-1" });
+      const program = captureHandler.detectChanges({ subscriptionId: {"type":"ref","fixture":"clip_article","field":"itemId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -330,7 +320,7 @@ describe('Capture functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = captureHandler.detectChanges({ subscriptionId: "sub-1" });
+      const program = captureHandler.detectChanges({ subscriptionId: {"type":"ref","fixture":"clip_article","field":"itemId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -338,7 +328,7 @@ describe('Capture functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof captureHandler.detectChanges !== 'function') return;
-      const result = await interpret(captureHandler.detectChanges({ subscriptionId: "sub-1" }), storage);
+      const result = await interpret(captureHandler.detectChanges({ subscriptionId: {"type":"ref","fixture":"clip_article","field":"itemId"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -349,12 +339,7 @@ describe('Capture functional handler', () => {
       if (typeof captureHandler.detectChanges !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_clip_article = await interpret(captureHandler.clip({ url: "https://example.com/article", mode: "web_article", metadata: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_clip_article?.output ?? {}));
-      const _fixtureInput = { subscriptionId: "sub-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(captureHandler.detectChanges({ ..._fixtureInput }), storage);
+      const result = await interpret(captureHandler.detectChanges({ subscriptionId: afterResult_clip_article?.output?.["itemId"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -370,7 +355,7 @@ describe('Capture functional handler', () => {
 
   describe('markReady', () => {
     it('builds a valid StorageProgram', () => {
-      const program = captureHandler.markReady({ itemId: "cap-1" });
+      const program = captureHandler.markReady({ itemId: {"type":"ref","fixture":"clip_article","field":"itemId"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -378,21 +363,21 @@ describe('Capture functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = captureHandler.markReady({ itemId: "cap-1" });
+      const program = captureHandler.markReady({ itemId: {"type":"ref","fixture":"clip_article","field":"itemId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = captureHandler.markReady({ itemId: "cap-1" });
+      const program = captureHandler.markReady({ itemId: {"type":"ref","fixture":"clip_article","field":"itemId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = captureHandler.markReady({ itemId: "cap-1" });
+      const program = captureHandler.markReady({ itemId: {"type":"ref","fixture":"clip_article","field":"itemId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -405,7 +390,7 @@ describe('Capture functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = captureHandler.markReady({ itemId: "cap-1" });
+      const program = captureHandler.markReady({ itemId: {"type":"ref","fixture":"clip_article","field":"itemId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -413,7 +398,7 @@ describe('Capture functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof captureHandler.markReady !== 'function') return;
-      const result = await interpret(captureHandler.markReady({ itemId: "cap-1" }), storage);
+      const result = await interpret(captureHandler.markReady({ itemId: {"type":"ref","fixture":"clip_article","field":"itemId"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -424,12 +409,7 @@ describe('Capture functional handler', () => {
       if (typeof captureHandler.markReady !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_clip_article = await interpret(captureHandler.clip({ url: "https://example.com/article", mode: "web_article", metadata: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_clip_article?.output ?? {}));
-      const _fixtureInput = { itemId: "cap-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(captureHandler.markReady({ ..._fixtureInput }), storage);
+      const result = await interpret(captureHandler.markReady({ itemId: afterResult_clip_article?.output?.["itemId"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

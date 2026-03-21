@@ -410,7 +410,7 @@ describe('HandlerEntity functional handler', () => {
 
   describe('getActionMethod', () => {
     it('builds a valid StorageProgram', () => {
-      const program = handlerEntityHandler.getActionMethod({ handler: "handler-001", actionName: "create" });
+      const program = handlerEntityHandler.getActionMethod({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"}, actionName: "create" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -418,21 +418,21 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = handlerEntityHandler.getActionMethod({ handler: "handler-001", actionName: "create" });
+      const program = handlerEntityHandler.getActionMethod({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"}, actionName: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = handlerEntityHandler.getActionMethod({ handler: "handler-001", actionName: "create" });
+      const program = handlerEntityHandler.getActionMethod({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"}, actionName: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = handlerEntityHandler.getActionMethod({ handler: "handler-001", actionName: "create" });
+      const program = handlerEntityHandler.getActionMethod({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"}, actionName: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -445,7 +445,7 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = handlerEntityHandler.getActionMethod({ handler: "handler-001", actionName: "create" });
+      const program = handlerEntityHandler.getActionMethod({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"}, actionName: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -453,7 +453,7 @@ describe('HandlerEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof handlerEntityHandler.getActionMethod !== 'function') return;
-      const result = await interpret(handlerEntityHandler.getActionMethod({ handler: "handler-001", actionName: "create" }), storage);
+      const result = await interpret(handlerEntityHandler.getActionMethod({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"}, actionName: "create" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -464,12 +464,7 @@ describe('HandlerEntity functional handler', () => {
       if (typeof handlerEntityHandler.getActionMethod !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
-      const _fixtureInput = { handler: "handler-001", actionName: "create" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(handlerEntityHandler.getActionMethod({ ..._fixtureInput }), storage);
+      const result = await interpret(handlerEntityHandler.getActionMethod({ handler: afterResult_register_article_handler?.output?.["handler"], actionName: "create" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -558,7 +553,7 @@ describe('HandlerEntity functional handler', () => {
 
   describe('getDependencies', () => {
     it('builds a valid StorageProgram', () => {
-      const program = handlerEntityHandler.getDependencies({ handler: "handler-001" });
+      const program = handlerEntityHandler.getDependencies({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -566,21 +561,21 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = handlerEntityHandler.getDependencies({ handler: "handler-001" });
+      const program = handlerEntityHandler.getDependencies({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = handlerEntityHandler.getDependencies({ handler: "handler-001" });
+      const program = handlerEntityHandler.getDependencies({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = handlerEntityHandler.getDependencies({ handler: "handler-001" });
+      const program = handlerEntityHandler.getDependencies({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -593,7 +588,7 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = handlerEntityHandler.getDependencies({ handler: "handler-001" });
+      const program = handlerEntityHandler.getDependencies({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -601,7 +596,7 @@ describe('HandlerEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof handlerEntityHandler.getDependencies !== 'function') return;
-      const result = await interpret(handlerEntityHandler.getDependencies({ handler: "handler-001" }), storage);
+      const result = await interpret(handlerEntityHandler.getDependencies({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -612,12 +607,7 @@ describe('HandlerEntity functional handler', () => {
       if (typeof handlerEntityHandler.getDependencies !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
-      const _fixtureInput = { handler: "handler-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(handlerEntityHandler.getDependencies({ ..._fixtureInput }), storage);
+      const result = await interpret(handlerEntityHandler.getDependencies({ handler: afterResult_register_article_handler?.output?.["handler"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -638,7 +628,7 @@ describe('HandlerEntity functional handler', () => {
 
   describe('getStorageUsage', () => {
     it('builds a valid StorageProgram', () => {
-      const program = handlerEntityHandler.getStorageUsage({ handler: "handler-001" });
+      const program = handlerEntityHandler.getStorageUsage({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -646,21 +636,21 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = handlerEntityHandler.getStorageUsage({ handler: "handler-001" });
+      const program = handlerEntityHandler.getStorageUsage({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = handlerEntityHandler.getStorageUsage({ handler: "handler-001" });
+      const program = handlerEntityHandler.getStorageUsage({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = handlerEntityHandler.getStorageUsage({ handler: "handler-001" });
+      const program = handlerEntityHandler.getStorageUsage({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -673,7 +663,7 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = handlerEntityHandler.getStorageUsage({ handler: "handler-001" });
+      const program = handlerEntityHandler.getStorageUsage({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -681,7 +671,7 @@ describe('HandlerEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof handlerEntityHandler.getStorageUsage !== 'function') return;
-      const result = await interpret(handlerEntityHandler.getStorageUsage({ handler: "handler-001" }), storage);
+      const result = await interpret(handlerEntityHandler.getStorageUsage({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -692,12 +682,7 @@ describe('HandlerEntity functional handler', () => {
       if (typeof handlerEntityHandler.getStorageUsage !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
-      const _fixtureInput = { handler: "handler-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(handlerEntityHandler.getStorageUsage({ ..._fixtureInput }), storage);
+      const result = await interpret(handlerEntityHandler.getStorageUsage({ handler: afterResult_register_article_handler?.output?.["handler"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -792,7 +777,7 @@ describe('HandlerEntity functional handler', () => {
 
   describe('resolveToAstNode', () => {
     it('builds a valid StorageProgram', () => {
-      const program = handlerEntityHandler.resolveToAstNode({ handler: "handler-001", line: "10", col: "5" });
+      const program = handlerEntityHandler.resolveToAstNode({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"}, line: "10", col: "5" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -800,21 +785,21 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = handlerEntityHandler.resolveToAstNode({ handler: "handler-001", line: "10", col: "5" });
+      const program = handlerEntityHandler.resolveToAstNode({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"}, line: "10", col: "5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = handlerEntityHandler.resolveToAstNode({ handler: "handler-001", line: "10", col: "5" });
+      const program = handlerEntityHandler.resolveToAstNode({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"}, line: "10", col: "5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = handlerEntityHandler.resolveToAstNode({ handler: "handler-001", line: "10", col: "5" });
+      const program = handlerEntityHandler.resolveToAstNode({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"}, line: "10", col: "5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -827,7 +812,7 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = handlerEntityHandler.resolveToAstNode({ handler: "handler-001", line: "10", col: "5" });
+      const program = handlerEntityHandler.resolveToAstNode({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"}, line: "10", col: "5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -835,7 +820,7 @@ describe('HandlerEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof handlerEntityHandler.resolveToAstNode !== 'function') return;
-      const result = await interpret(handlerEntityHandler.resolveToAstNode({ handler: "handler-001", line: "10", col: "5" }), storage);
+      const result = await interpret(handlerEntityHandler.resolveToAstNode({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"}, line: "10", col: "5" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -846,12 +831,7 @@ describe('HandlerEntity functional handler', () => {
       if (typeof handlerEntityHandler.resolveToAstNode !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
-      const _fixtureInput = { handler: "handler-001", line: "10", col: "5" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(handlerEntityHandler.resolveToAstNode({ ..._fixtureInput }), storage);
+      const result = await interpret(handlerEntityHandler.resolveToAstNode({ handler: afterResult_register_article_handler?.output?.["handler"], line: "10", col: "5" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -946,7 +926,7 @@ describe('HandlerEntity functional handler', () => {
 
   describe('traceToVariantReturn', () => {
     it('builds a valid StorageProgram', () => {
-      const program = handlerEntityHandler.traceToVariantReturn({ handler: "handler-001", actionName: "create" });
+      const program = handlerEntityHandler.traceToVariantReturn({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"}, actionName: "create" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -954,21 +934,21 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = handlerEntityHandler.traceToVariantReturn({ handler: "handler-001", actionName: "create" });
+      const program = handlerEntityHandler.traceToVariantReturn({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"}, actionName: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = handlerEntityHandler.traceToVariantReturn({ handler: "handler-001", actionName: "create" });
+      const program = handlerEntityHandler.traceToVariantReturn({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"}, actionName: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = handlerEntityHandler.traceToVariantReturn({ handler: "handler-001", actionName: "create" });
+      const program = handlerEntityHandler.traceToVariantReturn({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"}, actionName: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -981,7 +961,7 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = handlerEntityHandler.traceToVariantReturn({ handler: "handler-001", actionName: "create" });
+      const program = handlerEntityHandler.traceToVariantReturn({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"}, actionName: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -989,7 +969,7 @@ describe('HandlerEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof handlerEntityHandler.traceToVariantReturn !== 'function') return;
-      const result = await interpret(handlerEntityHandler.traceToVariantReturn({ handler: "handler-001", actionName: "create" }), storage);
+      const result = await interpret(handlerEntityHandler.traceToVariantReturn({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"}, actionName: "create" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -1000,12 +980,7 @@ describe('HandlerEntity functional handler', () => {
       if (typeof handlerEntityHandler.traceToVariantReturn !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
-      const _fixtureInput = { handler: "handler-001", actionName: "create" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(handlerEntityHandler.traceToVariantReturn({ ..._fixtureInput }), storage);
+      const result = await interpret(handlerEntityHandler.traceToVariantReturn({ handler: afterResult_register_article_handler?.output?.["handler"], actionName: "create" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -1020,7 +995,7 @@ describe('HandlerEntity functional handler', () => {
 
   describe('traceToStorageCalls', () => {
     it('builds a valid StorageProgram', () => {
-      const program = handlerEntityHandler.traceToStorageCalls({ handler: "handler-001", actionName: "create" });
+      const program = handlerEntityHandler.traceToStorageCalls({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"}, actionName: "create" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -1028,21 +1003,21 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = handlerEntityHandler.traceToStorageCalls({ handler: "handler-001", actionName: "create" });
+      const program = handlerEntityHandler.traceToStorageCalls({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"}, actionName: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = handlerEntityHandler.traceToStorageCalls({ handler: "handler-001", actionName: "create" });
+      const program = handlerEntityHandler.traceToStorageCalls({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"}, actionName: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = handlerEntityHandler.traceToStorageCalls({ handler: "handler-001", actionName: "create" });
+      const program = handlerEntityHandler.traceToStorageCalls({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"}, actionName: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -1055,7 +1030,7 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = handlerEntityHandler.traceToStorageCalls({ handler: "handler-001", actionName: "create" });
+      const program = handlerEntityHandler.traceToStorageCalls({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"}, actionName: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -1063,7 +1038,7 @@ describe('HandlerEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof handlerEntityHandler.traceToStorageCalls !== 'function') return;
-      const result = await interpret(handlerEntityHandler.traceToStorageCalls({ handler: "handler-001", actionName: "create" }), storage);
+      const result = await interpret(handlerEntityHandler.traceToStorageCalls({ handler: {"type":"ref","fixture":"register_article_handler","field":"handler"}, actionName: "create" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -1074,12 +1049,7 @@ describe('HandlerEntity functional handler', () => {
       if (typeof handlerEntityHandler.traceToStorageCalls !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
-      const _fixtureInput = { handler: "handler-001", actionName: "create" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(handlerEntityHandler.traceToStorageCalls({ ..._fixtureInput }), storage);
+      const result = await interpret(handlerEntityHandler.traceToStorageCalls({ handler: afterResult_register_article_handler?.output?.["handler"], actionName: "create" }), storage);
       expect(result.variant).toBe('ok');
     });
 

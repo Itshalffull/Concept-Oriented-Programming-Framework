@@ -68,7 +68,7 @@ concept SeedData [S] {
         No seed record exists with this identifier.
       }
 
-      fixture valid_apply { seed: "seed-1" } after valid_discover
+      fixture valid_apply { seed: $valid_discover.found } after valid_discover
       fixture apply_nonexistent { seed: "seed-999" } -> error
     }
 
@@ -103,7 +103,7 @@ concept SeedData [S] {
         No seed record exists with this identifier.
       }
 
-      fixture valid_reset { seed: "seed-1" } after valid_discover
+      fixture valid_reset { seed: $valid_discover.found } after valid_discover
       fixture reset_nonexistent { seed: "seed-999" } -> error
     }
   }

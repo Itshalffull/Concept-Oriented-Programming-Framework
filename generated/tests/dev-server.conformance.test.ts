@@ -110,7 +110,7 @@ describe('DevServer functional handler', () => {
 
   describe('stop', () => {
     it('builds a valid StorageProgram', () => {
-      const program = devServerHandler.stop({ session: "dev-server-1" });
+      const program = devServerHandler.stop({ session: {"type":"ref","fixture":"valid_start","field":"session"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -118,21 +118,21 @@ describe('DevServer functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = devServerHandler.stop({ session: "dev-server-1" });
+      const program = devServerHandler.stop({ session: {"type":"ref","fixture":"valid_start","field":"session"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = devServerHandler.stop({ session: "dev-server-1" });
+      const program = devServerHandler.stop({ session: {"type":"ref","fixture":"valid_start","field":"session"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = devServerHandler.stop({ session: "dev-server-1" });
+      const program = devServerHandler.stop({ session: {"type":"ref","fixture":"valid_start","field":"session"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -145,7 +145,7 @@ describe('DevServer functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = devServerHandler.stop({ session: "dev-server-1" });
+      const program = devServerHandler.stop({ session: {"type":"ref","fixture":"valid_start","field":"session"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -153,7 +153,7 @@ describe('DevServer functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof devServerHandler.stop !== 'function') return;
-      const result = await interpret(devServerHandler.stop({ session: "dev-server-1" }), storage);
+      const result = await interpret(devServerHandler.stop({ session: {"type":"ref","fixture":"valid_start","field":"session"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -164,12 +164,7 @@ describe('DevServer functional handler', () => {
       if (typeof devServerHandler.stop !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_start = await interpret(devServerHandler.start({ port: "3000", watchDirs: ["./specs","./syncs"] }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
-      const _fixtureInput = { session: "dev-server-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(devServerHandler.stop({ ..._fixtureInput }), storage);
+      const result = await interpret(devServerHandler.stop({ session: afterResult_valid_start?.output?.["session"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -177,12 +172,7 @@ describe('DevServer functional handler', () => {
       if (typeof devServerHandler.stop !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_start = await interpret(devServerHandler.start({ port: "3000", watchDirs: ["./specs","./syncs"] }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
-      const _fixtureInput = { session: "dev-server-999" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(devServerHandler.stop({ ..._fixtureInput }), storage);
+      const result = await interpret(devServerHandler.stop({ session: afterResult_valid_start?.output?.["session"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -190,7 +180,7 @@ describe('DevServer functional handler', () => {
 
   describe('status', () => {
     it('builds a valid StorageProgram', () => {
-      const program = devServerHandler.status({ session: "dev-server-1" });
+      const program = devServerHandler.status({ session: {"type":"ref","fixture":"valid_start","field":"session"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -198,21 +188,21 @@ describe('DevServer functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = devServerHandler.status({ session: "dev-server-1" });
+      const program = devServerHandler.status({ session: {"type":"ref","fixture":"valid_start","field":"session"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = devServerHandler.status({ session: "dev-server-1" });
+      const program = devServerHandler.status({ session: {"type":"ref","fixture":"valid_start","field":"session"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = devServerHandler.status({ session: "dev-server-1" });
+      const program = devServerHandler.status({ session: {"type":"ref","fixture":"valid_start","field":"session"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -225,7 +215,7 @@ describe('DevServer functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = devServerHandler.status({ session: "dev-server-1" });
+      const program = devServerHandler.status({ session: {"type":"ref","fixture":"valid_start","field":"session"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -233,7 +223,7 @@ describe('DevServer functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof devServerHandler.status !== 'function') return;
-      const result = await interpret(devServerHandler.status({ session: "dev-server-1" }), storage);
+      const result = await interpret(devServerHandler.status({ session: {"type":"ref","fixture":"valid_start","field":"session"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -244,12 +234,7 @@ describe('DevServer functional handler', () => {
       if (typeof devServerHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_start = await interpret(devServerHandler.start({ port: "3000", watchDirs: ["./specs","./syncs"] }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
-      const _fixtureInput = { session: "dev-server-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(devServerHandler.status({ ..._fixtureInput }), storage);
+      const result = await interpret(devServerHandler.status({ session: afterResult_valid_start?.output?.["session"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

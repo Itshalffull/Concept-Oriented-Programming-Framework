@@ -41,7 +41,7 @@ concept DockerComposeRuntime [D] {
         Service image updated and container recreated.
       }
 
-      fixture deploy_service { service: "dc-001", imageUri: "user-service:latest" } after provision_service
+      fixture deploy_service { service: $provision_service.service, imageUri: "user-service:latest" } after provision_service
       fixture deploy_empty_image { service: "dc-001", imageUri: "" } -> error
     }
 
@@ -50,8 +50,8 @@ concept DockerComposeRuntime [D] {
         Traffic weight has no effect in Compose. Always 100.
       }
 
-      fixture set_traffic { service: "dc-001", weight: 100 } after provision_service
-      fixture set_traffic_negative { service: "dc-001", weight: -1 } after provision_service
+      fixture set_traffic { service: $provision_service.service, weight: 100 } after provision_service
+      fixture set_traffic_negative { service: $provision_service.service, weight: -1 } after provision_service
     }
 
     action rollback(service: D, targetImage: String) {
@@ -59,8 +59,8 @@ concept DockerComposeRuntime [D] {
         Service reverted to previous image.
       }
 
-      fixture rollback_image { service: "dc-001", targetImage: "user-service:v1.0.0" } after provision_service
-      fixture rollback_empty { service: "dc-001", targetImage: "" } after provision_service
+      fixture rollback_image { service: $provision_service.service, targetImage: "user-service:v1.0.0" } after provision_service
+      fixture rollback_empty { service: $provision_service.service, targetImage: "" } after provision_service
     }
 
     action destroy(service: D) {
@@ -68,7 +68,7 @@ concept DockerComposeRuntime [D] {
         Container stopped and removed.
       }
 
-      fixture destroy_service { service: "dc-001" } after provision_service
+      fixture destroy_service { service: $provision_service.service } after provision_service
       fixture destroy_empty { service: "" } -> error
     }
   }

@@ -102,12 +102,7 @@ describe('DesignToken functional handler', () => {
       if (typeof designTokenHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_define_color = await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_define_color?.output ?? {}));
-      const _fixtureInput = { token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(designTokenHandler.define({ ..._fixtureInput }), storage);
+      const result = await interpret(designTokenHandler.define({ token: afterResult_valid_define_color?.output?.["token"], name: afterResult_valid_define_color?.output?.["token"], value: "#3b82f6", type: "color", tier: "primitive" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -115,7 +110,7 @@ describe('DesignToken functional handler', () => {
 
   describe('alias', () => {
     it('builds a valid StorageProgram', () => {
-      const program = designTokenHandler.alias({ token: "primary-color", name: "primary-color", reference: "blue-500", tier: "semantic" });
+      const program = designTokenHandler.alias({ token: "primary-color", name: "primary-color", reference: {"type":"ref","fixture":"valid_define_color","field":"token"}, tier: "semantic" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -123,21 +118,21 @@ describe('DesignToken functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = designTokenHandler.alias({ token: "primary-color", name: "primary-color", reference: "blue-500", tier: "semantic" });
+      const program = designTokenHandler.alias({ token: "primary-color", name: "primary-color", reference: {"type":"ref","fixture":"valid_define_color","field":"token"}, tier: "semantic" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = designTokenHandler.alias({ token: "primary-color", name: "primary-color", reference: "blue-500", tier: "semantic" });
+      const program = designTokenHandler.alias({ token: "primary-color", name: "primary-color", reference: {"type":"ref","fixture":"valid_define_color","field":"token"}, tier: "semantic" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = designTokenHandler.alias({ token: "primary-color", name: "primary-color", reference: "blue-500", tier: "semantic" });
+      const program = designTokenHandler.alias({ token: "primary-color", name: "primary-color", reference: {"type":"ref","fixture":"valid_define_color","field":"token"}, tier: "semantic" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -150,7 +145,7 @@ describe('DesignToken functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = designTokenHandler.alias({ token: "primary-color", name: "primary-color", reference: "blue-500", tier: "semantic" });
+      const program = designTokenHandler.alias({ token: "primary-color", name: "primary-color", reference: {"type":"ref","fixture":"valid_define_color","field":"token"}, tier: "semantic" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -158,7 +153,7 @@ describe('DesignToken functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof designTokenHandler.alias !== 'function') return;
-      const result = await interpret(designTokenHandler.alias({ token: "primary-color", name: "primary-color", reference: "blue-500", tier: "semantic" }), storage);
+      const result = await interpret(designTokenHandler.alias({ token: "primary-color", name: "primary-color", reference: {"type":"ref","fixture":"valid_define_color","field":"token"}, tier: "semantic" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -169,12 +164,7 @@ describe('DesignToken functional handler', () => {
       if (typeof designTokenHandler.alias !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_define_color = await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_define_color?.output ?? {}));
-      const _fixtureInput = { token: "primary-color", name: "primary-color", reference: "blue-500", tier: "semantic" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(designTokenHandler.alias({ ..._fixtureInput }), storage);
+      const result = await interpret(designTokenHandler.alias({ token: "primary-color", name: "primary-color", reference: afterResult_valid_define_color?.output?.["token"], tier: "semantic" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -189,7 +179,7 @@ describe('DesignToken functional handler', () => {
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = designTokenHandler.resolve({ token: "blue-500" });
+      const program = designTokenHandler.resolve({ token: {"type":"ref","fixture":"valid_define_color","field":"token"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -197,21 +187,21 @@ describe('DesignToken functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = designTokenHandler.resolve({ token: "blue-500" });
+      const program = designTokenHandler.resolve({ token: {"type":"ref","fixture":"valid_define_color","field":"token"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = designTokenHandler.resolve({ token: "blue-500" });
+      const program = designTokenHandler.resolve({ token: {"type":"ref","fixture":"valid_define_color","field":"token"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = designTokenHandler.resolve({ token: "blue-500" });
+      const program = designTokenHandler.resolve({ token: {"type":"ref","fixture":"valid_define_color","field":"token"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -224,7 +214,7 @@ describe('DesignToken functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = designTokenHandler.resolve({ token: "blue-500" });
+      const program = designTokenHandler.resolve({ token: {"type":"ref","fixture":"valid_define_color","field":"token"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -232,7 +222,7 @@ describe('DesignToken functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof designTokenHandler.resolve !== 'function') return;
-      const result = await interpret(designTokenHandler.resolve({ token: "blue-500" }), storage);
+      const result = await interpret(designTokenHandler.resolve({ token: {"type":"ref","fixture":"valid_define_color","field":"token"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -243,12 +233,7 @@ describe('DesignToken functional handler', () => {
       if (typeof designTokenHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_define_color = await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_define_color?.output ?? {}));
-      const _fixtureInput = { token: "blue-500" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(designTokenHandler.resolve({ ..._fixtureInput }), storage);
+      const result = await interpret(designTokenHandler.resolve({ token: afterResult_valid_define_color?.output?.["token"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -263,7 +248,7 @@ describe('DesignToken functional handler', () => {
 
   describe('update', () => {
     it('builds a valid StorageProgram', () => {
-      const program = designTokenHandler.update({ token: "blue-500", value: "#2563eb" });
+      const program = designTokenHandler.update({ token: {"type":"ref","fixture":"valid_define_color","field":"token"}, value: "#2563eb" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -271,21 +256,21 @@ describe('DesignToken functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = designTokenHandler.update({ token: "blue-500", value: "#2563eb" });
+      const program = designTokenHandler.update({ token: {"type":"ref","fixture":"valid_define_color","field":"token"}, value: "#2563eb" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = designTokenHandler.update({ token: "blue-500", value: "#2563eb" });
+      const program = designTokenHandler.update({ token: {"type":"ref","fixture":"valid_define_color","field":"token"}, value: "#2563eb" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = designTokenHandler.update({ token: "blue-500", value: "#2563eb" });
+      const program = designTokenHandler.update({ token: {"type":"ref","fixture":"valid_define_color","field":"token"}, value: "#2563eb" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -298,7 +283,7 @@ describe('DesignToken functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = designTokenHandler.update({ token: "blue-500", value: "#2563eb" });
+      const program = designTokenHandler.update({ token: {"type":"ref","fixture":"valid_define_color","field":"token"}, value: "#2563eb" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -306,7 +291,7 @@ describe('DesignToken functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof designTokenHandler.update !== 'function') return;
-      const result = await interpret(designTokenHandler.update({ token: "blue-500", value: "#2563eb" }), storage);
+      const result = await interpret(designTokenHandler.update({ token: {"type":"ref","fixture":"valid_define_color","field":"token"}, value: "#2563eb" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -317,12 +302,7 @@ describe('DesignToken functional handler', () => {
       if (typeof designTokenHandler.update !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_define_color = await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_define_color?.output ?? {}));
-      const _fixtureInput = { token: "blue-500", value: "#2563eb" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(designTokenHandler.update({ ..._fixtureInput }), storage);
+      const result = await interpret(designTokenHandler.update({ token: afterResult_valid_define_color?.output?.["token"], value: "#2563eb" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -337,7 +317,7 @@ describe('DesignToken functional handler', () => {
 
   describe('remove', () => {
     it('builds a valid StorageProgram', () => {
-      const program = designTokenHandler.remove({ token: "blue-500" });
+      const program = designTokenHandler.remove({ token: {"type":"ref","fixture":"valid_define_color","field":"token"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -345,21 +325,21 @@ describe('DesignToken functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = designTokenHandler.remove({ token: "blue-500" });
+      const program = designTokenHandler.remove({ token: {"type":"ref","fixture":"valid_define_color","field":"token"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = designTokenHandler.remove({ token: "blue-500" });
+      const program = designTokenHandler.remove({ token: {"type":"ref","fixture":"valid_define_color","field":"token"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = designTokenHandler.remove({ token: "blue-500" });
+      const program = designTokenHandler.remove({ token: {"type":"ref","fixture":"valid_define_color","field":"token"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -372,7 +352,7 @@ describe('DesignToken functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = designTokenHandler.remove({ token: "blue-500" });
+      const program = designTokenHandler.remove({ token: {"type":"ref","fixture":"valid_define_color","field":"token"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -380,7 +360,7 @@ describe('DesignToken functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof designTokenHandler.remove !== 'function') return;
-      const result = await interpret(designTokenHandler.remove({ token: "blue-500" }), storage);
+      const result = await interpret(designTokenHandler.remove({ token: {"type":"ref","fixture":"valid_define_color","field":"token"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -391,12 +371,7 @@ describe('DesignToken functional handler', () => {
       if (typeof designTokenHandler.remove !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_define_color = await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_define_color?.output ?? {}));
-      const _fixtureInput = { token: "blue-500" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(designTokenHandler.remove({ ..._fixtureInput }), storage);
+      const result = await interpret(designTokenHandler.remove({ token: afterResult_valid_define_color?.output?.["token"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

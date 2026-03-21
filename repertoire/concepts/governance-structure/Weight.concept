@@ -41,7 +41,7 @@ concept Weight [W] {
         This snapshot is immutable once created.
       }
 
-      fixture snap_governance { snapshotRef: "epoch-42", participants: "[\"alice\",\"bob\"]" } after update_stake
+      fixture snap_governance { snapshotRef: $update_stake.id, participants: "[\"alice\",\"bob\"]" } after update_stake
       fixture snap_empty_participants { snapshotRef: "epoch-43", participants: "" } -> error
     }
 
@@ -65,7 +65,7 @@ concept Weight [W] {
         The snapshot does not exist.
       }
 
-      fixture get_from_snapshot { snapshot: "snapshot-epoch-42", participant: "alice" } after update_stake
+      fixture get_from_snapshot { snapshot: $update_stake.id, participant: "alice" } after update_stake
       fixture get_from_missing_snapshot { snapshot: "snapshot-missing", participant: "alice" } -> error
     }
   }

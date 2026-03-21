@@ -109,7 +109,7 @@ describe('RankedChoice functional handler', () => {
 
   describe('count', () => {
     it('builds a valid StorageProgram', () => {
-      const program = rankedChoiceHandler.count({ config: "rcv-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]}]", weights: "{}" });
+      const program = rankedChoiceHandler.count({ config: {"type":"ref","fixture":"irv_single_seat","field":"id"}, rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]}]", weights: "{}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -117,21 +117,21 @@ describe('RankedChoice functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = rankedChoiceHandler.count({ config: "rcv-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]}]", weights: "{}" });
+      const program = rankedChoiceHandler.count({ config: {"type":"ref","fixture":"irv_single_seat","field":"id"}, rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = rankedChoiceHandler.count({ config: "rcv-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]}]", weights: "{}" });
+      const program = rankedChoiceHandler.count({ config: {"type":"ref","fixture":"irv_single_seat","field":"id"}, rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = rankedChoiceHandler.count({ config: "rcv-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]}]", weights: "{}" });
+      const program = rankedChoiceHandler.count({ config: {"type":"ref","fixture":"irv_single_seat","field":"id"}, rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -144,7 +144,7 @@ describe('RankedChoice functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = rankedChoiceHandler.count({ config: "rcv-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]}]", weights: "{}" });
+      const program = rankedChoiceHandler.count({ config: {"type":"ref","fixture":"irv_single_seat","field":"id"}, rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -152,7 +152,7 @@ describe('RankedChoice functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof rankedChoiceHandler.count !== 'function') return;
-      const result = await interpret(rankedChoiceHandler.count({ config: "rcv-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]}]", weights: "{}" }), storage);
+      const result = await interpret(rankedChoiceHandler.count({ config: {"type":"ref","fixture":"irv_single_seat","field":"id"}, rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]}]", weights: "{}" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -163,12 +163,7 @@ describe('RankedChoice functional handler', () => {
       if (typeof rankedChoiceHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_irv_single_seat = await interpret(rankedChoiceHandler.configure({ eliminationMethod: "InstantRunoff", seats: "1" }), storage);
-      const _pool = Object.assign({}, (afterResult_irv_single_seat?.output ?? {}));
-      const _fixtureInput = { config: "rcv-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]}]", weights: "{}" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(rankedChoiceHandler.count({ ..._fixtureInput }), storage);
+      const result = await interpret(rankedChoiceHandler.count({ config: afterResult_irv_single_seat?.output?.["id"], rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]}]", weights: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,12 +171,7 @@ describe('RankedChoice functional handler', () => {
       if (typeof rankedChoiceHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_irv_single_seat = await interpret(rankedChoiceHandler.configure({ eliminationMethod: "InstantRunoff", seats: "1" }), storage);
-      const _pool = Object.assign({}, (afterResult_irv_single_seat?.output ?? {}));
-      const _fixtureInput = { config: "rcv-001", rankedBallots: "[]", weights: "{}" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(rankedChoiceHandler.count({ ..._fixtureInput }), storage);
+      const result = await interpret(rankedChoiceHandler.count({ config: afterResult_irv_single_seat?.output?.["id"], rankedBallots: "[]", weights: "{}" }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -189,7 +179,7 @@ describe('RankedChoice functional handler', () => {
 
   describe('getRoundDetail', () => {
     it('builds a valid StorageProgram', () => {
-      const program = rankedChoiceHandler.getRoundDetail({ config: "rcv-001", roundNumber: "1" });
+      const program = rankedChoiceHandler.getRoundDetail({ config: {"type":"ref","fixture":"irv_single_seat","field":"id"}, roundNumber: "1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -197,21 +187,21 @@ describe('RankedChoice functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = rankedChoiceHandler.getRoundDetail({ config: "rcv-001", roundNumber: "1" });
+      const program = rankedChoiceHandler.getRoundDetail({ config: {"type":"ref","fixture":"irv_single_seat","field":"id"}, roundNumber: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = rankedChoiceHandler.getRoundDetail({ config: "rcv-001", roundNumber: "1" });
+      const program = rankedChoiceHandler.getRoundDetail({ config: {"type":"ref","fixture":"irv_single_seat","field":"id"}, roundNumber: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = rankedChoiceHandler.getRoundDetail({ config: "rcv-001", roundNumber: "1" });
+      const program = rankedChoiceHandler.getRoundDetail({ config: {"type":"ref","fixture":"irv_single_seat","field":"id"}, roundNumber: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -224,7 +214,7 @@ describe('RankedChoice functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = rankedChoiceHandler.getRoundDetail({ config: "rcv-001", roundNumber: "1" });
+      const program = rankedChoiceHandler.getRoundDetail({ config: {"type":"ref","fixture":"irv_single_seat","field":"id"}, roundNumber: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -232,7 +222,7 @@ describe('RankedChoice functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof rankedChoiceHandler.getRoundDetail !== 'function') return;
-      const result = await interpret(rankedChoiceHandler.getRoundDetail({ config: "rcv-001", roundNumber: "1" }), storage);
+      const result = await interpret(rankedChoiceHandler.getRoundDetail({ config: {"type":"ref","fixture":"irv_single_seat","field":"id"}, roundNumber: "1" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -243,12 +233,7 @@ describe('RankedChoice functional handler', () => {
       if (typeof rankedChoiceHandler.getRoundDetail !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_irv_single_seat = await interpret(rankedChoiceHandler.configure({ eliminationMethod: "InstantRunoff", seats: "1" }), storage);
-      const _pool = Object.assign({}, (afterResult_irv_single_seat?.output ?? {}));
-      const _fixtureInput = { config: "rcv-001", roundNumber: "1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(rankedChoiceHandler.getRoundDetail({ ..._fixtureInput }), storage);
+      const result = await interpret(rankedChoiceHandler.getRoundDetail({ config: afterResult_irv_single_seat?.output?.["id"], roundNumber: "1" }), storage);
       expect(result.variant).toBe('ok');
     });
 

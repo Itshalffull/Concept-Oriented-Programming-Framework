@@ -109,7 +109,7 @@ describe('FinalityGate functional handler', () => {
 
   describe('confirm', () => {
     it('builds a valid StorageProgram', () => {
-      const program = finalityGateHandler.confirm({ gate: "finality-001", proof: "block-hash-0xabc123" });
+      const program = finalityGateHandler.confirm({ gate: {"type":"ref","fixture":"submit_chain_finality","field":"id"}, proof: "block-hash-0xabc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -117,21 +117,21 @@ describe('FinalityGate functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = finalityGateHandler.confirm({ gate: "finality-001", proof: "block-hash-0xabc123" });
+      const program = finalityGateHandler.confirm({ gate: {"type":"ref","fixture":"submit_chain_finality","field":"id"}, proof: "block-hash-0xabc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = finalityGateHandler.confirm({ gate: "finality-001", proof: "block-hash-0xabc123" });
+      const program = finalityGateHandler.confirm({ gate: {"type":"ref","fixture":"submit_chain_finality","field":"id"}, proof: "block-hash-0xabc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = finalityGateHandler.confirm({ gate: "finality-001", proof: "block-hash-0xabc123" });
+      const program = finalityGateHandler.confirm({ gate: {"type":"ref","fixture":"submit_chain_finality","field":"id"}, proof: "block-hash-0xabc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -144,7 +144,7 @@ describe('FinalityGate functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = finalityGateHandler.confirm({ gate: "finality-001", proof: "block-hash-0xabc123" });
+      const program = finalityGateHandler.confirm({ gate: {"type":"ref","fixture":"submit_chain_finality","field":"id"}, proof: "block-hash-0xabc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -152,7 +152,7 @@ describe('FinalityGate functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof finalityGateHandler.confirm !== 'function') return;
-      const result = await interpret(finalityGateHandler.confirm({ gate: "finality-001", proof: "block-hash-0xabc123" }), storage);
+      const result = await interpret(finalityGateHandler.confirm({ gate: {"type":"ref","fixture":"submit_chain_finality","field":"id"}, proof: "block-hash-0xabc123" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -163,12 +163,7 @@ describe('FinalityGate functional handler', () => {
       if (typeof finalityGateHandler.confirm !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_submit_chain_finality = await interpret(finalityGateHandler.submit({ operationRef: "gov-prop-300", providerRef: "chain-finality-eth" }), storage);
-      const _pool = Object.assign({}, (afterResult_submit_chain_finality?.output ?? {}));
-      const _fixtureInput = { gate: "finality-001", proof: "block-hash-0xabc123" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(finalityGateHandler.confirm({ ..._fixtureInput }), storage);
+      const result = await interpret(finalityGateHandler.confirm({ gate: afterResult_submit_chain_finality?.output?.["id"], proof: "block-hash-0xabc123" }), storage);
       expect(result.variant).toBe('ok');
     });
 

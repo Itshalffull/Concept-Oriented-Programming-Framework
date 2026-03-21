@@ -44,7 +44,7 @@ concept ContentEmbedding [E] {
         There is no embedding projection recorded for this entity.
       }
 
-      fixture remove_existing { entity_id: "node-42" } after index_page
+      fixture remove_existing { entity_id: $index_page.embedding } after index_page
       fixture remove_missing { entity_id: "" } after index_page
     }
 
@@ -57,7 +57,7 @@ concept ContentEmbedding [E] {
         The entity does not currently have an embedding projection.
       }
 
-      fixture get_existing { entity_id: "node-42" } after index_page
+      fixture get_existing { entity_id: $index_page.embedding } after index_page
       fixture get_nonexistent { entity_id: "node-999" } -> error
     }
 
@@ -73,7 +73,7 @@ concept ContentEmbedding [E] {
         No similar entities matched the current scope.
       }
 
-      fixture search_pages { entity_id: "node-42", topK: 5, source_type: "page" } after index_page
+      fixture search_pages { entity_id: $index_page.embedding, topK: 5, source_type: "page" } after index_page
       fixture search_no_entity { entity_id: "", topK: 5, source_type: "page" } -> error
     }
   }

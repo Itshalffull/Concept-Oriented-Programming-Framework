@@ -250,7 +250,7 @@ describe('Authentication functional handler', () => {
 
   describe('authenticate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = authenticationHandler.authenticate({ token: "tok-abc-123" });
+      const program = authenticationHandler.authenticate({ token: {"type":"ref","fixture":"register_local","field":"user"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -258,21 +258,21 @@ describe('Authentication functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = authenticationHandler.authenticate({ token: "tok-abc-123" });
+      const program = authenticationHandler.authenticate({ token: {"type":"ref","fixture":"register_local","field":"user"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = authenticationHandler.authenticate({ token: "tok-abc-123" });
+      const program = authenticationHandler.authenticate({ token: {"type":"ref","fixture":"register_local","field":"user"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = authenticationHandler.authenticate({ token: "tok-abc-123" });
+      const program = authenticationHandler.authenticate({ token: {"type":"ref","fixture":"register_local","field":"user"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -285,7 +285,7 @@ describe('Authentication functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = authenticationHandler.authenticate({ token: "tok-abc-123" });
+      const program = authenticationHandler.authenticate({ token: {"type":"ref","fixture":"register_local","field":"user"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -293,7 +293,7 @@ describe('Authentication functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof authenticationHandler.authenticate !== 'function') return;
-      const result = await interpret(authenticationHandler.authenticate({ token: "tok-abc-123" }), storage);
+      const result = await interpret(authenticationHandler.authenticate({ token: {"type":"ref","fixture":"register_local","field":"user"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -304,12 +304,7 @@ describe('Authentication functional handler', () => {
       if (typeof authenticationHandler.authenticate !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_local = await interpret(authenticationHandler.register({ user: "alice", provider: "local", credentials: "secret123" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_local?.output ?? {}));
-      const _fixtureInput = { token: "tok-abc-123" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(authenticationHandler.authenticate({ ..._fixtureInput }), storage);
+      const result = await interpret(authenticationHandler.authenticate({ token: afterResult_register_local?.output?.["user"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

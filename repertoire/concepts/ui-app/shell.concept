@@ -41,7 +41,7 @@ concept Shell [S] {
       -> ok(shell: S) { Place a host reference in a zone. }
       -> notfound(message: String) { Zone not defined. }
 
-      fixture assign_host_to_primary { shell: "S-1", zone: "primary", ref: "host-1" } after init_two_zones
+      fixture assign_host_to_primary { shell: "S-1", zone: "primary", ref: $init_two_zones.shell } after init_two_zones
       fixture assign_unknown_shell { shell: "S-nonexistent", zone: "primary", ref: "host-1" } -> notfound
     }
 

@@ -102,7 +102,7 @@ describe('PessimisticLock functional handler', () => {
 
   describe('checkIn', () => {
     it('builds a valid StorageProgram', () => {
-      const program = pessimisticLockHandler.checkIn({ lockId: "pessimistic-lock-1" });
+      const program = pessimisticLockHandler.checkIn({ lockId: {"type":"ref","fixture":"checkout_with_duration","field":"lockId"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('PessimisticLock functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = pessimisticLockHandler.checkIn({ lockId: "pessimistic-lock-1" });
+      const program = pessimisticLockHandler.checkIn({ lockId: {"type":"ref","fixture":"checkout_with_duration","field":"lockId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = pessimisticLockHandler.checkIn({ lockId: "pessimistic-lock-1" });
+      const program = pessimisticLockHandler.checkIn({ lockId: {"type":"ref","fixture":"checkout_with_duration","field":"lockId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = pessimisticLockHandler.checkIn({ lockId: "pessimistic-lock-1" });
+      const program = pessimisticLockHandler.checkIn({ lockId: {"type":"ref","fixture":"checkout_with_duration","field":"lockId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('PessimisticLock functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = pessimisticLockHandler.checkIn({ lockId: "pessimistic-lock-1" });
+      const program = pessimisticLockHandler.checkIn({ lockId: {"type":"ref","fixture":"checkout_with_duration","field":"lockId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('PessimisticLock functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof pessimisticLockHandler.checkIn !== 'function') return;
-      const result = await interpret(pessimisticLockHandler.checkIn({ lockId: "pessimistic-lock-1" }), storage);
+      const result = await interpret(pessimisticLockHandler.checkIn({ lockId: {"type":"ref","fixture":"checkout_with_duration","field":"lockId"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('PessimisticLock functional handler', () => {
       if (typeof pessimisticLockHandler.checkIn !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_checkout_with_duration = await interpret(pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" }), storage);
-      const _pool = Object.assign({}, (afterResult_checkout_with_duration?.output ?? {}));
-      const _fixtureInput = { lockId: "pessimistic-lock-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(pessimisticLockHandler.checkIn({ ..._fixtureInput }), storage);
+      const result = await interpret(pessimisticLockHandler.checkIn({ lockId: afterResult_checkout_with_duration?.output?.["lockId"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,7 +171,7 @@ describe('PessimisticLock functional handler', () => {
 
   describe('breakLock', () => {
     it('builds a valid StorageProgram', () => {
-      const program = pessimisticLockHandler.breakLock({ lockId: "pessimistic-lock-1", breaker: "admin@example.com", reason: "Emergency release for blocked deployment" });
+      const program = pessimisticLockHandler.breakLock({ lockId: {"type":"ref","fixture":"checkout_with_duration","field":"lockId"}, breaker: "admin@example.com", reason: "Emergency release for blocked deployment" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +179,21 @@ describe('PessimisticLock functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = pessimisticLockHandler.breakLock({ lockId: "pessimistic-lock-1", breaker: "admin@example.com", reason: "Emergency release for blocked deployment" });
+      const program = pessimisticLockHandler.breakLock({ lockId: {"type":"ref","fixture":"checkout_with_duration","field":"lockId"}, breaker: "admin@example.com", reason: "Emergency release for blocked deployment" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = pessimisticLockHandler.breakLock({ lockId: "pessimistic-lock-1", breaker: "admin@example.com", reason: "Emergency release for blocked deployment" });
+      const program = pessimisticLockHandler.breakLock({ lockId: {"type":"ref","fixture":"checkout_with_duration","field":"lockId"}, breaker: "admin@example.com", reason: "Emergency release for blocked deployment" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = pessimisticLockHandler.breakLock({ lockId: "pessimistic-lock-1", breaker: "admin@example.com", reason: "Emergency release for blocked deployment" });
+      const program = pessimisticLockHandler.breakLock({ lockId: {"type":"ref","fixture":"checkout_with_duration","field":"lockId"}, breaker: "admin@example.com", reason: "Emergency release for blocked deployment" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +206,7 @@ describe('PessimisticLock functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = pessimisticLockHandler.breakLock({ lockId: "pessimistic-lock-1", breaker: "admin@example.com", reason: "Emergency release for blocked deployment" });
+      const program = pessimisticLockHandler.breakLock({ lockId: {"type":"ref","fixture":"checkout_with_duration","field":"lockId"}, breaker: "admin@example.com", reason: "Emergency release for blocked deployment" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,7 +214,7 @@ describe('PessimisticLock functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof pessimisticLockHandler.breakLock !== 'function') return;
-      const result = await interpret(pessimisticLockHandler.breakLock({ lockId: "pessimistic-lock-1", breaker: "admin@example.com", reason: "Emergency release for blocked deployment" }), storage);
+      const result = await interpret(pessimisticLockHandler.breakLock({ lockId: {"type":"ref","fixture":"checkout_with_duration","field":"lockId"}, breaker: "admin@example.com", reason: "Emergency release for blocked deployment" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -230,12 +225,7 @@ describe('PessimisticLock functional handler', () => {
       if (typeof pessimisticLockHandler.breakLock !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_checkout_with_duration = await interpret(pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" }), storage);
-      const _pool = Object.assign({}, (afterResult_checkout_with_duration?.output ?? {}));
-      const _fixtureInput = { lockId: "pessimistic-lock-1", breaker: "admin@example.com", reason: "Emergency release for blocked deployment" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(pessimisticLockHandler.breakLock({ ..._fixtureInput }), storage);
+      const result = await interpret(pessimisticLockHandler.breakLock({ lockId: afterResult_checkout_with_duration?.output?.["lockId"], breaker: "admin@example.com", reason: "Emergency release for blocked deployment" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -250,7 +240,7 @@ describe('PessimisticLock functional handler', () => {
 
   describe('renew', () => {
     it('builds a valid StorageProgram', () => {
-      const program = pessimisticLockHandler.renew({ lockId: "pessimistic-lock-1", additionalDuration: "1800" });
+      const program = pessimisticLockHandler.renew({ lockId: {"type":"ref","fixture":"checkout_with_duration","field":"lockId"}, additionalDuration: "1800" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -258,21 +248,21 @@ describe('PessimisticLock functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = pessimisticLockHandler.renew({ lockId: "pessimistic-lock-1", additionalDuration: "1800" });
+      const program = pessimisticLockHandler.renew({ lockId: {"type":"ref","fixture":"checkout_with_duration","field":"lockId"}, additionalDuration: "1800" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = pessimisticLockHandler.renew({ lockId: "pessimistic-lock-1", additionalDuration: "1800" });
+      const program = pessimisticLockHandler.renew({ lockId: {"type":"ref","fixture":"checkout_with_duration","field":"lockId"}, additionalDuration: "1800" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = pessimisticLockHandler.renew({ lockId: "pessimistic-lock-1", additionalDuration: "1800" });
+      const program = pessimisticLockHandler.renew({ lockId: {"type":"ref","fixture":"checkout_with_duration","field":"lockId"}, additionalDuration: "1800" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -285,7 +275,7 @@ describe('PessimisticLock functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = pessimisticLockHandler.renew({ lockId: "pessimistic-lock-1", additionalDuration: "1800" });
+      const program = pessimisticLockHandler.renew({ lockId: {"type":"ref","fixture":"checkout_with_duration","field":"lockId"}, additionalDuration: "1800" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -293,7 +283,7 @@ describe('PessimisticLock functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof pessimisticLockHandler.renew !== 'function') return;
-      const result = await interpret(pessimisticLockHandler.renew({ lockId: "pessimistic-lock-1", additionalDuration: "1800" }), storage);
+      const result = await interpret(pessimisticLockHandler.renew({ lockId: {"type":"ref","fixture":"checkout_with_duration","field":"lockId"}, additionalDuration: "1800" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -304,12 +294,7 @@ describe('PessimisticLock functional handler', () => {
       if (typeof pessimisticLockHandler.renew !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_checkout_with_duration = await interpret(pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" }), storage);
-      const _pool = Object.assign({}, (afterResult_checkout_with_duration?.output ?? {}));
-      const _fixtureInput = { lockId: "pessimistic-lock-1", additionalDuration: "1800" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(pessimisticLockHandler.renew({ ..._fixtureInput }), storage);
+      const result = await interpret(pessimisticLockHandler.renew({ lockId: afterResult_checkout_with_duration?.output?.["lockId"], additionalDuration: "1800" }), storage);
       expect(result.variant).toBe('ok');
     });
 

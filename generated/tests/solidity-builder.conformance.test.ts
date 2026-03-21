@@ -102,7 +102,7 @@ describe('SolidityBuilder functional handler', () => {
 
   describe('test', () => {
     it('builds a valid StorageProgram', () => {
-      const program = solidityBuilderHandler.test({ build: "solb-001", toolchainPath: "/usr/local/bin/solc", testType: "unit" });
+      const program = solidityBuilderHandler.test({ build: {"type":"ref","fixture":"build_contract","field":"build"}, toolchainPath: "/usr/local/bin/solc", testType: "unit" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('SolidityBuilder functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = solidityBuilderHandler.test({ build: "solb-001", toolchainPath: "/usr/local/bin/solc", testType: "unit" });
+      const program = solidityBuilderHandler.test({ build: {"type":"ref","fixture":"build_contract","field":"build"}, toolchainPath: "/usr/local/bin/solc", testType: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = solidityBuilderHandler.test({ build: "solb-001", toolchainPath: "/usr/local/bin/solc", testType: "unit" });
+      const program = solidityBuilderHandler.test({ build: {"type":"ref","fixture":"build_contract","field":"build"}, toolchainPath: "/usr/local/bin/solc", testType: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = solidityBuilderHandler.test({ build: "solb-001", toolchainPath: "/usr/local/bin/solc", testType: "unit" });
+      const program = solidityBuilderHandler.test({ build: {"type":"ref","fixture":"build_contract","field":"build"}, toolchainPath: "/usr/local/bin/solc", testType: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('SolidityBuilder functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = solidityBuilderHandler.test({ build: "solb-001", toolchainPath: "/usr/local/bin/solc", testType: "unit" });
+      const program = solidityBuilderHandler.test({ build: {"type":"ref","fixture":"build_contract","field":"build"}, toolchainPath: "/usr/local/bin/solc", testType: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('SolidityBuilder functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof solidityBuilderHandler.test !== 'function') return;
-      const result = await interpret(solidityBuilderHandler.test({ build: "solb-001", toolchainPath: "/usr/local/bin/solc", testType: "unit" }), storage);
+      const result = await interpret(solidityBuilderHandler.test({ build: {"type":"ref","fixture":"build_contract","field":"build"}, toolchainPath: "/usr/local/bin/solc", testType: "unit" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('SolidityBuilder functional handler', () => {
       if (typeof solidityBuilderHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_build_contract = await interpret(solidityBuilderHandler.build({ source: "./contracts/Token.sol", toolchainPath: "/usr/local/bin/solc", platform: "evm-shanghai", config: {"mode":"release"} }), storage);
-      const _pool = Object.assign({}, (afterResult_build_contract?.output ?? {}));
-      const _fixtureInput = { build: "solb-001", toolchainPath: "/usr/local/bin/solc", testType: "unit" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(solidityBuilderHandler.test({ ..._fixtureInput }), storage);
+      const result = await interpret(solidityBuilderHandler.test({ build: afterResult_build_contract?.output?.["build"], toolchainPath: "/usr/local/bin/solc", testType: "unit" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,7 +171,7 @@ describe('SolidityBuilder functional handler', () => {
 
   describe('package', () => {
     it('builds a valid StorageProgram', () => {
-      const program = solidityBuilderHandler.package({ build: "solb-001", format: "abi-bundle" });
+      const program = solidityBuilderHandler.package({ build: {"type":"ref","fixture":"build_contract","field":"build"}, format: "abi-bundle" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +179,21 @@ describe('SolidityBuilder functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = solidityBuilderHandler.package({ build: "solb-001", format: "abi-bundle" });
+      const program = solidityBuilderHandler.package({ build: {"type":"ref","fixture":"build_contract","field":"build"}, format: "abi-bundle" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = solidityBuilderHandler.package({ build: "solb-001", format: "abi-bundle" });
+      const program = solidityBuilderHandler.package({ build: {"type":"ref","fixture":"build_contract","field":"build"}, format: "abi-bundle" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = solidityBuilderHandler.package({ build: "solb-001", format: "abi-bundle" });
+      const program = solidityBuilderHandler.package({ build: {"type":"ref","fixture":"build_contract","field":"build"}, format: "abi-bundle" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +206,7 @@ describe('SolidityBuilder functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = solidityBuilderHandler.package({ build: "solb-001", format: "abi-bundle" });
+      const program = solidityBuilderHandler.package({ build: {"type":"ref","fixture":"build_contract","field":"build"}, format: "abi-bundle" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,7 +214,7 @@ describe('SolidityBuilder functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof solidityBuilderHandler.package !== 'function') return;
-      const result = await interpret(solidityBuilderHandler.package({ build: "solb-001", format: "abi-bundle" }), storage);
+      const result = await interpret(solidityBuilderHandler.package({ build: {"type":"ref","fixture":"build_contract","field":"build"}, format: "abi-bundle" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -230,12 +225,7 @@ describe('SolidityBuilder functional handler', () => {
       if (typeof solidityBuilderHandler.package !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_build_contract = await interpret(solidityBuilderHandler.build({ source: "./contracts/Token.sol", toolchainPath: "/usr/local/bin/solc", platform: "evm-shanghai", config: {"mode":"release"} }), storage);
-      const _pool = Object.assign({}, (afterResult_build_contract?.output ?? {}));
-      const _fixtureInput = { build: "solb-001", format: "abi-bundle" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(solidityBuilderHandler.package({ ..._fixtureInput }), storage);
+      const result = await interpret(solidityBuilderHandler.package({ build: afterResult_build_contract?.output?.["build"], format: "abi-bundle" }), storage);
       expect(result.variant).toBe('ok');
     });
 

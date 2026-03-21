@@ -102,7 +102,7 @@ describe('EqualWeight functional handler', () => {
 
   describe('getWeight', () => {
     it('builds a valid StorageProgram', () => {
-      const program = equalWeightHandler.getWeight({ config: "ew-cfg-001", participant: "alice" });
+      const program = equalWeightHandler.getWeight({ config: {"type":"ref","fixture":"configure_default","field":"id"}, participant: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('EqualWeight functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = equalWeightHandler.getWeight({ config: "ew-cfg-001", participant: "alice" });
+      const program = equalWeightHandler.getWeight({ config: {"type":"ref","fixture":"configure_default","field":"id"}, participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = equalWeightHandler.getWeight({ config: "ew-cfg-001", participant: "alice" });
+      const program = equalWeightHandler.getWeight({ config: {"type":"ref","fixture":"configure_default","field":"id"}, participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = equalWeightHandler.getWeight({ config: "ew-cfg-001", participant: "alice" });
+      const program = equalWeightHandler.getWeight({ config: {"type":"ref","fixture":"configure_default","field":"id"}, participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('EqualWeight functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = equalWeightHandler.getWeight({ config: "ew-cfg-001", participant: "alice" });
+      const program = equalWeightHandler.getWeight({ config: {"type":"ref","fixture":"configure_default","field":"id"}, participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('EqualWeight functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof equalWeightHandler.getWeight !== 'function') return;
-      const result = await interpret(equalWeightHandler.getWeight({ config: "ew-cfg-001", participant: "alice" }), storage);
+      const result = await interpret(equalWeightHandler.getWeight({ config: {"type":"ref","fixture":"configure_default","field":"id"}, participant: "alice" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('EqualWeight functional handler', () => {
       if (typeof equalWeightHandler.getWeight !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_configure_default = await interpret(equalWeightHandler.configure({ weightPerPerson: "1.0" }), storage);
-      const _pool = Object.assign({}, (afterResult_configure_default?.output ?? {}));
-      const _fixtureInput = { config: "ew-cfg-001", participant: "alice" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(equalWeightHandler.getWeight({ ..._fixtureInput }), storage);
+      const result = await interpret(equalWeightHandler.getWeight({ config: afterResult_configure_default?.output?.["id"], participant: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });
 

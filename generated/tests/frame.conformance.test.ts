@@ -102,7 +102,7 @@ describe('Frame functional handler', () => {
 
   describe('resize', () => {
     it('builds a valid StorageProgram', () => {
-      const program = frameHandler.resize({ frame: "frame-1", width: "500", height: "400" });
+      const program = frameHandler.resize({ frame: {"type":"ref","fixture":"valid_create","field":"frame"}, width: "500", height: "400" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('Frame functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = frameHandler.resize({ frame: "frame-1", width: "500", height: "400" });
+      const program = frameHandler.resize({ frame: {"type":"ref","fixture":"valid_create","field":"frame"}, width: "500", height: "400" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = frameHandler.resize({ frame: "frame-1", width: "500", height: "400" });
+      const program = frameHandler.resize({ frame: {"type":"ref","fixture":"valid_create","field":"frame"}, width: "500", height: "400" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = frameHandler.resize({ frame: "frame-1", width: "500", height: "400" });
+      const program = frameHandler.resize({ frame: {"type":"ref","fixture":"valid_create","field":"frame"}, width: "500", height: "400" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('Frame functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = frameHandler.resize({ frame: "frame-1", width: "500", height: "400" });
+      const program = frameHandler.resize({ frame: {"type":"ref","fixture":"valid_create","field":"frame"}, width: "500", height: "400" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('Frame functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof frameHandler.resize !== 'function') return;
-      const result = await interpret(frameHandler.resize({ frame: "frame-1", width: "500", height: "400" }), storage);
+      const result = await interpret(frameHandler.resize({ frame: {"type":"ref","fixture":"valid_create","field":"frame"}, width: "500", height: "400" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('Frame functional handler', () => {
       if (typeof frameHandler.resize !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_create = await interpret(frameHandler.create({ canvas: "c1", name: "Group A", x: "0", y: "0", width: "400", height: "300" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
-      const _fixtureInput = { frame: "frame-1", width: "500", height: "400" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(frameHandler.resize({ ..._fixtureInput }), storage);
+      const result = await interpret(frameHandler.resize({ frame: afterResult_valid_create?.output?.["frame"], width: "500", height: "400" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -177,7 +172,7 @@ describe('Frame functional handler', () => {
 
   describe('addItem', () => {
     it('builds a valid StorageProgram', () => {
-      const program = frameHandler.addItem({ frame: "frame-1", item_id: "item1" });
+      const program = frameHandler.addItem({ frame: {"type":"ref","fixture":"valid_create","field":"frame"}, item_id: "item1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -185,21 +180,21 @@ describe('Frame functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = frameHandler.addItem({ frame: "frame-1", item_id: "item1" });
+      const program = frameHandler.addItem({ frame: {"type":"ref","fixture":"valid_create","field":"frame"}, item_id: "item1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = frameHandler.addItem({ frame: "frame-1", item_id: "item1" });
+      const program = frameHandler.addItem({ frame: {"type":"ref","fixture":"valid_create","field":"frame"}, item_id: "item1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = frameHandler.addItem({ frame: "frame-1", item_id: "item1" });
+      const program = frameHandler.addItem({ frame: {"type":"ref","fixture":"valid_create","field":"frame"}, item_id: "item1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -212,7 +207,7 @@ describe('Frame functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = frameHandler.addItem({ frame: "frame-1", item_id: "item1" });
+      const program = frameHandler.addItem({ frame: {"type":"ref","fixture":"valid_create","field":"frame"}, item_id: "item1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -220,7 +215,7 @@ describe('Frame functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof frameHandler.addItem !== 'function') return;
-      const result = await interpret(frameHandler.addItem({ frame: "frame-1", item_id: "item1" }), storage);
+      const result = await interpret(frameHandler.addItem({ frame: {"type":"ref","fixture":"valid_create","field":"frame"}, item_id: "item1" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -231,12 +226,7 @@ describe('Frame functional handler', () => {
       if (typeof frameHandler.addItem !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_create = await interpret(frameHandler.create({ canvas: "c1", name: "Group A", x: "0", y: "0", width: "400", height: "300" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
-      const _fixtureInput = { frame: "frame-1", item_id: "item1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(frameHandler.addItem({ ..._fixtureInput }), storage);
+      const result = await interpret(frameHandler.addItem({ frame: afterResult_valid_create?.output?.["frame"], item_id: "item1" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -252,7 +242,7 @@ describe('Frame functional handler', () => {
 
   describe('removeItem', () => {
     it('builds a valid StorageProgram', () => {
-      const program = frameHandler.removeItem({ frame: "frame-1", item_id: "item1" });
+      const program = frameHandler.removeItem({ frame: {"type":"ref","fixture":"valid_create","field":"frame"}, item_id: "item1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -260,21 +250,21 @@ describe('Frame functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = frameHandler.removeItem({ frame: "frame-1", item_id: "item1" });
+      const program = frameHandler.removeItem({ frame: {"type":"ref","fixture":"valid_create","field":"frame"}, item_id: "item1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = frameHandler.removeItem({ frame: "frame-1", item_id: "item1" });
+      const program = frameHandler.removeItem({ frame: {"type":"ref","fixture":"valid_create","field":"frame"}, item_id: "item1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = frameHandler.removeItem({ frame: "frame-1", item_id: "item1" });
+      const program = frameHandler.removeItem({ frame: {"type":"ref","fixture":"valid_create","field":"frame"}, item_id: "item1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -287,7 +277,7 @@ describe('Frame functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = frameHandler.removeItem({ frame: "frame-1", item_id: "item1" });
+      const program = frameHandler.removeItem({ frame: {"type":"ref","fixture":"valid_create","field":"frame"}, item_id: "item1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -295,7 +285,7 @@ describe('Frame functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof frameHandler.removeItem !== 'function') return;
-      const result = await interpret(frameHandler.removeItem({ frame: "frame-1", item_id: "item1" }), storage);
+      const result = await interpret(frameHandler.removeItem({ frame: {"type":"ref","fixture":"valid_create","field":"frame"}, item_id: "item1" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -306,12 +296,7 @@ describe('Frame functional handler', () => {
       if (typeof frameHandler.removeItem !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_create = await interpret(frameHandler.create({ canvas: "c1", name: "Group A", x: "0", y: "0", width: "400", height: "300" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
-      const _fixtureInput = { frame: "frame-1", item_id: "item1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(frameHandler.removeItem({ ..._fixtureInput }), storage);
+      const result = await interpret(frameHandler.removeItem({ frame: afterResult_valid_create?.output?.["frame"], item_id: "item1" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -327,7 +312,7 @@ describe('Frame functional handler', () => {
 
   describe('setBackground', () => {
     it('builds a valid StorageProgram', () => {
-      const program = frameHandler.setBackground({ frame: "frame-1", color: "#f0f0f0" });
+      const program = frameHandler.setBackground({ frame: {"type":"ref","fixture":"valid_create","field":"frame"}, color: "#f0f0f0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -335,21 +320,21 @@ describe('Frame functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = frameHandler.setBackground({ frame: "frame-1", color: "#f0f0f0" });
+      const program = frameHandler.setBackground({ frame: {"type":"ref","fixture":"valid_create","field":"frame"}, color: "#f0f0f0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = frameHandler.setBackground({ frame: "frame-1", color: "#f0f0f0" });
+      const program = frameHandler.setBackground({ frame: {"type":"ref","fixture":"valid_create","field":"frame"}, color: "#f0f0f0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = frameHandler.setBackground({ frame: "frame-1", color: "#f0f0f0" });
+      const program = frameHandler.setBackground({ frame: {"type":"ref","fixture":"valid_create","field":"frame"}, color: "#f0f0f0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -362,7 +347,7 @@ describe('Frame functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = frameHandler.setBackground({ frame: "frame-1", color: "#f0f0f0" });
+      const program = frameHandler.setBackground({ frame: {"type":"ref","fixture":"valid_create","field":"frame"}, color: "#f0f0f0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -370,7 +355,7 @@ describe('Frame functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof frameHandler.setBackground !== 'function') return;
-      const result = await interpret(frameHandler.setBackground({ frame: "frame-1", color: "#f0f0f0" }), storage);
+      const result = await interpret(frameHandler.setBackground({ frame: {"type":"ref","fixture":"valid_create","field":"frame"}, color: "#f0f0f0" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -381,12 +366,7 @@ describe('Frame functional handler', () => {
       if (typeof frameHandler.setBackground !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_create = await interpret(frameHandler.create({ canvas: "c1", name: "Group A", x: "0", y: "0", width: "400", height: "300" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
-      const _fixtureInput = { frame: "frame-1", color: "#f0f0f0" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(frameHandler.setBackground({ ..._fixtureInput }), storage);
+      const result = await interpret(frameHandler.setBackground({ frame: afterResult_valid_create?.output?.["frame"], color: "#f0f0f0" }), storage);
       expect(result.variant).toBe('ok');
     });
 

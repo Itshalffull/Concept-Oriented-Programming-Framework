@@ -47,7 +47,7 @@ concept Timelock [TL] {
         The operation has already been executed.
       }
 
-      fixture execute_ready { lock: "timelock-001" } after schedule_transfer
+      fixture execute_ready { lock: $schedule_transfer.id } after schedule_transfer
       fixture execute_not_found { lock: "timelock-nonexistent" } -> error
     }
 
@@ -59,7 +59,7 @@ concept Timelock [TL] {
         The operation has already been executed or expired.
       }
 
-      fixture cancel_queued { lock: "timelock-001", reason: "Governance vote rejected proposal" } after schedule_transfer
+      fixture cancel_queued { lock: $schedule_transfer.id, reason: "Governance vote rejected proposal" } after schedule_transfer
       fixture cancel_not_found { lock: "timelock-nonexistent", reason: "cleanup" } -> error
     }
   }

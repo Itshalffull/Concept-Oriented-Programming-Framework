@@ -244,7 +244,7 @@ describe('CausalClock functional handler', () => {
 
   describe('dominates', () => {
     it('builds a valid StorageProgram', () => {
-      const program = causalClockHandler.dominates({ a: "event-1", b: "event-2" });
+      const program = causalClockHandler.dominates({ a: {"type":"ref","fixture":"tick_replica_a","field":"timestamp"}, b: {"type":"ref","fixture":"tick_replica_a","field":"timestamp"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -252,21 +252,21 @@ describe('CausalClock functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = causalClockHandler.dominates({ a: "event-1", b: "event-2" });
+      const program = causalClockHandler.dominates({ a: {"type":"ref","fixture":"tick_replica_a","field":"timestamp"}, b: {"type":"ref","fixture":"tick_replica_a","field":"timestamp"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = causalClockHandler.dominates({ a: "event-1", b: "event-2" });
+      const program = causalClockHandler.dominates({ a: {"type":"ref","fixture":"tick_replica_a","field":"timestamp"}, b: {"type":"ref","fixture":"tick_replica_a","field":"timestamp"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = causalClockHandler.dominates({ a: "event-1", b: "event-2" });
+      const program = causalClockHandler.dominates({ a: {"type":"ref","fixture":"tick_replica_a","field":"timestamp"}, b: {"type":"ref","fixture":"tick_replica_a","field":"timestamp"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -279,7 +279,7 @@ describe('CausalClock functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = causalClockHandler.dominates({ a: "event-1", b: "event-2" });
+      const program = causalClockHandler.dominates({ a: {"type":"ref","fixture":"tick_replica_a","field":"timestamp"}, b: {"type":"ref","fixture":"tick_replica_a","field":"timestamp"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -287,7 +287,7 @@ describe('CausalClock functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof causalClockHandler.dominates !== 'function') return;
-      const result = await interpret(causalClockHandler.dominates({ a: "event-1", b: "event-2" }), storage);
+      const result = await interpret(causalClockHandler.dominates({ a: {"type":"ref","fixture":"tick_replica_a","field":"timestamp"}, b: {"type":"ref","fixture":"tick_replica_a","field":"timestamp"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -298,12 +298,7 @@ describe('CausalClock functional handler', () => {
       if (typeof causalClockHandler.dominates !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_tick_replica_a = await interpret(causalClockHandler.tick({ replicaId: "replica-a" }), storage);
-      const _pool = Object.assign({}, (afterResult_tick_replica_a?.output ?? {}));
-      const _fixtureInput = { a: "event-1", b: "event-2" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(causalClockHandler.dominates({ ..._fixtureInput }), storage);
+      const result = await interpret(causalClockHandler.dominates({ a: afterResult_tick_replica_a?.output?.["timestamp"], b: afterResult_tick_replica_a?.output?.["timestamp"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -311,12 +306,7 @@ describe('CausalClock functional handler', () => {
       if (typeof causalClockHandler.dominates !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_tick_replica_a = await interpret(causalClockHandler.tick({ replicaId: "replica-a" }), storage);
-      const _pool = Object.assign({}, (afterResult_tick_replica_a?.output ?? {}));
-      const _fixtureInput = { a: "nonexistent", b: "event-2" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(causalClockHandler.dominates({ ..._fixtureInput }), storage);
+      const result = await interpret(causalClockHandler.dominates({ a: "nonexistent", b: afterResult_tick_replica_a?.output?.["timestamp"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

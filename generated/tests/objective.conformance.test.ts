@@ -102,7 +102,7 @@ describe('Objective functional handler', () => {
 
   describe('updateProgress', () => {
     it('builds a valid StorageProgram', () => {
-      const program = objectiveHandler.updateProgress({ objective: "objective-001", currentValue: "50.0" });
+      const program = objectiveHandler.updateProgress({ objective: {"type":"ref","fixture":"create_revenue_goal","field":"id"}, currentValue: "50.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('Objective functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = objectiveHandler.updateProgress({ objective: "objective-001", currentValue: "50.0" });
+      const program = objectiveHandler.updateProgress({ objective: {"type":"ref","fixture":"create_revenue_goal","field":"id"}, currentValue: "50.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = objectiveHandler.updateProgress({ objective: "objective-001", currentValue: "50.0" });
+      const program = objectiveHandler.updateProgress({ objective: {"type":"ref","fixture":"create_revenue_goal","field":"id"}, currentValue: "50.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = objectiveHandler.updateProgress({ objective: "objective-001", currentValue: "50.0" });
+      const program = objectiveHandler.updateProgress({ objective: {"type":"ref","fixture":"create_revenue_goal","field":"id"}, currentValue: "50.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('Objective functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = objectiveHandler.updateProgress({ objective: "objective-001", currentValue: "50.0" });
+      const program = objectiveHandler.updateProgress({ objective: {"type":"ref","fixture":"create_revenue_goal","field":"id"}, currentValue: "50.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('Objective functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof objectiveHandler.updateProgress !== 'function') return;
-      const result = await interpret(objectiveHandler.updateProgress({ objective: "objective-001", currentValue: "50.0" }), storage);
+      const result = await interpret(objectiveHandler.updateProgress({ objective: {"type":"ref","fixture":"create_revenue_goal","field":"id"}, currentValue: "50.0" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('Objective functional handler', () => {
       if (typeof objectiveHandler.updateProgress !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_revenue_goal = await interpret(objectiveHandler.create({ title: "Increase Revenue", description: "Grow quarterly revenue by 20%", owner: "cfo@acme.com", metricRefs: ["metric-revenue"], targetDate: "2026-12-31" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_revenue_goal?.output ?? {}));
-      const _fixtureInput = { objective: "objective-001", currentValue: "50.0" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(objectiveHandler.updateProgress({ ..._fixtureInput }), storage);
+      const result = await interpret(objectiveHandler.updateProgress({ objective: afterResult_create_revenue_goal?.output?.["id"], currentValue: "50.0" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,7 +171,7 @@ describe('Objective functional handler', () => {
 
   describe('evaluate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = objectiveHandler.evaluate({ objective: "objective-001" });
+      const program = objectiveHandler.evaluate({ objective: {"type":"ref","fixture":"create_revenue_goal","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +179,21 @@ describe('Objective functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = objectiveHandler.evaluate({ objective: "objective-001" });
+      const program = objectiveHandler.evaluate({ objective: {"type":"ref","fixture":"create_revenue_goal","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = objectiveHandler.evaluate({ objective: "objective-001" });
+      const program = objectiveHandler.evaluate({ objective: {"type":"ref","fixture":"create_revenue_goal","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = objectiveHandler.evaluate({ objective: "objective-001" });
+      const program = objectiveHandler.evaluate({ objective: {"type":"ref","fixture":"create_revenue_goal","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +206,7 @@ describe('Objective functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = objectiveHandler.evaluate({ objective: "objective-001" });
+      const program = objectiveHandler.evaluate({ objective: {"type":"ref","fixture":"create_revenue_goal","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,7 +214,7 @@ describe('Objective functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof objectiveHandler.evaluate !== 'function') return;
-      const result = await interpret(objectiveHandler.evaluate({ objective: "objective-001" }), storage);
+      const result = await interpret(objectiveHandler.evaluate({ objective: {"type":"ref","fixture":"create_revenue_goal","field":"id"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -230,12 +225,7 @@ describe('Objective functional handler', () => {
       if (typeof objectiveHandler.evaluate !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_revenue_goal = await interpret(objectiveHandler.create({ title: "Increase Revenue", description: "Grow quarterly revenue by 20%", owner: "cfo@acme.com", metricRefs: ["metric-revenue"], targetDate: "2026-12-31" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_revenue_goal?.output ?? {}));
-      const _fixtureInput = { objective: "objective-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(objectiveHandler.evaluate({ ..._fixtureInput }), storage);
+      const result = await interpret(objectiveHandler.evaluate({ objective: afterResult_create_revenue_goal?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -250,7 +240,7 @@ describe('Objective functional handler', () => {
 
   describe('cancel', () => {
     it('builds a valid StorageProgram', () => {
-      const program = objectiveHandler.cancel({ objective: "objective-001", reason: "Budget constraints" });
+      const program = objectiveHandler.cancel({ objective: {"type":"ref","fixture":"create_revenue_goal","field":"id"}, reason: "Budget constraints" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -258,21 +248,21 @@ describe('Objective functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = objectiveHandler.cancel({ objective: "objective-001", reason: "Budget constraints" });
+      const program = objectiveHandler.cancel({ objective: {"type":"ref","fixture":"create_revenue_goal","field":"id"}, reason: "Budget constraints" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = objectiveHandler.cancel({ objective: "objective-001", reason: "Budget constraints" });
+      const program = objectiveHandler.cancel({ objective: {"type":"ref","fixture":"create_revenue_goal","field":"id"}, reason: "Budget constraints" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = objectiveHandler.cancel({ objective: "objective-001", reason: "Budget constraints" });
+      const program = objectiveHandler.cancel({ objective: {"type":"ref","fixture":"create_revenue_goal","field":"id"}, reason: "Budget constraints" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -285,7 +275,7 @@ describe('Objective functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = objectiveHandler.cancel({ objective: "objective-001", reason: "Budget constraints" });
+      const program = objectiveHandler.cancel({ objective: {"type":"ref","fixture":"create_revenue_goal","field":"id"}, reason: "Budget constraints" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -293,7 +283,7 @@ describe('Objective functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof objectiveHandler.cancel !== 'function') return;
-      const result = await interpret(objectiveHandler.cancel({ objective: "objective-001", reason: "Budget constraints" }), storage);
+      const result = await interpret(objectiveHandler.cancel({ objective: {"type":"ref","fixture":"create_revenue_goal","field":"id"}, reason: "Budget constraints" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -304,12 +294,7 @@ describe('Objective functional handler', () => {
       if (typeof objectiveHandler.cancel !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_revenue_goal = await interpret(objectiveHandler.create({ title: "Increase Revenue", description: "Grow quarterly revenue by 20%", owner: "cfo@acme.com", metricRefs: ["metric-revenue"], targetDate: "2026-12-31" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_revenue_goal?.output ?? {}));
-      const _fixtureInput = { objective: "objective-001", reason: "Budget constraints" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(objectiveHandler.cancel({ ..._fixtureInput }), storage);
+      const result = await interpret(objectiveHandler.cancel({ objective: afterResult_create_revenue_goal?.output?.["id"], reason: "Budget constraints" }), storage);
       expect(result.variant).toBe('ok');
     });
 

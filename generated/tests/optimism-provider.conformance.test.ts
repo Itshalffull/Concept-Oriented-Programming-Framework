@@ -102,7 +102,7 @@ describe('OptimismProvider functional handler', () => {
 
   describe('poll', () => {
     it('builds a valid StorageProgram', () => {
-      const program = optimismProviderHandler.poll({ provider: "op-provider-1" });
+      const program = optimismProviderHandler.poll({ provider: {"type":"ref","fixture":"register_mainnet","field":"provider"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('OptimismProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = optimismProviderHandler.poll({ provider: "op-provider-1" });
+      const program = optimismProviderHandler.poll({ provider: {"type":"ref","fixture":"register_mainnet","field":"provider"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = optimismProviderHandler.poll({ provider: "op-provider-1" });
+      const program = optimismProviderHandler.poll({ provider: {"type":"ref","fixture":"register_mainnet","field":"provider"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = optimismProviderHandler.poll({ provider: "op-provider-1" });
+      const program = optimismProviderHandler.poll({ provider: {"type":"ref","fixture":"register_mainnet","field":"provider"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('OptimismProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = optimismProviderHandler.poll({ provider: "op-provider-1" });
+      const program = optimismProviderHandler.poll({ provider: {"type":"ref","fixture":"register_mainnet","field":"provider"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('OptimismProvider functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof optimismProviderHandler.poll !== 'function') return;
-      const result = await interpret(optimismProviderHandler.poll({ provider: "op-provider-1" }), storage);
+      const result = await interpret(optimismProviderHandler.poll({ provider: {"type":"ref","fixture":"register_mainnet","field":"provider"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('OptimismProvider functional handler', () => {
       if (typeof optimismProviderHandler.poll !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_mainnet = await interpret(optimismProviderHandler.register({ rpc_url: "https://mainnet.optimism.io", l1_bridge_address: "0x99C9fc46f92E8a1c0deC1b1747d010903E884bE1" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_mainnet?.output ?? {}));
-      const _fixtureInput = { provider: "op-provider-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(optimismProviderHandler.poll({ ..._fixtureInput }), storage);
+      const result = await interpret(optimismProviderHandler.poll({ provider: afterResult_register_mainnet?.output?.["provider"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,7 +171,7 @@ describe('OptimismProvider functional handler', () => {
 
   describe('checkFinality', () => {
     it('builds a valid StorageProgram', () => {
-      const program = optimismProviderHandler.checkFinality({ provider: "op-provider-1", tx_hash: "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890" });
+      const program = optimismProviderHandler.checkFinality({ provider: {"type":"ref","fixture":"register_mainnet","field":"provider"}, tx_hash: "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +179,21 @@ describe('OptimismProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = optimismProviderHandler.checkFinality({ provider: "op-provider-1", tx_hash: "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890" });
+      const program = optimismProviderHandler.checkFinality({ provider: {"type":"ref","fixture":"register_mainnet","field":"provider"}, tx_hash: "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = optimismProviderHandler.checkFinality({ provider: "op-provider-1", tx_hash: "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890" });
+      const program = optimismProviderHandler.checkFinality({ provider: {"type":"ref","fixture":"register_mainnet","field":"provider"}, tx_hash: "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = optimismProviderHandler.checkFinality({ provider: "op-provider-1", tx_hash: "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890" });
+      const program = optimismProviderHandler.checkFinality({ provider: {"type":"ref","fixture":"register_mainnet","field":"provider"}, tx_hash: "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +206,7 @@ describe('OptimismProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = optimismProviderHandler.checkFinality({ provider: "op-provider-1", tx_hash: "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890" });
+      const program = optimismProviderHandler.checkFinality({ provider: {"type":"ref","fixture":"register_mainnet","field":"provider"}, tx_hash: "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,7 +214,7 @@ describe('OptimismProvider functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof optimismProviderHandler.checkFinality !== 'function') return;
-      const result = await interpret(optimismProviderHandler.checkFinality({ provider: "op-provider-1", tx_hash: "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890" }), storage);
+      const result = await interpret(optimismProviderHandler.checkFinality({ provider: {"type":"ref","fixture":"register_mainnet","field":"provider"}, tx_hash: "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -230,12 +225,7 @@ describe('OptimismProvider functional handler', () => {
       if (typeof optimismProviderHandler.checkFinality !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_mainnet = await interpret(optimismProviderHandler.register({ rpc_url: "https://mainnet.optimism.io", l1_bridge_address: "0x99C9fc46f92E8a1c0deC1b1747d010903E884bE1" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_mainnet?.output ?? {}));
-      const _fixtureInput = { provider: "op-provider-1", tx_hash: "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(optimismProviderHandler.checkFinality({ ..._fixtureInput }), storage);
+      const result = await interpret(optimismProviderHandler.checkFinality({ provider: afterResult_register_mainnet?.output?.["provider"], tx_hash: "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -250,7 +240,7 @@ describe('OptimismProvider functional handler', () => {
 
   describe('relayMessage', () => {
     it('builds a valid StorageProgram', () => {
-      const program = optimismProviderHandler.relayMessage({ provider: "op-provider-1", message_hash: "0xdeadbeef1234567890abcdef1234567890abcdef1234567890abcdef12345678" });
+      const program = optimismProviderHandler.relayMessage({ provider: {"type":"ref","fixture":"register_mainnet","field":"provider"}, message_hash: "0xdeadbeef1234567890abcdef1234567890abcdef1234567890abcdef12345678" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -258,21 +248,21 @@ describe('OptimismProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = optimismProviderHandler.relayMessage({ provider: "op-provider-1", message_hash: "0xdeadbeef1234567890abcdef1234567890abcdef1234567890abcdef12345678" });
+      const program = optimismProviderHandler.relayMessage({ provider: {"type":"ref","fixture":"register_mainnet","field":"provider"}, message_hash: "0xdeadbeef1234567890abcdef1234567890abcdef1234567890abcdef12345678" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = optimismProviderHandler.relayMessage({ provider: "op-provider-1", message_hash: "0xdeadbeef1234567890abcdef1234567890abcdef1234567890abcdef12345678" });
+      const program = optimismProviderHandler.relayMessage({ provider: {"type":"ref","fixture":"register_mainnet","field":"provider"}, message_hash: "0xdeadbeef1234567890abcdef1234567890abcdef1234567890abcdef12345678" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = optimismProviderHandler.relayMessage({ provider: "op-provider-1", message_hash: "0xdeadbeef1234567890abcdef1234567890abcdef1234567890abcdef12345678" });
+      const program = optimismProviderHandler.relayMessage({ provider: {"type":"ref","fixture":"register_mainnet","field":"provider"}, message_hash: "0xdeadbeef1234567890abcdef1234567890abcdef1234567890abcdef12345678" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -285,7 +275,7 @@ describe('OptimismProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = optimismProviderHandler.relayMessage({ provider: "op-provider-1", message_hash: "0xdeadbeef1234567890abcdef1234567890abcdef1234567890abcdef12345678" });
+      const program = optimismProviderHandler.relayMessage({ provider: {"type":"ref","fixture":"register_mainnet","field":"provider"}, message_hash: "0xdeadbeef1234567890abcdef1234567890abcdef1234567890abcdef12345678" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -293,7 +283,7 @@ describe('OptimismProvider functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof optimismProviderHandler.relayMessage !== 'function') return;
-      const result = await interpret(optimismProviderHandler.relayMessage({ provider: "op-provider-1", message_hash: "0xdeadbeef1234567890abcdef1234567890abcdef1234567890abcdef12345678" }), storage);
+      const result = await interpret(optimismProviderHandler.relayMessage({ provider: {"type":"ref","fixture":"register_mainnet","field":"provider"}, message_hash: "0xdeadbeef1234567890abcdef1234567890abcdef1234567890abcdef12345678" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -304,12 +294,7 @@ describe('OptimismProvider functional handler', () => {
       if (typeof optimismProviderHandler.relayMessage !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_mainnet = await interpret(optimismProviderHandler.register({ rpc_url: "https://mainnet.optimism.io", l1_bridge_address: "0x99C9fc46f92E8a1c0deC1b1747d010903E884bE1" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_mainnet?.output ?? {}));
-      const _fixtureInput = { provider: "op-provider-1", message_hash: "0xdeadbeef1234567890abcdef1234567890abcdef1234567890abcdef12345678" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(optimismProviderHandler.relayMessage({ ..._fixtureInput }), storage);
+      const result = await interpret(optimismProviderHandler.relayMessage({ provider: afterResult_register_mainnet?.output?.["provider"], message_hash: "0xdeadbeef1234567890abcdef1234567890abcdef1234567890abcdef12345678" }), storage);
       expect(result.variant).toBe('ok');
     });
 

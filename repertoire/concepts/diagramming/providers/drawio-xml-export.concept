@@ -29,8 +29,8 @@ concept DrawioXmlExportProvider [C] {
       }
       -> error(message: String) { Export failed. }
 
-      fixture default_export { canvas_id: "canvas-1" } after valid
-      fixture with_compress { canvas_id: "canvas-2", options: { compress: true } } after valid
+      fixture default_export { canvas_id: $valid.name } after valid
+      fixture with_compress { canvas_id: $valid.name, options: { compress: true } } after valid
       fixture empty_canvas { canvas_id: "" } -> error
     }
 

@@ -62,7 +62,7 @@ concept SybilResistance [S] {
         The challenge does not exist.
       }
 
-      fixture resolve_upheld { challengeId: "challenge-1001", outcome: "upheld" } after verify_alice
+      fixture resolve_upheld { challengeId: $verify_alice.id, outcome: "upheld" } after verify_alice
       fixture resolve_nonexistent { challengeId: "challenge-nonexistent", outcome: "upheld" } -> error
     }
   }

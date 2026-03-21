@@ -64,8 +64,8 @@ concept VersionContext [C] {
         version-aware routing syncs call.
       }
 
-      fixture resolve_with_context { user: "alice", entity_id: "article-42" } after push_first
-      fixture resolve_base_user { user: "unknown-user", entity_id: "article-42" } after push_first
+      fixture resolve_with_context { user: "alice", entity_id: $push_first.context } after push_first
+      fixture resolve_base_user { user: "unknown-user", entity_id: $push_first.context } after push_first
     }
   }
 

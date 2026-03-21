@@ -65,7 +65,7 @@ concept Treasury [TR] {
         No allocation found with this identifier.
       }
 
-      fixture release_existing { allocation: "alloc-001" } after deposit_eth
+      fixture release_existing { allocation: $deposit_eth.id } after deposit_eth
       fixture release_nonexistent { allocation: "alloc-nonexistent" } -> error
     }
   }

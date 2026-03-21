@@ -98,7 +98,7 @@ concept WidgetImplementationEntity [I] {
         the generated component's rendered DOM/view elements.
         Result as serialized JSON array of { part, element, selector }.
       }
-      fixture mapping_valid { impl: "impl-uuid-1" } after register_react_dialog
+      fixture mapping_valid { impl: $register_react_dialog.impl } after register_react_dialog
       fixture mapping_missing { impl: "nonexistent-id" } after register_react_dialog
     }
 
@@ -145,7 +145,7 @@ concept WidgetImplementationEntity [I] {
       -> outOfRange(line: Int, maxLine: Int) {
         The given position is outside the implementation's line range.
       }
-      fixture resolve_node { impl: "impl-uuid-1", line: 15, col: 4 } after register_react_dialog
+      fixture resolve_node { impl: $register_react_dialog.impl, line: 15, col: 4 } after register_react_dialog
       fixture resolve_node_out_of_range { impl: "impl-uuid-1", line: 99999, col: 1 } -> error
     }
   }

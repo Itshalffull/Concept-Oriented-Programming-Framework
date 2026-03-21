@@ -47,7 +47,7 @@ concept RetentionPolicy [R] {
         Legal hold applied. All records matching scope pattern are held.
       }
 
-      fixture apply_litigation_hold { name: "litigation-2024", scope: "matter:123/*", reason: "pending lawsuit", issuer: "legal-dept" } after set_audit_retention
+      fixture apply_litigation_hold { name: $set_audit_retention.policyId, scope: "matter:123/*", reason: "pending lawsuit", issuer: "legal-dept" } after set_audit_retention
       fixture empty_hold_name { name: "", scope: "matter:*", reason: "test", issuer: "admin" } after set_audit_retention
     }
 
@@ -62,7 +62,7 @@ concept RetentionPolicy [R] {
         Hold was already released.
       }
 
-      fixture release_existing { holdId: "hold-1", releasedBy: "legal-dept", reason: "case settled" } after set_audit_retention
+      fixture release_existing { holdId: $set_audit_retention.policyId, releasedBy: "legal-dept", reason: "case settled" } after set_audit_retention
       fixture release_empty_by { holdId: "hold-1", releasedBy: "", reason: "test" } -> error
     }
 

@@ -177,7 +177,7 @@ describe('RageQuit functional handler', () => {
 
   describe('claim', () => {
     it('builds a valid StorageProgram', () => {
-      const program = rageQuitHandler.claim({ exit: "rq-001" });
+      const program = rageQuitHandler.claim({ exit: {"type":"ref","fixture":"initiate_exit","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -185,21 +185,21 @@ describe('RageQuit functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = rageQuitHandler.claim({ exit: "rq-001" });
+      const program = rageQuitHandler.claim({ exit: {"type":"ref","fixture":"initiate_exit","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = rageQuitHandler.claim({ exit: "rq-001" });
+      const program = rageQuitHandler.claim({ exit: {"type":"ref","fixture":"initiate_exit","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = rageQuitHandler.claim({ exit: "rq-001" });
+      const program = rageQuitHandler.claim({ exit: {"type":"ref","fixture":"initiate_exit","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -212,7 +212,7 @@ describe('RageQuit functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = rageQuitHandler.claim({ exit: "rq-001" });
+      const program = rageQuitHandler.claim({ exit: {"type":"ref","fixture":"initiate_exit","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -220,7 +220,7 @@ describe('RageQuit functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof rageQuitHandler.claim !== 'function') return;
-      const result = await interpret(rageQuitHandler.claim({ exit: "rq-001" }), storage);
+      const result = await interpret(rageQuitHandler.claim({ exit: {"type":"ref","fixture":"initiate_exit","field":"id"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -231,12 +231,7 @@ describe('RageQuit functional handler', () => {
       if (typeof rageQuitHandler.claim !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_initiate_exit = await interpret(rageQuitHandler.initiate({ member: "0xAliceDaoMember", shares: "150.0", loot: "50.0" }), storage);
-      const _pool = Object.assign({}, (afterResult_initiate_exit?.output ?? {}));
-      const _fixtureInput = { exit: "rq-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(rageQuitHandler.claim({ ..._fixtureInput }), storage);
+      const result = await interpret(rageQuitHandler.claim({ exit: afterResult_initiate_exit?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

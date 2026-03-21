@@ -42,7 +42,7 @@ concept FieldMapping [F] {
         A required field is missing or a transform within the mapping failed.
       }
 
-      fixture apply_record { record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: "map-1" } after map_title
+      fixture apply_record { record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: $map_title.id } after map_title
       fixture apply_missing { record: "{\"title\":\"Hello\"}", mappingId: "map-missing" } after map_title -> notfound
       fixture apply_bad_json { record: "not-json", mappingId: "map-1" } -> error
     }
@@ -55,7 +55,7 @@ concept FieldMapping [F] {
         Mapping does not exist.
       }
 
-      fixture reverse_record { record: "{\"headline\":\"Hello\",\"body\":\"World\"}", mappingId: "map-1" } after map_title
+      fixture reverse_record { record: "{\"headline\":\"Hello\",\"body\":\"World\"}", mappingId: $map_title.id } after map_title
       fixture reverse_missing { record: "{}", mappingId: "map-missing" } after map_title -> notfound
     }
 

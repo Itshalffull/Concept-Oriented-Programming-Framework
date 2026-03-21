@@ -257,7 +257,7 @@ describe('WidgetEntity functional handler', () => {
 
   describe('findComposing', () => {
     it('builds a valid StorageProgram', () => {
-      const program = widgetEntityHandler.findComposing({ widget: "widget-entity-1" });
+      const program = widgetEntityHandler.findComposing({ widget: {"type":"ref","fixture":"register_dialog","field":"entity"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -265,21 +265,21 @@ describe('WidgetEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = widgetEntityHandler.findComposing({ widget: "widget-entity-1" });
+      const program = widgetEntityHandler.findComposing({ widget: {"type":"ref","fixture":"register_dialog","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = widgetEntityHandler.findComposing({ widget: "widget-entity-1" });
+      const program = widgetEntityHandler.findComposing({ widget: {"type":"ref","fixture":"register_dialog","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = widgetEntityHandler.findComposing({ widget: "widget-entity-1" });
+      const program = widgetEntityHandler.findComposing({ widget: {"type":"ref","fixture":"register_dialog","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -292,7 +292,7 @@ describe('WidgetEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = widgetEntityHandler.findComposing({ widget: "widget-entity-1" });
+      const program = widgetEntityHandler.findComposing({ widget: {"type":"ref","fixture":"register_dialog","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -300,7 +300,7 @@ describe('WidgetEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof widgetEntityHandler.findComposing !== 'function') return;
-      const result = await interpret(widgetEntityHandler.findComposing({ widget: "widget-entity-1" }), storage);
+      const result = await interpret(widgetEntityHandler.findComposing({ widget: {"type":"ref","fixture":"register_dialog","field":"entity"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -311,12 +311,7 @@ describe('WidgetEntity functional handler', () => {
       if (typeof widgetEntityHandler.findComposing !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_dialog = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_dialog?.output ?? {}));
-      const _fixtureInput = { widget: "widget-entity-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(widgetEntityHandler.findComposing({ ..._fixtureInput }), storage);
+      const result = await interpret(widgetEntityHandler.findComposing({ widget: afterResult_register_dialog?.output?.["entity"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -337,12 +332,7 @@ describe('WidgetEntity functional handler', () => {
       if (typeof widgetEntityHandler.findComposing !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_dialog = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_dialog?.output ?? {}));
-      const _fixtureInput = { widget: "widget-entity-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(widgetEntityHandler.findComposing({ ..._fixtureInput }), storage);
+      const result = await interpret(widgetEntityHandler.findComposing({ widget: afterResult_register_dialog?.output?.["entity"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -363,7 +353,7 @@ describe('WidgetEntity functional handler', () => {
 
   describe('findComposedBy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = widgetEntityHandler.findComposedBy({ widget: "widget-entity-1" });
+      const program = widgetEntityHandler.findComposedBy({ widget: {"type":"ref","fixture":"register_dialog","field":"entity"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -371,21 +361,21 @@ describe('WidgetEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = widgetEntityHandler.findComposedBy({ widget: "widget-entity-1" });
+      const program = widgetEntityHandler.findComposedBy({ widget: {"type":"ref","fixture":"register_dialog","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = widgetEntityHandler.findComposedBy({ widget: "widget-entity-1" });
+      const program = widgetEntityHandler.findComposedBy({ widget: {"type":"ref","fixture":"register_dialog","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = widgetEntityHandler.findComposedBy({ widget: "widget-entity-1" });
+      const program = widgetEntityHandler.findComposedBy({ widget: {"type":"ref","fixture":"register_dialog","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -398,7 +388,7 @@ describe('WidgetEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = widgetEntityHandler.findComposedBy({ widget: "widget-entity-1" });
+      const program = widgetEntityHandler.findComposedBy({ widget: {"type":"ref","fixture":"register_dialog","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -406,7 +396,7 @@ describe('WidgetEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof widgetEntityHandler.findComposedBy !== 'function') return;
-      const result = await interpret(widgetEntityHandler.findComposedBy({ widget: "widget-entity-1" }), storage);
+      const result = await interpret(widgetEntityHandler.findComposedBy({ widget: {"type":"ref","fixture":"register_dialog","field":"entity"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -417,12 +407,7 @@ describe('WidgetEntity functional handler', () => {
       if (typeof widgetEntityHandler.findComposedBy !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_dialog = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_dialog?.output ?? {}));
-      const _fixtureInput = { widget: "widget-entity-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(widgetEntityHandler.findComposedBy({ ..._fixtureInput }), storage);
+      const result = await interpret(widgetEntityHandler.findComposedBy({ widget: afterResult_register_dialog?.output?.["entity"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -443,12 +428,7 @@ describe('WidgetEntity functional handler', () => {
       if (typeof widgetEntityHandler.findComposedBy !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_dialog = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_dialog?.output ?? {}));
-      const _fixtureInput = { widget: "widget-entity-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(widgetEntityHandler.findComposedBy({ ..._fixtureInput }), storage);
+      const result = await interpret(widgetEntityHandler.findComposedBy({ widget: afterResult_register_dialog?.output?.["entity"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -469,7 +449,7 @@ describe('WidgetEntity functional handler', () => {
 
   describe('generatedComponents', () => {
     it('builds a valid StorageProgram', () => {
-      const program = widgetEntityHandler.generatedComponents({ widget: "widget-entity-1" });
+      const program = widgetEntityHandler.generatedComponents({ widget: {"type":"ref","fixture":"register_dialog","field":"entity"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -477,21 +457,21 @@ describe('WidgetEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = widgetEntityHandler.generatedComponents({ widget: "widget-entity-1" });
+      const program = widgetEntityHandler.generatedComponents({ widget: {"type":"ref","fixture":"register_dialog","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = widgetEntityHandler.generatedComponents({ widget: "widget-entity-1" });
+      const program = widgetEntityHandler.generatedComponents({ widget: {"type":"ref","fixture":"register_dialog","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = widgetEntityHandler.generatedComponents({ widget: "widget-entity-1" });
+      const program = widgetEntityHandler.generatedComponents({ widget: {"type":"ref","fixture":"register_dialog","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -504,7 +484,7 @@ describe('WidgetEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = widgetEntityHandler.generatedComponents({ widget: "widget-entity-1" });
+      const program = widgetEntityHandler.generatedComponents({ widget: {"type":"ref","fixture":"register_dialog","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -512,7 +492,7 @@ describe('WidgetEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof widgetEntityHandler.generatedComponents !== 'function') return;
-      const result = await interpret(widgetEntityHandler.generatedComponents({ widget: "widget-entity-1" }), storage);
+      const result = await interpret(widgetEntityHandler.generatedComponents({ widget: {"type":"ref","fixture":"register_dialog","field":"entity"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -523,12 +503,7 @@ describe('WidgetEntity functional handler', () => {
       if (typeof widgetEntityHandler.generatedComponents !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_dialog = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_dialog?.output ?? {}));
-      const _fixtureInput = { widget: "widget-entity-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(widgetEntityHandler.generatedComponents({ ..._fixtureInput }), storage);
+      const result = await interpret(widgetEntityHandler.generatedComponents({ widget: afterResult_register_dialog?.output?.["entity"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -549,7 +524,7 @@ describe('WidgetEntity functional handler', () => {
 
   describe('accessibilityAudit', () => {
     it('builds a valid StorageProgram', () => {
-      const program = widgetEntityHandler.accessibilityAudit({ widget: "widget-entity-1" });
+      const program = widgetEntityHandler.accessibilityAudit({ widget: {"type":"ref","fixture":"register_dialog","field":"entity"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -557,21 +532,21 @@ describe('WidgetEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = widgetEntityHandler.accessibilityAudit({ widget: "widget-entity-1" });
+      const program = widgetEntityHandler.accessibilityAudit({ widget: {"type":"ref","fixture":"register_dialog","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = widgetEntityHandler.accessibilityAudit({ widget: "widget-entity-1" });
+      const program = widgetEntityHandler.accessibilityAudit({ widget: {"type":"ref","fixture":"register_dialog","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = widgetEntityHandler.accessibilityAudit({ widget: "widget-entity-1" });
+      const program = widgetEntityHandler.accessibilityAudit({ widget: {"type":"ref","fixture":"register_dialog","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -584,7 +559,7 @@ describe('WidgetEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = widgetEntityHandler.accessibilityAudit({ widget: "widget-entity-1" });
+      const program = widgetEntityHandler.accessibilityAudit({ widget: {"type":"ref","fixture":"register_dialog","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -592,7 +567,7 @@ describe('WidgetEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof widgetEntityHandler.accessibilityAudit !== 'function') return;
-      const result = await interpret(widgetEntityHandler.accessibilityAudit({ widget: "widget-entity-1" }), storage);
+      const result = await interpret(widgetEntityHandler.accessibilityAudit({ widget: {"type":"ref","fixture":"register_dialog","field":"entity"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -603,12 +578,7 @@ describe('WidgetEntity functional handler', () => {
       if (typeof widgetEntityHandler.accessibilityAudit !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_dialog = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_dialog?.output ?? {}));
-      const _fixtureInput = { widget: "widget-entity-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(widgetEntityHandler.accessibilityAudit({ ..._fixtureInput }), storage);
+      const result = await interpret(widgetEntityHandler.accessibilityAudit({ widget: afterResult_register_dialog?.output?.["entity"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -623,12 +593,7 @@ describe('WidgetEntity functional handler', () => {
       if (typeof widgetEntityHandler.accessibilityAudit !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_dialog = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_dialog?.output ?? {}));
-      const _fixtureInput = { widget: "widget-entity-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(widgetEntityHandler.accessibilityAudit({ ..._fixtureInput }), storage);
+      const result = await interpret(widgetEntityHandler.accessibilityAudit({ widget: afterResult_register_dialog?.output?.["entity"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -636,7 +601,7 @@ describe('WidgetEntity functional handler', () => {
 
   describe('traceToConcept', () => {
     it('builds a valid StorageProgram', () => {
-      const program = widgetEntityHandler.traceToConcept({ widget: "widget-entity-1" });
+      const program = widgetEntityHandler.traceToConcept({ widget: {"type":"ref","fixture":"register_dialog","field":"entity"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -644,21 +609,21 @@ describe('WidgetEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = widgetEntityHandler.traceToConcept({ widget: "widget-entity-1" });
+      const program = widgetEntityHandler.traceToConcept({ widget: {"type":"ref","fixture":"register_dialog","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = widgetEntityHandler.traceToConcept({ widget: "widget-entity-1" });
+      const program = widgetEntityHandler.traceToConcept({ widget: {"type":"ref","fixture":"register_dialog","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = widgetEntityHandler.traceToConcept({ widget: "widget-entity-1" });
+      const program = widgetEntityHandler.traceToConcept({ widget: {"type":"ref","fixture":"register_dialog","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -671,7 +636,7 @@ describe('WidgetEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = widgetEntityHandler.traceToConcept({ widget: "widget-entity-1" });
+      const program = widgetEntityHandler.traceToConcept({ widget: {"type":"ref","fixture":"register_dialog","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -679,7 +644,7 @@ describe('WidgetEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof widgetEntityHandler.traceToConcept !== 'function') return;
-      const result = await interpret(widgetEntityHandler.traceToConcept({ widget: "widget-entity-1" }), storage);
+      const result = await interpret(widgetEntityHandler.traceToConcept({ widget: {"type":"ref","fixture":"register_dialog","field":"entity"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -690,12 +655,7 @@ describe('WidgetEntity functional handler', () => {
       if (typeof widgetEntityHandler.traceToConcept !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_dialog = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_dialog?.output ?? {}));
-      const _fixtureInput = { widget: "widget-entity-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(widgetEntityHandler.traceToConcept({ ..._fixtureInput }), storage);
+      const result = await interpret(widgetEntityHandler.traceToConcept({ widget: afterResult_register_dialog?.output?.["entity"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

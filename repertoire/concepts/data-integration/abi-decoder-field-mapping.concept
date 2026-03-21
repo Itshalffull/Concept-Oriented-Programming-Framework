@@ -52,7 +52,7 @@ concept AbiDecoderFieldMapping [F] {
         with the ABI parameter type.
       }
 
-      fixture reverse_valid { data: "{\"owner\":\"0xAbC123\",\"amount\":100}", mapper: "abi-map-1" } after apply_valid
+      fixture reverse_valid { data: "{\"owner\":\"0xAbC123\",\"amount\":100}", mapper: $apply_valid.mapped } after apply_valid
       fixture reverse_missing_mapper { data: "{}", mapper: "nonexistent" } after apply_valid -> notfound
       fixture reverse_bad_json { data: "not-json", mapper: "abi-map-1" } -> error
     }

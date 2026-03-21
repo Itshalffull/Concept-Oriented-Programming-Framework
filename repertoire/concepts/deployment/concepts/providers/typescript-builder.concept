@@ -65,8 +65,8 @@ concept TypeScriptBuilder [N] {
         Some tests failed.
       }
 
-      fixture test_unit { build: "tsb-001", toolchainPath: "/usr/local/bin/tsc", testType: "unit" } after build_node_release
-      fixture test_with_invocation { build: "tsb-001", toolchainPath: "/usr/local/bin/tsc", invocation: { command: "npx vitest run", args: ["--reporter=json"], outputFormat: "vitest-json" }, testType: "unit" } after build_node_release
+      fixture test_unit { build: $build_node_release.build, toolchainPath: "/usr/local/bin/tsc", testType: "unit" } after build_node_release
+      fixture test_with_invocation { build: $build_node_release.build, toolchainPath: "/usr/local/bin/tsc", invocation: { command: "npx vitest run", args: ["--reporter=json"], outputFormat: "vitest-json" }, testType: "unit" } after build_node_release
       fixture test_missing_build { build: "", toolchainPath: "/usr/local/bin/tsc", testType: "unit" } -> error
     }
 
@@ -81,8 +81,8 @@ concept TypeScriptBuilder [N] {
         Requested format not available.
       }
 
-      fixture package_npm { build: "tsb-001", format: "npm" } after build_node_release
-      fixture package_bundle { build: "tsb-001", format: "bundle" } after build_node_release
+      fixture package_npm { build: $build_node_release.build, format: "npm" } after build_node_release
+      fixture package_bundle { build: $build_node_release.build, format: "bundle" } after build_node_release
       fixture package_invalid_format { build: "tsb-001", format: "zip" } -> error
     }
 

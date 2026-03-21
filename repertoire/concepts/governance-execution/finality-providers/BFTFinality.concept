@@ -49,7 +49,7 @@ concept BFTFinality [BF] {
         A finality round is initiated by the proposer.
       }
 
-      fixture propose_round { committee: "bft-001", operationRef: "gov-prop-55", proposer: "val-1" } after configure_pbft
+      fixture propose_round { committee: $configure_pbft.id, operationRef: $configure_pbft.id, proposer: $configure_pbft.id } after configure_pbft
       fixture propose_unknown_committee { committee: "bft-nonexistent", operationRef: "gov-prop-55", proposer: "val-1" } -> error
     }
 
@@ -61,8 +61,8 @@ concept BFTFinality [BF] {
         The voter is not a committee member.
       }
 
-      fixture vote_approve { committee: "bft-001", roundNumber: 1, validator: "val-1", approve: true } after configure_pbft
-      fixture vote_reject { committee: "bft-001", roundNumber: 1, validator: "val-2", approve: false } after configure_pbft
+      fixture vote_approve { committee: $configure_pbft.id, roundNumber: 1, validator: $configure_pbft.id, approve: true } after configure_pbft
+      fixture vote_reject { committee: $configure_pbft.id, roundNumber: 1, validator: $configure_pbft.id, approve: false } after configure_pbft
       fixture vote_not_member { committee: "bft-001", roundNumber: 1, validator: "unknown-val", approve: true } -> error
     }
 
@@ -77,8 +77,8 @@ concept BFTFinality [BF] {
         Conflicting votes detected from a validator.
       }
 
-      fixture check_consensus_reached { committee: "bft-001", roundNumber: 1 } after configure_pbft
-      fixture check_consensus_insufficient { committee: "bft-001", roundNumber: 2 } after configure_pbft
+      fixture check_consensus_reached { committee: $configure_pbft.id, roundNumber: 1 } after configure_pbft
+      fixture check_consensus_insufficient { committee: $configure_pbft.id, roundNumber: 2 } after configure_pbft
       fixture check_consensus_unknown_round { committee: "bft-001", roundNumber: 9999 } -> error
     }
   }

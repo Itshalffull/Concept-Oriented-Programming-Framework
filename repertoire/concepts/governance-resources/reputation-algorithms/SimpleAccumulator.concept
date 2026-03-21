@@ -28,7 +28,7 @@ concept SimpleAccumulator [SA] {
         The participant's score increases by the given amount, clamped to cap if set.
       }
 
-      fixture add_score { config: "acc-001", participant: "alice", amount: 25.0 } after configure_with_decay
+      fixture add_score { config: $configure_with_decay.id, participant: "alice", amount: 25.0 } after configure_with_decay
       fixture add_negative { config: "acc-001", participant: "alice", amount: -10.0 } -> error
     }
 
@@ -40,7 +40,7 @@ concept SimpleAccumulator [SA] {
         No decay rate is configured.
       }
 
-      fixture apply_decay_alice { config: "acc-001", participant: "alice" } after configure_with_decay
+      fixture apply_decay_alice { config: $configure_with_decay.id, participant: "alice" } after configure_with_decay
       fixture apply_decay_no_config { config: "acc-nonexistent", participant: "alice" } -> error
     }
 
@@ -49,7 +49,7 @@ concept SimpleAccumulator [SA] {
         Returns the participant's current accumulated score.
       }
 
-      fixture get_alice_score { config: "acc-001", participant: "alice" } after configure_with_decay
+      fixture get_alice_score { config: $configure_with_decay.id, participant: "alice" } after configure_with_decay
       fixture get_unknown_score { config: "acc-001", participant: "" } -> error
     }
   }

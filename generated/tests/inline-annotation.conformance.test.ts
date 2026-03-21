@@ -102,7 +102,7 @@ describe('InlineAnnotation functional handler', () => {
 
   describe('accept', () => {
     it('builds a valid StorageProgram', () => {
-      const program = inlineAnnotationHandler.accept({ annotationId: "inline-annotation-1" });
+      const program = inlineAnnotationHandler.accept({ annotationId: {"type":"ref","fixture":"annotate_insertion","field":"annotationId"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('InlineAnnotation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = inlineAnnotationHandler.accept({ annotationId: "inline-annotation-1" });
+      const program = inlineAnnotationHandler.accept({ annotationId: {"type":"ref","fixture":"annotate_insertion","field":"annotationId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = inlineAnnotationHandler.accept({ annotationId: "inline-annotation-1" });
+      const program = inlineAnnotationHandler.accept({ annotationId: {"type":"ref","fixture":"annotate_insertion","field":"annotationId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = inlineAnnotationHandler.accept({ annotationId: "inline-annotation-1" });
+      const program = inlineAnnotationHandler.accept({ annotationId: {"type":"ref","fixture":"annotate_insertion","field":"annotationId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('InlineAnnotation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = inlineAnnotationHandler.accept({ annotationId: "inline-annotation-1" });
+      const program = inlineAnnotationHandler.accept({ annotationId: {"type":"ref","fixture":"annotate_insertion","field":"annotationId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('InlineAnnotation functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof inlineAnnotationHandler.accept !== 'function') return;
-      const result = await interpret(inlineAnnotationHandler.accept({ annotationId: "inline-annotation-1" }), storage);
+      const result = await interpret(inlineAnnotationHandler.accept({ annotationId: {"type":"ref","fixture":"annotate_insertion","field":"annotationId"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('InlineAnnotation functional handler', () => {
       if (typeof inlineAnnotationHandler.accept !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_annotate_insertion = await interpret(inlineAnnotationHandler.annotate({ contentRef: "doc-readme", changeType: "insertion", scope: "new paragraph content", author: "alice@example.com" }), storage);
-      const _pool = Object.assign({}, (afterResult_annotate_insertion?.output ?? {}));
-      const _fixtureInput = { annotationId: "inline-annotation-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(inlineAnnotationHandler.accept({ ..._fixtureInput }), storage);
+      const result = await interpret(inlineAnnotationHandler.accept({ annotationId: afterResult_annotate_insertion?.output?.["annotationId"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,7 +171,7 @@ describe('InlineAnnotation functional handler', () => {
 
   describe('reject', () => {
     it('builds a valid StorageProgram', () => {
-      const program = inlineAnnotationHandler.reject({ annotationId: "inline-annotation-1" });
+      const program = inlineAnnotationHandler.reject({ annotationId: {"type":"ref","fixture":"accept_pending","field":"cleanContent"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +179,21 @@ describe('InlineAnnotation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = inlineAnnotationHandler.reject({ annotationId: "inline-annotation-1" });
+      const program = inlineAnnotationHandler.reject({ annotationId: {"type":"ref","fixture":"accept_pending","field":"cleanContent"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = inlineAnnotationHandler.reject({ annotationId: "inline-annotation-1" });
+      const program = inlineAnnotationHandler.reject({ annotationId: {"type":"ref","fixture":"accept_pending","field":"cleanContent"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = inlineAnnotationHandler.reject({ annotationId: "inline-annotation-1" });
+      const program = inlineAnnotationHandler.reject({ annotationId: {"type":"ref","fixture":"accept_pending","field":"cleanContent"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +206,7 @@ describe('InlineAnnotation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = inlineAnnotationHandler.reject({ annotationId: "inline-annotation-1" });
+      const program = inlineAnnotationHandler.reject({ annotationId: {"type":"ref","fixture":"accept_pending","field":"cleanContent"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,7 +214,7 @@ describe('InlineAnnotation functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof inlineAnnotationHandler.reject !== 'function') return;
-      const result = await interpret(inlineAnnotationHandler.reject({ annotationId: "inline-annotation-1" }), storage);
+      const result = await interpret(inlineAnnotationHandler.reject({ annotationId: {"type":"ref","fixture":"accept_pending","field":"cleanContent"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -230,13 +225,8 @@ describe('InlineAnnotation functional handler', () => {
       if (typeof inlineAnnotationHandler.reject !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_annotate_insertion = await interpret(inlineAnnotationHandler.annotate({ contentRef: "doc-readme", changeType: "insertion", scope: "new paragraph content", author: "alice@example.com" }), storage);
-      const afterResult_accept_pending = await interpret(inlineAnnotationHandler.accept({ annotationId: "inline-annotation-1" }), storage);
-      const _pool = Object.assign({}, (afterResult_annotate_insertion?.output ?? {}), (afterResult_accept_pending?.output ?? {}));
-      const _fixtureInput = { annotationId: "inline-annotation-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(inlineAnnotationHandler.reject({ ..._fixtureInput }), storage);
+      const afterResult_accept_pending = await interpret(inlineAnnotationHandler.accept({ annotationId: {"type":"ref","fixture":"annotate_insertion","field":"annotationId"} }), storage);
+      const result = await interpret(inlineAnnotationHandler.reject({ annotationId: afterResult_accept_pending?.output?.["cleanContent"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -385,7 +375,7 @@ describe('InlineAnnotation functional handler', () => {
       if (typeof inlineAnnotationHandler.rejectAll !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_annotate_insertion = await interpret(inlineAnnotationHandler.annotate({ contentRef: "doc-readme", changeType: "insertion", scope: "new paragraph content", author: "alice@example.com" }), storage);
-      const afterResult_accept_pending = await interpret(inlineAnnotationHandler.accept({ annotationId: "inline-annotation-1" }), storage);
+      const afterResult_accept_pending = await interpret(inlineAnnotationHandler.accept({ annotationId: {"type":"ref","fixture":"annotate_insertion","field":"annotationId"} }), storage);
       const _pool = Object.assign({}, (afterResult_annotate_insertion?.output ?? {}), (afterResult_accept_pending?.output ?? {}));
       const _fixtureInput = { contentRef: "doc-readme" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
@@ -399,7 +389,7 @@ describe('InlineAnnotation functional handler', () => {
       if (typeof inlineAnnotationHandler.rejectAll !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_annotate_insertion = await interpret(inlineAnnotationHandler.annotate({ contentRef: "doc-readme", changeType: "insertion", scope: "new paragraph content", author: "alice@example.com" }), storage);
-      const afterResult_accept_pending = await interpret(inlineAnnotationHandler.accept({ annotationId: "inline-annotation-1" }), storage);
+      const afterResult_accept_pending = await interpret(inlineAnnotationHandler.accept({ annotationId: {"type":"ref","fixture":"annotate_insertion","field":"annotationId"} }), storage);
       const _pool = Object.assign({}, (afterResult_annotate_insertion?.output ?? {}), (afterResult_accept_pending?.output ?? {}));
       const _fixtureInput = { contentRef: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {

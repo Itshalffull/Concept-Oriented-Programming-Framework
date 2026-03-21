@@ -263,7 +263,7 @@ describe('EcsRuntime functional handler', () => {
 
   describe('rollback', () => {
     it('builds a valid StorageProgram', () => {
-      const program = ecsRuntimeHandler.rollback({ service: "svc-abc123", targetTaskDefinition: "td-prev-001" });
+      const program = ecsRuntimeHandler.rollback({ service: "svc-abc123", targetTaskDefinition: {"type":"ref","fixture":"provision_fargate","field":"service"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -271,21 +271,21 @@ describe('EcsRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = ecsRuntimeHandler.rollback({ service: "svc-abc123", targetTaskDefinition: "td-prev-001" });
+      const program = ecsRuntimeHandler.rollback({ service: "svc-abc123", targetTaskDefinition: {"type":"ref","fixture":"provision_fargate","field":"service"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = ecsRuntimeHandler.rollback({ service: "svc-abc123", targetTaskDefinition: "td-prev-001" });
+      const program = ecsRuntimeHandler.rollback({ service: "svc-abc123", targetTaskDefinition: {"type":"ref","fixture":"provision_fargate","field":"service"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = ecsRuntimeHandler.rollback({ service: "svc-abc123", targetTaskDefinition: "td-prev-001" });
+      const program = ecsRuntimeHandler.rollback({ service: "svc-abc123", targetTaskDefinition: {"type":"ref","fixture":"provision_fargate","field":"service"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -298,7 +298,7 @@ describe('EcsRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = ecsRuntimeHandler.rollback({ service: "svc-abc123", targetTaskDefinition: "td-prev-001" });
+      const program = ecsRuntimeHandler.rollback({ service: "svc-abc123", targetTaskDefinition: {"type":"ref","fixture":"provision_fargate","field":"service"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -306,7 +306,7 @@ describe('EcsRuntime functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof ecsRuntimeHandler.rollback !== 'function') return;
-      const result = await interpret(ecsRuntimeHandler.rollback({ service: "svc-abc123", targetTaskDefinition: "td-prev-001" }), storage);
+      const result = await interpret(ecsRuntimeHandler.rollback({ service: "svc-abc123", targetTaskDefinition: {"type":"ref","fixture":"provision_fargate","field":"service"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -317,12 +317,7 @@ describe('EcsRuntime functional handler', () => {
       if (typeof ecsRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_provision_fargate = await interpret(ecsRuntimeHandler.provision({ concept: "OrderService", cpu: "256", memory: "512", cluster: "prod-cluster" }), storage);
-      const _pool = Object.assign({}, (afterResult_provision_fargate?.output ?? {}));
-      const _fixtureInput = { service: "svc-abc123", targetTaskDefinition: "td-prev-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(ecsRuntimeHandler.rollback({ ..._fixtureInput }), storage);
+      const result = await interpret(ecsRuntimeHandler.rollback({ service: "svc-abc123", targetTaskDefinition: afterResult_provision_fargate?.output?.["service"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

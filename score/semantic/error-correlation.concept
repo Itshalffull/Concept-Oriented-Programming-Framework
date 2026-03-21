@@ -97,7 +97,7 @@ concept ErrorCorrelation [E] {
         Could not determine root cause — partial chain returned
         as serialized JSON array.
       }
-      fixture root_cause_valid { error: "error-correlation-1" } after record_action_error
+      fixture root_cause_valid { error: $record_action_error.error } after record_action_error
       fixture root_cause_missing { error: "nonexistent-id" } -> error
     }
 
@@ -109,7 +109,7 @@ concept ErrorCorrelation [E] {
       -> notfound() {
         Error does not exist.
       }
-      fixture get_valid { error: "error-correlation-1" } after record_action_error
+      fixture get_valid { error: $record_action_error.error } after record_action_error
       fixture get_missing { error: "nonexistent-id" } -> error
     }
   }

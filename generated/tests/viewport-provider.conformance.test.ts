@@ -102,7 +102,7 @@ describe('ViewportProvider functional handler', () => {
 
   describe('observe', () => {
     it('builds a valid StorageProgram', () => {
-      const program = viewportProviderHandler.observe({ provider: "vp-1", width: "1920", height: "1080" });
+      const program = viewportProviderHandler.observe({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, width: "1920", height: "1080" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('ViewportProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = viewportProviderHandler.observe({ provider: "vp-1", width: "1920", height: "1080" });
+      const program = viewportProviderHandler.observe({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, width: "1920", height: "1080" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = viewportProviderHandler.observe({ provider: "vp-1", width: "1920", height: "1080" });
+      const program = viewportProviderHandler.observe({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, width: "1920", height: "1080" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = viewportProviderHandler.observe({ provider: "vp-1", width: "1920", height: "1080" });
+      const program = viewportProviderHandler.observe({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, width: "1920", height: "1080" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('ViewportProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = viewportProviderHandler.observe({ provider: "vp-1", width: "1920", height: "1080" });
+      const program = viewportProviderHandler.observe({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, width: "1920", height: "1080" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('ViewportProvider functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof viewportProviderHandler.observe !== 'function') return;
-      const result = await interpret(viewportProviderHandler.observe({ provider: "vp-1", width: "1920", height: "1080" }), storage);
+      const result = await interpret(viewportProviderHandler.observe({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, width: "1920", height: "1080" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('ViewportProvider functional handler', () => {
       if (typeof viewportProviderHandler.observe !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_init_default = await interpret(viewportProviderHandler.initialize({ config: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_init_default?.output ?? {}));
-      const _fixtureInput = { provider: "vp-1", width: "1920", height: "1080" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(viewportProviderHandler.observe({ ..._fixtureInput }), storage);
+      const result = await interpret(viewportProviderHandler.observe({ provider: afterResult_init_default?.output?.["provider"], width: "1920", height: "1080" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -169,12 +164,7 @@ describe('ViewportProvider functional handler', () => {
       if (typeof viewportProviderHandler.observe !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_init_default = await interpret(viewportProviderHandler.initialize({ config: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_init_default?.output ?? {}));
-      const _fixtureInput = { provider: "vp-1", width: "375", height: "812" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(viewportProviderHandler.observe({ ..._fixtureInput }), storage);
+      const result = await interpret(viewportProviderHandler.observe({ provider: afterResult_init_default?.output?.["provider"], width: "375", height: "812" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -182,7 +172,7 @@ describe('ViewportProvider functional handler', () => {
 
   describe('getBreakpoint', () => {
     it('builds a valid StorageProgram', () => {
-      const program = viewportProviderHandler.getBreakpoint({ provider: "vp-1" });
+      const program = viewportProviderHandler.getBreakpoint({ provider: {"type":"ref","fixture":"init_default","field":"provider"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -190,21 +180,21 @@ describe('ViewportProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = viewportProviderHandler.getBreakpoint({ provider: "vp-1" });
+      const program = viewportProviderHandler.getBreakpoint({ provider: {"type":"ref","fixture":"init_default","field":"provider"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = viewportProviderHandler.getBreakpoint({ provider: "vp-1" });
+      const program = viewportProviderHandler.getBreakpoint({ provider: {"type":"ref","fixture":"init_default","field":"provider"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = viewportProviderHandler.getBreakpoint({ provider: "vp-1" });
+      const program = viewportProviderHandler.getBreakpoint({ provider: {"type":"ref","fixture":"init_default","field":"provider"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -217,7 +207,7 @@ describe('ViewportProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = viewportProviderHandler.getBreakpoint({ provider: "vp-1" });
+      const program = viewportProviderHandler.getBreakpoint({ provider: {"type":"ref","fixture":"init_default","field":"provider"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -225,7 +215,7 @@ describe('ViewportProvider functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof viewportProviderHandler.getBreakpoint !== 'function') return;
-      const result = await interpret(viewportProviderHandler.getBreakpoint({ provider: "vp-1" }), storage);
+      const result = await interpret(viewportProviderHandler.getBreakpoint({ provider: {"type":"ref","fixture":"init_default","field":"provider"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -236,12 +226,7 @@ describe('ViewportProvider functional handler', () => {
       if (typeof viewportProviderHandler.getBreakpoint !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_init_default = await interpret(viewportProviderHandler.initialize({ config: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_init_default?.output ?? {}));
-      const _fixtureInput = { provider: "vp-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(viewportProviderHandler.getBreakpoint({ ..._fixtureInput }), storage);
+      const result = await interpret(viewportProviderHandler.getBreakpoint({ provider: afterResult_init_default?.output?.["provider"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -256,7 +241,7 @@ describe('ViewportProvider functional handler', () => {
 
   describe('setBreakpoints', () => {
     it('builds a valid StorageProgram', () => {
-      const program = viewportProviderHandler.setBreakpoints({ provider: "vp-1", breakpoints: "sm:480,md:768,lg:1024" });
+      const program = viewportProviderHandler.setBreakpoints({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, breakpoints: "sm:480,md:768,lg:1024" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -264,21 +249,21 @@ describe('ViewportProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = viewportProviderHandler.setBreakpoints({ provider: "vp-1", breakpoints: "sm:480,md:768,lg:1024" });
+      const program = viewportProviderHandler.setBreakpoints({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, breakpoints: "sm:480,md:768,lg:1024" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = viewportProviderHandler.setBreakpoints({ provider: "vp-1", breakpoints: "sm:480,md:768,lg:1024" });
+      const program = viewportProviderHandler.setBreakpoints({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, breakpoints: "sm:480,md:768,lg:1024" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = viewportProviderHandler.setBreakpoints({ provider: "vp-1", breakpoints: "sm:480,md:768,lg:1024" });
+      const program = viewportProviderHandler.setBreakpoints({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, breakpoints: "sm:480,md:768,lg:1024" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -291,7 +276,7 @@ describe('ViewportProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = viewportProviderHandler.setBreakpoints({ provider: "vp-1", breakpoints: "sm:480,md:768,lg:1024" });
+      const program = viewportProviderHandler.setBreakpoints({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, breakpoints: "sm:480,md:768,lg:1024" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -299,7 +284,7 @@ describe('ViewportProvider functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof viewportProviderHandler.setBreakpoints !== 'function') return;
-      const result = await interpret(viewportProviderHandler.setBreakpoints({ provider: "vp-1", breakpoints: "sm:480,md:768,lg:1024" }), storage);
+      const result = await interpret(viewportProviderHandler.setBreakpoints({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, breakpoints: "sm:480,md:768,lg:1024" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -310,12 +295,7 @@ describe('ViewportProvider functional handler', () => {
       if (typeof viewportProviderHandler.setBreakpoints !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_init_default = await interpret(viewportProviderHandler.initialize({ config: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_init_default?.output ?? {}));
-      const _fixtureInput = { provider: "vp-1", breakpoints: "sm:480,md:768,lg:1024" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(viewportProviderHandler.setBreakpoints({ ..._fixtureInput }), storage);
+      const result = await interpret(viewportProviderHandler.setBreakpoints({ provider: afterResult_init_default?.output?.["provider"], breakpoints: "sm:480,md:768,lg:1024" }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -51,7 +51,7 @@ concept ContentDigest [H] {
       -> no(diffSummary: String) {
         The units differ. Summary describes the differences.
       }
-      fixture equiv_check { a: "def-unit-1", b: "def-unit-2" } after compute_sha
+      fixture equiv_check { a: $compute_sha.digest, b: $compute_sha.digest } after compute_sha
       fixture equiv_empty { a: "", b: "" } -> error
     }
   }

@@ -170,7 +170,7 @@ describe('Session functional handler', () => {
 
   describe('refresh', () => {
     it('builds a valid StorageProgram', () => {
-      const program = sessionHandler.refresh({ session: "sess-001" });
+      const program = sessionHandler.refresh({ session: {"type":"ref","fixture":"create_mobile","field":"session"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -178,21 +178,21 @@ describe('Session functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = sessionHandler.refresh({ session: "sess-001" });
+      const program = sessionHandler.refresh({ session: {"type":"ref","fixture":"create_mobile","field":"session"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = sessionHandler.refresh({ session: "sess-001" });
+      const program = sessionHandler.refresh({ session: {"type":"ref","fixture":"create_mobile","field":"session"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = sessionHandler.refresh({ session: "sess-001" });
+      const program = sessionHandler.refresh({ session: {"type":"ref","fixture":"create_mobile","field":"session"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -205,7 +205,7 @@ describe('Session functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = sessionHandler.refresh({ session: "sess-001" });
+      const program = sessionHandler.refresh({ session: {"type":"ref","fixture":"create_mobile","field":"session"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -213,7 +213,7 @@ describe('Session functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof sessionHandler.refresh !== 'function') return;
-      const result = await interpret(sessionHandler.refresh({ session: "sess-001" }), storage);
+      const result = await interpret(sessionHandler.refresh({ session: {"type":"ref","fixture":"create_mobile","field":"session"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -224,12 +224,7 @@ describe('Session functional handler', () => {
       if (typeof sessionHandler.refresh !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_mobile = await interpret(sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_mobile?.output ?? {}));
-      const _fixtureInput = { session: "sess-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(sessionHandler.refresh({ ..._fixtureInput }), storage);
+      const result = await interpret(sessionHandler.refresh({ session: afterResult_create_mobile?.output?.["session"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -244,7 +239,7 @@ describe('Session functional handler', () => {
 
   describe('destroy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = sessionHandler.destroy({ session: "sess-001" });
+      const program = sessionHandler.destroy({ session: {"type":"ref","fixture":"create_mobile","field":"session"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -252,21 +247,21 @@ describe('Session functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = sessionHandler.destroy({ session: "sess-001" });
+      const program = sessionHandler.destroy({ session: {"type":"ref","fixture":"create_mobile","field":"session"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = sessionHandler.destroy({ session: "sess-001" });
+      const program = sessionHandler.destroy({ session: {"type":"ref","fixture":"create_mobile","field":"session"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = sessionHandler.destroy({ session: "sess-001" });
+      const program = sessionHandler.destroy({ session: {"type":"ref","fixture":"create_mobile","field":"session"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -279,7 +274,7 @@ describe('Session functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = sessionHandler.destroy({ session: "sess-001" });
+      const program = sessionHandler.destroy({ session: {"type":"ref","fixture":"create_mobile","field":"session"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -287,7 +282,7 @@ describe('Session functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof sessionHandler.destroy !== 'function') return;
-      const result = await interpret(sessionHandler.destroy({ session: "sess-001" }), storage);
+      const result = await interpret(sessionHandler.destroy({ session: {"type":"ref","fixture":"create_mobile","field":"session"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -298,12 +293,7 @@ describe('Session functional handler', () => {
       if (typeof sessionHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_mobile = await interpret(sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_mobile?.output ?? {}));
-      const _fixtureInput = { session: "sess-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(sessionHandler.destroy({ ..._fixtureInput }), storage);
+      const result = await interpret(sessionHandler.destroy({ session: afterResult_create_mobile?.output?.["session"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -392,7 +382,7 @@ describe('Session functional handler', () => {
 
   describe('getContext', () => {
     it('builds a valid StorageProgram', () => {
-      const program = sessionHandler.getContext({ session: "sess-001" });
+      const program = sessionHandler.getContext({ session: {"type":"ref","fixture":"create_mobile","field":"session"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -400,21 +390,21 @@ describe('Session functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = sessionHandler.getContext({ session: "sess-001" });
+      const program = sessionHandler.getContext({ session: {"type":"ref","fixture":"create_mobile","field":"session"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = sessionHandler.getContext({ session: "sess-001" });
+      const program = sessionHandler.getContext({ session: {"type":"ref","fixture":"create_mobile","field":"session"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = sessionHandler.getContext({ session: "sess-001" });
+      const program = sessionHandler.getContext({ session: {"type":"ref","fixture":"create_mobile","field":"session"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -427,7 +417,7 @@ describe('Session functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = sessionHandler.getContext({ session: "sess-001" });
+      const program = sessionHandler.getContext({ session: {"type":"ref","fixture":"create_mobile","field":"session"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -435,7 +425,7 @@ describe('Session functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof sessionHandler.getContext !== 'function') return;
-      const result = await interpret(sessionHandler.getContext({ session: "sess-001" }), storage);
+      const result = await interpret(sessionHandler.getContext({ session: {"type":"ref","fixture":"create_mobile","field":"session"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -446,12 +436,7 @@ describe('Session functional handler', () => {
       if (typeof sessionHandler.getContext !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_mobile = await interpret(sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_mobile?.output ?? {}));
-      const _fixtureInput = { session: "sess-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(sessionHandler.getContext({ ..._fixtureInput }), storage);
+      const result = await interpret(sessionHandler.getContext({ session: afterResult_create_mobile?.output?.["session"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -64,7 +64,7 @@ concept InterfaceEntity [I] {
         grpc). Result as serialized JSON array of { method, path,
         concept, action, params, returnType }.
       }
-      fixture endpoints_rest { interface: "iface-uuid-1", target: "rest" } after register_conduit_api
+      fixture endpoints_rest { interface: $register_conduit_api.interface, target: "rest" } after register_conduit_api
       fixture endpoints_empty_target { interface: "iface-uuid-1", target: "" } -> error
     }
 
@@ -73,7 +73,7 @@ concept InterfaceEntity [I] {
         Return all generated CLI commands. Result as serialized JSON
         array of { command, subcommand, concept, action, flags }.
       }
-      fixture commands_valid { interface: "iface-uuid-1" } after register_conduit_api
+      fixture commands_valid { interface: $register_conduit_api.interface } after register_conduit_api
       fixture commands_missing { interface: "nonexistent-id" } -> error
     }
 
@@ -82,7 +82,7 @@ concept InterfaceEntity [I] {
         Return all generated MCP tools. Result as serialized JSON
         array of { name, concept, action, inputSchema, description }.
       }
-      fixture tools_valid { interface: "iface-uuid-1" } after register_conduit_api
+      fixture tools_valid { interface: $register_conduit_api.interface } after register_conduit_api
       fixture tools_missing { interface: "nonexistent-id" } -> error
     }
 
@@ -92,7 +92,7 @@ concept InterfaceEntity [I] {
         serialized JSON array of { name, concept, triggerDescription,
         targetDirs }.
       }
-      fixture skills_valid { interface: "iface-uuid-1" } after register_conduit_api
+      fixture skills_valid { interface: $register_conduit_api.interface } after register_conduit_api
       fixture skills_missing { interface: "nonexistent-id" } -> error
     }
 
@@ -150,7 +150,7 @@ concept InterfaceEntity [I] {
         SDL, Proto). Result as serialized JSON array of { format,
         file, conceptCount, endpointCount }.
       }
-      fixture schemas_valid { interface: "iface-uuid-1" } after register_conduit_api
+      fixture schemas_valid { interface: $register_conduit_api.interface } after register_conduit_api
       fixture schemas_missing { interface: "nonexistent-id" } -> error
     }
 

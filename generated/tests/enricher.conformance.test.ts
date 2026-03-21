@@ -110,7 +110,7 @@ describe('Enricher functional handler', () => {
 
   describe('suggest', () => {
     it('builds a valid StorageProgram', () => {
-      const program = enricherHandler.suggest({ itemId: "item-1" });
+      const program = enricherHandler.suggest({ itemId: {"type":"ref","fixture":"enrich_auto_tag","field":"enrichmentId"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -118,21 +118,21 @@ describe('Enricher functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = enricherHandler.suggest({ itemId: "item-1" });
+      const program = enricherHandler.suggest({ itemId: {"type":"ref","fixture":"enrich_auto_tag","field":"enrichmentId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = enricherHandler.suggest({ itemId: "item-1" });
+      const program = enricherHandler.suggest({ itemId: {"type":"ref","fixture":"enrich_auto_tag","field":"enrichmentId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = enricherHandler.suggest({ itemId: "item-1" });
+      const program = enricherHandler.suggest({ itemId: {"type":"ref","fixture":"enrich_auto_tag","field":"enrichmentId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -145,7 +145,7 @@ describe('Enricher functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = enricherHandler.suggest({ itemId: "item-1" });
+      const program = enricherHandler.suggest({ itemId: {"type":"ref","fixture":"enrich_auto_tag","field":"enrichmentId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -153,7 +153,7 @@ describe('Enricher functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof enricherHandler.suggest !== 'function') return;
-      const result = await interpret(enricherHandler.suggest({ itemId: "item-1" }), storage);
+      const result = await interpret(enricherHandler.suggest({ itemId: {"type":"ref","fixture":"enrich_auto_tag","field":"enrichmentId"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -164,12 +164,7 @@ describe('Enricher functional handler', () => {
       if (typeof enricherHandler.suggest !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_enrich_auto_tag = await interpret(enricherHandler.enrich({ itemId: "item-1", enricherId: "auto_tag" }), storage);
-      const _pool = Object.assign({}, (afterResult_enrich_auto_tag?.output ?? {}));
-      const _fixtureInput = { itemId: "item-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(enricherHandler.suggest({ ..._fixtureInput }), storage);
+      const result = await interpret(enricherHandler.suggest({ itemId: afterResult_enrich_auto_tag?.output?.["enrichmentId"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -185,7 +180,7 @@ describe('Enricher functional handler', () => {
 
   describe('accept', () => {
     it('builds a valid StorageProgram', () => {
-      const program = enricherHandler.accept({ itemId: "item-1", enrichmentId: "enr-1" });
+      const program = enricherHandler.accept({ itemId: {"type":"ref","fixture":"enrich_auto_tag","field":"enrichmentId"}, enrichmentId: {"type":"ref","fixture":"enrich_auto_tag","field":"enrichmentId"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -193,21 +188,21 @@ describe('Enricher functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = enricherHandler.accept({ itemId: "item-1", enrichmentId: "enr-1" });
+      const program = enricherHandler.accept({ itemId: {"type":"ref","fixture":"enrich_auto_tag","field":"enrichmentId"}, enrichmentId: {"type":"ref","fixture":"enrich_auto_tag","field":"enrichmentId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = enricherHandler.accept({ itemId: "item-1", enrichmentId: "enr-1" });
+      const program = enricherHandler.accept({ itemId: {"type":"ref","fixture":"enrich_auto_tag","field":"enrichmentId"}, enrichmentId: {"type":"ref","fixture":"enrich_auto_tag","field":"enrichmentId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = enricherHandler.accept({ itemId: "item-1", enrichmentId: "enr-1" });
+      const program = enricherHandler.accept({ itemId: {"type":"ref","fixture":"enrich_auto_tag","field":"enrichmentId"}, enrichmentId: {"type":"ref","fixture":"enrich_auto_tag","field":"enrichmentId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -220,7 +215,7 @@ describe('Enricher functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = enricherHandler.accept({ itemId: "item-1", enrichmentId: "enr-1" });
+      const program = enricherHandler.accept({ itemId: {"type":"ref","fixture":"enrich_auto_tag","field":"enrichmentId"}, enrichmentId: {"type":"ref","fixture":"enrich_auto_tag","field":"enrichmentId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -228,7 +223,7 @@ describe('Enricher functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof enricherHandler.accept !== 'function') return;
-      const result = await interpret(enricherHandler.accept({ itemId: "item-1", enrichmentId: "enr-1" }), storage);
+      const result = await interpret(enricherHandler.accept({ itemId: {"type":"ref","fixture":"enrich_auto_tag","field":"enrichmentId"}, enrichmentId: {"type":"ref","fixture":"enrich_auto_tag","field":"enrichmentId"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -239,12 +234,7 @@ describe('Enricher functional handler', () => {
       if (typeof enricherHandler.accept !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_enrich_auto_tag = await interpret(enricherHandler.enrich({ itemId: "item-1", enricherId: "auto_tag" }), storage);
-      const _pool = Object.assign({}, (afterResult_enrich_auto_tag?.output ?? {}));
-      const _fixtureInput = { itemId: "item-1", enrichmentId: "enr-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(enricherHandler.accept({ ..._fixtureInput }), storage);
+      const result = await interpret(enricherHandler.accept({ itemId: afterResult_enrich_auto_tag?.output?.["enrichmentId"], enrichmentId: afterResult_enrich_auto_tag?.output?.["enrichmentId"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -260,7 +250,7 @@ describe('Enricher functional handler', () => {
 
   describe('reject', () => {
     it('builds a valid StorageProgram', () => {
-      const program = enricherHandler.reject({ itemId: "item-1", enrichmentId: "enr-2" });
+      const program = enricherHandler.reject({ itemId: {"type":"ref","fixture":"accept_enrichment","field":"id"}, enrichmentId: {"type":"ref","fixture":"accept_enrichment","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -268,21 +258,21 @@ describe('Enricher functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = enricherHandler.reject({ itemId: "item-1", enrichmentId: "enr-2" });
+      const program = enricherHandler.reject({ itemId: {"type":"ref","fixture":"accept_enrichment","field":"id"}, enrichmentId: {"type":"ref","fixture":"accept_enrichment","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = enricherHandler.reject({ itemId: "item-1", enrichmentId: "enr-2" });
+      const program = enricherHandler.reject({ itemId: {"type":"ref","fixture":"accept_enrichment","field":"id"}, enrichmentId: {"type":"ref","fixture":"accept_enrichment","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = enricherHandler.reject({ itemId: "item-1", enrichmentId: "enr-2" });
+      const program = enricherHandler.reject({ itemId: {"type":"ref","fixture":"accept_enrichment","field":"id"}, enrichmentId: {"type":"ref","fixture":"accept_enrichment","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -295,7 +285,7 @@ describe('Enricher functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = enricherHandler.reject({ itemId: "item-1", enrichmentId: "enr-2" });
+      const program = enricherHandler.reject({ itemId: {"type":"ref","fixture":"accept_enrichment","field":"id"}, enrichmentId: {"type":"ref","fixture":"accept_enrichment","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -303,7 +293,7 @@ describe('Enricher functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof enricherHandler.reject !== 'function') return;
-      const result = await interpret(enricherHandler.reject({ itemId: "item-1", enrichmentId: "enr-2" }), storage);
+      const result = await interpret(enricherHandler.reject({ itemId: {"type":"ref","fixture":"accept_enrichment","field":"id"}, enrichmentId: {"type":"ref","fixture":"accept_enrichment","field":"id"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -314,13 +304,8 @@ describe('Enricher functional handler', () => {
       if (typeof enricherHandler.reject !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_enrich_auto_tag = await interpret(enricherHandler.enrich({ itemId: "item-1", enricherId: "auto_tag" }), storage);
-      const afterResult_accept_enrichment = await interpret(enricherHandler.accept({ itemId: "item-1", enrichmentId: "enr-1" }), storage);
-      const _pool = Object.assign({}, (afterResult_enrich_auto_tag?.output ?? {}), (afterResult_accept_enrichment?.output ?? {}));
-      const _fixtureInput = { itemId: "item-1", enrichmentId: "enr-2" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(enricherHandler.reject({ ..._fixtureInput }), storage);
+      const afterResult_accept_enrichment = await interpret(enricherHandler.accept({ itemId: {"type":"ref","fixture":"enrich_auto_tag","field":"enrichmentId"}, enrichmentId: {"type":"ref","fixture":"enrich_auto_tag","field":"enrichmentId"} }), storage);
+      const result = await interpret(enricherHandler.reject({ itemId: afterResult_accept_enrichment?.output?.["id"], enrichmentId: afterResult_accept_enrichment?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

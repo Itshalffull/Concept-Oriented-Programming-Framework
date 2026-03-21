@@ -46,7 +46,7 @@ concept Replica [R] {
         fromReplica not in the known peers set.
       }
 
-      fixture receive_from_known_peer { op: "update:field=value", fromReplica: "replica-2" } after update_insert_op
+      fixture receive_from_known_peer { op: "update:field=value", fromReplica: $update_insert_op.newState } after update_insert_op
       fixture receive_from_unknown_peer { op: "update:field=value", fromReplica: "unknown-replica-999" } -> error
     }
 
@@ -58,7 +58,7 @@ concept Replica [R] {
         Peer is not currently reachable.
       }
 
-      fixture sync_known_peer { peer: "replica-2" } after update_insert_op
+      fixture sync_known_peer { peer: $update_insert_op.newState } after update_insert_op
       fixture sync_unknown_peer { peer: "unknown-peer-999" } -> error
     }
 
@@ -86,7 +86,7 @@ concept Replica [R] {
         Peer already in the set.
       }
 
-      fixture add_new_peer { peerId: "replica-3" } after update_insert_op
+      fixture add_new_peer { peerId: $update_insert_op.newState } after update_insert_op
       fixture add_empty_peer { peerId: "" } after update_insert_op
     }
   }

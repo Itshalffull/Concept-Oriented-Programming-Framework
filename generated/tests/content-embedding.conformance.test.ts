@@ -52,7 +52,7 @@ describe('ContentEmbedding imperative handler', () => {
   describe('remove', () => {
     it('produces a result', async () => {
       if (typeof contentEmbeddingHandler.remove !== 'function') return;
-      const result = await contentEmbeddingHandler.remove({ entity_id: "node-42" }, storage);
+      const result = await contentEmbeddingHandler.remove({ entity_id: {"type":"ref","fixture":"index_page","field":"embedding"} }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -63,12 +63,7 @@ describe('ContentEmbedding imperative handler', () => {
       if (typeof contentEmbeddingHandler.remove !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_index_page = await contentEmbeddingHandler.index({ entity_id: "node-42", source_type: "page", text: "Introduction to concept-oriented programming", model: "text-embedding-3-small" }, storage);
-      const _pool = Object.assign({}, (afterResult_index_page?.output ?? {}));
-      const _fixtureInput = { entity_id: "node-42" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await contentEmbeddingHandler.remove({ ..._fixtureInput }, storage);
+      const result = await contentEmbeddingHandler.remove({ entity_id: afterResult_index_page?.output?.["embedding"] }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -90,7 +85,7 @@ describe('ContentEmbedding imperative handler', () => {
   describe('get', () => {
     it('produces a result', async () => {
       if (typeof contentEmbeddingHandler.get !== 'function') return;
-      const result = await contentEmbeddingHandler.get({ entity_id: "node-42" }, storage);
+      const result = await contentEmbeddingHandler.get({ entity_id: {"type":"ref","fixture":"index_page","field":"embedding"} }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -101,12 +96,7 @@ describe('ContentEmbedding imperative handler', () => {
       if (typeof contentEmbeddingHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_index_page = await contentEmbeddingHandler.index({ entity_id: "node-42", source_type: "page", text: "Introduction to concept-oriented programming", model: "text-embedding-3-small" }, storage);
-      const _pool = Object.assign({}, (afterResult_index_page?.output ?? {}));
-      const _fixtureInput = { entity_id: "node-42" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await contentEmbeddingHandler.get({ ..._fixtureInput }, storage);
+      const result = await contentEmbeddingHandler.get({ entity_id: afterResult_index_page?.output?.["embedding"] }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -122,7 +112,7 @@ describe('ContentEmbedding imperative handler', () => {
   describe('searchSimilar', () => {
     it('produces a result', async () => {
       if (typeof contentEmbeddingHandler.searchSimilar !== 'function') return;
-      const result = await contentEmbeddingHandler.searchSimilar({ entity_id: "node-42", topK: "5", source_type: "page" }, storage);
+      const result = await contentEmbeddingHandler.searchSimilar({ entity_id: {"type":"ref","fixture":"index_page","field":"embedding"}, topK: "5", source_type: "page" }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -133,12 +123,7 @@ describe('ContentEmbedding imperative handler', () => {
       if (typeof contentEmbeddingHandler.searchSimilar !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_index_page = await contentEmbeddingHandler.index({ entity_id: "node-42", source_type: "page", text: "Introduction to concept-oriented programming", model: "text-embedding-3-small" }, storage);
-      const _pool = Object.assign({}, (afterResult_index_page?.output ?? {}));
-      const _fixtureInput = { entity_id: "node-42", topK: "5", source_type: "page" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await contentEmbeddingHandler.searchSimilar({ ..._fixtureInput }, storage);
+      const result = await contentEmbeddingHandler.searchSimilar({ entity_id: afterResult_index_page?.output?.["embedding"], topK: "5", source_type: "page" }, storage);
       expect(result.variant).toBe('ok');
     });
 

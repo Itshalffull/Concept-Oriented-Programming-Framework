@@ -183,7 +183,7 @@ describe('DeploymentEntity functional handler', () => {
 
   describe('listRuntimes', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deploymentEntityHandler.listRuntimes({ deployment: "deploy-001" });
+      const program = deploymentEntityHandler.listRuntimes({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -191,21 +191,21 @@ describe('DeploymentEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deploymentEntityHandler.listRuntimes({ deployment: "deploy-001" });
+      const program = deploymentEntityHandler.listRuntimes({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deploymentEntityHandler.listRuntimes({ deployment: "deploy-001" });
+      const program = deploymentEntityHandler.listRuntimes({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deploymentEntityHandler.listRuntimes({ deployment: "deploy-001" });
+      const program = deploymentEntityHandler.listRuntimes({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -218,7 +218,7 @@ describe('DeploymentEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deploymentEntityHandler.listRuntimes({ deployment: "deploy-001" });
+      const program = deploymentEntityHandler.listRuntimes({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -226,7 +226,7 @@ describe('DeploymentEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof deploymentEntityHandler.listRuntimes !== 'function') return;
-      const result = await interpret(deploymentEntityHandler.listRuntimes({ deployment: "deploy-001" }), storage);
+      const result = await interpret(deploymentEntityHandler.listRuntimes({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -237,12 +237,7 @@ describe('DeploymentEntity functional handler', () => {
       if (typeof deploymentEntityHandler.listRuntimes !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_prod = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_prod?.output ?? {}));
-      const _fixtureInput = { deployment: "deploy-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(deploymentEntityHandler.listRuntimes({ ..._fixtureInput }), storage);
+      const result = await interpret(deploymentEntityHandler.listRuntimes({ deployment: afterResult_register_prod?.output?.["deployment"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -263,7 +258,7 @@ describe('DeploymentEntity functional handler', () => {
 
   describe('findConceptRuntime', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deploymentEntityHandler.findConceptRuntime({ deployment: "deploy-001", concept: "User" });
+      const program = deploymentEntityHandler.findConceptRuntime({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"}, concept: "User" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -271,21 +266,21 @@ describe('DeploymentEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deploymentEntityHandler.findConceptRuntime({ deployment: "deploy-001", concept: "User" });
+      const program = deploymentEntityHandler.findConceptRuntime({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"}, concept: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deploymentEntityHandler.findConceptRuntime({ deployment: "deploy-001", concept: "User" });
+      const program = deploymentEntityHandler.findConceptRuntime({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"}, concept: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deploymentEntityHandler.findConceptRuntime({ deployment: "deploy-001", concept: "User" });
+      const program = deploymentEntityHandler.findConceptRuntime({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"}, concept: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -298,7 +293,7 @@ describe('DeploymentEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deploymentEntityHandler.findConceptRuntime({ deployment: "deploy-001", concept: "User" });
+      const program = deploymentEntityHandler.findConceptRuntime({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"}, concept: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -306,7 +301,7 @@ describe('DeploymentEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof deploymentEntityHandler.findConceptRuntime !== 'function') return;
-      const result = await interpret(deploymentEntityHandler.findConceptRuntime({ deployment: "deploy-001", concept: "User" }), storage);
+      const result = await interpret(deploymentEntityHandler.findConceptRuntime({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"}, concept: "User" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -317,12 +312,7 @@ describe('DeploymentEntity functional handler', () => {
       if (typeof deploymentEntityHandler.findConceptRuntime !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_prod = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_prod?.output ?? {}));
-      const _fixtureInput = { deployment: "deploy-001", concept: "User" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(deploymentEntityHandler.findConceptRuntime({ ..._fixtureInput }), storage);
+      const result = await interpret(deploymentEntityHandler.findConceptRuntime({ deployment: afterResult_register_prod?.output?.["deployment"], concept: "User" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -337,7 +327,7 @@ describe('DeploymentEntity functional handler', () => {
 
   describe('findSyncEngine', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deploymentEntityHandler.findSyncEngine({ deployment: "deploy-001", sync: "ArticlePublishSync" });
+      const program = deploymentEntityHandler.findSyncEngine({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"}, sync: "ArticlePublishSync" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -345,21 +335,21 @@ describe('DeploymentEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deploymentEntityHandler.findSyncEngine({ deployment: "deploy-001", sync: "ArticlePublishSync" });
+      const program = deploymentEntityHandler.findSyncEngine({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"}, sync: "ArticlePublishSync" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deploymentEntityHandler.findSyncEngine({ deployment: "deploy-001", sync: "ArticlePublishSync" });
+      const program = deploymentEntityHandler.findSyncEngine({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"}, sync: "ArticlePublishSync" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deploymentEntityHandler.findSyncEngine({ deployment: "deploy-001", sync: "ArticlePublishSync" });
+      const program = deploymentEntityHandler.findSyncEngine({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"}, sync: "ArticlePublishSync" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -372,7 +362,7 @@ describe('DeploymentEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deploymentEntityHandler.findSyncEngine({ deployment: "deploy-001", sync: "ArticlePublishSync" });
+      const program = deploymentEntityHandler.findSyncEngine({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"}, sync: "ArticlePublishSync" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -380,7 +370,7 @@ describe('DeploymentEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof deploymentEntityHandler.findSyncEngine !== 'function') return;
-      const result = await interpret(deploymentEntityHandler.findSyncEngine({ deployment: "deploy-001", sync: "ArticlePublishSync" }), storage);
+      const result = await interpret(deploymentEntityHandler.findSyncEngine({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"}, sync: "ArticlePublishSync" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -391,12 +381,7 @@ describe('DeploymentEntity functional handler', () => {
       if (typeof deploymentEntityHandler.findSyncEngine !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_prod = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_prod?.output ?? {}));
-      const _fixtureInput = { deployment: "deploy-001", sync: "ArticlePublishSync" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(deploymentEntityHandler.findSyncEngine({ ..._fixtureInput }), storage);
+      const result = await interpret(deploymentEntityHandler.findSyncEngine({ deployment: afterResult_register_prod?.output?.["deployment"], sync: "ArticlePublishSync" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -411,7 +396,7 @@ describe('DeploymentEntity functional handler', () => {
 
   describe('topology', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deploymentEntityHandler.topology({ deployment: "deploy-001" });
+      const program = deploymentEntityHandler.topology({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -419,21 +404,21 @@ describe('DeploymentEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deploymentEntityHandler.topology({ deployment: "deploy-001" });
+      const program = deploymentEntityHandler.topology({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deploymentEntityHandler.topology({ deployment: "deploy-001" });
+      const program = deploymentEntityHandler.topology({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deploymentEntityHandler.topology({ deployment: "deploy-001" });
+      const program = deploymentEntityHandler.topology({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -446,7 +431,7 @@ describe('DeploymentEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deploymentEntityHandler.topology({ deployment: "deploy-001" });
+      const program = deploymentEntityHandler.topology({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -454,7 +439,7 @@ describe('DeploymentEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof deploymentEntityHandler.topology !== 'function') return;
-      const result = await interpret(deploymentEntityHandler.topology({ deployment: "deploy-001" }), storage);
+      const result = await interpret(deploymentEntityHandler.topology({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -465,12 +450,7 @@ describe('DeploymentEntity functional handler', () => {
       if (typeof deploymentEntityHandler.topology !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_prod = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_prod?.output ?? {}));
-      const _fixtureInput = { deployment: "deploy-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(deploymentEntityHandler.topology({ ..._fixtureInput }), storage);
+      const result = await interpret(deploymentEntityHandler.topology({ deployment: afterResult_register_prod?.output?.["deployment"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -491,7 +471,7 @@ describe('DeploymentEntity functional handler', () => {
 
   describe('transportRoutes', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deploymentEntityHandler.transportRoutes({ deployment: "deploy-001", fromConcept: "User", toConcept: "Notification" });
+      const program = deploymentEntityHandler.transportRoutes({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"}, fromConcept: "User", toConcept: "Notification" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -499,21 +479,21 @@ describe('DeploymentEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deploymentEntityHandler.transportRoutes({ deployment: "deploy-001", fromConcept: "User", toConcept: "Notification" });
+      const program = deploymentEntityHandler.transportRoutes({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"}, fromConcept: "User", toConcept: "Notification" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deploymentEntityHandler.transportRoutes({ deployment: "deploy-001", fromConcept: "User", toConcept: "Notification" });
+      const program = deploymentEntityHandler.transportRoutes({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"}, fromConcept: "User", toConcept: "Notification" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deploymentEntityHandler.transportRoutes({ deployment: "deploy-001", fromConcept: "User", toConcept: "Notification" });
+      const program = deploymentEntityHandler.transportRoutes({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"}, fromConcept: "User", toConcept: "Notification" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -526,7 +506,7 @@ describe('DeploymentEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deploymentEntityHandler.transportRoutes({ deployment: "deploy-001", fromConcept: "User", toConcept: "Notification" });
+      const program = deploymentEntityHandler.transportRoutes({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"}, fromConcept: "User", toConcept: "Notification" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -534,7 +514,7 @@ describe('DeploymentEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof deploymentEntityHandler.transportRoutes !== 'function') return;
-      const result = await interpret(deploymentEntityHandler.transportRoutes({ deployment: "deploy-001", fromConcept: "User", toConcept: "Notification" }), storage);
+      const result = await interpret(deploymentEntityHandler.transportRoutes({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"}, fromConcept: "User", toConcept: "Notification" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -545,12 +525,7 @@ describe('DeploymentEntity functional handler', () => {
       if (typeof deploymentEntityHandler.transportRoutes !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_prod = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_prod?.output ?? {}));
-      const _fixtureInput = { deployment: "deploy-001", fromConcept: "User", toConcept: "Notification" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(deploymentEntityHandler.transportRoutes({ ..._fixtureInput }), storage);
+      const result = await interpret(deploymentEntityHandler.transportRoutes({ deployment: afterResult_register_prod?.output?.["deployment"], fromConcept: "User", toConcept: "Notification" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -565,7 +540,7 @@ describe('DeploymentEntity functional handler', () => {
 
   describe('storageTopology', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deploymentEntityHandler.storageTopology({ deployment: "deploy-001" });
+      const program = deploymentEntityHandler.storageTopology({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -573,21 +548,21 @@ describe('DeploymentEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deploymentEntityHandler.storageTopology({ deployment: "deploy-001" });
+      const program = deploymentEntityHandler.storageTopology({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deploymentEntityHandler.storageTopology({ deployment: "deploy-001" });
+      const program = deploymentEntityHandler.storageTopology({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deploymentEntityHandler.storageTopology({ deployment: "deploy-001" });
+      const program = deploymentEntityHandler.storageTopology({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -600,7 +575,7 @@ describe('DeploymentEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deploymentEntityHandler.storageTopology({ deployment: "deploy-001" });
+      const program = deploymentEntityHandler.storageTopology({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -608,7 +583,7 @@ describe('DeploymentEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof deploymentEntityHandler.storageTopology !== 'function') return;
-      const result = await interpret(deploymentEntityHandler.storageTopology({ deployment: "deploy-001" }), storage);
+      const result = await interpret(deploymentEntityHandler.storageTopology({ deployment: {"type":"ref","fixture":"register_prod","field":"deployment"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -619,12 +594,7 @@ describe('DeploymentEntity functional handler', () => {
       if (typeof deploymentEntityHandler.storageTopology !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_prod = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_prod?.output ?? {}));
-      const _fixtureInput = { deployment: "deploy-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(deploymentEntityHandler.storageTopology({ ..._fixtureInput }), storage);
+      const result = await interpret(deploymentEntityHandler.storageTopology({ deployment: afterResult_register_prod?.output?.["deployment"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

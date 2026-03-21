@@ -55,7 +55,7 @@ concept VaultProvider [V] {
         Lease already expired. Must re-fetch.
       }
 
-      fixture renew_active_lease { leaseId: "lease-abc-123" } after fetch_db_password
+      fixture renew_active_lease { leaseId: $fetch_db_password.value } after fetch_db_password
       fixture renew_empty_lease { leaseId: "" } -> error
     }
 

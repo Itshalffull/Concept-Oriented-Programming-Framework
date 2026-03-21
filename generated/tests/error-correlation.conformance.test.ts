@@ -375,7 +375,7 @@ describe('ErrorCorrelation functional handler', () => {
 
   describe('rootCause', () => {
     it('builds a valid StorageProgram', () => {
-      const program = errorCorrelationHandler.rootCause({ error: "error-correlation-1" });
+      const program = errorCorrelationHandler.rootCause({ error: {"type":"ref","fixture":"record_action_error","field":"error"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -383,21 +383,21 @@ describe('ErrorCorrelation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = errorCorrelationHandler.rootCause({ error: "error-correlation-1" });
+      const program = errorCorrelationHandler.rootCause({ error: {"type":"ref","fixture":"record_action_error","field":"error"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = errorCorrelationHandler.rootCause({ error: "error-correlation-1" });
+      const program = errorCorrelationHandler.rootCause({ error: {"type":"ref","fixture":"record_action_error","field":"error"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = errorCorrelationHandler.rootCause({ error: "error-correlation-1" });
+      const program = errorCorrelationHandler.rootCause({ error: {"type":"ref","fixture":"record_action_error","field":"error"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -410,7 +410,7 @@ describe('ErrorCorrelation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = errorCorrelationHandler.rootCause({ error: "error-correlation-1" });
+      const program = errorCorrelationHandler.rootCause({ error: {"type":"ref","fixture":"record_action_error","field":"error"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -418,7 +418,7 @@ describe('ErrorCorrelation functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof errorCorrelationHandler.rootCause !== 'function') return;
-      const result = await interpret(errorCorrelationHandler.rootCause({ error: "error-correlation-1" }), storage);
+      const result = await interpret(errorCorrelationHandler.rootCause({ error: {"type":"ref","fixture":"record_action_error","field":"error"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -429,12 +429,7 @@ describe('ErrorCorrelation functional handler', () => {
       if (typeof errorCorrelationHandler.rootCause !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_record_action_error = await interpret(errorCorrelationHandler.record({ flowId: "f-456", errorKind: "action-error", message: "Database connection timeout", rawEvent: "{\"concept\":\"User\",\"action\":\"create\",\"stack\":\"Error: timeout\\n    at create (handlers/user.ts:42:10)\"}" }), storage);
-      const _pool = Object.assign({}, (afterResult_record_action_error?.output ?? {}));
-      const _fixtureInput = { error: "error-correlation-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(errorCorrelationHandler.rootCause({ ..._fixtureInput }), storage);
+      const result = await interpret(errorCorrelationHandler.rootCause({ error: afterResult_record_action_error?.output?.["error"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -449,7 +444,7 @@ describe('ErrorCorrelation functional handler', () => {
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = errorCorrelationHandler.get({ error: "error-correlation-1" });
+      const program = errorCorrelationHandler.get({ error: {"type":"ref","fixture":"record_action_error","field":"error"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -457,21 +452,21 @@ describe('ErrorCorrelation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = errorCorrelationHandler.get({ error: "error-correlation-1" });
+      const program = errorCorrelationHandler.get({ error: {"type":"ref","fixture":"record_action_error","field":"error"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = errorCorrelationHandler.get({ error: "error-correlation-1" });
+      const program = errorCorrelationHandler.get({ error: {"type":"ref","fixture":"record_action_error","field":"error"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = errorCorrelationHandler.get({ error: "error-correlation-1" });
+      const program = errorCorrelationHandler.get({ error: {"type":"ref","fixture":"record_action_error","field":"error"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -484,7 +479,7 @@ describe('ErrorCorrelation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = errorCorrelationHandler.get({ error: "error-correlation-1" });
+      const program = errorCorrelationHandler.get({ error: {"type":"ref","fixture":"record_action_error","field":"error"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -492,7 +487,7 @@ describe('ErrorCorrelation functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof errorCorrelationHandler.get !== 'function') return;
-      const result = await interpret(errorCorrelationHandler.get({ error: "error-correlation-1" }), storage);
+      const result = await interpret(errorCorrelationHandler.get({ error: {"type":"ref","fixture":"record_action_error","field":"error"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -503,12 +498,7 @@ describe('ErrorCorrelation functional handler', () => {
       if (typeof errorCorrelationHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_record_action_error = await interpret(errorCorrelationHandler.record({ flowId: "f-456", errorKind: "action-error", message: "Database connection timeout", rawEvent: "{\"concept\":\"User\",\"action\":\"create\",\"stack\":\"Error: timeout\\n    at create (handlers/user.ts:42:10)\"}" }), storage);
-      const _pool = Object.assign({}, (afterResult_record_action_error?.output ?? {}));
-      const _fixtureInput = { error: "error-correlation-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(errorCorrelationHandler.get({ ..._fixtureInput }), storage);
+      const result = await interpret(errorCorrelationHandler.get({ error: afterResult_record_action_error?.output?.["error"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

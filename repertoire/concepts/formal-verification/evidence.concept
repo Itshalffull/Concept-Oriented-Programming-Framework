@@ -68,7 +68,7 @@ concept Evidence [E] {
         Evidence does not exist.
       }
 
-      fixture valid_retrieve { id: "ev-001" } after valid_record
+      fixture valid_retrieve { id: $valid_record.id } after valid_record
       fixture retrieve_missing { id: "nonexistent" } -> notfound
     }
 
@@ -97,7 +97,7 @@ concept Evidence [E] {
         Evidence does not exist.
       }
 
-      fixture valid_minimize { id: "ev-counter-001" } after valid_record
+      fixture valid_minimize { id: $valid_record.id } after valid_record
       fixture minimize_non_counter { id: "ev-proof-001" } -> not_applicable
       fixture minimize_missing { id: "nonexistent" } -> notfound
     }

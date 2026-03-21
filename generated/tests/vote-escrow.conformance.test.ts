@@ -52,7 +52,7 @@ describe('VoteEscrow imperative handler', () => {
   describe('lock', () => {
     it('produces a result', async () => {
       if (typeof voteEscrowHandler.lock !== 'function') return;
-      const result = await voteEscrowHandler.lock({ config: "ve-cfg-001", locker: "alice", amount: "1000.0", lockYears: "4.0" }, storage);
+      const result = await voteEscrowHandler.lock({ config: {"type":"ref","fixture":"configure_default","field":"id"}, locker: "alice", amount: "1000.0", lockYears: "4.0" }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -63,12 +63,7 @@ describe('VoteEscrow imperative handler', () => {
       if (typeof voteEscrowHandler.lock !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_configure_default = await voteEscrowHandler.configure({ token: "GOV", maxLockYears: "4.0" }, storage);
-      const _pool = Object.assign({}, (afterResult_configure_default?.output ?? {}));
-      const _fixtureInput = { config: "ve-cfg-001", locker: "alice", amount: "1000.0", lockYears: "4.0" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await voteEscrowHandler.lock({ ..._fixtureInput }, storage);
+      const result = await voteEscrowHandler.lock({ config: afterResult_configure_default?.output?.["id"], locker: "alice", amount: "1000.0", lockYears: "4.0" }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -84,7 +79,7 @@ describe('VoteEscrow imperative handler', () => {
   describe('extendLock', () => {
     it('produces a result', async () => {
       if (typeof voteEscrowHandler.extendLock !== 'function') return;
-      const result = await voteEscrowHandler.extendLock({ lock: "lock-001", additionalYears: "1.0" }, storage);
+      const result = await voteEscrowHandler.extendLock({ lock: {"type":"ref","fixture":"configure_default","field":"id"}, additionalYears: "1.0" }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -95,12 +90,7 @@ describe('VoteEscrow imperative handler', () => {
       if (typeof voteEscrowHandler.extendLock !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_configure_default = await voteEscrowHandler.configure({ token: "GOV", maxLockYears: "4.0" }, storage);
-      const _pool = Object.assign({}, (afterResult_configure_default?.output ?? {}));
-      const _fixtureInput = { lock: "lock-001", additionalYears: "1.0" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await voteEscrowHandler.extendLock({ ..._fixtureInput }, storage);
+      const result = await voteEscrowHandler.extendLock({ lock: afterResult_configure_default?.output?.["id"], additionalYears: "1.0" }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -116,7 +106,7 @@ describe('VoteEscrow imperative handler', () => {
   describe('getWeight', () => {
     it('produces a result', async () => {
       if (typeof voteEscrowHandler.getWeight !== 'function') return;
-      const result = await voteEscrowHandler.getWeight({ config: "ve-cfg-001", participant: "alice" }, storage);
+      const result = await voteEscrowHandler.getWeight({ config: {"type":"ref","fixture":"configure_default","field":"id"}, participant: "alice" }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -127,12 +117,7 @@ describe('VoteEscrow imperative handler', () => {
       if (typeof voteEscrowHandler.getWeight !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_configure_default = await voteEscrowHandler.configure({ token: "GOV", maxLockYears: "4.0" }, storage);
-      const _pool = Object.assign({}, (afterResult_configure_default?.output ?? {}));
-      const _fixtureInput = { config: "ve-cfg-001", participant: "alice" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await voteEscrowHandler.getWeight({ ..._fixtureInput }, storage);
+      const result = await voteEscrowHandler.getWeight({ config: afterResult_configure_default?.output?.["id"], participant: "alice" }, storage);
       expect(result.variant).toBe('ok');
     });
 

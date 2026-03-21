@@ -70,7 +70,7 @@ concept Lockfile [L] {
         The lockfile exists but cannot be parsed or has been tampered with.
       }
 
-      fixture read_existing_lockfile { lockfile: "lock-1" } after write_valid_lockfile
+      fixture read_existing_lockfile { lockfile: $write_valid_lockfile.lockfile } after write_valid_lockfile
       fixture read_nonexistent_lockfile { lockfile: "lock-nonexistent" } -> error
     }
 
@@ -89,7 +89,7 @@ concept Lockfile [L] {
         do not match the downloaded artifacts.
       }
 
-      fixture verify_valid_lockfile { lockfile: "lock-1" } after write_valid_lockfile
+      fixture verify_valid_lockfile { lockfile: $write_valid_lockfile.lockfile } after write_valid_lockfile
       fixture verify_nonexistent_lockfile { lockfile: "lock-nonexistent" } -> error
     }
 

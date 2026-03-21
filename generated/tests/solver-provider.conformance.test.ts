@@ -53,7 +53,7 @@ describe('SolverProvider imperative handler', () => {
   describe('dispatch', () => {
     it('produces a result', async () => {
       if (typeof solverProviderHandler.dispatch !== 'function') return;
-      const result = await solverProviderHandler.dispatch({ property_ref: "prop-1", formal_language: "smtlib", kind: "invariant" }, storage);
+      const result = await solverProviderHandler.dispatch({ property_ref: {"type":"ref","fixture":"valid_register","field":"id"}, formal_language: "smtlib", kind: "invariant" }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -64,12 +64,7 @@ describe('SolverProvider imperative handler', () => {
       if (typeof solverProviderHandler.dispatch !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_register = await solverProviderHandler.register({ provider_id: "z3", name: "Z3 SMT Solver", supported_languages: "[\"smtlib\"]", supported_kinds: "[\"invariant\",\"precondition\",\"postcondition\",\"safety\"]", priority: "1" }, storage);
-      const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
-      const _fixtureInput = { property_ref: "prop-1", formal_language: "smtlib", kind: "invariant" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await solverProviderHandler.dispatch({ ..._fixtureInput }, storage);
+      const result = await solverProviderHandler.dispatch({ property_ref: afterResult_valid_register?.output?.["id"], formal_language: "smtlib", kind: "invariant" }, storage);
       expect(result.variant).toBe('ok');
     });
 

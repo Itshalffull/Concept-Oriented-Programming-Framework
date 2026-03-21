@@ -36,7 +36,7 @@ concept Article [A] {
         If article does not exist.
       }
 
-      fixture update_ok { article: "art-001", title: "Updated Title", description: "Revised description", body: "Updated body content." } after create_ok
+      fixture update_ok { article: $create_ok.article, title: "Updated Title", description: "Revised description", body: "Updated body content." } after create_ok
       fixture update_notfound { article: "nonexistent-art", title: "Ghost Article", description: "Does not exist", body: "No body." } -> notfound
     }
 
@@ -48,7 +48,7 @@ concept Article [A] {
         If article does not exist.
       }
 
-      fixture delete_ok { article: "art-001" } after create_ok
+      fixture delete_ok { article: $create_ok.article } after create_ok
       fixture delete_notfound { article: "nonexistent-art" } -> notfound
     }
 
@@ -60,7 +60,7 @@ concept Article [A] {
         If article does not exist.
       }
 
-      fixture get_ok { article: "art-001" } after create_ok
+      fixture get_ok { article: $create_ok.article } after create_ok
       fixture get_notfound { article: "nonexistent-art" } -> notfound
     }
 

@@ -64,7 +64,7 @@ concept LanguageGrammar [G] {
       -> notfound(message: String) {
         Grammar does not exist.
       }
-      fixture get_grammar { grammar: "grammar-1" } after register_typescript
+      fixture get_grammar { grammar: $register_typescript.grammar } after register_typescript
       fixture get_missing { grammar: "nonexistent" } -> error
     }
 

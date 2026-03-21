@@ -57,7 +57,7 @@ concept Sdk [S] {
         Cannot reach the package registry.
       }
 
-      fixture publish_to_npm { package: "sdk-typescript-12345", registry: "npm" } after typescript_sdk
+      fixture publish_to_npm { package: $typescript_sdk.package, registry: "npm" } after typescript_sdk
       fixture unknown_registry { package: "sdk-go-12345", registry: "unknown-registry" } -> error
     }
   }

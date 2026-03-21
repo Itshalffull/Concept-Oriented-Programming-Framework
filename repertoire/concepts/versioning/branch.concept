@@ -49,7 +49,7 @@ concept Branch [B] {
         newNode not found in DAGHistory.
       }
 
-      fixture advance_head { branch: "branch-1", newNode: "dag-history-2" } after create_feature
+      fixture advance_head { branch: $create_feature.branch, newNode: $create_feature.branch } after create_feature
       fixture advance_empty_node { branch: "branch-1", newNode: "" } -> error
     }
 
@@ -64,7 +64,7 @@ concept Branch [B] {
         Protected branch cannot be deleted.
       }
 
-      fixture delete_existing { branch: "branch-1" } after create_feature
+      fixture delete_existing { branch: $create_feature.branch } after create_feature
       fixture delete_missing { branch: "branch-nonexistent" } -> error
     }
 
@@ -76,7 +76,7 @@ concept Branch [B] {
         Branch not found.
       }
 
-      fixture protect_main { branch: "branch-1" } after create_feature
+      fixture protect_main { branch: $create_feature.branch } after create_feature
       fixture protect_missing { branch: "branch-nonexistent" } -> error
     }
 
@@ -88,7 +88,7 @@ concept Branch [B] {
         Branch or upstream not found.
       }
 
-      fixture set_upstream_main { branch: "branch-2", upstream: "branch-1" } after create_feature
+      fixture set_upstream_main { branch: $create_feature.branch, upstream: $create_feature.branch } after create_feature
       fixture upstream_missing { branch: "branch-2", upstream: "branch-nonexistent" } -> error
     }
 
@@ -103,7 +103,7 @@ concept Branch [B] {
         b1 or b2 not found.
       }
 
-      fixture find_divergence { b1: "branch-1", b2: "branch-2" } after create_feature
+      fixture find_divergence { b1: $create_feature.branch, b2: $create_feature.branch } after create_feature
       fixture divergence_missing { b1: "branch-nonexistent", b2: "branch-1" } -> error
     }
 
@@ -115,7 +115,7 @@ concept Branch [B] {
         Branch not found.
       }
 
-      fixture archive_old { branch: "branch-1" } after create_feature
+      fixture archive_old { branch: $create_feature.branch } after create_feature
       fixture archive_missing { branch: "branch-nonexistent" } -> error
     }
   }

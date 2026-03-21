@@ -72,7 +72,7 @@ concept CloudRunRuntime [C] {
         Traffic routed to specified previous revision.
       }
 
-      fixture rollback_to_rev { service: "svc-abc123", targetRevision: "rev-20250101" } after provision_standard
+      fixture rollback_to_rev { service: "svc-abc123", targetRevision: $provision_standard.service } after provision_standard
       fixture rollback_empty_revision { service: "svc-abc123", targetRevision: "" } after provision_standard
     }
 

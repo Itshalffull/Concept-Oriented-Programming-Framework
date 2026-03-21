@@ -58,8 +58,8 @@ concept Host [W] {
       }
       -> notfound(message: String) { Host missing. }
 
-      fixture track_binding { host: "W-1", kind: "binding", ref: "bind-1" } after mount_article_list
-      fixture track_machine { host: "W-1", kind: "machine", ref: "machine-1" } after mount_article_list
+      fixture track_binding { host: "W-1", kind: "binding", ref: $mount_article_list.host } after mount_article_list
+      fixture track_machine { host: "W-1", kind: "machine", ref: $mount_article_list.host } after mount_article_list
       fixture track_unknown_host { host: "W-nonexistent", kind: "binding", ref: "bind-1" } -> notfound
     }
 

@@ -52,7 +52,7 @@ concept ScopeGraph [C] {
         Symbols returned as serialized JSON array.
       }
 
-      fixture valid_resolve_ref { graph: "scope-graph-1", scope: "scope-1", name: "createArticle" } after valid_build
+      fixture valid_resolve_ref { graph: $valid_build.graph, scope: $valid_build.graph, name: "createArticle" } after valid_build
       fixture resolve_ref_unknown { graph: "scope-graph-999", scope: "scope-1", name: "unknown" } -> error
     }
 
@@ -62,8 +62,8 @@ concept ScopeGraph [C] {
         inherited and imported names. Results as serialized JSON array.
       }
 
-      fixture valid_visible { graph: "scope-graph-1", scope: "scope-1" } after valid_build
-      fixture visible_no_graph { graph: "scope-graph-999", scope: "scope-1" } after valid_build
+      fixture valid_visible { graph: $valid_build.graph, scope: $valid_build.graph } after valid_build
+      fixture visible_no_graph { graph: $valid_build.graph, scope: $valid_build.graph } after valid_build
     }
 
     action resolveCrossFile(graph: C) {
@@ -75,7 +75,7 @@ concept ScopeGraph [C] {
         All references in this graph are already resolved.
       }
 
-      fixture valid_cross_file { graph: "scope-graph-1" } after valid_build
+      fixture valid_cross_file { graph: $valid_build.graph } after valid_build
       fixture cross_file_no_graph { graph: "scope-graph-999" } -> error
     }
 
@@ -87,7 +87,7 @@ concept ScopeGraph [C] {
         Graph does not exist.
       }
 
-      fixture valid_get { graph: "scope-graph-1" } after valid_build
+      fixture valid_get { graph: $valid_build.graph } after valid_build
       fixture get_nonexistent { graph: "scope-graph-999" } -> error
     }
   }

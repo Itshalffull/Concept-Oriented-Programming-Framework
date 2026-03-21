@@ -102,7 +102,7 @@ describe('BondingCurve functional handler', () => {
 
   describe('buy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = bondingCurveHandler.buy({ curve: "curve-001", buyer: "alice", reserveAmount: "100.0" });
+      const program = bondingCurveHandler.buy({ curve: {"type":"ref","fixture":"create_linear","field":"id"}, buyer: "alice", reserveAmount: "100.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('BondingCurve functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = bondingCurveHandler.buy({ curve: "curve-001", buyer: "alice", reserveAmount: "100.0" });
+      const program = bondingCurveHandler.buy({ curve: {"type":"ref","fixture":"create_linear","field":"id"}, buyer: "alice", reserveAmount: "100.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = bondingCurveHandler.buy({ curve: "curve-001", buyer: "alice", reserveAmount: "100.0" });
+      const program = bondingCurveHandler.buy({ curve: {"type":"ref","fixture":"create_linear","field":"id"}, buyer: "alice", reserveAmount: "100.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = bondingCurveHandler.buy({ curve: "curve-001", buyer: "alice", reserveAmount: "100.0" });
+      const program = bondingCurveHandler.buy({ curve: {"type":"ref","fixture":"create_linear","field":"id"}, buyer: "alice", reserveAmount: "100.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('BondingCurve functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = bondingCurveHandler.buy({ curve: "curve-001", buyer: "alice", reserveAmount: "100.0" });
+      const program = bondingCurveHandler.buy({ curve: {"type":"ref","fixture":"create_linear","field":"id"}, buyer: "alice", reserveAmount: "100.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('BondingCurve functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof bondingCurveHandler.buy !== 'function') return;
-      const result = await interpret(bondingCurveHandler.buy({ curve: "curve-001", buyer: "alice", reserveAmount: "100.0" }), storage);
+      const result = await interpret(bondingCurveHandler.buy({ curve: {"type":"ref","fixture":"create_linear","field":"id"}, buyer: "alice", reserveAmount: "100.0" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('BondingCurve functional handler', () => {
       if (typeof bondingCurveHandler.buy !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_linear = await interpret(bondingCurveHandler.create({ curveType: "linear", params: "{\"slope\":0.01}", reserveToken: "ETH", bondedToken: "GOV" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_linear?.output ?? {}));
-      const _fixtureInput = { curve: "curve-001", buyer: "alice", reserveAmount: "100.0" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(bondingCurveHandler.buy({ ..._fixtureInput }), storage);
+      const result = await interpret(bondingCurveHandler.buy({ curve: afterResult_create_linear?.output?.["id"], buyer: "alice", reserveAmount: "100.0" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,7 +171,7 @@ describe('BondingCurve functional handler', () => {
 
   describe('sell', () => {
     it('builds a valid StorageProgram', () => {
-      const program = bondingCurveHandler.sell({ curve: "curve-001", seller: "alice", tokenAmount: "50.0" });
+      const program = bondingCurveHandler.sell({ curve: {"type":"ref","fixture":"create_linear","field":"id"}, seller: "alice", tokenAmount: "50.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +179,21 @@ describe('BondingCurve functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = bondingCurveHandler.sell({ curve: "curve-001", seller: "alice", tokenAmount: "50.0" });
+      const program = bondingCurveHandler.sell({ curve: {"type":"ref","fixture":"create_linear","field":"id"}, seller: "alice", tokenAmount: "50.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = bondingCurveHandler.sell({ curve: "curve-001", seller: "alice", tokenAmount: "50.0" });
+      const program = bondingCurveHandler.sell({ curve: {"type":"ref","fixture":"create_linear","field":"id"}, seller: "alice", tokenAmount: "50.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = bondingCurveHandler.sell({ curve: "curve-001", seller: "alice", tokenAmount: "50.0" });
+      const program = bondingCurveHandler.sell({ curve: {"type":"ref","fixture":"create_linear","field":"id"}, seller: "alice", tokenAmount: "50.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +206,7 @@ describe('BondingCurve functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = bondingCurveHandler.sell({ curve: "curve-001", seller: "alice", tokenAmount: "50.0" });
+      const program = bondingCurveHandler.sell({ curve: {"type":"ref","fixture":"create_linear","field":"id"}, seller: "alice", tokenAmount: "50.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,7 +214,7 @@ describe('BondingCurve functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof bondingCurveHandler.sell !== 'function') return;
-      const result = await interpret(bondingCurveHandler.sell({ curve: "curve-001", seller: "alice", tokenAmount: "50.0" }), storage);
+      const result = await interpret(bondingCurveHandler.sell({ curve: {"type":"ref","fixture":"create_linear","field":"id"}, seller: "alice", tokenAmount: "50.0" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -230,12 +225,7 @@ describe('BondingCurve functional handler', () => {
       if (typeof bondingCurveHandler.sell !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_linear = await interpret(bondingCurveHandler.create({ curveType: "linear", params: "{\"slope\":0.01}", reserveToken: "ETH", bondedToken: "GOV" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_linear?.output ?? {}));
-      const _fixtureInput = { curve: "curve-001", seller: "alice", tokenAmount: "50.0" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(bondingCurveHandler.sell({ ..._fixtureInput }), storage);
+      const result = await interpret(bondingCurveHandler.sell({ curve: afterResult_create_linear?.output?.["id"], seller: "alice", tokenAmount: "50.0" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -250,7 +240,7 @@ describe('BondingCurve functional handler', () => {
 
   describe('getPrice', () => {
     it('builds a valid StorageProgram', () => {
-      const program = bondingCurveHandler.getPrice({ curve: "curve-001", amount: "10.0" });
+      const program = bondingCurveHandler.getPrice({ curve: {"type":"ref","fixture":"create_linear","field":"id"}, amount: "10.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -258,21 +248,21 @@ describe('BondingCurve functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = bondingCurveHandler.getPrice({ curve: "curve-001", amount: "10.0" });
+      const program = bondingCurveHandler.getPrice({ curve: {"type":"ref","fixture":"create_linear","field":"id"}, amount: "10.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = bondingCurveHandler.getPrice({ curve: "curve-001", amount: "10.0" });
+      const program = bondingCurveHandler.getPrice({ curve: {"type":"ref","fixture":"create_linear","field":"id"}, amount: "10.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = bondingCurveHandler.getPrice({ curve: "curve-001", amount: "10.0" });
+      const program = bondingCurveHandler.getPrice({ curve: {"type":"ref","fixture":"create_linear","field":"id"}, amount: "10.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -285,7 +275,7 @@ describe('BondingCurve functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = bondingCurveHandler.getPrice({ curve: "curve-001", amount: "10.0" });
+      const program = bondingCurveHandler.getPrice({ curve: {"type":"ref","fixture":"create_linear","field":"id"}, amount: "10.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -293,7 +283,7 @@ describe('BondingCurve functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof bondingCurveHandler.getPrice !== 'function') return;
-      const result = await interpret(bondingCurveHandler.getPrice({ curve: "curve-001", amount: "10.0" }), storage);
+      const result = await interpret(bondingCurveHandler.getPrice({ curve: {"type":"ref","fixture":"create_linear","field":"id"}, amount: "10.0" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -304,12 +294,7 @@ describe('BondingCurve functional handler', () => {
       if (typeof bondingCurveHandler.getPrice !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_linear = await interpret(bondingCurveHandler.create({ curveType: "linear", params: "{\"slope\":0.01}", reserveToken: "ETH", bondedToken: "GOV" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_linear?.output ?? {}));
-      const _fixtureInput = { curve: "curve-001", amount: "10.0" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(bondingCurveHandler.getPrice({ ..._fixtureInput }), storage);
+      const result = await interpret(bondingCurveHandler.getPrice({ curve: afterResult_create_linear?.output?.["id"], amount: "10.0" }), storage);
       expect(result.variant).toBe('ok');
     });
 

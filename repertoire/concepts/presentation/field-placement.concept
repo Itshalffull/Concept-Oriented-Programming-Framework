@@ -54,7 +54,7 @@ concept FieldPlacement [P] {
         The placement does not exist.
       }
 
-      fixture configure_formatter { placement: "fp-001", formatter: "markdown", label_display: "inline" } after create_title
+      fixture configure_formatter { placement: $create_title.placement, formatter: "markdown", label_display: "inline" } after create_title
       fixture configure_nonexistent { placement: "fp-missing" } -> error
     }
 
@@ -64,8 +64,8 @@ concept FieldPlacement [P] {
         Updates visibility settings.
       }
 
-      fixture hide_field { placement: "fp-001", visible: false, role_visibility: "admin" } after create_title
-      fixture show_field { placement: "fp-001", visible: true } after create_title
+      fixture hide_field { placement: $create_title.placement, visible: false, role_visibility: "admin" } after create_title
+      fixture show_field { placement: $create_title.placement, visible: true } after create_title
     }
 
     action set_field_mapping(placement: P, mapping: String) {
@@ -74,7 +74,7 @@ concept FieldPlacement [P] {
         The field's value is passed as context to the mapping.
       }
 
-      fixture set_mapping { placement: "fp-001", mapping: "rich-text-editor" } after create_title
+      fixture set_mapping { placement: $create_title.placement, mapping: "rich-text-editor" } after create_title
       fixture set_mapping_empty { placement: "fp-001", mapping: "" } -> error
     }
 
@@ -84,7 +84,7 @@ concept FieldPlacement [P] {
         its formatter directly.
       }
 
-      fixture clear_existing_mapping { placement: "fp-001" } after create_title
+      fixture clear_existing_mapping { placement: $create_title.placement } after create_title
       fixture clear_nonexistent { placement: "fp-missing" } -> error
     }
 
@@ -100,7 +100,7 @@ concept FieldPlacement [P] {
         The placement does not exist.
       }
 
-      fixture get_existing { placement: "fp-001" } after create_title
+      fixture get_existing { placement: $create_title.placement } after create_title
       fixture get_nonexistent { placement: "fp-missing" } -> error
     }
 
@@ -111,7 +111,7 @@ concept FieldPlacement [P] {
         missing reference gracefully — skip the field in rendering.
       }
 
-      fixture delete_existing { placement: "fp-001" } after create_title
+      fixture delete_existing { placement: $create_title.placement } after create_title
       fixture delete_nonexistent { placement: "fp-missing" } -> error
     }
 
@@ -123,7 +123,7 @@ concept FieldPlacement [P] {
         formatter independently.
       }
 
-      fixture duplicate_existing { placement: "fp-001" } after create_title
+      fixture duplicate_existing { placement: $create_title.placement } after create_title
       fixture duplicate_nonexistent { placement: "fp-missing" } -> error
     }
 

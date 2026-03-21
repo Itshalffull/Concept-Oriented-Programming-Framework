@@ -104,7 +104,7 @@ concept HandlerEntity [H] {
         The handler does not implement this action.
       }
 
-      fixture get_create_method { handler: "handler-001", actionName: "create" } after register_article_handler
+      fixture get_create_method { handler: $register_article_handler.handler, actionName: "create" } after register_article_handler
       fixture get_missing_method { handler: "handler-001", actionName: "nonexistentAction" } -> error
     }
 
@@ -133,7 +133,7 @@ concept HandlerEntity [H] {
         Each as serialized JSON array.
       }
 
-      fixture deps_article { handler: "handler-001" } after register_article_handler
+      fixture deps_article { handler: $register_article_handler.handler } after register_article_handler
       fixture deps_nonexistent { handler: "nonexistent-handler" } after register_article_handler
     }
 
@@ -144,7 +144,7 @@ concept HandlerEntity [H] {
         JSON array of { collection, operations: ["put","get",...] }.
       }
 
-      fixture storage_article { handler: "handler-001" } after register_article_handler
+      fixture storage_article { handler: $register_article_handler.handler } after register_article_handler
       fixture storage_nonexistent { handler: "nonexistent-handler" } after register_article_handler
     }
 
@@ -182,7 +182,7 @@ concept HandlerEntity [H] {
         The given position is outside the handler's line range.
       }
 
-      fixture resolve_ast_valid { handler: "handler-001", line: 10, col: 5 } after register_article_handler
+      fixture resolve_ast_valid { handler: $register_article_handler.handler, line: 10, col: 5 } after register_article_handler
       fixture resolve_ast_out_of_range { handler: "handler-001", line: 99999, col: 1 } -> error
     }
 
@@ -215,7 +215,7 @@ concept HandlerEntity [H] {
         The handler does not implement this action.
       }
 
-      fixture trace_create_returns { handler: "handler-001", actionName: "create" } after register_article_handler
+      fixture trace_create_returns { handler: $register_article_handler.handler, actionName: "create" } after register_article_handler
       fixture trace_missing_action { handler: "handler-001", actionName: "nonexistent" } -> error
     }
 
@@ -231,7 +231,7 @@ concept HandlerEntity [H] {
         The handler does not implement this action.
       }
 
-      fixture trace_create_storage { handler: "handler-001", actionName: "create" } after register_article_handler
+      fixture trace_create_storage { handler: $register_article_handler.handler, actionName: "create" } after register_article_handler
       fixture trace_missing_storage { handler: "handler-001", actionName: "nonexistent" } -> error
     }
 

@@ -46,8 +46,8 @@ concept RankedChoice [RC] {
         All ballots are exhausted before a winner emerges.
       }
 
-      fixture count_three_candidates { config: "rcv-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]}]", weights: "{}" } after irv_single_seat
-      fixture count_empty_ballots { config: "rcv-001", rankedBallots: "[]", weights: "{}" } after irv_single_seat -> error
+      fixture count_three_candidates { config: $irv_single_seat.id, rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]}]", weights: "{}" } after irv_single_seat
+      fixture count_empty_ballots { config: $irv_single_seat.id, rankedBallots: "[]", weights: "{}" } after irv_single_seat -> error
     }
 
     action getRoundDetail(config: RC, roundNumber: Int) {
@@ -58,7 +58,7 @@ concept RankedChoice [RC] {
         No such round exists.
       }
 
-      fixture get_round_one { config: "rcv-001", roundNumber: 1 } after irv_single_seat
+      fixture get_round_one { config: $irv_single_seat.id, roundNumber: 1 } after irv_single_seat
       fixture get_invalid_round { config: "rcv-001", roundNumber: 999 } -> error
     }
   }

@@ -111,7 +111,7 @@ describe('DataQuality functional handler', () => {
 
   describe('quarantine', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dataQualityHandler.quarantine({ itemId: "item-1", violations: "[{\"rule\":\"required\",\"field\":\"title\"}]" });
+      const program = dataQualityHandler.quarantine({ itemId: {"type":"ref","fixture":"validate_ok","field":"valid"}, violations: "[{\"rule\":\"required\",\"field\":\"title\"}]" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -119,21 +119,21 @@ describe('DataQuality functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dataQualityHandler.quarantine({ itemId: "item-1", violations: "[{\"rule\":\"required\",\"field\":\"title\"}]" });
+      const program = dataQualityHandler.quarantine({ itemId: {"type":"ref","fixture":"validate_ok","field":"valid"}, violations: "[{\"rule\":\"required\",\"field\":\"title\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dataQualityHandler.quarantine({ itemId: "item-1", violations: "[{\"rule\":\"required\",\"field\":\"title\"}]" });
+      const program = dataQualityHandler.quarantine({ itemId: {"type":"ref","fixture":"validate_ok","field":"valid"}, violations: "[{\"rule\":\"required\",\"field\":\"title\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dataQualityHandler.quarantine({ itemId: "item-1", violations: "[{\"rule\":\"required\",\"field\":\"title\"}]" });
+      const program = dataQualityHandler.quarantine({ itemId: {"type":"ref","fixture":"validate_ok","field":"valid"}, violations: "[{\"rule\":\"required\",\"field\":\"title\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -146,7 +146,7 @@ describe('DataQuality functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dataQualityHandler.quarantine({ itemId: "item-1", violations: "[{\"rule\":\"required\",\"field\":\"title\"}]" });
+      const program = dataQualityHandler.quarantine({ itemId: {"type":"ref","fixture":"validate_ok","field":"valid"}, violations: "[{\"rule\":\"required\",\"field\":\"title\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -154,7 +154,7 @@ describe('DataQuality functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof dataQualityHandler.quarantine !== 'function') return;
-      const result = await interpret(dataQualityHandler.quarantine({ itemId: "item-1", violations: "[{\"rule\":\"required\",\"field\":\"title\"}]" }), storage);
+      const result = await interpret(dataQualityHandler.quarantine({ itemId: {"type":"ref","fixture":"validate_ok","field":"valid"}, violations: "[{\"rule\":\"required\",\"field\":\"title\"}]" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -165,12 +165,7 @@ describe('DataQuality functional handler', () => {
       if (typeof dataQualityHandler.quarantine !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_validate_ok = await interpret(dataQualityHandler.validate({ item: "{\"title\":\"Test Article\",\"body\":\"Full content here\"}", rulesetId: "article_rules" }), storage);
-      const _pool = Object.assign({}, (afterResult_validate_ok?.output ?? {}));
-      const _fixtureInput = { itemId: "item-1", violations: "[{\"rule\":\"required\",\"field\":\"title\"}]" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(dataQualityHandler.quarantine({ ..._fixtureInput }), storage);
+      const result = await interpret(dataQualityHandler.quarantine({ itemId: afterResult_validate_ok?.output?.["valid"], violations: "[{\"rule\":\"required\",\"field\":\"title\"}]" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -178,7 +173,7 @@ describe('DataQuality functional handler', () => {
 
   describe('release', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dataQualityHandler.release({ itemId: "item-1" });
+      const program = dataQualityHandler.release({ itemId: {"type":"ref","fixture":"validate_ok","field":"valid"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -186,21 +181,21 @@ describe('DataQuality functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dataQualityHandler.release({ itemId: "item-1" });
+      const program = dataQualityHandler.release({ itemId: {"type":"ref","fixture":"validate_ok","field":"valid"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dataQualityHandler.release({ itemId: "item-1" });
+      const program = dataQualityHandler.release({ itemId: {"type":"ref","fixture":"validate_ok","field":"valid"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dataQualityHandler.release({ itemId: "item-1" });
+      const program = dataQualityHandler.release({ itemId: {"type":"ref","fixture":"validate_ok","field":"valid"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -213,7 +208,7 @@ describe('DataQuality functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dataQualityHandler.release({ itemId: "item-1" });
+      const program = dataQualityHandler.release({ itemId: {"type":"ref","fixture":"validate_ok","field":"valid"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -221,7 +216,7 @@ describe('DataQuality functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof dataQualityHandler.release !== 'function') return;
-      const result = await interpret(dataQualityHandler.release({ itemId: "item-1" }), storage);
+      const result = await interpret(dataQualityHandler.release({ itemId: {"type":"ref","fixture":"validate_ok","field":"valid"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -232,12 +227,7 @@ describe('DataQuality functional handler', () => {
       if (typeof dataQualityHandler.release !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_validate_ok = await interpret(dataQualityHandler.validate({ item: "{\"title\":\"Test Article\",\"body\":\"Full content here\"}", rulesetId: "article_rules" }), storage);
-      const _pool = Object.assign({}, (afterResult_validate_ok?.output ?? {}));
-      const _fixtureInput = { itemId: "item-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(dataQualityHandler.release({ ..._fixtureInput }), storage);
+      const result = await interpret(dataQualityHandler.release({ itemId: afterResult_validate_ok?.output?.["valid"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

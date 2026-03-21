@@ -109,7 +109,7 @@ describe('BordaCount functional handler', () => {
 
   describe('count', () => {
     it('builds a valid StorageProgram', () => {
-      const program = bordaCountHandler.count({ config: "borda-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]},{\"voter\":\"carol\",\"ranking\":[\"A\",\"C\",\"B\"]}]", weights: "{}" });
+      const program = bordaCountHandler.count({ config: {"type":"ref","fixture":"standard_scheme","field":"id"}, rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]},{\"voter\":\"carol\",\"ranking\":[\"A\",\"C\",\"B\"]}]", weights: "{}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -117,21 +117,21 @@ describe('BordaCount functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = bordaCountHandler.count({ config: "borda-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]},{\"voter\":\"carol\",\"ranking\":[\"A\",\"C\",\"B\"]}]", weights: "{}" });
+      const program = bordaCountHandler.count({ config: {"type":"ref","fixture":"standard_scheme","field":"id"}, rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]},{\"voter\":\"carol\",\"ranking\":[\"A\",\"C\",\"B\"]}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = bordaCountHandler.count({ config: "borda-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]},{\"voter\":\"carol\",\"ranking\":[\"A\",\"C\",\"B\"]}]", weights: "{}" });
+      const program = bordaCountHandler.count({ config: {"type":"ref","fixture":"standard_scheme","field":"id"}, rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]},{\"voter\":\"carol\",\"ranking\":[\"A\",\"C\",\"B\"]}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = bordaCountHandler.count({ config: "borda-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]},{\"voter\":\"carol\",\"ranking\":[\"A\",\"C\",\"B\"]}]", weights: "{}" });
+      const program = bordaCountHandler.count({ config: {"type":"ref","fixture":"standard_scheme","field":"id"}, rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]},{\"voter\":\"carol\",\"ranking\":[\"A\",\"C\",\"B\"]}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -144,7 +144,7 @@ describe('BordaCount functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = bordaCountHandler.count({ config: "borda-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]},{\"voter\":\"carol\",\"ranking\":[\"A\",\"C\",\"B\"]}]", weights: "{}" });
+      const program = bordaCountHandler.count({ config: {"type":"ref","fixture":"standard_scheme","field":"id"}, rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]},{\"voter\":\"carol\",\"ranking\":[\"A\",\"C\",\"B\"]}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -152,7 +152,7 @@ describe('BordaCount functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof bordaCountHandler.count !== 'function') return;
-      const result = await interpret(bordaCountHandler.count({ config: "borda-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]},{\"voter\":\"carol\",\"ranking\":[\"A\",\"C\",\"B\"]}]", weights: "{}" }), storage);
+      const result = await interpret(bordaCountHandler.count({ config: {"type":"ref","fixture":"standard_scheme","field":"id"}, rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]},{\"voter\":\"carol\",\"ranking\":[\"A\",\"C\",\"B\"]}]", weights: "{}" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -163,12 +163,7 @@ describe('BordaCount functional handler', () => {
       if (typeof bordaCountHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_standard_scheme = await interpret(bordaCountHandler.configure({ pointScheme: "Standard" }), storage);
-      const _pool = Object.assign({}, (afterResult_standard_scheme?.output ?? {}));
-      const _fixtureInput = { config: "borda-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]},{\"voter\":\"carol\",\"ranking\":[\"A\",\"C\",\"B\"]}]", weights: "{}" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(bordaCountHandler.count({ ..._fixtureInput }), storage);
+      const result = await interpret(bordaCountHandler.count({ config: afterResult_standard_scheme?.output?.["id"], rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]},{\"voter\":\"carol\",\"ranking\":[\"A\",\"C\",\"B\"]}]", weights: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,12 +171,7 @@ describe('BordaCount functional handler', () => {
       if (typeof bordaCountHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_standard_scheme = await interpret(bordaCountHandler.configure({ pointScheme: "Standard" }), storage);
-      const _pool = Object.assign({}, (afterResult_standard_scheme?.output ?? {}));
-      const _fixtureInput = { config: "borda-001", rankedBallots: "[]", weights: "{}" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(bordaCountHandler.count({ ..._fixtureInput }), storage);
+      const result = await interpret(bordaCountHandler.count({ config: afterResult_standard_scheme?.output?.["id"], rankedBallots: "[]", weights: "{}" }), storage);
       expect(result.variant).not.toBe('ok');
     });
 

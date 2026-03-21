@@ -102,7 +102,7 @@ describe('FieldPlacement functional handler', () => {
 
   describe('configure', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fieldPlacementHandler.configure({ placement: "fp-001", formatter: "markdown", label_display: "inline" });
+      const program = fieldPlacementHandler.configure({ placement: {"type":"ref","fixture":"create_title","field":"placement"}, formatter: "markdown", label_display: "inline" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('FieldPlacement functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fieldPlacementHandler.configure({ placement: "fp-001", formatter: "markdown", label_display: "inline" });
+      const program = fieldPlacementHandler.configure({ placement: {"type":"ref","fixture":"create_title","field":"placement"}, formatter: "markdown", label_display: "inline" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fieldPlacementHandler.configure({ placement: "fp-001", formatter: "markdown", label_display: "inline" });
+      const program = fieldPlacementHandler.configure({ placement: {"type":"ref","fixture":"create_title","field":"placement"}, formatter: "markdown", label_display: "inline" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fieldPlacementHandler.configure({ placement: "fp-001", formatter: "markdown", label_display: "inline" });
+      const program = fieldPlacementHandler.configure({ placement: {"type":"ref","fixture":"create_title","field":"placement"}, formatter: "markdown", label_display: "inline" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('FieldPlacement functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fieldPlacementHandler.configure({ placement: "fp-001", formatter: "markdown", label_display: "inline" });
+      const program = fieldPlacementHandler.configure({ placement: {"type":"ref","fixture":"create_title","field":"placement"}, formatter: "markdown", label_display: "inline" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('FieldPlacement functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof fieldPlacementHandler.configure !== 'function') return;
-      const result = await interpret(fieldPlacementHandler.configure({ placement: "fp-001", formatter: "markdown", label_display: "inline" }), storage);
+      const result = await interpret(fieldPlacementHandler.configure({ placement: {"type":"ref","fixture":"create_title","field":"placement"}, formatter: "markdown", label_display: "inline" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('FieldPlacement functional handler', () => {
       if (typeof fieldPlacementHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_title = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_title?.output ?? {}));
-      const _fixtureInput = { placement: "fp-001", formatter: "markdown", label_display: "inline" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(fieldPlacementHandler.configure({ ..._fixtureInput }), storage);
+      const result = await interpret(fieldPlacementHandler.configure({ placement: afterResult_create_title?.output?.["placement"], formatter: "markdown", label_display: "inline" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,7 +171,7 @@ describe('FieldPlacement functional handler', () => {
 
   describe('set_visibility', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fieldPlacementHandler.set_visibility({ placement: "fp-001", visible: "false", role_visibility: "admin" });
+      const program = fieldPlacementHandler.set_visibility({ placement: {"type":"ref","fixture":"create_title","field":"placement"}, visible: "false", role_visibility: "admin" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +179,21 @@ describe('FieldPlacement functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fieldPlacementHandler.set_visibility({ placement: "fp-001", visible: "false", role_visibility: "admin" });
+      const program = fieldPlacementHandler.set_visibility({ placement: {"type":"ref","fixture":"create_title","field":"placement"}, visible: "false", role_visibility: "admin" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fieldPlacementHandler.set_visibility({ placement: "fp-001", visible: "false", role_visibility: "admin" });
+      const program = fieldPlacementHandler.set_visibility({ placement: {"type":"ref","fixture":"create_title","field":"placement"}, visible: "false", role_visibility: "admin" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fieldPlacementHandler.set_visibility({ placement: "fp-001", visible: "false", role_visibility: "admin" });
+      const program = fieldPlacementHandler.set_visibility({ placement: {"type":"ref","fixture":"create_title","field":"placement"}, visible: "false", role_visibility: "admin" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +206,7 @@ describe('FieldPlacement functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fieldPlacementHandler.set_visibility({ placement: "fp-001", visible: "false", role_visibility: "admin" });
+      const program = fieldPlacementHandler.set_visibility({ placement: {"type":"ref","fixture":"create_title","field":"placement"}, visible: "false", role_visibility: "admin" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,7 +214,7 @@ describe('FieldPlacement functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof fieldPlacementHandler.set_visibility !== 'function') return;
-      const result = await interpret(fieldPlacementHandler.set_visibility({ placement: "fp-001", visible: "false", role_visibility: "admin" }), storage);
+      const result = await interpret(fieldPlacementHandler.set_visibility({ placement: {"type":"ref","fixture":"create_title","field":"placement"}, visible: "false", role_visibility: "admin" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -230,12 +225,7 @@ describe('FieldPlacement functional handler', () => {
       if (typeof fieldPlacementHandler.set_visibility !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_title = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_title?.output ?? {}));
-      const _fixtureInput = { placement: "fp-001", visible: "false", role_visibility: "admin" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(fieldPlacementHandler.set_visibility({ ..._fixtureInput }), storage);
+      const result = await interpret(fieldPlacementHandler.set_visibility({ placement: afterResult_create_title?.output?.["placement"], visible: "false", role_visibility: "admin" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -243,12 +233,7 @@ describe('FieldPlacement functional handler', () => {
       if (typeof fieldPlacementHandler.set_visibility !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_title = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_title?.output ?? {}));
-      const _fixtureInput = { placement: "fp-001", visible: "true" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(fieldPlacementHandler.set_visibility({ ..._fixtureInput }), storage);
+      const result = await interpret(fieldPlacementHandler.set_visibility({ placement: afterResult_create_title?.output?.["placement"], visible: "true" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -256,7 +241,7 @@ describe('FieldPlacement functional handler', () => {
 
   describe('set_field_mapping', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fieldPlacementHandler.set_field_mapping({ placement: "fp-001", mapping: "rich-text-editor" });
+      const program = fieldPlacementHandler.set_field_mapping({ placement: {"type":"ref","fixture":"create_title","field":"placement"}, mapping: "rich-text-editor" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -264,21 +249,21 @@ describe('FieldPlacement functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fieldPlacementHandler.set_field_mapping({ placement: "fp-001", mapping: "rich-text-editor" });
+      const program = fieldPlacementHandler.set_field_mapping({ placement: {"type":"ref","fixture":"create_title","field":"placement"}, mapping: "rich-text-editor" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fieldPlacementHandler.set_field_mapping({ placement: "fp-001", mapping: "rich-text-editor" });
+      const program = fieldPlacementHandler.set_field_mapping({ placement: {"type":"ref","fixture":"create_title","field":"placement"}, mapping: "rich-text-editor" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fieldPlacementHandler.set_field_mapping({ placement: "fp-001", mapping: "rich-text-editor" });
+      const program = fieldPlacementHandler.set_field_mapping({ placement: {"type":"ref","fixture":"create_title","field":"placement"}, mapping: "rich-text-editor" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -291,7 +276,7 @@ describe('FieldPlacement functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fieldPlacementHandler.set_field_mapping({ placement: "fp-001", mapping: "rich-text-editor" });
+      const program = fieldPlacementHandler.set_field_mapping({ placement: {"type":"ref","fixture":"create_title","field":"placement"}, mapping: "rich-text-editor" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -299,7 +284,7 @@ describe('FieldPlacement functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof fieldPlacementHandler.set_field_mapping !== 'function') return;
-      const result = await interpret(fieldPlacementHandler.set_field_mapping({ placement: "fp-001", mapping: "rich-text-editor" }), storage);
+      const result = await interpret(fieldPlacementHandler.set_field_mapping({ placement: {"type":"ref","fixture":"create_title","field":"placement"}, mapping: "rich-text-editor" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -310,12 +295,7 @@ describe('FieldPlacement functional handler', () => {
       if (typeof fieldPlacementHandler.set_field_mapping !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_title = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_title?.output ?? {}));
-      const _fixtureInput = { placement: "fp-001", mapping: "rich-text-editor" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(fieldPlacementHandler.set_field_mapping({ ..._fixtureInput }), storage);
+      const result = await interpret(fieldPlacementHandler.set_field_mapping({ placement: afterResult_create_title?.output?.["placement"], mapping: "rich-text-editor" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -330,7 +310,7 @@ describe('FieldPlacement functional handler', () => {
 
   describe('clear_field_mapping', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fieldPlacementHandler.clear_field_mapping({ placement: "fp-001" });
+      const program = fieldPlacementHandler.clear_field_mapping({ placement: {"type":"ref","fixture":"create_title","field":"placement"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -338,21 +318,21 @@ describe('FieldPlacement functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fieldPlacementHandler.clear_field_mapping({ placement: "fp-001" });
+      const program = fieldPlacementHandler.clear_field_mapping({ placement: {"type":"ref","fixture":"create_title","field":"placement"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fieldPlacementHandler.clear_field_mapping({ placement: "fp-001" });
+      const program = fieldPlacementHandler.clear_field_mapping({ placement: {"type":"ref","fixture":"create_title","field":"placement"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fieldPlacementHandler.clear_field_mapping({ placement: "fp-001" });
+      const program = fieldPlacementHandler.clear_field_mapping({ placement: {"type":"ref","fixture":"create_title","field":"placement"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -365,7 +345,7 @@ describe('FieldPlacement functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fieldPlacementHandler.clear_field_mapping({ placement: "fp-001" });
+      const program = fieldPlacementHandler.clear_field_mapping({ placement: {"type":"ref","fixture":"create_title","field":"placement"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -373,7 +353,7 @@ describe('FieldPlacement functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof fieldPlacementHandler.clear_field_mapping !== 'function') return;
-      const result = await interpret(fieldPlacementHandler.clear_field_mapping({ placement: "fp-001" }), storage);
+      const result = await interpret(fieldPlacementHandler.clear_field_mapping({ placement: {"type":"ref","fixture":"create_title","field":"placement"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -384,12 +364,7 @@ describe('FieldPlacement functional handler', () => {
       if (typeof fieldPlacementHandler.clear_field_mapping !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_title = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_title?.output ?? {}));
-      const _fixtureInput = { placement: "fp-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(fieldPlacementHandler.clear_field_mapping({ ..._fixtureInput }), storage);
+      const result = await interpret(fieldPlacementHandler.clear_field_mapping({ placement: afterResult_create_title?.output?.["placement"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -404,7 +379,7 @@ describe('FieldPlacement functional handler', () => {
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fieldPlacementHandler.get({ placement: "fp-001" });
+      const program = fieldPlacementHandler.get({ placement: {"type":"ref","fixture":"create_title","field":"placement"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -412,21 +387,21 @@ describe('FieldPlacement functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fieldPlacementHandler.get({ placement: "fp-001" });
+      const program = fieldPlacementHandler.get({ placement: {"type":"ref","fixture":"create_title","field":"placement"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fieldPlacementHandler.get({ placement: "fp-001" });
+      const program = fieldPlacementHandler.get({ placement: {"type":"ref","fixture":"create_title","field":"placement"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fieldPlacementHandler.get({ placement: "fp-001" });
+      const program = fieldPlacementHandler.get({ placement: {"type":"ref","fixture":"create_title","field":"placement"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -439,7 +414,7 @@ describe('FieldPlacement functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fieldPlacementHandler.get({ placement: "fp-001" });
+      const program = fieldPlacementHandler.get({ placement: {"type":"ref","fixture":"create_title","field":"placement"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -447,7 +422,7 @@ describe('FieldPlacement functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof fieldPlacementHandler.get !== 'function') return;
-      const result = await interpret(fieldPlacementHandler.get({ placement: "fp-001" }), storage);
+      const result = await interpret(fieldPlacementHandler.get({ placement: {"type":"ref","fixture":"create_title","field":"placement"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -458,12 +433,7 @@ describe('FieldPlacement functional handler', () => {
       if (typeof fieldPlacementHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_title = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_title?.output ?? {}));
-      const _fixtureInput = { placement: "fp-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(fieldPlacementHandler.get({ ..._fixtureInput }), storage);
+      const result = await interpret(fieldPlacementHandler.get({ placement: afterResult_create_title?.output?.["placement"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -478,7 +448,7 @@ describe('FieldPlacement functional handler', () => {
 
   describe('delete', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fieldPlacementHandler.delete({ placement: "fp-001" });
+      const program = fieldPlacementHandler.delete({ placement: {"type":"ref","fixture":"create_title","field":"placement"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -486,21 +456,21 @@ describe('FieldPlacement functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fieldPlacementHandler.delete({ placement: "fp-001" });
+      const program = fieldPlacementHandler.delete({ placement: {"type":"ref","fixture":"create_title","field":"placement"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fieldPlacementHandler.delete({ placement: "fp-001" });
+      const program = fieldPlacementHandler.delete({ placement: {"type":"ref","fixture":"create_title","field":"placement"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fieldPlacementHandler.delete({ placement: "fp-001" });
+      const program = fieldPlacementHandler.delete({ placement: {"type":"ref","fixture":"create_title","field":"placement"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -513,7 +483,7 @@ describe('FieldPlacement functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fieldPlacementHandler.delete({ placement: "fp-001" });
+      const program = fieldPlacementHandler.delete({ placement: {"type":"ref","fixture":"create_title","field":"placement"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -521,7 +491,7 @@ describe('FieldPlacement functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof fieldPlacementHandler.delete !== 'function') return;
-      const result = await interpret(fieldPlacementHandler.delete({ placement: "fp-001" }), storage);
+      const result = await interpret(fieldPlacementHandler.delete({ placement: {"type":"ref","fixture":"create_title","field":"placement"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -532,12 +502,7 @@ describe('FieldPlacement functional handler', () => {
       if (typeof fieldPlacementHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_title = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_title?.output ?? {}));
-      const _fixtureInput = { placement: "fp-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(fieldPlacementHandler.delete({ ..._fixtureInput }), storage);
+      const result = await interpret(fieldPlacementHandler.delete({ placement: afterResult_create_title?.output?.["placement"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -552,7 +517,7 @@ describe('FieldPlacement functional handler', () => {
 
   describe('duplicate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fieldPlacementHandler.duplicate({ placement: "fp-001" });
+      const program = fieldPlacementHandler.duplicate({ placement: {"type":"ref","fixture":"create_title","field":"placement"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -560,21 +525,21 @@ describe('FieldPlacement functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fieldPlacementHandler.duplicate({ placement: "fp-001" });
+      const program = fieldPlacementHandler.duplicate({ placement: {"type":"ref","fixture":"create_title","field":"placement"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fieldPlacementHandler.duplicate({ placement: "fp-001" });
+      const program = fieldPlacementHandler.duplicate({ placement: {"type":"ref","fixture":"create_title","field":"placement"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fieldPlacementHandler.duplicate({ placement: "fp-001" });
+      const program = fieldPlacementHandler.duplicate({ placement: {"type":"ref","fixture":"create_title","field":"placement"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -587,7 +552,7 @@ describe('FieldPlacement functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fieldPlacementHandler.duplicate({ placement: "fp-001" });
+      const program = fieldPlacementHandler.duplicate({ placement: {"type":"ref","fixture":"create_title","field":"placement"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -595,7 +560,7 @@ describe('FieldPlacement functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof fieldPlacementHandler.duplicate !== 'function') return;
-      const result = await interpret(fieldPlacementHandler.duplicate({ placement: "fp-001" }), storage);
+      const result = await interpret(fieldPlacementHandler.duplicate({ placement: {"type":"ref","fixture":"create_title","field":"placement"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -606,12 +571,7 @@ describe('FieldPlacement functional handler', () => {
       if (typeof fieldPlacementHandler.duplicate !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_title = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_title?.output ?? {}));
-      const _fixtureInput = { placement: "fp-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(fieldPlacementHandler.duplicate({ ..._fixtureInput }), storage);
+      const result = await interpret(fieldPlacementHandler.duplicate({ placement: afterResult_create_title?.output?.["placement"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

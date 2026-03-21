@@ -39,7 +39,7 @@ concept VariantEntity [V] {
         Return all syncs whose when-pattern matches this variant's
         tag. Results as serialized JSON array.
       }
-      fixture matching_valid { variant: "variant-entity-1" } after register_ok
+      fixture matching_valid { variant: $register_ok.variant } after register_ok
       fixture matching_missing { variant: "nonexistent-id" } after register_ok
     }
 
@@ -52,7 +52,7 @@ concept VariantEntity [V] {
         This variant is actively matched by syncs and/or
         observed at runtime.
       }
-      fixture dead_check_valid { variant: "variant-entity-1" } after register_ok
+      fixture dead_check_valid { variant: $register_ok.variant } after register_ok
       fixture dead_check_missing { variant: "nonexistent-id" } -> error
     }
 
@@ -63,7 +63,7 @@ concept VariantEntity [V] {
       -> notfound() {
         Variant does not exist.
       }
-      fixture get_valid { variant: "variant-entity-1" } after register_ok
+      fixture get_valid { variant: $register_ok.variant } after register_ok
       fixture get_missing { variant: "nonexistent-id" } -> error
     }
   }

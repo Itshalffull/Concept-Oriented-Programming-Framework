@@ -88,7 +88,7 @@ describe('Evidence imperative handler', () => {
   describe('retrieve', () => {
     it('produces a result', async () => {
       if (typeof evidenceHandler.retrieve !== 'function') return;
-      const result = await evidenceHandler.retrieve({ id: "ev-001" }, storage);
+      const result = await evidenceHandler.retrieve({ id: {"type":"ref","fixture":"valid_record","field":"id"} }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -99,12 +99,7 @@ describe('Evidence imperative handler', () => {
       if (typeof evidenceHandler.retrieve !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_record = await evidenceHandler.record({ property_ref: "prop-1", artifact_type: "proof_certificate", content: "(proof-body QED)", solver: "z3" }, storage);
-      const _pool = Object.assign({}, (afterResult_valid_record?.output ?? {}));
-      const _fixtureInput = { id: "ev-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await evidenceHandler.retrieve({ ..._fixtureInput }, storage);
+      const result = await evidenceHandler.retrieve({ id: afterResult_valid_record?.output?.["id"] }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -148,7 +143,7 @@ describe('Evidence imperative handler', () => {
   describe('minimize', () => {
     it('produces a result', async () => {
       if (typeof evidenceHandler.minimize !== 'function') return;
-      const result = await evidenceHandler.minimize({ id: "ev-counter-001" }, storage);
+      const result = await evidenceHandler.minimize({ id: {"type":"ref","fixture":"valid_record","field":"id"} }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -159,12 +154,7 @@ describe('Evidence imperative handler', () => {
       if (typeof evidenceHandler.minimize !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_record = await evidenceHandler.record({ property_ref: "prop-1", artifact_type: "proof_certificate", content: "(proof-body QED)", solver: "z3" }, storage);
-      const _pool = Object.assign({}, (afterResult_valid_record?.output ?? {}));
-      const _fixtureInput = { id: "ev-counter-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await evidenceHandler.minimize({ ..._fixtureInput }, storage);
+      const result = await evidenceHandler.minimize({ id: afterResult_valid_record?.output?.["id"] }, storage);
       expect(result.variant).toBe('ok');
     });
 

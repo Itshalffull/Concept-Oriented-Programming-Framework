@@ -66,7 +66,7 @@ concept ThemeEntity [T] {
       -> brokenChain(brokenAt: String) {
         Token reference chain is broken at this point.
       }
-      fixture resolve_primary { theme: "theme-entity-1", tokenPath: "palette.primary" } after register_light
+      fixture resolve_primary { theme: $register_light.entity, tokenPath: "palette.primary" } after register_light
       fixture resolve_missing { theme: "nonexistent", tokenPath: "palette.x" } -> error
     }
 
@@ -76,7 +76,7 @@ concept ThemeEntity [T] {
         Results as serialized JSON array of { rolePair, ratio,
         passes }.
       }
-      fixture audit_theme { theme: "theme-entity-1" } after register_light
+      fixture audit_theme { theme: $register_light.entity } after register_light
       fixture audit_missing { theme: "nonexistent" } -> error
     }
 
@@ -97,7 +97,7 @@ concept ThemeEntity [T] {
         Find all widgets whose connect sections reference the
         changed token. Results as serialized JSON array.
       }
-      fixture affected_primary { theme: "theme-entity-1", changedToken: "color.primary" } after register_light
+      fixture affected_primary { theme: $register_light.entity, changedToken: "color.primary" } after register_light
       fixture affected_missing { theme: "nonexistent", changedToken: "x" } after register_light
     }
 
@@ -107,7 +107,7 @@ concept ThemeEntity [T] {
         platforms (CSS, RN, DTCG JSON, etc.). Results as
         serialized JSON array of { platform, file }.
       }
-      fixture outputs_theme { theme: "theme-entity-1" } after register_light
+      fixture outputs_theme { theme: $register_light.entity } after register_light
       fixture outputs_missing { theme: "nonexistent" } after register_light
     }
   }

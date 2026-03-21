@@ -44,7 +44,7 @@ concept GlickoRating [GL] {
         Deviation decreases (more certain) after activity.
       }
 
-      fixture outcome_win { config: "glicko-001", participant: "alice", opponent: "bob", outcome: 1.0 } after configure_standard
+      fixture outcome_win { config: $configure_standard.id, participant: "alice", opponent: "bob", outcome: 1.0 } after configure_standard
       fixture outcome_invalid { config: "glicko-001", participant: "", opponent: "", outcome: -1.0 } -> error
     }
 
@@ -54,7 +54,7 @@ concept GlickoRating [GL] {
         growing uncertainty about the participant's current ability.
       }
 
-      fixture decay_30_days { config: "glicko-001", participant: "alice", daysSinceActive: 30.0 } after configure_standard
+      fixture decay_30_days { config: $configure_standard.id, participant: "alice", daysSinceActive: 30.0 } after configure_standard
       fixture decay_nonexistent { config: "glicko-001", participant: "unknown-player", daysSinceActive: 90.0 } -> error
     }
 
@@ -64,7 +64,7 @@ concept GlickoRating [GL] {
         to discount governance weight for uncertain participants.
       }
 
-      fixture weight_alice { config: "glicko-001", participant: "alice" } after configure_standard
+      fixture weight_alice { config: $configure_standard.id, participant: "alice" } after configure_standard
       fixture weight_unknown { config: "glicko-001", participant: "" } -> error
     }
   }

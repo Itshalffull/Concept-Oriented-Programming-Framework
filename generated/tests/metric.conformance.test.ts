@@ -102,7 +102,7 @@ describe('Metric functional handler', () => {
 
   describe('update', () => {
     it('builds a valid StorageProgram', () => {
-      const program = metricHandler.update({ metric: "metric-001", value: "150000.0", source: "finance-api" });
+      const program = metricHandler.update({ metric: {"type":"ref","fixture":"define_revenue","field":"id"}, value: "150000.0", source: "finance-api" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('Metric functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = metricHandler.update({ metric: "metric-001", value: "150000.0", source: "finance-api" });
+      const program = metricHandler.update({ metric: {"type":"ref","fixture":"define_revenue","field":"id"}, value: "150000.0", source: "finance-api" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = metricHandler.update({ metric: "metric-001", value: "150000.0", source: "finance-api" });
+      const program = metricHandler.update({ metric: {"type":"ref","fixture":"define_revenue","field":"id"}, value: "150000.0", source: "finance-api" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = metricHandler.update({ metric: "metric-001", value: "150000.0", source: "finance-api" });
+      const program = metricHandler.update({ metric: {"type":"ref","fixture":"define_revenue","field":"id"}, value: "150000.0", source: "finance-api" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('Metric functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = metricHandler.update({ metric: "metric-001", value: "150000.0", source: "finance-api" });
+      const program = metricHandler.update({ metric: {"type":"ref","fixture":"define_revenue","field":"id"}, value: "150000.0", source: "finance-api" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('Metric functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof metricHandler.update !== 'function') return;
-      const result = await interpret(metricHandler.update({ metric: "metric-001", value: "150000.0", source: "finance-api" }), storage);
+      const result = await interpret(metricHandler.update({ metric: {"type":"ref","fixture":"define_revenue","field":"id"}, value: "150000.0", source: "finance-api" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('Metric functional handler', () => {
       if (typeof metricHandler.update !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_define_revenue = await interpret(metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" }), storage);
-      const _pool = Object.assign({}, (afterResult_define_revenue?.output ?? {}));
-      const _fixtureInput = { metric: "metric-001", value: "150000.0", source: "finance-api" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(metricHandler.update({ ..._fixtureInput }), storage);
+      const result = await interpret(metricHandler.update({ metric: afterResult_define_revenue?.output?.["id"], value: "150000.0", source: "finance-api" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,7 +171,7 @@ describe('Metric functional handler', () => {
 
   describe('setThreshold', () => {
     it('builds a valid StorageProgram', () => {
-      const program = metricHandler.setThreshold({ metric: "metric-001", threshold: "100000.0", alertOnBreach: "true" });
+      const program = metricHandler.setThreshold({ metric: {"type":"ref","fixture":"define_revenue","field":"id"}, threshold: "100000.0", alertOnBreach: "true" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +179,21 @@ describe('Metric functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = metricHandler.setThreshold({ metric: "metric-001", threshold: "100000.0", alertOnBreach: "true" });
+      const program = metricHandler.setThreshold({ metric: {"type":"ref","fixture":"define_revenue","field":"id"}, threshold: "100000.0", alertOnBreach: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = metricHandler.setThreshold({ metric: "metric-001", threshold: "100000.0", alertOnBreach: "true" });
+      const program = metricHandler.setThreshold({ metric: {"type":"ref","fixture":"define_revenue","field":"id"}, threshold: "100000.0", alertOnBreach: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = metricHandler.setThreshold({ metric: "metric-001", threshold: "100000.0", alertOnBreach: "true" });
+      const program = metricHandler.setThreshold({ metric: {"type":"ref","fixture":"define_revenue","field":"id"}, threshold: "100000.0", alertOnBreach: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +206,7 @@ describe('Metric functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = metricHandler.setThreshold({ metric: "metric-001", threshold: "100000.0", alertOnBreach: "true" });
+      const program = metricHandler.setThreshold({ metric: {"type":"ref","fixture":"define_revenue","field":"id"}, threshold: "100000.0", alertOnBreach: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,7 +214,7 @@ describe('Metric functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof metricHandler.setThreshold !== 'function') return;
-      const result = await interpret(metricHandler.setThreshold({ metric: "metric-001", threshold: "100000.0", alertOnBreach: "true" }), storage);
+      const result = await interpret(metricHandler.setThreshold({ metric: {"type":"ref","fixture":"define_revenue","field":"id"}, threshold: "100000.0", alertOnBreach: "true" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -230,12 +225,7 @@ describe('Metric functional handler', () => {
       if (typeof metricHandler.setThreshold !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_define_revenue = await interpret(metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" }), storage);
-      const _pool = Object.assign({}, (afterResult_define_revenue?.output ?? {}));
-      const _fixtureInput = { metric: "metric-001", threshold: "100000.0", alertOnBreach: "true" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(metricHandler.setThreshold({ ..._fixtureInput }), storage);
+      const result = await interpret(metricHandler.setThreshold({ metric: afterResult_define_revenue?.output?.["id"], threshold: "100000.0", alertOnBreach: "true" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -250,7 +240,7 @@ describe('Metric functional handler', () => {
 
   describe('evaluate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = metricHandler.evaluate({ metric: "metric-001" });
+      const program = metricHandler.evaluate({ metric: {"type":"ref","fixture":"define_revenue","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -258,21 +248,21 @@ describe('Metric functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = metricHandler.evaluate({ metric: "metric-001" });
+      const program = metricHandler.evaluate({ metric: {"type":"ref","fixture":"define_revenue","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = metricHandler.evaluate({ metric: "metric-001" });
+      const program = metricHandler.evaluate({ metric: {"type":"ref","fixture":"define_revenue","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = metricHandler.evaluate({ metric: "metric-001" });
+      const program = metricHandler.evaluate({ metric: {"type":"ref","fixture":"define_revenue","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -285,7 +275,7 @@ describe('Metric functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = metricHandler.evaluate({ metric: "metric-001" });
+      const program = metricHandler.evaluate({ metric: {"type":"ref","fixture":"define_revenue","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -293,7 +283,7 @@ describe('Metric functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof metricHandler.evaluate !== 'function') return;
-      const result = await interpret(metricHandler.evaluate({ metric: "metric-001" }), storage);
+      const result = await interpret(metricHandler.evaluate({ metric: {"type":"ref","fixture":"define_revenue","field":"id"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -304,12 +294,7 @@ describe('Metric functional handler', () => {
       if (typeof metricHandler.evaluate !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_define_revenue = await interpret(metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" }), storage);
-      const _pool = Object.assign({}, (afterResult_define_revenue?.output ?? {}));
-      const _fixtureInput = { metric: "metric-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(metricHandler.evaluate({ ..._fixtureInput }), storage);
+      const result = await interpret(metricHandler.evaluate({ metric: afterResult_define_revenue?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

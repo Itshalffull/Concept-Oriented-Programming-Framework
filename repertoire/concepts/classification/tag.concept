@@ -20,7 +20,7 @@ concept Tag [T] {
       -> ok() { Dissociate the tag from the entity. }
       -> notfound(message: String) { Tag or entity not found. }
 
-      fixture remove_existing_tag { entity: "page-42", tag: "important" } after add_tag_to_page
+      fixture remove_existing_tag { entity: $add_tag_to_page.id, tag: "important" } after add_tag_to_page
       fixture remove_nonexistent_tag { entity: "page-99", tag: "missing-tag" } -> error
     }
     action getByTag(tag: T) {

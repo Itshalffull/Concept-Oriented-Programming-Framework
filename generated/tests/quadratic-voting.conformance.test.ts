@@ -102,7 +102,7 @@ describe('QuadraticVoting functional handler', () => {
 
   describe('allocateCredits', () => {
     it('builds a valid StorageProgram', () => {
-      const program = quadraticVotingHandler.allocateCredits({ config: "qv-001", voter: "alice" });
+      const program = quadraticVotingHandler.allocateCredits({ config: {"type":"ref","fixture":"standard_budget","field":"id"}, voter: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('QuadraticVoting functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = quadraticVotingHandler.allocateCredits({ config: "qv-001", voter: "alice" });
+      const program = quadraticVotingHandler.allocateCredits({ config: {"type":"ref","fixture":"standard_budget","field":"id"}, voter: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = quadraticVotingHandler.allocateCredits({ config: "qv-001", voter: "alice" });
+      const program = quadraticVotingHandler.allocateCredits({ config: {"type":"ref","fixture":"standard_budget","field":"id"}, voter: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = quadraticVotingHandler.allocateCredits({ config: "qv-001", voter: "alice" });
+      const program = quadraticVotingHandler.allocateCredits({ config: {"type":"ref","fixture":"standard_budget","field":"id"}, voter: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('QuadraticVoting functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = quadraticVotingHandler.allocateCredits({ config: "qv-001", voter: "alice" });
+      const program = quadraticVotingHandler.allocateCredits({ config: {"type":"ref","fixture":"standard_budget","field":"id"}, voter: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('QuadraticVoting functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof quadraticVotingHandler.allocateCredits !== 'function') return;
-      const result = await interpret(quadraticVotingHandler.allocateCredits({ config: "qv-001", voter: "alice" }), storage);
+      const result = await interpret(quadraticVotingHandler.allocateCredits({ config: {"type":"ref","fixture":"standard_budget","field":"id"}, voter: "alice" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('QuadraticVoting functional handler', () => {
       if (typeof quadraticVotingHandler.allocateCredits !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_standard_budget = await interpret(quadraticVotingHandler.configure({ creditBudget: "100.0" }), storage);
-      const _pool = Object.assign({}, (afterResult_standard_budget?.output ?? {}));
-      const _fixtureInput = { config: "qv-001", voter: "alice" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(quadraticVotingHandler.allocateCredits({ ..._fixtureInput }), storage);
+      const result = await interpret(quadraticVotingHandler.allocateCredits({ config: afterResult_standard_budget?.output?.["id"], voter: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,7 +171,7 @@ describe('QuadraticVoting functional handler', () => {
 
   describe('castVotes', () => {
     it('builds a valid StorageProgram', () => {
-      const program = quadraticVotingHandler.castVotes({ config: "qv-001", voter: "alice", issue: "budget-increase", numberOfVotes: "5" });
+      const program = quadraticVotingHandler.castVotes({ config: {"type":"ref","fixture":"standard_budget","field":"id"}, voter: "alice", issue: "budget-increase", numberOfVotes: "5" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +179,21 @@ describe('QuadraticVoting functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = quadraticVotingHandler.castVotes({ config: "qv-001", voter: "alice", issue: "budget-increase", numberOfVotes: "5" });
+      const program = quadraticVotingHandler.castVotes({ config: {"type":"ref","fixture":"standard_budget","field":"id"}, voter: "alice", issue: "budget-increase", numberOfVotes: "5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = quadraticVotingHandler.castVotes({ config: "qv-001", voter: "alice", issue: "budget-increase", numberOfVotes: "5" });
+      const program = quadraticVotingHandler.castVotes({ config: {"type":"ref","fixture":"standard_budget","field":"id"}, voter: "alice", issue: "budget-increase", numberOfVotes: "5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = quadraticVotingHandler.castVotes({ config: "qv-001", voter: "alice", issue: "budget-increase", numberOfVotes: "5" });
+      const program = quadraticVotingHandler.castVotes({ config: {"type":"ref","fixture":"standard_budget","field":"id"}, voter: "alice", issue: "budget-increase", numberOfVotes: "5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +206,7 @@ describe('QuadraticVoting functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = quadraticVotingHandler.castVotes({ config: "qv-001", voter: "alice", issue: "budget-increase", numberOfVotes: "5" });
+      const program = quadraticVotingHandler.castVotes({ config: {"type":"ref","fixture":"standard_budget","field":"id"}, voter: "alice", issue: "budget-increase", numberOfVotes: "5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,7 +214,7 @@ describe('QuadraticVoting functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof quadraticVotingHandler.castVotes !== 'function') return;
-      const result = await interpret(quadraticVotingHandler.castVotes({ config: "qv-001", voter: "alice", issue: "budget-increase", numberOfVotes: "5" }), storage);
+      const result = await interpret(quadraticVotingHandler.castVotes({ config: {"type":"ref","fixture":"standard_budget","field":"id"}, voter: "alice", issue: "budget-increase", numberOfVotes: "5" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -230,12 +225,7 @@ describe('QuadraticVoting functional handler', () => {
       if (typeof quadraticVotingHandler.castVotes !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_standard_budget = await interpret(quadraticVotingHandler.configure({ creditBudget: "100.0" }), storage);
-      const _pool = Object.assign({}, (afterResult_standard_budget?.output ?? {}));
-      const _fixtureInput = { config: "qv-001", voter: "alice", issue: "budget-increase", numberOfVotes: "5" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(quadraticVotingHandler.castVotes({ ..._fixtureInput }), storage);
+      const result = await interpret(quadraticVotingHandler.castVotes({ config: afterResult_standard_budget?.output?.["id"], voter: "alice", issue: "budget-increase", numberOfVotes: "5" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -250,7 +240,7 @@ describe('QuadraticVoting functional handler', () => {
 
   describe('count', () => {
     it('builds a valid StorageProgram', () => {
-      const program = quadraticVotingHandler.count({ config: "qv-001", issue: "budget-increase" });
+      const program = quadraticVotingHandler.count({ config: {"type":"ref","fixture":"standard_budget","field":"id"}, issue: "budget-increase" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -258,21 +248,21 @@ describe('QuadraticVoting functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = quadraticVotingHandler.count({ config: "qv-001", issue: "budget-increase" });
+      const program = quadraticVotingHandler.count({ config: {"type":"ref","fixture":"standard_budget","field":"id"}, issue: "budget-increase" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = quadraticVotingHandler.count({ config: "qv-001", issue: "budget-increase" });
+      const program = quadraticVotingHandler.count({ config: {"type":"ref","fixture":"standard_budget","field":"id"}, issue: "budget-increase" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = quadraticVotingHandler.count({ config: "qv-001", issue: "budget-increase" });
+      const program = quadraticVotingHandler.count({ config: {"type":"ref","fixture":"standard_budget","field":"id"}, issue: "budget-increase" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -285,7 +275,7 @@ describe('QuadraticVoting functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = quadraticVotingHandler.count({ config: "qv-001", issue: "budget-increase" });
+      const program = quadraticVotingHandler.count({ config: {"type":"ref","fixture":"standard_budget","field":"id"}, issue: "budget-increase" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -293,7 +283,7 @@ describe('QuadraticVoting functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof quadraticVotingHandler.count !== 'function') return;
-      const result = await interpret(quadraticVotingHandler.count({ config: "qv-001", issue: "budget-increase" }), storage);
+      const result = await interpret(quadraticVotingHandler.count({ config: {"type":"ref","fixture":"standard_budget","field":"id"}, issue: "budget-increase" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -304,12 +294,7 @@ describe('QuadraticVoting functional handler', () => {
       if (typeof quadraticVotingHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_standard_budget = await interpret(quadraticVotingHandler.configure({ creditBudget: "100.0" }), storage);
-      const _pool = Object.assign({}, (afterResult_standard_budget?.output ?? {}));
-      const _fixtureInput = { config: "qv-001", issue: "budget-increase" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(quadraticVotingHandler.count({ ..._fixtureInput }), storage);
+      const result = await interpret(quadraticVotingHandler.count({ config: afterResult_standard_budget?.output?.["id"], issue: "budget-increase" }), storage);
       expect(result.variant).toBe('ok');
     });
 

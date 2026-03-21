@@ -37,7 +37,7 @@ concept SearchIndex [I] {
         No index registered with this identifier.
       }
 
-      fixture index_article { index: "articles", item: "doc-1", data: "Introduction to functional programming" } after create_articles_index
+      fixture index_article { index: "articles", item: $create_articles_index.index, data: "Introduction to functional programming" } after create_articles_index
       fixture index_missing_index { index: "nonexistent", item: "doc-1", data: "Test data" } -> error
     }
 
@@ -50,7 +50,7 @@ concept SearchIndex [I] {
         No index registered with this identifier.
       }
 
-      fixture remove_existing_item { index: "articles", item: "doc-1" } after create_articles_index
+      fixture remove_existing_item { index: "articles", item: $create_articles_index.index } after create_articles_index
       fixture remove_from_missing_index { index: "nonexistent", item: "doc-1" } -> error
     }
 

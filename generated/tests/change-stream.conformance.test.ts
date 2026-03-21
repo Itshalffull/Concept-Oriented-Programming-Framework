@@ -97,7 +97,7 @@ describe('ChangeStream imperative handler', () => {
   describe('read', () => {
     it('produces a result', async () => {
       if (typeof changeStreamHandler.read !== 'function') return;
-      const result = await changeStreamHandler.read({ subscriptionId: "sub-1", maxCount: "10" }, storage);
+      const result = await changeStreamHandler.read({ subscriptionId: {"type":"ref","fixture":"append_insert","field":"offset"}, maxCount: "10" }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -108,12 +108,7 @@ describe('ChangeStream imperative handler', () => {
       if (typeof changeStreamHandler.read !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_append_insert = await changeStreamHandler.append({ type: "insert", before: null, after: "{\"id\":1,\"name\":\"alice\"}", source: "users-db" }, storage);
-      const _pool = Object.assign({}, (afterResult_append_insert?.output ?? {}));
-      const _fixtureInput = { subscriptionId: "sub-1", maxCount: "10" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await changeStreamHandler.read({ ..._fixtureInput }, storage);
+      const result = await changeStreamHandler.read({ subscriptionId: afterResult_append_insert?.output?.["offset"], maxCount: "10" }, storage);
       expect(result.variant).toBe('ok');
     });
 

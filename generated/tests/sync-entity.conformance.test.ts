@@ -477,7 +477,7 @@ describe('SyncEntity functional handler', () => {
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = syncEntityHandler.get({ sync: "sync-entity-1" });
+      const program = syncEntityHandler.get({ sync: {"type":"ref","fixture":"register_publish_sync","field":"sync"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -485,21 +485,21 @@ describe('SyncEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = syncEntityHandler.get({ sync: "sync-entity-1" });
+      const program = syncEntityHandler.get({ sync: {"type":"ref","fixture":"register_publish_sync","field":"sync"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = syncEntityHandler.get({ sync: "sync-entity-1" });
+      const program = syncEntityHandler.get({ sync: {"type":"ref","fixture":"register_publish_sync","field":"sync"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = syncEntityHandler.get({ sync: "sync-entity-1" });
+      const program = syncEntityHandler.get({ sync: {"type":"ref","fixture":"register_publish_sync","field":"sync"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -512,7 +512,7 @@ describe('SyncEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = syncEntityHandler.get({ sync: "sync-entity-1" });
+      const program = syncEntityHandler.get({ sync: {"type":"ref","fixture":"register_publish_sync","field":"sync"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -520,7 +520,7 @@ describe('SyncEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof syncEntityHandler.get !== 'function') return;
-      const result = await interpret(syncEntityHandler.get({ sync: "sync-entity-1" }), storage);
+      const result = await interpret(syncEntityHandler.get({ sync: {"type":"ref","fixture":"register_publish_sync","field":"sync"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -531,12 +531,7 @@ describe('SyncEntity functional handler', () => {
       if (typeof syncEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_publish_sync = await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_publish_sync?.output ?? {}));
-      const _fixtureInput = { sync: "sync-entity-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(syncEntityHandler.get({ ..._fixtureInput }), storage);
+      const result = await interpret(syncEntityHandler.get({ sync: afterResult_register_publish_sync?.output?.["sync"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

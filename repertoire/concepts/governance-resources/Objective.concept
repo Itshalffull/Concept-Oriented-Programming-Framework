@@ -44,7 +44,7 @@ concept Objective [OB] {
         All target values have been met. Status moves to Achieved.
       }
 
-      fixture update_halfway { objective: "objective-001", currentValue: 50.0 } after create_revenue_goal
+      fixture update_halfway { objective: $create_revenue_goal.id, currentValue: 50.0 } after create_revenue_goal
       fixture update_nonexistent { objective: "objective-nonexistent", currentValue: 10.0 } -> error
     }
 
@@ -59,7 +59,7 @@ concept Objective [OB] {
         The deadline has passed without achieving targets.
       }
 
-      fixture evaluate_existing { objective: "objective-001" } after create_revenue_goal
+      fixture evaluate_existing { objective: $create_revenue_goal.id } after create_revenue_goal
       fixture evaluate_nonexistent { objective: "objective-nonexistent" } -> error
     }
 
@@ -68,7 +68,7 @@ concept Objective [OB] {
         The objective is cancelled.
       }
 
-      fixture cancel_with_reason { objective: "objective-001", reason: "Budget constraints" } after create_revenue_goal
+      fixture cancel_with_reason { objective: $create_revenue_goal.id, reason: "Budget constraints" } after create_revenue_goal
       fixture cancel_nonexistent { objective: "objective-nonexistent", reason: "N/A" } after create_revenue_goal
     }
   }

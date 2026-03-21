@@ -75,7 +75,7 @@ concept EcsRuntime [S] {
         Service updated to previous task definition.
       }
 
-      fixture rollback_previous_td { service: "svc-abc123", targetTaskDefinition: "td-prev-001" } after provision_fargate
+      fixture rollback_previous_td { service: "svc-abc123", targetTaskDefinition: $provision_fargate.service } after provision_fargate
       fixture rollback_empty_td { service: "svc-abc123", targetTaskDefinition: "" } after provision_fargate
     }
 

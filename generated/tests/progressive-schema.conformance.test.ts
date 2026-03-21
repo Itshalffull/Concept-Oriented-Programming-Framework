@@ -102,7 +102,7 @@ describe('ProgressiveSchema functional handler', () => {
 
   describe('detectStructure', () => {
     it('builds a valid StorageProgram', () => {
-      const program = progressiveSchemaHandler.detectStructure({ itemId: "ps-1" });
+      const program = progressiveSchemaHandler.detectStructure({ itemId: {"type":"ref","fixture":"capture_meeting","field":"itemId"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('ProgressiveSchema functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = progressiveSchemaHandler.detectStructure({ itemId: "ps-1" });
+      const program = progressiveSchemaHandler.detectStructure({ itemId: {"type":"ref","fixture":"capture_meeting","field":"itemId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = progressiveSchemaHandler.detectStructure({ itemId: "ps-1" });
+      const program = progressiveSchemaHandler.detectStructure({ itemId: {"type":"ref","fixture":"capture_meeting","field":"itemId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = progressiveSchemaHandler.detectStructure({ itemId: "ps-1" });
+      const program = progressiveSchemaHandler.detectStructure({ itemId: {"type":"ref","fixture":"capture_meeting","field":"itemId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('ProgressiveSchema functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = progressiveSchemaHandler.detectStructure({ itemId: "ps-1" });
+      const program = progressiveSchemaHandler.detectStructure({ itemId: {"type":"ref","fixture":"capture_meeting","field":"itemId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('ProgressiveSchema functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof progressiveSchemaHandler.detectStructure !== 'function') return;
-      const result = await interpret(progressiveSchemaHandler.detectStructure({ itemId: "ps-1" }), storage);
+      const result = await interpret(progressiveSchemaHandler.detectStructure({ itemId: {"type":"ref","fixture":"capture_meeting","field":"itemId"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('ProgressiveSchema functional handler', () => {
       if (typeof progressiveSchemaHandler.detectStructure !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_capture_meeting = await interpret(progressiveSchemaHandler.captureFreeform({ content: "Meeting with John on 2026-03-01 about #project-x" }), storage);
-      const _pool = Object.assign({}, (afterResult_capture_meeting?.output ?? {}));
-      const _fixtureInput = { itemId: "ps-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(progressiveSchemaHandler.detectStructure({ ..._fixtureInput }), storage);
+      const result = await interpret(progressiveSchemaHandler.detectStructure({ itemId: afterResult_capture_meeting?.output?.["itemId"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -177,7 +172,7 @@ describe('ProgressiveSchema functional handler', () => {
 
   describe('acceptSuggestion', () => {
     it('builds a valid StorageProgram', () => {
-      const program = progressiveSchemaHandler.acceptSuggestion({ itemId: "ps-1", suggestionId: "sug-1" });
+      const program = progressiveSchemaHandler.acceptSuggestion({ itemId: {"type":"ref","fixture":"capture_meeting","field":"itemId"}, suggestionId: {"type":"ref","fixture":"capture_meeting","field":"itemId"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -185,21 +180,21 @@ describe('ProgressiveSchema functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = progressiveSchemaHandler.acceptSuggestion({ itemId: "ps-1", suggestionId: "sug-1" });
+      const program = progressiveSchemaHandler.acceptSuggestion({ itemId: {"type":"ref","fixture":"capture_meeting","field":"itemId"}, suggestionId: {"type":"ref","fixture":"capture_meeting","field":"itemId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = progressiveSchemaHandler.acceptSuggestion({ itemId: "ps-1", suggestionId: "sug-1" });
+      const program = progressiveSchemaHandler.acceptSuggestion({ itemId: {"type":"ref","fixture":"capture_meeting","field":"itemId"}, suggestionId: {"type":"ref","fixture":"capture_meeting","field":"itemId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = progressiveSchemaHandler.acceptSuggestion({ itemId: "ps-1", suggestionId: "sug-1" });
+      const program = progressiveSchemaHandler.acceptSuggestion({ itemId: {"type":"ref","fixture":"capture_meeting","field":"itemId"}, suggestionId: {"type":"ref","fixture":"capture_meeting","field":"itemId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -212,7 +207,7 @@ describe('ProgressiveSchema functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = progressiveSchemaHandler.acceptSuggestion({ itemId: "ps-1", suggestionId: "sug-1" });
+      const program = progressiveSchemaHandler.acceptSuggestion({ itemId: {"type":"ref","fixture":"capture_meeting","field":"itemId"}, suggestionId: {"type":"ref","fixture":"capture_meeting","field":"itemId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -220,7 +215,7 @@ describe('ProgressiveSchema functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof progressiveSchemaHandler.acceptSuggestion !== 'function') return;
-      const result = await interpret(progressiveSchemaHandler.acceptSuggestion({ itemId: "ps-1", suggestionId: "sug-1" }), storage);
+      const result = await interpret(progressiveSchemaHandler.acceptSuggestion({ itemId: {"type":"ref","fixture":"capture_meeting","field":"itemId"}, suggestionId: {"type":"ref","fixture":"capture_meeting","field":"itemId"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -231,12 +226,7 @@ describe('ProgressiveSchema functional handler', () => {
       if (typeof progressiveSchemaHandler.acceptSuggestion !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_capture_meeting = await interpret(progressiveSchemaHandler.captureFreeform({ content: "Meeting with John on 2026-03-01 about #project-x" }), storage);
-      const _pool = Object.assign({}, (afterResult_capture_meeting?.output ?? {}));
-      const _fixtureInput = { itemId: "ps-1", suggestionId: "sug-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(progressiveSchemaHandler.acceptSuggestion({ ..._fixtureInput }), storage);
+      const result = await interpret(progressiveSchemaHandler.acceptSuggestion({ itemId: afterResult_capture_meeting?.output?.["itemId"], suggestionId: afterResult_capture_meeting?.output?.["itemId"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -252,7 +242,7 @@ describe('ProgressiveSchema functional handler', () => {
 
   describe('rejectSuggestion', () => {
     it('builds a valid StorageProgram', () => {
-      const program = progressiveSchemaHandler.rejectSuggestion({ itemId: "ps-1", suggestionId: "sug-2" });
+      const program = progressiveSchemaHandler.rejectSuggestion({ itemId: {"type":"ref","fixture":"capture_meeting","field":"itemId"}, suggestionId: {"type":"ref","fixture":"capture_meeting","field":"itemId"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -260,21 +250,21 @@ describe('ProgressiveSchema functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = progressiveSchemaHandler.rejectSuggestion({ itemId: "ps-1", suggestionId: "sug-2" });
+      const program = progressiveSchemaHandler.rejectSuggestion({ itemId: {"type":"ref","fixture":"capture_meeting","field":"itemId"}, suggestionId: {"type":"ref","fixture":"capture_meeting","field":"itemId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = progressiveSchemaHandler.rejectSuggestion({ itemId: "ps-1", suggestionId: "sug-2" });
+      const program = progressiveSchemaHandler.rejectSuggestion({ itemId: {"type":"ref","fixture":"capture_meeting","field":"itemId"}, suggestionId: {"type":"ref","fixture":"capture_meeting","field":"itemId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = progressiveSchemaHandler.rejectSuggestion({ itemId: "ps-1", suggestionId: "sug-2" });
+      const program = progressiveSchemaHandler.rejectSuggestion({ itemId: {"type":"ref","fixture":"capture_meeting","field":"itemId"}, suggestionId: {"type":"ref","fixture":"capture_meeting","field":"itemId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -287,7 +277,7 @@ describe('ProgressiveSchema functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = progressiveSchemaHandler.rejectSuggestion({ itemId: "ps-1", suggestionId: "sug-2" });
+      const program = progressiveSchemaHandler.rejectSuggestion({ itemId: {"type":"ref","fixture":"capture_meeting","field":"itemId"}, suggestionId: {"type":"ref","fixture":"capture_meeting","field":"itemId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -295,7 +285,7 @@ describe('ProgressiveSchema functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof progressiveSchemaHandler.rejectSuggestion !== 'function') return;
-      const result = await interpret(progressiveSchemaHandler.rejectSuggestion({ itemId: "ps-1", suggestionId: "sug-2" }), storage);
+      const result = await interpret(progressiveSchemaHandler.rejectSuggestion({ itemId: {"type":"ref","fixture":"capture_meeting","field":"itemId"}, suggestionId: {"type":"ref","fixture":"capture_meeting","field":"itemId"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -306,12 +296,7 @@ describe('ProgressiveSchema functional handler', () => {
       if (typeof progressiveSchemaHandler.rejectSuggestion !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_capture_meeting = await interpret(progressiveSchemaHandler.captureFreeform({ content: "Meeting with John on 2026-03-01 about #project-x" }), storage);
-      const _pool = Object.assign({}, (afterResult_capture_meeting?.output ?? {}));
-      const _fixtureInput = { itemId: "ps-1", suggestionId: "sug-2" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(progressiveSchemaHandler.rejectSuggestion({ ..._fixtureInput }), storage);
+      const result = await interpret(progressiveSchemaHandler.rejectSuggestion({ itemId: afterResult_capture_meeting?.output?.["itemId"], suggestionId: afterResult_capture_meeting?.output?.["itemId"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -327,7 +312,7 @@ describe('ProgressiveSchema functional handler', () => {
 
   describe('promote', () => {
     it('builds a valid StorageProgram', () => {
-      const program = progressiveSchemaHandler.promote({ itemId: "ps-1", targetSchema: "Article" });
+      const program = progressiveSchemaHandler.promote({ itemId: {"type":"ref","fixture":"capture_meeting","field":"itemId"}, targetSchema: "Article" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -335,21 +320,21 @@ describe('ProgressiveSchema functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = progressiveSchemaHandler.promote({ itemId: "ps-1", targetSchema: "Article" });
+      const program = progressiveSchemaHandler.promote({ itemId: {"type":"ref","fixture":"capture_meeting","field":"itemId"}, targetSchema: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = progressiveSchemaHandler.promote({ itemId: "ps-1", targetSchema: "Article" });
+      const program = progressiveSchemaHandler.promote({ itemId: {"type":"ref","fixture":"capture_meeting","field":"itemId"}, targetSchema: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = progressiveSchemaHandler.promote({ itemId: "ps-1", targetSchema: "Article" });
+      const program = progressiveSchemaHandler.promote({ itemId: {"type":"ref","fixture":"capture_meeting","field":"itemId"}, targetSchema: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -362,7 +347,7 @@ describe('ProgressiveSchema functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = progressiveSchemaHandler.promote({ itemId: "ps-1", targetSchema: "Article" });
+      const program = progressiveSchemaHandler.promote({ itemId: {"type":"ref","fixture":"capture_meeting","field":"itemId"}, targetSchema: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -370,7 +355,7 @@ describe('ProgressiveSchema functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof progressiveSchemaHandler.promote !== 'function') return;
-      const result = await interpret(progressiveSchemaHandler.promote({ itemId: "ps-1", targetSchema: "Article" }), storage);
+      const result = await interpret(progressiveSchemaHandler.promote({ itemId: {"type":"ref","fixture":"capture_meeting","field":"itemId"}, targetSchema: "Article" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -381,12 +366,7 @@ describe('ProgressiveSchema functional handler', () => {
       if (typeof progressiveSchemaHandler.promote !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_capture_meeting = await interpret(progressiveSchemaHandler.captureFreeform({ content: "Meeting with John on 2026-03-01 about #project-x" }), storage);
-      const _pool = Object.assign({}, (afterResult_capture_meeting?.output ?? {}));
-      const _fixtureInput = { itemId: "ps-1", targetSchema: "Article" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(progressiveSchemaHandler.promote({ ..._fixtureInput }), storage);
+      const result = await interpret(progressiveSchemaHandler.promote({ itemId: afterResult_capture_meeting?.output?.["itemId"], targetSchema: "Article" }), storage);
       expect(result.variant).toBe('ok');
     });
 

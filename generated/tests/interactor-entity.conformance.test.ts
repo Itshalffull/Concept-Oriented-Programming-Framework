@@ -183,7 +183,7 @@ describe('InteractorEntity functional handler', () => {
 
   describe('matchingWidgets', () => {
     it('builds a valid StorageProgram', () => {
-      const program = interactorEntityHandler.matchingWidgets({ interactor: "interactor-entity-1", context: "desktop" });
+      const program = interactorEntityHandler.matchingWidgets({ interactor: {"type":"ref","fixture":"register_single_choice","field":"entity"}, context: "desktop" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -191,21 +191,21 @@ describe('InteractorEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = interactorEntityHandler.matchingWidgets({ interactor: "interactor-entity-1", context: "desktop" });
+      const program = interactorEntityHandler.matchingWidgets({ interactor: {"type":"ref","fixture":"register_single_choice","field":"entity"}, context: "desktop" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = interactorEntityHandler.matchingWidgets({ interactor: "interactor-entity-1", context: "desktop" });
+      const program = interactorEntityHandler.matchingWidgets({ interactor: {"type":"ref","fixture":"register_single_choice","field":"entity"}, context: "desktop" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = interactorEntityHandler.matchingWidgets({ interactor: "interactor-entity-1", context: "desktop" });
+      const program = interactorEntityHandler.matchingWidgets({ interactor: {"type":"ref","fixture":"register_single_choice","field":"entity"}, context: "desktop" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -218,7 +218,7 @@ describe('InteractorEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = interactorEntityHandler.matchingWidgets({ interactor: "interactor-entity-1", context: "desktop" });
+      const program = interactorEntityHandler.matchingWidgets({ interactor: {"type":"ref","fixture":"register_single_choice","field":"entity"}, context: "desktop" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -226,7 +226,7 @@ describe('InteractorEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof interactorEntityHandler.matchingWidgets !== 'function') return;
-      const result = await interpret(interactorEntityHandler.matchingWidgets({ interactor: "interactor-entity-1", context: "desktop" }), storage);
+      const result = await interpret(interactorEntityHandler.matchingWidgets({ interactor: {"type":"ref","fixture":"register_single_choice","field":"entity"}, context: "desktop" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -237,12 +237,7 @@ describe('InteractorEntity functional handler', () => {
       if (typeof interactorEntityHandler.matchingWidgets !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_single_choice = await interpret(interactorEntityHandler.register({ name: "single-choice", category: "selection", properties: "{\"dataType\":\"enum\",\"cardinality\":\"scalar\"}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_single_choice?.output ?? {}));
-      const _fixtureInput = { interactor: "interactor-entity-1", context: "desktop" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(interactorEntityHandler.matchingWidgets({ ..._fixtureInput }), storage);
+      const result = await interpret(interactorEntityHandler.matchingWidgets({ interactor: afterResult_register_single_choice?.output?.["entity"], context: "desktop" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -257,7 +252,7 @@ describe('InteractorEntity functional handler', () => {
 
   describe('classifiedFields', () => {
     it('builds a valid StorageProgram', () => {
-      const program = interactorEntityHandler.classifiedFields({ interactor: "interactor-entity-1" });
+      const program = interactorEntityHandler.classifiedFields({ interactor: {"type":"ref","fixture":"register_single_choice","field":"entity"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -265,21 +260,21 @@ describe('InteractorEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = interactorEntityHandler.classifiedFields({ interactor: "interactor-entity-1" });
+      const program = interactorEntityHandler.classifiedFields({ interactor: {"type":"ref","fixture":"register_single_choice","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = interactorEntityHandler.classifiedFields({ interactor: "interactor-entity-1" });
+      const program = interactorEntityHandler.classifiedFields({ interactor: {"type":"ref","fixture":"register_single_choice","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = interactorEntityHandler.classifiedFields({ interactor: "interactor-entity-1" });
+      const program = interactorEntityHandler.classifiedFields({ interactor: {"type":"ref","fixture":"register_single_choice","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -292,7 +287,7 @@ describe('InteractorEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = interactorEntityHandler.classifiedFields({ interactor: "interactor-entity-1" });
+      const program = interactorEntityHandler.classifiedFields({ interactor: {"type":"ref","fixture":"register_single_choice","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -300,7 +295,7 @@ describe('InteractorEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof interactorEntityHandler.classifiedFields !== 'function') return;
-      const result = await interpret(interactorEntityHandler.classifiedFields({ interactor: "interactor-entity-1" }), storage);
+      const result = await interpret(interactorEntityHandler.classifiedFields({ interactor: {"type":"ref","fixture":"register_single_choice","field":"entity"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -311,12 +306,7 @@ describe('InteractorEntity functional handler', () => {
       if (typeof interactorEntityHandler.classifiedFields !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_single_choice = await interpret(interactorEntityHandler.register({ name: "single-choice", category: "selection", properties: "{\"dataType\":\"enum\",\"cardinality\":\"scalar\"}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_single_choice?.output ?? {}));
-      const _fixtureInput = { interactor: "interactor-entity-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(interactorEntityHandler.classifiedFields({ ..._fixtureInput }), storage);
+      const result = await interpret(interactorEntityHandler.classifiedFields({ interactor: afterResult_register_single_choice?.output?.["entity"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -398,7 +388,7 @@ describe('InteractorEntity functional handler', () => {
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = interactorEntityHandler.get({ interactor: "interactor-entity-1" });
+      const program = interactorEntityHandler.get({ interactor: {"type":"ref","fixture":"register_single_choice","field":"entity"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -406,21 +396,21 @@ describe('InteractorEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = interactorEntityHandler.get({ interactor: "interactor-entity-1" });
+      const program = interactorEntityHandler.get({ interactor: {"type":"ref","fixture":"register_single_choice","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = interactorEntityHandler.get({ interactor: "interactor-entity-1" });
+      const program = interactorEntityHandler.get({ interactor: {"type":"ref","fixture":"register_single_choice","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = interactorEntityHandler.get({ interactor: "interactor-entity-1" });
+      const program = interactorEntityHandler.get({ interactor: {"type":"ref","fixture":"register_single_choice","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -433,7 +423,7 @@ describe('InteractorEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = interactorEntityHandler.get({ interactor: "interactor-entity-1" });
+      const program = interactorEntityHandler.get({ interactor: {"type":"ref","fixture":"register_single_choice","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -441,7 +431,7 @@ describe('InteractorEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof interactorEntityHandler.get !== 'function') return;
-      const result = await interpret(interactorEntityHandler.get({ interactor: "interactor-entity-1" }), storage);
+      const result = await interpret(interactorEntityHandler.get({ interactor: {"type":"ref","fixture":"register_single_choice","field":"entity"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -452,12 +442,7 @@ describe('InteractorEntity functional handler', () => {
       if (typeof interactorEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_single_choice = await interpret(interactorEntityHandler.register({ name: "single-choice", category: "selection", properties: "{\"dataType\":\"enum\",\"cardinality\":\"scalar\"}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_single_choice?.output ?? {}));
-      const _fixtureInput = { interactor: "interactor-entity-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(interactorEntityHandler.get({ ..._fixtureInput }), storage);
+      const result = await interpret(interactorEntityHandler.get({ interactor: afterResult_register_single_choice?.output?.["entity"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -52,7 +52,7 @@ describe('Replica imperative handler', () => {
   describe('receiveRemote', () => {
     it('produces a result', async () => {
       if (typeof replicaHandler.receiveRemote !== 'function') return;
-      const result = await replicaHandler.receiveRemote({ op: "update:field=value", fromReplica: "replica-2" }, storage);
+      const result = await replicaHandler.receiveRemote({ op: "update:field=value", fromReplica: {"type":"ref","fixture":"update_insert_op","field":"newState"} }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -63,12 +63,7 @@ describe('Replica imperative handler', () => {
       if (typeof replicaHandler.receiveRemote !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_update_insert_op = await replicaHandler.localUpdate({ op: "insert:hello-world" }, storage);
-      const _pool = Object.assign({}, (afterResult_update_insert_op?.output ?? {}));
-      const _fixtureInput = { op: "update:field=value", fromReplica: "replica-2" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await replicaHandler.receiveRemote({ ..._fixtureInput }, storage);
+      const result = await replicaHandler.receiveRemote({ op: "update:field=value", fromReplica: afterResult_update_insert_op?.output?.["newState"] }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -84,7 +79,7 @@ describe('Replica imperative handler', () => {
   describe('sync', () => {
     it('produces a result', async () => {
       if (typeof replicaHandler.sync !== 'function') return;
-      const result = await replicaHandler.sync({ peer: "replica-2" }, storage);
+      const result = await replicaHandler.sync({ peer: {"type":"ref","fixture":"update_insert_op","field":"newState"} }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -95,12 +90,7 @@ describe('Replica imperative handler', () => {
       if (typeof replicaHandler.sync !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_update_insert_op = await replicaHandler.localUpdate({ op: "insert:hello-world" }, storage);
-      const _pool = Object.assign({}, (afterResult_update_insert_op?.output ?? {}));
-      const _fixtureInput = { peer: "replica-2" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await replicaHandler.sync({ ..._fixtureInput }, storage);
+      const result = await replicaHandler.sync({ peer: afterResult_update_insert_op?.output?.["newState"] }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -166,7 +156,7 @@ describe('Replica imperative handler', () => {
   describe('addPeer', () => {
     it('produces a result', async () => {
       if (typeof replicaHandler.addPeer !== 'function') return;
-      const result = await replicaHandler.addPeer({ peerId: "replica-3" }, storage);
+      const result = await replicaHandler.addPeer({ peerId: {"type":"ref","fixture":"update_insert_op","field":"newState"} }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -177,12 +167,7 @@ describe('Replica imperative handler', () => {
       if (typeof replicaHandler.addPeer !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_update_insert_op = await replicaHandler.localUpdate({ op: "insert:hello-world" }, storage);
-      const _pool = Object.assign({}, (afterResult_update_insert_op?.output ?? {}));
-      const _fixtureInput = { peerId: "replica-3" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await replicaHandler.addPeer({ ..._fixtureInput }, storage);
+      const result = await replicaHandler.addPeer({ peerId: afterResult_update_insert_op?.output?.["newState"] }, storage);
       expect(result.variant).toBe('ok');
     });
 

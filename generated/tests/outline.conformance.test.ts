@@ -109,7 +109,7 @@ describe('Outline functional handler', () => {
 
   describe('indent', () => {
     it('builds a valid StorageProgram', () => {
-      const program = outlineHandler.indent({ node: "section-1" });
+      const program = outlineHandler.indent({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -117,21 +117,21 @@ describe('Outline functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = outlineHandler.indent({ node: "section-1" });
+      const program = outlineHandler.indent({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = outlineHandler.indent({ node: "section-1" });
+      const program = outlineHandler.indent({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = outlineHandler.indent({ node: "section-1" });
+      const program = outlineHandler.indent({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -144,7 +144,7 @@ describe('Outline functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = outlineHandler.indent({ node: "section-1" });
+      const program = outlineHandler.indent({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -152,7 +152,7 @@ describe('Outline functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof outlineHandler.indent !== 'function') return;
-      const result = await interpret(outlineHandler.indent({ node: "section-1" }), storage);
+      const result = await interpret(outlineHandler.indent({ node: {"type":"ref","fixture":"create_root","field":"node"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -163,12 +163,7 @@ describe('Outline functional handler', () => {
       if (typeof outlineHandler.indent !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_root = await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_root?.output ?? {}));
-      const _fixtureInput = { node: "section-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(outlineHandler.indent({ ..._fixtureInput }), storage);
+      const result = await interpret(outlineHandler.indent({ node: afterResult_create_root?.output?.["node"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -183,7 +178,7 @@ describe('Outline functional handler', () => {
 
   describe('outdent', () => {
     it('builds a valid StorageProgram', () => {
-      const program = outlineHandler.outdent({ node: "section-1" });
+      const program = outlineHandler.outdent({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -191,21 +186,21 @@ describe('Outline functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = outlineHandler.outdent({ node: "section-1" });
+      const program = outlineHandler.outdent({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = outlineHandler.outdent({ node: "section-1" });
+      const program = outlineHandler.outdent({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = outlineHandler.outdent({ node: "section-1" });
+      const program = outlineHandler.outdent({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -218,7 +213,7 @@ describe('Outline functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = outlineHandler.outdent({ node: "section-1" });
+      const program = outlineHandler.outdent({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -226,7 +221,7 @@ describe('Outline functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof outlineHandler.outdent !== 'function') return;
-      const result = await interpret(outlineHandler.outdent({ node: "section-1" }), storage);
+      const result = await interpret(outlineHandler.outdent({ node: {"type":"ref","fixture":"create_root","field":"node"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -237,12 +232,7 @@ describe('Outline functional handler', () => {
       if (typeof outlineHandler.outdent !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_root = await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_root?.output ?? {}));
-      const _fixtureInput = { node: "section-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(outlineHandler.outdent({ ..._fixtureInput }), storage);
+      const result = await interpret(outlineHandler.outdent({ node: afterResult_create_root?.output?.["node"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -257,7 +247,7 @@ describe('Outline functional handler', () => {
 
   describe('moveUp', () => {
     it('builds a valid StorageProgram', () => {
-      const program = outlineHandler.moveUp({ node: "section-1" });
+      const program = outlineHandler.moveUp({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -265,21 +255,21 @@ describe('Outline functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = outlineHandler.moveUp({ node: "section-1" });
+      const program = outlineHandler.moveUp({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = outlineHandler.moveUp({ node: "section-1" });
+      const program = outlineHandler.moveUp({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = outlineHandler.moveUp({ node: "section-1" });
+      const program = outlineHandler.moveUp({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -292,7 +282,7 @@ describe('Outline functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = outlineHandler.moveUp({ node: "section-1" });
+      const program = outlineHandler.moveUp({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -300,7 +290,7 @@ describe('Outline functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof outlineHandler.moveUp !== 'function') return;
-      const result = await interpret(outlineHandler.moveUp({ node: "section-1" }), storage);
+      const result = await interpret(outlineHandler.moveUp({ node: {"type":"ref","fixture":"create_root","field":"node"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -311,12 +301,7 @@ describe('Outline functional handler', () => {
       if (typeof outlineHandler.moveUp !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_root = await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_root?.output ?? {}));
-      const _fixtureInput = { node: "section-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(outlineHandler.moveUp({ ..._fixtureInput }), storage);
+      const result = await interpret(outlineHandler.moveUp({ node: afterResult_create_root?.output?.["node"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -331,7 +316,7 @@ describe('Outline functional handler', () => {
 
   describe('moveDown', () => {
     it('builds a valid StorageProgram', () => {
-      const program = outlineHandler.moveDown({ node: "section-1" });
+      const program = outlineHandler.moveDown({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -339,21 +324,21 @@ describe('Outline functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = outlineHandler.moveDown({ node: "section-1" });
+      const program = outlineHandler.moveDown({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = outlineHandler.moveDown({ node: "section-1" });
+      const program = outlineHandler.moveDown({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = outlineHandler.moveDown({ node: "section-1" });
+      const program = outlineHandler.moveDown({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -366,7 +351,7 @@ describe('Outline functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = outlineHandler.moveDown({ node: "section-1" });
+      const program = outlineHandler.moveDown({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -374,7 +359,7 @@ describe('Outline functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof outlineHandler.moveDown !== 'function') return;
-      const result = await interpret(outlineHandler.moveDown({ node: "section-1" }), storage);
+      const result = await interpret(outlineHandler.moveDown({ node: {"type":"ref","fixture":"create_root","field":"node"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -385,12 +370,7 @@ describe('Outline functional handler', () => {
       if (typeof outlineHandler.moveDown !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_root = await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_root?.output ?? {}));
-      const _fixtureInput = { node: "section-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(outlineHandler.moveDown({ ..._fixtureInput }), storage);
+      const result = await interpret(outlineHandler.moveDown({ node: afterResult_create_root?.output?.["node"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -405,7 +385,7 @@ describe('Outline functional handler', () => {
 
   describe('collapse', () => {
     it('builds a valid StorageProgram', () => {
-      const program = outlineHandler.collapse({ node: "chapter-1" });
+      const program = outlineHandler.collapse({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -413,21 +393,21 @@ describe('Outline functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = outlineHandler.collapse({ node: "chapter-1" });
+      const program = outlineHandler.collapse({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = outlineHandler.collapse({ node: "chapter-1" });
+      const program = outlineHandler.collapse({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = outlineHandler.collapse({ node: "chapter-1" });
+      const program = outlineHandler.collapse({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -440,7 +420,7 @@ describe('Outline functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = outlineHandler.collapse({ node: "chapter-1" });
+      const program = outlineHandler.collapse({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -448,7 +428,7 @@ describe('Outline functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof outlineHandler.collapse !== 'function') return;
-      const result = await interpret(outlineHandler.collapse({ node: "chapter-1" }), storage);
+      const result = await interpret(outlineHandler.collapse({ node: {"type":"ref","fixture":"create_root","field":"node"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -459,12 +439,7 @@ describe('Outline functional handler', () => {
       if (typeof outlineHandler.collapse !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_root = await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_root?.output ?? {}));
-      const _fixtureInput = { node: "chapter-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(outlineHandler.collapse({ ..._fixtureInput }), storage);
+      const result = await interpret(outlineHandler.collapse({ node: afterResult_create_root?.output?.["node"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -479,7 +454,7 @@ describe('Outline functional handler', () => {
 
   describe('expand', () => {
     it('builds a valid StorageProgram', () => {
-      const program = outlineHandler.expand({ node: "chapter-1" });
+      const program = outlineHandler.expand({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -487,21 +462,21 @@ describe('Outline functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = outlineHandler.expand({ node: "chapter-1" });
+      const program = outlineHandler.expand({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = outlineHandler.expand({ node: "chapter-1" });
+      const program = outlineHandler.expand({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = outlineHandler.expand({ node: "chapter-1" });
+      const program = outlineHandler.expand({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -514,7 +489,7 @@ describe('Outline functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = outlineHandler.expand({ node: "chapter-1" });
+      const program = outlineHandler.expand({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -522,7 +497,7 @@ describe('Outline functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof outlineHandler.expand !== 'function') return;
-      const result = await interpret(outlineHandler.expand({ node: "chapter-1" }), storage);
+      const result = await interpret(outlineHandler.expand({ node: {"type":"ref","fixture":"create_root","field":"node"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -533,12 +508,7 @@ describe('Outline functional handler', () => {
       if (typeof outlineHandler.expand !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_root = await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_root?.output ?? {}));
-      const _fixtureInput = { node: "chapter-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(outlineHandler.expand({ ..._fixtureInput }), storage);
+      const result = await interpret(outlineHandler.expand({ node: afterResult_create_root?.output?.["node"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -553,7 +523,7 @@ describe('Outline functional handler', () => {
 
   describe('reparent', () => {
     it('builds a valid StorageProgram', () => {
-      const program = outlineHandler.reparent({ node: "section-1", newParent: "chapter-2" });
+      const program = outlineHandler.reparent({ node: {"type":"ref","fixture":"create_root","field":"node"}, newParent: {"type":"ref","fixture":"create_root","field":"node"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -561,21 +531,21 @@ describe('Outline functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = outlineHandler.reparent({ node: "section-1", newParent: "chapter-2" });
+      const program = outlineHandler.reparent({ node: {"type":"ref","fixture":"create_root","field":"node"}, newParent: {"type":"ref","fixture":"create_root","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = outlineHandler.reparent({ node: "section-1", newParent: "chapter-2" });
+      const program = outlineHandler.reparent({ node: {"type":"ref","fixture":"create_root","field":"node"}, newParent: {"type":"ref","fixture":"create_root","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = outlineHandler.reparent({ node: "section-1", newParent: "chapter-2" });
+      const program = outlineHandler.reparent({ node: {"type":"ref","fixture":"create_root","field":"node"}, newParent: {"type":"ref","fixture":"create_root","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -588,7 +558,7 @@ describe('Outline functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = outlineHandler.reparent({ node: "section-1", newParent: "chapter-2" });
+      const program = outlineHandler.reparent({ node: {"type":"ref","fixture":"create_root","field":"node"}, newParent: {"type":"ref","fixture":"create_root","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -596,7 +566,7 @@ describe('Outline functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof outlineHandler.reparent !== 'function') return;
-      const result = await interpret(outlineHandler.reparent({ node: "section-1", newParent: "chapter-2" }), storage);
+      const result = await interpret(outlineHandler.reparent({ node: {"type":"ref","fixture":"create_root","field":"node"}, newParent: {"type":"ref","fixture":"create_root","field":"node"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -607,12 +577,7 @@ describe('Outline functional handler', () => {
       if (typeof outlineHandler.reparent !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_root = await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_root?.output ?? {}));
-      const _fixtureInput = { node: "section-1", newParent: "chapter-2" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(outlineHandler.reparent({ ..._fixtureInput }), storage);
+      const result = await interpret(outlineHandler.reparent({ node: afterResult_create_root?.output?.["node"], newParent: afterResult_create_root?.output?.["node"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -627,7 +592,7 @@ describe('Outline functional handler', () => {
 
   describe('getChildren', () => {
     it('builds a valid StorageProgram', () => {
-      const program = outlineHandler.getChildren({ node: "chapter-1" });
+      const program = outlineHandler.getChildren({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -635,21 +600,21 @@ describe('Outline functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = outlineHandler.getChildren({ node: "chapter-1" });
+      const program = outlineHandler.getChildren({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = outlineHandler.getChildren({ node: "chapter-1" });
+      const program = outlineHandler.getChildren({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = outlineHandler.getChildren({ node: "chapter-1" });
+      const program = outlineHandler.getChildren({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -662,7 +627,7 @@ describe('Outline functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = outlineHandler.getChildren({ node: "chapter-1" });
+      const program = outlineHandler.getChildren({ node: {"type":"ref","fixture":"create_root","field":"node"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -670,7 +635,7 @@ describe('Outline functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof outlineHandler.getChildren !== 'function') return;
-      const result = await interpret(outlineHandler.getChildren({ node: "chapter-1" }), storage);
+      const result = await interpret(outlineHandler.getChildren({ node: {"type":"ref","fixture":"create_root","field":"node"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -681,12 +646,7 @@ describe('Outline functional handler', () => {
       if (typeof outlineHandler.getChildren !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_root = await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_root?.output ?? {}));
-      const _fixtureInput = { node: "chapter-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(outlineHandler.getChildren({ ..._fixtureInput }), storage);
+      const result = await interpret(outlineHandler.getChildren({ node: afterResult_create_root?.output?.["node"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

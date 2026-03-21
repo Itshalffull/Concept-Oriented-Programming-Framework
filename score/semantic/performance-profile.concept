@@ -88,7 +88,7 @@ concept PerformanceProfile [P] {
         Profile does not exist.
       }
 
-      fixture get_existing_profile { profile: "performance-profile-1" } after aggregate_article_create
+      fixture get_existing_profile { profile: $aggregate_article_create.profile } after aggregate_article_create
       fixture get_nonexistent { profile: "nonexistent-profile" } -> error
     }
   }

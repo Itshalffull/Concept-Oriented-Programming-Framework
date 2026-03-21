@@ -102,7 +102,7 @@ describe('RetentionPolicy functional handler', () => {
 
   describe('applyHold', () => {
     it('builds a valid StorageProgram', () => {
-      const program = retentionPolicyHandler.applyHold({ name: "litigation-2024", scope: "matter:123/*", reason: "pending lawsuit", issuer: "legal-dept" });
+      const program = retentionPolicyHandler.applyHold({ name: {"type":"ref","fixture":"set_audit_retention","field":"policyId"}, scope: "matter:123/*", reason: "pending lawsuit", issuer: "legal-dept" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('RetentionPolicy functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = retentionPolicyHandler.applyHold({ name: "litigation-2024", scope: "matter:123/*", reason: "pending lawsuit", issuer: "legal-dept" });
+      const program = retentionPolicyHandler.applyHold({ name: {"type":"ref","fixture":"set_audit_retention","field":"policyId"}, scope: "matter:123/*", reason: "pending lawsuit", issuer: "legal-dept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = retentionPolicyHandler.applyHold({ name: "litigation-2024", scope: "matter:123/*", reason: "pending lawsuit", issuer: "legal-dept" });
+      const program = retentionPolicyHandler.applyHold({ name: {"type":"ref","fixture":"set_audit_retention","field":"policyId"}, scope: "matter:123/*", reason: "pending lawsuit", issuer: "legal-dept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = retentionPolicyHandler.applyHold({ name: "litigation-2024", scope: "matter:123/*", reason: "pending lawsuit", issuer: "legal-dept" });
+      const program = retentionPolicyHandler.applyHold({ name: {"type":"ref","fixture":"set_audit_retention","field":"policyId"}, scope: "matter:123/*", reason: "pending lawsuit", issuer: "legal-dept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('RetentionPolicy functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = retentionPolicyHandler.applyHold({ name: "litigation-2024", scope: "matter:123/*", reason: "pending lawsuit", issuer: "legal-dept" });
+      const program = retentionPolicyHandler.applyHold({ name: {"type":"ref","fixture":"set_audit_retention","field":"policyId"}, scope: "matter:123/*", reason: "pending lawsuit", issuer: "legal-dept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('RetentionPolicy functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof retentionPolicyHandler.applyHold !== 'function') return;
-      const result = await interpret(retentionPolicyHandler.applyHold({ name: "litigation-2024", scope: "matter:123/*", reason: "pending lawsuit", issuer: "legal-dept" }), storage);
+      const result = await interpret(retentionPolicyHandler.applyHold({ name: {"type":"ref","fixture":"set_audit_retention","field":"policyId"}, scope: "matter:123/*", reason: "pending lawsuit", issuer: "legal-dept" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('RetentionPolicy functional handler', () => {
       if (typeof retentionPolicyHandler.applyHold !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_set_audit_retention = await interpret(retentionPolicyHandler.setRetention({ recordType: "audit", period: "7", unit: "years", dispositionAction: "archive" }), storage);
-      const _pool = Object.assign({}, (afterResult_set_audit_retention?.output ?? {}));
-      const _fixtureInput = { name: "litigation-2024", scope: "matter:123/*", reason: "pending lawsuit", issuer: "legal-dept" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(retentionPolicyHandler.applyHold({ ..._fixtureInput }), storage);
+      const result = await interpret(retentionPolicyHandler.applyHold({ name: afterResult_set_audit_retention?.output?.["policyId"], scope: "matter:123/*", reason: "pending lawsuit", issuer: "legal-dept" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -182,7 +177,7 @@ describe('RetentionPolicy functional handler', () => {
 
   describe('releaseHold', () => {
     it('builds a valid StorageProgram', () => {
-      const program = retentionPolicyHandler.releaseHold({ holdId: "hold-1", releasedBy: "legal-dept", reason: "case settled" });
+      const program = retentionPolicyHandler.releaseHold({ holdId: {"type":"ref","fixture":"set_audit_retention","field":"policyId"}, releasedBy: "legal-dept", reason: "case settled" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -190,21 +185,21 @@ describe('RetentionPolicy functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = retentionPolicyHandler.releaseHold({ holdId: "hold-1", releasedBy: "legal-dept", reason: "case settled" });
+      const program = retentionPolicyHandler.releaseHold({ holdId: {"type":"ref","fixture":"set_audit_retention","field":"policyId"}, releasedBy: "legal-dept", reason: "case settled" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = retentionPolicyHandler.releaseHold({ holdId: "hold-1", releasedBy: "legal-dept", reason: "case settled" });
+      const program = retentionPolicyHandler.releaseHold({ holdId: {"type":"ref","fixture":"set_audit_retention","field":"policyId"}, releasedBy: "legal-dept", reason: "case settled" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = retentionPolicyHandler.releaseHold({ holdId: "hold-1", releasedBy: "legal-dept", reason: "case settled" });
+      const program = retentionPolicyHandler.releaseHold({ holdId: {"type":"ref","fixture":"set_audit_retention","field":"policyId"}, releasedBy: "legal-dept", reason: "case settled" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -217,7 +212,7 @@ describe('RetentionPolicy functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = retentionPolicyHandler.releaseHold({ holdId: "hold-1", releasedBy: "legal-dept", reason: "case settled" });
+      const program = retentionPolicyHandler.releaseHold({ holdId: {"type":"ref","fixture":"set_audit_retention","field":"policyId"}, releasedBy: "legal-dept", reason: "case settled" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -225,7 +220,7 @@ describe('RetentionPolicy functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof retentionPolicyHandler.releaseHold !== 'function') return;
-      const result = await interpret(retentionPolicyHandler.releaseHold({ holdId: "hold-1", releasedBy: "legal-dept", reason: "case settled" }), storage);
+      const result = await interpret(retentionPolicyHandler.releaseHold({ holdId: {"type":"ref","fixture":"set_audit_retention","field":"policyId"}, releasedBy: "legal-dept", reason: "case settled" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -236,12 +231,7 @@ describe('RetentionPolicy functional handler', () => {
       if (typeof retentionPolicyHandler.releaseHold !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_set_audit_retention = await interpret(retentionPolicyHandler.setRetention({ recordType: "audit", period: "7", unit: "years", dispositionAction: "archive" }), storage);
-      const _pool = Object.assign({}, (afterResult_set_audit_retention?.output ?? {}));
-      const _fixtureInput = { holdId: "hold-1", releasedBy: "legal-dept", reason: "case settled" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(retentionPolicyHandler.releaseHold({ ..._fixtureInput }), storage);
+      const result = await interpret(retentionPolicyHandler.releaseHold({ holdId: afterResult_set_audit_retention?.output?.["policyId"], releasedBy: "legal-dept", reason: "case settled" }), storage);
       expect(result.variant).toBe('ok');
     });
 

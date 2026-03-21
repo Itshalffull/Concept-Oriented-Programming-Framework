@@ -102,7 +102,7 @@ describe('Proposal functional handler', () => {
 
   describe('sponsor', () => {
     it('builds a valid StorageProgram', () => {
-      const program = proposalHandler.sponsor({ proposal: "proposal-001", sponsorId: "bob" });
+      const program = proposalHandler.sponsor({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, sponsorId: "bob" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('Proposal functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = proposalHandler.sponsor({ proposal: "proposal-001", sponsorId: "bob" });
+      const program = proposalHandler.sponsor({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, sponsorId: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = proposalHandler.sponsor({ proposal: "proposal-001", sponsorId: "bob" });
+      const program = proposalHandler.sponsor({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, sponsorId: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = proposalHandler.sponsor({ proposal: "proposal-001", sponsorId: "bob" });
+      const program = proposalHandler.sponsor({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, sponsorId: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('Proposal functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = proposalHandler.sponsor({ proposal: "proposal-001", sponsorId: "bob" });
+      const program = proposalHandler.sponsor({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, sponsorId: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('Proposal functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof proposalHandler.sponsor !== 'function') return;
-      const result = await interpret(proposalHandler.sponsor({ proposal: "proposal-001", sponsorId: "bob" }), storage);
+      const result = await interpret(proposalHandler.sponsor({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, sponsorId: "bob" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('Proposal functional handler', () => {
       if (typeof proposalHandler.sponsor !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_budget_proposal = await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage);
-      const _pool = Object.assign({}, (afterResult_create_budget_proposal?.output ?? {}));
-      const _fixtureInput = { proposal: "proposal-001", sponsorId: "bob" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(proposalHandler.sponsor({ ..._fixtureInput }), storage);
+      const result = await interpret(proposalHandler.sponsor({ proposal: afterResult_create_budget_proposal?.output?.["id"], sponsorId: "bob" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,7 +171,7 @@ describe('Proposal functional handler', () => {
 
   describe('activate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = proposalHandler.activate({ proposal: "proposal-001" });
+      const program = proposalHandler.activate({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +179,21 @@ describe('Proposal functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = proposalHandler.activate({ proposal: "proposal-001" });
+      const program = proposalHandler.activate({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = proposalHandler.activate({ proposal: "proposal-001" });
+      const program = proposalHandler.activate({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = proposalHandler.activate({ proposal: "proposal-001" });
+      const program = proposalHandler.activate({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +206,7 @@ describe('Proposal functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = proposalHandler.activate({ proposal: "proposal-001" });
+      const program = proposalHandler.activate({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,7 +214,7 @@ describe('Proposal functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof proposalHandler.activate !== 'function') return;
-      const result = await interpret(proposalHandler.activate({ proposal: "proposal-001" }), storage);
+      const result = await interpret(proposalHandler.activate({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -230,12 +225,7 @@ describe('Proposal functional handler', () => {
       if (typeof proposalHandler.activate !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_budget_proposal = await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage);
-      const _pool = Object.assign({}, (afterResult_create_budget_proposal?.output ?? {}));
-      const _fixtureInput = { proposal: "proposal-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(proposalHandler.activate({ ..._fixtureInput }), storage);
+      const result = await interpret(proposalHandler.activate({ proposal: afterResult_create_budget_proposal?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -250,7 +240,7 @@ describe('Proposal functional handler', () => {
 
   describe('advance', () => {
     it('builds a valid StorageProgram', () => {
-      const program = proposalHandler.advance({ proposal: "proposal-001", newStatus: "Passed" });
+      const program = proposalHandler.advance({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, newStatus: "Passed" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -258,21 +248,21 @@ describe('Proposal functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = proposalHandler.advance({ proposal: "proposal-001", newStatus: "Passed" });
+      const program = proposalHandler.advance({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, newStatus: "Passed" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = proposalHandler.advance({ proposal: "proposal-001", newStatus: "Passed" });
+      const program = proposalHandler.advance({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, newStatus: "Passed" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = proposalHandler.advance({ proposal: "proposal-001", newStatus: "Passed" });
+      const program = proposalHandler.advance({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, newStatus: "Passed" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -285,7 +275,7 @@ describe('Proposal functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = proposalHandler.advance({ proposal: "proposal-001", newStatus: "Passed" });
+      const program = proposalHandler.advance({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, newStatus: "Passed" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -293,7 +283,7 @@ describe('Proposal functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof proposalHandler.advance !== 'function') return;
-      const result = await interpret(proposalHandler.advance({ proposal: "proposal-001", newStatus: "Passed" }), storage);
+      const result = await interpret(proposalHandler.advance({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, newStatus: "Passed" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -304,12 +294,7 @@ describe('Proposal functional handler', () => {
       if (typeof proposalHandler.advance !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_budget_proposal = await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage);
-      const _pool = Object.assign({}, (afterResult_create_budget_proposal?.output ?? {}));
-      const _fixtureInput = { proposal: "proposal-001", newStatus: "Passed" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(proposalHandler.advance({ ..._fixtureInput }), storage);
+      const result = await interpret(proposalHandler.advance({ proposal: afterResult_create_budget_proposal?.output?.["id"], newStatus: "Passed" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -324,7 +309,7 @@ describe('Proposal functional handler', () => {
 
   describe('cancel', () => {
     it('builds a valid StorageProgram', () => {
-      const program = proposalHandler.cancel({ proposal: "proposal-001", canceller: "alice" });
+      const program = proposalHandler.cancel({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, canceller: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -332,21 +317,21 @@ describe('Proposal functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = proposalHandler.cancel({ proposal: "proposal-001", canceller: "alice" });
+      const program = proposalHandler.cancel({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, canceller: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = proposalHandler.cancel({ proposal: "proposal-001", canceller: "alice" });
+      const program = proposalHandler.cancel({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, canceller: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = proposalHandler.cancel({ proposal: "proposal-001", canceller: "alice" });
+      const program = proposalHandler.cancel({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, canceller: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -359,7 +344,7 @@ describe('Proposal functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = proposalHandler.cancel({ proposal: "proposal-001", canceller: "alice" });
+      const program = proposalHandler.cancel({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, canceller: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -367,7 +352,7 @@ describe('Proposal functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof proposalHandler.cancel !== 'function') return;
-      const result = await interpret(proposalHandler.cancel({ proposal: "proposal-001", canceller: "alice" }), storage);
+      const result = await interpret(proposalHandler.cancel({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, canceller: "alice" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -378,12 +363,7 @@ describe('Proposal functional handler', () => {
       if (typeof proposalHandler.cancel !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_budget_proposal = await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage);
-      const _pool = Object.assign({}, (afterResult_create_budget_proposal?.output ?? {}));
-      const _fixtureInput = { proposal: "proposal-001", canceller: "alice" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(proposalHandler.cancel({ ..._fixtureInput }), storage);
+      const result = await interpret(proposalHandler.cancel({ proposal: afterResult_create_budget_proposal?.output?.["id"], canceller: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });
 

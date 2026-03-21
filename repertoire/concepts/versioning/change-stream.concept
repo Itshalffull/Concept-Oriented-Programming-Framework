@@ -58,7 +58,7 @@ concept ChangeStream [E] {
         No more events available at this time.
       }
 
-      fixture read_batch { subscriptionId: "sub-1", maxCount: 10 } after append_insert
+      fixture read_batch { subscriptionId: $append_insert.offset, maxCount: 10 } after append_insert
       fixture read_missing_sub { subscriptionId: "", maxCount: 10 } -> error
     }
 

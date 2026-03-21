@@ -43,7 +43,7 @@ concept ProofOfPersonhood [PP] {
         The verification request does not exist.
       }
 
-      fixture confirm_valid { verification: "pop-1001" } after request_biometric
+      fixture confirm_valid { verification: $request_biometric.id } after request_biometric
       fixture confirm_nonexistent { verification: "pop-nonexistent" } -> error
     }
 
@@ -55,7 +55,7 @@ concept ProofOfPersonhood [PP] {
         The verification request does not exist.
       }
 
-      fixture reject_with_reason { verification: "pop-1001", reason: "Fraudulent proof submission" } after request_biometric
+      fixture reject_with_reason { verification: $request_biometric.id, reason: "Fraudulent proof submission" } after request_biometric
       fixture reject_nonexistent { verification: "pop-nonexistent", reason: "Invalid" } -> error
     }
 
@@ -70,7 +70,7 @@ concept ProofOfPersonhood [PP] {
         No verification exists.
       }
 
-      fixture check_valid_status { verification: "pop-1001" } after request_biometric
+      fixture check_valid_status { verification: $request_biometric.id } after request_biometric
       fixture check_nonexistent { verification: "pop-nonexistent" } -> error
     }
   }

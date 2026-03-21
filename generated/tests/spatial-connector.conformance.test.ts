@@ -52,7 +52,7 @@ describe('SpatialConnector imperative handler', () => {
   describe('promote', () => {
     it('produces a result', async () => {
       if (typeof spatialConnectorHandler.promote !== 'function') return;
-      const result = await spatialConnectorHandler.promote({ connector: "connector-1" }, storage);
+      const result = await spatialConnectorHandler.promote({ connector: {"type":"ref","fixture":"valid_draw","field":"connector"} }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -63,12 +63,7 @@ describe('SpatialConnector imperative handler', () => {
       if (typeof spatialConnectorHandler.promote !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_draw = await spatialConnectorHandler.draw({ canvas: "c1", source: "node-a", target: "node-b", type: "visual" }, storage);
-      const _pool = Object.assign({}, (afterResult_valid_draw?.output ?? {}));
-      const _fixtureInput = { connector: "connector-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await spatialConnectorHandler.promote({ ..._fixtureInput }, storage);
+      const result = await spatialConnectorHandler.promote({ connector: afterResult_valid_draw?.output?.["connector"] }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -85,7 +80,7 @@ describe('SpatialConnector imperative handler', () => {
   describe('demote', () => {
     it('produces a result', async () => {
       if (typeof spatialConnectorHandler.demote !== 'function') return;
-      const result = await spatialConnectorHandler.demote({ connector: "connector-1" }, storage);
+      const result = await spatialConnectorHandler.demote({ connector: {"type":"ref","fixture":"valid_draw","field":"connector"} }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -96,12 +91,7 @@ describe('SpatialConnector imperative handler', () => {
       if (typeof spatialConnectorHandler.demote !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_draw = await spatialConnectorHandler.draw({ canvas: "c1", source: "node-a", target: "node-b", type: "visual" }, storage);
-      const _pool = Object.assign({}, (afterResult_valid_draw?.output ?? {}));
-      const _fixtureInput = { connector: "connector-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await spatialConnectorHandler.demote({ ..._fixtureInput }, storage);
+      const result = await spatialConnectorHandler.demote({ connector: afterResult_valid_draw?.output?.["connector"] }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -151,7 +141,7 @@ describe('SpatialConnector imperative handler', () => {
   describe('hide', () => {
     it('produces a result', async () => {
       if (typeof spatialConnectorHandler.hide !== 'function') return;
-      const result = await spatialConnectorHandler.hide({ connector: "connector-1" }, storage);
+      const result = await spatialConnectorHandler.hide({ connector: {"type":"ref","fixture":"valid_draw","field":"connector"} }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -162,12 +152,7 @@ describe('SpatialConnector imperative handler', () => {
       if (typeof spatialConnectorHandler.hide !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_draw = await spatialConnectorHandler.draw({ canvas: "c1", source: "node-a", target: "node-b", type: "visual" }, storage);
-      const _pool = Object.assign({}, (afterResult_valid_draw?.output ?? {}));
-      const _fixtureInput = { connector: "connector-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await spatialConnectorHandler.hide({ ..._fixtureInput }, storage);
+      const result = await spatialConnectorHandler.hide({ connector: afterResult_valid_draw?.output?.["connector"] }, storage);
       expect(result.variant).toBe('ok');
     });
 

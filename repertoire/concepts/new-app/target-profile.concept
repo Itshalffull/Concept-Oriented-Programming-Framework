@@ -40,7 +40,7 @@ concept TargetProfile [P] {
         One or more languages are not recognized.
       }
 
-      fixture valid_set_backend { profileId: "profile-1", values: "[\"typescript\",\"rust\"]" } after valid_create
+      fixture valid_set_backend { profileId: $valid_create.profile, values: "[\"typescript\",\"rust\"]" } after valid_create
       fixture invalid_backend_lang { profileId: "profile-1", values: "[\"cobol\"]" } -> error
     }
 
@@ -52,7 +52,7 @@ concept TargetProfile [P] {
         One or more frameworks are not recognized.
       }
 
-      fixture valid_set_frontend { profileId: "profile-1", values: "[\"react\",\"svelte\"]" } after valid_create
+      fixture valid_set_frontend { profileId: $valid_create.profile, values: "[\"react\",\"svelte\"]" } after valid_create
       fixture invalid_frontend { profileId: "profile-1", values: "[\"angular\"]" } -> error
     }
 
@@ -64,7 +64,7 @@ concept TargetProfile [P] {
         One or more interfaces are not recognized.
       }
 
-      fixture valid_set_api { profileId: "profile-1", values: "[\"rest\",\"graphql\"]" } after valid_create
+      fixture valid_set_api { profileId: $valid_create.profile, values: "[\"rest\",\"graphql\"]" } after valid_create
       fixture invalid_api { profileId: "profile-1", values: "[\"soap\"]" } -> error
     }
 
@@ -73,7 +73,7 @@ concept TargetProfile [P] {
         Set the SDK language selections for the profile.
       }
 
-      fixture valid_set_sdk { profileId: "profile-1", values: "[\"typescript\",\"python\"]" } after valid_create
+      fixture valid_set_sdk { profileId: $valid_create.profile, values: "[\"typescript\",\"python\"]" } after valid_create
       fixture invalid_sdk { profileId: "profile-1", values: "[\"cobol\"]" } -> error
     }
 
@@ -85,7 +85,7 @@ concept TargetProfile [P] {
         The selected deploy targets conflict with other profile settings.
       }
 
-      fixture valid_set_deploy { profileId: "profile-1", values: "[\"vercel\",\"lambda\"]" } after valid_create
+      fixture valid_set_deploy { profileId: $valid_create.profile, values: "[\"vercel\",\"lambda\"]" } after valid_create
       fixture invalid_deploy { profileId: "profile-1", values: "[\"azure-functions\"]" } -> error
     }
 
@@ -94,7 +94,7 @@ concept TargetProfile [P] {
         Set the storage adapter selections for the profile.
       }
 
-      fixture valid_set_storage { profileId: "profile-1", values: "[\"postgres\",\"memory\"]" } after valid_create
+      fixture valid_set_storage { profileId: $valid_create.profile, values: "[\"postgres\",\"memory\"]" } after valid_create
       fixture invalid_storage { profileId: "profile-1", values: "[\"oracle\"]" } -> error
     }
 
@@ -103,7 +103,7 @@ concept TargetProfile [P] {
         Set the transport adapter selections for the profile.
       }
 
-      fixture valid_set_transport { profileId: "profile-1", values: "[\"http\",\"ws\"]" } after valid_create
+      fixture valid_set_transport { profileId: $valid_create.profile, values: "[\"http\",\"ws\"]" } after valid_create
       fixture invalid_transport { profileId: "profile-1", values: "[\"mqtt\"]" } -> error
     }
 
@@ -128,7 +128,7 @@ concept TargetProfile [P] {
         dimensions of this target profile.
       }
 
-      fixture valid_derive { profileId: "profile-1" } after valid_create
+      fixture valid_derive { profileId: $valid_create.profile } after valid_create
       fixture derive_nonexistent { profileId: "profile-999" } -> error
     }
 

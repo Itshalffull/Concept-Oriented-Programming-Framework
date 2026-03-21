@@ -109,7 +109,7 @@ describe('DeadPartProvider functional handler', () => {
 
   describe('getResults', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deadPartProviderHandler.getResults({ analysis: "dpa-1" });
+      const program = deadPartProviderHandler.getResults({ analysis: {"type":"ref","fixture":"all_parts_used","field":"analysis"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -117,21 +117,21 @@ describe('DeadPartProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deadPartProviderHandler.getResults({ analysis: "dpa-1" });
+      const program = deadPartProviderHandler.getResults({ analysis: {"type":"ref","fixture":"all_parts_used","field":"analysis"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deadPartProviderHandler.getResults({ analysis: "dpa-1" });
+      const program = deadPartProviderHandler.getResults({ analysis: {"type":"ref","fixture":"all_parts_used","field":"analysis"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deadPartProviderHandler.getResults({ analysis: "dpa-1" });
+      const program = deadPartProviderHandler.getResults({ analysis: {"type":"ref","fixture":"all_parts_used","field":"analysis"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -144,7 +144,7 @@ describe('DeadPartProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deadPartProviderHandler.getResults({ analysis: "dpa-1" });
+      const program = deadPartProviderHandler.getResults({ analysis: {"type":"ref","fixture":"all_parts_used","field":"analysis"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -152,7 +152,7 @@ describe('DeadPartProvider functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof deadPartProviderHandler.getResults !== 'function') return;
-      const result = await interpret(deadPartProviderHandler.getResults({ analysis: "dpa-1" }), storage);
+      const result = await interpret(deadPartProviderHandler.getResults({ analysis: {"type":"ref","fixture":"all_parts_used","field":"analysis"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -163,12 +163,7 @@ describe('DeadPartProvider functional handler', () => {
       if (typeof deadPartProviderHandler.getResults !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_all_parts_used = await interpret(deadPartProviderHandler.analyze({ analysis: "dpa-1", program: "card-widget", parts: ["root","label"], instructions: "[{\"tag\":\"element\",\"part\":\"root\",\"role\":\"container\"},{\"tag\":\"text\",\"part\":\"root\",\"content\":\"hello\"},{\"tag\":\"bind\",\"part\":\"label\",\"attr\":\"text\",\"expr\":\"name\"}]" }), storage);
-      const _pool = Object.assign({}, (afterResult_all_parts_used?.output ?? {}));
-      const _fixtureInput = { analysis: "dpa-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(deadPartProviderHandler.getResults({ ..._fixtureInput }), storage);
+      const result = await interpret(deadPartProviderHandler.getResults({ analysis: afterResult_all_parts_used?.output?.["analysis"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

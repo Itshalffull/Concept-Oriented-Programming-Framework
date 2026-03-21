@@ -102,7 +102,7 @@ describe('Role functional handler', () => {
 
   describe('assign', () => {
     it('builds a valid StorageProgram', () => {
-      const program = roleHandler.assign({ role: "role-1", member: "alice", assignedBy: "system" });
+      const program = roleHandler.assign({ role: {"type":"ref","fixture":"create_admin","field":"id"}, member: "alice", assignedBy: "system" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('Role functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = roleHandler.assign({ role: "role-1", member: "alice", assignedBy: "system" });
+      const program = roleHandler.assign({ role: {"type":"ref","fixture":"create_admin","field":"id"}, member: "alice", assignedBy: "system" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = roleHandler.assign({ role: "role-1", member: "alice", assignedBy: "system" });
+      const program = roleHandler.assign({ role: {"type":"ref","fixture":"create_admin","field":"id"}, member: "alice", assignedBy: "system" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = roleHandler.assign({ role: "role-1", member: "alice", assignedBy: "system" });
+      const program = roleHandler.assign({ role: {"type":"ref","fixture":"create_admin","field":"id"}, member: "alice", assignedBy: "system" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('Role functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = roleHandler.assign({ role: "role-1", member: "alice", assignedBy: "system" });
+      const program = roleHandler.assign({ role: {"type":"ref","fixture":"create_admin","field":"id"}, member: "alice", assignedBy: "system" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('Role functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof roleHandler.assign !== 'function') return;
-      const result = await interpret(roleHandler.assign({ role: "role-1", member: "alice", assignedBy: "system" }), storage);
+      const result = await interpret(roleHandler.assign({ role: {"type":"ref","fixture":"create_admin","field":"id"}, member: "alice", assignedBy: "system" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('Role functional handler', () => {
       if (typeof roleHandler.assign !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_admin = await interpret(roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_admin?.output ?? {}));
-      const _fixtureInput = { role: "role-1", member: "alice", assignedBy: "system" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(roleHandler.assign({ ..._fixtureInput }), storage);
+      const result = await interpret(roleHandler.assign({ role: afterResult_create_admin?.output?.["id"], member: "alice", assignedBy: "system" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,7 +171,7 @@ describe('Role functional handler', () => {
 
   describe('revoke', () => {
     it('builds a valid StorageProgram', () => {
-      const program = roleHandler.revoke({ role: "role-1", member: "alice" });
+      const program = roleHandler.revoke({ role: {"type":"ref","fixture":"create_admin","field":"id"}, member: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +179,21 @@ describe('Role functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = roleHandler.revoke({ role: "role-1", member: "alice" });
+      const program = roleHandler.revoke({ role: {"type":"ref","fixture":"create_admin","field":"id"}, member: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = roleHandler.revoke({ role: "role-1", member: "alice" });
+      const program = roleHandler.revoke({ role: {"type":"ref","fixture":"create_admin","field":"id"}, member: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = roleHandler.revoke({ role: "role-1", member: "alice" });
+      const program = roleHandler.revoke({ role: {"type":"ref","fixture":"create_admin","field":"id"}, member: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +206,7 @@ describe('Role functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = roleHandler.revoke({ role: "role-1", member: "alice" });
+      const program = roleHandler.revoke({ role: {"type":"ref","fixture":"create_admin","field":"id"}, member: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,7 +214,7 @@ describe('Role functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof roleHandler.revoke !== 'function') return;
-      const result = await interpret(roleHandler.revoke({ role: "role-1", member: "alice" }), storage);
+      const result = await interpret(roleHandler.revoke({ role: {"type":"ref","fixture":"create_admin","field":"id"}, member: "alice" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -230,12 +225,7 @@ describe('Role functional handler', () => {
       if (typeof roleHandler.revoke !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_admin = await interpret(roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_admin?.output ?? {}));
-      const _fixtureInput = { role: "role-1", member: "alice" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(roleHandler.revoke({ ..._fixtureInput }), storage);
+      const result = await interpret(roleHandler.revoke({ role: afterResult_create_admin?.output?.["id"], member: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -250,7 +240,7 @@ describe('Role functional handler', () => {
 
   describe('check', () => {
     it('builds a valid StorageProgram', () => {
-      const program = roleHandler.check({ role: "role-1", member: "alice" });
+      const program = roleHandler.check({ role: {"type":"ref","fixture":"create_admin","field":"id"}, member: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -258,21 +248,21 @@ describe('Role functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = roleHandler.check({ role: "role-1", member: "alice" });
+      const program = roleHandler.check({ role: {"type":"ref","fixture":"create_admin","field":"id"}, member: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = roleHandler.check({ role: "role-1", member: "alice" });
+      const program = roleHandler.check({ role: {"type":"ref","fixture":"create_admin","field":"id"}, member: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = roleHandler.check({ role: "role-1", member: "alice" });
+      const program = roleHandler.check({ role: {"type":"ref","fixture":"create_admin","field":"id"}, member: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -285,7 +275,7 @@ describe('Role functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = roleHandler.check({ role: "role-1", member: "alice" });
+      const program = roleHandler.check({ role: {"type":"ref","fixture":"create_admin","field":"id"}, member: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -293,7 +283,7 @@ describe('Role functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof roleHandler.check !== 'function') return;
-      const result = await interpret(roleHandler.check({ role: "role-1", member: "alice" }), storage);
+      const result = await interpret(roleHandler.check({ role: {"type":"ref","fixture":"create_admin","field":"id"}, member: "alice" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -304,12 +294,7 @@ describe('Role functional handler', () => {
       if (typeof roleHandler.check !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_admin = await interpret(roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_admin?.output ?? {}));
-      const _fixtureInput = { role: "role-1", member: "alice" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(roleHandler.check({ ..._fixtureInput }), storage);
+      const result = await interpret(roleHandler.check({ role: afterResult_create_admin?.output?.["id"], member: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -324,7 +309,7 @@ describe('Role functional handler', () => {
 
   describe('dissolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = roleHandler.dissolve({ role: "role-1" });
+      const program = roleHandler.dissolve({ role: {"type":"ref","fixture":"create_admin","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -332,21 +317,21 @@ describe('Role functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = roleHandler.dissolve({ role: "role-1" });
+      const program = roleHandler.dissolve({ role: {"type":"ref","fixture":"create_admin","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = roleHandler.dissolve({ role: "role-1" });
+      const program = roleHandler.dissolve({ role: {"type":"ref","fixture":"create_admin","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = roleHandler.dissolve({ role: "role-1" });
+      const program = roleHandler.dissolve({ role: {"type":"ref","fixture":"create_admin","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -359,7 +344,7 @@ describe('Role functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = roleHandler.dissolve({ role: "role-1" });
+      const program = roleHandler.dissolve({ role: {"type":"ref","fixture":"create_admin","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -367,7 +352,7 @@ describe('Role functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof roleHandler.dissolve !== 'function') return;
-      const result = await interpret(roleHandler.dissolve({ role: "role-1" }), storage);
+      const result = await interpret(roleHandler.dissolve({ role: {"type":"ref","fixture":"create_admin","field":"id"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -378,12 +363,7 @@ describe('Role functional handler', () => {
       if (typeof roleHandler.dissolve !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_admin = await interpret(roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_admin?.output ?? {}));
-      const _fixtureInput = { role: "role-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(roleHandler.dissolve({ ..._fixtureInput }), storage);
+      const result = await interpret(roleHandler.dissolve({ role: afterResult_create_admin?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

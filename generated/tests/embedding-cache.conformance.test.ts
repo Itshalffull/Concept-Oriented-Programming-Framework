@@ -176,7 +176,7 @@ describe('EmbeddingCache functional handler', () => {
 
   describe('put', () => {
     it('builds a valid StorageProgram', () => {
-      const program = embeddingCacheHandler.put({ digest: "sha256:abc123", vector: "[0.1,0.2,0.3]", model: "text-embedding-ada-002", dimensions: "3", sourceKind: "concept", sourceKey: "UserProfile" });
+      const program = embeddingCacheHandler.put({ digest: "sha256:abc123", vector: "[0.1,0.2,0.3]", model: {"type":"ref","fixture":"valid_path","field":"loaded"}, dimensions: "3", sourceKind: "concept", sourceKey: "UserProfile" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +184,21 @@ describe('EmbeddingCache functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = embeddingCacheHandler.put({ digest: "sha256:abc123", vector: "[0.1,0.2,0.3]", model: "text-embedding-ada-002", dimensions: "3", sourceKind: "concept", sourceKey: "UserProfile" });
+      const program = embeddingCacheHandler.put({ digest: "sha256:abc123", vector: "[0.1,0.2,0.3]", model: {"type":"ref","fixture":"valid_path","field":"loaded"}, dimensions: "3", sourceKind: "concept", sourceKey: "UserProfile" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = embeddingCacheHandler.put({ digest: "sha256:abc123", vector: "[0.1,0.2,0.3]", model: "text-embedding-ada-002", dimensions: "3", sourceKind: "concept", sourceKey: "UserProfile" });
+      const program = embeddingCacheHandler.put({ digest: "sha256:abc123", vector: "[0.1,0.2,0.3]", model: {"type":"ref","fixture":"valid_path","field":"loaded"}, dimensions: "3", sourceKind: "concept", sourceKey: "UserProfile" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = embeddingCacheHandler.put({ digest: "sha256:abc123", vector: "[0.1,0.2,0.3]", model: "text-embedding-ada-002", dimensions: "3", sourceKind: "concept", sourceKey: "UserProfile" });
+      const program = embeddingCacheHandler.put({ digest: "sha256:abc123", vector: "[0.1,0.2,0.3]", model: {"type":"ref","fixture":"valid_path","field":"loaded"}, dimensions: "3", sourceKind: "concept", sourceKey: "UserProfile" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +211,7 @@ describe('EmbeddingCache functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = embeddingCacheHandler.put({ digest: "sha256:abc123", vector: "[0.1,0.2,0.3]", model: "text-embedding-ada-002", dimensions: "3", sourceKind: "concept", sourceKey: "UserProfile" });
+      const program = embeddingCacheHandler.put({ digest: "sha256:abc123", vector: "[0.1,0.2,0.3]", model: {"type":"ref","fixture":"valid_path","field":"loaded"}, dimensions: "3", sourceKind: "concept", sourceKey: "UserProfile" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,7 +219,7 @@ describe('EmbeddingCache functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof embeddingCacheHandler.put !== 'function') return;
-      const result = await interpret(embeddingCacheHandler.put({ digest: "sha256:abc123", vector: "[0.1,0.2,0.3]", model: "text-embedding-ada-002", dimensions: "3", sourceKind: "concept", sourceKey: "UserProfile" }), storage);
+      const result = await interpret(embeddingCacheHandler.put({ digest: "sha256:abc123", vector: "[0.1,0.2,0.3]", model: {"type":"ref","fixture":"valid_path","field":"loaded"}, dimensions: "3", sourceKind: "concept", sourceKey: "UserProfile" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -230,12 +230,7 @@ describe('EmbeddingCache functional handler', () => {
       if (typeof embeddingCacheHandler.put !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_path = await interpret(embeddingCacheHandler.warm({ path: "/var/cache/embeddings.json" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_path?.output ?? {}));
-      const _fixtureInput = { digest: "sha256:abc123", vector: "[0.1,0.2,0.3]", model: "text-embedding-ada-002", dimensions: "3", sourceKind: "concept", sourceKey: "UserProfile" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(embeddingCacheHandler.put({ ..._fixtureInput }), storage);
+      const result = await interpret(embeddingCacheHandler.put({ digest: "sha256:abc123", vector: "[0.1,0.2,0.3]", model: afterResult_valid_path?.output?.["loaded"], dimensions: "3", sourceKind: "concept", sourceKey: "UserProfile" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -465,7 +460,7 @@ describe('EmbeddingCache functional handler', () => {
 
   describe('lookupWithConfig', () => {
     it('builds a valid StorageProgram', () => {
-      const program = embeddingCacheHandler.lookupWithConfig({ digest: "sha256:abc123", model: "text-embedding-ada-002", dimensions: "1536" });
+      const program = embeddingCacheHandler.lookupWithConfig({ digest: "sha256:abc123", model: {"type":"ref","fixture":"valid_path","field":"loaded"}, dimensions: "1536" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -473,21 +468,21 @@ describe('EmbeddingCache functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = embeddingCacheHandler.lookupWithConfig({ digest: "sha256:abc123", model: "text-embedding-ada-002", dimensions: "1536" });
+      const program = embeddingCacheHandler.lookupWithConfig({ digest: "sha256:abc123", model: {"type":"ref","fixture":"valid_path","field":"loaded"}, dimensions: "1536" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = embeddingCacheHandler.lookupWithConfig({ digest: "sha256:abc123", model: "text-embedding-ada-002", dimensions: "1536" });
+      const program = embeddingCacheHandler.lookupWithConfig({ digest: "sha256:abc123", model: {"type":"ref","fixture":"valid_path","field":"loaded"}, dimensions: "1536" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = embeddingCacheHandler.lookupWithConfig({ digest: "sha256:abc123", model: "text-embedding-ada-002", dimensions: "1536" });
+      const program = embeddingCacheHandler.lookupWithConfig({ digest: "sha256:abc123", model: {"type":"ref","fixture":"valid_path","field":"loaded"}, dimensions: "1536" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -500,7 +495,7 @@ describe('EmbeddingCache functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = embeddingCacheHandler.lookupWithConfig({ digest: "sha256:abc123", model: "text-embedding-ada-002", dimensions: "1536" });
+      const program = embeddingCacheHandler.lookupWithConfig({ digest: "sha256:abc123", model: {"type":"ref","fixture":"valid_path","field":"loaded"}, dimensions: "1536" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -508,7 +503,7 @@ describe('EmbeddingCache functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof embeddingCacheHandler.lookupWithConfig !== 'function') return;
-      const result = await interpret(embeddingCacheHandler.lookupWithConfig({ digest: "sha256:abc123", model: "text-embedding-ada-002", dimensions: "1536" }), storage);
+      const result = await interpret(embeddingCacheHandler.lookupWithConfig({ digest: "sha256:abc123", model: {"type":"ref","fixture":"valid_path","field":"loaded"}, dimensions: "1536" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -519,12 +514,7 @@ describe('EmbeddingCache functional handler', () => {
       if (typeof embeddingCacheHandler.lookupWithConfig !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_path = await interpret(embeddingCacheHandler.warm({ path: "/var/cache/embeddings.json" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_path?.output ?? {}));
-      const _fixtureInput = { digest: "sha256:abc123", model: "text-embedding-ada-002", dimensions: "1536" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(embeddingCacheHandler.lookupWithConfig({ ..._fixtureInput }), storage);
+      const result = await interpret(embeddingCacheHandler.lookupWithConfig({ digest: "sha256:abc123", model: afterResult_valid_path?.output?.["loaded"], dimensions: "1536" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -539,7 +529,7 @@ describe('EmbeddingCache functional handler', () => {
 
   describe('putWithConfig', () => {
     it('builds a valid StorageProgram', () => {
-      const program = embeddingCacheHandler.putWithConfig({ digest: "sha256:abc123", model: "text-embedding-ada-002", dimensions: "1536", vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User" });
+      const program = embeddingCacheHandler.putWithConfig({ digest: "sha256:abc123", model: {"type":"ref","fixture":"valid_path","field":"loaded"}, dimensions: "1536", vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -547,21 +537,21 @@ describe('EmbeddingCache functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = embeddingCacheHandler.putWithConfig({ digest: "sha256:abc123", model: "text-embedding-ada-002", dimensions: "1536", vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User" });
+      const program = embeddingCacheHandler.putWithConfig({ digest: "sha256:abc123", model: {"type":"ref","fixture":"valid_path","field":"loaded"}, dimensions: "1536", vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = embeddingCacheHandler.putWithConfig({ digest: "sha256:abc123", model: "text-embedding-ada-002", dimensions: "1536", vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User" });
+      const program = embeddingCacheHandler.putWithConfig({ digest: "sha256:abc123", model: {"type":"ref","fixture":"valid_path","field":"loaded"}, dimensions: "1536", vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = embeddingCacheHandler.putWithConfig({ digest: "sha256:abc123", model: "text-embedding-ada-002", dimensions: "1536", vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User" });
+      const program = embeddingCacheHandler.putWithConfig({ digest: "sha256:abc123", model: {"type":"ref","fixture":"valid_path","field":"loaded"}, dimensions: "1536", vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -574,7 +564,7 @@ describe('EmbeddingCache functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = embeddingCacheHandler.putWithConfig({ digest: "sha256:abc123", model: "text-embedding-ada-002", dimensions: "1536", vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User" });
+      const program = embeddingCacheHandler.putWithConfig({ digest: "sha256:abc123", model: {"type":"ref","fixture":"valid_path","field":"loaded"}, dimensions: "1536", vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -582,7 +572,7 @@ describe('EmbeddingCache functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof embeddingCacheHandler.putWithConfig !== 'function') return;
-      const result = await interpret(embeddingCacheHandler.putWithConfig({ digest: "sha256:abc123", model: "text-embedding-ada-002", dimensions: "1536", vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User" }), storage);
+      const result = await interpret(embeddingCacheHandler.putWithConfig({ digest: "sha256:abc123", model: {"type":"ref","fixture":"valid_path","field":"loaded"}, dimensions: "1536", vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -593,12 +583,7 @@ describe('EmbeddingCache functional handler', () => {
       if (typeof embeddingCacheHandler.putWithConfig !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_path = await interpret(embeddingCacheHandler.warm({ path: "/var/cache/embeddings.json" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_path?.output ?? {}));
-      const _fixtureInput = { digest: "sha256:abc123", model: "text-embedding-ada-002", dimensions: "1536", vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(embeddingCacheHandler.putWithConfig({ ..._fixtureInput }), storage);
+      const result = await interpret(embeddingCacheHandler.putWithConfig({ digest: "sha256:abc123", model: afterResult_valid_path?.output?.["loaded"], dimensions: "1536", vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User" }), storage);
       expect(result.variant).toBe('ok');
     });
 

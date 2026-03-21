@@ -38,7 +38,7 @@ concept MediaAsset [M] {
         No asset exists with this identifier.
       }
 
-      fixture extract_existing { asset: "img-001" } after create_image
+      fixture extract_existing { asset: $create_image.asset } after create_image
       fixture extract_missing { asset: "nonexistent" } -> notfound
     }
 
@@ -51,7 +51,7 @@ concept MediaAsset [M] {
         No asset exists with this identifier.
       }
 
-      fixture thumb_existing { asset: "img-001" } after create_image
+      fixture thumb_existing { asset: $create_image.asset } after create_image
       fixture thumb_missing { asset: "nonexistent" } -> notfound
     }
 
@@ -64,7 +64,7 @@ concept MediaAsset [M] {
         No asset exists with this identifier.
       }
 
-      fixture get_existing { asset: "img-001" } after create_image
+      fixture get_existing { asset: $create_image.asset } after create_image
       fixture get_missing { asset: "nonexistent" } -> notfound
     }
   }

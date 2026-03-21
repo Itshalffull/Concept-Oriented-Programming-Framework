@@ -42,7 +42,7 @@ concept Guard [GD] {
         The guard is disabled and does not apply.
       }
 
-      fixture checkpre_allowed { guard: "guard-001" } after register_balance_guard
+      fixture checkpre_allowed { guard: $register_balance_guard.id } after register_balance_guard
       fixture checkpre_disabled { guard: "guard-disabled-001" } -> error
     }
 
@@ -54,21 +54,21 @@ concept Guard [GD] {
         The post-execution check failed. The action should be reverted.
       }
 
-      fixture checkpost_passed { guard: "guard-001" } after register_balance_guard
+      fixture checkpost_passed { guard: $register_balance_guard.id } after register_balance_guard
       fixture checkpost_disabled { guard: "guard-disabled-001" } -> error
     }
 
     action enable(guard: GD) {
       -> enabled(guard: GD) { The guard is activated. }
 
-      fixture enable_guard { guard: "guard-001" } after register_balance_guard
+      fixture enable_guard { guard: $register_balance_guard.id } after register_balance_guard
       fixture enable_not_found { guard: "guard-nonexistent" } -> error
     }
 
     action disable(guard: GD) {
       -> disabled(guard: GD) { The guard is deactivated. }
 
-      fixture disable_guard { guard: "guard-001" } after enable_guard
+      fixture disable_guard { guard: $enable_guard.id } after enable_guard
       fixture disable_not_found { guard: "guard-nonexistent" } -> error
     }
   }

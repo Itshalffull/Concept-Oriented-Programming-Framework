@@ -104,7 +104,7 @@ concept RuntimeCoverage [C] {
       -> notfound() {
         No render data for this widget instance.
       }
-      fixture render_trace_valid { widgetInstance: "dialog-inst-001" } after record_action
+      fixture render_trace_valid { widgetInstance: $record_action.entry } after record_action
       fixture render_trace_empty { widgetInstance: "" } -> error
     }
 

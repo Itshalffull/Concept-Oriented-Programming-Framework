@@ -18,7 +18,7 @@ concept Favorite [U] {
       }
 
       fixture favorite_ok { user: "user-alice", article: "art-101" }
-      fixture favorite_another { user: "user-bob", article: "art-202" } after favorite_ok
+      fixture favorite_another { user: "user-bob", article: $favorite_ok.user } after favorite_ok
     }
 
     action unfavorite(user: U, article: String) {
@@ -27,8 +27,8 @@ concept Favorite [U] {
         Return user and article references.
       }
 
-      fixture unfavorite_ok { user: "user-alice", article: "art-101" } after favorite_ok
-      fixture unfavorite_not_in_set { user: "user-carol", article: "art-999" } after favorite_ok
+      fixture unfavorite_ok { user: "user-alice", article: $favorite_ok.user } after favorite_ok
+      fixture unfavorite_not_in_set { user: "user-carol", article: $favorite_ok.user } after favorite_ok
     }
 
     action isFavorited(user: U, article: String) {
@@ -36,8 +36,8 @@ concept Favorite [U] {
         Return whether the article is in the user's favorites.
       }
 
-      fixture is_favorited_ok { user: "user-alice", article: "art-101" } after favorite_ok
-      fixture is_favorited_unknown_user { user: "user-unknown", article: "art-101" } after favorite_ok
+      fixture is_favorited_ok { user: "user-alice", article: $favorite_ok.user } after favorite_ok
+      fixture is_favorited_unknown_user { user: "user-unknown", article: $favorite_ok.user } after favorite_ok
     }
 
     action count(article: String) {
@@ -45,7 +45,7 @@ concept Favorite [U] {
         Return the number of users who favorited this article.
       }
 
-      fixture count_ok { article: "art-101" } after favorite_ok
+      fixture count_ok { article: $favorite_ok.user } after favorite_ok
       fixture count_no_favorites { article: "art-unfavorited" } after favorite_ok
     }
   }

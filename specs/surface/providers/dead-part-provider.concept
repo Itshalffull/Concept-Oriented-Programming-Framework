@@ -42,7 +42,7 @@ concept DeadPartProvider [D] {
         No analysis result exists with this identifier.
       }
 
-      fixture existing_analysis { analysis: "dpa-1" } after all_parts_used
+      fixture existing_analysis { analysis: $all_parts_used.analysis } after all_parts_used
       fixture unknown_analysis { analysis: "nonexistent" } -> notfound
     }
   }

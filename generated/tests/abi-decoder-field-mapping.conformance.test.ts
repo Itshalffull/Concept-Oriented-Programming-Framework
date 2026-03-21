@@ -110,7 +110,7 @@ describe('AbiDecoderFieldMapping functional handler', () => {
 
   describe('reverse', () => {
     it('builds a valid StorageProgram', () => {
-      const program = abiDecoderFieldMappingHandler.reverse({ data: "{\"owner\":\"0xAbC123\",\"amount\":100}", mapper: "abi-map-1" });
+      const program = abiDecoderFieldMappingHandler.reverse({ data: "{\"owner\":\"0xAbC123\",\"amount\":100}", mapper: {"type":"ref","fixture":"apply_valid","field":"mapped"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -118,21 +118,21 @@ describe('AbiDecoderFieldMapping functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = abiDecoderFieldMappingHandler.reverse({ data: "{\"owner\":\"0xAbC123\",\"amount\":100}", mapper: "abi-map-1" });
+      const program = abiDecoderFieldMappingHandler.reverse({ data: "{\"owner\":\"0xAbC123\",\"amount\":100}", mapper: {"type":"ref","fixture":"apply_valid","field":"mapped"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = abiDecoderFieldMappingHandler.reverse({ data: "{\"owner\":\"0xAbC123\",\"amount\":100}", mapper: "abi-map-1" });
+      const program = abiDecoderFieldMappingHandler.reverse({ data: "{\"owner\":\"0xAbC123\",\"amount\":100}", mapper: {"type":"ref","fixture":"apply_valid","field":"mapped"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = abiDecoderFieldMappingHandler.reverse({ data: "{\"owner\":\"0xAbC123\",\"amount\":100}", mapper: "abi-map-1" });
+      const program = abiDecoderFieldMappingHandler.reverse({ data: "{\"owner\":\"0xAbC123\",\"amount\":100}", mapper: {"type":"ref","fixture":"apply_valid","field":"mapped"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -145,7 +145,7 @@ describe('AbiDecoderFieldMapping functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = abiDecoderFieldMappingHandler.reverse({ data: "{\"owner\":\"0xAbC123\",\"amount\":100}", mapper: "abi-map-1" });
+      const program = abiDecoderFieldMappingHandler.reverse({ data: "{\"owner\":\"0xAbC123\",\"amount\":100}", mapper: {"type":"ref","fixture":"apply_valid","field":"mapped"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -153,7 +153,7 @@ describe('AbiDecoderFieldMapping functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof abiDecoderFieldMappingHandler.reverse !== 'function') return;
-      const result = await interpret(abiDecoderFieldMappingHandler.reverse({ data: "{\"owner\":\"0xAbC123\",\"amount\":100}", mapper: "abi-map-1" }), storage);
+      const result = await interpret(abiDecoderFieldMappingHandler.reverse({ data: "{\"owner\":\"0xAbC123\",\"amount\":100}", mapper: {"type":"ref","fixture":"apply_valid","field":"mapped"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -164,12 +164,7 @@ describe('AbiDecoderFieldMapping functional handler', () => {
       if (typeof abiDecoderFieldMappingHandler.reverse !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_apply_valid = await interpret(abiDecoderFieldMappingHandler.apply({ data: "0x00000001", mapper: "abi-map-1", contract: "0xAbC123" }), storage);
-      const _pool = Object.assign({}, (afterResult_apply_valid?.output ?? {}));
-      const _fixtureInput = { data: "{\"owner\":\"0xAbC123\",\"amount\":100}", mapper: "abi-map-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(abiDecoderFieldMappingHandler.reverse({ ..._fixtureInput }), storage);
+      const result = await interpret(abiDecoderFieldMappingHandler.reverse({ data: "{\"owner\":\"0xAbC123\",\"amount\":100}", mapper: afterResult_apply_valid?.output?.["mapped"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

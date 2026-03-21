@@ -109,7 +109,7 @@ describe('ScoreVoting functional handler', () => {
 
   describe('count', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreVotingHandler.count({ config: "score-001", scoreBallots: "[{\"voter\":\"alice\",\"scores\":{\"A\":4,\"B\":2}},{\"voter\":\"bob\",\"scores\":{\"A\":3,\"B\":5}}]", weights: "{}" });
+      const program = scoreVotingHandler.count({ config: {"type":"ref","fixture":"mean_zero_to_five","field":"id"}, scoreBallots: "[{\"voter\":\"alice\",\"scores\":{\"A\":4,\"B\":2}},{\"voter\":\"bob\",\"scores\":{\"A\":3,\"B\":5}}]", weights: "{}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -117,21 +117,21 @@ describe('ScoreVoting functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreVotingHandler.count({ config: "score-001", scoreBallots: "[{\"voter\":\"alice\",\"scores\":{\"A\":4,\"B\":2}},{\"voter\":\"bob\",\"scores\":{\"A\":3,\"B\":5}}]", weights: "{}" });
+      const program = scoreVotingHandler.count({ config: {"type":"ref","fixture":"mean_zero_to_five","field":"id"}, scoreBallots: "[{\"voter\":\"alice\",\"scores\":{\"A\":4,\"B\":2}},{\"voter\":\"bob\",\"scores\":{\"A\":3,\"B\":5}}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreVotingHandler.count({ config: "score-001", scoreBallots: "[{\"voter\":\"alice\",\"scores\":{\"A\":4,\"B\":2}},{\"voter\":\"bob\",\"scores\":{\"A\":3,\"B\":5}}]", weights: "{}" });
+      const program = scoreVotingHandler.count({ config: {"type":"ref","fixture":"mean_zero_to_five","field":"id"}, scoreBallots: "[{\"voter\":\"alice\",\"scores\":{\"A\":4,\"B\":2}},{\"voter\":\"bob\",\"scores\":{\"A\":3,\"B\":5}}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreVotingHandler.count({ config: "score-001", scoreBallots: "[{\"voter\":\"alice\",\"scores\":{\"A\":4,\"B\":2}},{\"voter\":\"bob\",\"scores\":{\"A\":3,\"B\":5}}]", weights: "{}" });
+      const program = scoreVotingHandler.count({ config: {"type":"ref","fixture":"mean_zero_to_five","field":"id"}, scoreBallots: "[{\"voter\":\"alice\",\"scores\":{\"A\":4,\"B\":2}},{\"voter\":\"bob\",\"scores\":{\"A\":3,\"B\":5}}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -144,7 +144,7 @@ describe('ScoreVoting functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreVotingHandler.count({ config: "score-001", scoreBallots: "[{\"voter\":\"alice\",\"scores\":{\"A\":4,\"B\":2}},{\"voter\":\"bob\",\"scores\":{\"A\":3,\"B\":5}}]", weights: "{}" });
+      const program = scoreVotingHandler.count({ config: {"type":"ref","fixture":"mean_zero_to_five","field":"id"}, scoreBallots: "[{\"voter\":\"alice\",\"scores\":{\"A\":4,\"B\":2}},{\"voter\":\"bob\",\"scores\":{\"A\":3,\"B\":5}}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -152,7 +152,7 @@ describe('ScoreVoting functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof scoreVotingHandler.count !== 'function') return;
-      const result = await interpret(scoreVotingHandler.count({ config: "score-001", scoreBallots: "[{\"voter\":\"alice\",\"scores\":{\"A\":4,\"B\":2}},{\"voter\":\"bob\",\"scores\":{\"A\":3,\"B\":5}}]", weights: "{}" }), storage);
+      const result = await interpret(scoreVotingHandler.count({ config: {"type":"ref","fixture":"mean_zero_to_five","field":"id"}, scoreBallots: "[{\"voter\":\"alice\",\"scores\":{\"A\":4,\"B\":2}},{\"voter\":\"bob\",\"scores\":{\"A\":3,\"B\":5}}]", weights: "{}" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -163,12 +163,7 @@ describe('ScoreVoting functional handler', () => {
       if (typeof scoreVotingHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_mean_zero_to_five = await interpret(scoreVotingHandler.configure({ minScore: "0.0", maxScore: "5.0", aggregation: "Mean" }), storage);
-      const _pool = Object.assign({}, (afterResult_mean_zero_to_five?.output ?? {}));
-      const _fixtureInput = { config: "score-001", scoreBallots: "[{\"voter\":\"alice\",\"scores\":{\"A\":4,\"B\":2}},{\"voter\":\"bob\",\"scores\":{\"A\":3,\"B\":5}}]", weights: "{}" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(scoreVotingHandler.count({ ..._fixtureInput }), storage);
+      const result = await interpret(scoreVotingHandler.count({ config: afterResult_mean_zero_to_five?.output?.["id"], scoreBallots: "[{\"voter\":\"alice\",\"scores\":{\"A\":4,\"B\":2}},{\"voter\":\"bob\",\"scores\":{\"A\":3,\"B\":5}}]", weights: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,12 +171,7 @@ describe('ScoreVoting functional handler', () => {
       if (typeof scoreVotingHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_mean_zero_to_five = await interpret(scoreVotingHandler.configure({ minScore: "0.0", maxScore: "5.0", aggregation: "Mean" }), storage);
-      const _pool = Object.assign({}, (afterResult_mean_zero_to_five?.output ?? {}));
-      const _fixtureInput = { config: "score-001", scoreBallots: "[]", weights: "{}" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(scoreVotingHandler.count({ ..._fixtureInput }), storage);
+      const result = await interpret(scoreVotingHandler.count({ config: afterResult_mean_zero_to_five?.output?.["id"], scoreBallots: "[]", weights: "{}" }), storage);
       expect(result.variant).not.toBe('ok');
     });
 

@@ -74,7 +74,7 @@ concept GraphAnalysis [A] {
         No result exists with the given identifier.
       }
 
-      fixture existing_result { result: "result-001" } after pagerank_analysis
+      fixture existing_result { result: $pagerank_analysis.result } after pagerank_analysis
       fixture missing_result { result: "result-nonexistent" } -> notfound
     }
 

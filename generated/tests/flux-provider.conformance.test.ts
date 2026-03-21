@@ -109,7 +109,7 @@ describe('FluxProvider functional handler', () => {
 
   describe('reconciliationStatus', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fluxProviderHandler.reconciliationStatus({ kustomization: "ks-prod-001" });
+      const program = fluxProviderHandler.reconciliationStatus({ kustomization: {"type":"ref","fixture":"emit_prod","field":"kustomization"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -117,21 +117,21 @@ describe('FluxProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fluxProviderHandler.reconciliationStatus({ kustomization: "ks-prod-001" });
+      const program = fluxProviderHandler.reconciliationStatus({ kustomization: {"type":"ref","fixture":"emit_prod","field":"kustomization"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fluxProviderHandler.reconciliationStatus({ kustomization: "ks-prod-001" });
+      const program = fluxProviderHandler.reconciliationStatus({ kustomization: {"type":"ref","fixture":"emit_prod","field":"kustomization"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fluxProviderHandler.reconciliationStatus({ kustomization: "ks-prod-001" });
+      const program = fluxProviderHandler.reconciliationStatus({ kustomization: {"type":"ref","fixture":"emit_prod","field":"kustomization"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -144,7 +144,7 @@ describe('FluxProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fluxProviderHandler.reconciliationStatus({ kustomization: "ks-prod-001" });
+      const program = fluxProviderHandler.reconciliationStatus({ kustomization: {"type":"ref","fixture":"emit_prod","field":"kustomization"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -152,7 +152,7 @@ describe('FluxProvider functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof fluxProviderHandler.reconciliationStatus !== 'function') return;
-      const result = await interpret(fluxProviderHandler.reconciliationStatus({ kustomization: "ks-prod-001" }), storage);
+      const result = await interpret(fluxProviderHandler.reconciliationStatus({ kustomization: {"type":"ref","fixture":"emit_prod","field":"kustomization"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -163,12 +163,7 @@ describe('FluxProvider functional handler', () => {
       if (typeof fluxProviderHandler.reconciliationStatus !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_emit_prod = await interpret(fluxProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
-      const _pool = Object.assign({}, (afterResult_emit_prod?.output ?? {}));
-      const _fixtureInput = { kustomization: "ks-prod-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(fluxProviderHandler.reconciliationStatus({ ..._fixtureInput }), storage);
+      const result = await interpret(fluxProviderHandler.reconciliationStatus({ kustomization: afterResult_emit_prod?.output?.["kustomization"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -183,7 +178,7 @@ describe('FluxProvider functional handler', () => {
 
   describe('helmRelease', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fluxProviderHandler.helmRelease({ kustomization: "ks-prod-001", chart: "nginx-ingress", values: "{\"replicas\": 3}" });
+      const program = fluxProviderHandler.helmRelease({ kustomization: {"type":"ref","fixture":"emit_prod","field":"kustomization"}, chart: "nginx-ingress", values: "{\"replicas\": 3}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -191,21 +186,21 @@ describe('FluxProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fluxProviderHandler.helmRelease({ kustomization: "ks-prod-001", chart: "nginx-ingress", values: "{\"replicas\": 3}" });
+      const program = fluxProviderHandler.helmRelease({ kustomization: {"type":"ref","fixture":"emit_prod","field":"kustomization"}, chart: "nginx-ingress", values: "{\"replicas\": 3}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fluxProviderHandler.helmRelease({ kustomization: "ks-prod-001", chart: "nginx-ingress", values: "{\"replicas\": 3}" });
+      const program = fluxProviderHandler.helmRelease({ kustomization: {"type":"ref","fixture":"emit_prod","field":"kustomization"}, chart: "nginx-ingress", values: "{\"replicas\": 3}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fluxProviderHandler.helmRelease({ kustomization: "ks-prod-001", chart: "nginx-ingress", values: "{\"replicas\": 3}" });
+      const program = fluxProviderHandler.helmRelease({ kustomization: {"type":"ref","fixture":"emit_prod","field":"kustomization"}, chart: "nginx-ingress", values: "{\"replicas\": 3}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -218,7 +213,7 @@ describe('FluxProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fluxProviderHandler.helmRelease({ kustomization: "ks-prod-001", chart: "nginx-ingress", values: "{\"replicas\": 3}" });
+      const program = fluxProviderHandler.helmRelease({ kustomization: {"type":"ref","fixture":"emit_prod","field":"kustomization"}, chart: "nginx-ingress", values: "{\"replicas\": 3}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -226,7 +221,7 @@ describe('FluxProvider functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof fluxProviderHandler.helmRelease !== 'function') return;
-      const result = await interpret(fluxProviderHandler.helmRelease({ kustomization: "ks-prod-001", chart: "nginx-ingress", values: "{\"replicas\": 3}" }), storage);
+      const result = await interpret(fluxProviderHandler.helmRelease({ kustomization: {"type":"ref","fixture":"emit_prod","field":"kustomization"}, chart: "nginx-ingress", values: "{\"replicas\": 3}" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -237,12 +232,7 @@ describe('FluxProvider functional handler', () => {
       if (typeof fluxProviderHandler.helmRelease !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_emit_prod = await interpret(fluxProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
-      const _pool = Object.assign({}, (afterResult_emit_prod?.output ?? {}));
-      const _fixtureInput = { kustomization: "ks-prod-001", chart: "nginx-ingress", values: "{\"replicas\": 3}" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(fluxProviderHandler.helmRelease({ ..._fixtureInput }), storage);
+      const result = await interpret(fluxProviderHandler.helmRelease({ kustomization: afterResult_emit_prod?.output?.["kustomization"], chart: "nginx-ingress", values: "{\"replicas\": 3}" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -250,12 +240,7 @@ describe('FluxProvider functional handler', () => {
       if (typeof fluxProviderHandler.helmRelease !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_emit_prod = await interpret(fluxProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
-      const _pool = Object.assign({}, (afterResult_emit_prod?.output ?? {}));
-      const _fixtureInput = { kustomization: "ks-prod-001", chart: "", values: "{}" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(fluxProviderHandler.helmRelease({ ..._fixtureInput }), storage);
+      const result = await interpret(fluxProviderHandler.helmRelease({ kustomization: afterResult_emit_prod?.output?.["kustomization"], chart: "", values: "{}" }), storage);
       expect(result.variant).not.toBe('ok');
     });
 

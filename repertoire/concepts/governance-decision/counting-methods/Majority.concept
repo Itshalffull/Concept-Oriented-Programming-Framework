@@ -42,8 +42,8 @@ concept Majority [MJ] {
         No choice meets the threshold.
       }
 
-      fixture clear_winner { config: "maj-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" } after standard_majority
-      fixture no_ballots { config: "maj-001", ballots: "[]", weights: "{}" } after standard_majority -> error
+      fixture clear_winner { config: $standard_majority.id, ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" } after standard_majority
+      fixture no_ballots { config: $standard_majority.id, ballots: "[]", weights: "{}" } after standard_majority -> error
     }
   }
 

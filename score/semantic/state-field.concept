@@ -51,7 +51,7 @@ concept StateField [L] {
         across target languages. Results as serialized JSON array
         of { language, symbol, file }.
       }
-      fixture trace_generated_valid { field: "state-field-1" } after register_title
+      fixture trace_generated_valid { field: $register_title.field } after register_title
       fixture trace_generated_missing { field: "nonexistent-id" } after register_title
     }
 
@@ -61,7 +61,7 @@ concept StateField [L] {
         database columns, document keys, etc. Results as
         serialized JSON array of { adapter, columnOrKey }.
       }
-      fixture trace_storage_valid { field: "state-field-1" } after register_title
+      fixture trace_storage_valid { field: $register_title.field } after register_title
       fixture trace_storage_missing { field: "nonexistent-id" } after register_title
     }
 
@@ -72,9 +72,9 @@ concept StateField [L] {
       -> notfound() {
         Field does not exist.
       }
-      fixture get_valid { field: "state-field-1" } after register_title
+      fixture get_valid { field: $register_title.field } after register_title
       fixture get_missing { field: "nonexistent-id" } -> error
-      fixture get_field { field: "state-field-1" } after register_title
+      fixture get_field { field: $register_title.field } after register_title
     }
   }
 

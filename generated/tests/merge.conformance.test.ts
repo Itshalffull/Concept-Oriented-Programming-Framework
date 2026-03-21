@@ -189,7 +189,7 @@ describe('Merge functional handler', () => {
 
   describe('resolveConflict', () => {
     it('builds a valid StorageProgram', () => {
-      const program = mergeHandler.resolveConflict({ mergeId: "merge-1", conflictIndex: "0", resolution: "resolved line" });
+      const program = mergeHandler.resolveConflict({ mergeId: {"type":"ref","fixture":"register_three_way","field":"strategy"}, conflictIndex: "0", resolution: "resolved line" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -197,21 +197,21 @@ describe('Merge functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = mergeHandler.resolveConflict({ mergeId: "merge-1", conflictIndex: "0", resolution: "resolved line" });
+      const program = mergeHandler.resolveConflict({ mergeId: {"type":"ref","fixture":"register_three_way","field":"strategy"}, conflictIndex: "0", resolution: "resolved line" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = mergeHandler.resolveConflict({ mergeId: "merge-1", conflictIndex: "0", resolution: "resolved line" });
+      const program = mergeHandler.resolveConflict({ mergeId: {"type":"ref","fixture":"register_three_way","field":"strategy"}, conflictIndex: "0", resolution: "resolved line" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = mergeHandler.resolveConflict({ mergeId: "merge-1", conflictIndex: "0", resolution: "resolved line" });
+      const program = mergeHandler.resolveConflict({ mergeId: {"type":"ref","fixture":"register_three_way","field":"strategy"}, conflictIndex: "0", resolution: "resolved line" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -224,7 +224,7 @@ describe('Merge functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = mergeHandler.resolveConflict({ mergeId: "merge-1", conflictIndex: "0", resolution: "resolved line" });
+      const program = mergeHandler.resolveConflict({ mergeId: {"type":"ref","fixture":"register_three_way","field":"strategy"}, conflictIndex: "0", resolution: "resolved line" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -232,7 +232,7 @@ describe('Merge functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof mergeHandler.resolveConflict !== 'function') return;
-      const result = await interpret(mergeHandler.resolveConflict({ mergeId: "merge-1", conflictIndex: "0", resolution: "resolved line" }), storage);
+      const result = await interpret(mergeHandler.resolveConflict({ mergeId: {"type":"ref","fixture":"register_three_way","field":"strategy"}, conflictIndex: "0", resolution: "resolved line" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -243,12 +243,7 @@ describe('Merge functional handler', () => {
       if (typeof mergeHandler.resolveConflict !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_three_way = await interpret(mergeHandler.registerStrategy({ name: "three-way", contentTypes: ["text/plain"] }), storage);
-      const _pool = Object.assign({}, (afterResult_register_three_way?.output ?? {}));
-      const _fixtureInput = { mergeId: "merge-1", conflictIndex: "0", resolution: "resolved line" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(mergeHandler.resolveConflict({ ..._fixtureInput }), storage);
+      const result = await interpret(mergeHandler.resolveConflict({ mergeId: afterResult_register_three_way?.output?.["strategy"], conflictIndex: "0", resolution: "resolved line" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -263,7 +258,7 @@ describe('Merge functional handler', () => {
 
   describe('finalize', () => {
     it('builds a valid StorageProgram', () => {
-      const program = mergeHandler.finalize({ mergeId: "merge-1" });
+      const program = mergeHandler.finalize({ mergeId: {"type":"ref","fixture":"register_three_way","field":"strategy"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -271,21 +266,21 @@ describe('Merge functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = mergeHandler.finalize({ mergeId: "merge-1" });
+      const program = mergeHandler.finalize({ mergeId: {"type":"ref","fixture":"register_three_way","field":"strategy"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = mergeHandler.finalize({ mergeId: "merge-1" });
+      const program = mergeHandler.finalize({ mergeId: {"type":"ref","fixture":"register_three_way","field":"strategy"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = mergeHandler.finalize({ mergeId: "merge-1" });
+      const program = mergeHandler.finalize({ mergeId: {"type":"ref","fixture":"register_three_way","field":"strategy"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -298,7 +293,7 @@ describe('Merge functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = mergeHandler.finalize({ mergeId: "merge-1" });
+      const program = mergeHandler.finalize({ mergeId: {"type":"ref","fixture":"register_three_way","field":"strategy"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -306,7 +301,7 @@ describe('Merge functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof mergeHandler.finalize !== 'function') return;
-      const result = await interpret(mergeHandler.finalize({ mergeId: "merge-1" }), storage);
+      const result = await interpret(mergeHandler.finalize({ mergeId: {"type":"ref","fixture":"register_three_way","field":"strategy"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -317,12 +312,7 @@ describe('Merge functional handler', () => {
       if (typeof mergeHandler.finalize !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_three_way = await interpret(mergeHandler.registerStrategy({ name: "three-way", contentTypes: ["text/plain"] }), storage);
-      const _pool = Object.assign({}, (afterResult_register_three_way?.output ?? {}));
-      const _fixtureInput = { mergeId: "merge-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(mergeHandler.finalize({ ..._fixtureInput }), storage);
+      const result = await interpret(mergeHandler.finalize({ mergeId: afterResult_register_three_way?.output?.["strategy"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

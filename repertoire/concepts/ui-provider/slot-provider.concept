@@ -46,7 +46,7 @@ concept SlotProvider [P] {
       -> duplicate(message: String) {
         Slot name already defined on this host.
       }
-      fixture define_header { provider: "sp-1", name: "header", host: "dialog", position: "before-title" } after init_default
+      fixture define_header { provider: $init_default.provider, name: "header", host: "dialog", position: "before-title" } after init_default
       fixture define_empty_name { provider: "sp-1", name: "", host: "dialog", position: "top" } -> error
     }
 
@@ -56,7 +56,7 @@ concept SlotProvider [P] {
         fill or the default fallback.
       }
       -> notfound(message: String) { Slot not defined. }
-      fixture fill_slot { provider: "sp-1", slot: "slot-1", content: "<h1>Title</h1>" } after init_default
+      fixture fill_slot { provider: $init_default.provider, slot: $init_default.provider, content: "<h1>Title</h1>" } after init_default
       fixture fill_missing_slot { provider: "sp-1", slot: "nonexistent", content: "x" } -> error
     }
 
@@ -65,7 +65,7 @@ concept SlotProvider [P] {
         Remove injected content, revert slot to its fallback.
       }
       -> notfound(message: String) { Slot not defined. }
-      fixture clear_slot { provider: "sp-1", slot: "slot-1" } after init_default
+      fixture clear_slot { provider: $init_default.provider, slot: $init_default.provider } after init_default
       fixture clear_missing_slot { provider: "sp-1", slot: "nonexistent" } -> error
     }
 

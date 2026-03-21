@@ -102,7 +102,7 @@ describe('DesignTokenProvider functional handler', () => {
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = designTokenProviderHandler.resolve({ provider: "dtp-1", tokenName: "color.primary" });
+      const program = designTokenProviderHandler.resolve({ provider: {"type":"ref","fixture":"init_with_theme","field":"provider"}, tokenName: "color.primary" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('DesignTokenProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = designTokenProviderHandler.resolve({ provider: "dtp-1", tokenName: "color.primary" });
+      const program = designTokenProviderHandler.resolve({ provider: {"type":"ref","fixture":"init_with_theme","field":"provider"}, tokenName: "color.primary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = designTokenProviderHandler.resolve({ provider: "dtp-1", tokenName: "color.primary" });
+      const program = designTokenProviderHandler.resolve({ provider: {"type":"ref","fixture":"init_with_theme","field":"provider"}, tokenName: "color.primary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = designTokenProviderHandler.resolve({ provider: "dtp-1", tokenName: "color.primary" });
+      const program = designTokenProviderHandler.resolve({ provider: {"type":"ref","fixture":"init_with_theme","field":"provider"}, tokenName: "color.primary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('DesignTokenProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = designTokenProviderHandler.resolve({ provider: "dtp-1", tokenName: "color.primary" });
+      const program = designTokenProviderHandler.resolve({ provider: {"type":"ref","fixture":"init_with_theme","field":"provider"}, tokenName: "color.primary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('DesignTokenProvider functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof designTokenProviderHandler.resolve !== 'function') return;
-      const result = await interpret(designTokenProviderHandler.resolve({ provider: "dtp-1", tokenName: "color.primary" }), storage);
+      const result = await interpret(designTokenProviderHandler.resolve({ provider: {"type":"ref","fixture":"init_with_theme","field":"provider"}, tokenName: "color.primary" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('DesignTokenProvider functional handler', () => {
       if (typeof designTokenProviderHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_init_with_theme = await interpret(designTokenProviderHandler.initialize({ config: "{\"theme\":\"light\"}" }), storage);
-      const _pool = Object.assign({}, (afterResult_init_with_theme?.output ?? {}));
-      const _fixtureInput = { provider: "dtp-1", tokenName: "color.primary" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(designTokenProviderHandler.resolve({ ..._fixtureInput }), storage);
+      const result = await interpret(designTokenProviderHandler.resolve({ provider: afterResult_init_with_theme?.output?.["provider"], tokenName: "color.primary" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,7 +171,7 @@ describe('DesignTokenProvider functional handler', () => {
 
   describe('switchTheme', () => {
     it('builds a valid StorageProgram', () => {
-      const program = designTokenProviderHandler.switchTheme({ provider: "dtp-1", theme: "dark" });
+      const program = designTokenProviderHandler.switchTheme({ provider: {"type":"ref","fixture":"init_with_theme","field":"provider"}, theme: "dark" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +179,21 @@ describe('DesignTokenProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = designTokenProviderHandler.switchTheme({ provider: "dtp-1", theme: "dark" });
+      const program = designTokenProviderHandler.switchTheme({ provider: {"type":"ref","fixture":"init_with_theme","field":"provider"}, theme: "dark" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = designTokenProviderHandler.switchTheme({ provider: "dtp-1", theme: "dark" });
+      const program = designTokenProviderHandler.switchTheme({ provider: {"type":"ref","fixture":"init_with_theme","field":"provider"}, theme: "dark" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = designTokenProviderHandler.switchTheme({ provider: "dtp-1", theme: "dark" });
+      const program = designTokenProviderHandler.switchTheme({ provider: {"type":"ref","fixture":"init_with_theme","field":"provider"}, theme: "dark" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +206,7 @@ describe('DesignTokenProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = designTokenProviderHandler.switchTheme({ provider: "dtp-1", theme: "dark" });
+      const program = designTokenProviderHandler.switchTheme({ provider: {"type":"ref","fixture":"init_with_theme","field":"provider"}, theme: "dark" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,7 +214,7 @@ describe('DesignTokenProvider functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof designTokenProviderHandler.switchTheme !== 'function') return;
-      const result = await interpret(designTokenProviderHandler.switchTheme({ provider: "dtp-1", theme: "dark" }), storage);
+      const result = await interpret(designTokenProviderHandler.switchTheme({ provider: {"type":"ref","fixture":"init_with_theme","field":"provider"}, theme: "dark" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -230,12 +225,7 @@ describe('DesignTokenProvider functional handler', () => {
       if (typeof designTokenProviderHandler.switchTheme !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_init_with_theme = await interpret(designTokenProviderHandler.initialize({ config: "{\"theme\":\"light\"}" }), storage);
-      const _pool = Object.assign({}, (afterResult_init_with_theme?.output ?? {}));
-      const _fixtureInput = { provider: "dtp-1", theme: "dark" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(designTokenProviderHandler.switchTheme({ ..._fixtureInput }), storage);
+      const result = await interpret(designTokenProviderHandler.switchTheme({ provider: afterResult_init_with_theme?.output?.["provider"], theme: "dark" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -250,7 +240,7 @@ describe('DesignTokenProvider functional handler', () => {
 
   describe('getTokens', () => {
     it('builds a valid StorageProgram', () => {
-      const program = designTokenProviderHandler.getTokens({ provider: "dtp-1" });
+      const program = designTokenProviderHandler.getTokens({ provider: {"type":"ref","fixture":"init_with_theme","field":"provider"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -258,21 +248,21 @@ describe('DesignTokenProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = designTokenProviderHandler.getTokens({ provider: "dtp-1" });
+      const program = designTokenProviderHandler.getTokens({ provider: {"type":"ref","fixture":"init_with_theme","field":"provider"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = designTokenProviderHandler.getTokens({ provider: "dtp-1" });
+      const program = designTokenProviderHandler.getTokens({ provider: {"type":"ref","fixture":"init_with_theme","field":"provider"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = designTokenProviderHandler.getTokens({ provider: "dtp-1" });
+      const program = designTokenProviderHandler.getTokens({ provider: {"type":"ref","fixture":"init_with_theme","field":"provider"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -285,7 +275,7 @@ describe('DesignTokenProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = designTokenProviderHandler.getTokens({ provider: "dtp-1" });
+      const program = designTokenProviderHandler.getTokens({ provider: {"type":"ref","fixture":"init_with_theme","field":"provider"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -293,7 +283,7 @@ describe('DesignTokenProvider functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof designTokenProviderHandler.getTokens !== 'function') return;
-      const result = await interpret(designTokenProviderHandler.getTokens({ provider: "dtp-1" }), storage);
+      const result = await interpret(designTokenProviderHandler.getTokens({ provider: {"type":"ref","fixture":"init_with_theme","field":"provider"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -304,12 +294,7 @@ describe('DesignTokenProvider functional handler', () => {
       if (typeof designTokenProviderHandler.getTokens !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_init_with_theme = await interpret(designTokenProviderHandler.initialize({ config: "{\"theme\":\"light\"}" }), storage);
-      const _pool = Object.assign({}, (afterResult_init_with_theme?.output ?? {}));
-      const _fixtureInput = { provider: "dtp-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(designTokenProviderHandler.getTokens({ ..._fixtureInput }), storage);
+      const result = await interpret(designTokenProviderHandler.getTokens({ provider: afterResult_init_with_theme?.output?.["provider"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -330,7 +315,7 @@ describe('DesignTokenProvider functional handler', () => {
 
   describe('export', () => {
     it('builds a valid StorageProgram', () => {
-      const program = designTokenProviderHandler.export({ provider: "dtp-1", format: "css" });
+      const program = designTokenProviderHandler.export({ provider: {"type":"ref","fixture":"init_with_theme","field":"provider"}, format: "css" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -338,21 +323,21 @@ describe('DesignTokenProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = designTokenProviderHandler.export({ provider: "dtp-1", format: "css" });
+      const program = designTokenProviderHandler.export({ provider: {"type":"ref","fixture":"init_with_theme","field":"provider"}, format: "css" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = designTokenProviderHandler.export({ provider: "dtp-1", format: "css" });
+      const program = designTokenProviderHandler.export({ provider: {"type":"ref","fixture":"init_with_theme","field":"provider"}, format: "css" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = designTokenProviderHandler.export({ provider: "dtp-1", format: "css" });
+      const program = designTokenProviderHandler.export({ provider: {"type":"ref","fixture":"init_with_theme","field":"provider"}, format: "css" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -365,7 +350,7 @@ describe('DesignTokenProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = designTokenProviderHandler.export({ provider: "dtp-1", format: "css" });
+      const program = designTokenProviderHandler.export({ provider: {"type":"ref","fixture":"init_with_theme","field":"provider"}, format: "css" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -373,7 +358,7 @@ describe('DesignTokenProvider functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof designTokenProviderHandler.export !== 'function') return;
-      const result = await interpret(designTokenProviderHandler.export({ provider: "dtp-1", format: "css" }), storage);
+      const result = await interpret(designTokenProviderHandler.export({ provider: {"type":"ref","fixture":"init_with_theme","field":"provider"}, format: "css" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -384,12 +369,7 @@ describe('DesignTokenProvider functional handler', () => {
       if (typeof designTokenProviderHandler.export !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_init_with_theme = await interpret(designTokenProviderHandler.initialize({ config: "{\"theme\":\"light\"}" }), storage);
-      const _pool = Object.assign({}, (afterResult_init_with_theme?.output ?? {}));
-      const _fixtureInput = { provider: "dtp-1", format: "css" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(designTokenProviderHandler.export({ ..._fixtureInput }), storage);
+      const result = await interpret(designTokenProviderHandler.export({ provider: afterResult_init_with_theme?.output?.["provider"], format: "css" }), storage);
       expect(result.variant).toBe('ok');
     });
 

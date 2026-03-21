@@ -65,7 +65,7 @@ concept Authentication [U] {
         Token is expired, malformed, or has been revoked.
       }
 
-      fixture auth_valid_token { token: "tok-abc-123" } after register_local
+      fixture auth_valid_token { token: $register_local.user } after register_local
       fixture auth_invalid_token { token: "expired-or-revoked" } -> error
     }
 

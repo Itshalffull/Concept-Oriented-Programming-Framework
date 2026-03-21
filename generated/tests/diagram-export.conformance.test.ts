@@ -109,7 +109,7 @@ describe('DiagramExport functional handler', () => {
 
   describe('importDiagram', () => {
     it('builds a valid StorageProgram', () => {
-      const program = diagramExportHandler.importDiagram({ data: "{\"nodes\":[]}", format: "json", target_canvas: "canvas-5" });
+      const program = diagramExportHandler.importDiagram({ data: "{\"nodes\":[]}", format: "json", target_canvas: {"type":"ref","fixture":"export_svg","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -117,21 +117,21 @@ describe('DiagramExport functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = diagramExportHandler.importDiagram({ data: "{\"nodes\":[]}", format: "json", target_canvas: "canvas-5" });
+      const program = diagramExportHandler.importDiagram({ data: "{\"nodes\":[]}", format: "json", target_canvas: {"type":"ref","fixture":"export_svg","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = diagramExportHandler.importDiagram({ data: "{\"nodes\":[]}", format: "json", target_canvas: "canvas-5" });
+      const program = diagramExportHandler.importDiagram({ data: "{\"nodes\":[]}", format: "json", target_canvas: {"type":"ref","fixture":"export_svg","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = diagramExportHandler.importDiagram({ data: "{\"nodes\":[]}", format: "json", target_canvas: "canvas-5" });
+      const program = diagramExportHandler.importDiagram({ data: "{\"nodes\":[]}", format: "json", target_canvas: {"type":"ref","fixture":"export_svg","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -144,7 +144,7 @@ describe('DiagramExport functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = diagramExportHandler.importDiagram({ data: "{\"nodes\":[]}", format: "json", target_canvas: "canvas-5" });
+      const program = diagramExportHandler.importDiagram({ data: "{\"nodes\":[]}", format: "json", target_canvas: {"type":"ref","fixture":"export_svg","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -152,7 +152,7 @@ describe('DiagramExport functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof diagramExportHandler.importDiagram !== 'function') return;
-      const result = await interpret(diagramExportHandler.importDiagram({ data: "{\"nodes\":[]}", format: "json", target_canvas: "canvas-5" }), storage);
+      const result = await interpret(diagramExportHandler.importDiagram({ data: "{\"nodes\":[]}", format: "json", target_canvas: {"type":"ref","fixture":"export_svg","field":"id"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -163,12 +163,7 @@ describe('DiagramExport functional handler', () => {
       if (typeof diagramExportHandler.importDiagram !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_export_svg = await interpret(diagramExportHandler.export({ canvas_id: "canvas-1", format: "svg", options: {"width":"1920","height":"1080","embed_data":"true"} }), storage);
-      const _pool = Object.assign({}, (afterResult_export_svg?.output ?? {}));
-      const _fixtureInput = { data: "{\"nodes\":[]}", format: "json", target_canvas: "canvas-5" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(diagramExportHandler.importDiagram({ ..._fixtureInput }), storage);
+      const result = await interpret(diagramExportHandler.importDiagram({ data: "{\"nodes\":[]}", format: "json", target_canvas: afterResult_export_svg?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

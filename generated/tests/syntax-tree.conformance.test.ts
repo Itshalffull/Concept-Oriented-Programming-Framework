@@ -102,7 +102,7 @@ describe('SyntaxTree functional handler', () => {
 
   describe('reparse', () => {
     it('builds a valid StorageProgram', () => {
-      const program = syntaxTreeHandler.reparse({ tree: "tree-1", startByte: "10", oldEndByte: "20", newEndByte: "25", newText: "const x = 1;" });
+      const program = syntaxTreeHandler.reparse({ tree: {"type":"ref","fixture":"parse_ts_file","field":"tree"}, startByte: "10", oldEndByte: "20", newEndByte: "25", newText: "const x = 1;" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('SyntaxTree functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = syntaxTreeHandler.reparse({ tree: "tree-1", startByte: "10", oldEndByte: "20", newEndByte: "25", newText: "const x = 1;" });
+      const program = syntaxTreeHandler.reparse({ tree: {"type":"ref","fixture":"parse_ts_file","field":"tree"}, startByte: "10", oldEndByte: "20", newEndByte: "25", newText: "const x = 1;" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = syntaxTreeHandler.reparse({ tree: "tree-1", startByte: "10", oldEndByte: "20", newEndByte: "25", newText: "const x = 1;" });
+      const program = syntaxTreeHandler.reparse({ tree: {"type":"ref","fixture":"parse_ts_file","field":"tree"}, startByte: "10", oldEndByte: "20", newEndByte: "25", newText: "const x = 1;" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = syntaxTreeHandler.reparse({ tree: "tree-1", startByte: "10", oldEndByte: "20", newEndByte: "25", newText: "const x = 1;" });
+      const program = syntaxTreeHandler.reparse({ tree: {"type":"ref","fixture":"parse_ts_file","field":"tree"}, startByte: "10", oldEndByte: "20", newEndByte: "25", newText: "const x = 1;" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('SyntaxTree functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = syntaxTreeHandler.reparse({ tree: "tree-1", startByte: "10", oldEndByte: "20", newEndByte: "25", newText: "const x = 1;" });
+      const program = syntaxTreeHandler.reparse({ tree: {"type":"ref","fixture":"parse_ts_file","field":"tree"}, startByte: "10", oldEndByte: "20", newEndByte: "25", newText: "const x = 1;" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('SyntaxTree functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof syntaxTreeHandler.reparse !== 'function') return;
-      const result = await interpret(syntaxTreeHandler.reparse({ tree: "tree-1", startByte: "10", oldEndByte: "20", newEndByte: "25", newText: "const x = 1;" }), storage);
+      const result = await interpret(syntaxTreeHandler.reparse({ tree: {"type":"ref","fixture":"parse_ts_file","field":"tree"}, startByte: "10", oldEndByte: "20", newEndByte: "25", newText: "const x = 1;" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('SyntaxTree functional handler', () => {
       if (typeof syntaxTreeHandler.reparse !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_parse_ts_file = await interpret(syntaxTreeHandler.parse({ file: "src/app.ts", grammar: "typescript" }), storage);
-      const _pool = Object.assign({}, (afterResult_parse_ts_file?.output ?? {}));
-      const _fixtureInput = { tree: "tree-1", startByte: "10", oldEndByte: "20", newEndByte: "25", newText: "const x = 1;" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(syntaxTreeHandler.reparse({ ..._fixtureInput }), storage);
+      const result = await interpret(syntaxTreeHandler.reparse({ tree: afterResult_parse_ts_file?.output?.["tree"], startByte: "10", oldEndByte: "20", newEndByte: "25", newText: "const x = 1;" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,7 +171,7 @@ describe('SyntaxTree functional handler', () => {
 
   describe('query', () => {
     it('builds a valid StorageProgram', () => {
-      const program = syntaxTreeHandler.query({ tree: "tree-1", pattern: "(function_declaration) @fn" });
+      const program = syntaxTreeHandler.query({ tree: {"type":"ref","fixture":"parse_ts_file","field":"tree"}, pattern: "(function_declaration) @fn" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +179,21 @@ describe('SyntaxTree functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = syntaxTreeHandler.query({ tree: "tree-1", pattern: "(function_declaration) @fn" });
+      const program = syntaxTreeHandler.query({ tree: {"type":"ref","fixture":"parse_ts_file","field":"tree"}, pattern: "(function_declaration) @fn" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = syntaxTreeHandler.query({ tree: "tree-1", pattern: "(function_declaration) @fn" });
+      const program = syntaxTreeHandler.query({ tree: {"type":"ref","fixture":"parse_ts_file","field":"tree"}, pattern: "(function_declaration) @fn" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = syntaxTreeHandler.query({ tree: "tree-1", pattern: "(function_declaration) @fn" });
+      const program = syntaxTreeHandler.query({ tree: {"type":"ref","fixture":"parse_ts_file","field":"tree"}, pattern: "(function_declaration) @fn" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +206,7 @@ describe('SyntaxTree functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = syntaxTreeHandler.query({ tree: "tree-1", pattern: "(function_declaration) @fn" });
+      const program = syntaxTreeHandler.query({ tree: {"type":"ref","fixture":"parse_ts_file","field":"tree"}, pattern: "(function_declaration) @fn" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,7 +214,7 @@ describe('SyntaxTree functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof syntaxTreeHandler.query !== 'function') return;
-      const result = await interpret(syntaxTreeHandler.query({ tree: "tree-1", pattern: "(function_declaration) @fn" }), storage);
+      const result = await interpret(syntaxTreeHandler.query({ tree: {"type":"ref","fixture":"parse_ts_file","field":"tree"}, pattern: "(function_declaration) @fn" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -230,12 +225,7 @@ describe('SyntaxTree functional handler', () => {
       if (typeof syntaxTreeHandler.query !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_parse_ts_file = await interpret(syntaxTreeHandler.parse({ file: "src/app.ts", grammar: "typescript" }), storage);
-      const _pool = Object.assign({}, (afterResult_parse_ts_file?.output ?? {}));
-      const _fixtureInput = { tree: "tree-1", pattern: "(function_declaration) @fn" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(syntaxTreeHandler.query({ ..._fixtureInput }), storage);
+      const result = await interpret(syntaxTreeHandler.query({ tree: afterResult_parse_ts_file?.output?.["tree"], pattern: "(function_declaration) @fn" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -250,7 +240,7 @@ describe('SyntaxTree functional handler', () => {
 
   describe('nodeAt', () => {
     it('builds a valid StorageProgram', () => {
-      const program = syntaxTreeHandler.nodeAt({ tree: "tree-1", byteOffset: "42" });
+      const program = syntaxTreeHandler.nodeAt({ tree: {"type":"ref","fixture":"parse_ts_file","field":"tree"}, byteOffset: "42" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -258,21 +248,21 @@ describe('SyntaxTree functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = syntaxTreeHandler.nodeAt({ tree: "tree-1", byteOffset: "42" });
+      const program = syntaxTreeHandler.nodeAt({ tree: {"type":"ref","fixture":"parse_ts_file","field":"tree"}, byteOffset: "42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = syntaxTreeHandler.nodeAt({ tree: "tree-1", byteOffset: "42" });
+      const program = syntaxTreeHandler.nodeAt({ tree: {"type":"ref","fixture":"parse_ts_file","field":"tree"}, byteOffset: "42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = syntaxTreeHandler.nodeAt({ tree: "tree-1", byteOffset: "42" });
+      const program = syntaxTreeHandler.nodeAt({ tree: {"type":"ref","fixture":"parse_ts_file","field":"tree"}, byteOffset: "42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -285,7 +275,7 @@ describe('SyntaxTree functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = syntaxTreeHandler.nodeAt({ tree: "tree-1", byteOffset: "42" });
+      const program = syntaxTreeHandler.nodeAt({ tree: {"type":"ref","fixture":"parse_ts_file","field":"tree"}, byteOffset: "42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -293,7 +283,7 @@ describe('SyntaxTree functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof syntaxTreeHandler.nodeAt !== 'function') return;
-      const result = await interpret(syntaxTreeHandler.nodeAt({ tree: "tree-1", byteOffset: "42" }), storage);
+      const result = await interpret(syntaxTreeHandler.nodeAt({ tree: {"type":"ref","fixture":"parse_ts_file","field":"tree"}, byteOffset: "42" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -304,12 +294,7 @@ describe('SyntaxTree functional handler', () => {
       if (typeof syntaxTreeHandler.nodeAt !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_parse_ts_file = await interpret(syntaxTreeHandler.parse({ file: "src/app.ts", grammar: "typescript" }), storage);
-      const _pool = Object.assign({}, (afterResult_parse_ts_file?.output ?? {}));
-      const _fixtureInput = { tree: "tree-1", byteOffset: "42" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(syntaxTreeHandler.nodeAt({ ..._fixtureInput }), storage);
+      const result = await interpret(syntaxTreeHandler.nodeAt({ tree: afterResult_parse_ts_file?.output?.["tree"], byteOffset: "42" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -324,7 +309,7 @@ describe('SyntaxTree functional handler', () => {
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = syntaxTreeHandler.get({ tree: "tree-1" });
+      const program = syntaxTreeHandler.get({ tree: {"type":"ref","fixture":"parse_ts_file","field":"tree"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -332,21 +317,21 @@ describe('SyntaxTree functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = syntaxTreeHandler.get({ tree: "tree-1" });
+      const program = syntaxTreeHandler.get({ tree: {"type":"ref","fixture":"parse_ts_file","field":"tree"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = syntaxTreeHandler.get({ tree: "tree-1" });
+      const program = syntaxTreeHandler.get({ tree: {"type":"ref","fixture":"parse_ts_file","field":"tree"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = syntaxTreeHandler.get({ tree: "tree-1" });
+      const program = syntaxTreeHandler.get({ tree: {"type":"ref","fixture":"parse_ts_file","field":"tree"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -359,7 +344,7 @@ describe('SyntaxTree functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = syntaxTreeHandler.get({ tree: "tree-1" });
+      const program = syntaxTreeHandler.get({ tree: {"type":"ref","fixture":"parse_ts_file","field":"tree"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -367,7 +352,7 @@ describe('SyntaxTree functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof syntaxTreeHandler.get !== 'function') return;
-      const result = await interpret(syntaxTreeHandler.get({ tree: "tree-1" }), storage);
+      const result = await interpret(syntaxTreeHandler.get({ tree: {"type":"ref","fixture":"parse_ts_file","field":"tree"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -378,12 +363,7 @@ describe('SyntaxTree functional handler', () => {
       if (typeof syntaxTreeHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_parse_ts_file = await interpret(syntaxTreeHandler.parse({ file: "src/app.ts", grammar: "typescript" }), storage);
-      const _pool = Object.assign({}, (afterResult_parse_ts_file?.output ?? {}));
-      const _fixtureInput = { tree: "tree-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(syntaxTreeHandler.get({ ..._fixtureInput }), storage);
+      const result = await interpret(syntaxTreeHandler.get({ tree: afterResult_parse_ts_file?.output?.["tree"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

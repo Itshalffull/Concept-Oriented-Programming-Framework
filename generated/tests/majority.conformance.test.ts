@@ -109,7 +109,7 @@ describe('Majority functional handler', () => {
 
   describe('count', () => {
     it('builds a valid StorageProgram', () => {
-      const program = majorityCountHandler.count({ config: "maj-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" });
+      const program = majorityCountHandler.count({ config: {"type":"ref","fixture":"standard_majority","field":"id"}, ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -117,21 +117,21 @@ describe('Majority functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = majorityCountHandler.count({ config: "maj-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" });
+      const program = majorityCountHandler.count({ config: {"type":"ref","fixture":"standard_majority","field":"id"}, ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = majorityCountHandler.count({ config: "maj-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" });
+      const program = majorityCountHandler.count({ config: {"type":"ref","fixture":"standard_majority","field":"id"}, ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = majorityCountHandler.count({ config: "maj-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" });
+      const program = majorityCountHandler.count({ config: {"type":"ref","fixture":"standard_majority","field":"id"}, ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -144,7 +144,7 @@ describe('Majority functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = majorityCountHandler.count({ config: "maj-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" });
+      const program = majorityCountHandler.count({ config: {"type":"ref","fixture":"standard_majority","field":"id"}, ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -152,7 +152,7 @@ describe('Majority functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof majorityCountHandler.count !== 'function') return;
-      const result = await interpret(majorityCountHandler.count({ config: "maj-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" }), storage);
+      const result = await interpret(majorityCountHandler.count({ config: {"type":"ref","fixture":"standard_majority","field":"id"}, ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -163,12 +163,7 @@ describe('Majority functional handler', () => {
       if (typeof majorityCountHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_standard_majority = await interpret(majorityCountHandler.configure({ threshold: "0.5", binaryOnly: "true", tieBreaker: null }), storage);
-      const _pool = Object.assign({}, (afterResult_standard_majority?.output ?? {}));
-      const _fixtureInput = { config: "maj-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(majorityCountHandler.count({ ..._fixtureInput }), storage);
+      const result = await interpret(majorityCountHandler.count({ config: afterResult_standard_majority?.output?.["id"], ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,12 +171,7 @@ describe('Majority functional handler', () => {
       if (typeof majorityCountHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_standard_majority = await interpret(majorityCountHandler.configure({ threshold: "0.5", binaryOnly: "true", tieBreaker: null }), storage);
-      const _pool = Object.assign({}, (afterResult_standard_majority?.output ?? {}));
-      const _fixtureInput = { config: "maj-001", ballots: "[]", weights: "{}" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(majorityCountHandler.count({ ..._fixtureInput }), storage);
+      const result = await interpret(majorityCountHandler.count({ config: afterResult_standard_majority?.output?.["id"], ballots: "[]", weights: "{}" }), storage);
       expect(result.variant).not.toBe('ok');
     });
 

@@ -102,7 +102,7 @@ describe('MachineProvider functional handler', () => {
 
   describe('spawn', () => {
     it('builds a valid StorageProgram', () => {
-      const program = machineProviderHandler.spawn({ provider: "mp-1", widget: "dialog", context: "{}" });
+      const program = machineProviderHandler.spawn({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, widget: "dialog", context: "{}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('MachineProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = machineProviderHandler.spawn({ provider: "mp-1", widget: "dialog", context: "{}" });
+      const program = machineProviderHandler.spawn({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, widget: "dialog", context: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = machineProviderHandler.spawn({ provider: "mp-1", widget: "dialog", context: "{}" });
+      const program = machineProviderHandler.spawn({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, widget: "dialog", context: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = machineProviderHandler.spawn({ provider: "mp-1", widget: "dialog", context: "{}" });
+      const program = machineProviderHandler.spawn({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, widget: "dialog", context: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('MachineProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = machineProviderHandler.spawn({ provider: "mp-1", widget: "dialog", context: "{}" });
+      const program = machineProviderHandler.spawn({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, widget: "dialog", context: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('MachineProvider functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof machineProviderHandler.spawn !== 'function') return;
-      const result = await interpret(machineProviderHandler.spawn({ provider: "mp-1", widget: "dialog", context: "{}" }), storage);
+      const result = await interpret(machineProviderHandler.spawn({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, widget: "dialog", context: "{}" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('MachineProvider functional handler', () => {
       if (typeof machineProviderHandler.spawn !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_init_default = await interpret(machineProviderHandler.initialize({ config: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_init_default?.output ?? {}));
-      const _fixtureInput = { provider: "mp-1", widget: "dialog", context: "{}" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(machineProviderHandler.spawn({ ..._fixtureInput }), storage);
+      const result = await interpret(machineProviderHandler.spawn({ provider: afterResult_init_default?.output?.["provider"], widget: "dialog", context: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -169,12 +164,7 @@ describe('MachineProvider functional handler', () => {
       if (typeof machineProviderHandler.spawn !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_init_default = await interpret(machineProviderHandler.initialize({ config: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_init_default?.output ?? {}));
-      const _fixtureInput = { provider: "mp-1", widget: "", context: "{}" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(machineProviderHandler.spawn({ ..._fixtureInput }), storage);
+      const result = await interpret(machineProviderHandler.spawn({ provider: afterResult_init_default?.output?.["provider"], widget: "", context: "{}" }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -182,7 +172,7 @@ describe('MachineProvider functional handler', () => {
 
   describe('send', () => {
     it('builds a valid StorageProgram', () => {
-      const program = machineProviderHandler.send({ provider: "mp-1", machine: "machine-1", event: "OPEN" });
+      const program = machineProviderHandler.send({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, machine: {"type":"ref","fixture":"init_default","field":"provider"}, event: "OPEN" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -190,21 +180,21 @@ describe('MachineProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = machineProviderHandler.send({ provider: "mp-1", machine: "machine-1", event: "OPEN" });
+      const program = machineProviderHandler.send({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, machine: {"type":"ref","fixture":"init_default","field":"provider"}, event: "OPEN" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = machineProviderHandler.send({ provider: "mp-1", machine: "machine-1", event: "OPEN" });
+      const program = machineProviderHandler.send({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, machine: {"type":"ref","fixture":"init_default","field":"provider"}, event: "OPEN" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = machineProviderHandler.send({ provider: "mp-1", machine: "machine-1", event: "OPEN" });
+      const program = machineProviderHandler.send({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, machine: {"type":"ref","fixture":"init_default","field":"provider"}, event: "OPEN" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -217,7 +207,7 @@ describe('MachineProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = machineProviderHandler.send({ provider: "mp-1", machine: "machine-1", event: "OPEN" });
+      const program = machineProviderHandler.send({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, machine: {"type":"ref","fixture":"init_default","field":"provider"}, event: "OPEN" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -225,7 +215,7 @@ describe('MachineProvider functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof machineProviderHandler.send !== 'function') return;
-      const result = await interpret(machineProviderHandler.send({ provider: "mp-1", machine: "machine-1", event: "OPEN" }), storage);
+      const result = await interpret(machineProviderHandler.send({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, machine: {"type":"ref","fixture":"init_default","field":"provider"}, event: "OPEN" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -236,12 +226,7 @@ describe('MachineProvider functional handler', () => {
       if (typeof machineProviderHandler.send !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_init_default = await interpret(machineProviderHandler.initialize({ config: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_init_default?.output ?? {}));
-      const _fixtureInput = { provider: "mp-1", machine: "machine-1", event: "OPEN" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(machineProviderHandler.send({ ..._fixtureInput }), storage);
+      const result = await interpret(machineProviderHandler.send({ provider: afterResult_init_default?.output?.["provider"], machine: afterResult_init_default?.output?.["provider"], event: "OPEN" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -256,7 +241,7 @@ describe('MachineProvider functional handler', () => {
 
   describe('connect', () => {
     it('builds a valid StorageProgram', () => {
-      const program = machineProviderHandler.connect({ provider: "mp-1", machine: "machine-1" });
+      const program = machineProviderHandler.connect({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, machine: {"type":"ref","fixture":"init_default","field":"provider"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -264,21 +249,21 @@ describe('MachineProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = machineProviderHandler.connect({ provider: "mp-1", machine: "machine-1" });
+      const program = machineProviderHandler.connect({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, machine: {"type":"ref","fixture":"init_default","field":"provider"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = machineProviderHandler.connect({ provider: "mp-1", machine: "machine-1" });
+      const program = machineProviderHandler.connect({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, machine: {"type":"ref","fixture":"init_default","field":"provider"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = machineProviderHandler.connect({ provider: "mp-1", machine: "machine-1" });
+      const program = machineProviderHandler.connect({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, machine: {"type":"ref","fixture":"init_default","field":"provider"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -291,7 +276,7 @@ describe('MachineProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = machineProviderHandler.connect({ provider: "mp-1", machine: "machine-1" });
+      const program = machineProviderHandler.connect({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, machine: {"type":"ref","fixture":"init_default","field":"provider"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -299,7 +284,7 @@ describe('MachineProvider functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof machineProviderHandler.connect !== 'function') return;
-      const result = await interpret(machineProviderHandler.connect({ provider: "mp-1", machine: "machine-1" }), storage);
+      const result = await interpret(machineProviderHandler.connect({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, machine: {"type":"ref","fixture":"init_default","field":"provider"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -310,12 +295,7 @@ describe('MachineProvider functional handler', () => {
       if (typeof machineProviderHandler.connect !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_init_default = await interpret(machineProviderHandler.initialize({ config: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_init_default?.output ?? {}));
-      const _fixtureInput = { provider: "mp-1", machine: "machine-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(machineProviderHandler.connect({ ..._fixtureInput }), storage);
+      const result = await interpret(machineProviderHandler.connect({ provider: afterResult_init_default?.output?.["provider"], machine: afterResult_init_default?.output?.["provider"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -330,7 +310,7 @@ describe('MachineProvider functional handler', () => {
 
   describe('destroy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = machineProviderHandler.destroy({ provider: "mp-1", machine: "machine-1" });
+      const program = machineProviderHandler.destroy({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, machine: {"type":"ref","fixture":"init_default","field":"provider"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -338,21 +318,21 @@ describe('MachineProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = machineProviderHandler.destroy({ provider: "mp-1", machine: "machine-1" });
+      const program = machineProviderHandler.destroy({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, machine: {"type":"ref","fixture":"init_default","field":"provider"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = machineProviderHandler.destroy({ provider: "mp-1", machine: "machine-1" });
+      const program = machineProviderHandler.destroy({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, machine: {"type":"ref","fixture":"init_default","field":"provider"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = machineProviderHandler.destroy({ provider: "mp-1", machine: "machine-1" });
+      const program = machineProviderHandler.destroy({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, machine: {"type":"ref","fixture":"init_default","field":"provider"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -365,7 +345,7 @@ describe('MachineProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = machineProviderHandler.destroy({ provider: "mp-1", machine: "machine-1" });
+      const program = machineProviderHandler.destroy({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, machine: {"type":"ref","fixture":"init_default","field":"provider"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -373,7 +353,7 @@ describe('MachineProvider functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof machineProviderHandler.destroy !== 'function') return;
-      const result = await interpret(machineProviderHandler.destroy({ provider: "mp-1", machine: "machine-1" }), storage);
+      const result = await interpret(machineProviderHandler.destroy({ provider: {"type":"ref","fixture":"init_default","field":"provider"}, machine: {"type":"ref","fixture":"init_default","field":"provider"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -384,12 +364,7 @@ describe('MachineProvider functional handler', () => {
       if (typeof machineProviderHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_init_default = await interpret(machineProviderHandler.initialize({ config: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_init_default?.output ?? {}));
-      const _fixtureInput = { provider: "mp-1", machine: "machine-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(machineProviderHandler.destroy({ ..._fixtureInput }), storage);
+      const result = await interpret(machineProviderHandler.destroy({ provider: afterResult_init_default?.output?.["provider"], machine: afterResult_init_default?.output?.["provider"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -44,7 +44,7 @@ concept Enricher [E] {
         Item does not exist.
       }
 
-      fixture suggest_for_item { itemId: "item-1" } after enrich_auto_tag
+      fixture suggest_for_item { itemId: $enrich_auto_tag.enrichmentId } after enrich_auto_tag
       fixture suggest_missing { itemId: "item-missing" } -> notfound
     }
 
@@ -56,7 +56,7 @@ concept Enricher [E] {
         Enrichment does not exist.
       }
 
-      fixture accept_enrichment { itemId: "item-1", enrichmentId: "enr-1" } after enrich_auto_tag
+      fixture accept_enrichment { itemId: $enrich_auto_tag.enrichmentId, enrichmentId: $enrich_auto_tag.enrichmentId } after enrich_auto_tag
       fixture accept_missing { itemId: "item-1", enrichmentId: "enr-missing" } -> notfound
     }
 
@@ -68,7 +68,7 @@ concept Enricher [E] {
         Enrichment does not exist.
       }
 
-      fixture reject_enrichment { itemId: "item-1", enrichmentId: "enr-2" } after accept_enrichment
+      fixture reject_enrichment { itemId: $accept_enrichment.id, enrichmentId: $accept_enrichment.id } after accept_enrichment
       fixture reject_missing { itemId: "item-1", enrichmentId: "enr-missing" } -> notfound
     }
 

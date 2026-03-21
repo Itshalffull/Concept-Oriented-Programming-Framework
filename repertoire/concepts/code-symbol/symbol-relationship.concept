@@ -77,7 +77,7 @@ concept SymbolRelationship [R] {
         Relationship does not exist.
       }
 
-      fixture valid_get { relationship: "symbol-relationship-1" } after valid_add
+      fixture valid_get { relationship: $valid_add.relationship } after valid_add
       fixture get_nonexistent { relationship: "symbol-relationship-999" } -> error
     }
   }

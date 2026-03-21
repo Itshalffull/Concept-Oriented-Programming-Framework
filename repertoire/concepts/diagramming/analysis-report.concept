@@ -69,7 +69,7 @@ concept AnalysisReport [R] {
         No report exists with the given identifier.
       }
 
-      fixture existing_report { report: "report-001" } after table_report
+      fixture existing_report { report: $table_report.report } after table_report
       fixture missing_report { report: "report-nonexistent" } -> notfound
     }
 
@@ -95,8 +95,8 @@ concept AnalysisReport [R] {
         The requested output format is not supported.
       }
 
-      fixture csv_export { report: "report-001", outputFormat: "csv" } after table_report
-      fixture markdown_export { report: "report-001", outputFormat: "markdown" } after table_report
+      fixture csv_export { report: $table_report.report, outputFormat: "csv" } after table_report
+      fixture markdown_export { report: $table_report.report, outputFormat: "markdown" } after table_report
       fixture unsupported { report: "report-001", outputFormat: "pdf" } -> unsupported_output
       fixture missing_report { report: "report-nonexistent", outputFormat: "json" } -> notfound
     }

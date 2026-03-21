@@ -176,7 +176,7 @@ describe('SybilResistance functional handler', () => {
 
   describe('resolveChallenge', () => {
     it('builds a valid StorageProgram', () => {
-      const program = sybilResistanceHandler.resolveChallenge({ challengeId: "challenge-1001", outcome: "upheld" });
+      const program = sybilResistanceHandler.resolveChallenge({ challengeId: {"type":"ref","fixture":"verify_alice","field":"id"}, outcome: "upheld" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +184,21 @@ describe('SybilResistance functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = sybilResistanceHandler.resolveChallenge({ challengeId: "challenge-1001", outcome: "upheld" });
+      const program = sybilResistanceHandler.resolveChallenge({ challengeId: {"type":"ref","fixture":"verify_alice","field":"id"}, outcome: "upheld" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = sybilResistanceHandler.resolveChallenge({ challengeId: "challenge-1001", outcome: "upheld" });
+      const program = sybilResistanceHandler.resolveChallenge({ challengeId: {"type":"ref","fixture":"verify_alice","field":"id"}, outcome: "upheld" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = sybilResistanceHandler.resolveChallenge({ challengeId: "challenge-1001", outcome: "upheld" });
+      const program = sybilResistanceHandler.resolveChallenge({ challengeId: {"type":"ref","fixture":"verify_alice","field":"id"}, outcome: "upheld" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +211,7 @@ describe('SybilResistance functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = sybilResistanceHandler.resolveChallenge({ challengeId: "challenge-1001", outcome: "upheld" });
+      const program = sybilResistanceHandler.resolveChallenge({ challengeId: {"type":"ref","fixture":"verify_alice","field":"id"}, outcome: "upheld" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,7 +219,7 @@ describe('SybilResistance functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof sybilResistanceHandler.resolveChallenge !== 'function') return;
-      const result = await interpret(sybilResistanceHandler.resolveChallenge({ challengeId: "challenge-1001", outcome: "upheld" }), storage);
+      const result = await interpret(sybilResistanceHandler.resolveChallenge({ challengeId: {"type":"ref","fixture":"verify_alice","field":"id"}, outcome: "upheld" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -230,12 +230,7 @@ describe('SybilResistance functional handler', () => {
       if (typeof sybilResistanceHandler.resolveChallenge !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_verify_alice = await interpret(sybilResistanceHandler.verify({ candidate: "alice", method: "biometric", evidence: "fingerprint-hash-abc123" }), storage);
-      const _pool = Object.assign({}, (afterResult_verify_alice?.output ?? {}));
-      const _fixtureInput = { challengeId: "challenge-1001", outcome: "upheld" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(sybilResistanceHandler.resolveChallenge({ ..._fixtureInput }), storage);
+      const result = await interpret(sybilResistanceHandler.resolveChallenge({ challengeId: afterResult_verify_alice?.output?.["id"], outcome: "upheld" }), storage);
       expect(result.variant).toBe('ok');
     });
 

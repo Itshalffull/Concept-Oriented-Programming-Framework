@@ -47,7 +47,7 @@ concept Typography [X] {
       }
       -> invalid(message: String) { Referenced scale or fontStack not found. }
 
-      fixture style_heading1 { typography: "X-9", name: "heading-1", config: "{ \"fontSize\": 32, \"fontWeight\": 700, \"lineHeight\": 1.2, \"letterSpacing\": \"-0.02em\" }" } after scale_major_third
+      fixture style_heading1 { typography: "X-9", name: $scale_major_third.typography, config: "{ \"fontSize\": 32, \"fontWeight\": 700, \"lineHeight\": 1.2, \"letterSpacing\": \"-0.02em\" }" } after scale_major_third
       fixture style_body { typography: "X-10", name: "body", config: "{ \"fontSize\": 16, \"fontWeight\": 400, \"lineHeight\": 1.5 }" } after scale_major_third
       fixture style_invalid_json { typography: "X-11", name: "broken", config: "not-json" } -> invalid
       fixture style_missing_fontSize { typography: "X-12", name: "incomplete", config: "{ \"fontWeight\": 400 }" } after scale_major_third -> invalid

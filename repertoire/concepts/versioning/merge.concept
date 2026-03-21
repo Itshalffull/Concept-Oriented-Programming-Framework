@@ -73,7 +73,7 @@ concept Merge [C] {
         This conflict was already resolved.
       }
 
-      fixture resolve_first { mergeId: "merge-1", conflictIndex: 0, resolution: "resolved line" } after register_three_way
+      fixture resolve_first { mergeId: $register_three_way.strategy, conflictIndex: 0, resolution: "resolved line" } after register_three_way
       fixture invalid_index { mergeId: "merge-1", conflictIndex: 999, resolution: "text" } -> error
     }
 
@@ -85,7 +85,7 @@ concept Merge [C] {
         Cannot finalize — conflicts remain.
       }
 
-      fixture finalize_resolved { mergeId: "merge-1" } after register_three_way
+      fixture finalize_resolved { mergeId: $register_three_way.strategy } after register_three_way
       fixture finalize_unresolved { mergeId: "merge-nonexistent" } -> error
     }
   }

@@ -102,7 +102,7 @@ describe('StakeWeight functional handler', () => {
 
   describe('stake', () => {
     it('builds a valid StorageProgram', () => {
-      const program = stakeWeightHandler.stake({ config: "sw-cfg-001", staker: "alice", amount: "100.0" });
+      const program = stakeWeightHandler.stake({ config: {"type":"ref","fixture":"configure_gov","field":"id"}, staker: "alice", amount: "100.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('StakeWeight functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = stakeWeightHandler.stake({ config: "sw-cfg-001", staker: "alice", amount: "100.0" });
+      const program = stakeWeightHandler.stake({ config: {"type":"ref","fixture":"configure_gov","field":"id"}, staker: "alice", amount: "100.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = stakeWeightHandler.stake({ config: "sw-cfg-001", staker: "alice", amount: "100.0" });
+      const program = stakeWeightHandler.stake({ config: {"type":"ref","fixture":"configure_gov","field":"id"}, staker: "alice", amount: "100.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = stakeWeightHandler.stake({ config: "sw-cfg-001", staker: "alice", amount: "100.0" });
+      const program = stakeWeightHandler.stake({ config: {"type":"ref","fixture":"configure_gov","field":"id"}, staker: "alice", amount: "100.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('StakeWeight functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = stakeWeightHandler.stake({ config: "sw-cfg-001", staker: "alice", amount: "100.0" });
+      const program = stakeWeightHandler.stake({ config: {"type":"ref","fixture":"configure_gov","field":"id"}, staker: "alice", amount: "100.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('StakeWeight functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof stakeWeightHandler.stake !== 'function') return;
-      const result = await interpret(stakeWeightHandler.stake({ config: "sw-cfg-001", staker: "alice", amount: "100.0" }), storage);
+      const result = await interpret(stakeWeightHandler.stake({ config: {"type":"ref","fixture":"configure_gov","field":"id"}, staker: "alice", amount: "100.0" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('StakeWeight functional handler', () => {
       if (typeof stakeWeightHandler.stake !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_configure_gov = await interpret(stakeWeightHandler.configure({ token: "GOV", cooldownDays: "7.0" }), storage);
-      const _pool = Object.assign({}, (afterResult_configure_gov?.output ?? {}));
-      const _fixtureInput = { config: "sw-cfg-001", staker: "alice", amount: "100.0" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(stakeWeightHandler.stake({ ..._fixtureInput }), storage);
+      const result = await interpret(stakeWeightHandler.stake({ config: afterResult_configure_gov?.output?.["id"], staker: "alice", amount: "100.0" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,7 +171,7 @@ describe('StakeWeight functional handler', () => {
 
   describe('unstake', () => {
     it('builds a valid StorageProgram', () => {
-      const program = stakeWeightHandler.unstake({ stake: "stake-001" });
+      const program = stakeWeightHandler.unstake({ stake: {"type":"ref","fixture":"stake_hundred","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +179,21 @@ describe('StakeWeight functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = stakeWeightHandler.unstake({ stake: "stake-001" });
+      const program = stakeWeightHandler.unstake({ stake: {"type":"ref","fixture":"stake_hundred","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = stakeWeightHandler.unstake({ stake: "stake-001" });
+      const program = stakeWeightHandler.unstake({ stake: {"type":"ref","fixture":"stake_hundred","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = stakeWeightHandler.unstake({ stake: "stake-001" });
+      const program = stakeWeightHandler.unstake({ stake: {"type":"ref","fixture":"stake_hundred","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +206,7 @@ describe('StakeWeight functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = stakeWeightHandler.unstake({ stake: "stake-001" });
+      const program = stakeWeightHandler.unstake({ stake: {"type":"ref","fixture":"stake_hundred","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,7 +214,7 @@ describe('StakeWeight functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof stakeWeightHandler.unstake !== 'function') return;
-      const result = await interpret(stakeWeightHandler.unstake({ stake: "stake-001" }), storage);
+      const result = await interpret(stakeWeightHandler.unstake({ stake: {"type":"ref","fixture":"stake_hundred","field":"id"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -230,13 +225,8 @@ describe('StakeWeight functional handler', () => {
       if (typeof stakeWeightHandler.unstake !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_configure_gov = await interpret(stakeWeightHandler.configure({ token: "GOV", cooldownDays: "7.0" }), storage);
-      const afterResult_stake_hundred = await interpret(stakeWeightHandler.stake({ config: "sw-cfg-001", staker: "alice", amount: "100.0" }), storage);
-      const _pool = Object.assign({}, (afterResult_configure_gov?.output ?? {}), (afterResult_stake_hundred?.output ?? {}));
-      const _fixtureInput = { stake: "stake-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(stakeWeightHandler.unstake({ ..._fixtureInput }), storage);
+      const afterResult_stake_hundred = await interpret(stakeWeightHandler.stake({ config: {"type":"ref","fixture":"configure_gov","field":"id"}, staker: "alice", amount: "100.0" }), storage);
+      const result = await interpret(stakeWeightHandler.unstake({ stake: afterResult_stake_hundred?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -251,7 +241,7 @@ describe('StakeWeight functional handler', () => {
 
   describe('getWeight', () => {
     it('builds a valid StorageProgram', () => {
-      const program = stakeWeightHandler.getWeight({ config: "sw-cfg-001", participant: "alice" });
+      const program = stakeWeightHandler.getWeight({ config: {"type":"ref","fixture":"configure_gov","field":"id"}, participant: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -259,21 +249,21 @@ describe('StakeWeight functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = stakeWeightHandler.getWeight({ config: "sw-cfg-001", participant: "alice" });
+      const program = stakeWeightHandler.getWeight({ config: {"type":"ref","fixture":"configure_gov","field":"id"}, participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = stakeWeightHandler.getWeight({ config: "sw-cfg-001", participant: "alice" });
+      const program = stakeWeightHandler.getWeight({ config: {"type":"ref","fixture":"configure_gov","field":"id"}, participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = stakeWeightHandler.getWeight({ config: "sw-cfg-001", participant: "alice" });
+      const program = stakeWeightHandler.getWeight({ config: {"type":"ref","fixture":"configure_gov","field":"id"}, participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -286,7 +276,7 @@ describe('StakeWeight functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = stakeWeightHandler.getWeight({ config: "sw-cfg-001", participant: "alice" });
+      const program = stakeWeightHandler.getWeight({ config: {"type":"ref","fixture":"configure_gov","field":"id"}, participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -294,7 +284,7 @@ describe('StakeWeight functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof stakeWeightHandler.getWeight !== 'function') return;
-      const result = await interpret(stakeWeightHandler.getWeight({ config: "sw-cfg-001", participant: "alice" }), storage);
+      const result = await interpret(stakeWeightHandler.getWeight({ config: {"type":"ref","fixture":"configure_gov","field":"id"}, participant: "alice" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -305,12 +295,7 @@ describe('StakeWeight functional handler', () => {
       if (typeof stakeWeightHandler.getWeight !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_configure_gov = await interpret(stakeWeightHandler.configure({ token: "GOV", cooldownDays: "7.0" }), storage);
-      const _pool = Object.assign({}, (afterResult_configure_gov?.output ?? {}));
-      const _fixtureInput = { config: "sw-cfg-001", participant: "alice" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(stakeWeightHandler.getWeight({ ..._fixtureInput }), storage);
+      const result = await interpret(stakeWeightHandler.getWeight({ config: afterResult_configure_gov?.output?.["id"], participant: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });
 

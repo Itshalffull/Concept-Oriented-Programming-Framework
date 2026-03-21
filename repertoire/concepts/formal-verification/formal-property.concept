@@ -55,7 +55,7 @@ concept FormalProperty [P] {
         Property does not exist.
       }
 
-      fixture valid_prove { id: "fp-001", evidence_ref: "ev-abc" } after valid_define
+      fixture valid_prove { id: $valid_define.property, evidence_ref: "ev-abc" } after valid_define
       fixture prove_missing { id: "nonexistent", evidence_ref: "ev-abc" } -> notfound
     }
 
@@ -67,7 +67,7 @@ concept FormalProperty [P] {
         Property does not exist.
       }
 
-      fixture valid_refute { id: "fp-001", evidence_ref: "ev-counter" } after valid_define
+      fixture valid_refute { id: $valid_define.property, evidence_ref: "ev-counter" } after valid_define
       fixture refute_missing { id: "nonexistent", evidence_ref: "ev-counter" } -> notfound
     }
 
@@ -79,7 +79,7 @@ concept FormalProperty [P] {
         Property does not exist.
       }
 
-      fixture valid_check { id: "fp-001", solver: "z3" } after valid_define
+      fixture valid_check { id: $valid_define.property, solver: "z3" } after valid_define
       fixture check_missing { id: "nonexistent", solver: "z3" } -> notfound
     }
 
@@ -93,8 +93,8 @@ concept FormalProperty [P] {
         Intent not found or has no principles.
       }
 
-      fixture valid_synthesize { target_symbol: "clef/concept/Password", intent_ref: "intent-001" } after valid_define
-      fixture synthesize_with_lang { target_symbol: "clef/concept/User", intent_ref: "intent-002", formal_language: "lean" } after valid_define
+      fixture valid_synthesize { target_symbol: "clef/concept/Password", intent_ref: $valid_define.property } after valid_define
+      fixture synthesize_with_lang { target_symbol: "clef/concept/User", intent_ref: $valid_define.property, formal_language: "lean" } after valid_define
     }
 
     action coverage(target_symbol: String) {
@@ -124,7 +124,7 @@ concept FormalProperty [P] {
         Property does not exist.
       }
 
-      fixture valid_invalidate { id: "fp-001" } after valid_define
+      fixture valid_invalidate { id: $valid_define.property } after valid_define
       fixture invalidate_missing { id: "nonexistent" } -> notfound
     }
   }

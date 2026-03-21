@@ -47,7 +47,7 @@ concept Metric [ME] {
         The update caused a threshold to be crossed.
       }
 
-      fixture update_revenue { metric: "metric-001", value: 150000.0, source: "finance-api" } after define_revenue
+      fixture update_revenue { metric: $define_revenue.id, value: 150000.0, source: "finance-api" } after define_revenue
       fixture update_nonexistent { metric: "metric-nonexistent", value: 0.0, source: "manual" } -> error
     }
 
@@ -56,7 +56,7 @@ concept Metric [ME] {
         A threshold is added or updated.
       }
 
-      fixture set_revenue_threshold { metric: "metric-001", threshold: 100000.0, alertOnBreach: true } after define_revenue
+      fixture set_revenue_threshold { metric: $define_revenue.id, threshold: 100000.0, alertOnBreach: true } after define_revenue
       fixture set_threshold_nonexistent { metric: "metric-nonexistent", threshold: 0.0, alertOnBreach: false } -> error
     }
 
@@ -68,7 +68,7 @@ concept Metric [ME] {
         One or more thresholds are breached.
       }
 
-      fixture evaluate_existing { metric: "metric-001" } after define_revenue
+      fixture evaluate_existing { metric: $define_revenue.id } after define_revenue
       fixture evaluate_nonexistent { metric: "metric-nonexistent" } -> error
     }
   }

@@ -48,8 +48,8 @@ concept Deliberation [DL] {
         The thread is closed and no longer accepts entries.
       }
 
-      fixture add_argument { thread: "thread-001", author: "alice", content: "The budget increase is justified by projected revenue growth", entryType: "argument", parentEntry: null } after open_budget_thread
-      fixture add_reply { thread: "thread-001", author: "bob", content: "Revenue projections may be overly optimistic", entryType: "response", parentEntry: "entry-001" } after open_budget_thread
+      fixture add_argument { thread: $open_budget_thread.id, author: "alice", content: "The budget increase is justified by projected revenue growth", entryType: "argument", parentEntry: null } after open_budget_thread
+      fixture add_reply { thread: $open_budget_thread.id, author: "bob", content: "Revenue projections may be overly optimistic", entryType: "response", parentEntry: $open_budget_thread.id } after open_budget_thread
       fixture add_to_missing_thread { thread: "thread-nonexistent", author: "alice", content: "Test", entryType: "argument", parentEntry: null } -> error
     }
 
@@ -59,7 +59,7 @@ concept Deliberation [DL] {
         "need_more_info", "block").
       }
 
-      fixture signal_agree { thread: "thread-001", signaller: "carol", signal: "agree" } after open_budget_thread
+      fixture signal_agree { thread: $open_budget_thread.id, signaller: "carol", signal: "agree" } after open_budget_thread
       fixture signal_block { thread: "thread-001", signaller: "dave", signal: "block" } -> error
     }
 
@@ -68,7 +68,7 @@ concept Deliberation [DL] {
         The thread is closed. A summary of signals is available.
       }
 
-      fixture close_open_thread { thread: "thread-001" } after open_budget_thread
+      fixture close_open_thread { thread: $open_budget_thread.id } after open_budget_thread
       fixture close_missing_thread { thread: "thread-nonexistent" } -> error
     }
   }

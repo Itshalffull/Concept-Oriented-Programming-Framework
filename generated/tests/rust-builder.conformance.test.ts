@@ -102,7 +102,7 @@ describe('RustBuilder functional handler', () => {
 
   describe('test', () => {
     it('builds a valid StorageProgram', () => {
-      const program = rustBuilderHandler.test({ build: "rsb-001", toolchainPath: "/usr/local/bin/rustc", testType: "unit" });
+      const program = rustBuilderHandler.test({ build: {"type":"ref","fixture":"build_crate","field":"build"}, toolchainPath: "/usr/local/bin/rustc", testType: "unit" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('RustBuilder functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = rustBuilderHandler.test({ build: "rsb-001", toolchainPath: "/usr/local/bin/rustc", testType: "unit" });
+      const program = rustBuilderHandler.test({ build: {"type":"ref","fixture":"build_crate","field":"build"}, toolchainPath: "/usr/local/bin/rustc", testType: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = rustBuilderHandler.test({ build: "rsb-001", toolchainPath: "/usr/local/bin/rustc", testType: "unit" });
+      const program = rustBuilderHandler.test({ build: {"type":"ref","fixture":"build_crate","field":"build"}, toolchainPath: "/usr/local/bin/rustc", testType: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = rustBuilderHandler.test({ build: "rsb-001", toolchainPath: "/usr/local/bin/rustc", testType: "unit" });
+      const program = rustBuilderHandler.test({ build: {"type":"ref","fixture":"build_crate","field":"build"}, toolchainPath: "/usr/local/bin/rustc", testType: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('RustBuilder functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = rustBuilderHandler.test({ build: "rsb-001", toolchainPath: "/usr/local/bin/rustc", testType: "unit" });
+      const program = rustBuilderHandler.test({ build: {"type":"ref","fixture":"build_crate","field":"build"}, toolchainPath: "/usr/local/bin/rustc", testType: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('RustBuilder functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof rustBuilderHandler.test !== 'function') return;
-      const result = await interpret(rustBuilderHandler.test({ build: "rsb-001", toolchainPath: "/usr/local/bin/rustc", testType: "unit" }), storage);
+      const result = await interpret(rustBuilderHandler.test({ build: {"type":"ref","fixture":"build_crate","field":"build"}, toolchainPath: "/usr/local/bin/rustc", testType: "unit" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('RustBuilder functional handler', () => {
       if (typeof rustBuilderHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_build_crate = await interpret(rustBuilderHandler.build({ source: "./src/lib.rs", toolchainPath: "/usr/local/bin/rustc", platform: "linux-x86_64", config: {"mode":"release"} }), storage);
-      const _pool = Object.assign({}, (afterResult_build_crate?.output ?? {}));
-      const _fixtureInput = { build: "rsb-001", toolchainPath: "/usr/local/bin/rustc", testType: "unit" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(rustBuilderHandler.test({ ..._fixtureInput }), storage);
+      const result = await interpret(rustBuilderHandler.test({ build: afterResult_build_crate?.output?.["build"], toolchainPath: "/usr/local/bin/rustc", testType: "unit" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,7 +171,7 @@ describe('RustBuilder functional handler', () => {
 
   describe('package', () => {
     it('builds a valid StorageProgram', () => {
-      const program = rustBuilderHandler.package({ build: "rsb-001", format: "binary" });
+      const program = rustBuilderHandler.package({ build: {"type":"ref","fixture":"build_crate","field":"build"}, format: "binary" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +179,21 @@ describe('RustBuilder functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = rustBuilderHandler.package({ build: "rsb-001", format: "binary" });
+      const program = rustBuilderHandler.package({ build: {"type":"ref","fixture":"build_crate","field":"build"}, format: "binary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = rustBuilderHandler.package({ build: "rsb-001", format: "binary" });
+      const program = rustBuilderHandler.package({ build: {"type":"ref","fixture":"build_crate","field":"build"}, format: "binary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = rustBuilderHandler.package({ build: "rsb-001", format: "binary" });
+      const program = rustBuilderHandler.package({ build: {"type":"ref","fixture":"build_crate","field":"build"}, format: "binary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +206,7 @@ describe('RustBuilder functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = rustBuilderHandler.package({ build: "rsb-001", format: "binary" });
+      const program = rustBuilderHandler.package({ build: {"type":"ref","fixture":"build_crate","field":"build"}, format: "binary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,7 +214,7 @@ describe('RustBuilder functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof rustBuilderHandler.package !== 'function') return;
-      const result = await interpret(rustBuilderHandler.package({ build: "rsb-001", format: "binary" }), storage);
+      const result = await interpret(rustBuilderHandler.package({ build: {"type":"ref","fixture":"build_crate","field":"build"}, format: "binary" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -230,12 +225,7 @@ describe('RustBuilder functional handler', () => {
       if (typeof rustBuilderHandler.package !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_build_crate = await interpret(rustBuilderHandler.build({ source: "./src/lib.rs", toolchainPath: "/usr/local/bin/rustc", platform: "linux-x86_64", config: {"mode":"release"} }), storage);
-      const _pool = Object.assign({}, (afterResult_build_crate?.output ?? {}));
-      const _fixtureInput = { build: "rsb-001", format: "binary" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(rustBuilderHandler.package({ ..._fixtureInput }), storage);
+      const result = await interpret(rustBuilderHandler.package({ build: afterResult_build_crate?.output?.["build"], format: "binary" }), storage);
       expect(result.variant).toBe('ok');
     });
 

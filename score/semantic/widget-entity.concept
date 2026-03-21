@@ -72,9 +72,9 @@ concept WidgetEntity [W] {
         Return all widgets that compose this widget.
         Results as serialized JSON array.
       }
-      fixture composing_valid { widget: "widget-entity-1" } after register_dialog
+      fixture composing_valid { widget: $register_dialog.entity } after register_dialog
       fixture composing_missing { widget: "nonexistent-id" } after register_dialog
-      fixture find_composing { widget: "widget-entity-1" } after register_dialog
+      fixture find_composing { widget: $register_dialog.entity } after register_dialog
       fixture find_composing_missing { widget: "nonexistent" } after register_dialog
     }
 
@@ -83,9 +83,9 @@ concept WidgetEntity [W] {
         Return all widgets this widget composes.
         Results as serialized JSON array.
       }
-      fixture composed_valid { widget: "widget-entity-1" } after register_dialog
+      fixture composed_valid { widget: $register_dialog.entity } after register_dialog
       fixture composed_missing { widget: "nonexistent-id" } after register_dialog
-      fixture find_composed { widget: "widget-entity-1" } after register_dialog
+      fixture find_composed { widget: $register_dialog.entity } after register_dialog
       fixture find_composed_missing { widget: "nonexistent" } after register_dialog
     }
 
@@ -94,7 +94,7 @@ concept WidgetEntity [W] {
         Return all generated framework components for this widget.
         Results as serialized JSON array of { framework, file }.
       }
-      fixture generated_valid { widget: "widget-entity-1" } after register_dialog
+      fixture generated_valid { widget: $register_dialog.entity } after register_dialog
       fixture generated_missing { widget: "nonexistent-id" } after register_dialog
     }
 
@@ -107,9 +107,9 @@ concept WidgetEntity [W] {
         Accessibility declaration is incomplete. Missing items
         as serialized JSON array.
       }
-      fixture audit_valid { widget: "widget-entity-1" } after register_dialog
+      fixture audit_valid { widget: $register_dialog.entity } after register_dialog
       fixture audit_missing { widget: "nonexistent-id" } -> error
-      fixture audit_widget { widget: "widget-entity-1" } after register_dialog
+      fixture audit_widget { widget: $register_dialog.entity } after register_dialog
     }
 
     action traceToConcept(widget: W) {
@@ -121,7 +121,7 @@ concept WidgetEntity [W] {
       -> noConceptBinding() {
         This widget has no bindings to any concept.
       }
-      fixture trace_valid { widget: "widget-entity-1" } after register_dialog
+      fixture trace_valid { widget: $register_dialog.entity } after register_dialog
       fixture trace_missing { widget: "nonexistent-id" } -> error
     }
   }

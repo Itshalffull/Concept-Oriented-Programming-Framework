@@ -66,7 +66,7 @@ concept ContractTest [P] {
         Consumer artifact couldn't be loaded or started.
       }
 
-      fixture verify_rust_ts { contract: "ctr-pwd-001", producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" } after generate_password
+      fixture verify_rust_ts { contract: $generate_password.contract, producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" } after generate_password
       fixture verify_no_producer { contract: "ctr-pwd-001", producerArtifact: "", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" } -> producerUnavailable
       fixture verify_no_consumer { contract: "ctr-pwd-001", producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: "", consumerLanguage: "typescript" } -> consumerUnavailable
     }

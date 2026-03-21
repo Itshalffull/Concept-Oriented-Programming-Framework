@@ -28,7 +28,7 @@ concept Backlink [B] {
         converted into formal links, useful for suggesting new connections.
       }
 
-      fixture valid_mentions { entity: "doc-1" } after valid_backlinks
+      fixture valid_mentions { entity: $valid_backlinks.sources } after valid_backlinks
       fixture no_mentions { entity: "orphaned-doc" } after valid_backlinks
     }
 

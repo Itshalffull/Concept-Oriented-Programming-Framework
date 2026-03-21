@@ -102,7 +102,7 @@ describe('ProofOfPersonhood functional handler', () => {
 
   describe('confirmVerification', () => {
     it('builds a valid StorageProgram', () => {
-      const program = proofOfPersonhoodHandler.confirmVerification({ verification: "pop-1001" });
+      const program = proofOfPersonhoodHandler.confirmVerification({ verification: {"type":"ref","fixture":"request_biometric","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('ProofOfPersonhood functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = proofOfPersonhoodHandler.confirmVerification({ verification: "pop-1001" });
+      const program = proofOfPersonhoodHandler.confirmVerification({ verification: {"type":"ref","fixture":"request_biometric","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = proofOfPersonhoodHandler.confirmVerification({ verification: "pop-1001" });
+      const program = proofOfPersonhoodHandler.confirmVerification({ verification: {"type":"ref","fixture":"request_biometric","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = proofOfPersonhoodHandler.confirmVerification({ verification: "pop-1001" });
+      const program = proofOfPersonhoodHandler.confirmVerification({ verification: {"type":"ref","fixture":"request_biometric","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('ProofOfPersonhood functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = proofOfPersonhoodHandler.confirmVerification({ verification: "pop-1001" });
+      const program = proofOfPersonhoodHandler.confirmVerification({ verification: {"type":"ref","fixture":"request_biometric","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('ProofOfPersonhood functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof proofOfPersonhoodHandler.confirmVerification !== 'function') return;
-      const result = await interpret(proofOfPersonhoodHandler.confirmVerification({ verification: "pop-1001" }), storage);
+      const result = await interpret(proofOfPersonhoodHandler.confirmVerification({ verification: {"type":"ref","fixture":"request_biometric","field":"id"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('ProofOfPersonhood functional handler', () => {
       if (typeof proofOfPersonhoodHandler.confirmVerification !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_request_biometric = await interpret(proofOfPersonhoodHandler.requestVerification({ candidate: "alice", method: "Biometric", expiryDays: "365" }), storage);
-      const _pool = Object.assign({}, (afterResult_request_biometric?.output ?? {}));
-      const _fixtureInput = { verification: "pop-1001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(proofOfPersonhoodHandler.confirmVerification({ ..._fixtureInput }), storage);
+      const result = await interpret(proofOfPersonhoodHandler.confirmVerification({ verification: afterResult_request_biometric?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,7 +171,7 @@ describe('ProofOfPersonhood functional handler', () => {
 
   describe('rejectVerification', () => {
     it('builds a valid StorageProgram', () => {
-      const program = proofOfPersonhoodHandler.rejectVerification({ verification: "pop-1001", reason: "Fraudulent proof submission" });
+      const program = proofOfPersonhoodHandler.rejectVerification({ verification: {"type":"ref","fixture":"request_biometric","field":"id"}, reason: "Fraudulent proof submission" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +179,21 @@ describe('ProofOfPersonhood functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = proofOfPersonhoodHandler.rejectVerification({ verification: "pop-1001", reason: "Fraudulent proof submission" });
+      const program = proofOfPersonhoodHandler.rejectVerification({ verification: {"type":"ref","fixture":"request_biometric","field":"id"}, reason: "Fraudulent proof submission" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = proofOfPersonhoodHandler.rejectVerification({ verification: "pop-1001", reason: "Fraudulent proof submission" });
+      const program = proofOfPersonhoodHandler.rejectVerification({ verification: {"type":"ref","fixture":"request_biometric","field":"id"}, reason: "Fraudulent proof submission" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = proofOfPersonhoodHandler.rejectVerification({ verification: "pop-1001", reason: "Fraudulent proof submission" });
+      const program = proofOfPersonhoodHandler.rejectVerification({ verification: {"type":"ref","fixture":"request_biometric","field":"id"}, reason: "Fraudulent proof submission" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +206,7 @@ describe('ProofOfPersonhood functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = proofOfPersonhoodHandler.rejectVerification({ verification: "pop-1001", reason: "Fraudulent proof submission" });
+      const program = proofOfPersonhoodHandler.rejectVerification({ verification: {"type":"ref","fixture":"request_biometric","field":"id"}, reason: "Fraudulent proof submission" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,7 +214,7 @@ describe('ProofOfPersonhood functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof proofOfPersonhoodHandler.rejectVerification !== 'function') return;
-      const result = await interpret(proofOfPersonhoodHandler.rejectVerification({ verification: "pop-1001", reason: "Fraudulent proof submission" }), storage);
+      const result = await interpret(proofOfPersonhoodHandler.rejectVerification({ verification: {"type":"ref","fixture":"request_biometric","field":"id"}, reason: "Fraudulent proof submission" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -230,12 +225,7 @@ describe('ProofOfPersonhood functional handler', () => {
       if (typeof proofOfPersonhoodHandler.rejectVerification !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_request_biometric = await interpret(proofOfPersonhoodHandler.requestVerification({ candidate: "alice", method: "Biometric", expiryDays: "365" }), storage);
-      const _pool = Object.assign({}, (afterResult_request_biometric?.output ?? {}));
-      const _fixtureInput = { verification: "pop-1001", reason: "Fraudulent proof submission" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(proofOfPersonhoodHandler.rejectVerification({ ..._fixtureInput }), storage);
+      const result = await interpret(proofOfPersonhoodHandler.rejectVerification({ verification: afterResult_request_biometric?.output?.["id"], reason: "Fraudulent proof submission" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -250,7 +240,7 @@ describe('ProofOfPersonhood functional handler', () => {
 
   describe('checkStatus', () => {
     it('builds a valid StorageProgram', () => {
-      const program = proofOfPersonhoodHandler.checkStatus({ verification: "pop-1001" });
+      const program = proofOfPersonhoodHandler.checkStatus({ verification: {"type":"ref","fixture":"request_biometric","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -258,21 +248,21 @@ describe('ProofOfPersonhood functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = proofOfPersonhoodHandler.checkStatus({ verification: "pop-1001" });
+      const program = proofOfPersonhoodHandler.checkStatus({ verification: {"type":"ref","fixture":"request_biometric","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = proofOfPersonhoodHandler.checkStatus({ verification: "pop-1001" });
+      const program = proofOfPersonhoodHandler.checkStatus({ verification: {"type":"ref","fixture":"request_biometric","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = proofOfPersonhoodHandler.checkStatus({ verification: "pop-1001" });
+      const program = proofOfPersonhoodHandler.checkStatus({ verification: {"type":"ref","fixture":"request_biometric","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -285,7 +275,7 @@ describe('ProofOfPersonhood functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = proofOfPersonhoodHandler.checkStatus({ verification: "pop-1001" });
+      const program = proofOfPersonhoodHandler.checkStatus({ verification: {"type":"ref","fixture":"request_biometric","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -293,7 +283,7 @@ describe('ProofOfPersonhood functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof proofOfPersonhoodHandler.checkStatus !== 'function') return;
-      const result = await interpret(proofOfPersonhoodHandler.checkStatus({ verification: "pop-1001" }), storage);
+      const result = await interpret(proofOfPersonhoodHandler.checkStatus({ verification: {"type":"ref","fixture":"request_biometric","field":"id"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -304,12 +294,7 @@ describe('ProofOfPersonhood functional handler', () => {
       if (typeof proofOfPersonhoodHandler.checkStatus !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_request_biometric = await interpret(proofOfPersonhoodHandler.requestVerification({ candidate: "alice", method: "Biometric", expiryDays: "365" }), storage);
-      const _pool = Object.assign({}, (afterResult_request_biometric?.output ?? {}));
-      const _fixtureInput = { verification: "pop-1001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(proofOfPersonhoodHandler.checkStatus({ ..._fixtureInput }), storage);
+      const result = await interpret(proofOfPersonhoodHandler.checkStatus({ verification: afterResult_request_biometric?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

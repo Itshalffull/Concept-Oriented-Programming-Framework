@@ -52,7 +52,7 @@ describe('FeatureFlag imperative handler', () => {
   describe('disable', () => {
     it('produces a result', async () => {
       if (typeof featureFlagHandler.disable !== 'function') return;
-      const result = await featureFlagHandler.disable({ flag: "flag-1" }, storage);
+      const result = await featureFlagHandler.disable({ flag: {"type":"ref","fixture":"enable_existing_flag","field":"id"} }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -63,12 +63,7 @@ describe('FeatureFlag imperative handler', () => {
       if (typeof featureFlagHandler.disable !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_enable_existing_flag = await featureFlagHandler.enable({ flag: "flag-1" }, storage);
-      const _pool = Object.assign({}, (afterResult_enable_existing_flag?.output ?? {}));
-      const _fixtureInput = { flag: "flag-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await featureFlagHandler.disable({ ..._fixtureInput }, storage);
+      const result = await featureFlagHandler.disable({ flag: afterResult_enable_existing_flag?.output?.["id"] }, storage);
       expect(result.variant).toBe('ok');
     });
 

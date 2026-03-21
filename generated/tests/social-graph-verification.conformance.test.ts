@@ -102,7 +102,7 @@ describe('SocialGraphVerification functional handler', () => {
 
   describe('addVouch', () => {
     it('builds a valid StorageProgram', () => {
-      const program = socialGraphVerificationHandler.addVouch({ config: "sg-cfg-1", voucher: "alice", candidate: "bob" });
+      const program = socialGraphVerificationHandler.addVouch({ config: {"type":"ref","fixture":"configure_default","field":"id"}, voucher: "alice", candidate: "bob" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('SocialGraphVerification functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = socialGraphVerificationHandler.addVouch({ config: "sg-cfg-1", voucher: "alice", candidate: "bob" });
+      const program = socialGraphVerificationHandler.addVouch({ config: {"type":"ref","fixture":"configure_default","field":"id"}, voucher: "alice", candidate: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = socialGraphVerificationHandler.addVouch({ config: "sg-cfg-1", voucher: "alice", candidate: "bob" });
+      const program = socialGraphVerificationHandler.addVouch({ config: {"type":"ref","fixture":"configure_default","field":"id"}, voucher: "alice", candidate: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = socialGraphVerificationHandler.addVouch({ config: "sg-cfg-1", voucher: "alice", candidate: "bob" });
+      const program = socialGraphVerificationHandler.addVouch({ config: {"type":"ref","fixture":"configure_default","field":"id"}, voucher: "alice", candidate: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('SocialGraphVerification functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = socialGraphVerificationHandler.addVouch({ config: "sg-cfg-1", voucher: "alice", candidate: "bob" });
+      const program = socialGraphVerificationHandler.addVouch({ config: {"type":"ref","fixture":"configure_default","field":"id"}, voucher: "alice", candidate: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('SocialGraphVerification functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof socialGraphVerificationHandler.addVouch !== 'function') return;
-      const result = await interpret(socialGraphVerificationHandler.addVouch({ config: "sg-cfg-1", voucher: "alice", candidate: "bob" }), storage);
+      const result = await interpret(socialGraphVerificationHandler.addVouch({ config: {"type":"ref","fixture":"configure_default","field":"id"}, voucher: "alice", candidate: "bob" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('SocialGraphVerification functional handler', () => {
       if (typeof socialGraphVerificationHandler.addVouch !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_configure_default = await interpret(socialGraphVerificationHandler.configure({ minimumVouchers: "3", trustAlgorithm: "count" }), storage);
-      const _pool = Object.assign({}, (afterResult_configure_default?.output ?? {}));
-      const _fixtureInput = { config: "sg-cfg-1", voucher: "alice", candidate: "bob" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(socialGraphVerificationHandler.addVouch({ ..._fixtureInput }), storage);
+      const result = await interpret(socialGraphVerificationHandler.addVouch({ config: afterResult_configure_default?.output?.["id"], voucher: "alice", candidate: "bob" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,7 +171,7 @@ describe('SocialGraphVerification functional handler', () => {
 
   describe('revokeVouch', () => {
     it('builds a valid StorageProgram', () => {
-      const program = socialGraphVerificationHandler.revokeVouch({ config: "sg-cfg-1", voucher: "alice", candidate: "bob" });
+      const program = socialGraphVerificationHandler.revokeVouch({ config: {"type":"ref","fixture":"configure_default","field":"id"}, voucher: "alice", candidate: "bob" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +179,21 @@ describe('SocialGraphVerification functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = socialGraphVerificationHandler.revokeVouch({ config: "sg-cfg-1", voucher: "alice", candidate: "bob" });
+      const program = socialGraphVerificationHandler.revokeVouch({ config: {"type":"ref","fixture":"configure_default","field":"id"}, voucher: "alice", candidate: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = socialGraphVerificationHandler.revokeVouch({ config: "sg-cfg-1", voucher: "alice", candidate: "bob" });
+      const program = socialGraphVerificationHandler.revokeVouch({ config: {"type":"ref","fixture":"configure_default","field":"id"}, voucher: "alice", candidate: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = socialGraphVerificationHandler.revokeVouch({ config: "sg-cfg-1", voucher: "alice", candidate: "bob" });
+      const program = socialGraphVerificationHandler.revokeVouch({ config: {"type":"ref","fixture":"configure_default","field":"id"}, voucher: "alice", candidate: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +206,7 @@ describe('SocialGraphVerification functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = socialGraphVerificationHandler.revokeVouch({ config: "sg-cfg-1", voucher: "alice", candidate: "bob" });
+      const program = socialGraphVerificationHandler.revokeVouch({ config: {"type":"ref","fixture":"configure_default","field":"id"}, voucher: "alice", candidate: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,7 +214,7 @@ describe('SocialGraphVerification functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof socialGraphVerificationHandler.revokeVouch !== 'function') return;
-      const result = await interpret(socialGraphVerificationHandler.revokeVouch({ config: "sg-cfg-1", voucher: "alice", candidate: "bob" }), storage);
+      const result = await interpret(socialGraphVerificationHandler.revokeVouch({ config: {"type":"ref","fixture":"configure_default","field":"id"}, voucher: "alice", candidate: "bob" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -230,12 +225,7 @@ describe('SocialGraphVerification functional handler', () => {
       if (typeof socialGraphVerificationHandler.revokeVouch !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_configure_default = await interpret(socialGraphVerificationHandler.configure({ minimumVouchers: "3", trustAlgorithm: "count" }), storage);
-      const _pool = Object.assign({}, (afterResult_configure_default?.output ?? {}));
-      const _fixtureInput = { config: "sg-cfg-1", voucher: "alice", candidate: "bob" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(socialGraphVerificationHandler.revokeVouch({ ..._fixtureInput }), storage);
+      const result = await interpret(socialGraphVerificationHandler.revokeVouch({ config: afterResult_configure_default?.output?.["id"], voucher: "alice", candidate: "bob" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -250,7 +240,7 @@ describe('SocialGraphVerification functional handler', () => {
 
   describe('verify', () => {
     it('builds a valid StorageProgram', () => {
-      const program = socialGraphVerificationHandler.verify({ config: "sg-cfg-1", candidate: "bob" });
+      const program = socialGraphVerificationHandler.verify({ config: {"type":"ref","fixture":"configure_default","field":"id"}, candidate: "bob" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -258,21 +248,21 @@ describe('SocialGraphVerification functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = socialGraphVerificationHandler.verify({ config: "sg-cfg-1", candidate: "bob" });
+      const program = socialGraphVerificationHandler.verify({ config: {"type":"ref","fixture":"configure_default","field":"id"}, candidate: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = socialGraphVerificationHandler.verify({ config: "sg-cfg-1", candidate: "bob" });
+      const program = socialGraphVerificationHandler.verify({ config: {"type":"ref","fixture":"configure_default","field":"id"}, candidate: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = socialGraphVerificationHandler.verify({ config: "sg-cfg-1", candidate: "bob" });
+      const program = socialGraphVerificationHandler.verify({ config: {"type":"ref","fixture":"configure_default","field":"id"}, candidate: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -285,7 +275,7 @@ describe('SocialGraphVerification functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = socialGraphVerificationHandler.verify({ config: "sg-cfg-1", candidate: "bob" });
+      const program = socialGraphVerificationHandler.verify({ config: {"type":"ref","fixture":"configure_default","field":"id"}, candidate: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -293,7 +283,7 @@ describe('SocialGraphVerification functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof socialGraphVerificationHandler.verify !== 'function') return;
-      const result = await interpret(socialGraphVerificationHandler.verify({ config: "sg-cfg-1", candidate: "bob" }), storage);
+      const result = await interpret(socialGraphVerificationHandler.verify({ config: {"type":"ref","fixture":"configure_default","field":"id"}, candidate: "bob" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -304,12 +294,7 @@ describe('SocialGraphVerification functional handler', () => {
       if (typeof socialGraphVerificationHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_configure_default = await interpret(socialGraphVerificationHandler.configure({ minimumVouchers: "3", trustAlgorithm: "count" }), storage);
-      const _pool = Object.assign({}, (afterResult_configure_default?.output ?? {}));
-      const _fixtureInput = { config: "sg-cfg-1", candidate: "bob" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(socialGraphVerificationHandler.verify({ ..._fixtureInput }), storage);
+      const result = await interpret(socialGraphVerificationHandler.verify({ config: afterResult_configure_default?.output?.["id"], candidate: "bob" }), storage);
       expect(result.variant).toBe('ok');
     });
 

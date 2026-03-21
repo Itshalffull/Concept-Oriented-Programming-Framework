@@ -46,7 +46,7 @@ concept SyncedContent [S] {
         The reference does not exist.
       }
 
-      fixture delete_ref { ref: "ref-1" } after create_ref
+      fixture delete_ref { ref: $create_ref.id } after create_ref
       fixture delete_missing { ref: "ref-missing" } -> notfound
     }
 

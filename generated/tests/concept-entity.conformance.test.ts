@@ -324,7 +324,7 @@ describe('ConceptEntity functional handler', () => {
 
   describe('generatedArtifacts', () => {
     it('builds a valid StorageProgram', () => {
-      const program = conceptEntityHandler.generatedArtifacts({ entity: "concept-entity-1" });
+      const program = conceptEntityHandler.generatedArtifacts({ entity: {"type":"ref","fixture":"register_article","field":"entity"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -332,21 +332,21 @@ describe('ConceptEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = conceptEntityHandler.generatedArtifacts({ entity: "concept-entity-1" });
+      const program = conceptEntityHandler.generatedArtifacts({ entity: {"type":"ref","fixture":"register_article","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = conceptEntityHandler.generatedArtifacts({ entity: "concept-entity-1" });
+      const program = conceptEntityHandler.generatedArtifacts({ entity: {"type":"ref","fixture":"register_article","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = conceptEntityHandler.generatedArtifacts({ entity: "concept-entity-1" });
+      const program = conceptEntityHandler.generatedArtifacts({ entity: {"type":"ref","fixture":"register_article","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -359,7 +359,7 @@ describe('ConceptEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = conceptEntityHandler.generatedArtifacts({ entity: "concept-entity-1" });
+      const program = conceptEntityHandler.generatedArtifacts({ entity: {"type":"ref","fixture":"register_article","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -367,7 +367,7 @@ describe('ConceptEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof conceptEntityHandler.generatedArtifacts !== 'function') return;
-      const result = await interpret(conceptEntityHandler.generatedArtifacts({ entity: "concept-entity-1" }), storage);
+      const result = await interpret(conceptEntityHandler.generatedArtifacts({ entity: {"type":"ref","fixture":"register_article","field":"entity"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -378,12 +378,7 @@ describe('ConceptEntity functional handler', () => {
       if (typeof conceptEntityHandler.generatedArtifacts !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_article = await interpret(conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_article?.output ?? {}));
-      const _fixtureInput = { entity: "concept-entity-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(conceptEntityHandler.generatedArtifacts({ ..._fixtureInput }), storage);
+      const result = await interpret(conceptEntityHandler.generatedArtifacts({ entity: afterResult_register_article?.output?.["entity"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -398,7 +393,7 @@ describe('ConceptEntity functional handler', () => {
 
   describe('participatingSyncs', () => {
     it('builds a valid StorageProgram', () => {
-      const program = conceptEntityHandler.participatingSyncs({ entity: "concept-entity-1" });
+      const program = conceptEntityHandler.participatingSyncs({ entity: {"type":"ref","fixture":"register_article","field":"entity"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -406,21 +401,21 @@ describe('ConceptEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = conceptEntityHandler.participatingSyncs({ entity: "concept-entity-1" });
+      const program = conceptEntityHandler.participatingSyncs({ entity: {"type":"ref","fixture":"register_article","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = conceptEntityHandler.participatingSyncs({ entity: "concept-entity-1" });
+      const program = conceptEntityHandler.participatingSyncs({ entity: {"type":"ref","fixture":"register_article","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = conceptEntityHandler.participatingSyncs({ entity: "concept-entity-1" });
+      const program = conceptEntityHandler.participatingSyncs({ entity: {"type":"ref","fixture":"register_article","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -433,7 +428,7 @@ describe('ConceptEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = conceptEntityHandler.participatingSyncs({ entity: "concept-entity-1" });
+      const program = conceptEntityHandler.participatingSyncs({ entity: {"type":"ref","fixture":"register_article","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -441,7 +436,7 @@ describe('ConceptEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof conceptEntityHandler.participatingSyncs !== 'function') return;
-      const result = await interpret(conceptEntityHandler.participatingSyncs({ entity: "concept-entity-1" }), storage);
+      const result = await interpret(conceptEntityHandler.participatingSyncs({ entity: {"type":"ref","fixture":"register_article","field":"entity"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -452,12 +447,7 @@ describe('ConceptEntity functional handler', () => {
       if (typeof conceptEntityHandler.participatingSyncs !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_article = await interpret(conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_article?.output ?? {}));
-      const _fixtureInput = { entity: "concept-entity-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(conceptEntityHandler.participatingSyncs({ ..._fixtureInput }), storage);
+      const result = await interpret(conceptEntityHandler.participatingSyncs({ entity: afterResult_register_article?.output?.["entity"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -472,7 +462,7 @@ describe('ConceptEntity functional handler', () => {
 
   describe('checkCompatibility', () => {
     it('builds a valid StorageProgram', () => {
-      const program = conceptEntityHandler.checkCompatibility({ a: "concept-entity-1", b: "concept-entity-2" });
+      const program = conceptEntityHandler.checkCompatibility({ a: {"type":"ref","fixture":"register_article","field":"entity"}, b: {"type":"ref","fixture":"register_article","field":"entity"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -480,21 +470,21 @@ describe('ConceptEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = conceptEntityHandler.checkCompatibility({ a: "concept-entity-1", b: "concept-entity-2" });
+      const program = conceptEntityHandler.checkCompatibility({ a: {"type":"ref","fixture":"register_article","field":"entity"}, b: {"type":"ref","fixture":"register_article","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = conceptEntityHandler.checkCompatibility({ a: "concept-entity-1", b: "concept-entity-2" });
+      const program = conceptEntityHandler.checkCompatibility({ a: {"type":"ref","fixture":"register_article","field":"entity"}, b: {"type":"ref","fixture":"register_article","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = conceptEntityHandler.checkCompatibility({ a: "concept-entity-1", b: "concept-entity-2" });
+      const program = conceptEntityHandler.checkCompatibility({ a: {"type":"ref","fixture":"register_article","field":"entity"}, b: {"type":"ref","fixture":"register_article","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -507,7 +497,7 @@ describe('ConceptEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = conceptEntityHandler.checkCompatibility({ a: "concept-entity-1", b: "concept-entity-2" });
+      const program = conceptEntityHandler.checkCompatibility({ a: {"type":"ref","fixture":"register_article","field":"entity"}, b: {"type":"ref","fixture":"register_article","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -515,7 +505,7 @@ describe('ConceptEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof conceptEntityHandler.checkCompatibility !== 'function') return;
-      const result = await interpret(conceptEntityHandler.checkCompatibility({ a: "concept-entity-1", b: "concept-entity-2" }), storage);
+      const result = await interpret(conceptEntityHandler.checkCompatibility({ a: {"type":"ref","fixture":"register_article","field":"entity"}, b: {"type":"ref","fixture":"register_article","field":"entity"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -526,12 +516,7 @@ describe('ConceptEntity functional handler', () => {
       if (typeof conceptEntityHandler.checkCompatibility !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_article = await interpret(conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_article?.output ?? {}));
-      const _fixtureInput = { a: "concept-entity-1", b: "concept-entity-2" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(conceptEntityHandler.checkCompatibility({ ..._fixtureInput }), storage);
+      const result = await interpret(conceptEntityHandler.checkCompatibility({ a: afterResult_register_article?.output?.["entity"], b: afterResult_register_article?.output?.["entity"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

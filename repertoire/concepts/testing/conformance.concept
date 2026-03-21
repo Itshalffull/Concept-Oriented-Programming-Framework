@@ -70,8 +70,8 @@ concept Conformance [C] {
         requirement. Recorded, not treated as failure.
       }
 
-      fixture verify_ts { suite: "csuite-pwd-001", language: "typescript", artifactLocation: ".clef-artifacts/ts/password" } after generate_password
-      fixture verify_rust { suite: "csuite-pwd-001", language: "rust", artifactLocation: ".clef-artifacts/rust/password" } after generate_password
+      fixture verify_ts { suite: $generate_password.suite, language: "typescript", artifactLocation: ".clef-artifacts/ts/password" } after generate_password
+      fixture verify_rust { suite: $generate_password.suite, language: "rust", artifactLocation: ".clef-artifacts/rust/password" } after generate_password
       fixture verify_missing_suite { suite: "csuite-nonexistent", language: "typescript", artifactLocation: ".clef-artifacts/ts/password" } -> failure
     }
 
@@ -83,8 +83,8 @@ concept Conformance [C] {
         uses a different assertion shape.
       }
 
-      fixture deviation_solidity { concept: "password", language: "solidity", requirement: "req-password-003", reason: "Solidity cannot express Option<T> natively" } after generate_password
-      fixture deviation_swift { concept: "auth", language: "swift", requirement: "req-auth-002", reason: "Swift throws instead of returning error variant" } after generate_password
+      fixture deviation_solidity { concept: "password", language: "solidity", requirement: $generate_password.suite, reason: "Solidity cannot express Option<T> natively" } after generate_password
+      fixture deviation_swift { concept: "auth", language: "swift", requirement: $generate_password.suite, reason: "Swift throws instead of returning error variant" } after generate_password
     }
 
     action matrix(concepts: option list String) {

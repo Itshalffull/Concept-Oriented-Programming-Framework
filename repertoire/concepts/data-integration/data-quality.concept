@@ -41,7 +41,7 @@ concept DataQuality [D] {
         Item held for review with violation details.
       }
 
-      fixture quarantine_item { itemId: "item-1", violations: "[{\"rule\":\"required\",\"field\":\"title\"}]" } after validate_ok
+      fixture quarantine_item { itemId: $validate_ok.valid, violations: "[{\"rule\":\"required\",\"field\":\"title\"}]" } after validate_ok
     }
 
     action release(itemId: String) {
@@ -52,7 +52,7 @@ concept DataQuality [D] {
         Item not in quarantine.
       }
 
-      fixture release_quarantined { itemId: "item-1" } after validate_ok
+      fixture release_quarantined { itemId: $validate_ok.valid } after validate_ok
       fixture release_missing { itemId: "item-missing" } -> notfound
     }
 

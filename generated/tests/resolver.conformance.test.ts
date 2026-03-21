@@ -102,7 +102,7 @@ describe('Resolver functional handler', () => {
 
   describe('update', () => {
     it('builds a valid StorageProgram', () => {
-      const program = resolverHandler.update({ resolution: "res-1", targets: ["auth"], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"true","allowed_updates":"minor"} });
+      const program = resolverHandler.update({ resolution: {"type":"ref","fixture":"resolve_simple","field":"resolution"}, targets: ["auth"], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"true","allowed_updates":"minor"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('Resolver functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = resolverHandler.update({ resolution: "res-1", targets: ["auth"], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"true","allowed_updates":"minor"} });
+      const program = resolverHandler.update({ resolution: {"type":"ref","fixture":"resolve_simple","field":"resolution"}, targets: ["auth"], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"true","allowed_updates":"minor"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = resolverHandler.update({ resolution: "res-1", targets: ["auth"], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"true","allowed_updates":"minor"} });
+      const program = resolverHandler.update({ resolution: {"type":"ref","fixture":"resolve_simple","field":"resolution"}, targets: ["auth"], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"true","allowed_updates":"minor"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = resolverHandler.update({ resolution: "res-1", targets: ["auth"], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"true","allowed_updates":"minor"} });
+      const program = resolverHandler.update({ resolution: {"type":"ref","fixture":"resolve_simple","field":"resolution"}, targets: ["auth"], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"true","allowed_updates":"minor"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('Resolver functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = resolverHandler.update({ resolution: "res-1", targets: ["auth"], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"true","allowed_updates":"minor"} });
+      const program = resolverHandler.update({ resolution: {"type":"ref","fixture":"resolve_simple","field":"resolution"}, targets: ["auth"], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"true","allowed_updates":"minor"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('Resolver functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof resolverHandler.update !== 'function') return;
-      const result = await interpret(resolverHandler.update({ resolution: "res-1", targets: ["auth"], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"true","allowed_updates":"minor"} }), storage);
+      const result = await interpret(resolverHandler.update({ resolution: {"type":"ref","fixture":"resolve_simple","field":"resolution"}, targets: ["auth"], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"true","allowed_updates":"minor"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('Resolver functional handler', () => {
       if (typeof resolverHandler.update !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_resolve_simple = await interpret(resolverHandler.resolve({ constraints: [{"module_id":"auth","version_range":"^1.0.0","edge_type":"normal","environment":"all","features":[]}], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"false","allowed_updates":"minor"}, locked_versions: null }), storage);
-      const _pool = Object.assign({}, (afterResult_resolve_simple?.output ?? {}));
-      const _fixtureInput = { resolution: "res-1", targets: ["auth"], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"true","allowed_updates":"minor"} } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(resolverHandler.update({ ..._fixtureInput }), storage);
+      const result = await interpret(resolverHandler.update({ resolution: afterResult_resolve_simple?.output?.["resolution"], targets: ["auth"], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"true","allowed_updates":"minor"} }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -182,7 +177,7 @@ describe('Resolver functional handler', () => {
 
   describe('explain', () => {
     it('builds a valid StorageProgram', () => {
-      const program = resolverHandler.explain({ resolution: "res-1", module_id: "auth" });
+      const program = resolverHandler.explain({ resolution: {"type":"ref","fixture":"resolve_simple","field":"resolution"}, module_id: "auth" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -190,21 +185,21 @@ describe('Resolver functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = resolverHandler.explain({ resolution: "res-1", module_id: "auth" });
+      const program = resolverHandler.explain({ resolution: {"type":"ref","fixture":"resolve_simple","field":"resolution"}, module_id: "auth" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = resolverHandler.explain({ resolution: "res-1", module_id: "auth" });
+      const program = resolverHandler.explain({ resolution: {"type":"ref","fixture":"resolve_simple","field":"resolution"}, module_id: "auth" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = resolverHandler.explain({ resolution: "res-1", module_id: "auth" });
+      const program = resolverHandler.explain({ resolution: {"type":"ref","fixture":"resolve_simple","field":"resolution"}, module_id: "auth" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -217,7 +212,7 @@ describe('Resolver functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = resolverHandler.explain({ resolution: "res-1", module_id: "auth" });
+      const program = resolverHandler.explain({ resolution: {"type":"ref","fixture":"resolve_simple","field":"resolution"}, module_id: "auth" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -225,7 +220,7 @@ describe('Resolver functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof resolverHandler.explain !== 'function') return;
-      const result = await interpret(resolverHandler.explain({ resolution: "res-1", module_id: "auth" }), storage);
+      const result = await interpret(resolverHandler.explain({ resolution: {"type":"ref","fixture":"resolve_simple","field":"resolution"}, module_id: "auth" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -236,12 +231,7 @@ describe('Resolver functional handler', () => {
       if (typeof resolverHandler.explain !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_resolve_simple = await interpret(resolverHandler.resolve({ constraints: [{"module_id":"auth","version_range":"^1.0.0","edge_type":"normal","environment":"all","features":[]}], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"false","allowed_updates":"minor"}, locked_versions: null }), storage);
-      const _pool = Object.assign({}, (afterResult_resolve_simple?.output ?? {}));
-      const _fixtureInput = { resolution: "res-1", module_id: "auth" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(resolverHandler.explain({ ..._fixtureInput }), storage);
+      const result = await interpret(resolverHandler.explain({ resolution: afterResult_resolve_simple?.output?.["resolution"], module_id: "auth" }), storage);
       expect(result.variant).toBe('ok');
     });
 

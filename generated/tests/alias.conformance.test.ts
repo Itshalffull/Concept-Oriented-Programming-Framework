@@ -95,12 +95,7 @@ describe('Alias functional handler', () => {
       if (typeof aliasHandler.addAlias !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_add = await interpret(aliasHandler.addAlias({ entity: "page-123", name: "homepage" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
-      const _fixtureInput = { entity: "page-456", name: "about-us" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(aliasHandler.addAlias({ ..._fixtureInput }), storage);
+      const result = await interpret(aliasHandler.addAlias({ entity: afterResult_valid_add?.output?.["entity"], name: "about-us" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -116,7 +111,7 @@ describe('Alias functional handler', () => {
 
   describe('removeAlias', () => {
     it('builds a valid StorageProgram', () => {
-      const program = aliasHandler.removeAlias({ entity: "page-123", name: "homepage" });
+      const program = aliasHandler.removeAlias({ entity: {"type":"ref","fixture":"valid_add","field":"entity"}, name: "homepage" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -124,21 +119,21 @@ describe('Alias functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = aliasHandler.removeAlias({ entity: "page-123", name: "homepage" });
+      const program = aliasHandler.removeAlias({ entity: {"type":"ref","fixture":"valid_add","field":"entity"}, name: "homepage" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = aliasHandler.removeAlias({ entity: "page-123", name: "homepage" });
+      const program = aliasHandler.removeAlias({ entity: {"type":"ref","fixture":"valid_add","field":"entity"}, name: "homepage" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = aliasHandler.removeAlias({ entity: "page-123", name: "homepage" });
+      const program = aliasHandler.removeAlias({ entity: {"type":"ref","fixture":"valid_add","field":"entity"}, name: "homepage" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -151,7 +146,7 @@ describe('Alias functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = aliasHandler.removeAlias({ entity: "page-123", name: "homepage" });
+      const program = aliasHandler.removeAlias({ entity: {"type":"ref","fixture":"valid_add","field":"entity"}, name: "homepage" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -159,7 +154,7 @@ describe('Alias functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof aliasHandler.removeAlias !== 'function') return;
-      const result = await interpret(aliasHandler.removeAlias({ entity: "page-123", name: "homepage" }), storage);
+      const result = await interpret(aliasHandler.removeAlias({ entity: {"type":"ref","fixture":"valid_add","field":"entity"}, name: "homepage" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -170,12 +165,7 @@ describe('Alias functional handler', () => {
       if (typeof aliasHandler.removeAlias !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_add = await interpret(aliasHandler.addAlias({ entity: "page-123", name: "homepage" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
-      const _fixtureInput = { entity: "page-123", name: "homepage" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(aliasHandler.removeAlias({ ..._fixtureInput }), storage);
+      const result = await interpret(aliasHandler.removeAlias({ entity: afterResult_valid_add?.output?.["entity"], name: "homepage" }), storage);
       expect(result.variant).toBe('ok');
     });
 

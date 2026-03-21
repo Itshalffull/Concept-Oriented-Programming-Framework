@@ -103,7 +103,7 @@ describe('ProcessAutomationProvider functional handler', () => {
 
   describe('execute', () => {
     it('builds a valid StorageProgram', () => {
-      const program = processAutomationProviderHandler.execute({ action_payload: "{\"input\":\"data\"}", process_spec_id: "spec-001" });
+      const program = processAutomationProviderHandler.execute({ action_payload: "{\"input\":\"data\"}", process_spec_id: {"type":"ref","fixture":"valid","field":"provider_name"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -111,21 +111,21 @@ describe('ProcessAutomationProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = processAutomationProviderHandler.execute({ action_payload: "{\"input\":\"data\"}", process_spec_id: "spec-001" });
+      const program = processAutomationProviderHandler.execute({ action_payload: "{\"input\":\"data\"}", process_spec_id: {"type":"ref","fixture":"valid","field":"provider_name"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = processAutomationProviderHandler.execute({ action_payload: "{\"input\":\"data\"}", process_spec_id: "spec-001" });
+      const program = processAutomationProviderHandler.execute({ action_payload: "{\"input\":\"data\"}", process_spec_id: {"type":"ref","fixture":"valid","field":"provider_name"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = processAutomationProviderHandler.execute({ action_payload: "{\"input\":\"data\"}", process_spec_id: "spec-001" });
+      const program = processAutomationProviderHandler.execute({ action_payload: "{\"input\":\"data\"}", process_spec_id: {"type":"ref","fixture":"valid","field":"provider_name"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -138,7 +138,7 @@ describe('ProcessAutomationProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = processAutomationProviderHandler.execute({ action_payload: "{\"input\":\"data\"}", process_spec_id: "spec-001" });
+      const program = processAutomationProviderHandler.execute({ action_payload: "{\"input\":\"data\"}", process_spec_id: {"type":"ref","fixture":"valid","field":"provider_name"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -146,7 +146,7 @@ describe('ProcessAutomationProvider functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof processAutomationProviderHandler.execute !== 'function') return;
-      const result = await interpret(processAutomationProviderHandler.execute({ action_payload: "{\"input\":\"data\"}", process_spec_id: "spec-001" }), storage);
+      const result = await interpret(processAutomationProviderHandler.execute({ action_payload: "{\"input\":\"data\"}", process_spec_id: {"type":"ref","fixture":"valid","field":"provider_name"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -157,12 +157,7 @@ describe('ProcessAutomationProvider functional handler', () => {
       if (typeof processAutomationProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid = await interpret(processAutomationProviderHandler.register({  }), storage);
-      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
-      const _fixtureInput = { action_payload: "{\"input\":\"data\"}", process_spec_id: "spec-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(processAutomationProviderHandler.execute({ ..._fixtureInput }), storage);
+      const result = await interpret(processAutomationProviderHandler.execute({ action_payload: "{\"input\":\"data\"}", process_spec_id: afterResult_valid?.output?.["provider_name"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

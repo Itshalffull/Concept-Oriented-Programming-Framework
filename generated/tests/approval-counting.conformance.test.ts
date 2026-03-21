@@ -109,7 +109,7 @@ describe('ApprovalCounting functional handler', () => {
 
   describe('count', () => {
     it('builds a valid StorageProgram', () => {
-      const program = approvalCountingHandler.count({ config: "approval-001", approvalSets: "[{\"voter\":\"alice\",\"approvals\":[\"A\",\"B\"]},{\"voter\":\"bob\",\"approvals\":[\"B\",\"C\"]}]", weights: "{}" });
+      const program = approvalCountingHandler.count({ config: {"type":"ref","fixture":"single_winner_unlimited","field":"id"}, approvalSets: "[{\"voter\":\"alice\",\"approvals\":[\"A\",\"B\"]},{\"voter\":\"bob\",\"approvals\":[\"B\",\"C\"]}]", weights: "{}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -117,21 +117,21 @@ describe('ApprovalCounting functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = approvalCountingHandler.count({ config: "approval-001", approvalSets: "[{\"voter\":\"alice\",\"approvals\":[\"A\",\"B\"]},{\"voter\":\"bob\",\"approvals\":[\"B\",\"C\"]}]", weights: "{}" });
+      const program = approvalCountingHandler.count({ config: {"type":"ref","fixture":"single_winner_unlimited","field":"id"}, approvalSets: "[{\"voter\":\"alice\",\"approvals\":[\"A\",\"B\"]},{\"voter\":\"bob\",\"approvals\":[\"B\",\"C\"]}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = approvalCountingHandler.count({ config: "approval-001", approvalSets: "[{\"voter\":\"alice\",\"approvals\":[\"A\",\"B\"]},{\"voter\":\"bob\",\"approvals\":[\"B\",\"C\"]}]", weights: "{}" });
+      const program = approvalCountingHandler.count({ config: {"type":"ref","fixture":"single_winner_unlimited","field":"id"}, approvalSets: "[{\"voter\":\"alice\",\"approvals\":[\"A\",\"B\"]},{\"voter\":\"bob\",\"approvals\":[\"B\",\"C\"]}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = approvalCountingHandler.count({ config: "approval-001", approvalSets: "[{\"voter\":\"alice\",\"approvals\":[\"A\",\"B\"]},{\"voter\":\"bob\",\"approvals\":[\"B\",\"C\"]}]", weights: "{}" });
+      const program = approvalCountingHandler.count({ config: {"type":"ref","fixture":"single_winner_unlimited","field":"id"}, approvalSets: "[{\"voter\":\"alice\",\"approvals\":[\"A\",\"B\"]},{\"voter\":\"bob\",\"approvals\":[\"B\",\"C\"]}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -144,7 +144,7 @@ describe('ApprovalCounting functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = approvalCountingHandler.count({ config: "approval-001", approvalSets: "[{\"voter\":\"alice\",\"approvals\":[\"A\",\"B\"]},{\"voter\":\"bob\",\"approvals\":[\"B\",\"C\"]}]", weights: "{}" });
+      const program = approvalCountingHandler.count({ config: {"type":"ref","fixture":"single_winner_unlimited","field":"id"}, approvalSets: "[{\"voter\":\"alice\",\"approvals\":[\"A\",\"B\"]},{\"voter\":\"bob\",\"approvals\":[\"B\",\"C\"]}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -152,7 +152,7 @@ describe('ApprovalCounting functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof approvalCountingHandler.count !== 'function') return;
-      const result = await interpret(approvalCountingHandler.count({ config: "approval-001", approvalSets: "[{\"voter\":\"alice\",\"approvals\":[\"A\",\"B\"]},{\"voter\":\"bob\",\"approvals\":[\"B\",\"C\"]}]", weights: "{}" }), storage);
+      const result = await interpret(approvalCountingHandler.count({ config: {"type":"ref","fixture":"single_winner_unlimited","field":"id"}, approvalSets: "[{\"voter\":\"alice\",\"approvals\":[\"A\",\"B\"]},{\"voter\":\"bob\",\"approvals\":[\"B\",\"C\"]}]", weights: "{}" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -163,12 +163,7 @@ describe('ApprovalCounting functional handler', () => {
       if (typeof approvalCountingHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_single_winner_unlimited = await interpret(approvalCountingHandler.configure({ maxApprovals: null, winnerCount: "1" }), storage);
-      const _pool = Object.assign({}, (afterResult_single_winner_unlimited?.output ?? {}));
-      const _fixtureInput = { config: "approval-001", approvalSets: "[{\"voter\":\"alice\",\"approvals\":[\"A\",\"B\"]},{\"voter\":\"bob\",\"approvals\":[\"B\",\"C\"]}]", weights: "{}" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(approvalCountingHandler.count({ ..._fixtureInput }), storage);
+      const result = await interpret(approvalCountingHandler.count({ config: afterResult_single_winner_unlimited?.output?.["id"], approvalSets: "[{\"voter\":\"alice\",\"approvals\":[\"A\",\"B\"]},{\"voter\":\"bob\",\"approvals\":[\"B\",\"C\"]}]", weights: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,12 +171,7 @@ describe('ApprovalCounting functional handler', () => {
       if (typeof approvalCountingHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_single_winner_unlimited = await interpret(approvalCountingHandler.configure({ maxApprovals: null, winnerCount: "1" }), storage);
-      const _pool = Object.assign({}, (afterResult_single_winner_unlimited?.output ?? {}));
-      const _fixtureInput = { config: "approval-001", approvalSets: "[]", weights: "{}" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(approvalCountingHandler.count({ ..._fixtureInput }), storage);
+      const result = await interpret(approvalCountingHandler.count({ config: afterResult_single_winner_unlimited?.output?.["id"], approvalSets: "[]", weights: "{}" }), storage);
       expect(result.variant).not.toBe('ok');
     });
 

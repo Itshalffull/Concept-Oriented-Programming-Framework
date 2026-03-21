@@ -102,7 +102,7 @@ describe('Attestation functional handler', () => {
 
   describe('revoke', () => {
     it('builds a valid StorageProgram', () => {
-      const program = attestationHandler.revoke({ attestation: "attest-1001", revoker: "civic-authority" });
+      const program = attestationHandler.revoke({ attestation: {"type":"ref","fixture":"attest_kyc","field":"id"}, revoker: "civic-authority" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('Attestation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = attestationHandler.revoke({ attestation: "attest-1001", revoker: "civic-authority" });
+      const program = attestationHandler.revoke({ attestation: {"type":"ref","fixture":"attest_kyc","field":"id"}, revoker: "civic-authority" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = attestationHandler.revoke({ attestation: "attest-1001", revoker: "civic-authority" });
+      const program = attestationHandler.revoke({ attestation: {"type":"ref","fixture":"attest_kyc","field":"id"}, revoker: "civic-authority" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = attestationHandler.revoke({ attestation: "attest-1001", revoker: "civic-authority" });
+      const program = attestationHandler.revoke({ attestation: {"type":"ref","fixture":"attest_kyc","field":"id"}, revoker: "civic-authority" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('Attestation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = attestationHandler.revoke({ attestation: "attest-1001", revoker: "civic-authority" });
+      const program = attestationHandler.revoke({ attestation: {"type":"ref","fixture":"attest_kyc","field":"id"}, revoker: "civic-authority" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('Attestation functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof attestationHandler.revoke !== 'function') return;
-      const result = await interpret(attestationHandler.revoke({ attestation: "attest-1001", revoker: "civic-authority" }), storage);
+      const result = await interpret(attestationHandler.revoke({ attestation: {"type":"ref","fixture":"attest_kyc","field":"id"}, revoker: "civic-authority" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('Attestation functional handler', () => {
       if (typeof attestationHandler.revoke !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_attest_kyc = await interpret(attestationHandler.attest({ schema: "kyc-identity", attester: "civic-authority", recipient: "alice", data: "{\"level\":\"basic\"}", expiry: "2027-12-31T00:00:00Z" }), storage);
-      const _pool = Object.assign({}, (afterResult_attest_kyc?.output ?? {}));
-      const _fixtureInput = { attestation: "attest-1001", revoker: "civic-authority" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(attestationHandler.revoke({ ..._fixtureInput }), storage);
+      const result = await interpret(attestationHandler.revoke({ attestation: afterResult_attest_kyc?.output?.["id"], revoker: "civic-authority" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,7 +171,7 @@ describe('Attestation functional handler', () => {
 
   describe('verify', () => {
     it('builds a valid StorageProgram', () => {
-      const program = attestationHandler.verify({ attestation: "attest-1001" });
+      const program = attestationHandler.verify({ attestation: {"type":"ref","fixture":"attest_kyc","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +179,21 @@ describe('Attestation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = attestationHandler.verify({ attestation: "attest-1001" });
+      const program = attestationHandler.verify({ attestation: {"type":"ref","fixture":"attest_kyc","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = attestationHandler.verify({ attestation: "attest-1001" });
+      const program = attestationHandler.verify({ attestation: {"type":"ref","fixture":"attest_kyc","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = attestationHandler.verify({ attestation: "attest-1001" });
+      const program = attestationHandler.verify({ attestation: {"type":"ref","fixture":"attest_kyc","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +206,7 @@ describe('Attestation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = attestationHandler.verify({ attestation: "attest-1001" });
+      const program = attestationHandler.verify({ attestation: {"type":"ref","fixture":"attest_kyc","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,7 +214,7 @@ describe('Attestation functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof attestationHandler.verify !== 'function') return;
-      const result = await interpret(attestationHandler.verify({ attestation: "attest-1001" }), storage);
+      const result = await interpret(attestationHandler.verify({ attestation: {"type":"ref","fixture":"attest_kyc","field":"id"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -230,12 +225,7 @@ describe('Attestation functional handler', () => {
       if (typeof attestationHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_attest_kyc = await interpret(attestationHandler.attest({ schema: "kyc-identity", attester: "civic-authority", recipient: "alice", data: "{\"level\":\"basic\"}", expiry: "2027-12-31T00:00:00Z" }), storage);
-      const _pool = Object.assign({}, (afterResult_attest_kyc?.output ?? {}));
-      const _fixtureInput = { attestation: "attest-1001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(attestationHandler.verify({ ..._fixtureInput }), storage);
+      const result = await interpret(attestationHandler.verify({ attestation: afterResult_attest_kyc?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

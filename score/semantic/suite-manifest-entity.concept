@@ -92,7 +92,7 @@ concept SuiteManifestEntity [S] {
         and type parameter bindings. Result as serialized JSON
         array of { name, spec, params }.
       }
-      fixture concepts_valid { suite: "suite-uuid-1" } after register_identity
+      fixture concepts_valid { suite: $register_identity.suite } after register_identity
       fixture concepts_missing { suite: "nonexistent-id" } after register_identity
     }
 
@@ -101,7 +101,7 @@ concept SuiteManifestEntity [S] {
         Return all syncs in this suite with their tiers.
         Result as serialized JSON array of { name, tier, spec }.
       }
-      fixture syncs_valid { suite: "suite-uuid-1" } after register_identity
+      fixture syncs_valid { suite: $register_identity.suite } after register_identity
       fixture syncs_missing { suite: "nonexistent-id" } after register_identity
     }
 
@@ -120,7 +120,7 @@ concept SuiteManifestEntity [S] {
         Result as serialized JSON array of { name, version,
         depth, via }.
       }
-      fixture transitive_valid { suite: "suite-uuid-1" } after register_identity
+      fixture transitive_valid { suite: $register_identity.suite } after register_identity
       fixture transitive_missing { suite: "nonexistent-id" } after register_identity
     }
 

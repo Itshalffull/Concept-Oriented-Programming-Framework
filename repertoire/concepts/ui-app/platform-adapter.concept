@@ -41,8 +41,8 @@ concept PlatformAdapter [D] {
       }
       -> unsupported(message: String) { Transition type unsupported. }
 
-      fixture nav_push { adapter: "browser-adapter-1", transition: "{ \"type\": \"push\", \"destination\": \"articles\" }" } after register_browser
-      fixture nav_replace { adapter: "browser-adapter-1", transition: "{ \"type\": \"replace\", \"destination\": \"home\" }" } after register_browser
+      fixture nav_push { adapter: $register_browser.adapter, transition: "{ \"type\": \"push\", \"destination\": \"articles\" }" } after register_browser
+      fixture nav_replace { adapter: $register_browser.adapter, transition: "{ \"type\": \"replace\", \"destination\": \"home\" }" } after register_browser
       fixture nav_not_registered { adapter: "unknown-adapter", transition: "{ \"type\": \"push\" }" } after register_browser -> unsupported
       fixture nav_invalid_json { adapter: "browser-adapter-1", transition: "not-json" } -> unsupported
     }
@@ -53,8 +53,8 @@ concept PlatformAdapter [D] {
       }
       -> unmapped(message: String) { Role has no platform equivalent. }
 
-      fixture zone_persistent { adapter: "browser-adapter-1", role: "persistent" } after register_browser
-      fixture zone_navigated { adapter: "browser-adapter-1", role: "navigated" } after register_browser
+      fixture zone_persistent { adapter: $register_browser.adapter, role: "persistent" } after register_browser
+      fixture zone_navigated { adapter: $register_browser.adapter, role: "navigated" } after register_browser
       fixture zone_not_registered { adapter: "unknown-adapter", role: "persistent" } -> unmapped
     }
 
@@ -64,8 +64,8 @@ concept PlatformAdapter [D] {
       }
       -> ignored(message: String) { Event not relevant. }
 
-      fixture event_popstate { adapter: "browser-adapter-1", event: "{ \"name\": \"popstate\" }" } after register_browser
-      fixture event_hashchange { adapter: "browser-adapter-1", event: "{ \"name\": \"hashchange\" }" } after register_browser
+      fixture event_popstate { adapter: $register_browser.adapter, event: "{ \"name\": \"popstate\" }" } after register_browser
+      fixture event_hashchange { adapter: $register_browser.adapter, event: "{ \"name\": \"hashchange\" }" } after register_browser
       fixture event_not_registered { adapter: "unknown-adapter", event: "{ \"name\": \"popstate\" }" } after register_browser -> ignored
       fixture event_invalid_json { adapter: "browser-adapter-1", event: "bad-json" } -> ignored
     }

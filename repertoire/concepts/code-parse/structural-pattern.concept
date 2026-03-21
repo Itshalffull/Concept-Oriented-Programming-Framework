@@ -45,7 +45,7 @@ concept StructuralPattern [P] {
       -> incompatibleLanguage(patternLang: String, treeLang: String) {
         The pattern's language constraint doesn't match the tree's language.
       }
-      fixture match_pattern { pattern: "pat-1", tree: "tree-1" } after create_ts_query
+      fixture match_pattern { pattern: $create_ts_query.pattern, tree: $create_ts_query.pattern } after create_ts_query
       fixture match_missing_pattern { pattern: "nonexistent", tree: "tree-1" } -> error
     }
 
@@ -57,7 +57,7 @@ concept StructuralPattern [P] {
       -> noMatches() {
         No matches found across the project.
       }
-      fixture match_project { pattern: "pat-1" } after create_ts_query
+      fixture match_project { pattern: $create_ts_query.pattern } after create_ts_query
       fixture match_project_missing { pattern: "nonexistent" } -> error
     }
   }

@@ -22,7 +22,7 @@ concept Alias [A] {
       }
 
       fixture valid_add { entity: "page-123", name: "homepage" }
-      fixture another_alias { entity: "page-456", name: "about-us" } after valid_add
+      fixture another_alias { entity: $valid_add.entity, name: "about-us" } after valid_add
       fixture duplicate_alias { entity: "page-123", name: "homepage" } -> exists
     }
 
@@ -34,7 +34,7 @@ concept Alias [A] {
         No such alias exists for the entity.
       }
 
-      fixture valid_remove { entity: "page-123", name: "homepage" } after valid_add
+      fixture valid_remove { entity: $valid_add.entity, name: "homepage" } after valid_add
       fixture missing_alias { entity: "page-999", name: "nonexistent" } -> notfound
     }
 

@@ -47,7 +47,7 @@ concept InlineAnnotation [A] {
         Annotation was already accepted or rejected.
       }
 
-      fixture accept_pending { annotationId: "inline-annotation-1" } after annotate_insertion
+      fixture accept_pending { annotationId: $annotate_insertion.annotationId } after annotate_insertion
       fixture accept_nonexistent { annotationId: "inline-annotation-nonexistent" } -> error
     }
 
@@ -62,7 +62,7 @@ concept InlineAnnotation [A] {
         Annotation was already accepted or rejected.
       }
 
-      fixture reject_pending { annotationId: "inline-annotation-1" } after accept_pending
+      fixture reject_pending { annotationId: $accept_pending.cleanContent } after accept_pending
       fixture reject_nonexistent { annotationId: "inline-annotation-nonexistent" } -> error
     }
 

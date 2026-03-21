@@ -49,7 +49,7 @@ concept Meeting [MT] {
         The meeting moves to Called phase. The chair is recorded.
       }
 
-      fixture call_existing_meeting { meeting: "meeting-001", chair: "alice" } after schedule_board_meeting
+      fixture call_existing_meeting { meeting: $schedule_board_meeting.id, chair: "alice" } after schedule_board_meeting
       fixture call_missing_meeting { meeting: "meeting-nonexistent", chair: "alice" } -> error
     }
 
@@ -61,7 +61,7 @@ concept Meeting [MT] {
         The motion is out of order given the current meeting state.
       }
 
-      fixture make_main_motion { meeting: "meeting-001", mover: "bob", motionType: "main", text: "Approve the Q2 budget" } after schedule_board_meeting
+      fixture make_main_motion { meeting: $schedule_board_meeting.id, mover: "bob", motionType: "main", text: "Approve the Q2 budget" } after schedule_board_meeting
       fixture make_motion_missing_meeting { meeting: "meeting-nonexistent", mover: "bob", motionType: "main", text: "Test" } -> error
     }
 
@@ -71,7 +71,7 @@ concept Meeting [MT] {
         type allows debate).
       }
 
-      fixture second_existing_motion { meeting: "meeting-001", seconder: "carol", motionIndex: 0 } after schedule_board_meeting
+      fixture second_existing_motion { meeting: $schedule_board_meeting.id, seconder: "carol", motionIndex: 0 } after schedule_board_meeting
       fixture second_missing_motion { meeting: "meeting-001", seconder: "carol", motionIndex: 99 } -> error
     }
 
@@ -80,7 +80,7 @@ concept Meeting [MT] {
         Debate on the current motion is closed. The motion proceeds to vote.
       }
 
-      fixture call_question_valid { meeting: "meeting-001" } after schedule_board_meeting
+      fixture call_question_valid { meeting: $schedule_board_meeting.id } after schedule_board_meeting
       fixture call_question_missing { meeting: "meeting-nonexistent" } -> error
     }
 
@@ -89,7 +89,7 @@ concept Meeting [MT] {
         A minute entry is added to the meeting record.
       }
 
-      fixture record_minute_entry { meeting: "meeting-001", record: "Motion to approve Q2 budget passed unanimously" } after schedule_board_meeting
+      fixture record_minute_entry { meeting: $schedule_board_meeting.id, record: "Motion to approve Q2 budget passed unanimously" } after schedule_board_meeting
       fixture record_missing_meeting { meeting: "meeting-nonexistent", record: "Test" } -> error
     }
 
@@ -98,7 +98,7 @@ concept Meeting [MT] {
         The meeting is adjourned. Minutes are finalized.
       }
 
-      fixture adjourn_valid { meeting: "meeting-001" } after schedule_board_meeting
+      fixture adjourn_valid { meeting: $schedule_board_meeting.id } after schedule_board_meeting
       fixture adjourn_missing { meeting: "meeting-nonexistent" } -> error
     }
   }

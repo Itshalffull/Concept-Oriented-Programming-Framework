@@ -331,7 +331,7 @@ describe('DerivedEntity functional handler', () => {
 
   describe('compositionTree', () => {
     it('builds a valid StorageProgram', () => {
-      const program = derivedEntityHandler.compositionTree({ entity: "derived-entity-1" });
+      const program = derivedEntityHandler.compositionTree({ entity: {"type":"ref","fixture":"register_trash","field":"entity"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -339,21 +339,21 @@ describe('DerivedEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = derivedEntityHandler.compositionTree({ entity: "derived-entity-1" });
+      const program = derivedEntityHandler.compositionTree({ entity: {"type":"ref","fixture":"register_trash","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = derivedEntityHandler.compositionTree({ entity: "derived-entity-1" });
+      const program = derivedEntityHandler.compositionTree({ entity: {"type":"ref","fixture":"register_trash","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = derivedEntityHandler.compositionTree({ entity: "derived-entity-1" });
+      const program = derivedEntityHandler.compositionTree({ entity: {"type":"ref","fixture":"register_trash","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -366,7 +366,7 @@ describe('DerivedEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = derivedEntityHandler.compositionTree({ entity: "derived-entity-1" });
+      const program = derivedEntityHandler.compositionTree({ entity: {"type":"ref","fixture":"register_trash","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -374,7 +374,7 @@ describe('DerivedEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof derivedEntityHandler.compositionTree !== 'function') return;
-      const result = await interpret(derivedEntityHandler.compositionTree({ entity: "derived-entity-1" }), storage);
+      const result = await interpret(derivedEntityHandler.compositionTree({ entity: {"type":"ref","fixture":"register_trash","field":"entity"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -385,12 +385,7 @@ describe('DerivedEntity functional handler', () => {
       if (typeof derivedEntityHandler.compositionTree !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_trash = await interpret(derivedEntityHandler.register({ name: "Trash", source: "specs/trash.derived", ast: "{\"composes\":[\"Article\",\"Label\"],\"syncs\":{\"required\":[\"trash-on-delete\"]}}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_trash?.output ?? {}));
-      const _fixtureInput = { entity: "derived-entity-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(derivedEntityHandler.compositionTree({ ..._fixtureInput }), storage);
+      const result = await interpret(derivedEntityHandler.compositionTree({ entity: afterResult_register_trash?.output?.["entity"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -405,7 +400,7 @@ describe('DerivedEntity functional handler', () => {
 
   describe('traceRollup', () => {
     it('builds a valid StorageProgram', () => {
-      const program = derivedEntityHandler.traceRollup({ entity: "derived-entity-1", flowId: "flow-abc-123" });
+      const program = derivedEntityHandler.traceRollup({ entity: {"type":"ref","fixture":"register_trash","field":"entity"}, flowId: {"type":"ref","fixture":"register_trash","field":"entity"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -413,21 +408,21 @@ describe('DerivedEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = derivedEntityHandler.traceRollup({ entity: "derived-entity-1", flowId: "flow-abc-123" });
+      const program = derivedEntityHandler.traceRollup({ entity: {"type":"ref","fixture":"register_trash","field":"entity"}, flowId: {"type":"ref","fixture":"register_trash","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = derivedEntityHandler.traceRollup({ entity: "derived-entity-1", flowId: "flow-abc-123" });
+      const program = derivedEntityHandler.traceRollup({ entity: {"type":"ref","fixture":"register_trash","field":"entity"}, flowId: {"type":"ref","fixture":"register_trash","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = derivedEntityHandler.traceRollup({ entity: "derived-entity-1", flowId: "flow-abc-123" });
+      const program = derivedEntityHandler.traceRollup({ entity: {"type":"ref","fixture":"register_trash","field":"entity"}, flowId: {"type":"ref","fixture":"register_trash","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -440,7 +435,7 @@ describe('DerivedEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = derivedEntityHandler.traceRollup({ entity: "derived-entity-1", flowId: "flow-abc-123" });
+      const program = derivedEntityHandler.traceRollup({ entity: {"type":"ref","fixture":"register_trash","field":"entity"}, flowId: {"type":"ref","fixture":"register_trash","field":"entity"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -448,7 +443,7 @@ describe('DerivedEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof derivedEntityHandler.traceRollup !== 'function') return;
-      const result = await interpret(derivedEntityHandler.traceRollup({ entity: "derived-entity-1", flowId: "flow-abc-123" }), storage);
+      const result = await interpret(derivedEntityHandler.traceRollup({ entity: {"type":"ref","fixture":"register_trash","field":"entity"}, flowId: {"type":"ref","fixture":"register_trash","field":"entity"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -459,12 +454,7 @@ describe('DerivedEntity functional handler', () => {
       if (typeof derivedEntityHandler.traceRollup !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_trash = await interpret(derivedEntityHandler.register({ name: "Trash", source: "specs/trash.derived", ast: "{\"composes\":[\"Article\",\"Label\"],\"syncs\":{\"required\":[\"trash-on-delete\"]}}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_trash?.output ?? {}));
-      const _fixtureInput = { entity: "derived-entity-1", flowId: "flow-abc-123" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(derivedEntityHandler.traceRollup({ ..._fixtureInput }), storage);
+      const result = await interpret(derivedEntityHandler.traceRollup({ entity: afterResult_register_trash?.output?.["entity"], flowId: afterResult_register_trash?.output?.["entity"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

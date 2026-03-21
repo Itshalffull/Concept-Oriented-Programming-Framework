@@ -176,7 +176,7 @@ describe('ContentDigest functional handler', () => {
 
   describe('equivalent', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contentDigestHandler.equivalent({ a: "def-unit-1", b: "def-unit-2" });
+      const program = contentDigestHandler.equivalent({ a: {"type":"ref","fixture":"compute_sha","field":"digest"}, b: {"type":"ref","fixture":"compute_sha","field":"digest"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +184,21 @@ describe('ContentDigest functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contentDigestHandler.equivalent({ a: "def-unit-1", b: "def-unit-2" });
+      const program = contentDigestHandler.equivalent({ a: {"type":"ref","fixture":"compute_sha","field":"digest"}, b: {"type":"ref","fixture":"compute_sha","field":"digest"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contentDigestHandler.equivalent({ a: "def-unit-1", b: "def-unit-2" });
+      const program = contentDigestHandler.equivalent({ a: {"type":"ref","fixture":"compute_sha","field":"digest"}, b: {"type":"ref","fixture":"compute_sha","field":"digest"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contentDigestHandler.equivalent({ a: "def-unit-1", b: "def-unit-2" });
+      const program = contentDigestHandler.equivalent({ a: {"type":"ref","fixture":"compute_sha","field":"digest"}, b: {"type":"ref","fixture":"compute_sha","field":"digest"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +211,7 @@ describe('ContentDigest functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contentDigestHandler.equivalent({ a: "def-unit-1", b: "def-unit-2" });
+      const program = contentDigestHandler.equivalent({ a: {"type":"ref","fixture":"compute_sha","field":"digest"}, b: {"type":"ref","fixture":"compute_sha","field":"digest"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,7 +219,7 @@ describe('ContentDigest functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof contentDigestHandler.equivalent !== 'function') return;
-      const result = await interpret(contentDigestHandler.equivalent({ a: "def-unit-1", b: "def-unit-2" }), storage);
+      const result = await interpret(contentDigestHandler.equivalent({ a: {"type":"ref","fixture":"compute_sha","field":"digest"}, b: {"type":"ref","fixture":"compute_sha","field":"digest"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -230,12 +230,7 @@ describe('ContentDigest functional handler', () => {
       if (typeof contentDigestHandler.equivalent !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_compute_sha = await interpret(contentDigestHandler.compute({ unit: "def-unit-1", algorithm: "structural-normalized" }), storage);
-      const _pool = Object.assign({}, (afterResult_compute_sha?.output ?? {}));
-      const _fixtureInput = { a: "def-unit-1", b: "def-unit-2" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(contentDigestHandler.equivalent({ ..._fixtureInput }), storage);
+      const result = await interpret(contentDigestHandler.equivalent({ a: afterResult_compute_sha?.output?.["digest"], b: afterResult_compute_sha?.output?.["digest"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

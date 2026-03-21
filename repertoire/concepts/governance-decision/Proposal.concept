@@ -45,7 +45,7 @@ concept Proposal [P] {
         The proposal is not in Pending status.
       }
 
-      fixture sponsor_pending { proposal: "proposal-001", sponsorId: "bob" } after create_budget_proposal
+      fixture sponsor_pending { proposal: $create_budget_proposal.id, sponsorId: "bob" } after create_budget_proposal
       fixture sponsor_missing { proposal: "proposal-nonexistent", sponsorId: "bob" } -> error
     }
 
@@ -55,7 +55,7 @@ concept Proposal [P] {
         decision-making has begun.
       }
 
-      fixture activate_sponsored { proposal: "proposal-001" } after create_budget_proposal
+      fixture activate_sponsored { proposal: $create_budget_proposal.id } after create_budget_proposal
       fixture activate_missing { proposal: "proposal-nonexistent" } -> error
     }
 
@@ -68,7 +68,7 @@ concept Proposal [P] {
         The requested status transition is not valid.
       }
 
-      fixture advance_to_passed { proposal: "proposal-001", newStatus: "Passed" } after create_budget_proposal
+      fixture advance_to_passed { proposal: $create_budget_proposal.id, newStatus: "Passed" } after create_budget_proposal
       fixture advance_missing { proposal: "proposal-nonexistent", newStatus: "Passed" } -> error
     }
 
@@ -84,7 +84,7 @@ concept Proposal [P] {
         The proposal is in a terminal state and cannot be cancelled.
       }
 
-      fixture cancel_draft { proposal: "proposal-001", canceller: "alice" } after create_budget_proposal
+      fixture cancel_draft { proposal: $create_budget_proposal.id, canceller: "alice" } after create_budget_proposal
       fixture cancel_missing { proposal: "proposal-nonexistent", canceller: "alice" } -> error
     }
   }

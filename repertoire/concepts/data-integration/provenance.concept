@@ -37,7 +37,7 @@ concept Provenance [P] {
         Entity has no provenance records.
       }
 
-      fixture trace_existing { entityId: "item-1" } after record_capture
+      fixture trace_existing { entityId: $record_capture.recordId } after record_capture
       fixture trace_missing { entityId: "item-missing" } -> notfound
     }
 
@@ -85,7 +85,7 @@ concept Provenance [P] {
         Entity has no provenance records.
       }
 
-      fixture reproduce_existing { entityId: "item-1" } after record_capture
+      fixture reproduce_existing { entityId: $record_capture.recordId } after record_capture
       fixture reproduce_missing { entityId: "item-missing" } -> notfound
     }
   }

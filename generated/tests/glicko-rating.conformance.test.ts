@@ -102,7 +102,7 @@ describe('GlickoRating functional handler', () => {
 
   describe('recordOutcome', () => {
     it('builds a valid StorageProgram', () => {
-      const program = glickoRatingHandler.recordOutcome({ config: "glicko-001", participant: "alice", opponent: "bob", outcome: "1.0" });
+      const program = glickoRatingHandler.recordOutcome({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, participant: "alice", opponent: "bob", outcome: "1.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('GlickoRating functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = glickoRatingHandler.recordOutcome({ config: "glicko-001", participant: "alice", opponent: "bob", outcome: "1.0" });
+      const program = glickoRatingHandler.recordOutcome({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, participant: "alice", opponent: "bob", outcome: "1.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = glickoRatingHandler.recordOutcome({ config: "glicko-001", participant: "alice", opponent: "bob", outcome: "1.0" });
+      const program = glickoRatingHandler.recordOutcome({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, participant: "alice", opponent: "bob", outcome: "1.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = glickoRatingHandler.recordOutcome({ config: "glicko-001", participant: "alice", opponent: "bob", outcome: "1.0" });
+      const program = glickoRatingHandler.recordOutcome({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, participant: "alice", opponent: "bob", outcome: "1.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('GlickoRating functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = glickoRatingHandler.recordOutcome({ config: "glicko-001", participant: "alice", opponent: "bob", outcome: "1.0" });
+      const program = glickoRatingHandler.recordOutcome({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, participant: "alice", opponent: "bob", outcome: "1.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('GlickoRating functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof glickoRatingHandler.recordOutcome !== 'function') return;
-      const result = await interpret(glickoRatingHandler.recordOutcome({ config: "glicko-001", participant: "alice", opponent: "bob", outcome: "1.0" }), storage);
+      const result = await interpret(glickoRatingHandler.recordOutcome({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, participant: "alice", opponent: "bob", outcome: "1.0" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('GlickoRating functional handler', () => {
       if (typeof glickoRatingHandler.recordOutcome !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_configure_standard = await interpret(glickoRatingHandler.configure({ initialRating: "1500.0", initialDeviation: "350.0", initialVolatility: "0.06", inactivityGrowthRate: "30.0" }), storage);
-      const _pool = Object.assign({}, (afterResult_configure_standard?.output ?? {}));
-      const _fixtureInput = { config: "glicko-001", participant: "alice", opponent: "bob", outcome: "1.0" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(glickoRatingHandler.recordOutcome({ ..._fixtureInput }), storage);
+      const result = await interpret(glickoRatingHandler.recordOutcome({ config: afterResult_configure_standard?.output?.["id"], participant: "alice", opponent: "bob", outcome: "1.0" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,7 +171,7 @@ describe('GlickoRating functional handler', () => {
 
   describe('applyInactivityDecay', () => {
     it('builds a valid StorageProgram', () => {
-      const program = glickoRatingHandler.applyInactivityDecay({ config: "glicko-001", participant: "alice", daysSinceActive: "30.0" });
+      const program = glickoRatingHandler.applyInactivityDecay({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, participant: "alice", daysSinceActive: "30.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -184,21 +179,21 @@ describe('GlickoRating functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = glickoRatingHandler.applyInactivityDecay({ config: "glicko-001", participant: "alice", daysSinceActive: "30.0" });
+      const program = glickoRatingHandler.applyInactivityDecay({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, participant: "alice", daysSinceActive: "30.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = glickoRatingHandler.applyInactivityDecay({ config: "glicko-001", participant: "alice", daysSinceActive: "30.0" });
+      const program = glickoRatingHandler.applyInactivityDecay({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, participant: "alice", daysSinceActive: "30.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = glickoRatingHandler.applyInactivityDecay({ config: "glicko-001", participant: "alice", daysSinceActive: "30.0" });
+      const program = glickoRatingHandler.applyInactivityDecay({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, participant: "alice", daysSinceActive: "30.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -211,7 +206,7 @@ describe('GlickoRating functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = glickoRatingHandler.applyInactivityDecay({ config: "glicko-001", participant: "alice", daysSinceActive: "30.0" });
+      const program = glickoRatingHandler.applyInactivityDecay({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, participant: "alice", daysSinceActive: "30.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -219,7 +214,7 @@ describe('GlickoRating functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof glickoRatingHandler.applyInactivityDecay !== 'function') return;
-      const result = await interpret(glickoRatingHandler.applyInactivityDecay({ config: "glicko-001", participant: "alice", daysSinceActive: "30.0" }), storage);
+      const result = await interpret(glickoRatingHandler.applyInactivityDecay({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, participant: "alice", daysSinceActive: "30.0" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -230,12 +225,7 @@ describe('GlickoRating functional handler', () => {
       if (typeof glickoRatingHandler.applyInactivityDecay !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_configure_standard = await interpret(glickoRatingHandler.configure({ initialRating: "1500.0", initialDeviation: "350.0", initialVolatility: "0.06", inactivityGrowthRate: "30.0" }), storage);
-      const _pool = Object.assign({}, (afterResult_configure_standard?.output ?? {}));
-      const _fixtureInput = { config: "glicko-001", participant: "alice", daysSinceActive: "30.0" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(glickoRatingHandler.applyInactivityDecay({ ..._fixtureInput }), storage);
+      const result = await interpret(glickoRatingHandler.applyInactivityDecay({ config: afterResult_configure_standard?.output?.["id"], participant: "alice", daysSinceActive: "30.0" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -250,7 +240,7 @@ describe('GlickoRating functional handler', () => {
 
   describe('getReliableWeight', () => {
     it('builds a valid StorageProgram', () => {
-      const program = glickoRatingHandler.getReliableWeight({ config: "glicko-001", participant: "alice" });
+      const program = glickoRatingHandler.getReliableWeight({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, participant: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -258,21 +248,21 @@ describe('GlickoRating functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = glickoRatingHandler.getReliableWeight({ config: "glicko-001", participant: "alice" });
+      const program = glickoRatingHandler.getReliableWeight({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = glickoRatingHandler.getReliableWeight({ config: "glicko-001", participant: "alice" });
+      const program = glickoRatingHandler.getReliableWeight({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = glickoRatingHandler.getReliableWeight({ config: "glicko-001", participant: "alice" });
+      const program = glickoRatingHandler.getReliableWeight({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -285,7 +275,7 @@ describe('GlickoRating functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = glickoRatingHandler.getReliableWeight({ config: "glicko-001", participant: "alice" });
+      const program = glickoRatingHandler.getReliableWeight({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -293,7 +283,7 @@ describe('GlickoRating functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof glickoRatingHandler.getReliableWeight !== 'function') return;
-      const result = await interpret(glickoRatingHandler.getReliableWeight({ config: "glicko-001", participant: "alice" }), storage);
+      const result = await interpret(glickoRatingHandler.getReliableWeight({ config: {"type":"ref","fixture":"configure_standard","field":"id"}, participant: "alice" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -304,12 +294,7 @@ describe('GlickoRating functional handler', () => {
       if (typeof glickoRatingHandler.getReliableWeight !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_configure_standard = await interpret(glickoRatingHandler.configure({ initialRating: "1500.0", initialDeviation: "350.0", initialVolatility: "0.06", inactivityGrowthRate: "30.0" }), storage);
-      const _pool = Object.assign({}, (afterResult_configure_standard?.output ?? {}));
-      const _fixtureInput = { config: "glicko-001", participant: "alice" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(glickoRatingHandler.getReliableWeight({ ..._fixtureInput }), storage);
+      const result = await interpret(glickoRatingHandler.getReliableWeight({ config: afterResult_configure_standard?.output?.["id"], participant: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });
 

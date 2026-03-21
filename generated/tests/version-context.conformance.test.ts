@@ -123,7 +123,7 @@ describe('VersionContext imperative handler', () => {
   describe('resolve_for', () => {
     it('produces a result', async () => {
       if (typeof versionContextHandler.resolve_for !== 'function') return;
-      const result = await versionContextHandler.resolve_for({ user: "alice", entity_id: "article-42" }, storage);
+      const result = await versionContextHandler.resolve_for({ user: "alice", entity_id: {"type":"ref","fixture":"push_first","field":"context"} }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -134,12 +134,7 @@ describe('VersionContext imperative handler', () => {
       if (typeof versionContextHandler.resolve_for !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_push_first = await versionContextHandler.push({ user: "alice", space_id: "space-redesign" }, storage);
-      const _pool = Object.assign({}, (afterResult_push_first?.output ?? {}));
-      const _fixtureInput = { user: "alice", entity_id: "article-42" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await versionContextHandler.resolve_for({ ..._fixtureInput }, storage);
+      const result = await versionContextHandler.resolve_for({ user: "alice", entity_id: afterResult_push_first?.output?.["context"] }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -147,12 +142,7 @@ describe('VersionContext imperative handler', () => {
       if (typeof versionContextHandler.resolve_for !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_push_first = await versionContextHandler.push({ user: "alice", space_id: "space-redesign" }, storage);
-      const _pool = Object.assign({}, (afterResult_push_first?.output ?? {}));
-      const _fixtureInput = { user: "unknown-user", entity_id: "article-42" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await versionContextHandler.resolve_for({ ..._fixtureInput }, storage);
+      const result = await versionContextHandler.resolve_for({ user: "unknown-user", entity_id: afterResult_push_first?.output?.["context"] }, storage);
       expect(result.variant).toBe('ok');
     });
 

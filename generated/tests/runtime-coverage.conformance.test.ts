@@ -511,7 +511,7 @@ describe('RuntimeCoverage functional handler', () => {
 
   describe('widgetRenderTrace', () => {
     it('builds a valid StorageProgram', () => {
-      const program = runtimeCoverageHandler.widgetRenderTrace({ widgetInstance: "dialog-inst-001" });
+      const program = runtimeCoverageHandler.widgetRenderTrace({ widgetInstance: {"type":"ref","fixture":"record_action","field":"entry"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -519,21 +519,21 @@ describe('RuntimeCoverage functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = runtimeCoverageHandler.widgetRenderTrace({ widgetInstance: "dialog-inst-001" });
+      const program = runtimeCoverageHandler.widgetRenderTrace({ widgetInstance: {"type":"ref","fixture":"record_action","field":"entry"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = runtimeCoverageHandler.widgetRenderTrace({ widgetInstance: "dialog-inst-001" });
+      const program = runtimeCoverageHandler.widgetRenderTrace({ widgetInstance: {"type":"ref","fixture":"record_action","field":"entry"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = runtimeCoverageHandler.widgetRenderTrace({ widgetInstance: "dialog-inst-001" });
+      const program = runtimeCoverageHandler.widgetRenderTrace({ widgetInstance: {"type":"ref","fixture":"record_action","field":"entry"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -546,7 +546,7 @@ describe('RuntimeCoverage functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = runtimeCoverageHandler.widgetRenderTrace({ widgetInstance: "dialog-inst-001" });
+      const program = runtimeCoverageHandler.widgetRenderTrace({ widgetInstance: {"type":"ref","fixture":"record_action","field":"entry"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -554,7 +554,7 @@ describe('RuntimeCoverage functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof runtimeCoverageHandler.widgetRenderTrace !== 'function') return;
-      const result = await interpret(runtimeCoverageHandler.widgetRenderTrace({ widgetInstance: "dialog-inst-001" }), storage);
+      const result = await interpret(runtimeCoverageHandler.widgetRenderTrace({ widgetInstance: {"type":"ref","fixture":"record_action","field":"entry"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -565,12 +565,7 @@ describe('RuntimeCoverage functional handler', () => {
       if (typeof runtimeCoverageHandler.widgetRenderTrace !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_record_action = await interpret(runtimeCoverageHandler.record({ symbol: "clef/action/Article/create", kind: "action", flowId: "flow-001" }), storage);
-      const _pool = Object.assign({}, (afterResult_record_action?.output ?? {}));
-      const _fixtureInput = { widgetInstance: "dialog-inst-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(runtimeCoverageHandler.widgetRenderTrace({ ..._fixtureInput }), storage);
+      const result = await interpret(runtimeCoverageHandler.widgetRenderTrace({ widgetInstance: afterResult_record_action?.output?.["entry"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

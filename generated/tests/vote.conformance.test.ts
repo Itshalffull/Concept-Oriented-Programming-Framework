@@ -109,7 +109,7 @@ describe('Vote functional handler', () => {
 
   describe('castVote', () => {
     it('builds a valid StorageProgram', () => {
-      const program = voteHandler.castVote({ session: "session-001", voter: "alice", choice: "yes", weight: "1.0" });
+      const program = voteHandler.castVote({ session: {"type":"ref","fixture":"open_with_snapshot","field":"id"}, voter: "alice", choice: "yes", weight: "1.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -117,21 +117,21 @@ describe('Vote functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = voteHandler.castVote({ session: "session-001", voter: "alice", choice: "yes", weight: "1.0" });
+      const program = voteHandler.castVote({ session: {"type":"ref","fixture":"open_with_snapshot","field":"id"}, voter: "alice", choice: "yes", weight: "1.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = voteHandler.castVote({ session: "session-001", voter: "alice", choice: "yes", weight: "1.0" });
+      const program = voteHandler.castVote({ session: {"type":"ref","fixture":"open_with_snapshot","field":"id"}, voter: "alice", choice: "yes", weight: "1.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = voteHandler.castVote({ session: "session-001", voter: "alice", choice: "yes", weight: "1.0" });
+      const program = voteHandler.castVote({ session: {"type":"ref","fixture":"open_with_snapshot","field":"id"}, voter: "alice", choice: "yes", weight: "1.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -144,7 +144,7 @@ describe('Vote functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = voteHandler.castVote({ session: "session-001", voter: "alice", choice: "yes", weight: "1.0" });
+      const program = voteHandler.castVote({ session: {"type":"ref","fixture":"open_with_snapshot","field":"id"}, voter: "alice", choice: "yes", weight: "1.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -152,7 +152,7 @@ describe('Vote functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof voteHandler.castVote !== 'function') return;
-      const result = await interpret(voteHandler.castVote({ session: "session-001", voter: "alice", choice: "yes", weight: "1.0" }), storage);
+      const result = await interpret(voteHandler.castVote({ session: {"type":"ref","fixture":"open_with_snapshot","field":"id"}, voter: "alice", choice: "yes", weight: "1.0" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -163,12 +163,7 @@ describe('Vote functional handler', () => {
       if (typeof voteHandler.castVote !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_open_with_snapshot = await interpret(voteHandler.openSession({ proposalRef: "proposal-001", deadline: "2026-04-15T23:59:59Z", snapshotRef: "snapshot-abc" }), storage);
-      const _pool = Object.assign({}, (afterResult_open_with_snapshot?.output ?? {}));
-      const _fixtureInput = { session: "session-001", voter: "alice", choice: "yes", weight: "1.0" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(voteHandler.castVote({ ..._fixtureInput }), storage);
+      const result = await interpret(voteHandler.castVote({ session: afterResult_open_with_snapshot?.output?.["id"], voter: "alice", choice: "yes", weight: "1.0" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,12 +171,7 @@ describe('Vote functional handler', () => {
       if (typeof voteHandler.castVote !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_open_with_snapshot = await interpret(voteHandler.openSession({ proposalRef: "proposal-001", deadline: "2026-04-15T23:59:59Z", snapshotRef: "snapshot-abc" }), storage);
-      const _pool = Object.assign({}, (afterResult_open_with_snapshot?.output ?? {}));
-      const _fixtureInput = { session: "session-001", voter: "bob", choice: "no", weight: "2.5" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(voteHandler.castVote({ ..._fixtureInput }), storage);
+      const result = await interpret(voteHandler.castVote({ session: afterResult_open_with_snapshot?.output?.["id"], voter: "bob", choice: "no", weight: "2.5" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -196,7 +186,7 @@ describe('Vote functional handler', () => {
 
   describe('close', () => {
     it('builds a valid StorageProgram', () => {
-      const program = voteHandler.close({ session: "session-001" });
+      const program = voteHandler.close({ session: {"type":"ref","fixture":"open_with_snapshot","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -204,21 +194,21 @@ describe('Vote functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = voteHandler.close({ session: "session-001" });
+      const program = voteHandler.close({ session: {"type":"ref","fixture":"open_with_snapshot","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = voteHandler.close({ session: "session-001" });
+      const program = voteHandler.close({ session: {"type":"ref","fixture":"open_with_snapshot","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = voteHandler.close({ session: "session-001" });
+      const program = voteHandler.close({ session: {"type":"ref","fixture":"open_with_snapshot","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -231,7 +221,7 @@ describe('Vote functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = voteHandler.close({ session: "session-001" });
+      const program = voteHandler.close({ session: {"type":"ref","fixture":"open_with_snapshot","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -239,7 +229,7 @@ describe('Vote functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof voteHandler.close !== 'function') return;
-      const result = await interpret(voteHandler.close({ session: "session-001" }), storage);
+      const result = await interpret(voteHandler.close({ session: {"type":"ref","fixture":"open_with_snapshot","field":"id"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -250,12 +240,7 @@ describe('Vote functional handler', () => {
       if (typeof voteHandler.close !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_open_with_snapshot = await interpret(voteHandler.openSession({ proposalRef: "proposal-001", deadline: "2026-04-15T23:59:59Z", snapshotRef: "snapshot-abc" }), storage);
-      const _pool = Object.assign({}, (afterResult_open_with_snapshot?.output ?? {}));
-      const _fixtureInput = { session: "session-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(voteHandler.close({ ..._fixtureInput }), storage);
+      const result = await interpret(voteHandler.close({ session: afterResult_open_with_snapshot?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -270,7 +255,7 @@ describe('Vote functional handler', () => {
 
   describe('tally', () => {
     it('builds a valid StorageProgram', () => {
-      const program = voteHandler.tally({ session: "session-001" });
+      const program = voteHandler.tally({ session: {"type":"ref","fixture":"open_with_snapshot","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -278,21 +263,21 @@ describe('Vote functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = voteHandler.tally({ session: "session-001" });
+      const program = voteHandler.tally({ session: {"type":"ref","fixture":"open_with_snapshot","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = voteHandler.tally({ session: "session-001" });
+      const program = voteHandler.tally({ session: {"type":"ref","fixture":"open_with_snapshot","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = voteHandler.tally({ session: "session-001" });
+      const program = voteHandler.tally({ session: {"type":"ref","fixture":"open_with_snapshot","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -305,7 +290,7 @@ describe('Vote functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = voteHandler.tally({ session: "session-001" });
+      const program = voteHandler.tally({ session: {"type":"ref","fixture":"open_with_snapshot","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -313,7 +298,7 @@ describe('Vote functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof voteHandler.tally !== 'function') return;
-      const result = await interpret(voteHandler.tally({ session: "session-001" }), storage);
+      const result = await interpret(voteHandler.tally({ session: {"type":"ref","fixture":"open_with_snapshot","field":"id"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -324,12 +309,7 @@ describe('Vote functional handler', () => {
       if (typeof voteHandler.tally !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_open_with_snapshot = await interpret(voteHandler.openSession({ proposalRef: "proposal-001", deadline: "2026-04-15T23:59:59Z", snapshotRef: "snapshot-abc" }), storage);
-      const _pool = Object.assign({}, (afterResult_open_with_snapshot?.output ?? {}));
-      const _fixtureInput = { session: "session-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(voteHandler.tally({ ..._fixtureInput }), storage);
+      const result = await interpret(voteHandler.tally({ session: afterResult_open_with_snapshot?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

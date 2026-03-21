@@ -170,7 +170,7 @@ describe('DockerComposeIacProvider functional handler', () => {
 
   describe('apply', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dockerComposeIacProviderHandler.apply({ composeFile: "compose-001" });
+      const program = dockerComposeIacProviderHandler.apply({ composeFile: {"type":"ref","fixture":"generate_compose","field":"composeFile"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -178,21 +178,21 @@ describe('DockerComposeIacProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dockerComposeIacProviderHandler.apply({ composeFile: "compose-001" });
+      const program = dockerComposeIacProviderHandler.apply({ composeFile: {"type":"ref","fixture":"generate_compose","field":"composeFile"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dockerComposeIacProviderHandler.apply({ composeFile: "compose-001" });
+      const program = dockerComposeIacProviderHandler.apply({ composeFile: {"type":"ref","fixture":"generate_compose","field":"composeFile"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dockerComposeIacProviderHandler.apply({ composeFile: "compose-001" });
+      const program = dockerComposeIacProviderHandler.apply({ composeFile: {"type":"ref","fixture":"generate_compose","field":"composeFile"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -205,7 +205,7 @@ describe('DockerComposeIacProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dockerComposeIacProviderHandler.apply({ composeFile: "compose-001" });
+      const program = dockerComposeIacProviderHandler.apply({ composeFile: {"type":"ref","fixture":"generate_compose","field":"composeFile"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -213,7 +213,7 @@ describe('DockerComposeIacProvider functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof dockerComposeIacProviderHandler.apply !== 'function') return;
-      const result = await interpret(dockerComposeIacProviderHandler.apply({ composeFile: "compose-001" }), storage);
+      const result = await interpret(dockerComposeIacProviderHandler.apply({ composeFile: {"type":"ref","fixture":"generate_compose","field":"composeFile"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -224,12 +224,7 @@ describe('DockerComposeIacProvider functional handler', () => {
       if (typeof dockerComposeIacProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_generate_compose = await interpret(dockerComposeIacProviderHandler.generate({ plan: "dp-001" }), storage);
-      const _pool = Object.assign({}, (afterResult_generate_compose?.output ?? {}));
-      const _fixtureInput = { composeFile: "compose-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(dockerComposeIacProviderHandler.apply({ ..._fixtureInput }), storage);
+      const result = await interpret(dockerComposeIacProviderHandler.apply({ composeFile: afterResult_generate_compose?.output?.["composeFile"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -250,7 +245,7 @@ describe('DockerComposeIacProvider functional handler', () => {
 
   describe('teardown', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dockerComposeIacProviderHandler.teardown({ composeFile: "compose-001" });
+      const program = dockerComposeIacProviderHandler.teardown({ composeFile: {"type":"ref","fixture":"generate_compose","field":"composeFile"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -258,21 +253,21 @@ describe('DockerComposeIacProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dockerComposeIacProviderHandler.teardown({ composeFile: "compose-001" });
+      const program = dockerComposeIacProviderHandler.teardown({ composeFile: {"type":"ref","fixture":"generate_compose","field":"composeFile"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dockerComposeIacProviderHandler.teardown({ composeFile: "compose-001" });
+      const program = dockerComposeIacProviderHandler.teardown({ composeFile: {"type":"ref","fixture":"generate_compose","field":"composeFile"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dockerComposeIacProviderHandler.teardown({ composeFile: "compose-001" });
+      const program = dockerComposeIacProviderHandler.teardown({ composeFile: {"type":"ref","fixture":"generate_compose","field":"composeFile"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -285,7 +280,7 @@ describe('DockerComposeIacProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dockerComposeIacProviderHandler.teardown({ composeFile: "compose-001" });
+      const program = dockerComposeIacProviderHandler.teardown({ composeFile: {"type":"ref","fixture":"generate_compose","field":"composeFile"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -293,7 +288,7 @@ describe('DockerComposeIacProvider functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof dockerComposeIacProviderHandler.teardown !== 'function') return;
-      const result = await interpret(dockerComposeIacProviderHandler.teardown({ composeFile: "compose-001" }), storage);
+      const result = await interpret(dockerComposeIacProviderHandler.teardown({ composeFile: {"type":"ref","fixture":"generate_compose","field":"composeFile"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -304,12 +299,7 @@ describe('DockerComposeIacProvider functional handler', () => {
       if (typeof dockerComposeIacProviderHandler.teardown !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_generate_compose = await interpret(dockerComposeIacProviderHandler.generate({ plan: "dp-001" }), storage);
-      const _pool = Object.assign({}, (afterResult_generate_compose?.output ?? {}));
-      const _fixtureInput = { composeFile: "compose-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(dockerComposeIacProviderHandler.teardown({ ..._fixtureInput }), storage);
+      const result = await interpret(dockerComposeIacProviderHandler.teardown({ composeFile: afterResult_generate_compose?.output?.["composeFile"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

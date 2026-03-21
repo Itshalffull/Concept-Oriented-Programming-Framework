@@ -34,14 +34,14 @@ concept Schema [S] {
       -> ok() { Apply the schema to an entity as a type mixin. }
       -> notfound(message: String) { Schema does not exist. }
 
-      fixture apply_article_to_page { entity_id: "page-1", schema: "article" } after create_article
+      fixture apply_article_to_page { entity_id: $create_article.id, schema: "article" } after create_article
       fixture apply_missing_schema { entity_id: "page-1", schema: "nonexistent" } -> error
     }
     action removeFrom(entity_id: String, schema: S) {
       -> ok() { Remove the schema from an entity. }
       -> notfound(message: String) { Schema or association does not exist. }
 
-      fixture remove_article_from_page { entity_id: "page-1", schema: "article" } after create_article
+      fixture remove_article_from_page { entity_id: $create_article.id, schema: "article" } after create_article
       fixture remove_unapplied { entity_id: "page-99", schema: "article" } -> error
     }
     action getAssociations(schema: S) {

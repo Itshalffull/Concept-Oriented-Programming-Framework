@@ -53,7 +53,7 @@ describe('FormalProperty imperative handler', () => {
   describe('prove', () => {
     it('produces a result', async () => {
       if (typeof formalPropertyHandler.prove !== 'function') return;
-      const result = await formalPropertyHandler.prove({ id: "fp-001", evidence_ref: "ev-abc" }, storage);
+      const result = await formalPropertyHandler.prove({ id: {"type":"ref","fixture":"valid_define","field":"property"}, evidence_ref: "ev-abc" }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -64,12 +64,7 @@ describe('FormalProperty imperative handler', () => {
       if (typeof formalPropertyHandler.prove !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_define = await formalPropertyHandler.define({ name: "hash-nonzero", target_symbol: "clef/concept/Password", kind: "invariant", expression: "forall p: Password | len(p.hash) > 0", formal_language: "smtlib", scope: "local", priority: "required" }, storage);
-      const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
-      const _fixtureInput = { id: "fp-001", evidence_ref: "ev-abc" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await formalPropertyHandler.prove({ ..._fixtureInput }, storage);
+      const result = await formalPropertyHandler.prove({ id: afterResult_valid_define?.output?.["property"], evidence_ref: "ev-abc" }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -86,7 +81,7 @@ describe('FormalProperty imperative handler', () => {
   describe('refute', () => {
     it('produces a result', async () => {
       if (typeof formalPropertyHandler.refute !== 'function') return;
-      const result = await formalPropertyHandler.refute({ id: "fp-001", evidence_ref: "ev-counter" }, storage);
+      const result = await formalPropertyHandler.refute({ id: {"type":"ref","fixture":"valid_define","field":"property"}, evidence_ref: "ev-counter" }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -97,12 +92,7 @@ describe('FormalProperty imperative handler', () => {
       if (typeof formalPropertyHandler.refute !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_define = await formalPropertyHandler.define({ name: "hash-nonzero", target_symbol: "clef/concept/Password", kind: "invariant", expression: "forall p: Password | len(p.hash) > 0", formal_language: "smtlib", scope: "local", priority: "required" }, storage);
-      const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
-      const _fixtureInput = { id: "fp-001", evidence_ref: "ev-counter" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await formalPropertyHandler.refute({ ..._fixtureInput }, storage);
+      const result = await formalPropertyHandler.refute({ id: afterResult_valid_define?.output?.["property"], evidence_ref: "ev-counter" }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -119,7 +109,7 @@ describe('FormalProperty imperative handler', () => {
   describe('check', () => {
     it('produces a result', async () => {
       if (typeof formalPropertyHandler.check !== 'function') return;
-      const result = await formalPropertyHandler.check({ id: "fp-001", solver: "z3" }, storage);
+      const result = await formalPropertyHandler.check({ id: {"type":"ref","fixture":"valid_define","field":"property"}, solver: "z3" }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -130,12 +120,7 @@ describe('FormalProperty imperative handler', () => {
       if (typeof formalPropertyHandler.check !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_define = await formalPropertyHandler.define({ name: "hash-nonzero", target_symbol: "clef/concept/Password", kind: "invariant", expression: "forall p: Password | len(p.hash) > 0", formal_language: "smtlib", scope: "local", priority: "required" }, storage);
-      const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
-      const _fixtureInput = { id: "fp-001", solver: "z3" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await formalPropertyHandler.check({ ..._fixtureInput }, storage);
+      const result = await formalPropertyHandler.check({ id: afterResult_valid_define?.output?.["property"], solver: "z3" }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -152,7 +137,7 @@ describe('FormalProperty imperative handler', () => {
   describe('synthesize', () => {
     it('produces a result', async () => {
       if (typeof formalPropertyHandler.synthesize !== 'function') return;
-      const result = await formalPropertyHandler.synthesize({ target_symbol: "clef/concept/Password", intent_ref: "intent-001" }, storage);
+      const result = await formalPropertyHandler.synthesize({ target_symbol: "clef/concept/Password", intent_ref: {"type":"ref","fixture":"valid_define","field":"property"} }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -163,12 +148,7 @@ describe('FormalProperty imperative handler', () => {
       if (typeof formalPropertyHandler.synthesize !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_define = await formalPropertyHandler.define({ name: "hash-nonzero", target_symbol: "clef/concept/Password", kind: "invariant", expression: "forall p: Password | len(p.hash) > 0", formal_language: "smtlib", scope: "local", priority: "required" }, storage);
-      const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
-      const _fixtureInput = { target_symbol: "clef/concept/Password", intent_ref: "intent-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await formalPropertyHandler.synthesize({ ..._fixtureInput }, storage);
+      const result = await formalPropertyHandler.synthesize({ target_symbol: "clef/concept/Password", intent_ref: afterResult_valid_define?.output?.["property"] }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -176,12 +156,7 @@ describe('FormalProperty imperative handler', () => {
       if (typeof formalPropertyHandler.synthesize !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_define = await formalPropertyHandler.define({ name: "hash-nonzero", target_symbol: "clef/concept/Password", kind: "invariant", expression: "forall p: Password | len(p.hash) > 0", formal_language: "smtlib", scope: "local", priority: "required" }, storage);
-      const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
-      const _fixtureInput = { target_symbol: "clef/concept/User", intent_ref: "intent-002", formal_language: "lean" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await formalPropertyHandler.synthesize({ ..._fixtureInput }, storage);
+      const result = await formalPropertyHandler.synthesize({ target_symbol: "clef/concept/User", intent_ref: afterResult_valid_define?.output?.["property"], formal_language: "lean" }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -266,7 +241,7 @@ describe('FormalProperty imperative handler', () => {
   describe('invalidate', () => {
     it('produces a result', async () => {
       if (typeof formalPropertyHandler.invalidate !== 'function') return;
-      const result = await formalPropertyHandler.invalidate({ id: "fp-001" }, storage);
+      const result = await formalPropertyHandler.invalidate({ id: {"type":"ref","fixture":"valid_define","field":"property"} }, storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -277,12 +252,7 @@ describe('FormalProperty imperative handler', () => {
       if (typeof formalPropertyHandler.invalidate !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_define = await formalPropertyHandler.define({ name: "hash-nonzero", target_symbol: "clef/concept/Password", kind: "invariant", expression: "forall p: Password | len(p.hash) > 0", formal_language: "smtlib", scope: "local", priority: "required" }, storage);
-      const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
-      const _fixtureInput = { id: "fp-001" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await formalPropertyHandler.invalidate({ ..._fixtureInput }, storage);
+      const result = await formalPropertyHandler.invalidate({ id: afterResult_valid_define?.output?.["property"] }, storage);
       expect(result.variant).toBe('ok');
     });
 

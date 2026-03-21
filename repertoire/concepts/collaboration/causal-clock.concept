@@ -56,8 +56,8 @@ concept CausalClock [T] {
         Returns whether a strictly dominates b —
         a >= b component-wise and a != b.
       }
-      fixture dominates_check { a: "event-1", b: "event-2" } after tick_replica_a
-      fixture dominates_missing { a: "nonexistent", b: "event-2" } after tick_replica_a
+      fixture dominates_check { a: $tick_replica_a.timestamp, b: $tick_replica_a.timestamp } after tick_replica_a
+      fixture dominates_missing { a: "nonexistent", b: $tick_replica_a.timestamp } after tick_replica_a
     }
   }
 

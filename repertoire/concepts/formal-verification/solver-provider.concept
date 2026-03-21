@@ -48,7 +48,7 @@ concept SolverProvider [S] {
         No registered provider supports this combination.
       }
 
-      fixture valid_dispatch { property_ref: "prop-1", formal_language: "smtlib", kind: "invariant" } after valid_register
+      fixture valid_dispatch { property_ref: $valid_register.id, formal_language: "smtlib", kind: "invariant" } after valid_register
       fixture no_matching_provider { property_ref: "prop-2", formal_language: "coq", kind: "liveness" } -> no_provider
     }
 

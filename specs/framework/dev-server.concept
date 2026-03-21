@@ -49,8 +49,8 @@ concept DevServer [D] {
         Server stopped cleanly.
       }
 
-      fixture valid_stop { session: "dev-server-1" } after valid_start
-      fixture nonexistent_stop { session: "dev-server-999" } after valid_start
+      fixture valid_stop { session: $valid_start.session } after valid_start
+      fixture nonexistent_stop { session: $valid_start.session } after valid_start
     }
 
     action status(session: D) {
@@ -64,7 +64,7 @@ concept DevServer [D] {
         Server is not running.
       }
 
-      fixture running_status { session: "dev-server-1" } after valid_start
+      fixture running_status { session: $valid_start.session } after valid_start
       fixture stopped_status { session: "dev-server-999" } -> stopped
     }
   }

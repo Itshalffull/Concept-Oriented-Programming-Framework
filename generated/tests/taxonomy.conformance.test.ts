@@ -102,7 +102,7 @@ describe('Taxonomy functional handler', () => {
 
   describe('addTerm', () => {
     it('builds a valid StorageProgram', () => {
-      const program = taxonomyHandler.addTerm({ vocab: "vocab-topics-1", term: "science", parent: "" });
+      const program = taxonomyHandler.addTerm({ vocab: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, term: "science", parent: "" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('Taxonomy functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = taxonomyHandler.addTerm({ vocab: "vocab-topics-1", term: "science", parent: "" });
+      const program = taxonomyHandler.addTerm({ vocab: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, term: "science", parent: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = taxonomyHandler.addTerm({ vocab: "vocab-topics-1", term: "science", parent: "" });
+      const program = taxonomyHandler.addTerm({ vocab: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, term: "science", parent: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = taxonomyHandler.addTerm({ vocab: "vocab-topics-1", term: "science", parent: "" });
+      const program = taxonomyHandler.addTerm({ vocab: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, term: "science", parent: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('Taxonomy functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = taxonomyHandler.addTerm({ vocab: "vocab-topics-1", term: "science", parent: "" });
+      const program = taxonomyHandler.addTerm({ vocab: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, term: "science", parent: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('Taxonomy functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof taxonomyHandler.addTerm !== 'function') return;
-      const result = await interpret(taxonomyHandler.addTerm({ vocab: "vocab-topics-1", term: "science", parent: "" }), storage);
+      const result = await interpret(taxonomyHandler.addTerm({ vocab: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, term: "science", parent: "" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,12 +156,7 @@ describe('Taxonomy functional handler', () => {
       if (typeof taxonomyHandler.addTerm !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_topics_vocab = await interpret(taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_topics_vocab?.output ?? {}));
-      const _fixtureInput = { vocab: "vocab-topics-1", term: "science", parent: "" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(taxonomyHandler.addTerm({ ..._fixtureInput }), storage);
+      const result = await interpret(taxonomyHandler.addTerm({ vocab: afterResult_create_topics_vocab?.output?.["id"], term: "science", parent: "" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -169,12 +164,7 @@ describe('Taxonomy functional handler', () => {
       if (typeof taxonomyHandler.addTerm !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_topics_vocab = await interpret(taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_topics_vocab?.output ?? {}));
-      const _fixtureInput = { vocab: "vocab-topics-1", term: "physics", parent: "science" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(taxonomyHandler.addTerm({ ..._fixtureInput }), storage);
+      const result = await interpret(taxonomyHandler.addTerm({ vocab: afterResult_create_topics_vocab?.output?.["id"], term: "physics", parent: "science" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -189,7 +179,7 @@ describe('Taxonomy functional handler', () => {
 
   describe('setParent', () => {
     it('builds a valid StorageProgram', () => {
-      const program = taxonomyHandler.setParent({ vocab: "vocab-topics-1", term: "physics", parent: "natural-science" });
+      const program = taxonomyHandler.setParent({ vocab: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, term: "physics", parent: "natural-science" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -197,21 +187,21 @@ describe('Taxonomy functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = taxonomyHandler.setParent({ vocab: "vocab-topics-1", term: "physics", parent: "natural-science" });
+      const program = taxonomyHandler.setParent({ vocab: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, term: "physics", parent: "natural-science" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = taxonomyHandler.setParent({ vocab: "vocab-topics-1", term: "physics", parent: "natural-science" });
+      const program = taxonomyHandler.setParent({ vocab: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, term: "physics", parent: "natural-science" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = taxonomyHandler.setParent({ vocab: "vocab-topics-1", term: "physics", parent: "natural-science" });
+      const program = taxonomyHandler.setParent({ vocab: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, term: "physics", parent: "natural-science" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -224,7 +214,7 @@ describe('Taxonomy functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = taxonomyHandler.setParent({ vocab: "vocab-topics-1", term: "physics", parent: "natural-science" });
+      const program = taxonomyHandler.setParent({ vocab: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, term: "physics", parent: "natural-science" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -232,7 +222,7 @@ describe('Taxonomy functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof taxonomyHandler.setParent !== 'function') return;
-      const result = await interpret(taxonomyHandler.setParent({ vocab: "vocab-topics-1", term: "physics", parent: "natural-science" }), storage);
+      const result = await interpret(taxonomyHandler.setParent({ vocab: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, term: "physics", parent: "natural-science" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -243,12 +233,7 @@ describe('Taxonomy functional handler', () => {
       if (typeof taxonomyHandler.setParent !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_topics_vocab = await interpret(taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_topics_vocab?.output ?? {}));
-      const _fixtureInput = { vocab: "vocab-topics-1", term: "physics", parent: "natural-science" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(taxonomyHandler.setParent({ ..._fixtureInput }), storage);
+      const result = await interpret(taxonomyHandler.setParent({ vocab: afterResult_create_topics_vocab?.output?.["id"], term: "physics", parent: "natural-science" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -263,7 +248,7 @@ describe('Taxonomy functional handler', () => {
 
   describe('tagEntity', () => {
     it('builds a valid StorageProgram', () => {
-      const program = taxonomyHandler.tagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" });
+      const program = taxonomyHandler.tagEntity({ entity: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, vocab: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, term: "science" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -271,21 +256,21 @@ describe('Taxonomy functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = taxonomyHandler.tagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" });
+      const program = taxonomyHandler.tagEntity({ entity: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, vocab: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, term: "science" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = taxonomyHandler.tagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" });
+      const program = taxonomyHandler.tagEntity({ entity: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, vocab: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, term: "science" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = taxonomyHandler.tagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" });
+      const program = taxonomyHandler.tagEntity({ entity: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, vocab: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, term: "science" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -298,7 +283,7 @@ describe('Taxonomy functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = taxonomyHandler.tagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" });
+      const program = taxonomyHandler.tagEntity({ entity: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, vocab: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, term: "science" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -306,7 +291,7 @@ describe('Taxonomy functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof taxonomyHandler.tagEntity !== 'function') return;
-      const result = await interpret(taxonomyHandler.tagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" }), storage);
+      const result = await interpret(taxonomyHandler.tagEntity({ entity: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, vocab: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, term: "science" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -317,12 +302,7 @@ describe('Taxonomy functional handler', () => {
       if (typeof taxonomyHandler.tagEntity !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_topics_vocab = await interpret(taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_topics_vocab?.output ?? {}));
-      const _fixtureInput = { entity: "page-1", vocab: "vocab-topics-1", term: "science" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(taxonomyHandler.tagEntity({ ..._fixtureInput }), storage);
+      const result = await interpret(taxonomyHandler.tagEntity({ entity: afterResult_create_topics_vocab?.output?.["id"], vocab: afterResult_create_topics_vocab?.output?.["id"], term: "science" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -337,7 +317,7 @@ describe('Taxonomy functional handler', () => {
 
   describe('untagEntity', () => {
     it('builds a valid StorageProgram', () => {
-      const program = taxonomyHandler.untagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" });
+      const program = taxonomyHandler.untagEntity({ entity: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, vocab: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, term: "science" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -345,21 +325,21 @@ describe('Taxonomy functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = taxonomyHandler.untagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" });
+      const program = taxonomyHandler.untagEntity({ entity: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, vocab: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, term: "science" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = taxonomyHandler.untagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" });
+      const program = taxonomyHandler.untagEntity({ entity: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, vocab: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, term: "science" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = taxonomyHandler.untagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" });
+      const program = taxonomyHandler.untagEntity({ entity: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, vocab: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, term: "science" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -372,7 +352,7 @@ describe('Taxonomy functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = taxonomyHandler.untagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" });
+      const program = taxonomyHandler.untagEntity({ entity: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, vocab: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, term: "science" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -380,7 +360,7 @@ describe('Taxonomy functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof taxonomyHandler.untagEntity !== 'function') return;
-      const result = await interpret(taxonomyHandler.untagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" }), storage);
+      const result = await interpret(taxonomyHandler.untagEntity({ entity: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, vocab: {"type":"ref","fixture":"create_topics_vocab","field":"id"}, term: "science" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -391,12 +371,7 @@ describe('Taxonomy functional handler', () => {
       if (typeof taxonomyHandler.untagEntity !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_topics_vocab = await interpret(taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" }), storage);
-      const _pool = Object.assign({}, (afterResult_create_topics_vocab?.output ?? {}));
-      const _fixtureInput = { entity: "page-1", vocab: "vocab-topics-1", term: "science" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(taxonomyHandler.untagEntity({ ..._fixtureInput }), storage);
+      const result = await interpret(taxonomyHandler.untagEntity({ entity: afterResult_create_topics_vocab?.output?.["id"], vocab: afterResult_create_topics_vocab?.output?.["id"], term: "science" }), storage);
       expect(result.variant).toBe('ok');
     });
 

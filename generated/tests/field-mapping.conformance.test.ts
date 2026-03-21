@@ -110,7 +110,7 @@ describe('FieldMapping functional handler', () => {
 
   describe('apply', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fieldMappingHandler.apply({ record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: "map-1" });
+      const program = fieldMappingHandler.apply({ record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: {"type":"ref","fixture":"map_title","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -118,21 +118,21 @@ describe('FieldMapping functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fieldMappingHandler.apply({ record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: "map-1" });
+      const program = fieldMappingHandler.apply({ record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: {"type":"ref","fixture":"map_title","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fieldMappingHandler.apply({ record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: "map-1" });
+      const program = fieldMappingHandler.apply({ record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: {"type":"ref","fixture":"map_title","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fieldMappingHandler.apply({ record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: "map-1" });
+      const program = fieldMappingHandler.apply({ record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: {"type":"ref","fixture":"map_title","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -145,7 +145,7 @@ describe('FieldMapping functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fieldMappingHandler.apply({ record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: "map-1" });
+      const program = fieldMappingHandler.apply({ record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: {"type":"ref","fixture":"map_title","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -153,7 +153,7 @@ describe('FieldMapping functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof fieldMappingHandler.apply !== 'function') return;
-      const result = await interpret(fieldMappingHandler.apply({ record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: "map-1" }), storage);
+      const result = await interpret(fieldMappingHandler.apply({ record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: {"type":"ref","fixture":"map_title","field":"id"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -164,12 +164,7 @@ describe('FieldMapping functional handler', () => {
       if (typeof fieldMappingHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_map_title = await interpret(fieldMappingHandler.map({ mappingId: "map-1", sourceField: "title", destField: "headline", transform: "" }), storage);
-      const _pool = Object.assign({}, (afterResult_map_title?.output ?? {}));
-      const _fixtureInput = { record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: "map-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(fieldMappingHandler.apply({ ..._fixtureInput }), storage);
+      const result = await interpret(fieldMappingHandler.apply({ record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: afterResult_map_title?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -198,7 +193,7 @@ describe('FieldMapping functional handler', () => {
 
   describe('reverse', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fieldMappingHandler.reverse({ record: "{\"headline\":\"Hello\",\"body\":\"World\"}", mappingId: "map-1" });
+      const program = fieldMappingHandler.reverse({ record: "{\"headline\":\"Hello\",\"body\":\"World\"}", mappingId: {"type":"ref","fixture":"map_title","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -206,21 +201,21 @@ describe('FieldMapping functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fieldMappingHandler.reverse({ record: "{\"headline\":\"Hello\",\"body\":\"World\"}", mappingId: "map-1" });
+      const program = fieldMappingHandler.reverse({ record: "{\"headline\":\"Hello\",\"body\":\"World\"}", mappingId: {"type":"ref","fixture":"map_title","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fieldMappingHandler.reverse({ record: "{\"headline\":\"Hello\",\"body\":\"World\"}", mappingId: "map-1" });
+      const program = fieldMappingHandler.reverse({ record: "{\"headline\":\"Hello\",\"body\":\"World\"}", mappingId: {"type":"ref","fixture":"map_title","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fieldMappingHandler.reverse({ record: "{\"headline\":\"Hello\",\"body\":\"World\"}", mappingId: "map-1" });
+      const program = fieldMappingHandler.reverse({ record: "{\"headline\":\"Hello\",\"body\":\"World\"}", mappingId: {"type":"ref","fixture":"map_title","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -233,7 +228,7 @@ describe('FieldMapping functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fieldMappingHandler.reverse({ record: "{\"headline\":\"Hello\",\"body\":\"World\"}", mappingId: "map-1" });
+      const program = fieldMappingHandler.reverse({ record: "{\"headline\":\"Hello\",\"body\":\"World\"}", mappingId: {"type":"ref","fixture":"map_title","field":"id"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -241,7 +236,7 @@ describe('FieldMapping functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof fieldMappingHandler.reverse !== 'function') return;
-      const result = await interpret(fieldMappingHandler.reverse({ record: "{\"headline\":\"Hello\",\"body\":\"World\"}", mappingId: "map-1" }), storage);
+      const result = await interpret(fieldMappingHandler.reverse({ record: "{\"headline\":\"Hello\",\"body\":\"World\"}", mappingId: {"type":"ref","fixture":"map_title","field":"id"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -252,12 +247,7 @@ describe('FieldMapping functional handler', () => {
       if (typeof fieldMappingHandler.reverse !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_map_title = await interpret(fieldMappingHandler.map({ mappingId: "map-1", sourceField: "title", destField: "headline", transform: "" }), storage);
-      const _pool = Object.assign({}, (afterResult_map_title?.output ?? {}));
-      const _fixtureInput = { record: "{\"headline\":\"Hello\",\"body\":\"World\"}", mappingId: "map-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(fieldMappingHandler.reverse({ ..._fixtureInput }), storage);
+      const result = await interpret(fieldMappingHandler.reverse({ record: "{\"headline\":\"Hello\",\"body\":\"World\"}", mappingId: afterResult_map_title?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

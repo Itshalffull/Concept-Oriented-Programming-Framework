@@ -182,7 +182,7 @@ describe('Fetcher functional handler', () => {
 
   describe('cancel', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fetcherHandler.cancel({ download: "dl-1" });
+      const program = fetcherHandler.cancel({ download: {"type":"ref","fixture":"fetch_module","field":"download"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -190,21 +190,21 @@ describe('Fetcher functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fetcherHandler.cancel({ download: "dl-1" });
+      const program = fetcherHandler.cancel({ download: {"type":"ref","fixture":"fetch_module","field":"download"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fetcherHandler.cancel({ download: "dl-1" });
+      const program = fetcherHandler.cancel({ download: {"type":"ref","fixture":"fetch_module","field":"download"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fetcherHandler.cancel({ download: "dl-1" });
+      const program = fetcherHandler.cancel({ download: {"type":"ref","fixture":"fetch_module","field":"download"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -217,7 +217,7 @@ describe('Fetcher functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fetcherHandler.cancel({ download: "dl-1" });
+      const program = fetcherHandler.cancel({ download: {"type":"ref","fixture":"fetch_module","field":"download"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -225,7 +225,7 @@ describe('Fetcher functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof fetcherHandler.cancel !== 'function') return;
-      const result = await interpret(fetcherHandler.cancel({ download: "dl-1" }), storage);
+      const result = await interpret(fetcherHandler.cancel({ download: {"type":"ref","fixture":"fetch_module","field":"download"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -236,12 +236,7 @@ describe('Fetcher functional handler', () => {
       if (typeof fetcherHandler.cancel !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_fetch_module = await interpret(fetcherHandler.fetch({ module_id: "lodash", version: "4.17.21", source_url: "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz", expected_hash: "sha256:abc123" }), storage);
-      const _pool = Object.assign({}, (afterResult_fetch_module?.output ?? {}));
-      const _fixtureInput = { download: "dl-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(fetcherHandler.cancel({ ..._fixtureInput }), storage);
+      const result = await interpret(fetcherHandler.cancel({ download: afterResult_fetch_module?.output?.["download"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

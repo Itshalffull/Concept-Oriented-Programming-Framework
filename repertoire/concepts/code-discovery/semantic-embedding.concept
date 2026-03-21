@@ -68,7 +68,7 @@ concept SemanticEmbedding [B] {
         Embedding does not exist.
       }
 
-      fixture get_existing { embedding: "semantic-embedding-1" } after compute_codebert
+      fixture get_existing { embedding: $compute_codebert.embedding } after compute_codebert
       fixture get_unknown { embedding: "semantic-embedding-nonexistent" } -> notfound
     }
   }

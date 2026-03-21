@@ -64,7 +64,7 @@ concept Fetcher [D] {
         error "cancelled". Cleans up any partial data.
       }
 
-      fixture cancel_active_download { download: "dl-1" } after fetch_module
+      fixture cancel_active_download { download: $fetch_module.download } after fetch_module
       fixture cancel_nonexistent { download: "dl-nonexistent" } -> error
     }
   }

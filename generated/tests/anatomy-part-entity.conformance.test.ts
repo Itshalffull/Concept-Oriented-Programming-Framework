@@ -324,7 +324,7 @@ describe('AnatomyPartEntity functional handler', () => {
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = anatomyPartEntityHandler.get({ part: "anatomy-part-entity-1" });
+      const program = anatomyPartEntityHandler.get({ part: {"type":"ref","fixture":"register_dialog_root","field":"part"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -332,21 +332,21 @@ describe('AnatomyPartEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = anatomyPartEntityHandler.get({ part: "anatomy-part-entity-1" });
+      const program = anatomyPartEntityHandler.get({ part: {"type":"ref","fixture":"register_dialog_root","field":"part"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = anatomyPartEntityHandler.get({ part: "anatomy-part-entity-1" });
+      const program = anatomyPartEntityHandler.get({ part: {"type":"ref","fixture":"register_dialog_root","field":"part"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = anatomyPartEntityHandler.get({ part: "anatomy-part-entity-1" });
+      const program = anatomyPartEntityHandler.get({ part: {"type":"ref","fixture":"register_dialog_root","field":"part"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -359,7 +359,7 @@ describe('AnatomyPartEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = anatomyPartEntityHandler.get({ part: "anatomy-part-entity-1" });
+      const program = anatomyPartEntityHandler.get({ part: {"type":"ref","fixture":"register_dialog_root","field":"part"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -367,7 +367,7 @@ describe('AnatomyPartEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof anatomyPartEntityHandler.get !== 'function') return;
-      const result = await interpret(anatomyPartEntityHandler.get({ part: "anatomy-part-entity-1" }), storage);
+      const result = await interpret(anatomyPartEntityHandler.get({ part: {"type":"ref","fixture":"register_dialog_root","field":"part"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -378,12 +378,7 @@ describe('AnatomyPartEntity functional handler', () => {
       if (typeof anatomyPartEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_dialog_root = await interpret(anatomyPartEntityHandler.register({ widget: "dialog", name: "root", role: "container", required: "true" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_dialog_root?.output ?? {}));
-      const _fixtureInput = { part: "anatomy-part-entity-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(anatomyPartEntityHandler.get({ ..._fixtureInput }), storage);
+      const result = await interpret(anatomyPartEntityHandler.get({ part: afterResult_register_dialog_root?.output?.["part"] }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -49,7 +49,7 @@ concept Quorum [Q] {
         The quorum rule does not exist.
       }
 
-      fixture update_to_fractional { rule: "quorum-001", newType: "Fractional", newValue: 0.25 } after absolute_ten
+      fixture update_to_fractional { rule: $absolute_ten.id, newType: "Fractional", newValue: 0.25 } after absolute_ten
       fixture update_missing_rule { rule: "quorum-nonexistent", newType: "Absolute", newValue: 5.0 } -> error
     }
   }

@@ -410,7 +410,7 @@ describe('ThemeImplementationEntity functional handler', () => {
 
   describe('resolveToken', () => {
     it('builds a valid StorageProgram', () => {
-      const program = themeImplementationEntityHandler.resolveToken({ impl: "impl-001", tokenPath: "palette.primary.500" });
+      const program = themeImplementationEntityHandler.resolveToken({ impl: {"type":"ref","fixture":"register_ocean_css","field":"impl"}, tokenPath: "palette.primary.500" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -418,21 +418,21 @@ describe('ThemeImplementationEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = themeImplementationEntityHandler.resolveToken({ impl: "impl-001", tokenPath: "palette.primary.500" });
+      const program = themeImplementationEntityHandler.resolveToken({ impl: {"type":"ref","fixture":"register_ocean_css","field":"impl"}, tokenPath: "palette.primary.500" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = themeImplementationEntityHandler.resolveToken({ impl: "impl-001", tokenPath: "palette.primary.500" });
+      const program = themeImplementationEntityHandler.resolveToken({ impl: {"type":"ref","fixture":"register_ocean_css","field":"impl"}, tokenPath: "palette.primary.500" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = themeImplementationEntityHandler.resolveToken({ impl: "impl-001", tokenPath: "palette.primary.500" });
+      const program = themeImplementationEntityHandler.resolveToken({ impl: {"type":"ref","fixture":"register_ocean_css","field":"impl"}, tokenPath: "palette.primary.500" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -445,7 +445,7 @@ describe('ThemeImplementationEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = themeImplementationEntityHandler.resolveToken({ impl: "impl-001", tokenPath: "palette.primary.500" });
+      const program = themeImplementationEntityHandler.resolveToken({ impl: {"type":"ref","fixture":"register_ocean_css","field":"impl"}, tokenPath: "palette.primary.500" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -453,7 +453,7 @@ describe('ThemeImplementationEntity functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof themeImplementationEntityHandler.resolveToken !== 'function') return;
-      const result = await interpret(themeImplementationEntityHandler.resolveToken({ impl: "impl-001", tokenPath: "palette.primary.500" }), storage);
+      const result = await interpret(themeImplementationEntityHandler.resolveToken({ impl: {"type":"ref","fixture":"register_ocean_css","field":"impl"}, tokenPath: "palette.primary.500" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -464,12 +464,7 @@ describe('ThemeImplementationEntity functional handler', () => {
       if (typeof themeImplementationEntityHandler.resolveToken !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_register_ocean_css = await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage);
-      const _pool = Object.assign({}, (afterResult_register_ocean_css?.output ?? {}));
-      const _fixtureInput = { impl: "impl-001", tokenPath: "palette.primary.500" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
-      const result = await interpret(themeImplementationEntityHandler.resolveToken({ ..._fixtureInput }), storage);
+      const result = await interpret(themeImplementationEntityHandler.resolveToken({ impl: afterResult_register_ocean_css?.output?.["impl"], tokenPath: "palette.primary.500" }), storage);
       expect(result.variant).toBe('ok');
     });
 
