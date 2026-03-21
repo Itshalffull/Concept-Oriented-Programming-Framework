@@ -155,8 +155,13 @@ describe('Permission functional handler', () => {
     it('fixture "revoke_existing" -> ok', async () => {
       if (typeof permissionHandler.revoke !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(permissionHandler.grant({ who: "alice", where: "articles", what: "read", condition: "", grantedBy: "admin" }), storage);
-      const result = await interpret(permissionHandler.revoke({ permission: "alice:articles:read" }), storage);
+      const afterResult_grant_read_articles = await interpret(permissionHandler.grant({ who: "alice", where: "articles", what: "read", condition: "", grantedBy: "admin" }), storage);
+      const _pool = Object.assign({}, (afterResult_grant_read_articles?.output ?? {}));
+      const _fixtureInput = { permission: "alice:articles:read" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(permissionHandler.revoke({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('Permission functional handler', () => {
     it('fixture "check_allowed" -> ok', async () => {
       if (typeof permissionHandler.check !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(permissionHandler.grant({ who: "alice", where: "articles", what: "read", condition: "", grantedBy: "admin" }), storage);
-      const result = await interpret(permissionHandler.check({ who: "alice", where: "articles", what: "read" }), storage);
+      const afterResult_grant_read_articles = await interpret(permissionHandler.grant({ who: "alice", where: "articles", what: "read", condition: "", grantedBy: "admin" }), storage);
+      const _pool = Object.assign({}, (afterResult_grant_read_articles?.output ?? {}));
+      const _fixtureInput = { who: "alice", where: "articles", what: "read" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(permissionHandler.check({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

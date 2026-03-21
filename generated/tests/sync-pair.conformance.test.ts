@@ -156,8 +156,13 @@ describe('SyncPair functional handler', () => {
     it('fixture "sync_existing" -> ok', async () => {
       if (typeof syncPairHandler.sync !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(syncPairHandler.link({ pairId: "pair-1", idA: "local-42", idB: "remote-99" }), storage);
-      const result = await interpret(syncPairHandler.sync({ pairId: "pair-1" }), storage);
+      const afterResult_link_records = await interpret(syncPairHandler.link({ pairId: "pair-1", idA: "local-42", idB: "remote-99" }), storage);
+      const _pool = Object.assign({}, (afterResult_link_records?.output ?? {}));
+      const _fixtureInput = { pairId: "pair-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(syncPairHandler.sync({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -226,8 +231,13 @@ describe('SyncPair functional handler', () => {
     it('fixture "detect_existing" -> ok', async () => {
       if (typeof syncPairHandler.detectConflicts !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(syncPairHandler.link({ pairId: "pair-1", idA: "local-42", idB: "remote-99" }), storage);
-      const result = await interpret(syncPairHandler.detectConflicts({ pairId: "pair-1" }), storage);
+      const afterResult_link_records = await interpret(syncPairHandler.link({ pairId: "pair-1", idA: "local-42", idB: "remote-99" }), storage);
+      const _pool = Object.assign({}, (afterResult_link_records?.output ?? {}));
+      const _fixtureInput = { pairId: "pair-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(syncPairHandler.detectConflicts({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -296,8 +306,13 @@ describe('SyncPair functional handler', () => {
     it('fixture "resolve_conflict" -> ok', async () => {
       if (typeof syncPairHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(syncPairHandler.link({ pairId: "pair-1", idA: "local-42", idB: "remote-99" }), storage);
-      const result = await interpret(syncPairHandler.resolve({ conflictId: "conflict-1", resolution: "keep_local" }), storage);
+      const afterResult_link_records = await interpret(syncPairHandler.link({ pairId: "pair-1", idA: "local-42", idB: "remote-99" }), storage);
+      const _pool = Object.assign({}, (afterResult_link_records?.output ?? {}));
+      const _fixtureInput = { conflictId: "conflict-1", resolution: "keep_local" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(syncPairHandler.resolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -366,8 +381,13 @@ describe('SyncPair functional handler', () => {
     it('fixture "unlink_existing" -> ok', async () => {
       if (typeof syncPairHandler.unlink !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(syncPairHandler.link({ pairId: "pair-1", idA: "local-42", idB: "remote-99" }), storage);
-      const result = await interpret(syncPairHandler.unlink({ pairId: "pair-1", idA: "local-42" }), storage);
+      const afterResult_link_records = await interpret(syncPairHandler.link({ pairId: "pair-1", idA: "local-42", idB: "remote-99" }), storage);
+      const _pool = Object.assign({}, (afterResult_link_records?.output ?? {}));
+      const _fixtureInput = { pairId: "pair-1", idA: "local-42" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(syncPairHandler.unlink({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -436,8 +456,13 @@ describe('SyncPair functional handler', () => {
     it('fixture "changelog_recent" -> ok', async () => {
       if (typeof syncPairHandler.getChangeLog !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(syncPairHandler.link({ pairId: "pair-1", idA: "local-42", idB: "remote-99" }), storage);
-      const result = await interpret(syncPairHandler.getChangeLog({ pairId: "pair-1", since: "2026-01-01T00:00:00Z" }), storage);
+      const afterResult_link_records = await interpret(syncPairHandler.link({ pairId: "pair-1", idA: "local-42", idB: "remote-99" }), storage);
+      const _pool = Object.assign({}, (afterResult_link_records?.output ?? {}));
+      const _fixtureInput = { pairId: "pair-1", since: "2026-01-01T00:00:00Z" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(syncPairHandler.getChangeLog({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

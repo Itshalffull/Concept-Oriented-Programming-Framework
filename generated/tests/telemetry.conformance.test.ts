@@ -162,16 +162,26 @@ describe('Telemetry functional handler', () => {
     it('fixture "marker_staging" -> ok', async () => {
       if (typeof telemetryHandler.deployMarker !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(telemetryHandler.configure({ concept: "UserService", endpoint: "http://otel-collector:4317", samplingRate: "0.5" }), storage);
-      const result = await interpret(telemetryHandler.deployMarker({ suite: "auth-suite", version: "2.1.0", environment: "staging", status: "started" }), storage);
+      const afterResult_configure_otel = await interpret(telemetryHandler.configure({ concept: "UserService", endpoint: "http://otel-collector:4317", samplingRate: "0.5" }), storage);
+      const _pool = Object.assign({}, (afterResult_configure_otel?.output ?? {}));
+      const _fixtureInput = { suite: "auth-suite", version: "2.1.0", environment: "staging", status: "started" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(telemetryHandler.deployMarker({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "marker_production" -> ok', async () => {
       if (typeof telemetryHandler.deployMarker !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(telemetryHandler.configure({ concept: "UserService", endpoint: "http://otel-collector:4317", samplingRate: "0.5" }), storage);
-      const result = await interpret(telemetryHandler.deployMarker({ suite: "payments", version: "1.0.0", environment: "production", status: "completed" }), storage);
+      const afterResult_configure_otel = await interpret(telemetryHandler.configure({ concept: "UserService", endpoint: "http://otel-collector:4317", samplingRate: "0.5" }), storage);
+      const _pool = Object.assign({}, (afterResult_configure_otel?.output ?? {}));
+      const _fixtureInput = { suite: "payments", version: "1.0.0", environment: "production", status: "completed" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(telemetryHandler.deployMarker({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -239,16 +249,26 @@ describe('Telemetry functional handler', () => {
     it('fixture "analyze_5min" -> ok', async () => {
       if (typeof telemetryHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(telemetryHandler.configure({ concept: "UserService", endpoint: "http://otel-collector:4317", samplingRate: "0.5" }), storage);
-      const result = await interpret(telemetryHandler.analyze({ concept: "UserService", window: "300", criteria: "error_rate < 0.05" }), storage);
+      const afterResult_configure_otel = await interpret(telemetryHandler.configure({ concept: "UserService", endpoint: "http://otel-collector:4317", samplingRate: "0.5" }), storage);
+      const _pool = Object.assign({}, (afterResult_configure_otel?.output ?? {}));
+      const _fixtureInput = { concept: "UserService", window: "300", criteria: "error_rate < 0.05" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(telemetryHandler.analyze({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "analyze_1hr" -> ok', async () => {
       if (typeof telemetryHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(telemetryHandler.configure({ concept: "UserService", endpoint: "http://otel-collector:4317", samplingRate: "0.5" }), storage);
-      const result = await interpret(telemetryHandler.analyze({ concept: "PaymentService", window: "3600", criteria: "latency_p99 < 500" }), storage);
+      const afterResult_configure_otel = await interpret(telemetryHandler.configure({ concept: "UserService", endpoint: "http://otel-collector:4317", samplingRate: "0.5" }), storage);
+      const _pool = Object.assign({}, (afterResult_configure_otel?.output ?? {}));
+      const _fixtureInput = { concept: "PaymentService", window: "3600", criteria: "latency_p99 < 500" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(telemetryHandler.analyze({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -155,8 +155,13 @@ describe('Objective functional handler', () => {
     it('fixture "update_halfway" -> ok', async () => {
       if (typeof objectiveHandler.updateProgress !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(objectiveHandler.create({ title: "Increase Revenue", description: "Grow quarterly revenue by 20%", owner: "cfo@acme.com", metricRefs: ["metric-revenue"], targetDate: "2026-12-31" }), storage);
-      const result = await interpret(objectiveHandler.updateProgress({ objective: "objective-001", currentValue: "50.0" }), storage);
+      const afterResult_create_revenue_goal = await interpret(objectiveHandler.create({ title: "Increase Revenue", description: "Grow quarterly revenue by 20%", owner: "cfo@acme.com", metricRefs: ["metric-revenue"], targetDate: "2026-12-31" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_revenue_goal?.output ?? {}));
+      const _fixtureInput = { objective: "objective-001", currentValue: "50.0" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(objectiveHandler.updateProgress({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('Objective functional handler', () => {
     it('fixture "evaluate_existing" -> ok', async () => {
       if (typeof objectiveHandler.evaluate !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(objectiveHandler.create({ title: "Increase Revenue", description: "Grow quarterly revenue by 20%", owner: "cfo@acme.com", metricRefs: ["metric-revenue"], targetDate: "2026-12-31" }), storage);
-      const result = await interpret(objectiveHandler.evaluate({ objective: "objective-001" }), storage);
+      const afterResult_create_revenue_goal = await interpret(objectiveHandler.create({ title: "Increase Revenue", description: "Grow quarterly revenue by 20%", owner: "cfo@acme.com", metricRefs: ["metric-revenue"], targetDate: "2026-12-31" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_revenue_goal?.output ?? {}));
+      const _fixtureInput = { objective: "objective-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(objectiveHandler.evaluate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,16 +303,26 @@ describe('Objective functional handler', () => {
     it('fixture "cancel_with_reason" -> ok', async () => {
       if (typeof objectiveHandler.cancel !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(objectiveHandler.create({ title: "Increase Revenue", description: "Grow quarterly revenue by 20%", owner: "cfo@acme.com", metricRefs: ["metric-revenue"], targetDate: "2026-12-31" }), storage);
-      const result = await interpret(objectiveHandler.cancel({ objective: "objective-001", reason: "Budget constraints" }), storage);
+      const afterResult_create_revenue_goal = await interpret(objectiveHandler.create({ title: "Increase Revenue", description: "Grow quarterly revenue by 20%", owner: "cfo@acme.com", metricRefs: ["metric-revenue"], targetDate: "2026-12-31" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_revenue_goal?.output ?? {}));
+      const _fixtureInput = { objective: "objective-001", reason: "Budget constraints" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(objectiveHandler.cancel({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "cancel_nonexistent" -> ok', async () => {
       if (typeof objectiveHandler.cancel !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(objectiveHandler.create({ title: "Increase Revenue", description: "Grow quarterly revenue by 20%", owner: "cfo@acme.com", metricRefs: ["metric-revenue"], targetDate: "2026-12-31" }), storage);
-      const result = await interpret(objectiveHandler.cancel({ objective: "objective-nonexistent", reason: "N/A" }), storage);
+      const afterResult_create_revenue_goal = await interpret(objectiveHandler.create({ title: "Increase Revenue", description: "Grow quarterly revenue by 20%", owner: "cfo@acme.com", metricRefs: ["metric-revenue"], targetDate: "2026-12-31" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_revenue_goal?.output ?? {}));
+      const _fixtureInput = { objective: "objective-nonexistent", reason: "N/A" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(objectiveHandler.cancel({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

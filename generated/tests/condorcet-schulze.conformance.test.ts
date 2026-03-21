@@ -148,16 +148,26 @@ describe('CondorcetSchulze functional handler', () => {
     it('fixture "condorcet_clear_winner" -> ok', async () => {
       if (typeof condorcetSchulzeHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(condorcetSchulzeHandler.configure({  }), storage);
-      const result = await interpret(condorcetSchulzeHandler.count({ config: "condorcet-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"A\",\"C\",\"B\"]},{\"voter\":\"carol\",\"ranking\":[\"B\",\"A\",\"C\"]}]", weights: "{}" }), storage);
+      const afterResult_default_config = await interpret(condorcetSchulzeHandler.configure({  }), storage);
+      const _pool = Object.assign({}, (afterResult_default_config?.output ?? {}));
+      const _fixtureInput = { config: "condorcet-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"A\",\"C\",\"B\"]},{\"voter\":\"carol\",\"ranking\":[\"B\",\"A\",\"C\"]}]", weights: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(condorcetSchulzeHandler.count({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "condorcet_empty_ballots" -> error', async () => {
       if (typeof condorcetSchulzeHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(condorcetSchulzeHandler.configure({  }), storage);
-      const result = await interpret(condorcetSchulzeHandler.count({ config: "condorcet-001", rankedBallots: "[]", weights: "{}" }), storage);
+      const afterResult_default_config = await interpret(condorcetSchulzeHandler.configure({  }), storage);
+      const _pool = Object.assign({}, (afterResult_default_config?.output ?? {}));
+      const _fixtureInput = { config: "condorcet-001", rankedBallots: "[]", weights: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(condorcetSchulzeHandler.count({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -218,8 +228,13 @@ describe('CondorcetSchulze functional handler', () => {
     it('fixture "get_matrix" -> ok', async () => {
       if (typeof condorcetSchulzeHandler.getPairwiseMatrix !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(condorcetSchulzeHandler.configure({  }), storage);
-      const result = await interpret(condorcetSchulzeHandler.getPairwiseMatrix({ config: "condorcet-001" }), storage);
+      const afterResult_default_config = await interpret(condorcetSchulzeHandler.configure({  }), storage);
+      const _pool = Object.assign({}, (afterResult_default_config?.output ?? {}));
+      const _fixtureInput = { config: "condorcet-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(condorcetSchulzeHandler.getPairwiseMatrix({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -148,24 +148,39 @@ describe('GenerationPlan functional handler', () => {
     it('fixture "record_done" -> ok', async () => {
       if (typeof generationPlanHandler.recordStep !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(generationPlanHandler.complete({  }), storage);
-      const result = await interpret(generationPlanHandler.recordStep({ stepKey: "framework:TypeScriptGen:password", status: "done", filesProduced: "3", duration: "150", cached: "false" }), storage);
+      const afterResult_valid = await interpret(generationPlanHandler.complete({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { stepKey: "framework:TypeScriptGen:password", status: "done", filesProduced: "3", duration: "150", cached: "false" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(generationPlanHandler.recordStep({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "record_cached" -> ok', async () => {
       if (typeof generationPlanHandler.recordStep !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(generationPlanHandler.complete({  }), storage);
-      const result = await interpret(generationPlanHandler.recordStep({ stepKey: "framework:TypeScriptGen:auth", status: "cached", cached: "true" }), storage);
+      const afterResult_valid = await interpret(generationPlanHandler.complete({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { stepKey: "framework:TypeScriptGen:auth", status: "cached", cached: "true" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(generationPlanHandler.recordStep({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "record_failed" -> ok', async () => {
       if (typeof generationPlanHandler.recordStep !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(generationPlanHandler.complete({  }), storage);
-      const result = await interpret(generationPlanHandler.recordStep({ stepKey: "framework:RustGen:password", status: "failed", duration: "5000", cached: "false" }), storage);
+      const afterResult_valid = await interpret(generationPlanHandler.complete({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { stepKey: "framework:RustGen:password", status: "failed", duration: "5000", cached: "false" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(generationPlanHandler.recordStep({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -226,8 +241,13 @@ describe('GenerationPlan functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof generationPlanHandler.complete !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(generationPlanHandler.complete({  }), storage);
-      const result = await interpret(generationPlanHandler.complete({  }), storage);
+      const afterResult_valid = await interpret(generationPlanHandler.complete({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(generationPlanHandler.complete({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -288,16 +308,26 @@ describe('GenerationPlan functional handler', () => {
     it('fixture "status_existing" -> ok', async () => {
       if (typeof generationPlanHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(generationPlanHandler.complete({  }), storage);
-      const result = await interpret(generationPlanHandler.status({ run: "run-abc123" }), storage);
+      const afterResult_valid = await interpret(generationPlanHandler.complete({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { run: "run-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(generationPlanHandler.status({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "status_missing" -> ok', async () => {
       if (typeof generationPlanHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(generationPlanHandler.complete({  }), storage);
-      const result = await interpret(generationPlanHandler.status({ run: "run-nonexistent" }), storage);
+      const afterResult_valid = await interpret(generationPlanHandler.complete({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { run: "run-nonexistent" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(generationPlanHandler.status({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -358,16 +388,26 @@ describe('GenerationPlan functional handler', () => {
     it('fixture "summary_existing" -> ok', async () => {
       if (typeof generationPlanHandler.summary !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(generationPlanHandler.complete({  }), storage);
-      const result = await interpret(generationPlanHandler.summary({ run: "run-abc123" }), storage);
+      const afterResult_valid = await interpret(generationPlanHandler.complete({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { run: "run-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(generationPlanHandler.summary({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "summary_missing" -> ok', async () => {
       if (typeof generationPlanHandler.summary !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(generationPlanHandler.complete({  }), storage);
-      const result = await interpret(generationPlanHandler.summary({ run: "run-nonexistent" }), storage);
+      const afterResult_valid = await interpret(generationPlanHandler.complete({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { run: "run-nonexistent" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(generationPlanHandler.summary({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -428,16 +468,26 @@ describe('GenerationPlan functional handler', () => {
     it('fixture "history_default" -> ok', async () => {
       if (typeof generationPlanHandler.history !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(generationPlanHandler.complete({  }), storage);
-      const result = await interpret(generationPlanHandler.history({  }), storage);
+      const afterResult_valid = await interpret(generationPlanHandler.complete({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(generationPlanHandler.history({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "history_limited" -> ok', async () => {
       if (typeof generationPlanHandler.history !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(generationPlanHandler.complete({  }), storage);
-      const result = await interpret(generationPlanHandler.history({ limit: "5" }), storage);
+      const afterResult_valid = await interpret(generationPlanHandler.complete({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { limit: "5" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(generationPlanHandler.history({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

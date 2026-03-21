@@ -223,8 +223,13 @@ describe('Session functional handler', () => {
     it('fixture "refresh_valid" -> ok', async () => {
       if (typeof sessionHandler.refresh !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" }), storage);
-      const result = await interpret(sessionHandler.refresh({ session: "sess-001" }), storage);
+      const afterResult_create_mobile = await interpret(sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_mobile?.output ?? {}));
+      const _fixtureInput = { session: "sess-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(sessionHandler.refresh({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -292,8 +297,13 @@ describe('Session functional handler', () => {
     it('fixture "destroy_existing" -> ok', async () => {
       if (typeof sessionHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" }), storage);
-      const result = await interpret(sessionHandler.destroy({ session: "sess-001" }), storage);
+      const afterResult_create_mobile = await interpret(sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_mobile?.output ?? {}));
+      const _fixtureInput = { session: "sess-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(sessionHandler.destroy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -361,8 +371,13 @@ describe('Session functional handler', () => {
     it('fixture "destroy_all_alice" -> ok', async () => {
       if (typeof sessionHandler.destroyAll !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" }), storage);
-      const result = await interpret(sessionHandler.destroyAll({ userId: "alice" }), storage);
+      const afterResult_create_mobile = await interpret(sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_mobile?.output ?? {}));
+      const _fixtureInput = { userId: "alice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(sessionHandler.destroyAll({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -430,8 +445,13 @@ describe('Session functional handler', () => {
     it('fixture "context_existing" -> ok', async () => {
       if (typeof sessionHandler.getContext !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" }), storage);
-      const result = await interpret(sessionHandler.getContext({ session: "sess-001" }), storage);
+      const afterResult_create_mobile = await interpret(sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_mobile?.output ?? {}));
+      const _fixtureInput = { session: "sess-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(sessionHandler.getContext({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

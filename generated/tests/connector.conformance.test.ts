@@ -162,16 +162,26 @@ describe('Connector functional handler', () => {
     it('fixture "read_posts" -> ok', async () => {
       if (typeof connectorHandler.read !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" }), storage);
-      const result = await interpret(connectorHandler.read({ connectorId: "conn-1", query: "{\"path\":\"/posts\"}", options: "{}" }), storage);
+      const afterResult_configure_rest = await interpret(connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_configure_rest?.output ?? {}));
+      const _fixtureInput = { connectorId: "conn-1", query: "{\"path\":\"/posts\"}", options: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(connectorHandler.read({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "read_missing_connector" -> notfound', async () => {
       if (typeof connectorHandler.read !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" }), storage);
-      const result = await interpret(connectorHandler.read({ connectorId: "conn-missing", query: "{}", options: "{}" }), storage);
+      const afterResult_configure_rest = await interpret(connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_configure_rest?.output ?? {}));
+      const _fixtureInput = { connectorId: "conn-missing", query: "{}", options: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(connectorHandler.read({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
@@ -233,16 +243,26 @@ describe('Connector functional handler', () => {
     it('fixture "write_records" -> ok', async () => {
       if (typeof connectorHandler.write !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" }), storage);
-      const result = await interpret(connectorHandler.write({ connectorId: "conn-1", data: "[{\"title\":\"Post 1\"}]", options: "{}" }), storage);
+      const afterResult_configure_rest = await interpret(connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_configure_rest?.output ?? {}));
+      const _fixtureInput = { connectorId: "conn-1", data: "[{\"title\":\"Post 1\"}]", options: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(connectorHandler.write({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "write_missing_connector" -> notfound', async () => {
       if (typeof connectorHandler.write !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" }), storage);
-      const result = await interpret(connectorHandler.write({ connectorId: "conn-missing", data: "[]", options: "{}" }), storage);
+      const afterResult_configure_rest = await interpret(connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_configure_rest?.output ?? {}));
+      const _fixtureInput = { connectorId: "conn-missing", data: "[]", options: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(connectorHandler.write({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
@@ -304,8 +324,13 @@ describe('Connector functional handler', () => {
     it('fixture "test_existing" -> ok', async () => {
       if (typeof connectorHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" }), storage);
-      const result = await interpret(connectorHandler.test({ connectorId: "conn-1" }), storage);
+      const afterResult_configure_rest = await interpret(connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_configure_rest?.output ?? {}));
+      const _fixtureInput = { connectorId: "conn-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(connectorHandler.test({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -374,8 +399,13 @@ describe('Connector functional handler', () => {
     it('fixture "discover_existing" -> ok', async () => {
       if (typeof connectorHandler.discover !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" }), storage);
-      const result = await interpret(connectorHandler.discover({ connectorId: "conn-1" }), storage);
+      const afterResult_configure_rest = await interpret(connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_configure_rest?.output ?? {}));
+      const _fixtureInput = { connectorId: "conn-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(connectorHandler.discover({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

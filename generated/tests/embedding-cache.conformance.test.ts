@@ -155,8 +155,13 @@ describe('EmbeddingCache functional handler', () => {
     it('fixture "known_digest" -> ok', async () => {
       if (typeof embeddingCacheHandler.lookup !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(embeddingCacheHandler.warm({ path: "/var/cache/embeddings.json" }), storage);
-      const result = await interpret(embeddingCacheHandler.lookup({ digest: "sha256:abc123def456" }), storage);
+      const afterResult_valid_path = await interpret(embeddingCacheHandler.warm({ path: "/var/cache/embeddings.json" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_path?.output ?? {}));
+      const _fixtureInput = { digest: "sha256:abc123def456" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(embeddingCacheHandler.lookup({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('EmbeddingCache functional handler', () => {
     it('fixture "store_embedding" -> ok', async () => {
       if (typeof embeddingCacheHandler.put !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(embeddingCacheHandler.warm({ path: "/var/cache/embeddings.json" }), storage);
-      const result = await interpret(embeddingCacheHandler.put({ digest: "sha256:abc123", vector: "[0.1,0.2,0.3]", model: "text-embedding-ada-002", dimensions: "3", sourceKind: "concept", sourceKey: "UserProfile" }), storage);
+      const afterResult_valid_path = await interpret(embeddingCacheHandler.warm({ path: "/var/cache/embeddings.json" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_path?.output ?? {}));
+      const _fixtureInput = { digest: "sha256:abc123", vector: "[0.1,0.2,0.3]", model: "text-embedding-ada-002", dimensions: "3", sourceKind: "concept", sourceKey: "UserProfile" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(embeddingCacheHandler.put({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('EmbeddingCache functional handler', () => {
     it('fixture "flush_to_disk" -> ok', async () => {
       if (typeof embeddingCacheHandler.flush !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(embeddingCacheHandler.warm({ path: "/var/cache/embeddings.json" }), storage);
-      const result = await interpret(embeddingCacheHandler.flush({ path: "/var/cache/embeddings.json" }), storage);
+      const afterResult_valid_path = await interpret(embeddingCacheHandler.warm({ path: "/var/cache/embeddings.json" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_path?.output ?? {}));
+      const _fixtureInput = { path: "/var/cache/embeddings.json" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(embeddingCacheHandler.flush({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -362,8 +377,13 @@ describe('EmbeddingCache functional handler', () => {
     it('fixture "evict_existing" -> ok', async () => {
       if (typeof embeddingCacheHandler.evict !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(embeddingCacheHandler.warm({ path: "/var/cache/embeddings.json" }), storage);
-      const result = await interpret(embeddingCacheHandler.evict({ digest: "sha256:def456" }), storage);
+      const afterResult_valid_path = await interpret(embeddingCacheHandler.warm({ path: "/var/cache/embeddings.json" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_path?.output ?? {}));
+      const _fixtureInput = { digest: "sha256:def456" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(embeddingCacheHandler.evict({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -431,8 +451,13 @@ describe('EmbeddingCache functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof embeddingCacheHandler.stats !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(embeddingCacheHandler.warm({ path: "/var/cache/embeddings.json" }), storage);
-      const result = await interpret(embeddingCacheHandler.stats({  }), storage);
+      const afterResult_valid_path = await interpret(embeddingCacheHandler.warm({ path: "/var/cache/embeddings.json" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_path?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(embeddingCacheHandler.stats({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -493,8 +518,13 @@ describe('EmbeddingCache functional handler', () => {
     it('fixture "config_lookup" -> ok', async () => {
       if (typeof embeddingCacheHandler.lookupWithConfig !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(embeddingCacheHandler.warm({ path: "/var/cache/embeddings.json" }), storage);
-      const result = await interpret(embeddingCacheHandler.lookupWithConfig({ digest: "sha256:abc123", model: "text-embedding-ada-002", dimensions: "1536" }), storage);
+      const afterResult_valid_path = await interpret(embeddingCacheHandler.warm({ path: "/var/cache/embeddings.json" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_path?.output ?? {}));
+      const _fixtureInput = { digest: "sha256:abc123", model: "text-embedding-ada-002", dimensions: "1536" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(embeddingCacheHandler.lookupWithConfig({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -562,8 +592,13 @@ describe('EmbeddingCache functional handler', () => {
     it('fixture "store_with_config" -> ok', async () => {
       if (typeof embeddingCacheHandler.putWithConfig !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(embeddingCacheHandler.warm({ path: "/var/cache/embeddings.json" }), storage);
-      const result = await interpret(embeddingCacheHandler.putWithConfig({ digest: "sha256:abc123", model: "text-embedding-ada-002", dimensions: "1536", vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User" }), storage);
+      const afterResult_valid_path = await interpret(embeddingCacheHandler.warm({ path: "/var/cache/embeddings.json" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_path?.output ?? {}));
+      const _fixtureInput = { digest: "sha256:abc123", model: "text-embedding-ada-002", dimensions: "1536", vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(embeddingCacheHandler.putWithConfig({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

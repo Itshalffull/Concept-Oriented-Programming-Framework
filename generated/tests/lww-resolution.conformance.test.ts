@@ -148,16 +148,26 @@ describe('LWWResolution functional handler', () => {
     it('fixture "resolve_later_wins" -> ok', async () => {
       if (typeof lWWResolutionHandler.attemptResolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(lWWResolutionHandler.register({  }), storage);
-      const result = await interpret(lWWResolutionHandler.attemptResolve({ base: null, v1: "{\"_ts\": \"2026-01-15T10:00:00Z\", \"value\": \"alice\"}", v2: "{\"_ts\": \"2026-01-15T11:00:00Z\", \"value\": \"bob\"}", context: "document-field" }), storage);
+      const afterResult_valid = await interpret(lWWResolutionHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { base: null, v1: "{\"_ts\": \"2026-01-15T10:00:00Z\", \"value\": \"alice\"}", v2: "{\"_ts\": \"2026-01-15T11:00:00Z\", \"value\": \"bob\"}", context: "document-field" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(lWWResolutionHandler.attemptResolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_identical_timestamps" -> error', async () => {
       if (typeof lWWResolutionHandler.attemptResolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(lWWResolutionHandler.register({  }), storage);
-      const result = await interpret(lWWResolutionHandler.attemptResolve({ base: null, v1: "{\"_ts\": \"2026-01-15T10:00:00Z\"}", v2: "{\"_ts\": \"2026-01-15T10:00:00Z\"}", context: "field" }), storage);
+      const afterResult_valid = await interpret(lWWResolutionHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { base: null, v1: "{\"_ts\": \"2026-01-15T10:00:00Z\"}", v2: "{\"_ts\": \"2026-01-15T10:00:00Z\"}", context: "field" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(lWWResolutionHandler.attemptResolve({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 

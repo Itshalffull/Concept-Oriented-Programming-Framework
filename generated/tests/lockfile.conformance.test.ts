@@ -155,8 +155,13 @@ describe('Lockfile functional handler', () => {
     it('fixture "read_existing_lockfile" -> ok', async () => {
       if (typeof lockfileHandler.read !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(lockfileHandler.write({ project_hash: "sha256:manifest-hash-001", entries: [{"module_id":"lodash","version":"4.17.21","content_hash":"sha256:abc123","artifact_url":"https://registry.example.com/lodash.tgz","integrity":"sha256:abc123","features_enabled":[],"dependencies":[]}], metadata: {"resolver_version":"1.0.0","resolved_at":"2026-01-15T10:00:00Z","registry_snapshot":"snap-001"} }), storage);
-      const result = await interpret(lockfileHandler.read({ lockfile: "lock-1" }), storage);
+      const afterResult_write_valid_lockfile = await interpret(lockfileHandler.write({ project_hash: "sha256:manifest-hash-001", entries: [{"module_id":"lodash","version":"4.17.21","content_hash":"sha256:abc123","artifact_url":"https://registry.example.com/lodash.tgz","integrity":"sha256:abc123","features_enabled":[],"dependencies":[]}], metadata: {"resolver_version":"1.0.0","resolved_at":"2026-01-15T10:00:00Z","registry_snapshot":"snap-001"} }), storage);
+      const _pool = Object.assign({}, (afterResult_write_valid_lockfile?.output ?? {}));
+      const _fixtureInput = { lockfile: "lock-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(lockfileHandler.read({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('Lockfile functional handler', () => {
     it('fixture "verify_valid_lockfile" -> ok', async () => {
       if (typeof lockfileHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(lockfileHandler.write({ project_hash: "sha256:manifest-hash-001", entries: [{"module_id":"lodash","version":"4.17.21","content_hash":"sha256:abc123","artifact_url":"https://registry.example.com/lodash.tgz","integrity":"sha256:abc123","features_enabled":[],"dependencies":[]}], metadata: {"resolver_version":"1.0.0","resolved_at":"2026-01-15T10:00:00Z","registry_snapshot":"snap-001"} }), storage);
-      const result = await interpret(lockfileHandler.verify({ lockfile: "lock-1" }), storage);
+      const afterResult_write_valid_lockfile = await interpret(lockfileHandler.write({ project_hash: "sha256:manifest-hash-001", entries: [{"module_id":"lodash","version":"4.17.21","content_hash":"sha256:abc123","artifact_url":"https://registry.example.com/lodash.tgz","integrity":"sha256:abc123","features_enabled":[],"dependencies":[]}], metadata: {"resolver_version":"1.0.0","resolved_at":"2026-01-15T10:00:00Z","registry_snapshot":"snap-001"} }), storage);
+      const _pool = Object.assign({}, (afterResult_write_valid_lockfile?.output ?? {}));
+      const _fixtureInput = { lockfile: "lock-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(lockfileHandler.verify({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

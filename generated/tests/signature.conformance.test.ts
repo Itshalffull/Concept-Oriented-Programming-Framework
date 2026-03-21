@@ -155,16 +155,26 @@ describe('Signature functional handler', () => {
     it('fixture "compile_for_gpt4" -> ok', async () => {
       if (typeof signatureHandler.compile !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage);
-      const result = await interpret(signatureHandler.compile({ signature: "sig-qa-1", model_id: "gpt-4o", examples: [{"input":"What is AI?","output":"Artificial Intelligence"}] }), storage);
+      const afterResult_define_qa_signature = await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_qa_signature?.output ?? {}));
+      const _fixtureInput = { signature: "sig-qa-1", model_id: "gpt-4o", examples: [{"input":"What is AI?","output":"Artificial Intelligence"}] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(signatureHandler.compile({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "compile_no_examples" -> ok', async () => {
       if (typeof signatureHandler.compile !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage);
-      const result = await interpret(signatureHandler.compile({ signature: "sig-qa-1", model_id: "claude-3", examples: [] }), storage);
+      const afterResult_define_qa_signature = await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_qa_signature?.output ?? {}));
+      const _fixtureInput = { signature: "sig-qa-1", model_id: "claude-3", examples: [] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(signatureHandler.compile({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -232,16 +242,26 @@ describe('Signature functional handler', () => {
     it('fixture "execute_qa" -> ok', async () => {
       if (typeof signatureHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage);
-      const result = await interpret(signatureHandler.execute({ signature: "sig-qa-1", model_id: "gpt-4o", inputs: [{"field":"context","value":"The sky is blue."},{"field":"question","value":"What color is the sky?"}] }), storage);
+      const afterResult_define_qa_signature = await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_qa_signature?.output ?? {}));
+      const _fixtureInput = { signature: "sig-qa-1", model_id: "gpt-4o", inputs: [{"field":"context","value":"The sky is blue."},{"field":"question","value":"What color is the sky?"}] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(signatureHandler.execute({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "execute_not_compiled" -> error', async () => {
       if (typeof signatureHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage);
-      const result = await interpret(signatureHandler.execute({ signature: "sig-qa-1", model_id: "unknown-model", inputs: [{"field":"context","value":"test"}] }), storage);
+      const afterResult_define_qa_signature = await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_qa_signature?.output ?? {}));
+      const _fixtureInput = { signature: "sig-qa-1", model_id: "unknown-model", inputs: [{"field":"context","value":"test"}] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(signatureHandler.execute({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -302,8 +322,13 @@ describe('Signature functional handler', () => {
     it('fixture "recompile_for_claude" -> ok', async () => {
       if (typeof signatureHandler.recompile !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage);
-      const result = await interpret(signatureHandler.recompile({ signature: "sig-qa-1", target_model: "claude-3-opus" }), storage);
+      const afterResult_define_qa_signature = await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_qa_signature?.output ?? {}));
+      const _fixtureInput = { signature: "sig-qa-1", target_model: "claude-3-opus" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(signatureHandler.recompile({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

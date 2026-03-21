@@ -169,8 +169,13 @@ describe('SolidityToolchain functional handler', () => {
     it('fixture "register_valid" -> ok', async () => {
       if (typeof solidityToolchainHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(solidityToolchainHandler.resolve({ platform: "shanghai", versionConstraint: ">=0.8.20" }), storage);
-      const result = await interpret(solidityToolchainHandler.register({  }), storage);
+      const afterResult_resolve_shanghai = await interpret(solidityToolchainHandler.resolve({ platform: "shanghai", versionConstraint: ">=0.8.20" }), storage);
+      const _pool = Object.assign({}, (afterResult_resolve_shanghai?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(solidityToolchainHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

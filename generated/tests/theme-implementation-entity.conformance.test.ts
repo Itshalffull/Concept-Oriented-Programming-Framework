@@ -155,8 +155,13 @@ describe('ThemeImplementationEntity functional handler', () => {
     it('fixture "get_ocean_css" -> ok', async () => {
       if (typeof themeImplementationEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage);
-      const result = await interpret(themeImplementationEntityHandler.get({ theme: "ocean", platform: "css" }), storage);
+      const afterResult_register_ocean_css = await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_ocean_css?.output ?? {}));
+      const _fixtureInput = { theme: "ocean", platform: "css" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(themeImplementationEntityHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('ThemeImplementationEntity functional handler', () => {
     it('fixture "get_by_ocean_file" -> ok', async () => {
       if (typeof themeImplementationEntityHandler.getByFile !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage);
-      const result = await interpret(themeImplementationEntityHandler.getByFile({ sourceFile: "generated/surface/themes/ocean.css" }), storage);
+      const afterResult_register_ocean_css = await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_ocean_css?.output ?? {}));
+      const _fixtureInput = { sourceFile: "generated/surface/themes/ocean.css" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(themeImplementationEntityHandler.getByFile({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,16 +303,26 @@ describe('ThemeImplementationEntity functional handler', () => {
     it('fixture "find_ocean_impls" -> ok', async () => {
       if (typeof themeImplementationEntityHandler.findByTheme !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage);
-      const result = await interpret(themeImplementationEntityHandler.findByTheme({ theme: "ocean" }), storage);
+      const afterResult_register_ocean_css = await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_ocean_css?.output ?? {}));
+      const _fixtureInput = { theme: "ocean" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(themeImplementationEntityHandler.findByTheme({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_empty_theme" -> ok', async () => {
       if (typeof themeImplementationEntityHandler.findByTheme !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage);
-      const result = await interpret(themeImplementationEntityHandler.findByTheme({ theme: "" }), storage);
+      const afterResult_register_ocean_css = await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_ocean_css?.output ?? {}));
+      const _fixtureInput = { theme: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(themeImplementationEntityHandler.findByTheme({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -363,16 +383,26 @@ describe('ThemeImplementationEntity functional handler', () => {
     it('fixture "find_css_impls" -> ok', async () => {
       if (typeof themeImplementationEntityHandler.findByPlatform !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage);
-      const result = await interpret(themeImplementationEntityHandler.findByPlatform({ platform: "css" }), storage);
+      const afterResult_register_ocean_css = await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_ocean_css?.output ?? {}));
+      const _fixtureInput = { platform: "css" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(themeImplementationEntityHandler.findByPlatform({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_unknown_platform" -> ok', async () => {
       if (typeof themeImplementationEntityHandler.findByPlatform !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage);
-      const result = await interpret(themeImplementationEntityHandler.findByPlatform({ platform: "unknown-platform" }), storage);
+      const afterResult_register_ocean_css = await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_ocean_css?.output ?? {}));
+      const _fixtureInput = { platform: "unknown-platform" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(themeImplementationEntityHandler.findByPlatform({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -433,8 +463,13 @@ describe('ThemeImplementationEntity functional handler', () => {
     it('fixture "resolve_color_primary" -> ok', async () => {
       if (typeof themeImplementationEntityHandler.resolveToken !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage);
-      const result = await interpret(themeImplementationEntityHandler.resolveToken({ impl: "impl-001", tokenPath: "palette.primary.500" }), storage);
+      const afterResult_register_ocean_css = await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_ocean_css?.output ?? {}));
+      const _fixtureInput = { impl: "impl-001", tokenPath: "palette.primary.500" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(themeImplementationEntityHandler.resolveToken({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

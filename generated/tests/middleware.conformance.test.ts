@@ -162,24 +162,39 @@ describe('Middleware functional handler', () => {
     it('fixture "inject_single" -> ok', async () => {
       if (typeof middlewareHandler.inject !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(middlewareHandler.resolve({ traits: ["auth"], target: "rest" }), storage);
-      const result = await interpret(middlewareHandler.inject({ output: "app.get('/api', handler)", middlewares: ["bearer-check"], target: "rest" }), storage);
+      const afterResult_resolve_auth_rest = await interpret(middlewareHandler.resolve({ traits: ["auth"], target: "rest" }), storage);
+      const _pool = Object.assign({}, (afterResult_resolve_auth_rest?.output ?? {}));
+      const _fixtureInput = { output: "app.get('/api', handler)", middlewares: ["bearer-check"], target: "rest" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(middlewareHandler.inject({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "inject_multiple" -> ok', async () => {
       if (typeof middlewareHandler.inject !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(middlewareHandler.resolve({ traits: ["auth"], target: "rest" }), storage);
-      const result = await interpret(middlewareHandler.inject({ output: "server.addService(svc)", middlewares: ["auth-interceptor","logging"], target: "grpc" }), storage);
+      const afterResult_resolve_auth_rest = await interpret(middlewareHandler.resolve({ traits: ["auth"], target: "rest" }), storage);
+      const _pool = Object.assign({}, (afterResult_resolve_auth_rest?.output ?? {}));
+      const _fixtureInput = { output: "server.addService(svc)", middlewares: ["auth-interceptor","logging"], target: "grpc" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(middlewareHandler.inject({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "inject_empty" -> ok', async () => {
       if (typeof middlewareHandler.inject !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(middlewareHandler.resolve({ traits: ["auth"], target: "rest" }), storage);
-      const result = await interpret(middlewareHandler.inject({ output: "", middlewares: [], target: "rest" }), storage);
+      const afterResult_resolve_auth_rest = await interpret(middlewareHandler.resolve({ traits: ["auth"], target: "rest" }), storage);
+      const _pool = Object.assign({}, (afterResult_resolve_auth_rest?.output ?? {}));
+      const _fixtureInput = { output: "", middlewares: [], target: "rest" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(middlewareHandler.inject({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -240,24 +255,39 @@ describe('Middleware functional handler', () => {
     it('fixture "register_bearer" -> ok', async () => {
       if (typeof middlewareHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(middlewareHandler.resolve({ traits: ["auth"], target: "rest" }), storage);
-      const result = await interpret(middlewareHandler.register({ trait: "auth", target: "rest", implementation: "bearer-check", position: "auth" }), storage);
+      const afterResult_resolve_auth_rest = await interpret(middlewareHandler.resolve({ traits: ["auth"], target: "rest" }), storage);
+      const _pool = Object.assign({}, (afterResult_resolve_auth_rest?.output ?? {}));
+      const _fixtureInput = { trait: "auth", target: "rest", implementation: "bearer-check", position: "auth" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(middlewareHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_logging" -> ok', async () => {
       if (typeof middlewareHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(middlewareHandler.resolve({ traits: ["auth"], target: "rest" }), storage);
-      const result = await interpret(middlewareHandler.register({ trait: "logging", target: "grpc", implementation: "grpc-logger", position: "before-auth" }), storage);
+      const afterResult_resolve_auth_rest = await interpret(middlewareHandler.resolve({ traits: ["auth"], target: "rest" }), storage);
+      const _pool = Object.assign({}, (afterResult_resolve_auth_rest?.output ?? {}));
+      const _fixtureInput = { trait: "logging", target: "grpc", implementation: "grpc-logger", position: "before-auth" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(middlewareHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_empty_trait" -> ok', async () => {
       if (typeof middlewareHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(middlewareHandler.resolve({ traits: ["auth"], target: "rest" }), storage);
-      const result = await interpret(middlewareHandler.register({ trait: "", target: "rest", implementation: "noop", position: "auth" }), storage);
+      const afterResult_resolve_auth_rest = await interpret(middlewareHandler.resolve({ traits: ["auth"], target: "rest" }), storage);
+      const _pool = Object.assign({}, (afterResult_resolve_auth_rest?.output ?? {}));
+      const _fixtureInput = { trait: "", target: "rest", implementation: "noop", position: "auth" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(middlewareHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

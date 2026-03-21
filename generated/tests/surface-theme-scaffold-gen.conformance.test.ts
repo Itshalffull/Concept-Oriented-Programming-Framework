@@ -216,8 +216,13 @@ describe('SurfaceThemeScaffoldGen functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof surfaceThemeScaffoldGenHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(surfaceThemeScaffoldGenHandler.generate({ name: "corporate", primaryColor: "220", fontFamily: "Inter", baseSize: "16", scale: "1.25", secondaryColor: "180", borderRadius: "md", mode: "both", extends: null }), storage);
-      const result = await interpret(surfaceThemeScaffoldGenHandler.register({  }), storage);
+      const afterResult_valid_theme = await interpret(surfaceThemeScaffoldGenHandler.generate({ name: "corporate", primaryColor: "220", fontFamily: "Inter", baseSize: "16", scale: "1.25", secondaryColor: "180", borderRadius: "md", mode: "both", extends: null }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_theme?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(surfaceThemeScaffoldGenHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

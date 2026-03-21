@@ -178,8 +178,13 @@ describe('AnalysisOverlay functional handler', () => {
     it('fixture "remove_existing" -> ok', async () => {
       if (typeof analysisOverlayHandler.remove !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage);
-      const result = await interpret(analysisOverlayHandler.remove({ overlay: "overlay-001" }), storage);
+      const afterResult_node_color_overlay = await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage);
+      const _pool = Object.assign({}, (afterResult_node_color_overlay?.output ?? {}));
+      const _fixtureInput = { overlay: "overlay-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(analysisOverlayHandler.remove({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -248,8 +253,13 @@ describe('AnalysisOverlay functional handler', () => {
     it('fixture "toggle_existing" -> ok', async () => {
       if (typeof analysisOverlayHandler.toggle !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage);
-      const result = await interpret(analysisOverlayHandler.toggle({ overlay: "overlay-001" }), storage);
+      const afterResult_node_color_overlay = await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage);
+      const _pool = Object.assign({}, (afterResult_node_color_overlay?.output ?? {}));
+      const _fixtureInput = { overlay: "overlay-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(analysisOverlayHandler.toggle({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -318,16 +328,26 @@ describe('AnalysisOverlay functional handler', () => {
     it('fixture "list_canvas" -> ok', async () => {
       if (typeof analysisOverlayHandler.listOverlays !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage);
-      const result = await interpret(analysisOverlayHandler.listOverlays({ canvas: "canvas-1" }), storage);
+      const afterResult_node_color_overlay = await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage);
+      const _pool = Object.assign({}, (afterResult_node_color_overlay?.output ?? {}));
+      const _fixtureInput = { canvas: "canvas-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(analysisOverlayHandler.listOverlays({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "list_empty" -> ok', async () => {
       if (typeof analysisOverlayHandler.listOverlays !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage);
-      const result = await interpret(analysisOverlayHandler.listOverlays({ canvas: "canvas-empty" }), storage);
+      const afterResult_node_color_overlay = await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage);
+      const _pool = Object.assign({}, (afterResult_node_color_overlay?.output ?? {}));
+      const _fixtureInput = { canvas: "canvas-empty" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(analysisOverlayHandler.listOverlays({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -388,16 +408,26 @@ describe('AnalysisOverlay functional handler', () => {
     it('fixture "update_scale" -> ok', async () => {
       if (typeof analysisOverlayHandler.updateConfig !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage);
-      const result = await interpret(analysisOverlayHandler.updateConfig({ overlay: "overlay-001", config: "{\"minScale\":1.0,\"maxScale\":5.0}" }), storage);
+      const afterResult_node_color_overlay = await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage);
+      const _pool = Object.assign({}, (afterResult_node_color_overlay?.output ?? {}));
+      const _fixtureInput = { overlay: "overlay-001", config: "{\"minScale\":1.0,\"maxScale\":5.0}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(analysisOverlayHandler.updateConfig({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "update_missing" -> notfound', async () => {
       if (typeof analysisOverlayHandler.updateConfig !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage);
-      const result = await interpret(analysisOverlayHandler.updateConfig({ overlay: "overlay-nonexistent", config: "{}" }), storage);
+      const afterResult_node_color_overlay = await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage);
+      const _pool = Object.assign({}, (afterResult_node_color_overlay?.output ?? {}));
+      const _fixtureInput = { overlay: "overlay-nonexistent", config: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(analysisOverlayHandler.updateConfig({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notfound'));
     });

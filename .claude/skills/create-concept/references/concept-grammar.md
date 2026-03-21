@@ -197,23 +197,45 @@ action record(stepKey: String, inputHash: String, outputHash: String, determinis
 - **expected variant** (optional): `-> error`, `-> invalid`, etc. Defaults to `ok` if omitted
 - Fixtures appear after variants but before the action's closing `}`
 
-**Examples with `after`**:
+**Examples with `after` and output references**:
 ```
 action register(concept: String, sourceFile: String) {
-  -> ok(handler: H)
+  -> ok(id: H)
   -> error(message: String)
   fixture register_article { concept: "Article", sourceFile: "article.handler.ts" }
 }
 
-action get(concept: String) {
-  -> ok(handler: H)
+action get(entity: H) {
+  -> ok(name: String)
   -> notfound(message: String)
-  fixture get_article { concept: "Article" } after register_article
-  fixture get_missing { concept: "Nonexistent" } -> error
+  fixture get_article { entity: $register_article.id } after register_article
+  fixture get_missing { entity: "nonexistent-id" } -> notfound
 }
 ```
 
 The test generator resolves the `after` chain transitively — if `fixture_c after fixture_b` and `fixture_b after fixture_a`, all three run in order.
+
+**Output references** (`$fixture.field`): When a fixture uses `after`, its input values can reference output fields from the dependency fixture using `$fixtureName.field` syntax. At test time, the after-chain fixture runs first and its output is captured; the `$ref` is then resolved to the actual runtime value (e.g., a generated UUID). This replaces hardcoded placeholder IDs and ensures reader fixtures always find the data their after-chain created.
+
+```
+action create(title: String) {
+  -> ok(id: T, slug: String)
+  fixture create_post { title: "Hello World" }
+}
+
+action get(id: T) {
+  -> ok(title: String)
+  -> notfound()
+  fixture get_existing { id: $create_post.id } after create_post
+  fixture get_missing { id: "no-such-id" } -> notfound
+}
+
+action getBySlug(slug: String) {
+  -> ok(title: String)
+  -> notfound()
+  fixture slug_lookup { slug: $create_post.slug } after create_post
+}
+```
 
 **Fixture values**:
 
@@ -225,11 +247,13 @@ The test generator resolves the `after` chain transitively — if `fixture_c aft
 | `[1, 2, 3]` | Array | `ids: [1, 2, 3]` |
 | `{ k: "v" }` | Nested object | `config: { timeout: 30 }` |
 | `none` | Null | `optional: none` |
+| `$fixture.field` | Output ref | `id: $register_ok.id` |
 
 **Guidelines**:
 - Every action should have at least one `ok` fixture with realistic inputs
 - Add `-> error` or `-> invalid` fixtures to test negative paths
 - Use `after` to declare dependencies when a fixture needs data from a prior action's fixture (e.g., `get` after `create`, `update` after `register`)
+- **Use `$fixture.field` to reference output fields** from after-chain fixtures instead of hardcoded placeholder IDs. This ensures tests find the actual data seeded by the after-chain
 - Use fixture values that match what the handler actually expects (e.g., JSON strings for params that get `JSON.parse()`d)
 - Fixtures are used by the test generator as seeds for both deterministic and property-based tests
 

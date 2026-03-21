@@ -162,8 +162,13 @@ describe('Circle functional handler', () => {
     it('fixture "valid_assign" -> ok', async () => {
       if (typeof circleHandler.assignMember !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" }), storage);
-      const result = await interpret(circleHandler.assignMember({ circle: "circle-1", member: "alice", role: "developer" }), storage);
+      const afterResult_valid_create = await interpret(circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
+      const _fixtureInput = { circle: "circle-1", member: "alice", role: "developer" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(circleHandler.assignMember({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -231,8 +236,13 @@ describe('Circle functional handler', () => {
     it('fixture "valid_remove" -> ok', async () => {
       if (typeof circleHandler.removeMember !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" }), storage);
-      const result = await interpret(circleHandler.removeMember({ circle: "circle-1", member: "alice" }), storage);
+      const afterResult_valid_create = await interpret(circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
+      const _fixtureInput = { circle: "circle-1", member: "alice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(circleHandler.removeMember({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -300,8 +310,13 @@ describe('Circle functional handler', () => {
     it('fixture "valid_set_links" -> ok', async () => {
       if (typeof circleHandler.setLinks !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" }), storage);
-      const result = await interpret(circleHandler.setLinks({ circle: "circle-1", leadLink: "alice", repLink: "bob" }), storage);
+      const afterResult_valid_create = await interpret(circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
+      const _fixtureInput = { circle: "circle-1", leadLink: "alice", repLink: "bob" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(circleHandler.setLinks({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -369,8 +384,13 @@ describe('Circle functional handler', () => {
     it('fixture "valid_dissolve" -> ok', async () => {
       if (typeof circleHandler.dissolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" }), storage);
-      const result = await interpret(circleHandler.dissolve({ circle: "circle-1" }), storage);
+      const afterResult_valid_create = await interpret(circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
+      const _fixtureInput = { circle: "circle-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(circleHandler.dissolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -438,8 +458,13 @@ describe('Circle functional handler', () => {
     it('fixture "valid_jurisdiction" -> ok', async () => {
       if (typeof circleHandler.checkJurisdiction !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" }), storage);
-      const result = await interpret(circleHandler.checkJurisdiction({ circle: "circle-1", action: "approve-budget" }), storage);
+      const afterResult_valid_create = await interpret(circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
+      const _fixtureInput = { circle: "circle-1", action: "approve-budget" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(circleHandler.checkJurisdiction({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

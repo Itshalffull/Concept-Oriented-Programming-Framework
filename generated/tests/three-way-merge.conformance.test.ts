@@ -148,16 +148,26 @@ describe('ThreeWayMerge functional handler', () => {
     it('fixture "clean_merge" -> ok', async () => {
       if (typeof threeWayMergeHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(threeWayMergeHandler.register({  }), storage);
-      const result = await interpret(threeWayMergeHandler.execute({ base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3" }), storage);
+      const afterResult_valid = await interpret(threeWayMergeHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(threeWayMergeHandler.execute({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "conflicting_merge" -> ok', async () => {
       if (typeof threeWayMergeHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(threeWayMergeHandler.register({  }), storage);
-      const result = await interpret(threeWayMergeHandler.execute({ base: "line1", ours: "lineA", theirs: "lineB" }), storage);
+      const afterResult_valid = await interpret(threeWayMergeHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { base: "line1", ours: "lineA", theirs: "lineB" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(threeWayMergeHandler.execute({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

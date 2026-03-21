@@ -162,8 +162,13 @@ describe('DeadPartProvider functional handler', () => {
     it('fixture "existing_analysis" -> ok', async () => {
       if (typeof deadPartProviderHandler.getResults !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(deadPartProviderHandler.analyze({ analysis: "dpa-1", program: "card-widget", parts: ["root","label"], instructions: "[{\"tag\":\"element\",\"part\":\"root\",\"role\":\"container\"},{\"tag\":\"text\",\"part\":\"root\",\"content\":\"hello\"},{\"tag\":\"bind\",\"part\":\"label\",\"attr\":\"text\",\"expr\":\"name\"}]" }), storage);
-      const result = await interpret(deadPartProviderHandler.getResults({ analysis: "dpa-1" }), storage);
+      const afterResult_all_parts_used = await interpret(deadPartProviderHandler.analyze({ analysis: "dpa-1", program: "card-widget", parts: ["root","label"], instructions: "[{\"tag\":\"element\",\"part\":\"root\",\"role\":\"container\"},{\"tag\":\"text\",\"part\":\"root\",\"content\":\"hello\"},{\"tag\":\"bind\",\"part\":\"label\",\"attr\":\"text\",\"expr\":\"name\"}]" }), storage);
+      const _pool = Object.assign({}, (afterResult_all_parts_used?.output ?? {}));
+      const _fixtureInput = { analysis: "dpa-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(deadPartProviderHandler.getResults({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

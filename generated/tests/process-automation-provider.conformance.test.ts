@@ -156,8 +156,13 @@ describe('ProcessAutomationProvider functional handler', () => {
     it('fixture "execute_valid" -> ok', async () => {
       if (typeof processAutomationProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(processAutomationProviderHandler.register({  }), storage);
-      const result = await interpret(processAutomationProviderHandler.execute({ action_payload: "{\"input\":\"data\"}", process_spec_id: "spec-001" }), storage);
+      const afterResult_valid = await interpret(processAutomationProviderHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { action_payload: "{\"input\":\"data\"}", process_spec_id: "spec-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(processAutomationProviderHandler.execute({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -171,8 +176,13 @@ describe('ProcessAutomationProvider functional handler', () => {
     it('fixture "execute_no_spec" -> error', async () => {
       if (typeof processAutomationProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(processAutomationProviderHandler.register({  }), storage);
-      const result = await interpret(processAutomationProviderHandler.execute({ action_payload: "{\"input\":\"data\"}", process_spec_id: "" }), storage);
+      const afterResult_valid = await interpret(processAutomationProviderHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { action_payload: "{\"input\":\"data\"}", process_spec_id: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(processAutomationProviderHandler.execute({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 

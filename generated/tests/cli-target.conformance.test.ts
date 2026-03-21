@@ -237,8 +237,13 @@ describe('CliTarget functional handler', () => {
     it('fixture "list_task_commands" -> ok', async () => {
       if (typeof cliTargetHandler.listCommands !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(cliTargetHandler.generate({ projection: "task-projection", config: "{}" }), storage);
-      const result = await interpret(cliTargetHandler.listCommands({ concept: "Task" }), storage);
+      const afterResult_with_default_config = await interpret(cliTargetHandler.generate({ projection: "task-projection", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_with_default_config?.output ?? {}));
+      const _fixtureInput = { concept: "Task" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(cliTargetHandler.listCommands({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

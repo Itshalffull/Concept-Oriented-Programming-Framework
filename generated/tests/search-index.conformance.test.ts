@@ -94,8 +94,13 @@ describe('SearchIndex functional handler', () => {
     it('fixture "create_duplicate_index" -> error', async () => {
       if (typeof searchIndexHandler.createIndex !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(searchIndexHandler.createIndex({ index: "articles", config: "{\"backend\":\"memory\",\"analyzer\":\"standard\"}" }), storage);
-      const result = await interpret(searchIndexHandler.createIndex({ index: "articles", config: "{}" }), storage);
+      const afterResult_create_articles_index = await interpret(searchIndexHandler.createIndex({ index: "articles", config: "{\"backend\":\"memory\",\"analyzer\":\"standard\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_articles_index?.output ?? {}));
+      const _fixtureInput = { index: "articles", config: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(searchIndexHandler.createIndex({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -156,8 +161,13 @@ describe('SearchIndex functional handler', () => {
     it('fixture "index_article" -> ok', async () => {
       if (typeof searchIndexHandler.indexItem !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(searchIndexHandler.createIndex({ index: "articles", config: "{\"backend\":\"memory\",\"analyzer\":\"standard\"}" }), storage);
-      const result = await interpret(searchIndexHandler.indexItem({ index: "articles", item: "doc-1", data: "Introduction to functional programming" }), storage);
+      const afterResult_create_articles_index = await interpret(searchIndexHandler.createIndex({ index: "articles", config: "{\"backend\":\"memory\",\"analyzer\":\"standard\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_articles_index?.output ?? {}));
+      const _fixtureInput = { index: "articles", item: "doc-1", data: "Introduction to functional programming" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(searchIndexHandler.indexItem({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -225,8 +235,13 @@ describe('SearchIndex functional handler', () => {
     it('fixture "remove_existing_item" -> ok', async () => {
       if (typeof searchIndexHandler.removeItem !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(searchIndexHandler.createIndex({ index: "articles", config: "{\"backend\":\"memory\",\"analyzer\":\"standard\"}" }), storage);
-      const result = await interpret(searchIndexHandler.removeItem({ index: "articles", item: "doc-1" }), storage);
+      const afterResult_create_articles_index = await interpret(searchIndexHandler.createIndex({ index: "articles", config: "{\"backend\":\"memory\",\"analyzer\":\"standard\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_articles_index?.output ?? {}));
+      const _fixtureInput = { index: "articles", item: "doc-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(searchIndexHandler.removeItem({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -294,8 +309,13 @@ describe('SearchIndex functional handler', () => {
     it('fixture "search_functional" -> ok', async () => {
       if (typeof searchIndexHandler.search !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(searchIndexHandler.createIndex({ index: "articles", config: "{\"backend\":\"memory\",\"analyzer\":\"standard\"}" }), storage);
-      const result = await interpret(searchIndexHandler.search({ index: "articles", query: "functional programming" }), storage);
+      const afterResult_create_articles_index = await interpret(searchIndexHandler.createIndex({ index: "articles", config: "{\"backend\":\"memory\",\"analyzer\":\"standard\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_articles_index?.output ?? {}));
+      const _fixtureInput = { index: "articles", query: "functional programming" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(searchIndexHandler.search({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -363,8 +383,13 @@ describe('SearchIndex functional handler', () => {
     it('fixture "add_lowercase_processor" -> ok', async () => {
       if (typeof searchIndexHandler.addProcessor !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(searchIndexHandler.createIndex({ index: "articles", config: "{\"backend\":\"memory\",\"analyzer\":\"standard\"}" }), storage);
-      const result = await interpret(searchIndexHandler.addProcessor({ index: "articles", processor: "lowercase" }), storage);
+      const afterResult_create_articles_index = await interpret(searchIndexHandler.createIndex({ index: "articles", config: "{\"backend\":\"memory\",\"analyzer\":\"standard\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_articles_index?.output ?? {}));
+      const _fixtureInput = { index: "articles", processor: "lowercase" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(searchIndexHandler.addProcessor({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -432,8 +457,13 @@ describe('SearchIndex functional handler', () => {
     it('fixture "reindex_existing" -> ok', async () => {
       if (typeof searchIndexHandler.reindex !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(searchIndexHandler.createIndex({ index: "articles", config: "{\"backend\":\"memory\",\"analyzer\":\"standard\"}" }), storage);
-      const result = await interpret(searchIndexHandler.reindex({ index: "articles" }), storage);
+      const afterResult_create_articles_index = await interpret(searchIndexHandler.createIndex({ index: "articles", config: "{\"backend\":\"memory\",\"analyzer\":\"standard\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_articles_index?.output ?? {}));
+      const _fixtureInput = { index: "articles" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(searchIndexHandler.reindex({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -155,16 +155,26 @@ describe('Deliberation functional handler', () => {
     it('fixture "add_argument" -> ok', async () => {
       if (typeof deliberationHandler.addEntry !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(deliberationHandler.open({ proposalRef: "proposal-budget-2026" }), storage);
-      const result = await interpret(deliberationHandler.addEntry({ thread: "thread-001", author: "alice", content: "The budget increase is justified by projected revenue growth", entryType: "argument", parentEntry: null }), storage);
+      const afterResult_open_budget_thread = await interpret(deliberationHandler.open({ proposalRef: "proposal-budget-2026" }), storage);
+      const _pool = Object.assign({}, (afterResult_open_budget_thread?.output ?? {}));
+      const _fixtureInput = { thread: "thread-001", author: "alice", content: "The budget increase is justified by projected revenue growth", entryType: "argument", parentEntry: null } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(deliberationHandler.addEntry({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "add_reply" -> ok', async () => {
       if (typeof deliberationHandler.addEntry !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(deliberationHandler.open({ proposalRef: "proposal-budget-2026" }), storage);
-      const result = await interpret(deliberationHandler.addEntry({ thread: "thread-001", author: "bob", content: "Revenue projections may be overly optimistic", entryType: "response", parentEntry: "entry-001" }), storage);
+      const afterResult_open_budget_thread = await interpret(deliberationHandler.open({ proposalRef: "proposal-budget-2026" }), storage);
+      const _pool = Object.assign({}, (afterResult_open_budget_thread?.output ?? {}));
+      const _fixtureInput = { thread: "thread-001", author: "bob", content: "Revenue projections may be overly optimistic", entryType: "response", parentEntry: "entry-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(deliberationHandler.addEntry({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -232,8 +242,13 @@ describe('Deliberation functional handler', () => {
     it('fixture "signal_agree" -> ok', async () => {
       if (typeof deliberationHandler.signal !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(deliberationHandler.open({ proposalRef: "proposal-budget-2026" }), storage);
-      const result = await interpret(deliberationHandler.signal({ thread: "thread-001", signaller: "carol", signal: "agree" }), storage);
+      const afterResult_open_budget_thread = await interpret(deliberationHandler.open({ proposalRef: "proposal-budget-2026" }), storage);
+      const _pool = Object.assign({}, (afterResult_open_budget_thread?.output ?? {}));
+      const _fixtureInput = { thread: "thread-001", signaller: "carol", signal: "agree" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(deliberationHandler.signal({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -301,8 +316,13 @@ describe('Deliberation functional handler', () => {
     it('fixture "close_open_thread" -> ok', async () => {
       if (typeof deliberationHandler.close !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(deliberationHandler.open({ proposalRef: "proposal-budget-2026" }), storage);
-      const result = await interpret(deliberationHandler.close({ thread: "thread-001" }), storage);
+      const afterResult_open_budget_thread = await interpret(deliberationHandler.open({ proposalRef: "proposal-budget-2026" }), storage);
+      const _pool = Object.assign({}, (afterResult_open_budget_thread?.output ?? {}));
+      const _fixtureInput = { thread: "thread-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(deliberationHandler.close({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

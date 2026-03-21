@@ -162,8 +162,13 @@ describe('FinalityGate functional handler', () => {
     it('fixture "confirm_finalized" -> ok', async () => {
       if (typeof finalityGateHandler.confirm !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(finalityGateHandler.submit({ operationRef: "gov-prop-300", providerRef: "chain-finality-eth" }), storage);
-      const result = await interpret(finalityGateHandler.confirm({ gate: "finality-001", proof: "block-hash-0xabc123" }), storage);
+      const afterResult_submit_chain_finality = await interpret(finalityGateHandler.submit({ operationRef: "gov-prop-300", providerRef: "chain-finality-eth" }), storage);
+      const _pool = Object.assign({}, (afterResult_submit_chain_finality?.output ?? {}));
+      const _fixtureInput = { gate: "finality-001", proof: "block-hash-0xabc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(finalityGateHandler.confirm({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

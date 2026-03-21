@@ -155,8 +155,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "tree_root" -> ok', async () => {
       if (typeof scoreApiHandler.getFileTree !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.getFileTree({ path: ".", depth: "2" }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { path: ".", depth: "2" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.getFileTree({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "get_handler" -> ok', async () => {
       if (typeof scoreApiHandler.getFileContent !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.getFileContent({ path: "handlers/ts/app/flag.handler.ts" }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { path: "handlers/ts/app/flag.handler.ts" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.getFileContent({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "get_defs" -> ok', async () => {
       if (typeof scoreApiHandler.getDefinitions !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.getDefinitions({ path: "handlers/ts/app/flag.handler.ts" }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { path: "handlers/ts/app/flag.handler.ts" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.getDefinitions({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -362,8 +377,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "match_fns" -> ok', async () => {
       if (typeof scoreApiHandler.matchPattern !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.matchPattern({ pattern: "(function_declaration) @fn", language: "typescript" }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { pattern: "(function_declaration) @fn", language: "typescript" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.matchPattern({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -431,8 +451,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "find_flag" -> ok', async () => {
       if (typeof scoreApiHandler.findSymbol !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.findSymbol({ name: "flagHandler" }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { name: "flagHandler" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.findSymbol({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -500,8 +525,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "refs_flag" -> ok', async () => {
       if (typeof scoreApiHandler.getReferences !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.getReferences({ symbol: "flagHandler" }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { symbol: "flagHandler" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.getReferences({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -569,8 +599,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "scope_handler" -> ok', async () => {
       if (typeof scoreApiHandler.getScope !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.getScope({ file: "handlers/ts/app/flag.handler.ts", line: "10" }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { file: "handlers/ts/app/flag.handler.ts", line: "10" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.getScope({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -638,8 +673,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "rels_flag" -> ok', async () => {
       if (typeof scoreApiHandler.getRelationships !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.getRelationships({ symbol: "flagHandler" }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { symbol: "flagHandler" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.getRelationships({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -707,8 +747,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof scoreApiHandler.listConcepts !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.listConcepts({  }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.listConcepts({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -769,8 +814,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "get_flag" -> ok', async () => {
       if (typeof scoreApiHandler.getConcept !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.getConcept({ name: "Flag" }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { name: "Flag" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.getConcept({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -838,8 +888,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "get_flag_action" -> ok', async () => {
       if (typeof scoreApiHandler.getAction !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.getAction({ concept: "Flag", action: "flag" }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { concept: "Flag", action: "flag" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.getAction({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -907,8 +962,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "valid_2" -> ok', async () => {
       if (typeof scoreApiHandler.listSyncs !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.listSyncs({  }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.listSyncs({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -969,8 +1029,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "get_sync" -> ok', async () => {
       if (typeof scoreApiHandler.getSync !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.getSync({ name: "onUserCreate" }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { name: "onUserCreate" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.getSync({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -1038,8 +1103,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "flow_create" -> ok', async () => {
       if (typeof scoreApiHandler.getFlow !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.getFlow({ startConcept: "User", startAction: "create" }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { startConcept: "User", startAction: "create" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.getFlow({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -1107,8 +1177,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "get_handler_ts" -> ok', async () => {
       if (typeof scoreApiHandler.getHandler !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.getHandler({ concept: "Flag", language: "typescript" }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { concept: "Flag", language: "typescript" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.getHandler({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -1176,8 +1251,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "get_source" -> ok', async () => {
       if (typeof scoreApiHandler.getActionSource !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.getActionSource({ concept: "Flag", action: "flag" }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { concept: "Flag", action: "flag" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.getActionSource({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -1245,8 +1325,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "valid_3" -> ok', async () => {
       if (typeof scoreApiHandler.listHandlers !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.listHandlers({  }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.listHandlers({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -1307,8 +1392,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "valid_4" -> ok', async () => {
       if (typeof scoreApiHandler.implementationGaps !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.implementationGaps({  }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.implementationGaps({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -1369,8 +1459,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "resolve_trace" -> ok', async () => {
       if (typeof scoreApiHandler.resolveStackTrace !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.resolveStackTrace({ stackTrace: "Error\n    at flag (handlers/ts/app/flag.handler.ts:14:5)" }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { stackTrace: "Error\n    at flag (handlers/ts/app/flag.handler.ts:14:5)" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.resolveStackTrace({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -1438,8 +1533,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "get_react_dialog" -> ok', async () => {
       if (typeof scoreApiHandler.getWidgetImpl !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.getWidgetImpl({ widget: "dialog", framework: "react" }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { widget: "dialog", framework: "react" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.getWidgetImpl({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -1507,8 +1607,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "get_css_light" -> ok', async () => {
       if (typeof scoreApiHandler.getThemeImpl !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.getThemeImpl({ theme: "light", platform: "css" }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { theme: "light", platform: "css" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.getThemeImpl({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -1576,8 +1681,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "get_prod" -> ok', async () => {
       if (typeof scoreApiHandler.getDeployment !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.getDeployment({ name: "conduit-prod" }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { name: "conduit-prod" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.getDeployment({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -1645,8 +1755,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "get_topo" -> ok', async () => {
       if (typeof scoreApiHandler.getDeploymentTopology !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.getDeploymentTopology({ name: "conduit-prod" }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { name: "conduit-prod" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.getDeploymentTopology({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -1714,8 +1829,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "get_health" -> ok', async () => {
       if (typeof scoreApiHandler.getDeploymentHealth !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.getDeploymentHealth({ name: "conduit-prod" }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { name: "conduit-prod" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.getDeploymentHealth({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -1783,8 +1903,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "valid_5" -> ok', async () => {
       if (typeof scoreApiHandler.listSuites !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.listSuites({  }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.listSuites({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -1845,8 +1970,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "get_suite" -> ok', async () => {
       if (typeof scoreApiHandler.getSuite !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.getSuite({ name: "identity" }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { name: "identity" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.getSuite({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -1914,8 +2044,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "valid_6" -> ok', async () => {
       if (typeof scoreApiHandler.listInterfaces !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.listInterfaces({  }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.listInterfaces({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -1976,8 +2111,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "get_rest_endpoints" -> ok', async () => {
       if (typeof scoreApiHandler.getEndpoints !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.getEndpoints({ interface: "conduit-api", target: "rest" }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { interface: "conduit-api", target: "rest" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.getEndpoints({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -2045,8 +2185,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "trace_users" -> ok', async () => {
       if (typeof scoreApiHandler.traceEndpoint !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.traceEndpoint({ target: "rest", path: "/api/users", method: "POST" }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { target: "rest", path: "/api/users", method: "POST" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.traceEndpoint({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -2114,8 +2259,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "deps_symbol" -> ok', async () => {
       if (typeof scoreApiHandler.getDependencies !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.getDependencies({ symbol: "flagHandler" }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { symbol: "flagHandler" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.getDependencies({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -2183,8 +2333,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "dependents" -> ok', async () => {
       if (typeof scoreApiHandler.getDependents !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.getDependents({ symbol: "flagHandler" }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { symbol: "flagHandler" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.getDependents({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -2252,8 +2407,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "impact_handler" -> ok', async () => {
       if (typeof scoreApiHandler.getImpact !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.getImpact({ file: "handlers/ts/app/flag.handler.ts" }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { file: "handlers/ts/app/flag.handler.ts" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.getImpact({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -2321,8 +2481,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "flow_path" -> ok', async () => {
       if (typeof scoreApiHandler.getDataFlow !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.getDataFlow({ from: "User/create", to: "Email/send" }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { from: "User/create", to: "Email/send" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.getDataFlow({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -2390,8 +2555,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "search_user" -> ok', async () => {
       if (typeof scoreApiHandler.search !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.search({ query: "user authentication", limit: "10" }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { query: "user authentication", limit: "10" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.search({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -2459,8 +2629,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "explain_flag" -> ok', async () => {
       if (typeof scoreApiHandler.explain !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.explain({ symbol: "Flag" }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { symbol: "Flag" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.explain({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -2528,8 +2703,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "valid_7" -> ok', async () => {
       if (typeof scoreApiHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.status({  }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.status({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -2590,8 +2770,13 @@ describe('ScoreApi functional handler', () => {
     it('fixture "valid_8" -> ok', async () => {
       if (typeof scoreApiHandler.reindex !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-      const result = await interpret(scoreApiHandler.reindex({  }), storage);
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreApiHandler.reindex({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

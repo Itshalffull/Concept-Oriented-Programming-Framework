@@ -162,16 +162,26 @@ describe('SwiftBuilder functional handler', () => {
     it('fixture "test_unit" -> ok', async () => {
       if (typeof swiftBuilderHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(swiftBuilderHandler.build({ source: "./generated/swift/auth", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: {"mode":"release","features":["logging"]} }), storage);
-      const result = await interpret(swiftBuilderHandler.test({ build: "swb-abc123", toolchainPath: "/usr/bin/swiftc", testType: "unit" }), storage);
+      const afterResult_build_release = await interpret(swiftBuilderHandler.build({ source: "./generated/swift/auth", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: {"mode":"release","features":["logging"]} }), storage);
+      const _pool = Object.assign({}, (afterResult_build_release?.output ?? {}));
+      const _fixtureInput = { build: "swb-abc123", toolchainPath: "/usr/bin/swiftc", testType: "unit" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(swiftBuilderHandler.test({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "test_with_invocation" -> ok', async () => {
       if (typeof swiftBuilderHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(swiftBuilderHandler.build({ source: "./generated/swift/auth", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: {"mode":"release","features":["logging"]} }), storage);
-      const result = await interpret(swiftBuilderHandler.test({ build: "swb-abc123", toolchainPath: "/usr/bin/swiftc", invocation: {"command":"swift test","args":["--parallel"],"outputFormat":"swift-test-json","configFile":"Package.swift"}, testType: "unit" }), storage);
+      const afterResult_build_release = await interpret(swiftBuilderHandler.build({ source: "./generated/swift/auth", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: {"mode":"release","features":["logging"]} }), storage);
+      const _pool = Object.assign({}, (afterResult_build_release?.output ?? {}));
+      const _fixtureInput = { build: "swb-abc123", toolchainPath: "/usr/bin/swiftc", invocation: {"command":"swift test","args":["--parallel"],"outputFormat":"swift-test-json","configFile":"Package.swift"}, testType: "unit" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(swiftBuilderHandler.test({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -239,16 +249,26 @@ describe('SwiftBuilder functional handler', () => {
     it('fixture "package_framework" -> ok', async () => {
       if (typeof swiftBuilderHandler.package !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(swiftBuilderHandler.build({ source: "./generated/swift/auth", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: {"mode":"release","features":["logging"]} }), storage);
-      const result = await interpret(swiftBuilderHandler.package({ build: "swb-abc123", format: "framework" }), storage);
+      const afterResult_build_release = await interpret(swiftBuilderHandler.build({ source: "./generated/swift/auth", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: {"mode":"release","features":["logging"]} }), storage);
+      const _pool = Object.assign({}, (afterResult_build_release?.output ?? {}));
+      const _fixtureInput = { build: "swb-abc123", format: "framework" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(swiftBuilderHandler.package({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "package_xcframework" -> ok', async () => {
       if (typeof swiftBuilderHandler.package !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(swiftBuilderHandler.build({ source: "./generated/swift/auth", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: {"mode":"release","features":["logging"]} }), storage);
-      const result = await interpret(swiftBuilderHandler.package({ build: "swb-abc123", format: "xcframework" }), storage);
+      const afterResult_build_release = await interpret(swiftBuilderHandler.build({ source: "./generated/swift/auth", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: {"mode":"release","features":["logging"]} }), storage);
+      const _pool = Object.assign({}, (afterResult_build_release?.output ?? {}));
+      const _fixtureInput = { build: "swb-abc123", format: "xcframework" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(swiftBuilderHandler.package({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -316,8 +336,13 @@ describe('SwiftBuilder functional handler', () => {
     it('fixture "register_valid" -> ok', async () => {
       if (typeof swiftBuilderHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(swiftBuilderHandler.build({ source: "./generated/swift/auth", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: {"mode":"release","features":["logging"]} }), storage);
-      const result = await interpret(swiftBuilderHandler.register({  }), storage);
+      const afterResult_build_release = await interpret(swiftBuilderHandler.build({ source: "./generated/swift/auth", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: {"mode":"release","features":["logging"]} }), storage);
+      const _pool = Object.assign({}, (afterResult_build_release?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(swiftBuilderHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

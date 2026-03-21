@@ -155,8 +155,13 @@ describe('FieldPlacement functional handler', () => {
     it('fixture "configure_formatter" -> ok', async () => {
       if (typeof fieldPlacementHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
-      const result = await interpret(fieldPlacementHandler.configure({ placement: "fp-001", formatter: "markdown", label_display: "inline" }), storage);
+      const afterResult_create_title = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_title?.output ?? {}));
+      const _fixtureInput = { placement: "fp-001", formatter: "markdown", label_display: "inline" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(fieldPlacementHandler.configure({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,16 +229,26 @@ describe('FieldPlacement functional handler', () => {
     it('fixture "hide_field" -> ok', async () => {
       if (typeof fieldPlacementHandler.set_visibility !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
-      const result = await interpret(fieldPlacementHandler.set_visibility({ placement: "fp-001", visible: "false", role_visibility: "admin" }), storage);
+      const afterResult_create_title = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_title?.output ?? {}));
+      const _fixtureInput = { placement: "fp-001", visible: "false", role_visibility: "admin" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(fieldPlacementHandler.set_visibility({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "show_field" -> ok', async () => {
       if (typeof fieldPlacementHandler.set_visibility !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
-      const result = await interpret(fieldPlacementHandler.set_visibility({ placement: "fp-001", visible: "true" }), storage);
+      const afterResult_create_title = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_title?.output ?? {}));
+      const _fixtureInput = { placement: "fp-001", visible: "true" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(fieldPlacementHandler.set_visibility({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -294,8 +309,13 @@ describe('FieldPlacement functional handler', () => {
     it('fixture "set_mapping" -> ok', async () => {
       if (typeof fieldPlacementHandler.set_field_mapping !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
-      const result = await interpret(fieldPlacementHandler.set_field_mapping({ placement: "fp-001", mapping: "rich-text-editor" }), storage);
+      const afterResult_create_title = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_title?.output ?? {}));
+      const _fixtureInput = { placement: "fp-001", mapping: "rich-text-editor" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(fieldPlacementHandler.set_field_mapping({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -363,8 +383,13 @@ describe('FieldPlacement functional handler', () => {
     it('fixture "clear_existing_mapping" -> ok', async () => {
       if (typeof fieldPlacementHandler.clear_field_mapping !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
-      const result = await interpret(fieldPlacementHandler.clear_field_mapping({ placement: "fp-001" }), storage);
+      const afterResult_create_title = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_title?.output ?? {}));
+      const _fixtureInput = { placement: "fp-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(fieldPlacementHandler.clear_field_mapping({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -432,8 +457,13 @@ describe('FieldPlacement functional handler', () => {
     it('fixture "get_existing" -> ok', async () => {
       if (typeof fieldPlacementHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
-      const result = await interpret(fieldPlacementHandler.get({ placement: "fp-001" }), storage);
+      const afterResult_create_title = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_title?.output ?? {}));
+      const _fixtureInput = { placement: "fp-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(fieldPlacementHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -501,8 +531,13 @@ describe('FieldPlacement functional handler', () => {
     it('fixture "delete_existing" -> ok', async () => {
       if (typeof fieldPlacementHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
-      const result = await interpret(fieldPlacementHandler.delete({ placement: "fp-001" }), storage);
+      const afterResult_create_title = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_title?.output ?? {}));
+      const _fixtureInput = { placement: "fp-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(fieldPlacementHandler.delete({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -570,8 +605,13 @@ describe('FieldPlacement functional handler', () => {
     it('fixture "duplicate_existing" -> ok', async () => {
       if (typeof fieldPlacementHandler.duplicate !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
-      const result = await interpret(fieldPlacementHandler.duplicate({ placement: "fp-001" }), storage);
+      const afterResult_create_title = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_title?.output ?? {}));
+      const _fixtureInput = { placement: "fp-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(fieldPlacementHandler.duplicate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -639,8 +679,13 @@ describe('FieldPlacement functional handler', () => {
     it('fixture "list_all" -> ok', async () => {
       if (typeof fieldPlacementHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
-      const result = await interpret(fieldPlacementHandler.list({  }), storage);
+      const afterResult_create_title = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_title?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(fieldPlacementHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -94,16 +94,26 @@ describe('User functional handler', () => {
     it('fixture "duplicate_name" -> ok', async () => {
       if (typeof userHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(userHandler.register({ user: "u-001", name: "Alice Chen", email: "alice@example.com" }), storage);
-      const result = await interpret(userHandler.register({ user: "u-002", name: "Alice Chen", email: "other@example.com" }), storage);
+      const afterResult_new_user = await interpret(userHandler.register({ user: "u-001", name: "Alice Chen", email: "alice@example.com" }), storage);
+      const _pool = Object.assign({}, (afterResult_new_user?.output ?? {}));
+      const _fixtureInput = { user: "u-002", name: "Alice Chen", email: "other@example.com" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(userHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "duplicate_email" -> ok', async () => {
       if (typeof userHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(userHandler.register({ user: "u-001", name: "Alice Chen", email: "alice@example.com" }), storage);
-      const result = await interpret(userHandler.register({ user: "u-003", name: "Bob Smith", email: "alice@example.com" }), storage);
+      const afterResult_new_user = await interpret(userHandler.register({ user: "u-001", name: "Alice Chen", email: "alice@example.com" }), storage);
+      const _pool = Object.assign({}, (afterResult_new_user?.output ?? {}));
+      const _fixtureInput = { user: "u-003", name: "Bob Smith", email: "alice@example.com" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(userHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

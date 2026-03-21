@@ -162,8 +162,13 @@ describe('VaultProvider functional handler', () => {
     it('fixture "renew_active_lease" -> ok', async () => {
       if (typeof vaultProviderHandler.renewLease !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(vaultProviderHandler.fetch({ path: "secret/data/db-password" }), storage);
-      const result = await interpret(vaultProviderHandler.renewLease({ leaseId: "lease-abc-123" }), storage);
+      const afterResult_fetch_db_password = await interpret(vaultProviderHandler.fetch({ path: "secret/data/db-password" }), storage);
+      const _pool = Object.assign({}, (afterResult_fetch_db_password?.output ?? {}));
+      const _fixtureInput = { leaseId: "lease-abc-123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(vaultProviderHandler.renewLease({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -231,16 +236,26 @@ describe('VaultProvider functional handler', () => {
     it('fixture "rotate_db_secret" -> ok', async () => {
       if (typeof vaultProviderHandler.rotate !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(vaultProviderHandler.fetch({ path: "secret/data/db-password" }), storage);
-      const result = await interpret(vaultProviderHandler.rotate({ path: "secret/data/db-password" }), storage);
+      const afterResult_fetch_db_password = await interpret(vaultProviderHandler.fetch({ path: "secret/data/db-password" }), storage);
+      const _pool = Object.assign({}, (afterResult_fetch_db_password?.output ?? {}));
+      const _fixtureInput = { path: "secret/data/db-password" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(vaultProviderHandler.rotate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "rotate_empty_path" -> ok', async () => {
       if (typeof vaultProviderHandler.rotate !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(vaultProviderHandler.fetch({ path: "secret/data/db-password" }), storage);
-      const result = await interpret(vaultProviderHandler.rotate({ path: "" }), storage);
+      const afterResult_fetch_db_password = await interpret(vaultProviderHandler.fetch({ path: "secret/data/db-password" }), storage);
+      const _pool = Object.assign({}, (afterResult_fetch_db_password?.output ?? {}));
+      const _fixtureInput = { path: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(vaultProviderHandler.rotate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -55,16 +55,26 @@ describe('GrpcProvider imperative handler', () => {
     it('fixture "configure_user_service" -> ok', async () => {
       if (typeof grpcProviderHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
-      await grpcProviderHandler.list({  }, storage);
-      const result = await grpcProviderHandler.configure({ name: "user-service", target: "localhost:50051", protoRef: "user.proto", options: "{}" }, storage);
+      const afterResult_valid = await grpcProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { name: "user-service", target: "localhost:50051", protoRef: "user.proto", options: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await grpcProviderHandler.configure({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_with_tls" -> ok', async () => {
       if (typeof grpcProviderHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
-      await grpcProviderHandler.list({  }, storage);
-      const result = await grpcProviderHandler.configure({ name: "auth-service", target: "auth.prod:443", protoRef: "auth.proto", options: "{\"tls\":true}" }, storage);
+      const afterResult_valid = await grpcProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { name: "auth-service", target: "auth.prod:443", protoRef: "auth.proto", options: "{\"tls\":true}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await grpcProviderHandler.configure({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -83,16 +93,26 @@ describe('GrpcProvider imperative handler', () => {
     it('fixture "get_user" -> ok', async () => {
       if (typeof grpcProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await grpcProviderHandler.list({  }, storage);
-      const result = await grpcProviderHandler.execute({ channel: "user-service", service: "UserService", method: "GetUser", payload: "{\"id\":42}" }, storage);
+      const afterResult_valid = await grpcProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { channel: "user-service", service: "UserService", method: "GetUser", payload: "{\"id\":42}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await grpcProviderHandler.execute({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "execute_unknown_channel" -> notFound', async () => {
       if (typeof grpcProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await grpcProviderHandler.list({  }, storage);
-      const result = await grpcProviderHandler.execute({ channel: "nonexistent", service: "Svc", method: "Call", payload: "{}" }, storage);
+      const afterResult_valid = await grpcProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { channel: "nonexistent", service: "Svc", method: "Call", payload: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await grpcProviderHandler.execute({ ..._fixtureInput }, storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notFound'));
     });
@@ -112,8 +132,13 @@ describe('GrpcProvider imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof grpcProviderHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await grpcProviderHandler.list({  }, storage);
-      const result = await grpcProviderHandler.list({  }, storage);
+      const afterResult_valid = await grpcProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await grpcProviderHandler.list({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -155,8 +155,13 @@ describe('PerformanceProfile functional handler', () => {
     it('fixture "hotspots_actions_p90" -> ok', async () => {
       if (typeof performanceProfileHandler.hotspots !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(performanceProfileHandler.aggregate({ symbol: "clef/action/Article/create", window: "{}" }), storage);
-      const result = await interpret(performanceProfileHandler.hotspots({ kind: "action", metric: "p90", topN: "10" }), storage);
+      const afterResult_aggregate_article_create = await interpret(performanceProfileHandler.aggregate({ symbol: "clef/action/Article/create", window: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_aggregate_article_create?.output ?? {}));
+      const _fixtureInput = { kind: "action", metric: "p90", topN: "10" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(performanceProfileHandler.hotspots({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('PerformanceProfile functional handler', () => {
     it('fixture "slow_chains_500ms" -> ok', async () => {
       if (typeof performanceProfileHandler.slowChains !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(performanceProfileHandler.aggregate({ symbol: "clef/action/Article/create", window: "{}" }), storage);
-      const result = await interpret(performanceProfileHandler.slowChains({ thresholdMs: "500" }), storage);
+      const afterResult_aggregate_article_create = await interpret(performanceProfileHandler.aggregate({ symbol: "clef/action/Article/create", window: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_aggregate_article_create?.output ?? {}));
+      const _fixtureInput = { thresholdMs: "500" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(performanceProfileHandler.slowChains({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -361,8 +371,13 @@ describe('PerformanceProfile functional handler', () => {
     it('fixture "get_existing_profile" -> ok', async () => {
       if (typeof performanceProfileHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(performanceProfileHandler.aggregate({ symbol: "clef/action/Article/create", window: "{}" }), storage);
-      const result = await interpret(performanceProfileHandler.get({ profile: "performance-profile-1" }), storage);
+      const afterResult_aggregate_article_create = await interpret(performanceProfileHandler.aggregate({ symbol: "clef/action/Article/create", window: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_aggregate_article_create?.output ?? {}));
+      const _fixtureInput = { profile: "performance-profile-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(performanceProfileHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

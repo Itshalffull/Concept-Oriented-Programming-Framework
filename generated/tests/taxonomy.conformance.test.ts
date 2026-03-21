@@ -155,16 +155,26 @@ describe('Taxonomy functional handler', () => {
     it('fixture "add_root_term" -> ok', async () => {
       if (typeof taxonomyHandler.addTerm !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" }), storage);
-      const result = await interpret(taxonomyHandler.addTerm({ vocab: "vocab-topics-1", term: "science", parent: "" }), storage);
+      const afterResult_create_topics_vocab = await interpret(taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_topics_vocab?.output ?? {}));
+      const _fixtureInput = { vocab: "vocab-topics-1", term: "science", parent: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(taxonomyHandler.addTerm({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "add_child_term" -> ok', async () => {
       if (typeof taxonomyHandler.addTerm !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" }), storage);
-      const result = await interpret(taxonomyHandler.addTerm({ vocab: "vocab-topics-1", term: "physics", parent: "science" }), storage);
+      const afterResult_create_topics_vocab = await interpret(taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_topics_vocab?.output ?? {}));
+      const _fixtureInput = { vocab: "vocab-topics-1", term: "physics", parent: "science" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(taxonomyHandler.addTerm({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -232,8 +242,13 @@ describe('Taxonomy functional handler', () => {
     it('fixture "reassign_parent" -> ok', async () => {
       if (typeof taxonomyHandler.setParent !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" }), storage);
-      const result = await interpret(taxonomyHandler.setParent({ vocab: "vocab-topics-1", term: "physics", parent: "natural-science" }), storage);
+      const afterResult_create_topics_vocab = await interpret(taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_topics_vocab?.output ?? {}));
+      const _fixtureInput = { vocab: "vocab-topics-1", term: "physics", parent: "natural-science" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(taxonomyHandler.setParent({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -301,8 +316,13 @@ describe('Taxonomy functional handler', () => {
     it('fixture "tag_page_with_term" -> ok', async () => {
       if (typeof taxonomyHandler.tagEntity !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" }), storage);
-      const result = await interpret(taxonomyHandler.tagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" }), storage);
+      const afterResult_create_topics_vocab = await interpret(taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_topics_vocab?.output ?? {}));
+      const _fixtureInput = { entity: "page-1", vocab: "vocab-topics-1", term: "science" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(taxonomyHandler.tagEntity({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -370,8 +390,13 @@ describe('Taxonomy functional handler', () => {
     it('fixture "untag_page" -> ok', async () => {
       if (typeof taxonomyHandler.untagEntity !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" }), storage);
-      const result = await interpret(taxonomyHandler.untagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" }), storage);
+      const afterResult_create_topics_vocab = await interpret(taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_topics_vocab?.output ?? {}));
+      const _fixtureInput = { entity: "page-1", vocab: "vocab-topics-1", term: "science" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(taxonomyHandler.untagEntity({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

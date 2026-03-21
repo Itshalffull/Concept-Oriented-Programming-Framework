@@ -170,16 +170,26 @@ describe('ProgramSlice functional handler', () => {
     it('fixture "valid_files" -> ok', async () => {
       if (typeof programSliceHandler.filesInSlice !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(programSliceHandler.compute({ criterion: "clef/state-field/Article/title", direction: "forward" }), storage);
-      const result = await interpret(programSliceHandler.filesInSlice({  }), storage);
+      const afterResult_forward_slice = await interpret(programSliceHandler.compute({ criterion: "clef/state-field/Article/title", direction: "forward" }), storage);
+      const _pool = Object.assign({}, (afterResult_forward_slice?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(programSliceHandler.filesInSlice({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_slice" -> ok', async () => {
       if (typeof programSliceHandler.filesInSlice !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(programSliceHandler.compute({ criterion: "clef/state-field/Article/title", direction: "forward" }), storage);
-      const result = await interpret(programSliceHandler.filesInSlice({ slice: "program-slice-empty" }), storage);
+      const afterResult_forward_slice = await interpret(programSliceHandler.compute({ criterion: "clef/state-field/Article/title", direction: "forward" }), storage);
+      const _pool = Object.assign({}, (afterResult_forward_slice?.output ?? {}));
+      const _fixtureInput = { slice: "program-slice-empty" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(programSliceHandler.filesInSlice({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -240,16 +250,26 @@ describe('ProgramSlice functional handler', () => {
     it('fixture "valid_symbols" -> ok', async () => {
       if (typeof programSliceHandler.symbolsInSlice !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(programSliceHandler.compute({ criterion: "clef/state-field/Article/title", direction: "forward" }), storage);
-      const result = await interpret(programSliceHandler.symbolsInSlice({  }), storage);
+      const afterResult_forward_slice = await interpret(programSliceHandler.compute({ criterion: "clef/state-field/Article/title", direction: "forward" }), storage);
+      const _pool = Object.assign({}, (afterResult_forward_slice?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(programSliceHandler.symbolsInSlice({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_slice" -> ok', async () => {
       if (typeof programSliceHandler.symbolsInSlice !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(programSliceHandler.compute({ criterion: "clef/state-field/Article/title", direction: "forward" }), storage);
-      const result = await interpret(programSliceHandler.symbolsInSlice({ slice: "program-slice-empty" }), storage);
+      const afterResult_forward_slice = await interpret(programSliceHandler.compute({ criterion: "clef/state-field/Article/title", direction: "forward" }), storage);
+      const _pool = Object.assign({}, (afterResult_forward_slice?.output ?? {}));
+      const _fixtureInput = { slice: "program-slice-empty" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(programSliceHandler.symbolsInSlice({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -310,8 +330,13 @@ describe('ProgramSlice functional handler', () => {
     it('fixture "valid_get" -> ok', async () => {
       if (typeof programSliceHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(programSliceHandler.compute({ criterion: "clef/state-field/Article/title", direction: "forward" }), storage);
-      const result = await interpret(programSliceHandler.get({  }), storage);
+      const afterResult_forward_slice = await interpret(programSliceHandler.compute({ criterion: "clef/state-field/Article/title", direction: "forward" }), storage);
+      const _pool = Object.assign({}, (afterResult_forward_slice?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(programSliceHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

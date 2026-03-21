@@ -62,8 +62,13 @@ describe('WebhookEndpoint imperative handler', () => {
     it('fixture "resolve_deploy" -> ok', async () => {
       if (typeof webhookEndpointHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await webhookEndpointHandler.register({ name: "deploy-webhook", url: "https://hooks.example.com/deploy", headers: "{\"X-Secret\":\"s3cret\"}" }, storage);
-      const result = await webhookEndpointHandler.resolve({ name: "deploy-webhook" }, storage);
+      const afterResult_register_deploy_hook = await webhookEndpointHandler.register({ name: "deploy-webhook", url: "https://hooks.example.com/deploy", headers: "{\"X-Secret\":\"s3cret\"}" }, storage);
+      const _pool = Object.assign({}, (afterResult_register_deploy_hook?.output ?? {}));
+      const _fixtureInput = { name: "deploy-webhook" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await webhookEndpointHandler.resolve({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -90,8 +95,13 @@ describe('WebhookEndpoint imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof webhookEndpointHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await webhookEndpointHandler.register({ name: "deploy-webhook", url: "https://hooks.example.com/deploy", headers: "{\"X-Secret\":\"s3cret\"}" }, storage);
-      const result = await webhookEndpointHandler.list({  }, storage);
+      const afterResult_register_deploy_hook = await webhookEndpointHandler.register({ name: "deploy-webhook", url: "https://hooks.example.com/deploy", headers: "{\"X-Secret\":\"s3cret\"}" }, storage);
+      const _pool = Object.assign({}, (afterResult_register_deploy_hook?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await webhookEndpointHandler.list({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 

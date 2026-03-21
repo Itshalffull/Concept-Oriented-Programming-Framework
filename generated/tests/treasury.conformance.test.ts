@@ -155,8 +155,13 @@ describe('Treasury functional handler', () => {
     it('fixture "withdraw_eth" -> ok', async () => {
       if (typeof treasuryHandler.withdraw !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(treasuryHandler.deposit({ vault: "dao-treasury", token: "ETH", amount: "100.0" }), storage);
-      const result = await interpret(treasuryHandler.withdraw({ vault: "dao-treasury", token: "ETH", amount: "50.0" }), storage);
+      const afterResult_deposit_eth = await interpret(treasuryHandler.deposit({ vault: "dao-treasury", token: "ETH", amount: "100.0" }), storage);
+      const _pool = Object.assign({}, (afterResult_deposit_eth?.output ?? {}));
+      const _fixtureInput = { vault: "dao-treasury", token: "ETH", amount: "50.0" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(treasuryHandler.withdraw({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('Treasury functional handler', () => {
     it('fixture "allocate_grant" -> ok', async () => {
       if (typeof treasuryHandler.allocate !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(treasuryHandler.deposit({ vault: "dao-treasury", token: "ETH", amount: "100.0" }), storage);
-      const result = await interpret(treasuryHandler.allocate({ vault: "dao-treasury", token: "ETH", amount: "25.0", purpose: "developer-grant-q1" }), storage);
+      const afterResult_deposit_eth = await interpret(treasuryHandler.deposit({ vault: "dao-treasury", token: "ETH", amount: "100.0" }), storage);
+      const _pool = Object.assign({}, (afterResult_deposit_eth?.output ?? {}));
+      const _fixtureInput = { vault: "dao-treasury", token: "ETH", amount: "25.0", purpose: "developer-grant-q1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(treasuryHandler.allocate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('Treasury functional handler', () => {
     it('fixture "release_existing" -> ok', async () => {
       if (typeof treasuryHandler.releaseAllocation !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(treasuryHandler.deposit({ vault: "dao-treasury", token: "ETH", amount: "100.0" }), storage);
-      const result = await interpret(treasuryHandler.releaseAllocation({ allocation: "alloc-001" }), storage);
+      const afterResult_deposit_eth = await interpret(treasuryHandler.deposit({ vault: "dao-treasury", token: "ETH", amount: "100.0" }), storage);
+      const _pool = Object.assign({}, (afterResult_deposit_eth?.output ?? {}));
+      const _fixtureInput = { allocation: "alloc-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(treasuryHandler.releaseAllocation({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

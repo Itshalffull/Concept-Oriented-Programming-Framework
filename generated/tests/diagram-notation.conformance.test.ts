@@ -162,16 +162,26 @@ describe('DiagramNotation functional handler', () => {
     it('fixture "decision_node" -> ok', async () => {
       if (typeof diagramNotationHandler.addNodeType !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(diagramNotationHandler.create({ name: "Flowchart", description: "Standard flowchart notation" }), storage);
-      const result = await interpret(diagramNotationHandler.addNodeType({ notation: "notation-1", type_key: "decision", label: "Decision", shape: "diamond", default_fill: "#F3E5F5", default_stroke: null, icon: null, schema_id: null }), storage);
+      const afterResult_flowchart = await interpret(diagramNotationHandler.create({ name: "Flowchart", description: "Standard flowchart notation" }), storage);
+      const _pool = Object.assign({}, (afterResult_flowchart?.output ?? {}));
+      const _fixtureInput = { notation: "notation-1", type_key: "decision", label: "Decision", shape: "diamond", default_fill: "#F3E5F5", default_stroke: null, icon: null, schema_id: null } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(diagramNotationHandler.addNodeType({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "task_node" -> ok', async () => {
       if (typeof diagramNotationHandler.addNodeType !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(diagramNotationHandler.create({ name: "Flowchart", description: "Standard flowchart notation" }), storage);
-      const result = await interpret(diagramNotationHandler.addNodeType({ notation: "notation-1", type_key: "task", label: "Task", shape: "rectangle", default_fill: "#E3F2FD", default_stroke: "#90CAF9", icon: null, schema_id: null }), storage);
+      const afterResult_flowchart = await interpret(diagramNotationHandler.create({ name: "Flowchart", description: "Standard flowchart notation" }), storage);
+      const _pool = Object.assign({}, (afterResult_flowchart?.output ?? {}));
+      const _fixtureInput = { notation: "notation-1", type_key: "task", label: "Task", shape: "rectangle", default_fill: "#E3F2FD", default_stroke: "#90CAF9", icon: null, schema_id: null } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(diagramNotationHandler.addNodeType({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -240,16 +250,26 @@ describe('DiagramNotation functional handler', () => {
     it('fixture "flow_edge" -> ok', async () => {
       if (typeof diagramNotationHandler.addEdgeType !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(diagramNotationHandler.create({ name: "Flowchart", description: "Standard flowchart notation" }), storage);
-      const result = await interpret(diagramNotationHandler.addEdgeType({ notation: "notation-1", type_key: "flow", label: "Flow", line_style: "solid", arrow_type: "forward", default_color: null, requires_label: "false" }), storage);
+      const afterResult_flowchart = await interpret(diagramNotationHandler.create({ name: "Flowchart", description: "Standard flowchart notation" }), storage);
+      const _pool = Object.assign({}, (afterResult_flowchart?.output ?? {}));
+      const _fixtureInput = { notation: "notation-1", type_key: "flow", label: "Flow", line_style: "solid", arrow_type: "forward", default_color: null, requires_label: "false" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(diagramNotationHandler.addEdgeType({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "dependency_edge" -> ok', async () => {
       if (typeof diagramNotationHandler.addEdgeType !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(diagramNotationHandler.create({ name: "Flowchart", description: "Standard flowchart notation" }), storage);
-      const result = await interpret(diagramNotationHandler.addEdgeType({ notation: "notation-1", type_key: "dependency", label: "Depends On", line_style: "dashed", arrow_type: "forward", default_color: "#FF5722", requires_label: "true" }), storage);
+      const afterResult_flowchart = await interpret(diagramNotationHandler.create({ name: "Flowchart", description: "Standard flowchart notation" }), storage);
+      const _pool = Object.assign({}, (afterResult_flowchart?.output ?? {}));
+      const _fixtureInput = { notation: "notation-1", type_key: "dependency", label: "Depends On", line_style: "dashed", arrow_type: "forward", default_color: "#FF5722", requires_label: "true" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(diagramNotationHandler.addEdgeType({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -318,8 +338,13 @@ describe('DiagramNotation functional handler', () => {
     it('fixture "task_to_decision" -> ok', async () => {
       if (typeof diagramNotationHandler.addConnectionRule !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(diagramNotationHandler.create({ name: "Flowchart", description: "Standard flowchart notation" }), storage);
-      const result = await interpret(diagramNotationHandler.addConnectionRule({ notation: "notation-1", source_type: "task", target_type: "decision", allowed_edge_types: ["flow"], min_outgoing: null, max_outgoing: null, min_incoming: null, max_incoming: null }), storage);
+      const afterResult_flowchart = await interpret(diagramNotationHandler.create({ name: "Flowchart", description: "Standard flowchart notation" }), storage);
+      const _pool = Object.assign({}, (afterResult_flowchart?.output ?? {}));
+      const _fixtureInput = { notation: "notation-1", source_type: "task", target_type: "decision", allowed_edge_types: ["flow"], min_outgoing: null, max_outgoing: null, min_incoming: null, max_incoming: null } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(diagramNotationHandler.addConnectionRule({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -457,8 +482,13 @@ describe('DiagramNotation functional handler', () => {
     it('fixture "existing_notation" -> ok', async () => {
       if (typeof diagramNotationHandler.getNodePalette !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(diagramNotationHandler.create({ name: "Flowchart", description: "Standard flowchart notation" }), storage);
-      const result = await interpret(diagramNotationHandler.getNodePalette({ notation: "notation-1" }), storage);
+      const afterResult_flowchart = await interpret(diagramNotationHandler.create({ name: "Flowchart", description: "Standard flowchart notation" }), storage);
+      const _pool = Object.assign({}, (afterResult_flowchart?.output ?? {}));
+      const _fixtureInput = { notation: "notation-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(diagramNotationHandler.getNodePalette({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -519,8 +549,13 @@ describe('DiagramNotation functional handler', () => {
     it('fixture "existing_notation" -> ok', async () => {
       if (typeof diagramNotationHandler.getEdgePalette !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(diagramNotationHandler.create({ name: "Flowchart", description: "Standard flowchart notation" }), storage);
-      const result = await interpret(diagramNotationHandler.getEdgePalette({ notation: "notation-1" }), storage);
+      const afterResult_flowchart = await interpret(diagramNotationHandler.create({ name: "Flowchart", description: "Standard flowchart notation" }), storage);
+      const _pool = Object.assign({}, (afterResult_flowchart?.output ?? {}));
+      const _fixtureInput = { notation: "notation-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(diagramNotationHandler.getEdgePalette({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -581,8 +616,13 @@ describe('DiagramNotation functional handler', () => {
     it('fixture "apply_notation" -> ok', async () => {
       if (typeof diagramNotationHandler.applyToCanvas !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(diagramNotationHandler.create({ name: "Flowchart", description: "Standard flowchart notation" }), storage);
-      const result = await interpret(diagramNotationHandler.applyToCanvas({ canvas_id: "canvas-1", notation: "notation-1" }), storage);
+      const afterResult_flowchart = await interpret(diagramNotationHandler.create({ name: "Flowchart", description: "Standard flowchart notation" }), storage);
+      const _pool = Object.assign({}, (afterResult_flowchart?.output ?? {}));
+      const _fixtureInput = { canvas_id: "canvas-1", notation: "notation-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(diagramNotationHandler.applyToCanvas({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

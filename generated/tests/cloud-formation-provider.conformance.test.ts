@@ -223,8 +223,13 @@ describe('CloudFormationProvider functional handler', () => {
     it('fixture "apply_stack" -> ok', async () => {
       if (typeof cloudformationProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(cloudformationProviderHandler.generate({ plan: "dp-002-payment-service" }), storage);
-      const result = await interpret(cloudformationProviderHandler.apply({ stack: "stack-abc123" }), storage);
+      const afterResult_generate_plan = await interpret(cloudformationProviderHandler.generate({ plan: "dp-002-payment-service" }), storage);
+      const _pool = Object.assign({}, (afterResult_generate_plan?.output ?? {}));
+      const _fixtureInput = { stack: "stack-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(cloudformationProviderHandler.apply({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -292,8 +297,13 @@ describe('CloudFormationProvider functional handler', () => {
     it('fixture "teardown_stack" -> ok', async () => {
       if (typeof cloudformationProviderHandler.teardown !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(cloudformationProviderHandler.generate({ plan: "dp-002-payment-service" }), storage);
-      const result = await interpret(cloudformationProviderHandler.teardown({ stack: "stack-abc123" }), storage);
+      const afterResult_generate_plan = await interpret(cloudformationProviderHandler.generate({ plan: "dp-002-payment-service" }), storage);
+      const _pool = Object.assign({}, (afterResult_generate_plan?.output ?? {}));
+      const _fixtureInput = { stack: "stack-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(cloudformationProviderHandler.teardown({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

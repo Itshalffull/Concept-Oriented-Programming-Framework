@@ -162,8 +162,13 @@ describe('StateField functional handler', () => {
     it('fixture "find_article" -> ok', async () => {
       if (typeof stateFieldHandler.findByConcept !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" }), storage);
-      const result = await interpret(stateFieldHandler.findByConcept({ concept: "Article" }), storage);
+      const afterResult_register_title = await interpret(stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_title?.output ?? {}));
+      const _fixtureInput = { concept: "Article" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(stateFieldHandler.findByConcept({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -231,16 +236,26 @@ describe('StateField functional handler', () => {
     it('fixture "trace_generated_valid" -> ok', async () => {
       if (typeof stateFieldHandler.traceToGenerated !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" }), storage);
-      const result = await interpret(stateFieldHandler.traceToGenerated({ field: "state-field-1" }), storage);
+      const afterResult_register_title = await interpret(stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_title?.output ?? {}));
+      const _fixtureInput = { field: "state-field-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(stateFieldHandler.traceToGenerated({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "trace_generated_missing" -> ok', async () => {
       if (typeof stateFieldHandler.traceToGenerated !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" }), storage);
-      const result = await interpret(stateFieldHandler.traceToGenerated({ field: "nonexistent-id" }), storage);
+      const afterResult_register_title = await interpret(stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_title?.output ?? {}));
+      const _fixtureInput = { field: "nonexistent-id" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(stateFieldHandler.traceToGenerated({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -301,16 +316,26 @@ describe('StateField functional handler', () => {
     it('fixture "trace_storage_valid" -> ok', async () => {
       if (typeof stateFieldHandler.traceToStorage !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" }), storage);
-      const result = await interpret(stateFieldHandler.traceToStorage({ field: "state-field-1" }), storage);
+      const afterResult_register_title = await interpret(stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_title?.output ?? {}));
+      const _fixtureInput = { field: "state-field-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(stateFieldHandler.traceToStorage({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "trace_storage_missing" -> ok', async () => {
       if (typeof stateFieldHandler.traceToStorage !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" }), storage);
-      const result = await interpret(stateFieldHandler.traceToStorage({ field: "nonexistent-id" }), storage);
+      const afterResult_register_title = await interpret(stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_title?.output ?? {}));
+      const _fixtureInput = { field: "nonexistent-id" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(stateFieldHandler.traceToStorage({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -371,8 +396,13 @@ describe('StateField functional handler', () => {
     it('fixture "get_valid" -> ok', async () => {
       if (typeof stateFieldHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" }), storage);
-      const result = await interpret(stateFieldHandler.get({ field: "state-field-1" }), storage);
+      const afterResult_register_title = await interpret(stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_title?.output ?? {}));
+      const _fixtureInput = { field: "state-field-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(stateFieldHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -386,8 +416,13 @@ describe('StateField functional handler', () => {
     it('fixture "get_field" -> ok', async () => {
       if (typeof stateFieldHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" }), storage);
-      const result = await interpret(stateFieldHandler.get({ field: "state-field-1" }), storage);
+      const afterResult_register_title = await interpret(stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_title?.output ?? {}));
+      const _fixtureInput = { field: "state-field-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(stateFieldHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

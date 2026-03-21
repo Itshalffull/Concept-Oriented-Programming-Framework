@@ -162,8 +162,13 @@ describe('Execution functional handler', () => {
     it('fixture "execute_pending" -> ok', async () => {
       if (typeof executionHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(executionHandler.schedule({ sourceRef: "proposal-001", actions: ["transfer(from: treasury, to: alice, amount: 100)"], executor: "governance-bot" }), storage);
-      const result = await interpret(executionHandler.execute({ execution: "execution-001" }), storage);
+      const afterResult_schedule_transfer = await interpret(executionHandler.schedule({ sourceRef: "proposal-001", actions: ["transfer(from: treasury, to: alice, amount: 100)"], executor: "governance-bot" }), storage);
+      const _pool = Object.assign({}, (afterResult_schedule_transfer?.output ?? {}));
+      const _fixtureInput = { execution: "execution-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(executionHandler.execute({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -232,8 +237,13 @@ describe('Execution functional handler', () => {
     it('fixture "rollback_completed" -> ok', async () => {
       if (typeof executionHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(executionHandler.schedule({ sourceRef: "proposal-001", actions: ["transfer(from: treasury, to: alice, amount: 100)"], executor: "governance-bot" }), storage);
-      const result = await interpret(executionHandler.rollback({ execution: "execution-001" }), storage);
+      const afterResult_schedule_transfer = await interpret(executionHandler.schedule({ sourceRef: "proposal-001", actions: ["transfer(from: treasury, to: alice, amount: 100)"], executor: "governance-bot" }), storage);
+      const _pool = Object.assign({}, (afterResult_schedule_transfer?.output ?? {}));
+      const _fixtureInput = { execution: "execution-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(executionHandler.rollback({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -162,16 +162,26 @@ describe('BordaCount functional handler', () => {
     it('fixture "borda_three_voters" -> ok', async () => {
       if (typeof bordaCountHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(bordaCountHandler.configure({ pointScheme: "Standard" }), storage);
-      const result = await interpret(bordaCountHandler.count({ config: "borda-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]},{\"voter\":\"carol\",\"ranking\":[\"A\",\"C\",\"B\"]}]", weights: "{}" }), storage);
+      const afterResult_standard_scheme = await interpret(bordaCountHandler.configure({ pointScheme: "Standard" }), storage);
+      const _pool = Object.assign({}, (afterResult_standard_scheme?.output ?? {}));
+      const _fixtureInput = { config: "borda-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]},{\"voter\":\"carol\",\"ranking\":[\"A\",\"C\",\"B\"]}]", weights: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(bordaCountHandler.count({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "borda_no_ballots" -> error', async () => {
       if (typeof bordaCountHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(bordaCountHandler.configure({ pointScheme: "Standard" }), storage);
-      const result = await interpret(bordaCountHandler.count({ config: "borda-001", rankedBallots: "[]", weights: "{}" }), storage);
+      const afterResult_standard_scheme = await interpret(bordaCountHandler.configure({ pointScheme: "Standard" }), storage);
+      const _pool = Object.assign({}, (afterResult_standard_scheme?.output ?? {}));
+      const _fixtureInput = { config: "borda-001", rankedBallots: "[]", weights: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(bordaCountHandler.count({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 

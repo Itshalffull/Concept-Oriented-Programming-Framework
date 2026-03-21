@@ -155,16 +155,26 @@ describe('Fetcher functional handler', () => {
     it('fixture "fetch_batch_two_items" -> ok', async () => {
       if (typeof fetcherHandler.fetchBatch !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(fetcherHandler.fetch({ module_id: "lodash", version: "4.17.21", source_url: "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz", expected_hash: "sha256:abc123" }), storage);
-      const result = await interpret(fetcherHandler.fetchBatch({ items: [{"module_id":"lodash","version":"4.17.21","source_url":"https://registry.example.com/lodash.tgz","expected_hash":"sha256:abc"},{"module_id":"express","version":"4.18.2","source_url":"https://registry.example.com/express.tgz","expected_hash":"sha256:def"}] }), storage);
+      const afterResult_fetch_module = await interpret(fetcherHandler.fetch({ module_id: "lodash", version: "4.17.21", source_url: "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz", expected_hash: "sha256:abc123" }), storage);
+      const _pool = Object.assign({}, (afterResult_fetch_module?.output ?? {}));
+      const _fixtureInput = { items: [{"module_id":"lodash","version":"4.17.21","source_url":"https://registry.example.com/lodash.tgz","expected_hash":"sha256:abc"},{"module_id":"express","version":"4.18.2","source_url":"https://registry.example.com/express.tgz","expected_hash":"sha256:def"}] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(fetcherHandler.fetchBatch({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "fetch_batch_empty" -> ok', async () => {
       if (typeof fetcherHandler.fetchBatch !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(fetcherHandler.fetch({ module_id: "lodash", version: "4.17.21", source_url: "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz", expected_hash: "sha256:abc123" }), storage);
-      const result = await interpret(fetcherHandler.fetchBatch({ items: [] }), storage);
+      const afterResult_fetch_module = await interpret(fetcherHandler.fetch({ module_id: "lodash", version: "4.17.21", source_url: "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz", expected_hash: "sha256:abc123" }), storage);
+      const _pool = Object.assign({}, (afterResult_fetch_module?.output ?? {}));
+      const _fixtureInput = { items: [] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(fetcherHandler.fetchBatch({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -225,8 +235,13 @@ describe('Fetcher functional handler', () => {
     it('fixture "cancel_active_download" -> ok', async () => {
       if (typeof fetcherHandler.cancel !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(fetcherHandler.fetch({ module_id: "lodash", version: "4.17.21", source_url: "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz", expected_hash: "sha256:abc123" }), storage);
-      const result = await interpret(fetcherHandler.cancel({ download: "dl-1" }), storage);
+      const afterResult_fetch_module = await interpret(fetcherHandler.fetch({ module_id: "lodash", version: "4.17.21", source_url: "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz", expected_hash: "sha256:abc123" }), storage);
+      const _pool = Object.assign({}, (afterResult_fetch_module?.output ?? {}));
+      const _fixtureInput = { download: "dl-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(fetcherHandler.cancel({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

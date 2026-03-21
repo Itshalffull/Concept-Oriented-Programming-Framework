@@ -169,8 +169,13 @@ describe('Generator functional handler', () => {
     it('fixture "valid_plan" -> ok', async () => {
       if (typeof generatorHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(generatorHandler.plan({ suite: "commerce", interfaceManifest: "{\"targets\":[\"rest\",\"graphql\"],\"concepts\":[\"Order\",\"Product\"],\"outputDir\":\"generated/commerce\"}" }), storage);
-      const result = await interpret(generatorHandler.generate({ plan: "plan-commerce-12345" }), storage);
+      const afterResult_with_valid_manifest = await interpret(generatorHandler.plan({ suite: "commerce", interfaceManifest: "{\"targets\":[\"rest\",\"graphql\"],\"concepts\":[\"Order\",\"Product\"],\"outputDir\":\"generated/commerce\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_with_valid_manifest?.output ?? {}));
+      const _fixtureInput = { plan: "plan-commerce-12345" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(generatorHandler.generate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -238,8 +243,13 @@ describe('Generator functional handler', () => {
     it('fixture "regenerate_rest_only" -> ok', async () => {
       if (typeof generatorHandler.regenerate !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(generatorHandler.plan({ suite: "commerce", interfaceManifest: "{\"targets\":[\"rest\",\"graphql\"],\"concepts\":[\"Order\",\"Product\"],\"outputDir\":\"generated/commerce\"}" }), storage);
-      const result = await interpret(generatorHandler.regenerate({ plan: "plan-commerce-12345", targets: ["rest"] }), storage);
+      const afterResult_with_valid_manifest = await interpret(generatorHandler.plan({ suite: "commerce", interfaceManifest: "{\"targets\":[\"rest\",\"graphql\"],\"concepts\":[\"Order\",\"Product\"],\"outputDir\":\"generated/commerce\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_with_valid_manifest?.output ?? {}));
+      const _fixtureInput = { plan: "plan-commerce-12345", targets: ["rest"] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(generatorHandler.regenerate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -171,8 +171,13 @@ describe('Machine functional handler', () => {
     it('fixture "valid_send" -> ok', async () => {
       if (typeof machineHandler.send !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(machineHandler.spawn({ widget: "dialog", context: "{\"title\":\"Confirm\"}" }), storage);
-      const result = await interpret(machineHandler.send({ event: "start" }), storage);
+      const afterResult_valid_spawn = await interpret(machineHandler.spawn({ widget: "dialog", context: "{\"title\":\"Confirm\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_spawn?.output ?? {}));
+      const _fixtureInput = { event: "start" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(machineHandler.send({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -241,8 +246,13 @@ describe('Machine functional handler', () => {
     it('fixture "valid_connect" -> ok', async () => {
       if (typeof machineHandler.connect !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(machineHandler.spawn({ widget: "dialog", context: "{\"title\":\"Confirm\"}" }), storage);
-      const result = await interpret(machineHandler.connect({  }), storage);
+      const afterResult_valid_spawn = await interpret(machineHandler.spawn({ widget: "dialog", context: "{\"title\":\"Confirm\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_spawn?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(machineHandler.connect({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -311,8 +321,13 @@ describe('Machine functional handler', () => {
     it('fixture "valid_destroy" -> ok', async () => {
       if (typeof machineHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(machineHandler.spawn({ widget: "dialog", context: "{\"title\":\"Confirm\"}" }), storage);
-      const result = await interpret(machineHandler.destroy({  }), storage);
+      const afterResult_valid_spawn = await interpret(machineHandler.spawn({ widget: "dialog", context: "{\"title\":\"Confirm\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_spawn?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(machineHandler.destroy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

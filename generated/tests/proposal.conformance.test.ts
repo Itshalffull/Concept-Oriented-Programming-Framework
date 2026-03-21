@@ -155,8 +155,13 @@ describe('Proposal functional handler', () => {
     it('fixture "sponsor_pending" -> ok', async () => {
       if (typeof proposalHandler.sponsor !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage);
-      const result = await interpret(proposalHandler.sponsor({ proposal: "proposal-001", sponsorId: "bob" }), storage);
+      const afterResult_create_budget_proposal = await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage);
+      const _pool = Object.assign({}, (afterResult_create_budget_proposal?.output ?? {}));
+      const _fixtureInput = { proposal: "proposal-001", sponsorId: "bob" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(proposalHandler.sponsor({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('Proposal functional handler', () => {
     it('fixture "activate_sponsored" -> ok', async () => {
       if (typeof proposalHandler.activate !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage);
-      const result = await interpret(proposalHandler.activate({ proposal: "proposal-001" }), storage);
+      const afterResult_create_budget_proposal = await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage);
+      const _pool = Object.assign({}, (afterResult_create_budget_proposal?.output ?? {}));
+      const _fixtureInput = { proposal: "proposal-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(proposalHandler.activate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('Proposal functional handler', () => {
     it('fixture "advance_to_passed" -> ok', async () => {
       if (typeof proposalHandler.advance !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage);
-      const result = await interpret(proposalHandler.advance({ proposal: "proposal-001", newStatus: "Passed" }), storage);
+      const afterResult_create_budget_proposal = await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage);
+      const _pool = Object.assign({}, (afterResult_create_budget_proposal?.output ?? {}));
+      const _fixtureInput = { proposal: "proposal-001", newStatus: "Passed" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(proposalHandler.advance({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -362,8 +377,13 @@ describe('Proposal functional handler', () => {
     it('fixture "cancel_draft" -> ok', async () => {
       if (typeof proposalHandler.cancel !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage);
-      const result = await interpret(proposalHandler.cancel({ proposal: "proposal-001", canceller: "alice" }), storage);
+      const afterResult_create_budget_proposal = await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage);
+      const _pool = Object.assign({}, (afterResult_create_budget_proposal?.output ?? {}));
+      const _fixtureInput = { proposal: "proposal-001", canceller: "alice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(proposalHandler.cancel({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

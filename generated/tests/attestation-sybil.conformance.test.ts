@@ -155,8 +155,13 @@ describe('AttestationSybil functional handler', () => {
     it('fixture "submit_valid_attestation" -> ok', async () => {
       if (typeof attestationSybilHandler.submitAttestation !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(attestationSybilHandler.configure({ requiredSchema: "kyc-basic", requiredAttester: "civic-authority" }), storage);
-      const result = await interpret(attestationSybilHandler.submitAttestation({ config: "att-sybil-1", candidate: "alice", attestationRef: "att-ref-001", schema: "kyc-basic", attester: "civic-authority", expiresAt: "2027-12-31T00:00:00Z" }), storage);
+      const afterResult_configure_kyc = await interpret(attestationSybilHandler.configure({ requiredSchema: "kyc-basic", requiredAttester: "civic-authority" }), storage);
+      const _pool = Object.assign({}, (afterResult_configure_kyc?.output ?? {}));
+      const _fixtureInput = { config: "att-sybil-1", candidate: "alice", attestationRef: "att-ref-001", schema: "kyc-basic", attester: "civic-authority", expiresAt: "2027-12-31T00:00:00Z" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(attestationSybilHandler.submitAttestation({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('AttestationSybil functional handler', () => {
     it('fixture "verify_alice" -> ok', async () => {
       if (typeof attestationSybilHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(attestationSybilHandler.configure({ requiredSchema: "kyc-basic", requiredAttester: "civic-authority" }), storage);
-      const result = await interpret(attestationSybilHandler.verify({ config: "att-sybil-1", candidate: "alice" }), storage);
+      const afterResult_configure_kyc = await interpret(attestationSybilHandler.configure({ requiredSchema: "kyc-basic", requiredAttester: "civic-authority" }), storage);
+      const _pool = Object.assign({}, (afterResult_configure_kyc?.output ?? {}));
+      const _fixtureInput = { config: "att-sybil-1", candidate: "alice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(attestationSybilHandler.verify({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -162,8 +162,13 @@ describe('Pathauto functional handler', () => {
     it('fixture "bulk_two" -> ok', async () => {
       if (typeof pathautoHandler.bulkGenerate !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(pathautoHandler.generateAlias({ pattern: "blog", entity: "My Example Page" }), storage);
-      const result = await interpret(pathautoHandler.bulkGenerate({ pattern: "docs", entities: "[\"Getting Started\",\"API Reference\"]" }), storage);
+      const afterResult_valid_page = await interpret(pathautoHandler.generateAlias({ pattern: "blog", entity: "My Example Page" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_page?.output ?? {}));
+      const _fixtureInput = { pattern: "docs", entities: "[\"Getting Started\",\"API Reference\"]" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(pathautoHandler.bulkGenerate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -231,16 +236,26 @@ describe('Pathauto functional handler', () => {
     it('fixture "clean_spaces" -> ok', async () => {
       if (typeof pathautoHandler.cleanString !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(pathautoHandler.generateAlias({ pattern: "blog", entity: "My Example Page" }), storage);
-      const result = await interpret(pathautoHandler.cleanString({ input: "Hello World Test" }), storage);
+      const afterResult_valid_page = await interpret(pathautoHandler.generateAlias({ pattern: "blog", entity: "My Example Page" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_page?.output ?? {}));
+      const _fixtureInput = { input: "Hello World Test" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(pathautoHandler.cleanString({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "clean_empty" -> ok', async () => {
       if (typeof pathautoHandler.cleanString !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(pathautoHandler.generateAlias({ pattern: "blog", entity: "My Example Page" }), storage);
-      const result = await interpret(pathautoHandler.cleanString({ input: "" }), storage);
+      const afterResult_valid_page = await interpret(pathautoHandler.generateAlias({ pattern: "blog", entity: "My Example Page" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_page?.output ?? {}));
+      const _fixtureInput = { input: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(pathautoHandler.cleanString({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -155,8 +155,13 @@ describe('Article functional handler', () => {
     it('fixture "update_ok" -> ok', async () => {
       if (typeof articleHandler.update !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(articleHandler.create({ article: "art-001", title: "Introduction to Concept Programming", description: "A primer on concept-oriented design", body: "Concept programming separates concerns into independent modules.", author: "alice" }), storage);
-      const result = await interpret(articleHandler.update({ article: "art-001", title: "Updated Title", description: "Revised description", body: "Updated body content." }), storage);
+      const afterResult_create_ok = await interpret(articleHandler.create({ article: "art-001", title: "Introduction to Concept Programming", description: "A primer on concept-oriented design", body: "Concept programming separates concerns into independent modules.", author: "alice" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_ok?.output ?? {}));
+      const _fixtureInput = { article: "art-001", title: "Updated Title", description: "Revised description", body: "Updated body content." } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(articleHandler.update({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -225,8 +230,13 @@ describe('Article functional handler', () => {
     it('fixture "delete_ok" -> ok', async () => {
       if (typeof articleHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(articleHandler.create({ article: "art-001", title: "Introduction to Concept Programming", description: "A primer on concept-oriented design", body: "Concept programming separates concerns into independent modules.", author: "alice" }), storage);
-      const result = await interpret(articleHandler.delete({ article: "art-001" }), storage);
+      const afterResult_create_ok = await interpret(articleHandler.create({ article: "art-001", title: "Introduction to Concept Programming", description: "A primer on concept-oriented design", body: "Concept programming separates concerns into independent modules.", author: "alice" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_ok?.output ?? {}));
+      const _fixtureInput = { article: "art-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(articleHandler.delete({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -295,8 +305,13 @@ describe('Article functional handler', () => {
     it('fixture "get_ok" -> ok', async () => {
       if (typeof articleHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(articleHandler.create({ article: "art-001", title: "Introduction to Concept Programming", description: "A primer on concept-oriented design", body: "Concept programming separates concerns into independent modules.", author: "alice" }), storage);
-      const result = await interpret(articleHandler.get({ article: "art-001" }), storage);
+      const afterResult_create_ok = await interpret(articleHandler.create({ article: "art-001", title: "Introduction to Concept Programming", description: "A primer on concept-oriented design", body: "Concept programming separates concerns into independent modules.", author: "alice" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_ok?.output ?? {}));
+      const _fixtureInput = { article: "art-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(articleHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -365,8 +380,13 @@ describe('Article functional handler', () => {
     it('fixture "list_ok" -> ok', async () => {
       if (typeof articleHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(articleHandler.create({ article: "art-001", title: "Introduction to Concept Programming", description: "A primer on concept-oriented design", body: "Concept programming separates concerns into independent modules.", author: "alice" }), storage);
-      const result = await interpret(articleHandler.list({  }), storage);
+      const afterResult_create_ok = await interpret(articleHandler.create({ article: "art-001", title: "Introduction to Concept Programming", description: "A primer on concept-oriented design", body: "Concept programming separates concerns into independent modules.", author: "alice" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_ok?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(articleHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

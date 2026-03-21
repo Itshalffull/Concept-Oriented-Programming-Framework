@@ -230,8 +230,13 @@ describe('TerraformProvider functional handler', () => {
     it('fixture "apply_workspace" -> ok', async () => {
       if (typeof terraformProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(terraformProviderHandler.generate({ plan: "dp-001" }), storage);
-      const result = await interpret(terraformProviderHandler.apply({ workspace: "ws-prod-001" }), storage);
+      const afterResult_generate_plan = await interpret(terraformProviderHandler.generate({ plan: "dp-001" }), storage);
+      const _pool = Object.assign({}, (afterResult_generate_plan?.output ?? {}));
+      const _fixtureInput = { workspace: "ws-prod-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(terraformProviderHandler.apply({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -299,16 +304,26 @@ describe('TerraformProvider functional handler', () => {
     it('fixture "teardown_workspace" -> ok', async () => {
       if (typeof terraformProviderHandler.teardown !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(terraformProviderHandler.generate({ plan: "dp-001" }), storage);
-      const result = await interpret(terraformProviderHandler.teardown({ workspace: "ws-prod-001" }), storage);
+      const afterResult_generate_plan = await interpret(terraformProviderHandler.generate({ plan: "dp-001" }), storage);
+      const _pool = Object.assign({}, (afterResult_generate_plan?.output ?? {}));
+      const _fixtureInput = { workspace: "ws-prod-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(terraformProviderHandler.teardown({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "teardown_nonexistent" -> ok', async () => {
       if (typeof terraformProviderHandler.teardown !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(terraformProviderHandler.generate({ plan: "dp-001" }), storage);
-      const result = await interpret(terraformProviderHandler.teardown({ workspace: "" }), storage);
+      const afterResult_generate_plan = await interpret(terraformProviderHandler.generate({ plan: "dp-001" }), storage);
+      const _pool = Object.assign({}, (afterResult_generate_plan?.output ?? {}));
+      const _fixtureInput = { workspace: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(terraformProviderHandler.teardown({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

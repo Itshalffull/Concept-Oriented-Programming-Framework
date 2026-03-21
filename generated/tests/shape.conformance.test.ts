@@ -155,16 +155,26 @@ describe('Shape functional handler', () => {
     it('fixture "resolve_button" -> ok', async () => {
       if (typeof shapeHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" }), storage);
-      const result = await interpret(shapeHandler.resolve({ shapeId: "shape-1", element: "button" }), storage);
+      const afterResult_configure_rounded = await interpret(shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" }), storage);
+      const _pool = Object.assign({}, (afterResult_configure_rounded?.output ?? {}));
+      const _fixtureInput = { shapeId: "shape-1", element: "button" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(shapeHandler.resolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_card" -> ok', async () => {
       if (typeof shapeHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" }), storage);
-      const result = await interpret(shapeHandler.resolve({ shapeId: "shape-1", element: "card" }), storage);
+      const afterResult_configure_rounded = await interpret(shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" }), storage);
+      const _pool = Object.assign({}, (afterResult_configure_rounded?.output ?? {}));
+      const _fixtureInput = { shapeId: "shape-1", element: "card" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(shapeHandler.resolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

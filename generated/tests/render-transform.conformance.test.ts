@@ -155,8 +155,13 @@ describe('RenderTransform functional handler', () => {
     it('fixture "dark_theme_transform" -> ok', async () => {
       if (typeof renderTransformHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(renderTransformHandler.registerKind({ kind: "token-remap" }), storage);
-      const result = await interpret(renderTransformHandler.register({ name: "dark-theme", kind: "token-remap", spec: "{\"mappings\":{\"palette.primary\":\"palette.primary-dark\"}}" }), storage);
+      const afterResult_token_remap_kind = await interpret(renderTransformHandler.registerKind({ kind: "token-remap" }), storage);
+      const _pool = Object.assign({}, (afterResult_token_remap_kind?.output ?? {}));
+      const _fixtureInput = { name: "dark-theme", kind: "token-remap", spec: "{\"mappings\":{\"palette.primary\":\"palette.primary-dark\"}}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(renderTransformHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,16 +229,26 @@ describe('RenderTransform functional handler', () => {
     it('fixture "apply_token_remap" -> ok', async () => {
       if (typeof renderTransformHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(renderTransformHandler.registerKind({ kind: "token-remap" }), storage);
-      const result = await interpret(renderTransformHandler.apply({ program: "{\"instructions\":[]}", kind: "token-remap", spec: "{\"mappings\":{}}" }), storage);
+      const afterResult_token_remap_kind = await interpret(renderTransformHandler.registerKind({ kind: "token-remap" }), storage);
+      const _pool = Object.assign({}, (afterResult_token_remap_kind?.output ?? {}));
+      const _fixtureInput = { program: "{\"instructions\":[]}", kind: "token-remap", spec: "{\"mappings\":{}}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(renderTransformHandler.apply({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_program" -> error', async () => {
       if (typeof renderTransformHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(renderTransformHandler.registerKind({ kind: "token-remap" }), storage);
-      const result = await interpret(renderTransformHandler.apply({ program: "not-json", kind: "token-remap", spec: "{}" }), storage);
+      const afterResult_token_remap_kind = await interpret(renderTransformHandler.registerKind({ kind: "token-remap" }), storage);
+      const _pool = Object.assign({}, (afterResult_token_remap_kind?.output ?? {}));
+      const _fixtureInput = { program: "not-json", kind: "token-remap", spec: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(renderTransformHandler.apply({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -294,8 +309,13 @@ describe('RenderTransform functional handler', () => {
     it('fixture "compose_two" -> ok', async () => {
       if (typeof renderTransformHandler.compose !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(renderTransformHandler.registerKind({ kind: "token-remap" }), storage);
-      const result = await interpret(renderTransformHandler.compose({ transforms: "[{\"name\":\"t1\",\"kind\":\"token-remap\",\"spec\":\"{}\"},{\"name\":\"t2\",\"kind\":\"a11y-adapt\",\"spec\":\"{}\"}]" }), storage);
+      const afterResult_token_remap_kind = await interpret(renderTransformHandler.registerKind({ kind: "token-remap" }), storage);
+      const _pool = Object.assign({}, (afterResult_token_remap_kind?.output ?? {}));
+      const _fixtureInput = { transforms: "[{\"name\":\"t1\",\"kind\":\"token-remap\",\"spec\":\"{}\"},{\"name\":\"t2\",\"kind\":\"a11y-adapt\",\"spec\":\"{}\"}]" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(renderTransformHandler.compose({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -363,8 +383,13 @@ describe('RenderTransform functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof renderTransformHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(renderTransformHandler.registerKind({ kind: "token-remap" }), storage);
-      const result = await interpret(renderTransformHandler.list({  }), storage);
+      const afterResult_token_remap_kind = await interpret(renderTransformHandler.registerKind({ kind: "token-remap" }), storage);
+      const _pool = Object.assign({}, (afterResult_token_remap_kind?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(renderTransformHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -425,8 +450,13 @@ describe('RenderTransform functional handler', () => {
     it('fixture "existing_transform" -> ok', async () => {
       if (typeof renderTransformHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(renderTransformHandler.registerKind({ kind: "token-remap" }), storage);
-      const result = await interpret(renderTransformHandler.get({ name: "dark-theme" }), storage);
+      const afterResult_token_remap_kind = await interpret(renderTransformHandler.registerKind({ kind: "token-remap" }), storage);
+      const _pool = Object.assign({}, (afterResult_token_remap_kind?.output ?? {}));
+      const _fixtureInput = { name: "dark-theme" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(renderTransformHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

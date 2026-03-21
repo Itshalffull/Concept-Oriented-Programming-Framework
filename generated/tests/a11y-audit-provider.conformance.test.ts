@@ -162,8 +162,13 @@ describe('A11yAuditProvider functional handler', () => {
     it('fixture "existing_audit" -> ok', async () => {
       if (typeof a11yAuditProviderHandler.getFindings !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(a11yAuditProviderHandler.audit({ audit: "aud-1", program: "dialog-widget", instructions: "[{\"tag\":\"element\",\"part\":\"root\",\"role\":\"container\"},{\"tag\":\"aria\",\"part\":\"root\",\"attr\":\"role\",\"value\":\"dialog\"},{\"tag\":\"aria\",\"part\":\"root\",\"attr\":\"label\",\"value\":\"Confirm\"},{\"tag\":\"focus\",\"strategy\":\"trap\"}]", parts: ["root"] }), storage);
-      const result = await interpret(a11yAuditProviderHandler.getFindings({ audit: "aud-1" }), storage);
+      const afterResult_accessible_dialog = await interpret(a11yAuditProviderHandler.audit({ audit: "aud-1", program: "dialog-widget", instructions: "[{\"tag\":\"element\",\"part\":\"root\",\"role\":\"container\"},{\"tag\":\"aria\",\"part\":\"root\",\"attr\":\"role\",\"value\":\"dialog\"},{\"tag\":\"aria\",\"part\":\"root\",\"attr\":\"label\",\"value\":\"Confirm\"},{\"tag\":\"focus\",\"strategy\":\"trap\"}]", parts: ["root"] }), storage);
+      const _pool = Object.assign({}, (afterResult_accessible_dialog?.output ?? {}));
+      const _fixtureInput = { audit: "aud-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(a11yAuditProviderHandler.getFindings({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

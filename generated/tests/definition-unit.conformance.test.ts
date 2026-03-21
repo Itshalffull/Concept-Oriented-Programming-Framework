@@ -155,8 +155,13 @@ describe('DefinitionUnit functional handler', () => {
     it('fixture "find_by_symbol" -> ok', async () => {
       if (typeof definitionUnitHandler.findBySymbol !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(definitionUnitHandler.extract({ tree: "tree-1", startByte: "0", endByte: "100" }), storage);
-      const result = await interpret(definitionUnitHandler.findBySymbol({ symbol: "src/app.ts:handleRequest" }), storage);
+      const afterResult_extract_function = await interpret(definitionUnitHandler.extract({ tree: "tree-1", startByte: "0", endByte: "100" }), storage);
+      const _pool = Object.assign({}, (afterResult_extract_function?.output ?? {}));
+      const _fixtureInput = { symbol: "src/app.ts:handleRequest" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(definitionUnitHandler.findBySymbol({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,16 +229,26 @@ describe('DefinitionUnit functional handler', () => {
     it('fixture "find_ts_functions" -> ok', async () => {
       if (typeof definitionUnitHandler.findByPattern !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(definitionUnitHandler.extract({ tree: "tree-1", startByte: "0", endByte: "100" }), storage);
-      const result = await interpret(definitionUnitHandler.findByPattern({ kind: "function", language: "typescript", namePattern: "handle.*" }), storage);
+      const afterResult_extract_function = await interpret(definitionUnitHandler.extract({ tree: "tree-1", startByte: "0", endByte: "100" }), storage);
+      const _pool = Object.assign({}, (afterResult_extract_function?.output ?? {}));
+      const _fixtureInput = { kind: "function", language: "typescript", namePattern: "handle.*" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(definitionUnitHandler.findByPattern({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_all" -> ok', async () => {
       if (typeof definitionUnitHandler.findByPattern !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(definitionUnitHandler.extract({ tree: "tree-1", startByte: "0", endByte: "100" }), storage);
-      const result = await interpret(definitionUnitHandler.findByPattern({ kind: "", language: "", namePattern: "" }), storage);
+      const afterResult_extract_function = await interpret(definitionUnitHandler.extract({ tree: "tree-1", startByte: "0", endByte: "100" }), storage);
+      const _pool = Object.assign({}, (afterResult_extract_function?.output ?? {}));
+      const _fixtureInput = { kind: "", language: "", namePattern: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(definitionUnitHandler.findByPattern({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

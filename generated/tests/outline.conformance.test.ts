@@ -162,8 +162,13 @@ describe('Outline functional handler', () => {
     it('fixture "indent_node" -> ok', async () => {
       if (typeof outlineHandler.indent !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
-      const result = await interpret(outlineHandler.indent({ node: "section-1" }), storage);
+      const afterResult_create_root = await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_root?.output ?? {}));
+      const _fixtureInput = { node: "section-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(outlineHandler.indent({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -231,8 +236,13 @@ describe('Outline functional handler', () => {
     it('fixture "outdent_node" -> ok', async () => {
       if (typeof outlineHandler.outdent !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
-      const result = await interpret(outlineHandler.outdent({ node: "section-1" }), storage);
+      const afterResult_create_root = await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_root?.output ?? {}));
+      const _fixtureInput = { node: "section-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(outlineHandler.outdent({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -300,8 +310,13 @@ describe('Outline functional handler', () => {
     it('fixture "move_up_node" -> ok', async () => {
       if (typeof outlineHandler.moveUp !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
-      const result = await interpret(outlineHandler.moveUp({ node: "section-1" }), storage);
+      const afterResult_create_root = await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_root?.output ?? {}));
+      const _fixtureInput = { node: "section-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(outlineHandler.moveUp({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -369,8 +384,13 @@ describe('Outline functional handler', () => {
     it('fixture "move_down_node" -> ok', async () => {
       if (typeof outlineHandler.moveDown !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
-      const result = await interpret(outlineHandler.moveDown({ node: "section-1" }), storage);
+      const afterResult_create_root = await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_root?.output ?? {}));
+      const _fixtureInput = { node: "section-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(outlineHandler.moveDown({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -438,8 +458,13 @@ describe('Outline functional handler', () => {
     it('fixture "collapse_node" -> ok', async () => {
       if (typeof outlineHandler.collapse !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
-      const result = await interpret(outlineHandler.collapse({ node: "chapter-1" }), storage);
+      const afterResult_create_root = await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_root?.output ?? {}));
+      const _fixtureInput = { node: "chapter-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(outlineHandler.collapse({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -507,8 +532,13 @@ describe('Outline functional handler', () => {
     it('fixture "expand_node" -> ok', async () => {
       if (typeof outlineHandler.expand !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
-      const result = await interpret(outlineHandler.expand({ node: "chapter-1" }), storage);
+      const afterResult_create_root = await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_root?.output ?? {}));
+      const _fixtureInput = { node: "chapter-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(outlineHandler.expand({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -576,8 +606,13 @@ describe('Outline functional handler', () => {
     it('fixture "reparent_node" -> ok', async () => {
       if (typeof outlineHandler.reparent !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
-      const result = await interpret(outlineHandler.reparent({ node: "section-1", newParent: "chapter-2" }), storage);
+      const afterResult_create_root = await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_root?.output ?? {}));
+      const _fixtureInput = { node: "section-1", newParent: "chapter-2" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(outlineHandler.reparent({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -645,8 +680,13 @@ describe('Outline functional handler', () => {
     it('fixture "get_children" -> ok', async () => {
       if (typeof outlineHandler.getChildren !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
-      const result = await interpret(outlineHandler.getChildren({ node: "chapter-1" }), storage);
+      const afterResult_create_root = await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_root?.output ?? {}));
+      const _fixtureInput = { node: "chapter-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(outlineHandler.getChildren({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -155,8 +155,13 @@ describe('BindingProvider functional handler', () => {
     it('fixture "bind_static" -> ok', async () => {
       if (typeof bindingProviderHandler.bind !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(bindingProviderHandler.initialize({ config: "{}" }), storage);
-      const result = await interpret(bindingProviderHandler.bind({ provider: "bp-1", concept: "Article", mode: "static" }), storage);
+      const afterResult_init_default = await interpret(bindingProviderHandler.initialize({ config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_init_default?.output ?? {}));
+      const _fixtureInput = { provider: "bp-1", concept: "Article", mode: "static" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(bindingProviderHandler.bind({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('BindingProvider functional handler', () => {
     it('fixture "sync_valid" -> ok', async () => {
       if (typeof bindingProviderHandler.sync !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(bindingProviderHandler.initialize({ config: "{}" }), storage);
-      const result = await interpret(bindingProviderHandler.sync({ provider: "bp-1" }), storage);
+      const afterResult_init_default = await interpret(bindingProviderHandler.initialize({ config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_init_default?.output ?? {}));
+      const _fixtureInput = { provider: "bp-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(bindingProviderHandler.sync({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,16 +303,26 @@ describe('BindingProvider functional handler', () => {
     it('fixture "invoke_action" -> ok', async () => {
       if (typeof bindingProviderHandler.invoke !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(bindingProviderHandler.initialize({ config: "{}" }), storage);
-      const result = await interpret(bindingProviderHandler.invoke({ provider: "bp-1", action: "create", input: "test-input" }), storage);
+      const afterResult_init_default = await interpret(bindingProviderHandler.initialize({ config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_init_default?.output ?? {}));
+      const _fixtureInput = { provider: "bp-1", action: "create", input: "test-input" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(bindingProviderHandler.invoke({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "invoke_missing" -> error', async () => {
       if (typeof bindingProviderHandler.invoke !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(bindingProviderHandler.initialize({ config: "{}" }), storage);
-      const result = await interpret(bindingProviderHandler.invoke({ provider: "nonexistent", action: "create", input: "{}" }), storage);
+      const afterResult_init_default = await interpret(bindingProviderHandler.initialize({ config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_init_default?.output ?? {}));
+      const _fixtureInput = { provider: "nonexistent", action: "create", input: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(bindingProviderHandler.invoke({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -363,8 +383,13 @@ describe('BindingProvider functional handler', () => {
     it('fixture "unbind_valid" -> ok', async () => {
       if (typeof bindingProviderHandler.unbind !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(bindingProviderHandler.initialize({ config: "{}" }), storage);
-      const result = await interpret(bindingProviderHandler.unbind({ provider: "bp-1" }), storage);
+      const afterResult_init_default = await interpret(bindingProviderHandler.initialize({ config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_init_default?.output ?? {}));
+      const _fixtureInput = { provider: "bp-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(bindingProviderHandler.unbind({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

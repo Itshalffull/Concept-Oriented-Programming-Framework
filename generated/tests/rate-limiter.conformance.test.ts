@@ -156,8 +156,13 @@ describe('RateLimiter functional handler', () => {
     it('fixture "acquire_tokens" -> ok', async () => {
       if (typeof rateLimiterHandler.acquire !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(rateLimiterHandler.configure({ endpoint: "openai-api", maxTokens: "100", refillRate: "10", refillIntervalMs: "1000" }), storage);
-      const result = await interpret(rateLimiterHandler.acquire({ endpoint: "openai-api", tokens: "5" }), storage);
+      const afterResult_api_limiter = await interpret(rateLimiterHandler.configure({ endpoint: "openai-api", maxTokens: "100", refillRate: "10", refillIntervalMs: "1000" }), storage);
+      const _pool = Object.assign({}, (afterResult_api_limiter?.output ?? {}));
+      const _fixtureInput = { endpoint: "openai-api", tokens: "5" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(rateLimiterHandler.acquire({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -234,9 +239,14 @@ describe('RateLimiter functional handler', () => {
     it('fixture "release_tokens" -> ok', async () => {
       if (typeof rateLimiterHandler.release !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(rateLimiterHandler.configure({ endpoint: "openai-api", maxTokens: "100", refillRate: "10", refillIntervalMs: "1000" }), storage);
-      await interpret(rateLimiterHandler.acquire({ endpoint: "openai-api", tokens: "5" }), storage);
-      const result = await interpret(rateLimiterHandler.release({ endpoint: "openai-api", tokens: "3" }), storage);
+      const afterResult_api_limiter = await interpret(rateLimiterHandler.configure({ endpoint: "openai-api", maxTokens: "100", refillRate: "10", refillIntervalMs: "1000" }), storage);
+      const afterResult_acquire_tokens = await interpret(rateLimiterHandler.acquire({ endpoint: "openai-api", tokens: "5" }), storage);
+      const _pool = Object.assign({}, (afterResult_api_limiter?.output ?? {}), (afterResult_acquire_tokens?.output ?? {}));
+      const _fixtureInput = { endpoint: "openai-api", tokens: "3" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(rateLimiterHandler.release({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -305,8 +315,13 @@ describe('RateLimiter functional handler', () => {
     it('fixture "get_status" -> ok', async () => {
       if (typeof rateLimiterHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(rateLimiterHandler.configure({ endpoint: "openai-api", maxTokens: "100", refillRate: "10", refillIntervalMs: "1000" }), storage);
-      const result = await interpret(rateLimiterHandler.get({ endpoint: "openai-api" }), storage);
+      const afterResult_api_limiter = await interpret(rateLimiterHandler.configure({ endpoint: "openai-api", maxTokens: "100", refillRate: "10", refillIntervalMs: "1000" }), storage);
+      const _pool = Object.assign({}, (afterResult_api_limiter?.output ?? {}));
+      const _fixtureInput = { endpoint: "openai-api" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(rateLimiterHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -375,8 +390,13 @@ describe('RateLimiter functional handler', () => {
     it('fixture "reset_limiter" -> ok', async () => {
       if (typeof rateLimiterHandler.reset !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(rateLimiterHandler.configure({ endpoint: "openai-api", maxTokens: "100", refillRate: "10", refillIntervalMs: "1000" }), storage);
-      const result = await interpret(rateLimiterHandler.reset({ endpoint: "openai-api" }), storage);
+      const afterResult_api_limiter = await interpret(rateLimiterHandler.configure({ endpoint: "openai-api", maxTokens: "100", refillRate: "10", refillIntervalMs: "1000" }), storage);
+      const _pool = Object.assign({}, (afterResult_api_limiter?.output ?? {}));
+      const _fixtureInput = { endpoint: "openai-api" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(rateLimiterHandler.reset({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -155,8 +155,13 @@ describe('Meeting functional handler', () => {
     it('fixture "call_existing_meeting" -> ok', async () => {
       if (typeof meetingHandler.callToOrder !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(meetingHandler.schedule({ title: "Q2 Board Meeting", agenda: ["Budget review","Hiring plan","Product roadmap"] }), storage);
-      const result = await interpret(meetingHandler.callToOrder({ meeting: "meeting-001", chair: "alice" }), storage);
+      const afterResult_schedule_board_meeting = await interpret(meetingHandler.schedule({ title: "Q2 Board Meeting", agenda: ["Budget review","Hiring plan","Product roadmap"] }), storage);
+      const _pool = Object.assign({}, (afterResult_schedule_board_meeting?.output ?? {}));
+      const _fixtureInput = { meeting: "meeting-001", chair: "alice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(meetingHandler.callToOrder({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('Meeting functional handler', () => {
     it('fixture "make_main_motion" -> ok', async () => {
       if (typeof meetingHandler.makeMotion !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(meetingHandler.schedule({ title: "Q2 Board Meeting", agenda: ["Budget review","Hiring plan","Product roadmap"] }), storage);
-      const result = await interpret(meetingHandler.makeMotion({ meeting: "meeting-001", mover: "bob", motionType: "main", text: "Approve the Q2 budget" }), storage);
+      const afterResult_schedule_board_meeting = await interpret(meetingHandler.schedule({ title: "Q2 Board Meeting", agenda: ["Budget review","Hiring plan","Product roadmap"] }), storage);
+      const _pool = Object.assign({}, (afterResult_schedule_board_meeting?.output ?? {}));
+      const _fixtureInput = { meeting: "meeting-001", mover: "bob", motionType: "main", text: "Approve the Q2 budget" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(meetingHandler.makeMotion({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('Meeting functional handler', () => {
     it('fixture "second_existing_motion" -> ok', async () => {
       if (typeof meetingHandler.secondMotion !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(meetingHandler.schedule({ title: "Q2 Board Meeting", agenda: ["Budget review","Hiring plan","Product roadmap"] }), storage);
-      const result = await interpret(meetingHandler.secondMotion({ meeting: "meeting-001", seconder: "carol", motionIndex: "0" }), storage);
+      const afterResult_schedule_board_meeting = await interpret(meetingHandler.schedule({ title: "Q2 Board Meeting", agenda: ["Budget review","Hiring plan","Product roadmap"] }), storage);
+      const _pool = Object.assign({}, (afterResult_schedule_board_meeting?.output ?? {}));
+      const _fixtureInput = { meeting: "meeting-001", seconder: "carol", motionIndex: "0" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(meetingHandler.secondMotion({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -362,8 +377,13 @@ describe('Meeting functional handler', () => {
     it('fixture "call_question_valid" -> ok', async () => {
       if (typeof meetingHandler.callQuestion !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(meetingHandler.schedule({ title: "Q2 Board Meeting", agenda: ["Budget review","Hiring plan","Product roadmap"] }), storage);
-      const result = await interpret(meetingHandler.callQuestion({ meeting: "meeting-001" }), storage);
+      const afterResult_schedule_board_meeting = await interpret(meetingHandler.schedule({ title: "Q2 Board Meeting", agenda: ["Budget review","Hiring plan","Product roadmap"] }), storage);
+      const _pool = Object.assign({}, (afterResult_schedule_board_meeting?.output ?? {}));
+      const _fixtureInput = { meeting: "meeting-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(meetingHandler.callQuestion({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -431,8 +451,13 @@ describe('Meeting functional handler', () => {
     it('fixture "record_minute_entry" -> ok', async () => {
       if (typeof meetingHandler.recordMinute !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(meetingHandler.schedule({ title: "Q2 Board Meeting", agenda: ["Budget review","Hiring plan","Product roadmap"] }), storage);
-      const result = await interpret(meetingHandler.recordMinute({ meeting: "meeting-001", record: "Motion to approve Q2 budget passed unanimously" }), storage);
+      const afterResult_schedule_board_meeting = await interpret(meetingHandler.schedule({ title: "Q2 Board Meeting", agenda: ["Budget review","Hiring plan","Product roadmap"] }), storage);
+      const _pool = Object.assign({}, (afterResult_schedule_board_meeting?.output ?? {}));
+      const _fixtureInput = { meeting: "meeting-001", record: "Motion to approve Q2 budget passed unanimously" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(meetingHandler.recordMinute({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -500,8 +525,13 @@ describe('Meeting functional handler', () => {
     it('fixture "adjourn_valid" -> ok', async () => {
       if (typeof meetingHandler.adjourn !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(meetingHandler.schedule({ title: "Q2 Board Meeting", agenda: ["Budget review","Hiring plan","Product roadmap"] }), storage);
-      const result = await interpret(meetingHandler.adjourn({ meeting: "meeting-001" }), storage);
+      const afterResult_schedule_board_meeting = await interpret(meetingHandler.schedule({ title: "Q2 Board Meeting", agenda: ["Budget review","Hiring plan","Product roadmap"] }), storage);
+      const _pool = Object.assign({}, (afterResult_schedule_board_meeting?.output ?? {}));
+      const _fixtureInput = { meeting: "meeting-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(meetingHandler.adjourn({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

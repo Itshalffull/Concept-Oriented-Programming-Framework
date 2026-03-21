@@ -148,24 +148,39 @@ describe('A11yAdaptProvider functional handler', () => {
     it('fixture "modify_aria_label" -> ok', async () => {
       if (typeof a11yAdaptProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(a11yAdaptProviderHandler.register({  }), storage);
-      const result = await interpret(a11yAdaptProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"aria\",\"attr\":\"aria-label\",\"value\":\"Card\"},{\"tag\":\"pure\",\"output\":\"W\"}]}", spec: "{\"modifications\":[{\"match\":{\"tag\":\"aria\",\"attr\":\"aria-label\"},\"set\":{\"value\":\"Accessible Card\"}}]}" }), storage);
+      const afterResult_valid = await interpret(a11yAdaptProviderHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { program: "{\"instructions\":[{\"tag\":\"aria\",\"attr\":\"aria-label\",\"value\":\"Card\"},{\"tag\":\"pure\",\"output\":\"W\"}]}", spec: "{\"modifications\":[{\"match\":{\"tag\":\"aria\",\"attr\":\"aria-label\"},\"set\":{\"value\":\"Accessible Card\"}}]}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(a11yAdaptProviderHandler.apply({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "inject_aria_live" -> ok', async () => {
       if (typeof a11yAdaptProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(a11yAdaptProviderHandler.register({  }), storage);
-      const result = await interpret(a11yAdaptProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"additions\":[{\"tag\":\"aria\",\"attr\":\"aria-live\",\"value\":\"polite\"}]}" }), storage);
+      const afterResult_valid = await interpret(a11yAdaptProviderHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"additions\":[{\"tag\":\"aria\",\"attr\":\"aria-live\",\"value\":\"polite\"}]}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(a11yAdaptProviderHandler.apply({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_spec_json" -> error', async () => {
       if (typeof a11yAdaptProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(a11yAdaptProviderHandler.register({  }), storage);
-      const result = await interpret(a11yAdaptProviderHandler.apply({ program: "{\"instructions\":[]}", spec: "bad-json" }), storage);
+      const afterResult_valid = await interpret(a11yAdaptProviderHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { program: "{\"instructions\":[]}", spec: "bad-json" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(a11yAdaptProviderHandler.apply({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 

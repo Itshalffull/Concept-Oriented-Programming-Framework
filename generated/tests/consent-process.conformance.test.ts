@@ -155,8 +155,13 @@ describe('ConsentProcess functional handler', () => {
     it('fixture "advance_to_clarifying" -> ok', async () => {
       if (typeof consentProcessHandler.advancePhase !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(consentProcessHandler.initiate({ proposalRef: "proposal-budget-2026" }), storage);
-      const result = await interpret(consentProcessHandler.advancePhase({ process: "consent-001" }), storage);
+      const afterResult_initiate_budget_proposal = await interpret(consentProcessHandler.initiate({ proposalRef: "proposal-budget-2026" }), storage);
+      const _pool = Object.assign({}, (afterResult_initiate_budget_proposal?.output ?? {}));
+      const _fixtureInput = { process: "consent-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(consentProcessHandler.advancePhase({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('ConsentProcess functional handler', () => {
     it('fixture "raise_paramount" -> ok', async () => {
       if (typeof consentProcessHandler.raiseObjection !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(consentProcessHandler.initiate({ proposalRef: "proposal-budget-2026" }), storage);
-      const result = await interpret(consentProcessHandler.raiseObjection({ process: "consent-001", objector: "alice", reason: "Exceeds annual budget limit", isParamount: "true" }), storage);
+      const afterResult_initiate_budget_proposal = await interpret(consentProcessHandler.initiate({ proposalRef: "proposal-budget-2026" }), storage);
+      const _pool = Object.assign({}, (afterResult_initiate_budget_proposal?.output ?? {}));
+      const _fixtureInput = { process: "consent-001", objector: "alice", reason: "Exceeds annual budget limit", isParamount: "true" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(consentProcessHandler.raiseObjection({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('ConsentProcess functional handler', () => {
     it('fixture "integrate_first_objection" -> ok', async () => {
       if (typeof consentProcessHandler.integrateObjection !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(consentProcessHandler.initiate({ proposalRef: "proposal-budget-2026" }), storage);
-      const result = await interpret(consentProcessHandler.integrateObjection({ process: "consent-001", objectionIndex: "0", amendment: "Cap budget at 80% of original request" }), storage);
+      const afterResult_initiate_budget_proposal = await interpret(consentProcessHandler.initiate({ proposalRef: "proposal-budget-2026" }), storage);
+      const _pool = Object.assign({}, (afterResult_initiate_budget_proposal?.output ?? {}));
+      const _fixtureInput = { process: "consent-001", objectionIndex: "0", amendment: "Cap budget at 80% of original request" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(consentProcessHandler.integrateObjection({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -362,8 +377,13 @@ describe('ConsentProcess functional handler', () => {
     it('fixture "resolve_clean" -> ok', async () => {
       if (typeof consentProcessHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(consentProcessHandler.initiate({ proposalRef: "proposal-budget-2026" }), storage);
-      const result = await interpret(consentProcessHandler.resolve({ process: "consent-001" }), storage);
+      const afterResult_initiate_budget_proposal = await interpret(consentProcessHandler.initiate({ proposalRef: "proposal-budget-2026" }), storage);
+      const _pool = Object.assign({}, (afterResult_initiate_budget_proposal?.output ?? {}));
+      const _fixtureInput = { process: "consent-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(consentProcessHandler.resolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -155,8 +155,13 @@ describe('Authorization functional handler', () => {
     it('fixture "revoke_publish" -> ok', async () => {
       if (typeof authorizationHandler.revokePermission !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(authorizationHandler.grantPermission({ role: "admin", permission: "write" }), storage);
-      const result = await interpret(authorizationHandler.revokePermission({ role: "editor", permission: "publish" }), storage);
+      const afterResult_grant_write_to_admin = await interpret(authorizationHandler.grantPermission({ role: "admin", permission: "write" }), storage);
+      const _pool = Object.assign({}, (afterResult_grant_write_to_admin?.output ?? {}));
+      const _fixtureInput = { role: "editor", permission: "publish" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(authorizationHandler.revokePermission({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('Authorization functional handler', () => {
     it('fixture "assign_admin" -> ok', async () => {
       if (typeof authorizationHandler.assignRole !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(authorizationHandler.grantPermission({ role: "admin", permission: "write" }), storage);
-      const result = await interpret(authorizationHandler.assignRole({ user: "alice", role: "admin" }), storage);
+      const afterResult_grant_write_to_admin = await interpret(authorizationHandler.grantPermission({ role: "admin", permission: "write" }), storage);
+      const _pool = Object.assign({}, (afterResult_grant_write_to_admin?.output ?? {}));
+      const _fixtureInput = { user: "alice", role: "admin" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(authorizationHandler.assignRole({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('Authorization functional handler', () => {
     it('fixture "check_granted" -> ok', async () => {
       if (typeof authorizationHandler.checkPermission !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(authorizationHandler.grantPermission({ role: "admin", permission: "write" }), storage);
-      const result = await interpret(authorizationHandler.checkPermission({ user: "alice", permission: "write" }), storage);
+      const afterResult_grant_write_to_admin = await interpret(authorizationHandler.grantPermission({ role: "admin", permission: "write" }), storage);
+      const _pool = Object.assign({}, (afterResult_grant_write_to_admin?.output ?? {}));
+      const _fixtureInput = { user: "alice", permission: "write" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(authorizationHandler.checkPermission({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

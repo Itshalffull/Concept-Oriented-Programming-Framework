@@ -162,16 +162,26 @@ describe('Health functional handler', () => {
     it('fixture "check_auth_sync" -> ok', async () => {
       if (typeof healthHandler.checkSync !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(healthHandler.checkConcept({ concept: "User", runtime: "server" }), storage);
-      const result = await interpret(healthHandler.checkSync({ sync: "auth-session-sync", concepts: ["User","Session"] }), storage);
+      const afterResult_check_user = await interpret(healthHandler.checkConcept({ concept: "User", runtime: "server" }), storage);
+      const _pool = Object.assign({}, (afterResult_check_user?.output ?? {}));
+      const _fixtureInput = { sync: "auth-session-sync", concepts: ["User","Session"] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(healthHandler.checkSync({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "check_sync_empty" -> ok', async () => {
       if (typeof healthHandler.checkSync !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(healthHandler.checkConcept({ concept: "User", runtime: "server" }), storage);
-      const result = await interpret(healthHandler.checkSync({ sync: "", concepts: [] }), storage);
+      const afterResult_check_user = await interpret(healthHandler.checkConcept({ concept: "User", runtime: "server" }), storage);
+      const _pool = Object.assign({}, (afterResult_check_user?.output ?? {}));
+      const _fixtureInput = { sync: "", concepts: [] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(healthHandler.checkSync({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -232,24 +242,39 @@ describe('Health functional handler', () => {
     it('fixture "check_auth_suite" -> ok', async () => {
       if (typeof healthHandler.checkSuite !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(healthHandler.checkConcept({ concept: "User", runtime: "server" }), storage);
-      const result = await interpret(healthHandler.checkSuite({ suite: "auth-suite", environment: "staging" }), storage);
+      const afterResult_check_user = await interpret(healthHandler.checkConcept({ concept: "User", runtime: "server" }), storage);
+      const _pool = Object.assign({}, (afterResult_check_user?.output ?? {}));
+      const _fixtureInput = { suite: "auth-suite", environment: "staging" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(healthHandler.checkSuite({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "check_suite_prod" -> ok', async () => {
       if (typeof healthHandler.checkSuite !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(healthHandler.checkConcept({ concept: "User", runtime: "server" }), storage);
-      const result = await interpret(healthHandler.checkSuite({ suite: "payments", environment: "production" }), storage);
+      const afterResult_check_user = await interpret(healthHandler.checkConcept({ concept: "User", runtime: "server" }), storage);
+      const _pool = Object.assign({}, (afterResult_check_user?.output ?? {}));
+      const _fixtureInput = { suite: "payments", environment: "production" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(healthHandler.checkSuite({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "check_suite_empty" -> ok', async () => {
       if (typeof healthHandler.checkSuite !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(healthHandler.checkConcept({ concept: "User", runtime: "server" }), storage);
-      const result = await interpret(healthHandler.checkSuite({ suite: "", environment: "staging" }), storage);
+      const afterResult_check_user = await interpret(healthHandler.checkConcept({ concept: "User", runtime: "server" }), storage);
+      const _pool = Object.assign({}, (afterResult_check_user?.output ?? {}));
+      const _fixtureInput = { suite: "", environment: "staging" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(healthHandler.checkSuite({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -310,16 +335,26 @@ describe('Health functional handler', () => {
     it('fixture "check_invariant" -> ok', async () => {
       if (typeof healthHandler.checkInvariant !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(healthHandler.checkConcept({ concept: "User", runtime: "server" }), storage);
-      const result = await interpret(healthHandler.checkInvariant({ concept: "User", invariant: "valid-email" }), storage);
+      const afterResult_check_user = await interpret(healthHandler.checkConcept({ concept: "User", runtime: "server" }), storage);
+      const _pool = Object.assign({}, (afterResult_check_user?.output ?? {}));
+      const _fixtureInput = { concept: "User", invariant: "valid-email" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(healthHandler.checkInvariant({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "check_invariant_empty" -> ok', async () => {
       if (typeof healthHandler.checkInvariant !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(healthHandler.checkConcept({ concept: "User", runtime: "server" }), storage);
-      const result = await interpret(healthHandler.checkInvariant({ concept: "", invariant: "valid-email" }), storage);
+      const afterResult_check_user = await interpret(healthHandler.checkConcept({ concept: "User", runtime: "server" }), storage);
+      const _pool = Object.assign({}, (afterResult_check_user?.output ?? {}));
+      const _fixtureInput = { concept: "", invariant: "valid-email" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(healthHandler.checkInvariant({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

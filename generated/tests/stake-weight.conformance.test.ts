@@ -155,8 +155,13 @@ describe('StakeWeight functional handler', () => {
     it('fixture "stake_hundred" -> ok', async () => {
       if (typeof stakeWeightHandler.stake !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(stakeWeightHandler.configure({ token: "GOV", cooldownDays: "7.0" }), storage);
-      const result = await interpret(stakeWeightHandler.stake({ config: "sw-cfg-001", staker: "alice", amount: "100.0" }), storage);
+      const afterResult_configure_gov = await interpret(stakeWeightHandler.configure({ token: "GOV", cooldownDays: "7.0" }), storage);
+      const _pool = Object.assign({}, (afterResult_configure_gov?.output ?? {}));
+      const _fixtureInput = { config: "sw-cfg-001", staker: "alice", amount: "100.0" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(stakeWeightHandler.stake({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,9 +229,14 @@ describe('StakeWeight functional handler', () => {
     it('fixture "unstake_existing" -> ok', async () => {
       if (typeof stakeWeightHandler.unstake !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(stakeWeightHandler.configure({ token: "GOV", cooldownDays: "7.0" }), storage);
-      await interpret(stakeWeightHandler.stake({ config: "sw-cfg-001", staker: "alice", amount: "100.0" }), storage);
-      const result = await interpret(stakeWeightHandler.unstake({ stake: "stake-001" }), storage);
+      const afterResult_configure_gov = await interpret(stakeWeightHandler.configure({ token: "GOV", cooldownDays: "7.0" }), storage);
+      const afterResult_stake_hundred = await interpret(stakeWeightHandler.stake({ config: "sw-cfg-001", staker: "alice", amount: "100.0" }), storage);
+      const _pool = Object.assign({}, (afterResult_configure_gov?.output ?? {}), (afterResult_stake_hundred?.output ?? {}));
+      const _fixtureInput = { stake: "stake-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(stakeWeightHandler.unstake({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -294,8 +304,13 @@ describe('StakeWeight functional handler', () => {
     it('fixture "get_staked" -> ok', async () => {
       if (typeof stakeWeightHandler.getWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(stakeWeightHandler.configure({ token: "GOV", cooldownDays: "7.0" }), storage);
-      const result = await interpret(stakeWeightHandler.getWeight({ config: "sw-cfg-001", participant: "alice" }), storage);
+      const afterResult_configure_gov = await interpret(stakeWeightHandler.configure({ token: "GOV", cooldownDays: "7.0" }), storage);
+      const _pool = Object.assign({}, (afterResult_configure_gov?.output ?? {}));
+      const _fixtureInput = { config: "sw-cfg-001", participant: "alice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(stakeWeightHandler.getWeight({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

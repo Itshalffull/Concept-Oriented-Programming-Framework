@@ -162,8 +162,13 @@ describe('EcsRuntime functional handler', () => {
     it('fixture "deploy_ecr" -> ok', async () => {
       if (typeof ecsRuntimeHandler.deploy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(ecsRuntimeHandler.provision({ concept: "OrderService", cpu: "256", memory: "512", cluster: "prod-cluster" }), storage);
-      const result = await interpret(ecsRuntimeHandler.deploy({ service: "svc-abc123", imageUri: "123456789.dkr.ecr.us-east-1.amazonaws.com/order-service:v2" }), storage);
+      const afterResult_provision_fargate = await interpret(ecsRuntimeHandler.provision({ concept: "OrderService", cpu: "256", memory: "512", cluster: "prod-cluster" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_fargate?.output ?? {}));
+      const _fixtureInput = { service: "svc-abc123", imageUri: "123456789.dkr.ecr.us-east-1.amazonaws.com/order-service:v2" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(ecsRuntimeHandler.deploy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -231,16 +236,26 @@ describe('EcsRuntime functional handler', () => {
     it('fixture "traffic_canary" -> ok', async () => {
       if (typeof ecsRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(ecsRuntimeHandler.provision({ concept: "OrderService", cpu: "256", memory: "512", cluster: "prod-cluster" }), storage);
-      const result = await interpret(ecsRuntimeHandler.setTrafficWeight({ service: "svc-abc123", weight: "20" }), storage);
+      const afterResult_provision_fargate = await interpret(ecsRuntimeHandler.provision({ concept: "OrderService", cpu: "256", memory: "512", cluster: "prod-cluster" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_fargate?.output ?? {}));
+      const _fixtureInput = { service: "svc-abc123", weight: "20" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(ecsRuntimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "traffic_no_service" -> ok', async () => {
       if (typeof ecsRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(ecsRuntimeHandler.provision({ concept: "OrderService", cpu: "256", memory: "512", cluster: "prod-cluster" }), storage);
-      const result = await interpret(ecsRuntimeHandler.setTrafficWeight({ service: "", weight: "50" }), storage);
+      const afterResult_provision_fargate = await interpret(ecsRuntimeHandler.provision({ concept: "OrderService", cpu: "256", memory: "512", cluster: "prod-cluster" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_fargate?.output ?? {}));
+      const _fixtureInput = { service: "", weight: "50" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(ecsRuntimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -301,16 +316,26 @@ describe('EcsRuntime functional handler', () => {
     it('fixture "rollback_previous_td" -> ok', async () => {
       if (typeof ecsRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(ecsRuntimeHandler.provision({ concept: "OrderService", cpu: "256", memory: "512", cluster: "prod-cluster" }), storage);
-      const result = await interpret(ecsRuntimeHandler.rollback({ service: "svc-abc123", targetTaskDefinition: "td-prev-001" }), storage);
+      const afterResult_provision_fargate = await interpret(ecsRuntimeHandler.provision({ concept: "OrderService", cpu: "256", memory: "512", cluster: "prod-cluster" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_fargate?.output ?? {}));
+      const _fixtureInput = { service: "svc-abc123", targetTaskDefinition: "td-prev-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(ecsRuntimeHandler.rollback({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "rollback_empty_td" -> ok', async () => {
       if (typeof ecsRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(ecsRuntimeHandler.provision({ concept: "OrderService", cpu: "256", memory: "512", cluster: "prod-cluster" }), storage);
-      const result = await interpret(ecsRuntimeHandler.rollback({ service: "svc-abc123", targetTaskDefinition: "" }), storage);
+      const afterResult_provision_fargate = await interpret(ecsRuntimeHandler.provision({ concept: "OrderService", cpu: "256", memory: "512", cluster: "prod-cluster" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_fargate?.output ?? {}));
+      const _fixtureInput = { service: "svc-abc123", targetTaskDefinition: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(ecsRuntimeHandler.rollback({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -371,8 +396,13 @@ describe('EcsRuntime functional handler', () => {
     it('fixture "destroy_valid" -> ok', async () => {
       if (typeof ecsRuntimeHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(ecsRuntimeHandler.provision({ concept: "OrderService", cpu: "256", memory: "512", cluster: "prod-cluster" }), storage);
-      const result = await interpret(ecsRuntimeHandler.destroy({ service: "svc-abc123" }), storage);
+      const afterResult_provision_fargate = await interpret(ecsRuntimeHandler.provision({ concept: "OrderService", cpu: "256", memory: "512", cluster: "prod-cluster" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_fargate?.output ?? {}));
+      const _fixtureInput = { service: "svc-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(ecsRuntimeHandler.destroy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -30,7 +30,7 @@ Your job is to create well-formed `.concept` files that are:
 1. **Research first** — use ScoreApi to check if a similar concept already exists in specs/ or repertoire/
 2. **Design the concept** — identify state, actions, variants, and invariants following Jackson's methodology
 3. **Write the spec** — use the create-concept skill for grammar reference and checklist
-4. **Add fixtures** — every action gets at least one ok fixture and error fixtures; use `after` for reader actions
+4. **Add fixtures** — every action gets at least one ok fixture and error fixtures; use `after` + `$fixture.field` output references for reader actions (e.g., `{ id: $create_ok.id } after create_ok`)
 5. **Validate** — use spec-parser to verify the spec parses correctly
 
 ## Rules
@@ -39,3 +39,4 @@ Your job is to create well-formed `.concept` files that are:
 - NEVER create concepts that depend on other concepts — use syncs for wiring
 - ALWAYS include operational principles (invariant examples)
 - Fixture values must match what the handler expects (JSON strings for JSON.parse params)
+- ALWAYS use $fixture.field output references in reader fixture inputs instead of hardcoded placeholder IDs — e.g., `fixture get_ok { id: $register_ok.id } after register_ok` not `fixture get_ok { id: "entity-1" } after register_ok`

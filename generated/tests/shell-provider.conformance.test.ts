@@ -55,24 +55,39 @@ describe('ShellProvider imperative handler', () => {
     it('fixture "echo_hello" -> ok', async () => {
       if (typeof shellProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await shellProviderHandler.list({  }, storage);
-      const result = await shellProviderHandler.execute({ command: "echo", args: "hello", env: "{}", cwd: "/tmp", timeout: "5000" }, storage);
+      const afterResult_valid = await shellProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { command: "echo", args: "hello", env: "{}", cwd: "/tmp", timeout: "5000" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await shellProviderHandler.execute({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "ls_home" -> ok', async () => {
       if (typeof shellProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await shellProviderHandler.list({  }, storage);
-      const result = await shellProviderHandler.execute({ command: "ls", args: "-la", env: "{}", cwd: "/home", timeout: "10000" }, storage);
+      const afterResult_valid = await shellProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { command: "ls", args: "-la", env: "{}", cwd: "/home", timeout: "10000" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await shellProviderHandler.execute({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_executable" -> error', async () => {
       if (typeof shellProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await shellProviderHandler.list({  }, storage);
-      const result = await shellProviderHandler.execute({ command: "/nonexistent/binary", args: "", env: "{}", cwd: "/tmp", timeout: "5000" }, storage);
+      const afterResult_valid = await shellProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { command: "/nonexistent/binary", args: "", env: "{}", cwd: "/tmp", timeout: "5000" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await shellProviderHandler.execute({ ..._fixtureInput }, storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -91,8 +106,13 @@ describe('ShellProvider imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof shellProviderHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await shellProviderHandler.list({  }, storage);
-      const result = await shellProviderHandler.list({  }, storage);
+      const afterResult_valid = await shellProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await shellProviderHandler.list({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 

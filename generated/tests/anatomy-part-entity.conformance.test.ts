@@ -155,8 +155,13 @@ describe('AnatomyPartEntity functional handler', () => {
     it('fixture "find_containers" -> ok', async () => {
       if (typeof anatomyPartEntityHandler.findByRole !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(anatomyPartEntityHandler.register({ widget: "dialog", name: "root", role: "container", required: "true" }), storage);
-      const result = await interpret(anatomyPartEntityHandler.findByRole({ role: "container" }), storage);
+      const afterResult_register_dialog_root = await interpret(anatomyPartEntityHandler.register({ widget: "dialog", name: "root", role: "container", required: "true" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_dialog_root?.output ?? {}));
+      const _fixtureInput = { role: "container" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(anatomyPartEntityHandler.findByRole({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('AnatomyPartEntity functional handler', () => {
     it('fixture "find_title_bindings" -> ok', async () => {
       if (typeof anatomyPartEntityHandler.findBoundToField !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(anatomyPartEntityHandler.register({ widget: "dialog", name: "root", role: "container", required: "true" }), storage);
-      const result = await interpret(anatomyPartEntityHandler.findBoundToField({ field: "title" }), storage);
+      const afterResult_register_dialog_root = await interpret(anatomyPartEntityHandler.register({ widget: "dialog", name: "root", role: "container", required: "true" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_dialog_root?.output ?? {}));
+      const _fixtureInput = { field: "title" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(anatomyPartEntityHandler.findBoundToField({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('AnatomyPartEntity functional handler', () => {
     it('fixture "find_submit_bindings" -> ok', async () => {
       if (typeof anatomyPartEntityHandler.findBoundToAction !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(anatomyPartEntityHandler.register({ widget: "dialog", name: "root", role: "container", required: "true" }), storage);
-      const result = await interpret(anatomyPartEntityHandler.findBoundToAction({ action: "submit" }), storage);
+      const afterResult_register_dialog_root = await interpret(anatomyPartEntityHandler.register({ widget: "dialog", name: "root", role: "container", required: "true" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_dialog_root?.output ?? {}));
+      const _fixtureInput = { action: "submit" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(anatomyPartEntityHandler.findBoundToAction({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -362,8 +377,13 @@ describe('AnatomyPartEntity functional handler', () => {
     it('fixture "get_existing_part" -> ok', async () => {
       if (typeof anatomyPartEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(anatomyPartEntityHandler.register({ widget: "dialog", name: "root", role: "container", required: "true" }), storage);
-      const result = await interpret(anatomyPartEntityHandler.get({ part: "anatomy-part-entity-1" }), storage);
+      const afterResult_register_dialog_root = await interpret(anatomyPartEntityHandler.register({ widget: "dialog", name: "root", role: "container", required: "true" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_dialog_root?.output ?? {}));
+      const _fixtureInput = { part: "anatomy-part-entity-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(anatomyPartEntityHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

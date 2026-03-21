@@ -98,8 +98,13 @@ describe('Evidence imperative handler', () => {
     it('fixture "valid_retrieve" -> ok', async () => {
       if (typeof evidenceHandler.retrieve !== 'function') return;
       const storage = createInMemoryStorage();
-      await evidenceHandler.record({ property_ref: "prop-1", artifact_type: "proof_certificate", content: "(proof-body QED)", solver: "z3" }, storage);
-      const result = await evidenceHandler.retrieve({ id: "ev-001" }, storage);
+      const afterResult_valid_record = await evidenceHandler.record({ property_ref: "prop-1", artifact_type: "proof_certificate", content: "(proof-body QED)", solver: "z3" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_record?.output ?? {}));
+      const _fixtureInput = { id: "ev-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await evidenceHandler.retrieve({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -153,8 +158,13 @@ describe('Evidence imperative handler', () => {
     it('fixture "valid_minimize" -> ok', async () => {
       if (typeof evidenceHandler.minimize !== 'function') return;
       const storage = createInMemoryStorage();
-      await evidenceHandler.record({ property_ref: "prop-1", artifact_type: "proof_certificate", content: "(proof-body QED)", solver: "z3" }, storage);
-      const result = await evidenceHandler.minimize({ id: "ev-counter-001" }, storage);
+      const afterResult_valid_record = await evidenceHandler.record({ property_ref: "prop-1", artifact_type: "proof_certificate", content: "(proof-body QED)", solver: "z3" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_record?.output ?? {}));
+      const _fixtureInput = { id: "ev-counter-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await evidenceHandler.minimize({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -189,16 +199,26 @@ describe('Evidence imperative handler', () => {
     it('fixture "list_all" -> ok', async () => {
       if (typeof evidenceHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await evidenceHandler.record({ property_ref: "prop-1", artifact_type: "proof_certificate", content: "(proof-body QED)", solver: "z3" }, storage);
-      const result = await evidenceHandler.list({  }, storage);
+      const afterResult_valid_record = await evidenceHandler.record({ property_ref: "prop-1", artifact_type: "proof_certificate", content: "(proof-body QED)", solver: "z3" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_record?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await evidenceHandler.list({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "list_by_type" -> ok', async () => {
       if (typeof evidenceHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await evidenceHandler.record({ property_ref: "prop-1", artifact_type: "proof_certificate", content: "(proof-body QED)", solver: "z3" }, storage);
-      const result = await evidenceHandler.list({ artifact_type: "proof_certificate" }, storage);
+      const afterResult_valid_record = await evidenceHandler.record({ property_ref: "prop-1", artifact_type: "proof_certificate", content: "(proof-body QED)", solver: "z3" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_record?.output ?? {}));
+      const _fixtureInput = { artifact_type: "proof_certificate" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await evidenceHandler.list({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 

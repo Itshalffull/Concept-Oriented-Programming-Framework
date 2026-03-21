@@ -162,8 +162,13 @@ describe('Quorum functional handler', () => {
     it('fixture "quorum_met" -> ok', async () => {
       if (typeof quorumHandler.check !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(quorumHandler.setThreshold({ thresholdType: "Absolute", value: "10.0" }), storage);
-      const result = await interpret(quorumHandler.check({ totalVotes: "15", totalEligible: "100" }), storage);
+      const afterResult_absolute_ten = await interpret(quorumHandler.setThreshold({ thresholdType: "Absolute", value: "10.0" }), storage);
+      const _pool = Object.assign({}, (afterResult_absolute_ten?.output ?? {}));
+      const _fixtureInput = { totalVotes: "15", totalEligible: "100" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(quorumHandler.check({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -231,8 +236,13 @@ describe('Quorum functional handler', () => {
     it('fixture "update_to_fractional" -> ok', async () => {
       if (typeof quorumHandler.updateThreshold !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(quorumHandler.setThreshold({ thresholdType: "Absolute", value: "10.0" }), storage);
-      const result = await interpret(quorumHandler.updateThreshold({ rule: "quorum-001", newType: "Fractional", newValue: "0.25" }), storage);
+      const afterResult_absolute_ten = await interpret(quorumHandler.setThreshold({ thresholdType: "Absolute", value: "10.0" }), storage);
+      const _pool = Object.assign({}, (afterResult_absolute_ten?.output ?? {}));
+      const _fixtureInput = { rule: "quorum-001", newType: "Fractional", newValue: "0.25" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(quorumHandler.updateThreshold({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

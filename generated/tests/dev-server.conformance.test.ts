@@ -163,16 +163,26 @@ describe('DevServer functional handler', () => {
     it('fixture "valid_stop" -> ok', async () => {
       if (typeof devServerHandler.stop !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(devServerHandler.start({ port: "3000", watchDirs: ["./specs","./syncs"] }), storage);
-      const result = await interpret(devServerHandler.stop({ session: "dev-server-1" }), storage);
+      const afterResult_valid_start = await interpret(devServerHandler.start({ port: "3000", watchDirs: ["./specs","./syncs"] }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
+      const _fixtureInput = { session: "dev-server-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(devServerHandler.stop({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "nonexistent_stop" -> ok', async () => {
       if (typeof devServerHandler.stop !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(devServerHandler.start({ port: "3000", watchDirs: ["./specs","./syncs"] }), storage);
-      const result = await interpret(devServerHandler.stop({ session: "dev-server-999" }), storage);
+      const afterResult_valid_start = await interpret(devServerHandler.start({ port: "3000", watchDirs: ["./specs","./syncs"] }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
+      const _fixtureInput = { session: "dev-server-999" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(devServerHandler.stop({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -233,8 +243,13 @@ describe('DevServer functional handler', () => {
     it('fixture "running_status" -> ok', async () => {
       if (typeof devServerHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(devServerHandler.start({ port: "3000", watchDirs: ["./specs","./syncs"] }), storage);
-      const result = await interpret(devServerHandler.status({ session: "dev-server-1" }), storage);
+      const afterResult_valid_start = await interpret(devServerHandler.start({ port: "3000", watchDirs: ["./specs","./syncs"] }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
+      const _fixtureInput = { session: "dev-server-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(devServerHandler.status({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

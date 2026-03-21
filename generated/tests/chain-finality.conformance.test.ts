@@ -162,16 +162,26 @@ describe('ChainFinality functional handler', () => {
     it('fixture "check_finalized" -> ok', async () => {
       if (typeof chainFinalityHandler.checkFinality !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(chainFinalityHandler.track({ operationRef: "gov-prop-101", txHash: "0xabc123def456", chainId: "ethereum-mainnet", requiredConfirmations: "12", submittedBlock: "19500000" }), storage);
-      const result = await interpret(chainFinalityHandler.checkFinality({ entry: "chain-001", currentBlock: "19500020" }), storage);
+      const afterResult_track_eth_tx = await interpret(chainFinalityHandler.track({ operationRef: "gov-prop-101", txHash: "0xabc123def456", chainId: "ethereum-mainnet", requiredConfirmations: "12", submittedBlock: "19500000" }), storage);
+      const _pool = Object.assign({}, (afterResult_track_eth_tx?.output ?? {}));
+      const _fixtureInput = { entry: "chain-001", currentBlock: "19500020" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(chainFinalityHandler.checkFinality({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "check_pending" -> ok', async () => {
       if (typeof chainFinalityHandler.checkFinality !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(chainFinalityHandler.track({ operationRef: "gov-prop-101", txHash: "0xabc123def456", chainId: "ethereum-mainnet", requiredConfirmations: "12", submittedBlock: "19500000" }), storage);
-      const result = await interpret(chainFinalityHandler.checkFinality({ entry: "chain-001", currentBlock: "19500005" }), storage);
+      const afterResult_track_eth_tx = await interpret(chainFinalityHandler.track({ operationRef: "gov-prop-101", txHash: "0xabc123def456", chainId: "ethereum-mainnet", requiredConfirmations: "12", submittedBlock: "19500000" }), storage);
+      const _pool = Object.assign({}, (afterResult_track_eth_tx?.output ?? {}));
+      const _fixtureInput = { entry: "chain-001", currentBlock: "19500005" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(chainFinalityHandler.checkFinality({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

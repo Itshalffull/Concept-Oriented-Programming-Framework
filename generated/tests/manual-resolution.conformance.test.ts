@@ -148,8 +148,13 @@ describe('ManualResolution functional handler', () => {
     it('fixture "escalate_to_human" -> ok', async () => {
       if (typeof manualResolutionHandler.attemptResolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(manualResolutionHandler.register({  }), storage);
-      const result = await interpret(manualResolutionHandler.attemptResolve({ base: null, v1: "version-alice", v2: "version-bob", context: "legal-document" }), storage);
+      const afterResult_valid = await interpret(manualResolutionHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { base: null, v1: "version-alice", v2: "version-bob", context: "legal-document" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(manualResolutionHandler.attemptResolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

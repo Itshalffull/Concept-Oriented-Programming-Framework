@@ -162,8 +162,13 @@ describe('GcfRuntime functional handler', () => {
     it('fixture "deploy_gcs" -> ok', async () => {
       if (typeof gcfRuntimeHandler.deploy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(gcfRuntimeHandler.provision({ concept: "UserService", projectId: "my-gcp-project", region: "us-central1", runtime: "nodejs20", triggerType: "http" }), storage);
-      const result = await interpret(gcfRuntimeHandler.deploy({ function: "gcf-abc123", sourceArchive: "gs://deploy-bucket/user-service.zip" }), storage);
+      const afterResult_provision_http = await interpret(gcfRuntimeHandler.provision({ concept: "UserService", projectId: "my-gcp-project", region: "us-central1", runtime: "nodejs20", triggerType: "http" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_http?.output ?? {}));
+      const _fixtureInput = { function: "gcf-abc123", sourceArchive: "gs://deploy-bucket/user-service.zip" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(gcfRuntimeHandler.deploy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -231,8 +236,13 @@ describe('GcfRuntime functional handler', () => {
     it('fixture "traffic_split" -> ok', async () => {
       if (typeof gcfRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(gcfRuntimeHandler.provision({ concept: "UserService", projectId: "my-gcp-project", region: "us-central1", runtime: "nodejs20", triggerType: "http" }), storage);
-      const result = await interpret(gcfRuntimeHandler.setTrafficWeight({ function: "gcf-abc123", weight: "75" }), storage);
+      const afterResult_provision_http = await interpret(gcfRuntimeHandler.provision({ concept: "UserService", projectId: "my-gcp-project", region: "us-central1", runtime: "nodejs20", triggerType: "http" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_http?.output ?? {}));
+      const _fixtureInput = { function: "gcf-abc123", weight: "75" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(gcfRuntimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -300,8 +310,13 @@ describe('GcfRuntime functional handler', () => {
     it('fixture "rollback_to_v1" -> ok', async () => {
       if (typeof gcfRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(gcfRuntimeHandler.provision({ concept: "UserService", projectId: "my-gcp-project", region: "us-central1", runtime: "nodejs20", triggerType: "http" }), storage);
-      const result = await interpret(gcfRuntimeHandler.rollback({ function: "gcf-abc123", targetVersion: "1" }), storage);
+      const afterResult_provision_http = await interpret(gcfRuntimeHandler.provision({ concept: "UserService", projectId: "my-gcp-project", region: "us-central1", runtime: "nodejs20", triggerType: "http" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_http?.output ?? {}));
+      const _fixtureInput = { function: "gcf-abc123", targetVersion: "1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(gcfRuntimeHandler.rollback({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -369,8 +384,13 @@ describe('GcfRuntime functional handler', () => {
     it('fixture "destroy_valid" -> ok', async () => {
       if (typeof gcfRuntimeHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(gcfRuntimeHandler.provision({ concept: "UserService", projectId: "my-gcp-project", region: "us-central1", runtime: "nodejs20", triggerType: "http" }), storage);
-      const result = await interpret(gcfRuntimeHandler.destroy({ function: "gcf-abc123" }), storage);
+      const afterResult_provision_http = await interpret(gcfRuntimeHandler.provision({ concept: "UserService", projectId: "my-gcp-project", region: "us-central1", runtime: "nodejs20", triggerType: "http" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_http?.output ?? {}));
+      const _fixtureInput = { function: "gcf-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(gcfRuntimeHandler.destroy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -162,8 +162,13 @@ describe('ArgoCDProvider functional handler', () => {
     it('fixture "reconcile_app" -> ok', async () => {
       if (typeof argocdProviderHandler.reconciliationStatus !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(argocdProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
-      const result = await interpret(argocdProviderHandler.reconciliationStatus({ application: "app-prod-001" }), storage);
+      const afterResult_emit_prod = await interpret(argocdProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
+      const _pool = Object.assign({}, (afterResult_emit_prod?.output ?? {}));
+      const _fixtureInput = { application: "app-prod-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(argocdProviderHandler.reconciliationStatus({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -231,16 +236,26 @@ describe('ArgoCDProvider functional handler', () => {
     it('fixture "syncwave_app" -> ok', async () => {
       if (typeof argocdProviderHandler.syncWave !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(argocdProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
-      const result = await interpret(argocdProviderHandler.syncWave({ application: "app-prod-001", wave: "1" }), storage);
+      const afterResult_emit_prod = await interpret(argocdProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
+      const _pool = Object.assign({}, (afterResult_emit_prod?.output ?? {}));
+      const _fixtureInput = { application: "app-prod-001", wave: "1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(argocdProviderHandler.syncWave({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "syncwave_nonexistent" -> ok', async () => {
       if (typeof argocdProviderHandler.syncWave !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(argocdProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
-      const result = await interpret(argocdProviderHandler.syncWave({ application: "", wave: "0" }), storage);
+      const afterResult_emit_prod = await interpret(argocdProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
+      const _pool = Object.assign({}, (afterResult_emit_prod?.output ?? {}));
+      const _fixtureInput = { application: "", wave: "0" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(argocdProviderHandler.syncWave({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

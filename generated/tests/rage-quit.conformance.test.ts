@@ -230,8 +230,13 @@ describe('RageQuit functional handler', () => {
     it('fixture "claim_calculated" -> ok', async () => {
       if (typeof rageQuitHandler.claim !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(rageQuitHandler.initiate({ member: "0xAliceDaoMember", shares: "150.0", loot: "50.0" }), storage);
-      const result = await interpret(rageQuitHandler.claim({ exit: "rq-001" }), storage);
+      const afterResult_initiate_exit = await interpret(rageQuitHandler.initiate({ member: "0xAliceDaoMember", shares: "150.0", loot: "50.0" }), storage);
+      const _pool = Object.assign({}, (afterResult_initiate_exit?.output ?? {}));
+      const _fixtureInput = { exit: "rq-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(rageQuitHandler.claim({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

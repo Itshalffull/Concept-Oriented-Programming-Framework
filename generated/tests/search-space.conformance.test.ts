@@ -62,16 +62,26 @@ describe('SearchSpace imperative handler', () => {
     it('fixture "tombstone_existing" -> ok', async () => {
       if (typeof searchSpaceHandler.tombstone !== 'function') return;
       const storage = createInMemoryStorage();
-      await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "article-42", data: "Concept-oriented programming framework" }, storage);
-      const result = await searchSpaceHandler.tombstone({ scope_id: "vs-1", provider: "text", entity_id: "article-42" }, storage);
+      const afterResult_index_text = await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "article-42", data: "Concept-oriented programming framework" }, storage);
+      const _pool = Object.assign({}, (afterResult_index_text?.output ?? {}));
+      const _fixtureInput = { scope_id: "vs-1", provider: "text", entity_id: "article-42" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await searchSpaceHandler.tombstone({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "tombstone_new" -> ok', async () => {
       if (typeof searchSpaceHandler.tombstone !== 'function') return;
       const storage = createInMemoryStorage();
-      await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "article-42", data: "Concept-oriented programming framework" }, storage);
-      const result = await searchSpaceHandler.tombstone({ scope_id: "vs-2", provider: "text", entity_id: "article-99" }, storage);
+      const afterResult_index_text = await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "article-42", data: "Concept-oriented programming framework" }, storage);
+      const _pool = Object.assign({}, (afterResult_index_text?.output ?? {}));
+      const _fixtureInput = { scope_id: "vs-2", provider: "text", entity_id: "article-99" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await searchSpaceHandler.tombstone({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -90,8 +100,13 @@ describe('SearchSpace imperative handler', () => {
     it('fixture "query_text" -> ok', async () => {
       if (typeof searchSpaceHandler.query !== 'function') return;
       const storage = createInMemoryStorage();
-      await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "article-42", data: "Concept-oriented programming framework" }, storage);
-      const result = await searchSpaceHandler.query({ scope_id: "vs-1", provider: "text", query_expr: "concept" }, storage);
+      const afterResult_index_text = await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "article-42", data: "Concept-oriented programming framework" }, storage);
+      const _pool = Object.assign({}, (afterResult_index_text?.output ?? {}));
+      const _fixtureInput = { scope_id: "vs-1", provider: "text", query_expr: "concept" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await searchSpaceHandler.query({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -118,16 +133,26 @@ describe('SearchSpace imperative handler', () => {
     it('fixture "clear_scope" -> ok', async () => {
       if (typeof searchSpaceHandler.clear !== 'function') return;
       const storage = createInMemoryStorage();
-      await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "article-42", data: "Concept-oriented programming framework" }, storage);
-      const result = await searchSpaceHandler.clear({ scope_id: "vs-1" }, storage);
+      const afterResult_index_text = await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "article-42", data: "Concept-oriented programming framework" }, storage);
+      const _pool = Object.assign({}, (afterResult_index_text?.output ?? {}));
+      const _fixtureInput = { scope_id: "vs-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await searchSpaceHandler.clear({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "clear_empty" -> ok', async () => {
       if (typeof searchSpaceHandler.clear !== 'function') return;
       const storage = createInMemoryStorage();
-      await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "article-42", data: "Concept-oriented programming framework" }, storage);
-      const result = await searchSpaceHandler.clear({ scope_id: "vs-empty" }, storage);
+      const afterResult_index_text = await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "article-42", data: "Concept-oriented programming framework" }, storage);
+      const _pool = Object.assign({}, (afterResult_index_text?.output ?? {}));
+      const _fixtureInput = { scope_id: "vs-empty" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await searchSpaceHandler.clear({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -146,16 +171,26 @@ describe('SearchSpace imperative handler', () => {
     it('fixture "materialize_scope" -> ok', async () => {
       if (typeof searchSpaceHandler.materialize !== 'function') return;
       const storage = createInMemoryStorage();
-      await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "article-42", data: "Concept-oriented programming framework" }, storage);
-      const result = await searchSpaceHandler.materialize({ scope_id: "vs-1" }, storage);
+      const afterResult_index_text = await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "article-42", data: "Concept-oriented programming framework" }, storage);
+      const _pool = Object.assign({}, (afterResult_index_text?.output ?? {}));
+      const _fixtureInput = { scope_id: "vs-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await searchSpaceHandler.materialize({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "materialize_empty" -> ok', async () => {
       if (typeof searchSpaceHandler.materialize !== 'function') return;
       const storage = createInMemoryStorage();
-      await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "article-42", data: "Concept-oriented programming framework" }, storage);
-      const result = await searchSpaceHandler.materialize({ scope_id: "vs-empty" }, storage);
+      const afterResult_index_text = await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "article-42", data: "Concept-oriented programming framework" }, storage);
+      const _pool = Object.assign({}, (afterResult_index_text?.output ?? {}));
+      const _fixtureInput = { scope_id: "vs-empty" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await searchSpaceHandler.materialize({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 

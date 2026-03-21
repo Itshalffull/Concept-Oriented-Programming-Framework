@@ -230,16 +230,26 @@ describe('McpTarget functional handler', () => {
     it('fixture "list_tools_agent" -> ok', async () => {
       if (typeof mcpTargetHandler.listTools !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(mcpTargetHandler.generate({ projection: "agent-projection", config: "{\"serverName\":\"agent-mcp\",\"transport\":\"stdio\"}" }), storage);
-      const result = await interpret(mcpTargetHandler.listTools({ concept: "Agent" }), storage);
+      const afterResult_generate_agent = await interpret(mcpTargetHandler.generate({ projection: "agent-projection", config: "{\"serverName\":\"agent-mcp\",\"transport\":\"stdio\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_generate_agent?.output ?? {}));
+      const _fixtureInput = { concept: "Agent" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(mcpTargetHandler.listTools({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "list_tools_score" -> ok', async () => {
       if (typeof mcpTargetHandler.listTools !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(mcpTargetHandler.generate({ projection: "agent-projection", config: "{\"serverName\":\"agent-mcp\",\"transport\":\"stdio\"}" }), storage);
-      const result = await interpret(mcpTargetHandler.listTools({ concept: "ScoreApi" }), storage);
+      const afterResult_generate_agent = await interpret(mcpTargetHandler.generate({ projection: "agent-projection", config: "{\"serverName\":\"agent-mcp\",\"transport\":\"stdio\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_generate_agent?.output ?? {}));
+      const _fixtureInput = { concept: "ScoreApi" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(mcpTargetHandler.listTools({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

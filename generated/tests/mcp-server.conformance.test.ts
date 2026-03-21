@@ -162,16 +162,26 @@ describe('McpServer functional handler', () => {
     it('fixture "valid_register_tool" -> ok', async () => {
       if (typeof mcpServerHandler.registerTool !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(mcpServerHandler.start({ manifestPath: "examples/devtools/devtools.interface.yaml", transport: "stdio" }), storage);
-      const result = await interpret(mcpServerHandler.registerTool({ name: "user_create", concept: "User", action: "create", description: "Create a new user account", schema: "{\"type\":\"object\",\"properties\":{\"email\":{\"type\":\"string\"}},\"required\":[\"email\"]}" }), storage);
+      const afterResult_valid_start = await interpret(mcpServerHandler.start({ manifestPath: "examples/devtools/devtools.interface.yaml", transport: "stdio" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
+      const _fixtureInput = { name: "user_create", concept: "User", action: "create", description: "Create a new user account", schema: "{\"type\":\"object\",\"properties\":{\"email\":{\"type\":\"string\"}},\"required\":[\"email\"]}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(mcpServerHandler.registerTool({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "duplicate_tool" -> duplicate', async () => {
       if (typeof mcpServerHandler.registerTool !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(mcpServerHandler.start({ manifestPath: "examples/devtools/devtools.interface.yaml", transport: "stdio" }), storage);
-      const result = await interpret(mcpServerHandler.registerTool({ name: "user_create", concept: "User", action: "create", description: "duplicate entry", schema: "{}" }), storage);
+      const afterResult_valid_start = await interpret(mcpServerHandler.start({ manifestPath: "examples/devtools/devtools.interface.yaml", transport: "stdio" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
+      const _fixtureInput = { name: "user_create", concept: "User", action: "create", description: "duplicate entry", schema: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(mcpServerHandler.registerTool({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('duplicate'));
     });
@@ -233,16 +243,26 @@ describe('McpServer functional handler', () => {
     it('fixture "valid_call" -> ok', async () => {
       if (typeof mcpServerHandler.handleCall !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(mcpServerHandler.start({ manifestPath: "examples/devtools/devtools.interface.yaml", transport: "stdio" }), storage);
-      const result = await interpret(mcpServerHandler.handleCall({ toolName: "user_create", arguments: "{\"email\":\"alice@example.com\"}" }), storage);
+      const afterResult_valid_start = await interpret(mcpServerHandler.start({ manifestPath: "examples/devtools/devtools.interface.yaml", transport: "stdio" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
+      const _fixtureInput = { toolName: "user_create", arguments: "{\"email\":\"alice@example.com\"}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(mcpServerHandler.handleCall({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "unknown_tool" -> notfound', async () => {
       if (typeof mcpServerHandler.handleCall !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(mcpServerHandler.start({ manifestPath: "examples/devtools/devtools.interface.yaml", transport: "stdio" }), storage);
-      const result = await interpret(mcpServerHandler.handleCall({ toolName: "nonexistent_tool", arguments: "{}" }), storage);
+      const afterResult_valid_start = await interpret(mcpServerHandler.start({ manifestPath: "examples/devtools/devtools.interface.yaml", transport: "stdio" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
+      const _fixtureInput = { toolName: "nonexistent_tool", arguments: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(mcpServerHandler.handleCall({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
@@ -304,8 +324,13 @@ describe('McpServer functional handler', () => {
     it('fixture "valid_stop" -> ok', async () => {
       if (typeof mcpServerHandler.stop !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(mcpServerHandler.start({ manifestPath: "examples/devtools/devtools.interface.yaml", transport: "stdio" }), storage);
-      const result = await interpret(mcpServerHandler.stop({  }), storage);
+      const afterResult_valid_start = await interpret(mcpServerHandler.start({ manifestPath: "examples/devtools/devtools.interface.yaml", transport: "stdio" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(mcpServerHandler.stop({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -366,8 +391,13 @@ describe('McpServer functional handler', () => {
     it('fixture "valid_list_tools" -> ok', async () => {
       if (typeof mcpServerHandler.listTools !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(mcpServerHandler.start({ manifestPath: "examples/devtools/devtools.interface.yaml", transport: "stdio" }), storage);
-      const result = await interpret(mcpServerHandler.listTools({  }), storage);
+      const afterResult_valid_start = await interpret(mcpServerHandler.start({ manifestPath: "examples/devtools/devtools.interface.yaml", transport: "stdio" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(mcpServerHandler.listTools({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

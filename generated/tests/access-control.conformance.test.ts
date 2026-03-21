@@ -155,8 +155,13 @@ describe('AccessControl functional handler', () => {
     it('fixture "orIf_allowed" -> ok', async () => {
       if (typeof accessControlHandler.orIf !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(accessControlHandler.check({ resource: "document:123", action: "read", context: "user:alice" }), storage);
-      const result = await interpret(accessControlHandler.orIf({ left: "neutral", right: "allowed" }), storage);
+      const afterResult_check_read = await interpret(accessControlHandler.check({ resource: "document:123", action: "read", context: "user:alice" }), storage);
+      const _pool = Object.assign({}, (afterResult_check_read?.output ?? {}));
+      const _fixtureInput = { left: "neutral", right: "allowed" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(accessControlHandler.orIf({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('AccessControl functional handler', () => {
     it('fixture "andIf_both_allowed" -> ok', async () => {
       if (typeof accessControlHandler.andIf !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(accessControlHandler.check({ resource: "document:123", action: "read", context: "user:alice" }), storage);
-      const result = await interpret(accessControlHandler.andIf({ left: "allowed", right: "allowed" }), storage);
+      const afterResult_check_read = await interpret(accessControlHandler.check({ resource: "document:123", action: "read", context: "user:alice" }), storage);
+      const _pool = Object.assign({}, (afterResult_check_read?.output ?? {}));
+      const _fixtureInput = { left: "allowed", right: "allowed" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(accessControlHandler.andIf({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

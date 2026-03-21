@@ -163,8 +163,13 @@ describe('ContractChecker functional handler', () => {
     it('fixture "valid_checkAll" -> ok', async () => {
       if (typeof contractCheckerHandler.checkAll !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(contractCheckerHandler.check({ widget: "approval-detail", concept: "Approval" }), storage);
-      const result = await interpret(contractCheckerHandler.checkAll({ concept: "Approval" }), storage);
+      const afterResult_valid_check = await interpret(contractCheckerHandler.check({ widget: "approval-detail", concept: "Approval" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_check?.output ?? {}));
+      const _fixtureInput = { concept: "Approval" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(contractCheckerHandler.checkAll({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -233,8 +238,13 @@ describe('ContractChecker functional handler', () => {
     it('fixture "valid_checkSuite" -> ok', async () => {
       if (typeof contractCheckerHandler.checkSuite !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(contractCheckerHandler.check({ widget: "approval-detail", concept: "Approval" }), storage);
-      const result = await interpret(contractCheckerHandler.checkSuite({ suite: "governance" }), storage);
+      const afterResult_valid_check = await interpret(contractCheckerHandler.check({ widget: "approval-detail", concept: "Approval" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_check?.output ?? {}));
+      const _fixtureInput = { suite: "governance" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(contractCheckerHandler.checkSuite({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -303,8 +313,13 @@ describe('ContractChecker functional handler', () => {
     it('fixture "valid_suggest" -> ok', async () => {
       if (typeof contractCheckerHandler.suggest !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(contractCheckerHandler.check({ widget: "approval-detail", concept: "Approval" }), storage);
-      const result = await interpret(contractCheckerHandler.suggest({ widget: "approval-detail", concept: "Approval" }), storage);
+      const afterResult_valid_check = await interpret(contractCheckerHandler.check({ widget: "approval-detail", concept: "Approval" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_check?.output ?? {}));
+      const _fixtureInput = { widget: "approval-detail", concept: "Approval" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(contractCheckerHandler.suggest({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

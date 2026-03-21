@@ -162,16 +162,26 @@ describe('Vote functional handler', () => {
     it('fixture "cast_yes" -> ok', async () => {
       if (typeof voteHandler.castVote !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(voteHandler.openSession({ proposalRef: "proposal-001", deadline: "2026-04-15T23:59:59Z", snapshotRef: "snapshot-abc" }), storage);
-      const result = await interpret(voteHandler.castVote({ session: "session-001", voter: "alice", choice: "yes", weight: "1.0" }), storage);
+      const afterResult_open_with_snapshot = await interpret(voteHandler.openSession({ proposalRef: "proposal-001", deadline: "2026-04-15T23:59:59Z", snapshotRef: "snapshot-abc" }), storage);
+      const _pool = Object.assign({}, (afterResult_open_with_snapshot?.output ?? {}));
+      const _fixtureInput = { session: "session-001", voter: "alice", choice: "yes", weight: "1.0" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(voteHandler.castVote({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "cast_weighted" -> ok', async () => {
       if (typeof voteHandler.castVote !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(voteHandler.openSession({ proposalRef: "proposal-001", deadline: "2026-04-15T23:59:59Z", snapshotRef: "snapshot-abc" }), storage);
-      const result = await interpret(voteHandler.castVote({ session: "session-001", voter: "bob", choice: "no", weight: "2.5" }), storage);
+      const afterResult_open_with_snapshot = await interpret(voteHandler.openSession({ proposalRef: "proposal-001", deadline: "2026-04-15T23:59:59Z", snapshotRef: "snapshot-abc" }), storage);
+      const _pool = Object.assign({}, (afterResult_open_with_snapshot?.output ?? {}));
+      const _fixtureInput = { session: "session-001", voter: "bob", choice: "no", weight: "2.5" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(voteHandler.castVote({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -239,8 +249,13 @@ describe('Vote functional handler', () => {
     it('fixture "close_open_session" -> ok', async () => {
       if (typeof voteHandler.close !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(voteHandler.openSession({ proposalRef: "proposal-001", deadline: "2026-04-15T23:59:59Z", snapshotRef: "snapshot-abc" }), storage);
-      const result = await interpret(voteHandler.close({ session: "session-001" }), storage);
+      const afterResult_open_with_snapshot = await interpret(voteHandler.openSession({ proposalRef: "proposal-001", deadline: "2026-04-15T23:59:59Z", snapshotRef: "snapshot-abc" }), storage);
+      const _pool = Object.assign({}, (afterResult_open_with_snapshot?.output ?? {}));
+      const _fixtureInput = { session: "session-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(voteHandler.close({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -308,8 +323,13 @@ describe('Vote functional handler', () => {
     it('fixture "tally_closed_session" -> ok', async () => {
       if (typeof voteHandler.tally !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(voteHandler.openSession({ proposalRef: "proposal-001", deadline: "2026-04-15T23:59:59Z", snapshotRef: "snapshot-abc" }), storage);
-      const result = await interpret(voteHandler.tally({ session: "session-001" }), storage);
+      const afterResult_open_with_snapshot = await interpret(voteHandler.openSession({ proposalRef: "proposal-001", deadline: "2026-04-15T23:59:59Z", snapshotRef: "snapshot-abc" }), storage);
+      const _pool = Object.assign({}, (afterResult_open_with_snapshot?.output ?? {}));
+      const _fixtureInput = { session: "session-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(voteHandler.tally({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

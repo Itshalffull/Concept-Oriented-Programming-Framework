@@ -155,16 +155,26 @@ describe('K8sRuntime functional handler', () => {
     it('fixture "deploy_image" -> ok', async () => {
       if (typeof k8sRuntimeHandler.deploy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" }), storage);
-      const result = await interpret(k8sRuntimeHandler.deploy({ deployment: "dep-001", imageUri: "registry.io/user-service:v1.2.0" }), storage);
+      const afterResult_provision_deployment = await interpret(k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_deployment?.output ?? {}));
+      const _fixtureInput = { deployment: "dep-001", imageUri: "registry.io/user-service:v1.2.0" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(k8sRuntimeHandler.deploy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "deploy_empty_image" -> ok', async () => {
       if (typeof k8sRuntimeHandler.deploy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" }), storage);
-      const result = await interpret(k8sRuntimeHandler.deploy({ deployment: "dep-001", imageUri: "" }), storage);
+      const afterResult_provision_deployment = await interpret(k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_deployment?.output ?? {}));
+      const _fixtureInput = { deployment: "dep-001", imageUri: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(k8sRuntimeHandler.deploy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -225,16 +235,26 @@ describe('K8sRuntime functional handler', () => {
     it('fixture "set_canary_weight" -> ok', async () => {
       if (typeof k8sRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" }), storage);
-      const result = await interpret(k8sRuntimeHandler.setTrafficWeight({ deployment: "dep-001", weight: "25" }), storage);
+      const afterResult_provision_deployment = await interpret(k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_deployment?.output ?? {}));
+      const _fixtureInput = { deployment: "dep-001", weight: "25" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(k8sRuntimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "set_invalid_weight" -> ok', async () => {
       if (typeof k8sRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" }), storage);
-      const result = await interpret(k8sRuntimeHandler.setTrafficWeight({ deployment: "dep-001", weight: "-1" }), storage);
+      const afterResult_provision_deployment = await interpret(k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_deployment?.output ?? {}));
+      const _fixtureInput = { deployment: "dep-001", weight: "-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(k8sRuntimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -295,16 +315,26 @@ describe('K8sRuntime functional handler', () => {
     it('fixture "rollback_to_rev1" -> ok', async () => {
       if (typeof k8sRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" }), storage);
-      const result = await interpret(k8sRuntimeHandler.rollback({ deployment: "dep-001", targetRevision: "1" }), storage);
+      const afterResult_provision_deployment = await interpret(k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_deployment?.output ?? {}));
+      const _fixtureInput = { deployment: "dep-001", targetRevision: "1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(k8sRuntimeHandler.rollback({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "rollback_empty_rev" -> ok', async () => {
       if (typeof k8sRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" }), storage);
-      const result = await interpret(k8sRuntimeHandler.rollback({ deployment: "dep-001", targetRevision: "" }), storage);
+      const afterResult_provision_deployment = await interpret(k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_deployment?.output ?? {}));
+      const _fixtureInput = { deployment: "dep-001", targetRevision: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(k8sRuntimeHandler.rollback({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -365,8 +395,13 @@ describe('K8sRuntime functional handler', () => {
     it('fixture "destroy_deployment" -> ok', async () => {
       if (typeof k8sRuntimeHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" }), storage);
-      const result = await interpret(k8sRuntimeHandler.destroy({ deployment: "dep-001" }), storage);
+      const afterResult_provision_deployment = await interpret(k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_deployment?.output ?? {}));
+      const _fixtureInput = { deployment: "dep-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(k8sRuntimeHandler.destroy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

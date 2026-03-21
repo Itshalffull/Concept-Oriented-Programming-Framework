@@ -69,16 +69,26 @@ describe('ChangeStream imperative handler', () => {
     it('fixture "subscribe_from_start" -> ok', async () => {
       if (typeof changeStreamHandler.subscribe !== 'function') return;
       const storage = createInMemoryStorage();
-      await changeStreamHandler.append({ type: "insert", before: null, after: "{\"id\":1,\"name\":\"alice\"}", source: "users-db" }, storage);
-      const result = await changeStreamHandler.subscribe({ fromOffset: "0" }, storage);
+      const afterResult_append_insert = await changeStreamHandler.append({ type: "insert", before: null, after: "{\"id\":1,\"name\":\"alice\"}", source: "users-db" }, storage);
+      const _pool = Object.assign({}, (afterResult_append_insert?.output ?? {}));
+      const _fixtureInput = { fromOffset: "0" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await changeStreamHandler.subscribe({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "subscribe_from_head" -> ok', async () => {
       if (typeof changeStreamHandler.subscribe !== 'function') return;
       const storage = createInMemoryStorage();
-      await changeStreamHandler.append({ type: "insert", before: null, after: "{\"id\":1,\"name\":\"alice\"}", source: "users-db" }, storage);
-      const result = await changeStreamHandler.subscribe({ fromOffset: null }, storage);
+      const afterResult_append_insert = await changeStreamHandler.append({ type: "insert", before: null, after: "{\"id\":1,\"name\":\"alice\"}", source: "users-db" }, storage);
+      const _pool = Object.assign({}, (afterResult_append_insert?.output ?? {}));
+      const _fixtureInput = { fromOffset: null } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await changeStreamHandler.subscribe({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -97,8 +107,13 @@ describe('ChangeStream imperative handler', () => {
     it('fixture "read_batch" -> ok', async () => {
       if (typeof changeStreamHandler.read !== 'function') return;
       const storage = createInMemoryStorage();
-      await changeStreamHandler.append({ type: "insert", before: null, after: "{\"id\":1,\"name\":\"alice\"}", source: "users-db" }, storage);
-      const result = await changeStreamHandler.read({ subscriptionId: "sub-1", maxCount: "10" }, storage);
+      const afterResult_append_insert = await changeStreamHandler.append({ type: "insert", before: null, after: "{\"id\":1,\"name\":\"alice\"}", source: "users-db" }, storage);
+      const _pool = Object.assign({}, (afterResult_append_insert?.output ?? {}));
+      const _fixtureInput = { subscriptionId: "sub-1", maxCount: "10" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await changeStreamHandler.read({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -124,16 +139,26 @@ describe('ChangeStream imperative handler', () => {
     it('fixture "ack_offset" -> ok', async () => {
       if (typeof changeStreamHandler.acknowledge !== 'function') return;
       const storage = createInMemoryStorage();
-      await changeStreamHandler.append({ type: "insert", before: null, after: "{\"id\":1,\"name\":\"alice\"}", source: "users-db" }, storage);
-      const result = await changeStreamHandler.acknowledge({ consumer: "analytics-worker", offset: "42" }, storage);
+      const afterResult_append_insert = await changeStreamHandler.append({ type: "insert", before: null, after: "{\"id\":1,\"name\":\"alice\"}", source: "users-db" }, storage);
+      const _pool = Object.assign({}, (afterResult_append_insert?.output ?? {}));
+      const _fixtureInput = { consumer: "analytics-worker", offset: "42" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await changeStreamHandler.acknowledge({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "ack_empty_consumer" -> ok', async () => {
       if (typeof changeStreamHandler.acknowledge !== 'function') return;
       const storage = createInMemoryStorage();
-      await changeStreamHandler.append({ type: "insert", before: null, after: "{\"id\":1,\"name\":\"alice\"}", source: "users-db" }, storage);
-      const result = await changeStreamHandler.acknowledge({ consumer: "", offset: "1" }, storage);
+      const afterResult_append_insert = await changeStreamHandler.append({ type: "insert", before: null, after: "{\"id\":1,\"name\":\"alice\"}", source: "users-db" }, storage);
+      const _pool = Object.assign({}, (afterResult_append_insert?.output ?? {}));
+      const _fixtureInput = { consumer: "", offset: "1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await changeStreamHandler.acknowledge({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -152,8 +177,13 @@ describe('ChangeStream imperative handler', () => {
     it('fixture "replay_range" -> ok', async () => {
       if (typeof changeStreamHandler.replay !== 'function') return;
       const storage = createInMemoryStorage();
-      await changeStreamHandler.append({ type: "insert", before: null, after: "{\"id\":1,\"name\":\"alice\"}", source: "users-db" }, storage);
-      const result = await changeStreamHandler.replay({ from: "1", to: "10" }, storage);
+      const afterResult_append_insert = await changeStreamHandler.append({ type: "insert", before: null, after: "{\"id\":1,\"name\":\"alice\"}", source: "users-db" }, storage);
+      const _pool = Object.assign({}, (afterResult_append_insert?.output ?? {}));
+      const _fixtureInput = { from: "1", to: "10" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await changeStreamHandler.replay({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 

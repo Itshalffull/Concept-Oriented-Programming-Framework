@@ -55,16 +55,26 @@ describe('GraphqlProvider imperative handler', () => {
     it('fixture "configure_github" -> ok', async () => {
       if (typeof graphqlProviderHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
-      await graphqlProviderHandler.list({  }, storage);
-      const result = await graphqlProviderHandler.configure({ name: "github-api", url: "https://api.github.com/graphql", headers: "{\"Authorization\":\"Bearer ghp_token\"}", schemaRef: "github-schema" }, storage);
+      const afterResult_valid = await graphqlProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { name: "github-api", url: "https://api.github.com/graphql", headers: "{\"Authorization\":\"Bearer ghp_token\"}", schemaRef: "github-schema" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await graphqlProviderHandler.configure({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_local" -> ok', async () => {
       if (typeof graphqlProviderHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
-      await graphqlProviderHandler.list({  }, storage);
-      const result = await graphqlProviderHandler.configure({ name: "local-gql", url: "http://localhost:4000/graphql", headers: "{}", schemaRef: "" }, storage);
+      const afterResult_valid = await graphqlProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { name: "local-gql", url: "http://localhost:4000/graphql", headers: "{}", schemaRef: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await graphqlProviderHandler.configure({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -83,24 +93,39 @@ describe('GraphqlProvider imperative handler', () => {
     it('fixture "query_viewer" -> ok', async () => {
       if (typeof graphqlProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await graphqlProviderHandler.list({  }, storage);
-      const result = await graphqlProviderHandler.execute({ endpoint: "github-api", query: "{ viewer { login } }", variables: "{}", operationType: "query" }, storage);
+      const afterResult_valid = await graphqlProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { endpoint: "github-api", query: "{ viewer { login } }", variables: "{}", operationType: "query" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await graphqlProviderHandler.execute({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "mutation_create" -> ok', async () => {
       if (typeof graphqlProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await graphqlProviderHandler.list({  }, storage);
-      const result = await graphqlProviderHandler.execute({ endpoint: "github-api", query: "mutation { createIssue(input: {}) { id } }", variables: "{}", operationType: "mutation" }, storage);
+      const afterResult_valid = await graphqlProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { endpoint: "github-api", query: "mutation { createIssue(input: {}) { id } }", variables: "{}", operationType: "mutation" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await graphqlProviderHandler.execute({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "execute_unknown_endpoint" -> notFound', async () => {
       if (typeof graphqlProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await graphqlProviderHandler.list({  }, storage);
-      const result = await graphqlProviderHandler.execute({ endpoint: "nonexistent", query: "{ test }", variables: "{}", operationType: "query" }, storage);
+      const afterResult_valid = await graphqlProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { endpoint: "nonexistent", query: "{ test }", variables: "{}", operationType: "query" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await graphqlProviderHandler.execute({ ..._fixtureInput }, storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notFound'));
     });
@@ -120,8 +145,13 @@ describe('GraphqlProvider imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof graphqlProviderHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await graphqlProviderHandler.list({  }, storage);
-      const result = await graphqlProviderHandler.list({  }, storage);
+      const afterResult_valid = await graphqlProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await graphqlProviderHandler.list({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 

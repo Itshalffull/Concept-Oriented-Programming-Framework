@@ -155,8 +155,13 @@ describe('Intent functional handler', () => {
     it('fixture "update_purpose" -> ok', async () => {
       if (typeof intentHandler.update !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(intentHandler.define({ intent: "auth-intent", target: "UserAuth", purpose: "Authenticate users securely", operationalPrinciple: "After login, session is valid for 24 hours" }), storage);
-      const result = await interpret(intentHandler.update({ intent: "auth-intent", purpose: "Authenticate and authorize users", operationalPrinciple: "After login, session is valid for 8 hours" }), storage);
+      const afterResult_define_auth = await interpret(intentHandler.define({ intent: "auth-intent", target: "UserAuth", purpose: "Authenticate users securely", operationalPrinciple: "After login, session is valid for 24 hours" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_auth?.output ?? {}));
+      const _fixtureInput = { intent: "auth-intent", purpose: "Authenticate and authorize users", operationalPrinciple: "After login, session is valid for 8 hours" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(intentHandler.update({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('Intent functional handler', () => {
     it('fixture "verify_existing" -> ok', async () => {
       if (typeof intentHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(intentHandler.define({ intent: "auth-intent", target: "UserAuth", purpose: "Authenticate users securely", operationalPrinciple: "After login, session is valid for 24 hours" }), storage);
-      const result = await interpret(intentHandler.verify({ intent: "auth-intent" }), storage);
+      const afterResult_define_auth = await interpret(intentHandler.define({ intent: "auth-intent", target: "UserAuth", purpose: "Authenticate users securely", operationalPrinciple: "After login, session is valid for 24 hours" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_auth?.output ?? {}));
+      const _fixtureInput = { intent: "auth-intent" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(intentHandler.verify({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,16 +303,26 @@ describe('Intent functional handler', () => {
     it('fixture "discover_auth" -> ok', async () => {
       if (typeof intentHandler.discover !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(intentHandler.define({ intent: "auth-intent", target: "UserAuth", purpose: "Authenticate users securely", operationalPrinciple: "After login, session is valid for 24 hours" }), storage);
-      const result = await interpret(intentHandler.discover({ query: "authentication" }), storage);
+      const afterResult_define_auth = await interpret(intentHandler.define({ intent: "auth-intent", target: "UserAuth", purpose: "Authenticate users securely", operationalPrinciple: "After login, session is valid for 24 hours" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_auth?.output ?? {}));
+      const _fixtureInput = { query: "authentication" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(intentHandler.discover({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "discover_empty" -> ok', async () => {
       if (typeof intentHandler.discover !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(intentHandler.define({ intent: "auth-intent", target: "UserAuth", purpose: "Authenticate users securely", operationalPrinciple: "After login, session is valid for 24 hours" }), storage);
-      const result = await interpret(intentHandler.discover({ query: "" }), storage);
+      const afterResult_define_auth = await interpret(intentHandler.define({ intent: "auth-intent", target: "UserAuth", purpose: "Authenticate users securely", operationalPrinciple: "After login, session is valid for 24 hours" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_auth?.output ?? {}));
+      const _fixtureInput = { query: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(intentHandler.discover({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -363,16 +383,26 @@ describe('Intent functional handler', () => {
     it('fixture "suggest_from_desc" -> ok', async () => {
       if (typeof intentHandler.suggestFromDescription !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(intentHandler.define({ intent: "auth-intent", target: "UserAuth", purpose: "Authenticate users securely", operationalPrinciple: "After login, session is valid for 24 hours" }), storage);
-      const result = await interpret(intentHandler.suggestFromDescription({ description: "A system for managing user accounts with login and registration" }), storage);
+      const afterResult_define_auth = await interpret(intentHandler.define({ intent: "auth-intent", target: "UserAuth", purpose: "Authenticate users securely", operationalPrinciple: "After login, session is valid for 24 hours" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_auth?.output ?? {}));
+      const _fixtureInput = { description: "A system for managing user accounts with login and registration" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(intentHandler.suggestFromDescription({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "suggest_empty" -> ok', async () => {
       if (typeof intentHandler.suggestFromDescription !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(intentHandler.define({ intent: "auth-intent", target: "UserAuth", purpose: "Authenticate users securely", operationalPrinciple: "After login, session is valid for 24 hours" }), storage);
-      const result = await interpret(intentHandler.suggestFromDescription({ description: "" }), storage);
+      const afterResult_define_auth = await interpret(intentHandler.define({ intent: "auth-intent", target: "UserAuth", purpose: "Authenticate users securely", operationalPrinciple: "After login, session is valid for 24 hours" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_auth?.output ?? {}));
+      const _fixtureInput = { description: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(intentHandler.suggestFromDescription({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

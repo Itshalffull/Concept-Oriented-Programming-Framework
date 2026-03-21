@@ -162,16 +162,26 @@ describe('Secret functional handler', () => {
     it('fixture "exists_check" -> ok', async () => {
       if (typeof secretHandler.exists !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(secretHandler.resolve({ name: "DB_PASSWORD", provider: "vault" }), storage);
-      const result = await interpret(secretHandler.exists({ name: "DB_PASSWORD", provider: "vault" }), storage);
+      const afterResult_resolve_db_password = await interpret(secretHandler.resolve({ name: "DB_PASSWORD", provider: "vault" }), storage);
+      const _pool = Object.assign({}, (afterResult_resolve_db_password?.output ?? {}));
+      const _fixtureInput = { name: "DB_PASSWORD", provider: "vault" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(secretHandler.exists({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "exists_empty_name" -> ok', async () => {
       if (typeof secretHandler.exists !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(secretHandler.resolve({ name: "DB_PASSWORD", provider: "vault" }), storage);
-      const result = await interpret(secretHandler.exists({ name: "", provider: "vault" }), storage);
+      const afterResult_resolve_db_password = await interpret(secretHandler.resolve({ name: "DB_PASSWORD", provider: "vault" }), storage);
+      const _pool = Object.assign({}, (afterResult_resolve_db_password?.output ?? {}));
+      const _fixtureInput = { name: "", provider: "vault" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(secretHandler.exists({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -232,16 +242,26 @@ describe('Secret functional handler', () => {
     it('fixture "rotate_db" -> ok', async () => {
       if (typeof secretHandler.rotate !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(secretHandler.resolve({ name: "DB_PASSWORD", provider: "vault" }), storage);
-      const result = await interpret(secretHandler.rotate({ name: "DB_PASSWORD", provider: "vault" }), storage);
+      const afterResult_resolve_db_password = await interpret(secretHandler.resolve({ name: "DB_PASSWORD", provider: "vault" }), storage);
+      const _pool = Object.assign({}, (afterResult_resolve_db_password?.output ?? {}));
+      const _fixtureInput = { name: "DB_PASSWORD", provider: "vault" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(secretHandler.rotate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "rotate_empty_provider" -> ok', async () => {
       if (typeof secretHandler.rotate !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(secretHandler.resolve({ name: "DB_PASSWORD", provider: "vault" }), storage);
-      const result = await interpret(secretHandler.rotate({ name: "API_KEY", provider: "" }), storage);
+      const afterResult_resolve_db_password = await interpret(secretHandler.resolve({ name: "DB_PASSWORD", provider: "vault" }), storage);
+      const _pool = Object.assign({}, (afterResult_resolve_db_password?.output ?? {}));
+      const _fixtureInput = { name: "API_KEY", provider: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(secretHandler.rotate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -302,16 +322,26 @@ describe('Secret functional handler', () => {
     it('fixture "invalidate_cache" -> ok', async () => {
       if (typeof secretHandler.invalidateCache !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(secretHandler.resolve({ name: "DB_PASSWORD", provider: "vault" }), storage);
-      const result = await interpret(secretHandler.invalidateCache({ name: "DB_PASSWORD" }), storage);
+      const afterResult_resolve_db_password = await interpret(secretHandler.resolve({ name: "DB_PASSWORD", provider: "vault" }), storage);
+      const _pool = Object.assign({}, (afterResult_resolve_db_password?.output ?? {}));
+      const _fixtureInput = { name: "DB_PASSWORD" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(secretHandler.invalidateCache({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalidate_empty" -> ok', async () => {
       if (typeof secretHandler.invalidateCache !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(secretHandler.resolve({ name: "DB_PASSWORD", provider: "vault" }), storage);
-      const result = await interpret(secretHandler.invalidateCache({ name: "" }), storage);
+      const afterResult_resolve_db_password = await interpret(secretHandler.resolve({ name: "DB_PASSWORD", provider: "vault" }), storage);
+      const _pool = Object.assign({}, (afterResult_resolve_db_password?.output ?? {}));
+      const _fixtureInput = { name: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(secretHandler.invalidateCache({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

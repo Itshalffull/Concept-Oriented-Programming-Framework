@@ -62,8 +62,13 @@ describe('FeatureFlag imperative handler', () => {
     it('fixture "disable_existing_flag" -> ok', async () => {
       if (typeof featureFlagHandler.disable !== 'function') return;
       const storage = createInMemoryStorage();
-      await featureFlagHandler.enable({ flag: "flag-1" }, storage);
-      const result = await featureFlagHandler.disable({ flag: "flag-1" }, storage);
+      const afterResult_enable_existing_flag = await featureFlagHandler.enable({ flag: "flag-1" }, storage);
+      const _pool = Object.assign({}, (afterResult_enable_existing_flag?.output ?? {}));
+      const _fixtureInput = { flag: "flag-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await featureFlagHandler.disable({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -89,16 +94,26 @@ describe('FeatureFlag imperative handler', () => {
     it('fixture "unify_compatible_flags" -> ok', async () => {
       if (typeof featureFlagHandler.unify !== 'function') return;
       const storage = createInMemoryStorage();
-      await featureFlagHandler.enable({ flag: "flag-1" }, storage);
-      const result = await featureFlagHandler.unify({ flags: ["flag-1","flag-2"] }, storage);
+      const afterResult_enable_existing_flag = await featureFlagHandler.enable({ flag: "flag-1" }, storage);
+      const _pool = Object.assign({}, (afterResult_enable_existing_flag?.output ?? {}));
+      const _fixtureInput = { flags: ["flag-1","flag-2"] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await featureFlagHandler.unify({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "unify_empty_flags" -> ok', async () => {
       if (typeof featureFlagHandler.unify !== 'function') return;
       const storage = createInMemoryStorage();
-      await featureFlagHandler.enable({ flag: "flag-1" }, storage);
-      const result = await featureFlagHandler.unify({ flags: [] }, storage);
+      const afterResult_enable_existing_flag = await featureFlagHandler.enable({ flag: "flag-1" }, storage);
+      const _pool = Object.assign({}, (afterResult_enable_existing_flag?.output ?? {}));
+      const _fixtureInput = { flags: [] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await featureFlagHandler.unify({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -155,16 +155,26 @@ describe('Merge functional handler', () => {
     it('fixture "clean_merge" -> ok', async () => {
       if (typeof mergeHandler.merge !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(mergeHandler.registerStrategy({ name: "three-way", contentTypes: ["text/plain"] }), storage);
-      const result = await interpret(mergeHandler.merge({ base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3", strategy: null }), storage);
+      const afterResult_register_three_way = await interpret(mergeHandler.registerStrategy({ name: "three-way", contentTypes: ["text/plain"] }), storage);
+      const _pool = Object.assign({}, (afterResult_register_three_way?.output ?? {}));
+      const _fixtureInput = { base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3", strategy: null } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(mergeHandler.merge({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "conflicting_merge" -> ok', async () => {
       if (typeof mergeHandler.merge !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(mergeHandler.registerStrategy({ name: "three-way", contentTypes: ["text/plain"] }), storage);
-      const result = await interpret(mergeHandler.merge({ base: "line1", ours: "lineA", theirs: "lineB", strategy: null }), storage);
+      const afterResult_register_three_way = await interpret(mergeHandler.registerStrategy({ name: "three-way", contentTypes: ["text/plain"] }), storage);
+      const _pool = Object.assign({}, (afterResult_register_three_way?.output ?? {}));
+      const _fixtureInput = { base: "line1", ours: "lineA", theirs: "lineB", strategy: null } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(mergeHandler.merge({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -232,8 +242,13 @@ describe('Merge functional handler', () => {
     it('fixture "resolve_first" -> ok', async () => {
       if (typeof mergeHandler.resolveConflict !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(mergeHandler.registerStrategy({ name: "three-way", contentTypes: ["text/plain"] }), storage);
-      const result = await interpret(mergeHandler.resolveConflict({ mergeId: "merge-1", conflictIndex: "0", resolution: "resolved line" }), storage);
+      const afterResult_register_three_way = await interpret(mergeHandler.registerStrategy({ name: "three-way", contentTypes: ["text/plain"] }), storage);
+      const _pool = Object.assign({}, (afterResult_register_three_way?.output ?? {}));
+      const _fixtureInput = { mergeId: "merge-1", conflictIndex: "0", resolution: "resolved line" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(mergeHandler.resolveConflict({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -301,8 +316,13 @@ describe('Merge functional handler', () => {
     it('fixture "finalize_resolved" -> ok', async () => {
       if (typeof mergeHandler.finalize !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(mergeHandler.registerStrategy({ name: "three-way", contentTypes: ["text/plain"] }), storage);
-      const result = await interpret(mergeHandler.finalize({ mergeId: "merge-1" }), storage);
+      const afterResult_register_three_way = await interpret(mergeHandler.registerStrategy({ name: "three-way", contentTypes: ["text/plain"] }), storage);
+      const _pool = Object.assign({}, (afterResult_register_three_way?.output ?? {}));
+      const _fixtureInput = { mergeId: "merge-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(mergeHandler.finalize({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -237,16 +237,26 @@ describe('RestTarget functional handler', () => {
     it('fixture "list_user_routes" -> ok', async () => {
       if (typeof restTargetHandler.listRoutes !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(restTargetHandler.generate({ projection: "user-projection", config: "{}" }), storage);
-      const result = await interpret(restTargetHandler.listRoutes({ concept: "User" }), storage);
+      const afterResult_with_default_config = await interpret(restTargetHandler.generate({ projection: "user-projection", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_with_default_config?.output ?? {}));
+      const _fixtureInput = { concept: "User" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(restTargetHandler.listRoutes({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_concept" -> ok', async () => {
       if (typeof restTargetHandler.listRoutes !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(restTargetHandler.generate({ projection: "user-projection", config: "{}" }), storage);
-      const result = await interpret(restTargetHandler.listRoutes({ concept: "" }), storage);
+      const afterResult_with_default_config = await interpret(restTargetHandler.generate({ projection: "user-projection", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_with_default_config?.output ?? {}));
+      const _fixtureInput = { concept: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(restTargetHandler.listRoutes({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

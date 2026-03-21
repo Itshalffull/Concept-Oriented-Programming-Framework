@@ -55,16 +55,26 @@ describe('WasmProvider imperative handler', () => {
     it('fixture "load_tokenizer" -> ok', async () => {
       if (typeof wasmProviderHandler.load !== 'function') return;
       const storage = createInMemoryStorage();
-      await wasmProviderHandler.list({  }, storage);
-      const result = await wasmProviderHandler.load({ name: "tokenizer", wasmPath: "/modules/tokenizer.wasm", memoryLimit: "65536" }, storage);
+      const afterResult_valid = await wasmProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { name: "tokenizer", wasmPath: "/modules/tokenizer.wasm", memoryLimit: "65536" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await wasmProviderHandler.load({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "load_large_module" -> ok', async () => {
       if (typeof wasmProviderHandler.load !== 'function') return;
       const storage = createInMemoryStorage();
-      await wasmProviderHandler.list({  }, storage);
-      const result = await wasmProviderHandler.load({ name: "parser", wasmPath: "/modules/parser.wasm", memoryLimit: "131072" }, storage);
+      const afterResult_valid = await wasmProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { name: "parser", wasmPath: "/modules/parser.wasm", memoryLimit: "131072" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await wasmProviderHandler.load({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -83,8 +93,13 @@ describe('WasmProvider imperative handler', () => {
     it('fixture "call_tokenize" -> ok', async () => {
       if (typeof wasmProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await wasmProviderHandler.list({  }, storage);
-      const result = await wasmProviderHandler.execute({ module: "tokenizer", function: "tokenize", args: "[\"hello world\"]" }, storage);
+      const afterResult_valid = await wasmProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { module: "tokenizer", function: "tokenize", args: "[\"hello world\"]" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await wasmProviderHandler.execute({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -111,8 +126,13 @@ describe('WasmProvider imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof wasmProviderHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await wasmProviderHandler.list({  }, storage);
-      const result = await wasmProviderHandler.list({  }, storage);
+      const afterResult_valid = await wasmProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await wasmProviderHandler.list({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 

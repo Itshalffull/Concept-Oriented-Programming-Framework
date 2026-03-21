@@ -230,8 +230,13 @@ describe('OpenaiTarget functional handler', () => {
     it('fixture "list_functions_score" -> ok', async () => {
       if (typeof openaiTargetHandler.listFunctions !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(openaiTargetHandler.generate({ projection: "{\"conceptName\":\"ScoreApi\",\"conceptManifest\":\"{\\\"name\\\":\\\"ScoreApi\\\",\\\"actions\\\":[]}\"}", config: "{\"strict\":true}" }), storage);
-      const result = await interpret(openaiTargetHandler.listFunctions({ concept: "ScoreApi" }), storage);
+      const afterResult_generate_strict = await interpret(openaiTargetHandler.generate({ projection: "{\"conceptName\":\"ScoreApi\",\"conceptManifest\":\"{\\\"name\\\":\\\"ScoreApi\\\",\\\"actions\\\":[]}\"}", config: "{\"strict\":true}" }), storage);
+      const _pool = Object.assign({}, (afterResult_generate_strict?.output ?? {}));
+      const _fixtureInput = { concept: "ScoreApi" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(openaiTargetHandler.listFunctions({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -162,8 +162,13 @@ describe('Runtime functional handler', () => {
     it('fixture "deploy_v1" -> ok', async () => {
       if (typeof runtimeHandler.deploy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(runtimeHandler.provision({ concept: "UserService", runtimeType: "ecs-fargate", config: "{\"cpu\":256,\"memory\":512}" }), storage);
-      const result = await interpret(runtimeHandler.deploy({ instance: "rt-abc123", artifact: "s3://artifacts/user-v1.zip", version: "1.0.0" }), storage);
+      const afterResult_provision_ecs = await interpret(runtimeHandler.provision({ concept: "UserService", runtimeType: "ecs-fargate", config: "{\"cpu\":256,\"memory\":512}" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_ecs?.output ?? {}));
+      const _fixtureInput = { instance: "rt-abc123", artifact: "s3://artifacts/user-v1.zip", version: "1.0.0" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(runtimeHandler.deploy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -231,16 +236,26 @@ describe('Runtime functional handler', () => {
     it('fixture "traffic_canary" -> ok', async () => {
       if (typeof runtimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(runtimeHandler.provision({ concept: "UserService", runtimeType: "ecs-fargate", config: "{\"cpu\":256,\"memory\":512}" }), storage);
-      const result = await interpret(runtimeHandler.setTrafficWeight({ instance: "rt-abc123", weight: "25" }), storage);
+      const afterResult_provision_ecs = await interpret(runtimeHandler.provision({ concept: "UserService", runtimeType: "ecs-fargate", config: "{\"cpu\":256,\"memory\":512}" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_ecs?.output ?? {}));
+      const _fixtureInput = { instance: "rt-abc123", weight: "25" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(runtimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "traffic_no_instance" -> ok', async () => {
       if (typeof runtimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(runtimeHandler.provision({ concept: "UserService", runtimeType: "ecs-fargate", config: "{\"cpu\":256,\"memory\":512}" }), storage);
-      const result = await interpret(runtimeHandler.setTrafficWeight({ instance: "", weight: "50" }), storage);
+      const afterResult_provision_ecs = await interpret(runtimeHandler.provision({ concept: "UserService", runtimeType: "ecs-fargate", config: "{\"cpu\":256,\"memory\":512}" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_ecs?.output ?? {}));
+      const _fixtureInput = { instance: "", weight: "50" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(runtimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -301,8 +316,13 @@ describe('Runtime functional handler', () => {
     it('fixture "rollback_instance" -> ok', async () => {
       if (typeof runtimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(runtimeHandler.provision({ concept: "UserService", runtimeType: "ecs-fargate", config: "{\"cpu\":256,\"memory\":512}" }), storage);
-      const result = await interpret(runtimeHandler.rollback({ instance: "rt-abc123" }), storage);
+      const afterResult_provision_ecs = await interpret(runtimeHandler.provision({ concept: "UserService", runtimeType: "ecs-fargate", config: "{\"cpu\":256,\"memory\":512}" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_ecs?.output ?? {}));
+      const _fixtureInput = { instance: "rt-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(runtimeHandler.rollback({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -370,8 +390,13 @@ describe('Runtime functional handler', () => {
     it('fixture "destroy_valid" -> ok', async () => {
       if (typeof runtimeHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(runtimeHandler.provision({ concept: "UserService", runtimeType: "ecs-fargate", config: "{\"cpu\":256,\"memory\":512}" }), storage);
-      const result = await interpret(runtimeHandler.destroy({ instance: "rt-abc123" }), storage);
+      const afterResult_provision_ecs = await interpret(runtimeHandler.provision({ concept: "UserService", runtimeType: "ecs-fargate", config: "{\"cpu\":256,\"memory\":512}" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_ecs?.output ?? {}));
+      const _fixtureInput = { instance: "rt-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(runtimeHandler.destroy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -439,8 +464,13 @@ describe('Runtime functional handler', () => {
     it('fixture "update_endpoint" -> ok', async () => {
       if (typeof runtimeHandler.updateEndpoint !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(runtimeHandler.provision({ concept: "UserService", runtimeType: "ecs-fargate", config: "{\"cpu\":256,\"memory\":512}" }), storage);
-      const result = await interpret(runtimeHandler.updateEndpoint({ instance: "rt-abc123", endpoint: "https://user-service.vercel.app" }), storage);
+      const afterResult_provision_ecs = await interpret(runtimeHandler.provision({ concept: "UserService", runtimeType: "ecs-fargate", config: "{\"cpu\":256,\"memory\":512}" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_ecs?.output ?? {}));
+      const _fixtureInput = { instance: "rt-abc123", endpoint: "https://user-service.vercel.app" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(runtimeHandler.updateEndpoint({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -508,8 +538,13 @@ describe('Runtime functional handler', () => {
     it('fixture "get_endpoint" -> ok', async () => {
       if (typeof runtimeHandler.getEndpoint !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(runtimeHandler.provision({ concept: "UserService", runtimeType: "ecs-fargate", config: "{\"cpu\":256,\"memory\":512}" }), storage);
-      const result = await interpret(runtimeHandler.getEndpoint({ instance: "rt-abc123" }), storage);
+      const afterResult_provision_ecs = await interpret(runtimeHandler.provision({ concept: "UserService", runtimeType: "ecs-fargate", config: "{\"cpu\":256,\"memory\":512}" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_ecs?.output ?? {}));
+      const _fixtureInput = { instance: "rt-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(runtimeHandler.getEndpoint({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -577,16 +612,26 @@ describe('Runtime functional handler', () => {
     it('fixture "configure_deps" -> ok', async () => {
       if (typeof runtimeHandler.configureDependencies !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(runtimeHandler.provision({ concept: "UserService", runtimeType: "ecs-fargate", config: "{\"cpu\":256,\"memory\":512}" }), storage);
-      const result = await interpret(runtimeHandler.configureDependencies({ instance: "rt-abc123", dependencies: "{\"auth\":{\"env\":\"AUTH_URL\",\"url\":\"https://auth.svc:8080\"}}" }), storage);
+      const afterResult_provision_ecs = await interpret(runtimeHandler.provision({ concept: "UserService", runtimeType: "ecs-fargate", config: "{\"cpu\":256,\"memory\":512}" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_ecs?.output ?? {}));
+      const _fixtureInput = { instance: "rt-abc123", dependencies: "{\"auth\":{\"env\":\"AUTH_URL\",\"url\":\"https://auth.svc:8080\"}}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(runtimeHandler.configureDependencies({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_deps_missing" -> error', async () => {
       if (typeof runtimeHandler.configureDependencies !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(runtimeHandler.provision({ concept: "UserService", runtimeType: "ecs-fargate", config: "{\"cpu\":256,\"memory\":512}" }), storage);
-      const result = await interpret(runtimeHandler.configureDependencies({ instance: "", dependencies: "{}" }), storage);
+      const afterResult_provision_ecs = await interpret(runtimeHandler.provision({ concept: "UserService", runtimeType: "ecs-fargate", config: "{\"cpu\":256,\"memory\":512}" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_ecs?.output ?? {}));
+      const _fixtureInput = { instance: "", dependencies: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(runtimeHandler.configureDependencies({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -647,8 +692,13 @@ describe('Runtime functional handler', () => {
     it('fixture "healthcheck_valid" -> ok', async () => {
       if (typeof runtimeHandler.healthCheck !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(runtimeHandler.provision({ concept: "UserService", runtimeType: "ecs-fargate", config: "{\"cpu\":256,\"memory\":512}" }), storage);
-      const result = await interpret(runtimeHandler.healthCheck({ instance: "rt-abc123" }), storage);
+      const afterResult_provision_ecs = await interpret(runtimeHandler.provision({ concept: "UserService", runtimeType: "ecs-fargate", config: "{\"cpu\":256,\"memory\":512}" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_ecs?.output ?? {}));
+      const _fixtureInput = { instance: "rt-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(runtimeHandler.healthCheck({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

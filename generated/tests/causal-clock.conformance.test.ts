@@ -155,8 +155,13 @@ describe('CausalClock functional handler', () => {
     it('fixture "merge_same_length" -> ok', async () => {
       if (typeof causalClockHandler.merge !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(causalClockHandler.tick({ replicaId: "replica-a" }), storage);
-      const result = await interpret(causalClockHandler.merge({ localClock: "[1,2,3]", remoteClock: "[2,1,4]" }), storage);
+      const afterResult_tick_replica_a = await interpret(causalClockHandler.tick({ replicaId: "replica-a" }), storage);
+      const _pool = Object.assign({}, (afterResult_tick_replica_a?.output ?? {}));
+      const _fixtureInput = { localClock: "[1,2,3]", remoteClock: "[2,1,4]" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(causalClockHandler.merge({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -292,16 +297,26 @@ describe('CausalClock functional handler', () => {
     it('fixture "dominates_check" -> ok', async () => {
       if (typeof causalClockHandler.dominates !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(causalClockHandler.tick({ replicaId: "replica-a" }), storage);
-      const result = await interpret(causalClockHandler.dominates({ a: "event-1", b: "event-2" }), storage);
+      const afterResult_tick_replica_a = await interpret(causalClockHandler.tick({ replicaId: "replica-a" }), storage);
+      const _pool = Object.assign({}, (afterResult_tick_replica_a?.output ?? {}));
+      const _fixtureInput = { a: "event-1", b: "event-2" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(causalClockHandler.dominates({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "dominates_missing" -> ok', async () => {
       if (typeof causalClockHandler.dominates !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(causalClockHandler.tick({ replicaId: "replica-a" }), storage);
-      const result = await interpret(causalClockHandler.dominates({ a: "nonexistent", b: "event-2" }), storage);
+      const afterResult_tick_replica_a = await interpret(causalClockHandler.tick({ replicaId: "replica-a" }), storage);
+      const _pool = Object.assign({}, (afterResult_tick_replica_a?.output ?? {}));
+      const _fixtureInput = { a: "nonexistent", b: "event-2" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(causalClockHandler.dominates({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

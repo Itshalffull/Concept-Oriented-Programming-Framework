@@ -155,8 +155,13 @@ describe('Attestation functional handler', () => {
     it('fixture "revoke_by_attester" -> ok', async () => {
       if (typeof attestationHandler.revoke !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(attestationHandler.attest({ schema: "kyc-identity", attester: "civic-authority", recipient: "alice", data: "{\"level\":\"basic\"}", expiry: "2027-12-31T00:00:00Z" }), storage);
-      const result = await interpret(attestationHandler.revoke({ attestation: "attest-1001", revoker: "civic-authority" }), storage);
+      const afterResult_attest_kyc = await interpret(attestationHandler.attest({ schema: "kyc-identity", attester: "civic-authority", recipient: "alice", data: "{\"level\":\"basic\"}", expiry: "2027-12-31T00:00:00Z" }), storage);
+      const _pool = Object.assign({}, (afterResult_attest_kyc?.output ?? {}));
+      const _fixtureInput = { attestation: "attest-1001", revoker: "civic-authority" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(attestationHandler.revoke({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('Attestation functional handler', () => {
     it('fixture "verify_valid" -> ok', async () => {
       if (typeof attestationHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(attestationHandler.attest({ schema: "kyc-identity", attester: "civic-authority", recipient: "alice", data: "{\"level\":\"basic\"}", expiry: "2027-12-31T00:00:00Z" }), storage);
-      const result = await interpret(attestationHandler.verify({ attestation: "attest-1001" }), storage);
+      const afterResult_attest_kyc = await interpret(attestationHandler.attest({ schema: "kyc-identity", attester: "civic-authority", recipient: "alice", data: "{\"level\":\"basic\"}", expiry: "2027-12-31T00:00:00Z" }), storage);
+      const _pool = Object.assign({}, (afterResult_attest_kyc?.output ?? {}));
+      const _fixtureInput = { attestation: "attest-1001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(attestationHandler.verify({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

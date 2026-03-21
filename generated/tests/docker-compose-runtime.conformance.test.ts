@@ -155,8 +155,13 @@ describe('DockerComposeRuntime functional handler', () => {
     it('fixture "deploy_service" -> ok', async () => {
       if (typeof dockerComposeRuntimeHandler.deploy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(dockerComposeRuntimeHandler.provision({ concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }), storage);
-      const result = await interpret(dockerComposeRuntimeHandler.deploy({ service: "dc-001", imageUri: "user-service:latest" }), storage);
+      const afterResult_provision_service = await interpret(dockerComposeRuntimeHandler.provision({ concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_service?.output ?? {}));
+      const _fixtureInput = { service: "dc-001", imageUri: "user-service:latest" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(dockerComposeRuntimeHandler.deploy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,16 +229,26 @@ describe('DockerComposeRuntime functional handler', () => {
     it('fixture "set_traffic" -> ok', async () => {
       if (typeof dockerComposeRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(dockerComposeRuntimeHandler.provision({ concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }), storage);
-      const result = await interpret(dockerComposeRuntimeHandler.setTrafficWeight({ service: "dc-001", weight: "100" }), storage);
+      const afterResult_provision_service = await interpret(dockerComposeRuntimeHandler.provision({ concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_service?.output ?? {}));
+      const _fixtureInput = { service: "dc-001", weight: "100" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(dockerComposeRuntimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "set_traffic_negative" -> ok', async () => {
       if (typeof dockerComposeRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(dockerComposeRuntimeHandler.provision({ concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }), storage);
-      const result = await interpret(dockerComposeRuntimeHandler.setTrafficWeight({ service: "dc-001", weight: "-1" }), storage);
+      const afterResult_provision_service = await interpret(dockerComposeRuntimeHandler.provision({ concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_service?.output ?? {}));
+      const _fixtureInput = { service: "dc-001", weight: "-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(dockerComposeRuntimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -294,16 +309,26 @@ describe('DockerComposeRuntime functional handler', () => {
     it('fixture "rollback_image" -> ok', async () => {
       if (typeof dockerComposeRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(dockerComposeRuntimeHandler.provision({ concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }), storage);
-      const result = await interpret(dockerComposeRuntimeHandler.rollback({ service: "dc-001", targetImage: "user-service:v1.0.0" }), storage);
+      const afterResult_provision_service = await interpret(dockerComposeRuntimeHandler.provision({ concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_service?.output ?? {}));
+      const _fixtureInput = { service: "dc-001", targetImage: "user-service:v1.0.0" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(dockerComposeRuntimeHandler.rollback({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "rollback_empty" -> ok', async () => {
       if (typeof dockerComposeRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(dockerComposeRuntimeHandler.provision({ concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }), storage);
-      const result = await interpret(dockerComposeRuntimeHandler.rollback({ service: "dc-001", targetImage: "" }), storage);
+      const afterResult_provision_service = await interpret(dockerComposeRuntimeHandler.provision({ concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_service?.output ?? {}));
+      const _fixtureInput = { service: "dc-001", targetImage: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(dockerComposeRuntimeHandler.rollback({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -364,8 +389,13 @@ describe('DockerComposeRuntime functional handler', () => {
     it('fixture "destroy_service" -> ok', async () => {
       if (typeof dockerComposeRuntimeHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(dockerComposeRuntimeHandler.provision({ concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }), storage);
-      const result = await interpret(dockerComposeRuntimeHandler.destroy({ service: "dc-001" }), storage);
+      const afterResult_provision_service = await interpret(dockerComposeRuntimeHandler.provision({ concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_service?.output ?? {}));
+      const _fixtureInput = { service: "dc-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(dockerComposeRuntimeHandler.destroy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

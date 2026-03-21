@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-20T22:54:17.836Z",
+  "generatedAt": "2026-03-21T18:18:09.090Z",
   "files": [
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/spec-parser/spec-parser.commands.ts",
@@ -22,7 +22,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/spec-parser/references/concept-grammar.md",
       "relativePath": "claude-skills/spec-parser/references/concept-grammar.md",
-      "hash": "6ba710d34d6dab12541e05f12119d93a3dca76c74ef47517080d5b3754455e29",
+      "hash": "8b133c95db78fcce8511126c13e7b31d91d8987278f8f6ac58672f960e781f5a",
       "target": "claude-skills"
     },
     {
@@ -3856,7 +3856,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/agents/concept-scaffold-gen.md",
       "relativePath": "claude-agents/concept-scaffold-gen.md",
-      "hash": "7c6fdd7eaab38875f938524b4e5440ffb045f4b3355298addb1c77a0dd620ca2",
+      "hash": "c7ec8fd96846dfbcbe828440e27f478f782223a8f3436aee0d349ceb46b74bf8",
       "target": "claude-agents"
     },
     {

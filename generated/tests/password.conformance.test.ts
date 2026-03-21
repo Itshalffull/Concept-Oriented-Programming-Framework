@@ -156,8 +156,13 @@ describe('Password functional handler', () => {
     it('fixture "existing_user" -> ok', async () => {
       if (typeof passwordHandler.check !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(passwordHandler.set({ user: "alice", password: "Str0ngP@ssw0rd!" }), storage);
-      const result = await interpret(passwordHandler.check({ user: "alice", password: "Str0ngP@ssw0rd!" }), storage);
+      const afterResult_valid_password = await interpret(passwordHandler.set({ user: "alice", password: "Str0ngP@ssw0rd!" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_password?.output ?? {}));
+      const _fixtureInput = { user: "alice", password: "Str0ngP@ssw0rd!" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(passwordHandler.check({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

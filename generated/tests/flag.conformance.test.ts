@@ -155,8 +155,13 @@ describe('Flag functional handler', () => {
     it('fixture "unflag_existing" -> ok', async () => {
       if (typeof flagHandler.unflag !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(flagHandler.flag({ flagging: "flag-1", flagType: "bookmark", entity: "article-42", user: "user-7" }), storage);
-      const result = await interpret(flagHandler.unflag({ flagging: "flag-1" }), storage);
+      const afterResult_flag_bookmark = await interpret(flagHandler.flag({ flagging: "flag-1", flagType: "bookmark", entity: "article-42", user: "user-7" }), storage);
+      const _pool = Object.assign({}, (afterResult_flag_bookmark?.output ?? {}));
+      const _fixtureInput = { flagging: "flag-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(flagHandler.unflag({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,16 +229,26 @@ describe('Flag functional handler', () => {
     it('fixture "is_flagged_check" -> ok', async () => {
       if (typeof flagHandler.isFlagged !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(flagHandler.flag({ flagging: "flag-1", flagType: "bookmark", entity: "article-42", user: "user-7" }), storage);
-      const result = await interpret(flagHandler.isFlagged({ flagType: "bookmark", entity: "article-42", user: "user-7" }), storage);
+      const afterResult_flag_bookmark = await interpret(flagHandler.flag({ flagging: "flag-1", flagType: "bookmark", entity: "article-42", user: "user-7" }), storage);
+      const _pool = Object.assign({}, (afterResult_flag_bookmark?.output ?? {}));
+      const _fixtureInput = { flagType: "bookmark", entity: "article-42", user: "user-7" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(flagHandler.isFlagged({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "is_flagged_empty_type" -> ok', async () => {
       if (typeof flagHandler.isFlagged !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(flagHandler.flag({ flagging: "flag-1", flagType: "bookmark", entity: "article-42", user: "user-7" }), storage);
-      const result = await interpret(flagHandler.isFlagged({ flagType: "", entity: "article-42", user: "user-7" }), storage);
+      const afterResult_flag_bookmark = await interpret(flagHandler.flag({ flagging: "flag-1", flagType: "bookmark", entity: "article-42", user: "user-7" }), storage);
+      const _pool = Object.assign({}, (afterResult_flag_bookmark?.output ?? {}));
+      const _fixtureInput = { flagType: "", entity: "article-42", user: "user-7" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(flagHandler.isFlagged({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -294,16 +309,26 @@ describe('Flag functional handler', () => {
     it('fixture "get_count_likes" -> ok', async () => {
       if (typeof flagHandler.getCount !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(flagHandler.flag({ flagging: "flag-1", flagType: "bookmark", entity: "article-42", user: "user-7" }), storage);
-      const result = await interpret(flagHandler.getCount({ flagType: "like", entity: "article-42" }), storage);
+      const afterResult_flag_bookmark = await interpret(flagHandler.flag({ flagging: "flag-1", flagType: "bookmark", entity: "article-42", user: "user-7" }), storage);
+      const _pool = Object.assign({}, (afterResult_flag_bookmark?.output ?? {}));
+      const _fixtureInput = { flagType: "like", entity: "article-42" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(flagHandler.getCount({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_count_empty" -> ok', async () => {
       if (typeof flagHandler.getCount !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(flagHandler.flag({ flagging: "flag-1", flagType: "bookmark", entity: "article-42", user: "user-7" }), storage);
-      const result = await interpret(flagHandler.getCount({ flagType: "", entity: "" }), storage);
+      const afterResult_flag_bookmark = await interpret(flagHandler.flag({ flagging: "flag-1", flagType: "bookmark", entity: "article-42", user: "user-7" }), storage);
+      const _pool = Object.assign({}, (afterResult_flag_bookmark?.output ?? {}));
+      const _fixtureInput = { flagType: "", entity: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(flagHandler.getCount({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -155,8 +155,13 @@ describe('Authentication functional handler', () => {
     it('fixture "login_valid" -> ok', async () => {
       if (typeof authenticationHandler.login !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(authenticationHandler.register({ user: "alice", provider: "local", credentials: "secret123" }), storage);
-      const result = await interpret(authenticationHandler.login({ user: "alice", credentials: "secret123" }), storage);
+      const afterResult_register_local = await interpret(authenticationHandler.register({ user: "alice", provider: "local", credentials: "secret123" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_local?.output ?? {}));
+      const _fixtureInput = { user: "alice", credentials: "secret123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(authenticationHandler.login({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('Authentication functional handler', () => {
     it('fixture "logout_existing" -> ok', async () => {
       if (typeof authenticationHandler.logout !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(authenticationHandler.register({ user: "alice", provider: "local", credentials: "secret123" }), storage);
-      const result = await interpret(authenticationHandler.logout({ user: "alice" }), storage);
+      const afterResult_register_local = await interpret(authenticationHandler.register({ user: "alice", provider: "local", credentials: "secret123" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_local?.output ?? {}));
+      const _fixtureInput = { user: "alice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(authenticationHandler.logout({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('Authentication functional handler', () => {
     it('fixture "auth_valid_token" -> ok', async () => {
       if (typeof authenticationHandler.authenticate !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(authenticationHandler.register({ user: "alice", provider: "local", credentials: "secret123" }), storage);
-      const result = await interpret(authenticationHandler.authenticate({ token: "tok-abc-123" }), storage);
+      const afterResult_register_local = await interpret(authenticationHandler.register({ user: "alice", provider: "local", credentials: "secret123" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_local?.output ?? {}));
+      const _fixtureInput = { token: "tok-abc-123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(authenticationHandler.authenticate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -362,8 +377,13 @@ describe('Authentication functional handler', () => {
     it('fixture "reset_existing" -> ok', async () => {
       if (typeof authenticationHandler.resetPassword !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(authenticationHandler.register({ user: "alice", provider: "local", credentials: "secret123" }), storage);
-      const result = await interpret(authenticationHandler.resetPassword({ user: "alice", newCredentials: "newpass456" }), storage);
+      const afterResult_register_local = await interpret(authenticationHandler.register({ user: "alice", provider: "local", credentials: "secret123" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_local?.output ?? {}));
+      const _fixtureInput = { user: "alice", newCredentials: "newpass456" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(authenticationHandler.resetPassword({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

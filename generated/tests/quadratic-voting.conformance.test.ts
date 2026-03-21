@@ -155,8 +155,13 @@ describe('QuadraticVoting functional handler', () => {
     it('fixture "allocate_alice" -> ok', async () => {
       if (typeof quadraticVotingHandler.allocateCredits !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(quadraticVotingHandler.configure({ creditBudget: "100.0" }), storage);
-      const result = await interpret(quadraticVotingHandler.allocateCredits({ config: "qv-001", voter: "alice" }), storage);
+      const afterResult_standard_budget = await interpret(quadraticVotingHandler.configure({ creditBudget: "100.0" }), storage);
+      const _pool = Object.assign({}, (afterResult_standard_budget?.output ?? {}));
+      const _fixtureInput = { config: "qv-001", voter: "alice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(quadraticVotingHandler.allocateCredits({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('QuadraticVoting functional handler', () => {
     it('fixture "cast_five_votes" -> ok', async () => {
       if (typeof quadraticVotingHandler.castVotes !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(quadraticVotingHandler.configure({ creditBudget: "100.0" }), storage);
-      const result = await interpret(quadraticVotingHandler.castVotes({ config: "qv-001", voter: "alice", issue: "budget-increase", numberOfVotes: "5" }), storage);
+      const afterResult_standard_budget = await interpret(quadraticVotingHandler.configure({ creditBudget: "100.0" }), storage);
+      const _pool = Object.assign({}, (afterResult_standard_budget?.output ?? {}));
+      const _fixtureInput = { config: "qv-001", voter: "alice", issue: "budget-increase", numberOfVotes: "5" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(quadraticVotingHandler.castVotes({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('QuadraticVoting functional handler', () => {
     it('fixture "tally_issue" -> ok', async () => {
       if (typeof quadraticVotingHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(quadraticVotingHandler.configure({ creditBudget: "100.0" }), storage);
-      const result = await interpret(quadraticVotingHandler.count({ config: "qv-001", issue: "budget-increase" }), storage);
+      const afterResult_standard_budget = await interpret(quadraticVotingHandler.configure({ creditBudget: "100.0" }), storage);
+      const _pool = Object.assign({}, (afterResult_standard_budget?.output ?? {}));
+      const _fixtureInput = { config: "qv-001", issue: "budget-increase" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(quadraticVotingHandler.count({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

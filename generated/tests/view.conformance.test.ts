@@ -155,8 +155,13 @@ describe('View functional handler', () => {
     it('fixture "get_existing_view" -> ok', async () => {
       if (typeof viewHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage);
-      const result = await interpret(viewHandler.get({ view: "tasks-table" }), storage);
+      const afterResult_create_task_table = await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_task_table?.output ?? {}));
+      const _fixtureInput = { view: "tasks-table" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(viewHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('View functional handler', () => {
     it('fixture "resolve_existing" -> ok', async () => {
       if (typeof viewHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage);
-      const result = await interpret(viewHandler.resolve({ view: "tasks-table" }), storage);
+      const afterResult_create_task_table = await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_task_table?.output ?? {}));
+      const _fixtureInput = { view: "tasks-table" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(viewHandler.resolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,16 +303,26 @@ describe('View functional handler', () => {
     it('fixture "set_controls" -> ok', async () => {
       if (typeof viewHandler.setControls !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage);
-      const result = await interpret(viewHandler.setControls({ view: "tasks-table", controls: "{\"create\": true}" }), storage);
+      const afterResult_create_task_table = await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_task_table?.output ?? {}));
+      const _fixtureInput = { view: "tasks-table", controls: "{\"create\": true}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(viewHandler.setControls({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "set_controls_missing_view" -> error', async () => {
       if (typeof viewHandler.setControls !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage);
-      const result = await interpret(viewHandler.setControls({ view: "no-such-view", controls: "{}" }), storage);
+      const afterResult_create_task_table = await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_task_table?.output ?? {}));
+      const _fixtureInput = { view: "no-such-view", controls: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(viewHandler.setControls({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -363,16 +383,26 @@ describe('View functional handler', () => {
     it('fixture "set_filter_active" -> ok', async () => {
       if (typeof viewHandler.setFilter !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage);
-      const result = await interpret(viewHandler.setFilter({ view: "tasks-table", filter: "status=active" }), storage);
+      const afterResult_create_task_table = await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_task_table?.output ?? {}));
+      const _fixtureInput = { view: "tasks-table", filter: "status=active" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(viewHandler.setFilter({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "set_filter_missing_view" -> ok', async () => {
       if (typeof viewHandler.setFilter !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage);
-      const result = await interpret(viewHandler.setFilter({ view: "no-such-view", filter: "status=active" }), storage);
+      const afterResult_create_task_table = await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_task_table?.output ?? {}));
+      const _fixtureInput = { view: "no-such-view", filter: "status=active" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(viewHandler.setFilter({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -433,8 +463,13 @@ describe('View functional handler', () => {
     it('fixture "sort_by_date" -> ok', async () => {
       if (typeof viewHandler.setSort !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage);
-      const result = await interpret(viewHandler.setSort({ view: "tasks-table", sort: "created_at:desc" }), storage);
+      const afterResult_create_task_table = await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_task_table?.output ?? {}));
+      const _fixtureInput = { view: "tasks-table", sort: "created_at:desc" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(viewHandler.setSort({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -502,8 +537,13 @@ describe('View functional handler', () => {
     it('fixture "group_by_status" -> ok', async () => {
       if (typeof viewHandler.setGroup !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage);
-      const result = await interpret(viewHandler.setGroup({ view: "tasks-table", group: "status" }), storage);
+      const afterResult_create_task_table = await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_task_table?.output ?? {}));
+      const _fixtureInput = { view: "tasks-table", group: "status" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(viewHandler.setGroup({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -571,8 +611,13 @@ describe('View functional handler', () => {
     it('fixture "set_fields" -> ok', async () => {
       if (typeof viewHandler.setVisibleFields !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage);
-      const result = await interpret(viewHandler.setVisibleFields({ view: "tasks-table", fields: "[\"title\",\"status\",\"assignee\"]" }), storage);
+      const afterResult_create_task_table = await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_task_table?.output ?? {}));
+      const _fixtureInput = { view: "tasks-table", fields: "[\"title\",\"status\",\"assignee\"]" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(viewHandler.setVisibleFields({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -640,16 +685,26 @@ describe('View functional handler', () => {
     it('fixture "switch_to_board" -> ok', async () => {
       if (typeof viewHandler.changeLayout !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage);
-      const result = await interpret(viewHandler.changeLayout({ view: "tasks-table", layout: "board" }), storage);
+      const afterResult_create_task_table = await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_task_table?.output ?? {}));
+      const _fixtureInput = { view: "tasks-table", layout: "board" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(viewHandler.changeLayout({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "change_layout_missing" -> ok', async () => {
       if (typeof viewHandler.changeLayout !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage);
-      const result = await interpret(viewHandler.changeLayout({ view: "no-such-view", layout: "calendar" }), storage);
+      const afterResult_create_task_table = await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_task_table?.output ?? {}));
+      const _fixtureInput = { view: "no-such-view", layout: "calendar" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(viewHandler.changeLayout({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -710,8 +765,13 @@ describe('View functional handler', () => {
     it('fixture "duplicate_existing" -> ok', async () => {
       if (typeof viewHandler.duplicate !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage);
-      const result = await interpret(viewHandler.duplicate({ view: "tasks-table" }), storage);
+      const afterResult_create_task_table = await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_task_table?.output ?? {}));
+      const _fixtureInput = { view: "tasks-table" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(viewHandler.duplicate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -779,8 +839,13 @@ describe('View functional handler', () => {
     it('fixture "embed_existing" -> ok', async () => {
       if (typeof viewHandler.embed !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage);
-      const result = await interpret(viewHandler.embed({ view: "tasks-table" }), storage);
+      const afterResult_create_task_table = await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_task_table?.output ?? {}));
+      const _fixtureInput = { view: "tasks-table" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(viewHandler.embed({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

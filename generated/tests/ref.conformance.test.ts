@@ -155,8 +155,13 @@ describe('Ref functional handler', () => {
     it('fixture "update_head" -> ok', async () => {
       if (typeof refHandler.update !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(refHandler.create({ name: "HEAD", hash: "sha256:abc123def456" }), storage);
-      const result = await interpret(refHandler.update({ name: "HEAD", newHash: "sha256:newdef456", expectedOldHash: "sha256:abc123def456" }), storage);
+      const afterResult_create_head = await interpret(refHandler.create({ name: "HEAD", hash: "sha256:abc123def456" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_head?.output ?? {}));
+      const _fixtureInput = { name: "HEAD", newHash: "sha256:newdef456", expectedOldHash: "sha256:abc123def456" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(refHandler.update({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('Ref functional handler', () => {
     it('fixture "delete_tag" -> ok', async () => {
       if (typeof refHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(refHandler.create({ name: "HEAD", hash: "sha256:abc123def456" }), storage);
-      const result = await interpret(refHandler.delete({ name: "tags/v1.0" }), storage);
+      const afterResult_create_head = await interpret(refHandler.create({ name: "HEAD", hash: "sha256:abc123def456" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_head?.output ?? {}));
+      const _fixtureInput = { name: "tags/v1.0" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(refHandler.delete({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('Ref functional handler', () => {
     it('fixture "resolve_head" -> ok', async () => {
       if (typeof refHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(refHandler.create({ name: "HEAD", hash: "sha256:abc123def456" }), storage);
-      const result = await interpret(refHandler.resolve({ name: "HEAD" }), storage);
+      const afterResult_create_head = await interpret(refHandler.create({ name: "HEAD", hash: "sha256:abc123def456" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_head?.output ?? {}));
+      const _fixtureInput = { name: "HEAD" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(refHandler.resolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -362,8 +377,13 @@ describe('Ref functional handler', () => {
     it('fixture "log_head" -> ok', async () => {
       if (typeof refHandler.log !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(refHandler.create({ name: "HEAD", hash: "sha256:abc123def456" }), storage);
-      const result = await interpret(refHandler.log({ name: "HEAD" }), storage);
+      const afterResult_create_head = await interpret(refHandler.create({ name: "HEAD", hash: "sha256:abc123def456" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_head?.output ?? {}));
+      const _fixtureInput = { name: "HEAD" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(refHandler.log({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

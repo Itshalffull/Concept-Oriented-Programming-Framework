@@ -155,8 +155,13 @@ describe('Renderer functional handler', () => {
     it('fixture "register_sidebar" -> ok', async () => {
       if (typeof rendererHandler.autoPlaceholder !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(rendererHandler.render({ renderer: "main-renderer", tree: "<page><header/><body/></page>" }), storage);
-      const result = await interpret(rendererHandler.autoPlaceholder({ renderer: "main-renderer", name: "sidebar" }), storage);
+      const afterResult_render_page = await interpret(rendererHandler.render({ renderer: "main-renderer", tree: "<page><header/><body/></page>" }), storage);
+      const _pool = Object.assign({}, (afterResult_render_page?.output ?? {}));
+      const _fixtureInput = { renderer: "main-renderer", name: "sidebar" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(rendererHandler.autoPlaceholder({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('Renderer functional handler', () => {
     it('fixture "stream_page" -> ok', async () => {
       if (typeof rendererHandler.stream !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(rendererHandler.render({ renderer: "main-renderer", tree: "<page><header/><body/></page>" }), storage);
-      const result = await interpret(rendererHandler.stream({ renderer: "main-renderer", tree: "<page><header/></page>" }), storage);
+      const afterResult_render_page = await interpret(rendererHandler.render({ renderer: "main-renderer", tree: "<page><header/><body/></page>" }), storage);
+      const _pool = Object.assign({}, (afterResult_render_page?.output ?? {}));
+      const _fixtureInput = { renderer: "main-renderer", tree: "<page><header/></page>" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(rendererHandler.stream({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('Renderer functional handler', () => {
     it('fixture "merge_tags" -> ok', async () => {
       if (typeof rendererHandler.mergeCacheability !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(rendererHandler.render({ renderer: "main-renderer", tree: "<page><header/><body/></page>" }), storage);
-      const result = await interpret(rendererHandler.mergeCacheability({ renderer: "main-renderer", tags: "{\"page\":300,\"user\":60}" }), storage);
+      const afterResult_render_page = await interpret(rendererHandler.render({ renderer: "main-renderer", tree: "<page><header/><body/></page>" }), storage);
+      const _pool = Object.assign({}, (afterResult_render_page?.output ?? {}));
+      const _fixtureInput = { renderer: "main-renderer", tags: "{\"page\":300,\"user\":60}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(rendererHandler.mergeCacheability({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

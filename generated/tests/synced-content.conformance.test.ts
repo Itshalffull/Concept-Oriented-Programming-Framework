@@ -156,8 +156,13 @@ describe('SyncedContent functional handler', () => {
     it('fixture "edit_content" -> ok', async () => {
       if (typeof syncedContentHandler.editOriginal !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(syncedContentHandler.createReference({ ref: "ref-1", original: "doc-main" }), storage);
-      const result = await interpret(syncedContentHandler.editOriginal({ original: "doc-main", content: "Updated paragraph text" }), storage);
+      const afterResult_create_ref = await interpret(syncedContentHandler.createReference({ ref: "ref-1", original: "doc-main" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_ref?.output ?? {}));
+      const _fixtureInput = { original: "doc-main", content: "Updated paragraph text" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(syncedContentHandler.editOriginal({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -226,8 +231,13 @@ describe('SyncedContent functional handler', () => {
     it('fixture "delete_ref" -> ok', async () => {
       if (typeof syncedContentHandler.deleteReference !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(syncedContentHandler.createReference({ ref: "ref-1", original: "doc-main" }), storage);
-      const result = await interpret(syncedContentHandler.deleteReference({ ref: "ref-1" }), storage);
+      const afterResult_create_ref = await interpret(syncedContentHandler.createReference({ ref: "ref-1", original: "doc-main" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_ref?.output ?? {}));
+      const _fixtureInput = { ref: "ref-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(syncedContentHandler.deleteReference({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

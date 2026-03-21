@@ -162,16 +162,26 @@ describe('VercelRuntime functional handler', () => {
     it('fixture "deploy_dist" -> ok', async () => {
       if (typeof vercelRuntimeHandler.deploy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" }), storage);
-      const result = await interpret(vercelRuntimeHandler.deploy({ project: "prj_userservice", sourceDirectory: "./dist" }), storage);
+      const afterResult_provision_nextjs = await interpret(vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_nextjs?.output ?? {}));
+      const _fixtureInput = { project: "prj_userservice", sourceDirectory: "./dist" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(vercelRuntimeHandler.deploy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "deploy_src" -> ok', async () => {
       if (typeof vercelRuntimeHandler.deploy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" }), storage);
-      const result = await interpret(vercelRuntimeHandler.deploy({ project: "prj_api", sourceDirectory: "./src" }), storage);
+      const afterResult_provision_nextjs = await interpret(vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_nextjs?.output ?? {}));
+      const _fixtureInput = { project: "prj_api", sourceDirectory: "./src" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(vercelRuntimeHandler.deploy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -239,16 +249,26 @@ describe('VercelRuntime functional handler', () => {
     it('fixture "traffic_50" -> ok', async () => {
       if (typeof vercelRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" }), storage);
-      const result = await interpret(vercelRuntimeHandler.setTrafficWeight({ project: "prj_userservice", weight: "50" }), storage);
+      const afterResult_provision_nextjs = await interpret(vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_nextjs?.output ?? {}));
+      const _fixtureInput = { project: "prj_userservice", weight: "50" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(vercelRuntimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "traffic_negative" -> ok', async () => {
       if (typeof vercelRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" }), storage);
-      const result = await interpret(vercelRuntimeHandler.setTrafficWeight({ project: "prj_userservice", weight: "-1" }), storage);
+      const afterResult_provision_nextjs = await interpret(vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_nextjs?.output ?? {}));
+      const _fixtureInput = { project: "prj_userservice", weight: "-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(vercelRuntimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -309,16 +329,26 @@ describe('VercelRuntime functional handler', () => {
     it('fixture "rollback_valid" -> ok', async () => {
       if (typeof vercelRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" }), storage);
-      const result = await interpret(vercelRuntimeHandler.rollback({ project: "prj_userservice", targetDeploymentId: "dpl_abc123" }), storage);
+      const afterResult_provision_nextjs = await interpret(vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_nextjs?.output ?? {}));
+      const _fixtureInput = { project: "prj_userservice", targetDeploymentId: "dpl_abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(vercelRuntimeHandler.rollback({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "rollback_missing_deployment" -> ok', async () => {
       if (typeof vercelRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" }), storage);
-      const result = await interpret(vercelRuntimeHandler.rollback({ project: "prj_userservice", targetDeploymentId: "" }), storage);
+      const afterResult_provision_nextjs = await interpret(vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_nextjs?.output ?? {}));
+      const _fixtureInput = { project: "prj_userservice", targetDeploymentId: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(vercelRuntimeHandler.rollback({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -379,16 +409,26 @@ describe('VercelRuntime functional handler', () => {
     it('fixture "env_vars_valid" -> ok', async () => {
       if (typeof vercelRuntimeHandler.configureEnv !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" }), storage);
-      const result = await interpret(vercelRuntimeHandler.configureEnv({ project: "prj_userservice", envVars: "[{\"key\":\"DATABASE_URL\",\"value\":\"postgres://localhost\"}]" }), storage);
+      const afterResult_provision_nextjs = await interpret(vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_nextjs?.output ?? {}));
+      const _fixtureInput = { project: "prj_userservice", envVars: "[{\"key\":\"DATABASE_URL\",\"value\":\"postgres://localhost\"}]" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(vercelRuntimeHandler.configureEnv({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "env_vars_empty_project" -> ok', async () => {
       if (typeof vercelRuntimeHandler.configureEnv !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" }), storage);
-      const result = await interpret(vercelRuntimeHandler.configureEnv({ project: "", envVars: "[]" }), storage);
+      const afterResult_provision_nextjs = await interpret(vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_nextjs?.output ?? {}));
+      const _fixtureInput = { project: "", envVars: "[]" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(vercelRuntimeHandler.configureEnv({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -449,8 +489,13 @@ describe('VercelRuntime functional handler', () => {
     it('fixture "destroy_valid" -> ok', async () => {
       if (typeof vercelRuntimeHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" }), storage);
-      const result = await interpret(vercelRuntimeHandler.destroy({ project: "prj_userservice" }), storage);
+      const afterResult_provision_nextjs = await interpret(vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_nextjs?.output ?? {}));
+      const _fixtureInput = { project: "prj_userservice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(vercelRuntimeHandler.destroy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

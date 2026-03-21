@@ -155,8 +155,13 @@ describe('Property functional handler', () => {
     it('fixture "get_existing" -> ok', async () => {
       if (typeof propertyHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(propertyHandler.set({ entity: "page-1", key: "title", value: "Hello World" }), storage);
-      const result = await interpret(propertyHandler.get({ entity: "page-1", key: "title" }), storage);
+      const afterResult_set_title = await interpret(propertyHandler.set({ entity: "page-1", key: "title", value: "Hello World" }), storage);
+      const _pool = Object.assign({}, (afterResult_set_title?.output ?? {}));
+      const _fixtureInput = { entity: "page-1", key: "title" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(propertyHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('Property functional handler', () => {
     it('fixture "delete_existing" -> ok', async () => {
       if (typeof propertyHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(propertyHandler.set({ entity: "page-1", key: "title", value: "Hello World" }), storage);
-      const result = await interpret(propertyHandler.delete({ entity: "page-1", key: "title" }), storage);
+      const afterResult_set_title = await interpret(propertyHandler.set({ entity: "page-1", key: "title", value: "Hello World" }), storage);
+      const _pool = Object.assign({}, (afterResult_set_title?.output ?? {}));
+      const _fixtureInput = { entity: "page-1", key: "title" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(propertyHandler.delete({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('Property functional handler', () => {
     it('fixture "list_all_props" -> ok', async () => {
       if (typeof propertyHandler.listAll !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(propertyHandler.set({ entity: "page-1", key: "title", value: "Hello World" }), storage);
-      const result = await interpret(propertyHandler.listAll({ entity: "page-1" }), storage);
+      const afterResult_set_title = await interpret(propertyHandler.set({ entity: "page-1", key: "title", value: "Hello World" }), storage);
+      const _pool = Object.assign({}, (afterResult_set_title?.output ?? {}));
+      const _fixtureInput = { entity: "page-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(propertyHandler.listAll({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

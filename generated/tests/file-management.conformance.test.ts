@@ -101,8 +101,13 @@ describe('FileManagement functional handler', () => {
     it('fixture "upload_duplicate" -> ok', async () => {
       if (typeof fileManagementHandler.upload !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(fileManagementHandler.upload({ file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" }), storage);
-      const result = await interpret(fileManagementHandler.upload({ file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" }), storage);
+      const afterResult_upload_pdf = await interpret(fileManagementHandler.upload({ file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" }), storage);
+      const _pool = Object.assign({}, (afterResult_upload_pdf?.output ?? {}));
+      const _fixtureInput = { file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(fileManagementHandler.upload({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -163,8 +168,13 @@ describe('FileManagement functional handler', () => {
     it('fixture "add_usage_ok" -> ok', async () => {
       if (typeof fileManagementHandler.addUsage !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(fileManagementHandler.upload({ file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" }), storage);
-      const result = await interpret(fileManagementHandler.addUsage({ file: "report.pdf", entity: "article-1" }), storage);
+      const afterResult_upload_pdf = await interpret(fileManagementHandler.upload({ file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" }), storage);
+      const _pool = Object.assign({}, (afterResult_upload_pdf?.output ?? {}));
+      const _fixtureInput = { file: "report.pdf", entity: "article-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(fileManagementHandler.addUsage({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -233,8 +243,13 @@ describe('FileManagement functional handler', () => {
     it('fixture "remove_usage_ok" -> ok', async () => {
       if (typeof fileManagementHandler.removeUsage !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(fileManagementHandler.upload({ file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" }), storage);
-      const result = await interpret(fileManagementHandler.removeUsage({ file: "report.pdf", entity: "article-1" }), storage);
+      const afterResult_upload_pdf = await interpret(fileManagementHandler.upload({ file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" }), storage);
+      const _pool = Object.assign({}, (afterResult_upload_pdf?.output ?? {}));
+      const _fixtureInput = { file: "report.pdf", entity: "article-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(fileManagementHandler.removeUsage({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -303,8 +318,13 @@ describe('FileManagement functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof fileManagementHandler.garbageCollect !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(fileManagementHandler.upload({ file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" }), storage);
-      const result = await interpret(fileManagementHandler.garbageCollect({  }), storage);
+      const afterResult_upload_pdf = await interpret(fileManagementHandler.upload({ file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" }), storage);
+      const _pool = Object.assign({}, (afterResult_upload_pdf?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(fileManagementHandler.garbageCollect({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -365,8 +385,13 @@ describe('FileManagement functional handler', () => {
     it('fixture "get_existing" -> ok', async () => {
       if (typeof fileManagementHandler.getFile !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(fileManagementHandler.upload({ file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" }), storage);
-      const result = await interpret(fileManagementHandler.getFile({ file: "report.pdf" }), storage);
+      const afterResult_upload_pdf = await interpret(fileManagementHandler.upload({ file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" }), storage);
+      const _pool = Object.assign({}, (afterResult_upload_pdf?.output ?? {}));
+      const _fixtureInput = { file: "report.pdf" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(fileManagementHandler.getFile({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

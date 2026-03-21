@@ -155,8 +155,13 @@ describe('Collection functional handler', () => {
     it('fixture "add_article_member" -> ok', async () => {
       if (typeof collectionHandler.addMember !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(collectionHandler.create({ collection: "articles", type: "list", schema: "article-v1" }), storage);
-      const result = await interpret(collectionHandler.addMember({ collection: "articles", member: "post-2026-01" }), storage);
+      const afterResult_create_articles = await interpret(collectionHandler.create({ collection: "articles", type: "list", schema: "article-v1" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_articles?.output ?? {}));
+      const _fixtureInput = { collection: "articles", member: "post-2026-01" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(collectionHandler.addMember({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('Collection functional handler', () => {
     it('fixture "remove_article" -> ok', async () => {
       if (typeof collectionHandler.removeMember !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(collectionHandler.create({ collection: "articles", type: "list", schema: "article-v1" }), storage);
-      const result = await interpret(collectionHandler.removeMember({ collection: "articles", member: "post-2026-01" }), storage);
+      const afterResult_create_articles = await interpret(collectionHandler.create({ collection: "articles", type: "list", schema: "article-v1" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_articles?.output ?? {}));
+      const _fixtureInput = { collection: "articles", member: "post-2026-01" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(collectionHandler.removeMember({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('Collection functional handler', () => {
     it('fixture "get_article_members" -> ok', async () => {
       if (typeof collectionHandler.getMembers !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(collectionHandler.create({ collection: "articles", type: "list", schema: "article-v1" }), storage);
-      const result = await interpret(collectionHandler.getMembers({ collection: "articles" }), storage);
+      const afterResult_create_articles = await interpret(collectionHandler.create({ collection: "articles", type: "list", schema: "article-v1" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_articles?.output ?? {}));
+      const _fixtureInput = { collection: "articles" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(collectionHandler.getMembers({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -362,8 +377,13 @@ describe('Collection functional handler', () => {
     it('fixture "set_article_schema" -> ok', async () => {
       if (typeof collectionHandler.setSchema !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(collectionHandler.create({ collection: "articles", type: "list", schema: "article-v1" }), storage);
-      const result = await interpret(collectionHandler.setSchema({ collection: "articles", schema: "article-v2" }), storage);
+      const afterResult_create_articles = await interpret(collectionHandler.create({ collection: "articles", type: "list", schema: "article-v1" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_articles?.output ?? {}));
+      const _fixtureInput = { collection: "articles", schema: "article-v2" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(collectionHandler.setSchema({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

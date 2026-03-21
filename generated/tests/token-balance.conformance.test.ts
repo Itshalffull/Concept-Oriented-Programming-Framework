@@ -62,8 +62,13 @@ describe('TokenBalance imperative handler', () => {
     it('fixture "snapshot_block" -> ok', async () => {
       if (typeof tokenBalanceHandler.takeSnapshot !== 'function') return;
       const storage = createInMemoryStorage();
-      await tokenBalanceHandler.configure({ tokenContract: "0xGOV", snapshotBlock: "18000000" }, storage);
-      const result = await tokenBalanceHandler.takeSnapshot({ config: "tb-cfg-001", blockRef: "18000000" }, storage);
+      const afterResult_configure_gov_token = await tokenBalanceHandler.configure({ tokenContract: "0xGOV", snapshotBlock: "18000000" }, storage);
+      const _pool = Object.assign({}, (afterResult_configure_gov_token?.output ?? {}));
+      const _fixtureInput = { config: "tb-cfg-001", blockRef: "18000000" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await tokenBalanceHandler.takeSnapshot({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -89,8 +94,13 @@ describe('TokenBalance imperative handler', () => {
     it('fixture "set_balance_alice" -> ok', async () => {
       if (typeof tokenBalanceHandler.setBalance !== 'function') return;
       const storage = createInMemoryStorage();
-      await tokenBalanceHandler.configure({ tokenContract: "0xGOV", snapshotBlock: "18000000" }, storage);
-      const result = await tokenBalanceHandler.setBalance({ config: "tb-cfg-001", participant: "alice", balance: "500.0" }, storage);
+      const afterResult_configure_gov_token = await tokenBalanceHandler.configure({ tokenContract: "0xGOV", snapshotBlock: "18000000" }, storage);
+      const _pool = Object.assign({}, (afterResult_configure_gov_token?.output ?? {}));
+      const _fixtureInput = { config: "tb-cfg-001", participant: "alice", balance: "500.0" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await tokenBalanceHandler.setBalance({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -116,16 +126,26 @@ describe('TokenBalance imperative handler', () => {
     it('fixture "get_live_balance" -> ok', async () => {
       if (typeof tokenBalanceHandler.getBalance !== 'function') return;
       const storage = createInMemoryStorage();
-      await tokenBalanceHandler.configure({ tokenContract: "0xGOV", snapshotBlock: "18000000" }, storage);
-      const result = await tokenBalanceHandler.getBalance({ config: "tb-cfg-001", participant: "alice" }, storage);
+      const afterResult_configure_gov_token = await tokenBalanceHandler.configure({ tokenContract: "0xGOV", snapshotBlock: "18000000" }, storage);
+      const _pool = Object.assign({}, (afterResult_configure_gov_token?.output ?? {}));
+      const _fixtureInput = { config: "tb-cfg-001", participant: "alice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await tokenBalanceHandler.getBalance({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_snapshot_balance" -> ok', async () => {
       if (typeof tokenBalanceHandler.getBalance !== 'function') return;
       const storage = createInMemoryStorage();
-      await tokenBalanceHandler.configure({ tokenContract: "0xGOV", snapshotBlock: "18000000" }, storage);
-      const result = await tokenBalanceHandler.getBalance({ config: "tb-cfg-001", participant: "alice", snapshot: "tb-snap-001" }, storage);
+      const afterResult_configure_gov_token = await tokenBalanceHandler.configure({ tokenContract: "0xGOV", snapshotBlock: "18000000" }, storage);
+      const _pool = Object.assign({}, (afterResult_configure_gov_token?.output ?? {}));
+      const _fixtureInput = { config: "tb-cfg-001", participant: "alice", snapshot: "tb-snap-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await tokenBalanceHandler.getBalance({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 

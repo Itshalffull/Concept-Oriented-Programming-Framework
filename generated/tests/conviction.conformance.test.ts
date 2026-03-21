@@ -155,8 +155,13 @@ describe('Conviction functional handler', () => {
     it('fixture "stake_tokens" -> ok', async () => {
       if (typeof convictionHandler.stake !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(convictionHandler.registerProposal({ proposalRef: "proposal-infra-2026", requestedFunds: "5000.0", totalFunds: "100000.0" }), storage);
-      const result = await interpret(convictionHandler.stake({ proposal: "conviction-001", staker: "alice", amount: "500.0" }), storage);
+      const afterResult_register_infra_proposal = await interpret(convictionHandler.registerProposal({ proposalRef: "proposal-infra-2026", requestedFunds: "5000.0", totalFunds: "100000.0" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_infra_proposal?.output ?? {}));
+      const _fixtureInput = { proposal: "conviction-001", staker: "alice", amount: "500.0" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(convictionHandler.stake({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,9 +229,14 @@ describe('Conviction functional handler', () => {
     it('fixture "unstake_tokens" -> ok', async () => {
       if (typeof convictionHandler.unstake !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(convictionHandler.registerProposal({ proposalRef: "proposal-infra-2026", requestedFunds: "5000.0", totalFunds: "100000.0" }), storage);
-      await interpret(convictionHandler.stake({ proposal: "conviction-001", staker: "alice", amount: "500.0" }), storage);
-      const result = await interpret(convictionHandler.unstake({ proposal: "conviction-001", staker: "alice" }), storage);
+      const afterResult_register_infra_proposal = await interpret(convictionHandler.registerProposal({ proposalRef: "proposal-infra-2026", requestedFunds: "5000.0", totalFunds: "100000.0" }), storage);
+      const afterResult_stake_tokens = await interpret(convictionHandler.stake({ proposal: "conviction-001", staker: "alice", amount: "500.0" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_infra_proposal?.output ?? {}), (afterResult_stake_tokens?.output ?? {}));
+      const _fixtureInput = { proposal: "conviction-001", staker: "alice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(convictionHandler.unstake({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -294,8 +304,13 @@ describe('Conviction functional handler', () => {
     it('fixture "update_active" -> ok', async () => {
       if (typeof convictionHandler.updateConviction !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(convictionHandler.registerProposal({ proposalRef: "proposal-infra-2026", requestedFunds: "5000.0", totalFunds: "100000.0" }), storage);
-      const result = await interpret(convictionHandler.updateConviction({ proposal: "conviction-001" }), storage);
+      const afterResult_register_infra_proposal = await interpret(convictionHandler.registerProposal({ proposalRef: "proposal-infra-2026", requestedFunds: "5000.0", totalFunds: "100000.0" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_infra_proposal?.output ?? {}));
+      const _fixtureInput = { proposal: "conviction-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(convictionHandler.updateConviction({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

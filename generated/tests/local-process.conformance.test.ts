@@ -148,8 +148,13 @@ describe('LocalProcess functional handler', () => {
     it('fixture "register_wasm" -> ok', async () => {
       if (typeof localProcessHandler.registerRuntime !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(localProcessHandler.listRuntimes({  }), storage);
-      const result = await interpret(localProcessHandler.registerRuntime({ runtime: "wasm", providerName: "WasmProvider" }), storage);
+      const afterResult_valid = await interpret(localProcessHandler.listRuntimes({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { runtime: "wasm", providerName: "WasmProvider" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(localProcessHandler.registerRuntime({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -218,16 +223,26 @@ describe('LocalProcess functional handler', () => {
     it('fixture "wasm_inference" -> ok', async () => {
       if (typeof localProcessHandler.dispatch !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(localProcessHandler.listRuntimes({  }), storage);
-      const result = await interpret(localProcessHandler.dispatch({ runtime: "wasm", operation: "execute", moduleRef: "image-classifier.wasm", input: "{\"image\": \"base64data\"}", config: "{\"memoryLimit\": 256}" }), storage);
+      const afterResult_valid = await interpret(localProcessHandler.listRuntimes({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { runtime: "wasm", operation: "execute", moduleRef: "image-classifier.wasm", input: "{\"image\": \"base64data\"}", config: "{\"memoryLimit\": 256}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(localProcessHandler.dispatch({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_runtime" -> runtimeNotFound', async () => {
       if (typeof localProcessHandler.dispatch !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(localProcessHandler.listRuntimes({  }), storage);
-      const result = await interpret(localProcessHandler.dispatch({ runtime: "cuda", operation: "compute", moduleRef: "model.bin", input: "{}", config: "{}" }), storage);
+      const afterResult_valid = await interpret(localProcessHandler.listRuntimes({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { runtime: "cuda", operation: "compute", moduleRef: "model.bin", input: "{}", config: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(localProcessHandler.dispatch({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('runtimeNotFound'));
     });
@@ -235,8 +250,13 @@ describe('LocalProcess functional handler', () => {
     it('fixture "failed_execution" -> error', async () => {
       if (typeof localProcessHandler.dispatch !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(localProcessHandler.listRuntimes({  }), storage);
-      const result = await interpret(localProcessHandler.dispatch({ runtime: "wasm", operation: "execute", moduleRef: "broken-module.wasm", input: "{}", config: "{}" }), storage);
+      const afterResult_valid = await interpret(localProcessHandler.listRuntimes({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { runtime: "wasm", operation: "execute", moduleRef: "broken-module.wasm", input: "{}", config: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(localProcessHandler.dispatch({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -297,8 +317,13 @@ describe('LocalProcess functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof localProcessHandler.listRuntimes !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(localProcessHandler.listRuntimes({  }), storage);
-      const result = await interpret(localProcessHandler.listRuntimes({  }), storage);
+      const afterResult_valid = await interpret(localProcessHandler.listRuntimes({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(localProcessHandler.listRuntimes({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

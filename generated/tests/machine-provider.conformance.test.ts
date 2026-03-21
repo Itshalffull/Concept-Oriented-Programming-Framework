@@ -155,16 +155,26 @@ describe('MachineProvider functional handler', () => {
     it('fixture "spawn_dialog" -> ok', async () => {
       if (typeof machineProviderHandler.spawn !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(machineProviderHandler.initialize({ config: "{}" }), storage);
-      const result = await interpret(machineProviderHandler.spawn({ provider: "mp-1", widget: "dialog", context: "{}" }), storage);
+      const afterResult_init_default = await interpret(machineProviderHandler.initialize({ config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_init_default?.output ?? {}));
+      const _fixtureInput = { provider: "mp-1", widget: "dialog", context: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(machineProviderHandler.spawn({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "spawn_empty_widget" -> error', async () => {
       if (typeof machineProviderHandler.spawn !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(machineProviderHandler.initialize({ config: "{}" }), storage);
-      const result = await interpret(machineProviderHandler.spawn({ provider: "mp-1", widget: "", context: "{}" }), storage);
+      const afterResult_init_default = await interpret(machineProviderHandler.initialize({ config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_init_default?.output ?? {}));
+      const _fixtureInput = { provider: "mp-1", widget: "", context: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(machineProviderHandler.spawn({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -225,8 +235,13 @@ describe('MachineProvider functional handler', () => {
     it('fixture "send_open" -> ok', async () => {
       if (typeof machineProviderHandler.send !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(machineProviderHandler.initialize({ config: "{}" }), storage);
-      const result = await interpret(machineProviderHandler.send({ provider: "mp-1", machine: "machine-1", event: "OPEN" }), storage);
+      const afterResult_init_default = await interpret(machineProviderHandler.initialize({ config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_init_default?.output ?? {}));
+      const _fixtureInput = { provider: "mp-1", machine: "machine-1", event: "OPEN" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(machineProviderHandler.send({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -294,8 +309,13 @@ describe('MachineProvider functional handler', () => {
     it('fixture "connect_valid" -> ok', async () => {
       if (typeof machineProviderHandler.connect !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(machineProviderHandler.initialize({ config: "{}" }), storage);
-      const result = await interpret(machineProviderHandler.connect({ provider: "mp-1", machine: "machine-1" }), storage);
+      const afterResult_init_default = await interpret(machineProviderHandler.initialize({ config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_init_default?.output ?? {}));
+      const _fixtureInput = { provider: "mp-1", machine: "machine-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(machineProviderHandler.connect({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -363,8 +383,13 @@ describe('MachineProvider functional handler', () => {
     it('fixture "destroy_valid" -> ok', async () => {
       if (typeof machineProviderHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(machineProviderHandler.initialize({ config: "{}" }), storage);
-      const result = await interpret(machineProviderHandler.destroy({ provider: "mp-1", machine: "machine-1" }), storage);
+      const afterResult_init_default = await interpret(machineProviderHandler.initialize({ config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_init_default?.output ?? {}));
+      const _fixtureInput = { provider: "mp-1", machine: "machine-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(machineProviderHandler.destroy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

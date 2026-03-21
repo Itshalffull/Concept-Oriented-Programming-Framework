@@ -244,24 +244,39 @@ describe('Toolchain functional handler', () => {
     it('fixture "list_all" -> ok', async () => {
       if (typeof toolchainHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(toolchainHandler.resolve({ language: "swift", platform: "linux-arm64" }), storage);
-      const result = await interpret(toolchainHandler.list({  }), storage);
+      const afterResult_resolve_swift_compiler = await interpret(toolchainHandler.resolve({ language: "swift", platform: "linux-arm64" }), storage);
+      const _pool = Object.assign({}, (afterResult_resolve_swift_compiler?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(toolchainHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "list_by_language" -> ok', async () => {
       if (typeof toolchainHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(toolchainHandler.resolve({ language: "swift", platform: "linux-arm64" }), storage);
-      const result = await interpret(toolchainHandler.list({ language: "typescript" }), storage);
+      const afterResult_resolve_swift_compiler = await interpret(toolchainHandler.resolve({ language: "swift", platform: "linux-arm64" }), storage);
+      const _pool = Object.assign({}, (afterResult_resolve_swift_compiler?.output ?? {}));
+      const _fixtureInput = { language: "typescript" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(toolchainHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "list_by_category" -> ok', async () => {
       if (typeof toolchainHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(toolchainHandler.resolve({ language: "swift", platform: "linux-arm64" }), storage);
-      const result = await interpret(toolchainHandler.list({ category: "unit-runner" }), storage);
+      const afterResult_resolve_swift_compiler = await interpret(toolchainHandler.resolve({ language: "swift", platform: "linux-arm64" }), storage);
+      const _pool = Object.assign({}, (afterResult_resolve_swift_compiler?.output ?? {}));
+      const _fixtureInput = { category: "unit-runner" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(toolchainHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -322,8 +337,13 @@ describe('Toolchain functional handler', () => {
     it('fixture "capabilities_existing" -> ok', async () => {
       if (typeof toolchainHandler.capabilities !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(toolchainHandler.resolve({ language: "swift", platform: "linux-arm64" }), storage);
-      const result = await interpret(toolchainHandler.capabilities({ tool: "tc-abc123" }), storage);
+      const afterResult_resolve_swift_compiler = await interpret(toolchainHandler.resolve({ language: "swift", platform: "linux-arm64" }), storage);
+      const _pool = Object.assign({}, (afterResult_resolve_swift_compiler?.output ?? {}));
+      const _fixtureInput = { tool: "tc-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(toolchainHandler.capabilities({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

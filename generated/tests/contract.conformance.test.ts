@@ -63,8 +63,13 @@ describe('Contract imperative handler', () => {
     it('fixture "valid_verify" -> ok', async () => {
       if (typeof contractHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
-      await contractHandler.define({ name: "user-password-contract", source_concept: "clef/concept/User", target_concept: "clef/concept/Password", assumptions: "[\"user-exists-before-password\"]", guarantees: "[\"password-hash-nonzero\"]" }, storage);
-      const result = await contractHandler.verify({ id: "ct-001" }, storage);
+      const afterResult_valid_define = await contractHandler.define({ name: "user-password-contract", source_concept: "clef/concept/User", target_concept: "clef/concept/Password", assumptions: "[\"user-exists-before-password\"]", guarantees: "[\"password-hash-nonzero\"]" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
+      const _fixtureInput = { id: "ct-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await contractHandler.verify({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -91,8 +96,13 @@ describe('Contract imperative handler', () => {
     it('fixture "valid_compose" -> ok', async () => {
       if (typeof contractHandler.compose !== 'function') return;
       const storage = createInMemoryStorage();
-      await contractHandler.define({ name: "user-password-contract", source_concept: "clef/concept/User", target_concept: "clef/concept/Password", assumptions: "[\"user-exists-before-password\"]", guarantees: "[\"password-hash-nonzero\"]" }, storage);
-      const result = await contractHandler.compose({ contract_ids: "[\"ct-001\",\"ct-002\"]" }, storage);
+      const afterResult_valid_define = await contractHandler.define({ name: "user-password-contract", source_concept: "clef/concept/User", target_concept: "clef/concept/Password", assumptions: "[\"user-exists-before-password\"]", guarantees: "[\"password-hash-nonzero\"]" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
+      const _fixtureInput = { contract_ids: "[\"ct-001\",\"ct-002\"]" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await contractHandler.compose({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -119,8 +129,13 @@ describe('Contract imperative handler', () => {
     it('fixture "valid_discharge" -> ok', async () => {
       if (typeof contractHandler.discharge !== 'function') return;
       const storage = createInMemoryStorage();
-      await contractHandler.define({ name: "user-password-contract", source_concept: "clef/concept/User", target_concept: "clef/concept/Password", assumptions: "[\"user-exists-before-password\"]", guarantees: "[\"password-hash-nonzero\"]" }, storage);
-      const result = await contractHandler.discharge({ id: "ct-001", assumption_ref: "user-exists-before-password" }, storage);
+      const afterResult_valid_define = await contractHandler.define({ name: "user-password-contract", source_concept: "clef/concept/User", target_concept: "clef/concept/Password", assumptions: "[\"user-exists-before-password\"]", guarantees: "[\"password-hash-nonzero\"]" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
+      const _fixtureInput = { id: "ct-001", assumption_ref: "user-exists-before-password" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await contractHandler.discharge({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -147,16 +162,26 @@ describe('Contract imperative handler', () => {
     it('fixture "list_all" -> ok', async () => {
       if (typeof contractHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await contractHandler.define({ name: "user-password-contract", source_concept: "clef/concept/User", target_concept: "clef/concept/Password", assumptions: "[\"user-exists-before-password\"]", guarantees: "[\"password-hash-nonzero\"]" }, storage);
-      const result = await contractHandler.list({  }, storage);
+      const afterResult_valid_define = await contractHandler.define({ name: "user-password-contract", source_concept: "clef/concept/User", target_concept: "clef/concept/Password", assumptions: "[\"user-exists-before-password\"]", guarantees: "[\"password-hash-nonzero\"]" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await contractHandler.list({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "list_by_source" -> ok', async () => {
       if (typeof contractHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await contractHandler.define({ name: "user-password-contract", source_concept: "clef/concept/User", target_concept: "clef/concept/Password", assumptions: "[\"user-exists-before-password\"]", guarantees: "[\"password-hash-nonzero\"]" }, storage);
-      const result = await contractHandler.list({ source_concept: "clef/concept/User" }, storage);
+      const afterResult_valid_define = await contractHandler.define({ name: "user-password-contract", source_concept: "clef/concept/User", target_concept: "clef/concept/Password", assumptions: "[\"user-exists-before-password\"]", guarantees: "[\"password-hash-nonzero\"]" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
+      const _fixtureInput = { source_concept: "clef/concept/User" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await contractHandler.list({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 

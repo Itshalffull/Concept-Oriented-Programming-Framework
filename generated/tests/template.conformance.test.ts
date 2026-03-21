@@ -94,8 +94,13 @@ describe('Template functional handler', () => {
     it('fixture "duplicate_define" -> exists', async () => {
       if (typeof templateHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(templateHandler.define({ template: "welcome-email", body: "Hello {{name}}", variables: "name" }), storage);
-      const result = await interpret(templateHandler.define({ template: "welcome-email", body: "Hi {{name}}", variables: "name" }), storage);
+      const afterResult_valid_define = await interpret(templateHandler.define({ template: "welcome-email", body: "Hello {{name}}", variables: "name" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
+      const _fixtureInput = { template: "welcome-email", body: "Hi {{name}}", variables: "name" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(templateHandler.define({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('exists'));
     });
@@ -157,8 +162,13 @@ describe('Template functional handler', () => {
     it('fixture "valid_instantiate" -> ok', async () => {
       if (typeof templateHandler.instantiate !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(templateHandler.define({ template: "welcome-email", body: "Hello {{name}}", variables: "name" }), storage);
-      const result = await interpret(templateHandler.instantiate({ template: "welcome-email", values: "name=World" }), storage);
+      const afterResult_valid_define = await interpret(templateHandler.define({ template: "welcome-email", body: "Hello {{name}}", variables: "name" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
+      const _fixtureInput = { template: "welcome-email", values: "name=World" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(templateHandler.instantiate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -227,8 +237,13 @@ describe('Template functional handler', () => {
     it('fixture "valid_trigger" -> ok', async () => {
       if (typeof templateHandler.registerTrigger !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(templateHandler.define({ template: "welcome-email", body: "Hello {{name}}", variables: "name" }), storage);
-      const result = await interpret(templateHandler.registerTrigger({ template: "welcome-email", trigger: "on-signup" }), storage);
+      const afterResult_valid_define = await interpret(templateHandler.define({ template: "welcome-email", body: "Hello {{name}}", variables: "name" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
+      const _fixtureInput = { template: "welcome-email", trigger: "on-signup" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(templateHandler.registerTrigger({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -297,8 +312,13 @@ describe('Template functional handler', () => {
     it('fixture "valid_merge" -> ok', async () => {
       if (typeof templateHandler.mergeProperties !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(templateHandler.define({ template: "welcome-email", body: "Hello {{name}}", variables: "name" }), storage);
-      const result = await interpret(templateHandler.mergeProperties({ template: "welcome-email", properties: "greeting,signature" }), storage);
+      const afterResult_valid_define = await interpret(templateHandler.define({ template: "welcome-email", body: "Hello {{name}}", variables: "name" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
+      const _fixtureInput = { template: "welcome-email", properties: "greeting,signature" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(templateHandler.mergeProperties({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -155,8 +155,13 @@ describe('Metric functional handler', () => {
     it('fixture "update_revenue" -> ok', async () => {
       if (typeof metricHandler.update !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" }), storage);
-      const result = await interpret(metricHandler.update({ metric: "metric-001", value: "150000.0", source: "finance-api" }), storage);
+      const afterResult_define_revenue = await interpret(metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_revenue?.output ?? {}));
+      const _fixtureInput = { metric: "metric-001", value: "150000.0", source: "finance-api" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(metricHandler.update({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('Metric functional handler', () => {
     it('fixture "set_revenue_threshold" -> ok', async () => {
       if (typeof metricHandler.setThreshold !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" }), storage);
-      const result = await interpret(metricHandler.setThreshold({ metric: "metric-001", threshold: "100000.0", alertOnBreach: "true" }), storage);
+      const afterResult_define_revenue = await interpret(metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_revenue?.output ?? {}));
+      const _fixtureInput = { metric: "metric-001", threshold: "100000.0", alertOnBreach: "true" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(metricHandler.setThreshold({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('Metric functional handler', () => {
     it('fixture "evaluate_existing" -> ok', async () => {
       if (typeof metricHandler.evaluate !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" }), storage);
-      const result = await interpret(metricHandler.evaluate({ metric: "metric-001" }), storage);
+      const afterResult_define_revenue = await interpret(metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_revenue?.output ?? {}));
+      const _fixtureInput = { metric: "metric-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(metricHandler.evaluate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

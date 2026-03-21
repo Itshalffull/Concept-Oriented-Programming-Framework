@@ -155,16 +155,26 @@ describe('ContentParser functional handler', () => {
     it('fixture "register_tag_extractor" -> ok', async () => {
       if (typeof contentParserHandler.registerExtractor !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(contentParserHandler.registerFormat({ name: "markdown", grammar: "{\"block\":\"paragraph\"}" }), storage);
-      const result = await interpret(contentParserHandler.registerExtractor({ name: "tags", pattern: "#(\\w+)" }), storage);
+      const afterResult_register_markdown = await interpret(contentParserHandler.registerFormat({ name: "markdown", grammar: "{\"block\":\"paragraph\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_markdown?.output ?? {}));
+      const _fixtureInput = { name: "tags", pattern: "#(\\w+)" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(contentParserHandler.registerExtractor({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_empty_extractor" -> ok', async () => {
       if (typeof contentParserHandler.registerExtractor !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(contentParserHandler.registerFormat({ name: "markdown", grammar: "{\"block\":\"paragraph\"}" }), storage);
-      const result = await interpret(contentParserHandler.registerExtractor({ name: "", pattern: "" }), storage);
+      const afterResult_register_markdown = await interpret(contentParserHandler.registerFormat({ name: "markdown", grammar: "{\"block\":\"paragraph\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_markdown?.output ?? {}));
+      const _fixtureInput = { name: "", pattern: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(contentParserHandler.registerExtractor({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('ContentParser functional handler', () => {
     it('fixture "extract_refs" -> ok', async () => {
       if (typeof contentParserHandler.extractRefs !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(contentParserHandler.registerFormat({ name: "markdown", grammar: "{\"block\":\"paragraph\"}" }), storage);
-      const result = await interpret(contentParserHandler.extractRefs({ content: "doc-1" }), storage);
+      const afterResult_register_markdown = await interpret(contentParserHandler.registerFormat({ name: "markdown", grammar: "{\"block\":\"paragraph\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_markdown?.output ?? {}));
+      const _fixtureInput = { content: "doc-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(contentParserHandler.extractRefs({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -362,8 +377,13 @@ describe('ContentParser functional handler', () => {
     it('fixture "extract_tags" -> ok', async () => {
       if (typeof contentParserHandler.extractTags !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(contentParserHandler.registerFormat({ name: "markdown", grammar: "{\"block\":\"paragraph\"}" }), storage);
-      const result = await interpret(contentParserHandler.extractTags({ content: "doc-1" }), storage);
+      const afterResult_register_markdown = await interpret(contentParserHandler.registerFormat({ name: "markdown", grammar: "{\"block\":\"paragraph\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_markdown?.output ?? {}));
+      const _fixtureInput = { content: "doc-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(contentParserHandler.extractTags({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -431,8 +451,13 @@ describe('ContentParser functional handler', () => {
     it('fixture "extract_props" -> ok', async () => {
       if (typeof contentParserHandler.extractProperties !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(contentParserHandler.registerFormat({ name: "markdown", grammar: "{\"block\":\"paragraph\"}" }), storage);
-      const result = await interpret(contentParserHandler.extractProperties({ content: "doc-1" }), storage);
+      const afterResult_register_markdown = await interpret(contentParserHandler.registerFormat({ name: "markdown", grammar: "{\"block\":\"paragraph\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_markdown?.output ?? {}));
+      const _fixtureInput = { content: "doc-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(contentParserHandler.extractProperties({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

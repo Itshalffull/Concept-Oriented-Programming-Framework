@@ -230,8 +230,13 @@ describe('RegistryScaffoldGen functional handler', () => {
     it('fixture "valid_register" -> ok', async () => {
       if (typeof registryScaffoldGenHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(registryScaffoldGenHandler.generate({ deployManifest: "deploys/production.deploy.yaml", outputPath: "generated/kernel-registry.ts", language: "typescript" }), storage);
-      const result = await interpret(registryScaffoldGenHandler.register({  }), storage);
+      const afterResult_valid_generate = await interpret(registryScaffoldGenHandler.generate({ deployManifest: "deploys/production.deploy.yaml", outputPath: "generated/kernel-registry.ts", language: "typescript" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_generate?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(registryScaffoldGenHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

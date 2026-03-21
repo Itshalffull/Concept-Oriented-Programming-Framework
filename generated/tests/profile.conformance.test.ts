@@ -148,8 +148,13 @@ describe('Profile functional handler', () => {
     it('fixture "existing_profile" -> ok', async () => {
       if (typeof profileHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(profileHandler.update({ user: "alice", bio: "Software engineer from Seattle", image: "https://cdn.example.com/alice.jpg" }), storage);
-      const result = await interpret(profileHandler.get({ user: "alice" }), storage);
+      const afterResult_complete_profile = await interpret(profileHandler.update({ user: "alice", bio: "Software engineer from Seattle", image: "https://cdn.example.com/alice.jpg" }), storage);
+      const _pool = Object.assign({}, (afterResult_complete_profile?.output ?? {}));
+      const _fixtureInput = { user: "alice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(profileHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

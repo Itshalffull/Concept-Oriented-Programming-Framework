@@ -155,8 +155,13 @@ describe('OptimismProvider functional handler', () => {
     it('fixture "poll_existing" -> ok', async () => {
       if (typeof optimismProviderHandler.poll !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(optimismProviderHandler.register({ rpc_url: "https://mainnet.optimism.io", l1_bridge_address: "0x99C9fc46f92E8a1c0deC1b1747d010903E884bE1" }), storage);
-      const result = await interpret(optimismProviderHandler.poll({ provider: "op-provider-1" }), storage);
+      const afterResult_register_mainnet = await interpret(optimismProviderHandler.register({ rpc_url: "https://mainnet.optimism.io", l1_bridge_address: "0x99C9fc46f92E8a1c0deC1b1747d010903E884bE1" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_mainnet?.output ?? {}));
+      const _fixtureInput = { provider: "op-provider-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(optimismProviderHandler.poll({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('OptimismProvider functional handler', () => {
     it('fixture "check_finalized_tx" -> ok', async () => {
       if (typeof optimismProviderHandler.checkFinality !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(optimismProviderHandler.register({ rpc_url: "https://mainnet.optimism.io", l1_bridge_address: "0x99C9fc46f92E8a1c0deC1b1747d010903E884bE1" }), storage);
-      const result = await interpret(optimismProviderHandler.checkFinality({ provider: "op-provider-1", tx_hash: "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890" }), storage);
+      const afterResult_register_mainnet = await interpret(optimismProviderHandler.register({ rpc_url: "https://mainnet.optimism.io", l1_bridge_address: "0x99C9fc46f92E8a1c0deC1b1747d010903E884bE1" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_mainnet?.output ?? {}));
+      const _fixtureInput = { provider: "op-provider-1", tx_hash: "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(optimismProviderHandler.checkFinality({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('OptimismProvider functional handler', () => {
     it('fixture "relay_valid_message" -> ok', async () => {
       if (typeof optimismProviderHandler.relayMessage !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(optimismProviderHandler.register({ rpc_url: "https://mainnet.optimism.io", l1_bridge_address: "0x99C9fc46f92E8a1c0deC1b1747d010903E884bE1" }), storage);
-      const result = await interpret(optimismProviderHandler.relayMessage({ provider: "op-provider-1", message_hash: "0xdeadbeef1234567890abcdef1234567890abcdef1234567890abcdef12345678" }), storage);
+      const afterResult_register_mainnet = await interpret(optimismProviderHandler.register({ rpc_url: "https://mainnet.optimism.io", l1_bridge_address: "0x99C9fc46f92E8a1c0deC1b1747d010903E884bE1" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_mainnet?.output ?? {}));
+      const _fixtureInput = { provider: "op-provider-1", message_hash: "0xdeadbeef1234567890abcdef1234567890abcdef1234567890abcdef12345678" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(optimismProviderHandler.relayMessage({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -163,8 +163,13 @@ describe('DataSource functional handler', () => {
     it('fixture "connect_existing" -> ok', async () => {
       if (typeof dataSourceHandler.connect !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(dataSourceHandler.register({ name: "blog_api", uri: "https://blog.example.com/api", credentials: "token:abc123" }), storage);
-      const result = await interpret(dataSourceHandler.connect({ sourceId: "src-1" }), storage);
+      const afterResult_register_api = await interpret(dataSourceHandler.register({ name: "blog_api", uri: "https://blog.example.com/api", credentials: "token:abc123" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_api?.output ?? {}));
+      const _fixtureInput = { sourceId: "src-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(dataSourceHandler.connect({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -233,8 +238,13 @@ describe('DataSource functional handler', () => {
     it('fixture "discover_existing" -> ok', async () => {
       if (typeof dataSourceHandler.discover !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(dataSourceHandler.register({ name: "blog_api", uri: "https://blog.example.com/api", credentials: "token:abc123" }), storage);
-      const result = await interpret(dataSourceHandler.discover({ sourceId: "src-1" }), storage);
+      const afterResult_register_api = await interpret(dataSourceHandler.register({ name: "blog_api", uri: "https://blog.example.com/api", credentials: "token:abc123" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_api?.output ?? {}));
+      const _fixtureInput = { sourceId: "src-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(dataSourceHandler.discover({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -303,8 +313,13 @@ describe('DataSource functional handler', () => {
     it('fixture "health_existing" -> ok', async () => {
       if (typeof dataSourceHandler.healthCheck !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(dataSourceHandler.register({ name: "blog_api", uri: "https://blog.example.com/api", credentials: "token:abc123" }), storage);
-      const result = await interpret(dataSourceHandler.healthCheck({ sourceId: "src-1" }), storage);
+      const afterResult_register_api = await interpret(dataSourceHandler.register({ name: "blog_api", uri: "https://blog.example.com/api", credentials: "token:abc123" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_api?.output ?? {}));
+      const _fixtureInput = { sourceId: "src-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(dataSourceHandler.healthCheck({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -373,8 +388,13 @@ describe('DataSource functional handler', () => {
     it('fixture "deactivate_existing" -> ok', async () => {
       if (typeof dataSourceHandler.deactivate !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(dataSourceHandler.register({ name: "blog_api", uri: "https://blog.example.com/api", credentials: "token:abc123" }), storage);
-      const result = await interpret(dataSourceHandler.deactivate({ sourceId: "src-1" }), storage);
+      const afterResult_register_api = await interpret(dataSourceHandler.register({ name: "blog_api", uri: "https://blog.example.com/api", credentials: "token:abc123" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_api?.output ?? {}));
+      const _fixtureInput = { sourceId: "src-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(dataSourceHandler.deactivate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

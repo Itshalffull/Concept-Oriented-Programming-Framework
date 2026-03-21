@@ -162,8 +162,13 @@ describe('WidgetEntity functional handler', () => {
     it('fixture "get_dialog" -> ok', async () => {
       if (typeof widgetEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
-      const result = await interpret(widgetEntityHandler.get({ name: "dialog" }), storage);
+      const afterResult_register_dialog = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_dialog?.output ?? {}));
+      const _fixtureInput = { name: "dialog" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetEntityHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -231,8 +236,13 @@ describe('WidgetEntity functional handler', () => {
     it('fixture "find_single_choice" -> ok', async () => {
       if (typeof widgetEntityHandler.findByAffordance !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
-      const result = await interpret(widgetEntityHandler.findByAffordance({ interactor: "single-choice" }), storage);
+      const afterResult_register_dialog = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_dialog?.output ?? {}));
+      const _fixtureInput = { interactor: "single-choice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetEntityHandler.findByAffordance({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -300,32 +310,52 @@ describe('WidgetEntity functional handler', () => {
     it('fixture "composing_valid" -> ok', async () => {
       if (typeof widgetEntityHandler.findComposing !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
-      const result = await interpret(widgetEntityHandler.findComposing({ widget: "widget-entity-1" }), storage);
+      const afterResult_register_dialog = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_dialog?.output ?? {}));
+      const _fixtureInput = { widget: "widget-entity-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetEntityHandler.findComposing({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "composing_missing" -> ok', async () => {
       if (typeof widgetEntityHandler.findComposing !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
-      const result = await interpret(widgetEntityHandler.findComposing({ widget: "nonexistent-id" }), storage);
+      const afterResult_register_dialog = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_dialog?.output ?? {}));
+      const _fixtureInput = { widget: "nonexistent-id" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetEntityHandler.findComposing({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_composing" -> ok', async () => {
       if (typeof widgetEntityHandler.findComposing !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
-      const result = await interpret(widgetEntityHandler.findComposing({ widget: "widget-entity-1" }), storage);
+      const afterResult_register_dialog = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_dialog?.output ?? {}));
+      const _fixtureInput = { widget: "widget-entity-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetEntityHandler.findComposing({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_composing_missing" -> ok', async () => {
       if (typeof widgetEntityHandler.findComposing !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
-      const result = await interpret(widgetEntityHandler.findComposing({ widget: "nonexistent" }), storage);
+      const afterResult_register_dialog = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_dialog?.output ?? {}));
+      const _fixtureInput = { widget: "nonexistent" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetEntityHandler.findComposing({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -386,32 +416,52 @@ describe('WidgetEntity functional handler', () => {
     it('fixture "composed_valid" -> ok', async () => {
       if (typeof widgetEntityHandler.findComposedBy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
-      const result = await interpret(widgetEntityHandler.findComposedBy({ widget: "widget-entity-1" }), storage);
+      const afterResult_register_dialog = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_dialog?.output ?? {}));
+      const _fixtureInput = { widget: "widget-entity-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetEntityHandler.findComposedBy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "composed_missing" -> ok', async () => {
       if (typeof widgetEntityHandler.findComposedBy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
-      const result = await interpret(widgetEntityHandler.findComposedBy({ widget: "nonexistent-id" }), storage);
+      const afterResult_register_dialog = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_dialog?.output ?? {}));
+      const _fixtureInput = { widget: "nonexistent-id" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetEntityHandler.findComposedBy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_composed" -> ok', async () => {
       if (typeof widgetEntityHandler.findComposedBy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
-      const result = await interpret(widgetEntityHandler.findComposedBy({ widget: "widget-entity-1" }), storage);
+      const afterResult_register_dialog = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_dialog?.output ?? {}));
+      const _fixtureInput = { widget: "widget-entity-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetEntityHandler.findComposedBy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_composed_missing" -> ok', async () => {
       if (typeof widgetEntityHandler.findComposedBy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
-      const result = await interpret(widgetEntityHandler.findComposedBy({ widget: "nonexistent" }), storage);
+      const afterResult_register_dialog = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_dialog?.output ?? {}));
+      const _fixtureInput = { widget: "nonexistent" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetEntityHandler.findComposedBy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -472,16 +522,26 @@ describe('WidgetEntity functional handler', () => {
     it('fixture "generated_valid" -> ok', async () => {
       if (typeof widgetEntityHandler.generatedComponents !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
-      const result = await interpret(widgetEntityHandler.generatedComponents({ widget: "widget-entity-1" }), storage);
+      const afterResult_register_dialog = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_dialog?.output ?? {}));
+      const _fixtureInput = { widget: "widget-entity-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetEntityHandler.generatedComponents({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "generated_missing" -> ok', async () => {
       if (typeof widgetEntityHandler.generatedComponents !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
-      const result = await interpret(widgetEntityHandler.generatedComponents({ widget: "nonexistent-id" }), storage);
+      const afterResult_register_dialog = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_dialog?.output ?? {}));
+      const _fixtureInput = { widget: "nonexistent-id" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetEntityHandler.generatedComponents({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -542,8 +602,13 @@ describe('WidgetEntity functional handler', () => {
     it('fixture "audit_valid" -> ok', async () => {
       if (typeof widgetEntityHandler.accessibilityAudit !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
-      const result = await interpret(widgetEntityHandler.accessibilityAudit({ widget: "widget-entity-1" }), storage);
+      const afterResult_register_dialog = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_dialog?.output ?? {}));
+      const _fixtureInput = { widget: "widget-entity-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetEntityHandler.accessibilityAudit({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -557,8 +622,13 @@ describe('WidgetEntity functional handler', () => {
     it('fixture "audit_widget" -> ok', async () => {
       if (typeof widgetEntityHandler.accessibilityAudit !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
-      const result = await interpret(widgetEntityHandler.accessibilityAudit({ widget: "widget-entity-1" }), storage);
+      const afterResult_register_dialog = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_dialog?.output ?? {}));
+      const _fixtureInput = { widget: "widget-entity-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetEntityHandler.accessibilityAudit({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -619,8 +689,13 @@ describe('WidgetEntity functional handler', () => {
     it('fixture "trace_valid" -> ok', async () => {
       if (typeof widgetEntityHandler.traceToConcept !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
-      const result = await interpret(widgetEntityHandler.traceToConcept({ widget: "widget-entity-1" }), storage);
+      const afterResult_register_dialog = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_dialog?.output ?? {}));
+      const _fixtureInput = { widget: "widget-entity-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetEntityHandler.traceToConcept({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

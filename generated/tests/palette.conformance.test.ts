@@ -171,16 +171,26 @@ describe('Palette functional handler', () => {
     it('fixture "assign_primary" -> ok', async () => {
       if (typeof paletteHandler.assignRole !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(paletteHandler.generate({ palette: "C-1", name: "blue", seed: "#3b82f6" }), storage);
-      const result = await interpret(paletteHandler.assignRole({ palette: "C-1", role: "primary" }), storage);
+      const afterResult_generate_blue = await interpret(paletteHandler.generate({ palette: "C-1", name: "blue", seed: "#3b82f6" }), storage);
+      const _pool = Object.assign({}, (afterResult_generate_blue?.output ?? {}));
+      const _fixtureInput = { palette: "C-1", role: "primary" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(paletteHandler.assignRole({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "assign_accent" -> ok', async () => {
       if (typeof paletteHandler.assignRole !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(paletteHandler.generate({ palette: "C-1", name: "blue", seed: "#3b82f6" }), storage);
-      const result = await interpret(paletteHandler.assignRole({ palette: "C-2", role: "accent" }), storage);
+      const afterResult_generate_blue = await interpret(paletteHandler.generate({ palette: "C-1", name: "blue", seed: "#3b82f6" }), storage);
+      const _pool = Object.assign({}, (afterResult_generate_blue?.output ?? {}));
+      const _fixtureInput = { palette: "C-2", role: "accent" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(paletteHandler.assignRole({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -249,8 +259,13 @@ describe('Palette functional handler', () => {
     it('fixture "contrast_blue_white" -> ok', async () => {
       if (typeof paletteHandler.checkContrast !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(paletteHandler.generate({ palette: "C-1", name: "blue", seed: "#3b82f6" }), storage);
-      const result = await interpret(paletteHandler.checkContrast({ foreground: "C-1", background: "C-2" }), storage);
+      const afterResult_generate_blue = await interpret(paletteHandler.generate({ palette: "C-1", name: "blue", seed: "#3b82f6" }), storage);
+      const _pool = Object.assign({}, (afterResult_generate_blue?.output ?? {}));
+      const _fixtureInput = { foreground: "C-1", background: "C-2" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(paletteHandler.checkContrast({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

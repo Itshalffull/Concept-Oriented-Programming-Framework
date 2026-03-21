@@ -155,8 +155,13 @@ describe('PeerAllocation functional handler', () => {
     it('fixture "allocate_to_peer" -> ok', async () => {
       if (typeof peerAllocationHandler.allocate !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(peerAllocationHandler.openRound({ budget: "100", deadlineDays: "7.0" }), storage);
-      const result = await interpret(peerAllocationHandler.allocate({ round: "peer-alloc-001", allocator: "alice", recipient: "bob", amount: "30", note: "Great code review" }), storage);
+      const afterResult_open_weekly_round = await interpret(peerAllocationHandler.openRound({ budget: "100", deadlineDays: "7.0" }), storage);
+      const _pool = Object.assign({}, (afterResult_open_weekly_round?.output ?? {}));
+      const _fixtureInput = { round: "peer-alloc-001", allocator: "alice", recipient: "bob", amount: "30", note: "Great code review" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(peerAllocationHandler.allocate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('PeerAllocation functional handler', () => {
     it('fixture "finalize_round" -> ok', async () => {
       if (typeof peerAllocationHandler.finalize !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(peerAllocationHandler.openRound({ budget: "100", deadlineDays: "7.0" }), storage);
-      const result = await interpret(peerAllocationHandler.finalize({ round: "peer-alloc-001" }), storage);
+      const afterResult_open_weekly_round = await interpret(peerAllocationHandler.openRound({ budget: "100", deadlineDays: "7.0" }), storage);
+      const _pool = Object.assign({}, (afterResult_open_weekly_round?.output ?? {}));
+      const _fixtureInput = { round: "peer-alloc-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(peerAllocationHandler.finalize({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

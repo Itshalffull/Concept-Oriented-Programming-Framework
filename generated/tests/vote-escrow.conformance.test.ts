@@ -62,8 +62,13 @@ describe('VoteEscrow imperative handler', () => {
     it('fixture "lock_full_term" -> ok', async () => {
       if (typeof voteEscrowHandler.lock !== 'function') return;
       const storage = createInMemoryStorage();
-      await voteEscrowHandler.configure({ token: "GOV", maxLockYears: "4.0" }, storage);
-      const result = await voteEscrowHandler.lock({ config: "ve-cfg-001", locker: "alice", amount: "1000.0", lockYears: "4.0" }, storage);
+      const afterResult_configure_default = await voteEscrowHandler.configure({ token: "GOV", maxLockYears: "4.0" }, storage);
+      const _pool = Object.assign({}, (afterResult_configure_default?.output ?? {}));
+      const _fixtureInput = { config: "ve-cfg-001", locker: "alice", amount: "1000.0", lockYears: "4.0" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await voteEscrowHandler.lock({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -89,8 +94,13 @@ describe('VoteEscrow imperative handler', () => {
     it('fixture "extend_by_one" -> ok', async () => {
       if (typeof voteEscrowHandler.extendLock !== 'function') return;
       const storage = createInMemoryStorage();
-      await voteEscrowHandler.configure({ token: "GOV", maxLockYears: "4.0" }, storage);
-      const result = await voteEscrowHandler.extendLock({ lock: "lock-001", additionalYears: "1.0" }, storage);
+      const afterResult_configure_default = await voteEscrowHandler.configure({ token: "GOV", maxLockYears: "4.0" }, storage);
+      const _pool = Object.assign({}, (afterResult_configure_default?.output ?? {}));
+      const _fixtureInput = { lock: "lock-001", additionalYears: "1.0" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await voteEscrowHandler.extendLock({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -116,8 +126,13 @@ describe('VoteEscrow imperative handler', () => {
     it('fixture "get_weight_alice" -> ok', async () => {
       if (typeof voteEscrowHandler.getWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await voteEscrowHandler.configure({ token: "GOV", maxLockYears: "4.0" }, storage);
-      const result = await voteEscrowHandler.getWeight({ config: "ve-cfg-001", participant: "alice" }, storage);
+      const afterResult_configure_default = await voteEscrowHandler.configure({ token: "GOV", maxLockYears: "4.0" }, storage);
+      const _pool = Object.assign({}, (afterResult_configure_default?.output ?? {}));
+      const _fixtureInput = { config: "ve-cfg-001", participant: "alice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await voteEscrowHandler.getWeight({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -143,8 +158,13 @@ describe('VoteEscrow imperative handler', () => {
     it('fixture "withdraw_expired" -> ok', async () => {
       if (typeof voteEscrowHandler.withdraw !== 'function') return;
       const storage = createInMemoryStorage();
-      await voteEscrowHandler.configure({ token: "GOV", maxLockYears: "4.0" }, storage);
-      const result = await voteEscrowHandler.withdraw({ lock: "lock-expired" }, storage);
+      const afterResult_configure_default = await voteEscrowHandler.configure({ token: "GOV", maxLockYears: "4.0" }, storage);
+      const _pool = Object.assign({}, (afterResult_configure_default?.output ?? {}));
+      const _fixtureInput = { lock: "lock-expired" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await voteEscrowHandler.withdraw({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 

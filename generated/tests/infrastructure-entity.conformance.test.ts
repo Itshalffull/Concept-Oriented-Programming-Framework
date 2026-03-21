@@ -155,8 +155,13 @@ describe('InfrastructureEntity functional handler', () => {
     it('fixture "get_app_storage" -> ok', async () => {
       if (typeof infrastructureEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage);
-      const result = await interpret(infrastructureEntityHandler.get({ name: "AppStorage", kind: "storage" }), storage);
+      const afterResult_register_app_storage = await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_app_storage?.output ?? {}));
+      const _fixtureInput = { name: "AppStorage", kind: "storage" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(infrastructureEntityHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,16 +229,26 @@ describe('InfrastructureEntity functional handler', () => {
     it('fixture "find_postgresql_adapters" -> ok', async () => {
       if (typeof infrastructureEntityHandler.findByBackend !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage);
-      const result = await interpret(infrastructureEntityHandler.findByBackend({ backend: "postgresql" }), storage);
+      const afterResult_register_app_storage = await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_app_storage?.output ?? {}));
+      const _fixtureInput = { backend: "postgresql" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(infrastructureEntityHandler.findByBackend({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_unknown_backend" -> ok', async () => {
       if (typeof infrastructureEntityHandler.findByBackend !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage);
-      const result = await interpret(infrastructureEntityHandler.findByBackend({ backend: "unknown-db" }), storage);
+      const afterResult_register_app_storage = await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_app_storage?.output ?? {}));
+      const _fixtureInput = { backend: "unknown-db" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(infrastructureEntityHandler.findByBackend({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -294,16 +309,26 @@ describe('InfrastructureEntity functional handler', () => {
     it('fixture "find_article_adapters" -> ok', async () => {
       if (typeof infrastructureEntityHandler.findByConcept !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage);
-      const result = await interpret(infrastructureEntityHandler.findByConcept({ concept: "Article" }), storage);
+      const afterResult_register_app_storage = await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_app_storage?.output ?? {}));
+      const _fixtureInput = { concept: "Article" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(infrastructureEntityHandler.findByConcept({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_unbound_concept" -> ok', async () => {
       if (typeof infrastructureEntityHandler.findByConcept !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage);
-      const result = await interpret(infrastructureEntityHandler.findByConcept({ concept: "Nonexistent" }), storage);
+      const afterResult_register_app_storage = await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_app_storage?.output ?? {}));
+      const _fixtureInput = { concept: "Nonexistent" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(infrastructureEntityHandler.findByConcept({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -364,16 +389,26 @@ describe('InfrastructureEntity functional handler', () => {
     it('fixture "find_api_runtime" -> ok', async () => {
       if (typeof infrastructureEntityHandler.findByRuntime !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage);
-      const result = await interpret(infrastructureEntityHandler.findByRuntime({ runtime: "api-server" }), storage);
+      const afterResult_register_app_storage = await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_app_storage?.output ?? {}));
+      const _fixtureInput = { runtime: "api-server" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(infrastructureEntityHandler.findByRuntime({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_unknown_runtime" -> ok', async () => {
       if (typeof infrastructureEntityHandler.findByRuntime !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage);
-      const result = await interpret(infrastructureEntityHandler.findByRuntime({ runtime: "nonexistent-runtime" }), storage);
+      const afterResult_register_app_storage = await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_app_storage?.output ?? {}));
+      const _fixtureInput = { runtime: "nonexistent-runtime" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(infrastructureEntityHandler.findByRuntime({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -434,16 +469,26 @@ describe('InfrastructureEntity functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof infrastructureEntityHandler.sharedBackends !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage);
-      const result = await interpret(infrastructureEntityHandler.sharedBackends({  }), storage);
+      const afterResult_register_app_storage = await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_app_storage?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(infrastructureEntityHandler.sharedBackends({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "shared_backend_failure" -> ok', async () => {
       if (typeof infrastructureEntityHandler.sharedBackends !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage);
-      const result = await interpret(infrastructureEntityHandler.sharedBackends({  }), storage);
+      const afterResult_register_app_storage = await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_app_storage?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(infrastructureEntityHandler.sharedBackends({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -504,16 +549,26 @@ describe('InfrastructureEntity functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof infrastructureEntityHandler.networkTopology !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage);
-      const result = await interpret(infrastructureEntityHandler.networkTopology({  }), storage);
+      const afterResult_register_app_storage = await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_app_storage?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(infrastructureEntityHandler.networkTopology({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "topology_failure" -> ok', async () => {
       if (typeof infrastructureEntityHandler.networkTopology !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage);
-      const result = await interpret(infrastructureEntityHandler.networkTopology({  }), storage);
+      const afterResult_register_app_storage = await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_app_storage?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(infrastructureEntityHandler.networkTopology({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

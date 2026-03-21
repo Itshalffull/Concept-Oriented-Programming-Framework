@@ -162,8 +162,13 @@ describe('GcpSmProvider functional handler', () => {
     it('fixture "rotate_db_password" -> ok', async () => {
       if (typeof gcpSmProviderHandler.rotate !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(gcpSmProviderHandler.fetch({ secretId: "db-password", version: "latest" }), storage);
-      const result = await interpret(gcpSmProviderHandler.rotate({ secretId: "db-password" }), storage);
+      const afterResult_fetch_db_password = await interpret(gcpSmProviderHandler.fetch({ secretId: "db-password", version: "latest" }), storage);
+      const _pool = Object.assign({}, (afterResult_fetch_db_password?.output ?? {}));
+      const _fixtureInput = { secretId: "db-password" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(gcpSmProviderHandler.rotate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

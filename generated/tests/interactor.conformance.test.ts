@@ -163,24 +163,39 @@ describe('Interactor functional handler', () => {
     it('fixture "field_classify" -> ok', async () => {
       if (typeof interactorHandler.classify !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(interactorHandler.define({ name: "single-choice", category: "selection", properties: "{\"cardinality\":\"one\",\"comparison\":true}" }), storage);
-      const result = await interpret(interactorHandler.classify({ fieldType: "String", constraints: "{\"cardinality\":\"one\"}", intent: "edit" }), storage);
+      const afterResult_valid_define = await interpret(interactorHandler.define({ name: "single-choice", category: "selection", properties: "{\"cardinality\":\"one\",\"comparison\":true}" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
+      const _fixtureInput = { fieldType: "String", constraints: "{\"cardinality\":\"one\"}", intent: "edit" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(interactorHandler.classify({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "entity_classify" -> ok', async () => {
       if (typeof interactorHandler.classify !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(interactorHandler.define({ name: "single-choice", category: "selection", properties: "{\"cardinality\":\"one\",\"comparison\":true}" }), storage);
-      const result = await interpret(interactorHandler.classify({ fieldType: "entity", constraints: "{\"concept\":\"Approval\",\"view\":\"detail\"}", intent: "" }), storage);
+      const afterResult_valid_define = await interpret(interactorHandler.define({ name: "single-choice", category: "selection", properties: "{\"cardinality\":\"one\",\"comparison\":true}" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
+      const _fixtureInput = { fieldType: "entity", constraints: "{\"concept\":\"Approval\",\"view\":\"detail\"}", intent: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(interactorHandler.classify({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "no_match" -> ambiguous', async () => {
       if (typeof interactorHandler.classify !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(interactorHandler.define({ name: "single-choice", category: "selection", properties: "{\"cardinality\":\"one\",\"comparison\":true}" }), storage);
-      const result = await interpret(interactorHandler.classify({ fieldType: "UnknownType", constraints: "{}", intent: "" }), storage);
+      const afterResult_valid_define = await interpret(interactorHandler.define({ name: "single-choice", category: "selection", properties: "{\"cardinality\":\"one\",\"comparison\":true}" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
+      const _fixtureInput = { fieldType: "UnknownType", constraints: "{}", intent: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(interactorHandler.classify({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('ambiguous'));
     });
@@ -242,8 +257,13 @@ describe('Interactor functional handler', () => {
     it('fixture "valid_get" -> ok', async () => {
       if (typeof interactorHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(interactorHandler.define({ name: "single-choice", category: "selection", properties: "{\"cardinality\":\"one\",\"comparison\":true}" }), storage);
-      const result = await interpret(interactorHandler.get({  }), storage);
+      const afterResult_valid_define = await interpret(interactorHandler.define({ name: "single-choice", category: "selection", properties: "{\"cardinality\":\"one\",\"comparison\":true}" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(interactorHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -312,16 +332,26 @@ describe('Interactor functional handler', () => {
     it('fixture "list_all" -> ok', async () => {
       if (typeof interactorHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(interactorHandler.define({ name: "single-choice", category: "selection", properties: "{\"cardinality\":\"one\",\"comparison\":true}" }), storage);
-      const result = await interpret(interactorHandler.list({  }), storage);
+      const afterResult_valid_define = await interpret(interactorHandler.define({ name: "single-choice", category: "selection", properties: "{\"cardinality\":\"one\",\"comparison\":true}" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(interactorHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "list_by_category" -> ok', async () => {
       if (typeof interactorHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(interactorHandler.define({ name: "single-choice", category: "selection", properties: "{\"cardinality\":\"one\",\"comparison\":true}" }), storage);
-      const result = await interpret(interactorHandler.list({ category: "selection" }), storage);
+      const afterResult_valid_define = await interpret(interactorHandler.define({ name: "single-choice", category: "selection", properties: "{\"cardinality\":\"one\",\"comparison\":true}" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
+      const _fixtureInput = { category: "selection" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(interactorHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

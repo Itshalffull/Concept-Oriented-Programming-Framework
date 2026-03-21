@@ -163,24 +163,39 @@ describe('Affordance functional handler', () => {
     it('fixture "valid_match" -> ok', async () => {
       if (typeof affordanceHandler.match !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(affordanceHandler.declare({ widget: "radio-group", interactor: "single-choice", specificity: "10", conditions: "{\"maxOptions\":8}", bind: "", contractVersion: "1" }), storage);
-      const result = await interpret(affordanceHandler.match({ interactor: "single-choice", context: "{\"optionCount\":4,\"platform\":\"browser\"}" }), storage);
+      const afterResult_valid_declare = await interpret(affordanceHandler.declare({ widget: "radio-group", interactor: "single-choice", specificity: "10", conditions: "{\"maxOptions\":8}", bind: "", contractVersion: "1" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_declare?.output ?? {}));
+      const _fixtureInput = { interactor: "single-choice", context: "{\"optionCount\":4,\"platform\":\"browser\"}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(affordanceHandler.match({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "entity_match" -> ok', async () => {
       if (typeof affordanceHandler.match !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(affordanceHandler.declare({ widget: "radio-group", interactor: "single-choice", specificity: "10", conditions: "{\"maxOptions\":8}", bind: "", contractVersion: "1" }), storage);
-      const result = await interpret(affordanceHandler.match({ interactor: "entity-detail", context: "{\"concept\":\"Approval\"}" }), storage);
+      const afterResult_valid_declare = await interpret(affordanceHandler.declare({ widget: "radio-group", interactor: "single-choice", specificity: "10", conditions: "{\"maxOptions\":8}", bind: "", contractVersion: "1" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_declare?.output ?? {}));
+      const _fixtureInput = { interactor: "entity-detail", context: "{\"concept\":\"Approval\"}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(affordanceHandler.match({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "no_match" -> none', async () => {
       if (typeof affordanceHandler.match !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(affordanceHandler.declare({ widget: "radio-group", interactor: "single-choice", specificity: "10", conditions: "{\"maxOptions\":8}", bind: "", contractVersion: "1" }), storage);
-      const result = await interpret(affordanceHandler.match({ interactor: "nonexistent-type", context: "{}" }), storage);
+      const afterResult_valid_declare = await interpret(affordanceHandler.declare({ widget: "radio-group", interactor: "single-choice", specificity: "10", conditions: "{\"maxOptions\":8}", bind: "", contractVersion: "1" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_declare?.output ?? {}));
+      const _fixtureInput = { interactor: "nonexistent-type", context: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(affordanceHandler.match({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('none'));
     });
@@ -242,8 +257,13 @@ describe('Affordance functional handler', () => {
     it('fixture "valid_explain" -> ok', async () => {
       if (typeof affordanceHandler.explain !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(affordanceHandler.declare({ widget: "radio-group", interactor: "single-choice", specificity: "10", conditions: "{\"maxOptions\":8}", bind: "", contractVersion: "1" }), storage);
-      const result = await interpret(affordanceHandler.explain({  }), storage);
+      const afterResult_valid_declare = await interpret(affordanceHandler.declare({ widget: "radio-group", interactor: "single-choice", specificity: "10", conditions: "{\"maxOptions\":8}", bind: "", contractVersion: "1" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_declare?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(affordanceHandler.explain({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -312,8 +332,13 @@ describe('Affordance functional handler', () => {
     it('fixture "valid_remove" -> ok', async () => {
       if (typeof affordanceHandler.remove !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(affordanceHandler.declare({ widget: "radio-group", interactor: "single-choice", specificity: "10", conditions: "{\"maxOptions\":8}", bind: "", contractVersion: "1" }), storage);
-      const result = await interpret(affordanceHandler.remove({  }), storage);
+      const afterResult_valid_declare = await interpret(affordanceHandler.declare({ widget: "radio-group", interactor: "single-choice", specificity: "10", conditions: "{\"maxOptions\":8}", bind: "", contractVersion: "1" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_declare?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(affordanceHandler.remove({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

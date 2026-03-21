@@ -94,8 +94,13 @@ describe('ProjectScaffold functional handler', () => {
     it('fixture "another_project" -> ok', async () => {
       if (typeof projectScaffoldHandler.scaffold !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(projectScaffoldHandler.scaffold({ name: "inventory-app" }), storage);
-      const result = await interpret(projectScaffoldHandler.scaffold({ name: "billing-service" }), storage);
+      const afterResult_valid_scaffold = await interpret(projectScaffoldHandler.scaffold({ name: "inventory-app" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_scaffold?.output ?? {}));
+      const _fixtureInput = { name: "billing-service" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(projectScaffoldHandler.scaffold({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

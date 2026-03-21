@@ -155,16 +155,26 @@ describe('Comment functional handler', () => {
     it('fixture "valid_reply" -> ok', async () => {
       if (typeof commentHandler.reply !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" }), storage);
-      const result = await interpret(commentHandler.reply({ comment: "r1", parent: "c1", content: "Thanks!", author: "bob" }), storage);
+      const afterResult_valid_add = await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
+      const _fixtureInput = { comment: "r1", parent: "c1", content: "Thanks!", author: "bob" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(commentHandler.reply({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_parent" -> ok', async () => {
       if (typeof commentHandler.reply !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" }), storage);
-      const result = await interpret(commentHandler.reply({ comment: "r2", parent: "nonexistent", content: "Hello", author: "bob" }), storage);
+      const afterResult_valid_add = await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
+      const _fixtureInput = { comment: "r2", parent: "nonexistent", content: "Hello", author: "bob" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(commentHandler.reply({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -225,8 +235,13 @@ describe('Comment functional handler', () => {
     it('fixture "valid_publish" -> ok', async () => {
       if (typeof commentHandler.publish !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" }), storage);
-      const result = await interpret(commentHandler.publish({ comment: "c1" }), storage);
+      const afterResult_valid_add = await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
+      const _fixtureInput = { comment: "c1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(commentHandler.publish({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -295,9 +310,14 @@ describe('Comment functional handler', () => {
     it('fixture "valid_unpublish" -> ok', async () => {
       if (typeof commentHandler.unpublish !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" }), storage);
-      await interpret(commentHandler.publish({ comment: "c1" }), storage);
-      const result = await interpret(commentHandler.unpublish({ comment: "c1" }), storage);
+      const afterResult_valid_add = await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" }), storage);
+      const afterResult_valid_publish = await interpret(commentHandler.publish({ comment: "c1" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}), (afterResult_valid_publish?.output ?? {}));
+      const _fixtureInput = { comment: "c1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(commentHandler.unpublish({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -366,8 +386,13 @@ describe('Comment functional handler', () => {
     it('fixture "valid_delete" -> ok', async () => {
       if (typeof commentHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" }), storage);
-      const result = await interpret(commentHandler.delete({ comment: "c1" }), storage);
+      const afterResult_valid_add = await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
+      const _fixtureInput = { comment: "c1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(commentHandler.delete({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

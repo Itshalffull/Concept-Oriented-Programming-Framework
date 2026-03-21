@@ -162,8 +162,13 @@ describe('DiagramExport functional handler', () => {
     it('fixture "import_json" -> ok', async () => {
       if (typeof diagramExportHandler.importDiagram !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(diagramExportHandler.export({ canvas_id: "canvas-1", format: "svg", options: {"width":"1920","height":"1080","embed_data":"true"} }), storage);
-      const result = await interpret(diagramExportHandler.importDiagram({ data: "{\"nodes\":[]}", format: "json", target_canvas: "canvas-5" }), storage);
+      const afterResult_export_svg = await interpret(diagramExportHandler.export({ canvas_id: "canvas-1", format: "svg", options: {"width":"1920","height":"1080","embed_data":"true"} }), storage);
+      const _pool = Object.assign({}, (afterResult_export_svg?.output ?? {}));
+      const _fixtureInput = { data: "{\"nodes\":[]}", format: "json", target_canvas: "canvas-5" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(diagramExportHandler.importDiagram({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -231,16 +236,26 @@ describe('DiagramExport functional handler', () => {
     it('fixture "detect_json" -> ok', async () => {
       if (typeof diagramExportHandler.detectFormat !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(diagramExportHandler.export({ canvas_id: "canvas-1", format: "svg", options: {"width":"1920","height":"1080","embed_data":"true"} }), storage);
-      const result = await interpret(diagramExportHandler.detectFormat({ data: "{\"nodes\":[]}" }), storage);
+      const afterResult_export_svg = await interpret(diagramExportHandler.export({ canvas_id: "canvas-1", format: "svg", options: {"width":"1920","height":"1080","embed_data":"true"} }), storage);
+      const _pool = Object.assign({}, (afterResult_export_svg?.output ?? {}));
+      const _fixtureInput = { data: "{\"nodes\":[]}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(diagramExportHandler.detectFormat({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "detect_svg" -> ok', async () => {
       if (typeof diagramExportHandler.detectFormat !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(diagramExportHandler.export({ canvas_id: "canvas-1", format: "svg", options: {"width":"1920","height":"1080","embed_data":"true"} }), storage);
-      const result = await interpret(diagramExportHandler.detectFormat({ data: "<svg xmlns=\"http://www.w3.org/2000/svg\"></svg>" }), storage);
+      const afterResult_export_svg = await interpret(diagramExportHandler.export({ canvas_id: "canvas-1", format: "svg", options: {"width":"1920","height":"1080","embed_data":"true"} }), storage);
+      const _pool = Object.assign({}, (afterResult_export_svg?.output ?? {}));
+      const _fixtureInput = { data: "<svg xmlns=\"http://www.w3.org/2000/svg\"></svg>" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(diagramExportHandler.detectFormat({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

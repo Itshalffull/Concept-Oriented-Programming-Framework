@@ -148,16 +148,26 @@ describe('MultiValueResolution functional handler', () => {
     it('fixture "resolve_two_values" -> ok', async () => {
       if (typeof multiValueResolutionHandler.attemptResolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(multiValueResolutionHandler.register({  }), storage);
-      const result = await interpret(multiValueResolutionHandler.attemptResolve({ base: null, v1: "cart-item-a", v2: "cart-item-b", context: "shopping-cart" }), storage);
+      const afterResult_valid = await interpret(multiValueResolutionHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { base: null, v1: "cart-item-a", v2: "cart-item-b", context: "shopping-cart" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(multiValueResolutionHandler.attemptResolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_with_base" -> ok', async () => {
       if (typeof multiValueResolutionHandler.attemptResolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(multiValueResolutionHandler.register({  }), storage);
-      const result = await interpret(multiValueResolutionHandler.attemptResolve({ base: "original-value", v1: "edit-alice", v2: "edit-bob", context: "annotations" }), storage);
+      const afterResult_valid = await interpret(multiValueResolutionHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { base: "original-value", v1: "edit-alice", v2: "edit-bob", context: "annotations" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(multiValueResolutionHandler.attemptResolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

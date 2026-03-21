@@ -155,16 +155,26 @@ describe('Artifact functional handler', () => {
     it('fixture "store_artifact" -> ok', async () => {
       if (typeof artifactHandler.store !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(artifactHandler.build({ concept: "User", spec: "user.concept", implementation: "user.handler.ts", deps: [] }), storage);
-      const result = await interpret(artifactHandler.store({ hash: "sha256-00000abcdef0", location: "artifacts/sha256-00000abcdef0", concept: "User", language: "typescript", platform: "linux-x86_64" }), storage);
+      const afterResult_build_user_concept = await interpret(artifactHandler.build({ concept: "User", spec: "user.concept", implementation: "user.handler.ts", deps: [] }), storage);
+      const _pool = Object.assign({}, (afterResult_build_user_concept?.output ?? {}));
+      const _fixtureInput = { hash: "sha256-00000abcdef0", location: "artifacts/sha256-00000abcdef0", concept: "User", language: "typescript", platform: "linux-x86_64" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(artifactHandler.store({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "store_empty_hash" -> ok', async () => {
       if (typeof artifactHandler.store !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(artifactHandler.build({ concept: "User", spec: "user.concept", implementation: "user.handler.ts", deps: [] }), storage);
-      const result = await interpret(artifactHandler.store({ hash: "", location: "", concept: "", language: "", platform: "" }), storage);
+      const afterResult_build_user_concept = await interpret(artifactHandler.build({ concept: "User", spec: "user.concept", implementation: "user.handler.ts", deps: [] }), storage);
+      const _pool = Object.assign({}, (afterResult_build_user_concept?.output ?? {}));
+      const _fixtureInput = { hash: "", location: "", concept: "", language: "", platform: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(artifactHandler.store({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -225,8 +235,13 @@ describe('Artifact functional handler', () => {
     it('fixture "resolve_existing" -> ok', async () => {
       if (typeof artifactHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(artifactHandler.build({ concept: "User", spec: "user.concept", implementation: "user.handler.ts", deps: [] }), storage);
-      const result = await interpret(artifactHandler.resolve({ hash: "sha256-00000abcdef0" }), storage);
+      const afterResult_build_user_concept = await interpret(artifactHandler.build({ concept: "User", spec: "user.concept", implementation: "user.handler.ts", deps: [] }), storage);
+      const _pool = Object.assign({}, (afterResult_build_user_concept?.output ?? {}));
+      const _fixtureInput = { hash: "sha256-00000abcdef0" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(artifactHandler.resolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -294,16 +309,26 @@ describe('Artifact functional handler', () => {
     it('fixture "gc_old_artifacts" -> ok', async () => {
       if (typeof artifactHandler.gc !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(artifactHandler.build({ concept: "User", spec: "user.concept", implementation: "user.handler.ts", deps: [] }), storage);
-      const result = await interpret(artifactHandler.gc({ olderThan: "2025-01-01T00:00:00Z", keepVersions: "3" }), storage);
+      const afterResult_build_user_concept = await interpret(artifactHandler.build({ concept: "User", spec: "user.concept", implementation: "user.handler.ts", deps: [] }), storage);
+      const _pool = Object.assign({}, (afterResult_build_user_concept?.output ?? {}));
+      const _fixtureInput = { olderThan: "2025-01-01T00:00:00Z", keepVersions: "3" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(artifactHandler.gc({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "gc_negative_keep" -> ok', async () => {
       if (typeof artifactHandler.gc !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(artifactHandler.build({ concept: "User", spec: "user.concept", implementation: "user.handler.ts", deps: [] }), storage);
-      const result = await interpret(artifactHandler.gc({ olderThan: "2025-01-01T00:00:00Z", keepVersions: "-1" }), storage);
+      const afterResult_build_user_concept = await interpret(artifactHandler.build({ concept: "User", spec: "user.concept", implementation: "user.handler.ts", deps: [] }), storage);
+      const _pool = Object.assign({}, (afterResult_build_user_concept?.output ?? {}));
+      const _fixtureInput = { olderThan: "2025-01-01T00:00:00Z", keepVersions: "-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(artifactHandler.gc({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

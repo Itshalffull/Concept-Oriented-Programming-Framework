@@ -155,16 +155,26 @@ describe('AppInstallation functional handler', () => {
     it('fixture "list_active" -> ok', async () => {
       if (typeof appInstallationHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(appInstallationHandler.register({ installation: "core-suite", name: "Core Suite", version: "1.0.0", status: "active", registry: "clef-registry", description: "Core governance concepts", concepts: "12", syncs: "5" }), storage);
-      const result = await interpret(appInstallationHandler.list({ status: "active" }), storage);
+      const afterResult_register_core_suite = await interpret(appInstallationHandler.register({ installation: "core-suite", name: "Core Suite", version: "1.0.0", status: "active", registry: "clef-registry", description: "Core governance concepts", concepts: "12", syncs: "5" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_core_suite?.output ?? {}));
+      const _fixtureInput = { status: "active" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(appInstallationHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "list_all" -> ok', async () => {
       if (typeof appInstallationHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(appInstallationHandler.register({ installation: "core-suite", name: "Core Suite", version: "1.0.0", status: "active", registry: "clef-registry", description: "Core governance concepts", concepts: "12", syncs: "5" }), storage);
-      const result = await interpret(appInstallationHandler.list({  }), storage);
+      const afterResult_register_core_suite = await interpret(appInstallationHandler.register({ installation: "core-suite", name: "Core Suite", version: "1.0.0", status: "active", registry: "clef-registry", description: "Core governance concepts", concepts: "12", syncs: "5" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_core_suite?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(appInstallationHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -155,8 +155,13 @@ describe('Branch functional handler', () => {
     it('fixture "advance_head" -> ok', async () => {
       if (typeof branchHandler.advance !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage);
-      const result = await interpret(branchHandler.advance({ branch: "branch-1", newNode: "dag-history-2" }), storage);
+      const afterResult_create_feature = await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_feature?.output ?? {}));
+      const _fixtureInput = { branch: "branch-1", newNode: "dag-history-2" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(branchHandler.advance({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('Branch functional handler', () => {
     it('fixture "delete_existing" -> ok', async () => {
       if (typeof branchHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage);
-      const result = await interpret(branchHandler.delete({ branch: "branch-1" }), storage);
+      const afterResult_create_feature = await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_feature?.output ?? {}));
+      const _fixtureInput = { branch: "branch-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(branchHandler.delete({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('Branch functional handler', () => {
     it('fixture "protect_main" -> ok', async () => {
       if (typeof branchHandler.protect !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage);
-      const result = await interpret(branchHandler.protect({ branch: "branch-1" }), storage);
+      const afterResult_create_feature = await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_feature?.output ?? {}));
+      const _fixtureInput = { branch: "branch-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(branchHandler.protect({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -362,8 +377,13 @@ describe('Branch functional handler', () => {
     it('fixture "set_upstream_main" -> ok', async () => {
       if (typeof branchHandler.setUpstream !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage);
-      const result = await interpret(branchHandler.setUpstream({ branch: "branch-2", upstream: "branch-1" }), storage);
+      const afterResult_create_feature = await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_feature?.output ?? {}));
+      const _fixtureInput = { branch: "branch-2", upstream: "branch-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(branchHandler.setUpstream({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -431,8 +451,13 @@ describe('Branch functional handler', () => {
     it('fixture "find_divergence" -> ok', async () => {
       if (typeof branchHandler.divergencePoint !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage);
-      const result = await interpret(branchHandler.divergencePoint({ b1: "branch-1", b2: "branch-2" }), storage);
+      const afterResult_create_feature = await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_feature?.output ?? {}));
+      const _fixtureInput = { b1: "branch-1", b2: "branch-2" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(branchHandler.divergencePoint({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -500,8 +525,13 @@ describe('Branch functional handler', () => {
     it('fixture "archive_old" -> ok', async () => {
       if (typeof branchHandler.archive !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage);
-      const result = await interpret(branchHandler.archive({ branch: "branch-1" }), storage);
+      const afterResult_create_feature = await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_feature?.output ?? {}));
+      const _fixtureInput = { branch: "branch-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(branchHandler.archive({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

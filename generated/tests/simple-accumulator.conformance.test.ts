@@ -155,8 +155,13 @@ describe('SimpleAccumulator functional handler', () => {
     it('fixture "add_score" -> ok', async () => {
       if (typeof simpleAccumulatorHandler.add !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(simpleAccumulatorHandler.configure({ decayRate: "0.1", cap: "1000.0" }), storage);
-      const result = await interpret(simpleAccumulatorHandler.add({ config: "acc-001", participant: "alice", amount: "25.0" }), storage);
+      const afterResult_configure_with_decay = await interpret(simpleAccumulatorHandler.configure({ decayRate: "0.1", cap: "1000.0" }), storage);
+      const _pool = Object.assign({}, (afterResult_configure_with_decay?.output ?? {}));
+      const _fixtureInput = { config: "acc-001", participant: "alice", amount: "25.0" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(simpleAccumulatorHandler.add({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('SimpleAccumulator functional handler', () => {
     it('fixture "apply_decay_alice" -> ok', async () => {
       if (typeof simpleAccumulatorHandler.applyDecay !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(simpleAccumulatorHandler.configure({ decayRate: "0.1", cap: "1000.0" }), storage);
-      const result = await interpret(simpleAccumulatorHandler.applyDecay({ config: "acc-001", participant: "alice" }), storage);
+      const afterResult_configure_with_decay = await interpret(simpleAccumulatorHandler.configure({ decayRate: "0.1", cap: "1000.0" }), storage);
+      const _pool = Object.assign({}, (afterResult_configure_with_decay?.output ?? {}));
+      const _fixtureInput = { config: "acc-001", participant: "alice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(simpleAccumulatorHandler.applyDecay({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('SimpleAccumulator functional handler', () => {
     it('fixture "get_alice_score" -> ok', async () => {
       if (typeof simpleAccumulatorHandler.getScore !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(simpleAccumulatorHandler.configure({ decayRate: "0.1", cap: "1000.0" }), storage);
-      const result = await interpret(simpleAccumulatorHandler.getScore({ config: "acc-001", participant: "alice" }), storage);
+      const afterResult_configure_with_decay = await interpret(simpleAccumulatorHandler.configure({ decayRate: "0.1", cap: "1000.0" }), storage);
+      const _pool = Object.assign({}, (afterResult_configure_with_decay?.output ?? {}));
+      const _fixtureInput = { config: "acc-001", participant: "alice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(simpleAccumulatorHandler.getScore({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -162,8 +162,13 @@ describe('Namespace functional handler', () => {
     it('fixture "get_existing_children" -> ok', async () => {
       if (typeof namespaceHandler.getChildren !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(namespaceHandler.createNamespacedPage({ node: "ns-alpha-1", path: "projects/alpha/docs" }), storage);
-      const result = await interpret(namespaceHandler.getChildren({ node: "ns-alpha-1" }), storage);
+      const afterResult_create_nested_page = await interpret(namespaceHandler.createNamespacedPage({ node: "ns-alpha-1", path: "projects/alpha/docs" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_nested_page?.output ?? {}));
+      const _fixtureInput = { node: "ns-alpha-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(namespaceHandler.getChildren({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -231,8 +236,13 @@ describe('Namespace functional handler', () => {
     it('fixture "get_existing_hierarchy" -> ok', async () => {
       if (typeof namespaceHandler.getHierarchy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(namespaceHandler.createNamespacedPage({ node: "ns-alpha-1", path: "projects/alpha/docs" }), storage);
-      const result = await interpret(namespaceHandler.getHierarchy({ node: "ns-alpha-1" }), storage);
+      const afterResult_create_nested_page = await interpret(namespaceHandler.createNamespacedPage({ node: "ns-alpha-1", path: "projects/alpha/docs" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_nested_page?.output ?? {}));
+      const _fixtureInput = { node: "ns-alpha-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(namespaceHandler.getHierarchy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -300,8 +310,13 @@ describe('Namespace functional handler', () => {
     it('fixture "move_existing_node" -> ok', async () => {
       if (typeof namespaceHandler.move !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(namespaceHandler.createNamespacedPage({ node: "ns-alpha-1", path: "projects/alpha/docs" }), storage);
-      const result = await interpret(namespaceHandler.move({ node: "ns-alpha-1", newPath: "archive/alpha/docs" }), storage);
+      const afterResult_create_nested_page = await interpret(namespaceHandler.createNamespacedPage({ node: "ns-alpha-1", path: "projects/alpha/docs" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_nested_page?.output ?? {}));
+      const _fixtureInput = { node: "ns-alpha-1", newPath: "archive/alpha/docs" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(namespaceHandler.move({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

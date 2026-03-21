@@ -155,8 +155,13 @@ describe('Provenance functional handler', () => {
     it('fixture "trace_existing" -> ok', async () => {
       if (typeof provenanceHandler.trace !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(provenanceHandler.record({ entity: "item-1", activity: "capture", agent: "system", inputs: "" }), storage);
-      const result = await interpret(provenanceHandler.trace({ entityId: "item-1" }), storage);
+      const afterResult_record_capture = await interpret(provenanceHandler.record({ entity: "item-1", activity: "capture", agent: "system", inputs: "" }), storage);
+      const _pool = Object.assign({}, (afterResult_record_capture?.output ?? {}));
+      const _fixtureInput = { entityId: "item-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(provenanceHandler.trace({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -225,8 +230,13 @@ describe('Provenance functional handler', () => {
     it('fixture "audit_batch" -> ok', async () => {
       if (typeof provenanceHandler.audit !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(provenanceHandler.record({ entity: "item-1", activity: "capture", agent: "system", inputs: "" }), storage);
-      const result = await interpret(provenanceHandler.audit({ batchId: "batch-2026-03-01" }), storage);
+      const afterResult_record_capture = await interpret(provenanceHandler.record({ entity: "item-1", activity: "capture", agent: "system", inputs: "" }), storage);
+      const _pool = Object.assign({}, (afterResult_record_capture?.output ?? {}));
+      const _fixtureInput = { batchId: "batch-2026-03-01" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(provenanceHandler.audit({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -295,8 +305,13 @@ describe('Provenance functional handler', () => {
     it('fixture "rollback_batch" -> ok', async () => {
       if (typeof provenanceHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(provenanceHandler.record({ entity: "item-1", activity: "capture", agent: "system", inputs: "" }), storage);
-      const result = await interpret(provenanceHandler.rollback({ batchId: "batch-2026-03-01" }), storage);
+      const afterResult_record_capture = await interpret(provenanceHandler.record({ entity: "item-1", activity: "capture", agent: "system", inputs: "" }), storage);
+      const _pool = Object.assign({}, (afterResult_record_capture?.output ?? {}));
+      const _fixtureInput = { batchId: "batch-2026-03-01" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(provenanceHandler.rollback({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -434,8 +449,13 @@ describe('Provenance functional handler', () => {
     it('fixture "reproduce_existing" -> ok', async () => {
       if (typeof provenanceHandler.reproduce !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(provenanceHandler.record({ entity: "item-1", activity: "capture", agent: "system", inputs: "" }), storage);
-      const result = await interpret(provenanceHandler.reproduce({ entityId: "item-1" }), storage);
+      const afterResult_record_capture = await interpret(provenanceHandler.record({ entity: "item-1", activity: "capture", agent: "system", inputs: "" }), storage);
+      const _pool = Object.assign({}, (afterResult_record_capture?.output ?? {}));
+      const _fixtureInput = { entityId: "item-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(provenanceHandler.reproduce({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

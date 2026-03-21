@@ -155,8 +155,13 @@ describe('Weight functional handler', () => {
     it('fixture "snap_governance" -> ok', async () => {
       if (typeof weightHandler.snapshot !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(weightHandler.updateWeight({ participant: "alice", source: "staking", value: "100.0" }), storage);
-      const result = await interpret(weightHandler.snapshot({ snapshotRef: "epoch-42", participants: "[\"alice\",\"bob\"]" }), storage);
+      const afterResult_update_stake = await interpret(weightHandler.updateWeight({ participant: "alice", source: "staking", value: "100.0" }), storage);
+      const _pool = Object.assign({}, (afterResult_update_stake?.output ?? {}));
+      const _fixtureInput = { snapshotRef: "epoch-42", participants: "[\"alice\",\"bob\"]" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(weightHandler.snapshot({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('Weight functional handler', () => {
     it('fixture "get_alice_weight" -> ok', async () => {
       if (typeof weightHandler.getWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(weightHandler.updateWeight({ participant: "alice", source: "staking", value: "100.0" }), storage);
-      const result = await interpret(weightHandler.getWeight({ participant: "alice" }), storage);
+      const afterResult_update_stake = await interpret(weightHandler.updateWeight({ participant: "alice", source: "staking", value: "100.0" }), storage);
+      const _pool = Object.assign({}, (afterResult_update_stake?.output ?? {}));
+      const _fixtureInput = { participant: "alice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(weightHandler.getWeight({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('Weight functional handler', () => {
     it('fixture "get_from_snapshot" -> ok', async () => {
       if (typeof weightHandler.getWeightFromSnapshot !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(weightHandler.updateWeight({ participant: "alice", source: "staking", value: "100.0" }), storage);
-      const result = await interpret(weightHandler.getWeightFromSnapshot({ snapshot: "snapshot-epoch-42", participant: "alice" }), storage);
+      const afterResult_update_stake = await interpret(weightHandler.updateWeight({ participant: "alice", source: "staking", value: "100.0" }), storage);
+      const _pool = Object.assign({}, (afterResult_update_stake?.output ?? {}));
+      const _fixtureInput = { snapshot: "snapshot-epoch-42", participant: "alice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(weightHandler.getWeightFromSnapshot({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

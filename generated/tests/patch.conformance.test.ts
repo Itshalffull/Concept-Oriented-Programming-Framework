@@ -155,8 +155,13 @@ describe('Patch functional handler', () => {
     it('fixture "apply_existing" -> ok', async () => {
       if (typeof patchHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(patchHandler.create({ base: "sha256:aaa111", target: "sha256:bbb222", effect: "[{\"type\":\"equal\",\"line\":0,\"content\":\"hello\"}]" }), storage);
-      const result = await interpret(patchHandler.apply({ patchId: "patch-1", content: "hello\nworld" }), storage);
+      const afterResult_create_patch = await interpret(patchHandler.create({ base: "sha256:aaa111", target: "sha256:bbb222", effect: "[{\"type\":\"equal\",\"line\":0,\"content\":\"hello\"}]" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_patch?.output ?? {}));
+      const _fixtureInput = { patchId: "patch-1", content: "hello\nworld" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(patchHandler.apply({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('Patch functional handler', () => {
     it('fixture "invert_existing" -> ok', async () => {
       if (typeof patchHandler.invert !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(patchHandler.create({ base: "sha256:aaa111", target: "sha256:bbb222", effect: "[{\"type\":\"equal\",\"line\":0,\"content\":\"hello\"}]" }), storage);
-      const result = await interpret(patchHandler.invert({ patchId: "patch-1" }), storage);
+      const afterResult_create_patch = await interpret(patchHandler.create({ base: "sha256:aaa111", target: "sha256:bbb222", effect: "[{\"type\":\"equal\",\"line\":0,\"content\":\"hello\"}]" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_patch?.output ?? {}));
+      const _fixtureInput = { patchId: "patch-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(patchHandler.invert({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('Patch functional handler', () => {
     it('fixture "compose_sequential" -> ok', async () => {
       if (typeof patchHandler.compose !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(patchHandler.create({ base: "sha256:aaa111", target: "sha256:bbb222", effect: "[{\"type\":\"equal\",\"line\":0,\"content\":\"hello\"}]" }), storage);
-      const result = await interpret(patchHandler.compose({ first: "patch-1", second: "patch-2" }), storage);
+      const afterResult_create_patch = await interpret(patchHandler.create({ base: "sha256:aaa111", target: "sha256:bbb222", effect: "[{\"type\":\"equal\",\"line\":0,\"content\":\"hello\"}]" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_patch?.output ?? {}));
+      const _fixtureInput = { first: "patch-1", second: "patch-2" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(patchHandler.compose({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -362,8 +377,13 @@ describe('Patch functional handler', () => {
     it('fixture "commute_independent" -> ok', async () => {
       if (typeof patchHandler.commute !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(patchHandler.create({ base: "sha256:aaa111", target: "sha256:bbb222", effect: "[{\"type\":\"equal\",\"line\":0,\"content\":\"hello\"}]" }), storage);
-      const result = await interpret(patchHandler.commute({ p1: "patch-1", p2: "patch-2" }), storage);
+      const afterResult_create_patch = await interpret(patchHandler.create({ base: "sha256:aaa111", target: "sha256:bbb222", effect: "[{\"type\":\"equal\",\"line\":0,\"content\":\"hello\"}]" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_patch?.output ?? {}));
+      const _fixtureInput = { p1: "patch-1", p2: "patch-2" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(patchHandler.commute({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -224,16 +224,26 @@ describe('SuiteManager functional handler', () => {
     it('fixture "valid_test" -> ok', async () => {
       if (typeof suiteManagerHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(suiteManagerHandler.init({ name: "payment-suite" }), storage);
-      const result = await interpret(suiteManagerHandler.test({ path: "./repertoire/payment-suite/" }), storage);
+      const afterResult_valid_init = await interpret(suiteManagerHandler.init({ name: "payment-suite" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_init?.output ?? {}));
+      const _fixtureInput = { path: "./repertoire/payment-suite/" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(suiteManagerHandler.test({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_test_path" -> ok', async () => {
       if (typeof suiteManagerHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(suiteManagerHandler.init({ name: "payment-suite" }), storage);
-      const result = await interpret(suiteManagerHandler.test({ path: "" }), storage);
+      const afterResult_valid_init = await interpret(suiteManagerHandler.init({ name: "payment-suite" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_init?.output ?? {}));
+      const _fixtureInput = { path: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(suiteManagerHandler.test({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -294,8 +304,13 @@ describe('SuiteManager functional handler', () => {
     it('fixture "valid_list" -> ok', async () => {
       if (typeof suiteManagerHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(suiteManagerHandler.init({ name: "payment-suite" }), storage);
-      const result = await interpret(suiteManagerHandler.list({  }), storage);
+      const afterResult_valid_init = await interpret(suiteManagerHandler.init({ name: "payment-suite" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_init?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(suiteManagerHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -356,8 +371,13 @@ describe('SuiteManager functional handler', () => {
     it('fixture "valid_overrides" -> ok', async () => {
       if (typeof suiteManagerHandler.checkOverrides !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(suiteManagerHandler.init({ name: "payment-suite" }), storage);
-      const result = await interpret(suiteManagerHandler.checkOverrides({ path: "./repertoire/payment-suite/" }), storage);
+      const afterResult_valid_init = await interpret(suiteManagerHandler.init({ name: "payment-suite" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_init?.output ?? {}));
+      const _fixtureInput = { path: "./repertoire/payment-suite/" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(suiteManagerHandler.checkOverrides({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

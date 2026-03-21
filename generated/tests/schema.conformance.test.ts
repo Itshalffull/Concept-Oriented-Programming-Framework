@@ -155,8 +155,13 @@ describe('Schema functional handler', () => {
     it('fixture "add_tags_field" -> ok', async () => {
       if (typeof schemaHandler.addField !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(schemaHandler.defineSchema({ schema: "article", fields: "title,body,author" }), storage);
-      const result = await interpret(schemaHandler.addField({ schema: "article", field: "tags" }), storage);
+      const afterResult_create_article = await interpret(schemaHandler.defineSchema({ schema: "article", fields: "title,body,author" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_article?.output ?? {}));
+      const _fixtureInput = { schema: "article", field: "tags" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(schemaHandler.addField({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('Schema functional handler', () => {
     it('fixture "extend_blog_from_article" -> ok', async () => {
       if (typeof schemaHandler.extendSchema !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(schemaHandler.defineSchema({ schema: "article", fields: "title,body,author" }), storage);
-      const result = await interpret(schemaHandler.extendSchema({ schema: "blog-post", parent: "article" }), storage);
+      const afterResult_create_article = await interpret(schemaHandler.defineSchema({ schema: "article", fields: "title,body,author" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_article?.output ?? {}));
+      const _fixtureInput = { schema: "blog-post", parent: "article" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(schemaHandler.extendSchema({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('Schema functional handler', () => {
     it('fixture "apply_article_to_page" -> ok', async () => {
       if (typeof schemaHandler.applyTo !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(schemaHandler.defineSchema({ schema: "article", fields: "title,body,author" }), storage);
-      const result = await interpret(schemaHandler.applyTo({ entity_id: "page-1", schema: "article" }), storage);
+      const afterResult_create_article = await interpret(schemaHandler.defineSchema({ schema: "article", fields: "title,body,author" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_article?.output ?? {}));
+      const _fixtureInput = { entity_id: "page-1", schema: "article" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(schemaHandler.applyTo({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -362,8 +377,13 @@ describe('Schema functional handler', () => {
     it('fixture "remove_article_from_page" -> ok', async () => {
       if (typeof schemaHandler.removeFrom !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(schemaHandler.defineSchema({ schema: "article", fields: "title,body,author" }), storage);
-      const result = await interpret(schemaHandler.removeFrom({ entity_id: "page-1", schema: "article" }), storage);
+      const afterResult_create_article = await interpret(schemaHandler.defineSchema({ schema: "article", fields: "title,body,author" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_article?.output ?? {}));
+      const _fixtureInput = { entity_id: "page-1", schema: "article" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(schemaHandler.removeFrom({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -431,8 +451,13 @@ describe('Schema functional handler', () => {
     it('fixture "get_article_entities" -> ok', async () => {
       if (typeof schemaHandler.getAssociations !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(schemaHandler.defineSchema({ schema: "article", fields: "title,body,author" }), storage);
-      const result = await interpret(schemaHandler.getAssociations({ schema: "article" }), storage);
+      const afterResult_create_article = await interpret(schemaHandler.defineSchema({ schema: "article", fields: "title,body,author" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_article?.output ?? {}));
+      const _fixtureInput = { schema: "article" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(schemaHandler.getAssociations({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -500,8 +525,13 @@ describe('Schema functional handler', () => {
     it('fixture "export_article" -> ok', async () => {
       if (typeof schemaHandler.export !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(schemaHandler.defineSchema({ schema: "article", fields: "title,body,author" }), storage);
-      const result = await interpret(schemaHandler.export({ schema: "article" }), storage);
+      const afterResult_create_article = await interpret(schemaHandler.defineSchema({ schema: "article", fields: "title,body,author" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_article?.output ?? {}));
+      const _fixtureInput = { schema: "article" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(schemaHandler.export({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -162,8 +162,13 @@ describe('WidgetImplementationEntity functional handler', () => {
     it('fixture "get_react_dialog" -> ok', async () => {
       if (typeof widgetImplementationEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
-      const result = await interpret(widgetImplementationEntityHandler.get({ widget: "dialog", framework: "react" }), storage);
+      const afterResult_register_react_dialog = await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_react_dialog?.output ?? {}));
+      const _fixtureInput = { widget: "dialog", framework: "react" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetImplementationEntityHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -231,8 +236,13 @@ describe('WidgetImplementationEntity functional handler', () => {
     it('fixture "get_by_file" -> ok', async () => {
       if (typeof widgetImplementationEntityHandler.getByFile !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
-      const result = await interpret(widgetImplementationEntityHandler.getByFile({ sourceFile: "generated/surface/dialog/Dialog.tsx" }), storage);
+      const afterResult_register_react_dialog = await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_react_dialog?.output ?? {}));
+      const _fixtureInput = { sourceFile: "generated/surface/dialog/Dialog.tsx" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetImplementationEntityHandler.getByFile({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -307,8 +317,13 @@ describe('WidgetImplementationEntity functional handler', () => {
     it('fixture "find_dialog" -> ok', async () => {
       if (typeof widgetImplementationEntityHandler.findByWidget !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
-      const result = await interpret(widgetImplementationEntityHandler.findByWidget({ widget: "dialog" }), storage);
+      const afterResult_register_react_dialog = await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_react_dialog?.output ?? {}));
+      const _fixtureInput = { widget: "dialog" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetImplementationEntityHandler.findByWidget({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -322,8 +337,13 @@ describe('WidgetImplementationEntity functional handler', () => {
     it('fixture "find_empty_widget" -> ok', async () => {
       if (typeof widgetImplementationEntityHandler.findByWidget !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
-      const result = await interpret(widgetImplementationEntityHandler.findByWidget({ widget: "" }), storage);
+      const afterResult_register_react_dialog = await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_react_dialog?.output ?? {}));
+      const _fixtureInput = { widget: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetImplementationEntityHandler.findByWidget({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -384,16 +404,26 @@ describe('WidgetImplementationEntity functional handler', () => {
     it('fixture "find_react" -> ok', async () => {
       if (typeof widgetImplementationEntityHandler.findByFramework !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
-      const result = await interpret(widgetImplementationEntityHandler.findByFramework({ framework: "react" }), storage);
+      const afterResult_register_react_dialog = await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_react_dialog?.output ?? {}));
+      const _fixtureInput = { framework: "react" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetImplementationEntityHandler.findByFramework({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_empty_framework" -> ok', async () => {
       if (typeof widgetImplementationEntityHandler.findByFramework !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
-      const result = await interpret(widgetImplementationEntityHandler.findByFramework({ framework: "" }), storage);
+      const afterResult_register_react_dialog = await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_react_dialog?.output ?? {}));
+      const _fixtureInput = { framework: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetImplementationEntityHandler.findByFramework({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -454,16 +484,26 @@ describe('WidgetImplementationEntity functional handler', () => {
     it('fixture "mapping_valid" -> ok', async () => {
       if (typeof widgetImplementationEntityHandler.anatomyMapping !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
-      const result = await interpret(widgetImplementationEntityHandler.anatomyMapping({ impl: "impl-uuid-1" }), storage);
+      const afterResult_register_react_dialog = await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_react_dialog?.output ?? {}));
+      const _fixtureInput = { impl: "impl-uuid-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetImplementationEntityHandler.anatomyMapping({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "mapping_missing" -> ok', async () => {
       if (typeof widgetImplementationEntityHandler.anatomyMapping !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
-      const result = await interpret(widgetImplementationEntityHandler.anatomyMapping({ impl: "nonexistent-id" }), storage);
+      const afterResult_register_react_dialog = await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_react_dialog?.output ?? {}));
+      const _fixtureInput = { impl: "nonexistent-id" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetImplementationEntityHandler.anatomyMapping({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -592,8 +632,13 @@ describe('WidgetImplementationEntity functional handler', () => {
     it('fixture "resolve_frame" -> ok', async () => {
       if (typeof widgetImplementationEntityHandler.resolveRenderFrame !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
-      const result = await interpret(widgetImplementationEntityHandler.resolveRenderFrame({ file: "generated/surface/dialog/Dialog.tsx", line: "42", col: "8" }), storage);
+      const afterResult_register_react_dialog = await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_react_dialog?.output ?? {}));
+      const _fixtureInput = { file: "generated/surface/dialog/Dialog.tsx", line: "42", col: "8" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetImplementationEntityHandler.resolveRenderFrame({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -661,8 +706,13 @@ describe('WidgetImplementationEntity functional handler', () => {
     it('fixture "resolve_node" -> ok', async () => {
       if (typeof widgetImplementationEntityHandler.resolveToAstNode !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
-      const result = await interpret(widgetImplementationEntityHandler.resolveToAstNode({ impl: "impl-uuid-1", line: "15", col: "4" }), storage);
+      const afterResult_register_react_dialog = await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_react_dialog?.output ?? {}));
+      const _fixtureInput = { impl: "impl-uuid-1", line: "15", col: "4" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetImplementationEntityHandler.resolveToAstNode({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

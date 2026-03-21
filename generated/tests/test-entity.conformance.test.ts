@@ -155,8 +155,13 @@ describe('TestEntity functional handler', () => {
     it('fixture "get_existing_test" -> ok', async () => {
       if (typeof testEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
-      const result = await interpret(testEntityHandler.get({ name: "User/create conformance" }), storage);
+      const afterResult_register_conformance_test = await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_conformance_test?.output ?? {}));
+      const _fixtureInput = { name: "User/create conformance" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(testEntityHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,16 +229,26 @@ describe('TestEntity functional handler', () => {
     it('fixture "find_user_tests" -> ok', async () => {
       if (typeof testEntityHandler.findByEntity !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
-      const result = await interpret(testEntityHandler.findByEntity({ entity: "User" }), storage);
+      const afterResult_register_conformance_test = await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_conformance_test?.output ?? {}));
+      const _fixtureInput = { entity: "User" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(testEntityHandler.findByEntity({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_untested_entity" -> ok', async () => {
       if (typeof testEntityHandler.findByEntity !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
-      const result = await interpret(testEntityHandler.findByEntity({ entity: "Nonexistent" }), storage);
+      const afterResult_register_conformance_test = await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_conformance_test?.output ?? {}));
+      const _fixtureInput = { entity: "Nonexistent" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(testEntityHandler.findByEntity({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -294,16 +309,26 @@ describe('TestEntity functional handler', () => {
     it('fixture "find_user_create_tests" -> ok', async () => {
       if (typeof testEntityHandler.findByAction !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
-      const result = await interpret(testEntityHandler.findByAction({ concept: "User", action: "create" }), storage);
+      const afterResult_register_conformance_test = await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_conformance_test?.output ?? {}));
+      const _fixtureInput = { concept: "User", action: "create" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(testEntityHandler.findByAction({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_untested_action" -> ok', async () => {
       if (typeof testEntityHandler.findByAction !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
-      const result = await interpret(testEntityHandler.findByAction({ concept: "User", action: "nonexistentAction" }), storage);
+      const afterResult_register_conformance_test = await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_conformance_test?.output ?? {}));
+      const _fixtureInput = { concept: "User", action: "nonexistentAction" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(testEntityHandler.findByAction({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -364,16 +389,26 @@ describe('TestEntity functional handler', () => {
     it('fixture "find_conformance_tests" -> ok', async () => {
       if (typeof testEntityHandler.findByKind !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
-      const result = await interpret(testEntityHandler.findByKind({ kind: "conformance" }), storage);
+      const afterResult_register_conformance_test = await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_conformance_test?.output ?? {}));
+      const _fixtureInput = { kind: "conformance" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(testEntityHandler.findByKind({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_unknown_kind" -> ok', async () => {
       if (typeof testEntityHandler.findByKind !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
-      const result = await interpret(testEntityHandler.findByKind({ kind: "nonexistent-kind" }), storage);
+      const afterResult_register_conformance_test = await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_conformance_test?.output ?? {}));
+      const _fixtureInput = { kind: "nonexistent-kind" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(testEntityHandler.findByKind({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -434,8 +469,13 @@ describe('TestEntity functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof testEntityHandler.findFailing !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
-      const result = await interpret(testEntityHandler.findFailing({  }), storage);
+      const afterResult_register_conformance_test = await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_conformance_test?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(testEntityHandler.findFailing({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -503,16 +543,26 @@ describe('TestEntity functional handler', () => {
     it('fixture "coverage_user" -> ok', async () => {
       if (typeof testEntityHandler.coverageReport !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
-      const result = await interpret(testEntityHandler.coverageReport({ entity: "User" }), storage);
+      const afterResult_register_conformance_test = await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_conformance_test?.output ?? {}));
+      const _fixtureInput = { entity: "User" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(testEntityHandler.coverageReport({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "coverage_nonexistent" -> ok', async () => {
       if (typeof testEntityHandler.coverageReport !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
-      const result = await interpret(testEntityHandler.coverageReport({ entity: "Nonexistent" }), storage);
+      const afterResult_register_conformance_test = await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_conformance_test?.output ?? {}));
+      const _fixtureInput = { entity: "Nonexistent" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(testEntityHandler.coverageReport({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -573,8 +623,13 @@ describe('TestEntity functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof testEntityHandler.untestedActions !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
-      const result = await interpret(testEntityHandler.untestedActions({  }), storage);
+      const afterResult_register_conformance_test = await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_conformance_test?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(testEntityHandler.untestedActions({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -642,8 +697,13 @@ describe('TestEntity functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof testEntityHandler.untestedInvariants !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
-      const result = await interpret(testEntityHandler.untestedInvariants({  }), storage);
+      const afterResult_register_conformance_test = await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_conformance_test?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(testEntityHandler.untestedInvariants({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -711,16 +771,26 @@ describe('TestEntity functional handler', () => {
     it('fixture "record_pass" -> ok', async () => {
       if (typeof testEntityHandler.recordResult !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
-      const result = await interpret(testEntityHandler.recordResult({ test: "test-001", result: "pass", duration: "150" }), storage);
+      const afterResult_register_conformance_test = await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_conformance_test?.output ?? {}));
+      const _fixtureInput = { test: "test-001", result: "pass", duration: "150" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(testEntityHandler.recordResult({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "record_empty_result" -> ok', async () => {
       if (typeof testEntityHandler.recordResult !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
-      const result = await interpret(testEntityHandler.recordResult({ test: "test-001", result: "", duration: "0" }), storage);
+      const afterResult_register_conformance_test = await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_conformance_test?.output ?? {}));
+      const _fixtureInput = { test: "test-001", result: "", duration: "0" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(testEntityHandler.recordResult({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

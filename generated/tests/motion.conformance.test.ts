@@ -170,16 +170,26 @@ describe('Motion functional handler', () => {
     it('fixture "easing_ease_in_out" -> ok', async () => {
       if (typeof motionHandler.defineEasing !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(motionHandler.defineDuration({ motion: "O-1", name: "fast", ms: "100" }), storage);
-      const result = await interpret(motionHandler.defineEasing({ motion: "O-5", name: "standard", value: "ease-in-out" }), storage);
+      const afterResult_duration_fast = await interpret(motionHandler.defineDuration({ motion: "O-1", name: "fast", ms: "100" }), storage);
+      const _pool = Object.assign({}, (afterResult_duration_fast?.output ?? {}));
+      const _fixtureInput = { motion: "O-5", name: "standard", value: "ease-in-out" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(motionHandler.defineEasing({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "easing_cubic_bezier" -> ok', async () => {
       if (typeof motionHandler.defineEasing !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(motionHandler.defineDuration({ motion: "O-1", name: "fast", ms: "100" }), storage);
-      const result = await interpret(motionHandler.defineEasing({ motion: "O-6", name: "decelerate", value: "cubic-bezier(0.0, 0.0, 0.2, 1)" }), storage);
+      const afterResult_duration_fast = await interpret(motionHandler.defineDuration({ motion: "O-1", name: "fast", ms: "100" }), storage);
+      const _pool = Object.assign({}, (afterResult_duration_fast?.output ?? {}));
+      const _fixtureInput = { motion: "O-6", name: "decelerate", value: "cubic-bezier(0.0, 0.0, 0.2, 1)" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(motionHandler.defineEasing({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -248,16 +258,26 @@ describe('Motion functional handler', () => {
     it('fixture "transition_fade" -> ok', async () => {
       if (typeof motionHandler.defineTransition !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(motionHandler.defineDuration({ motion: "O-1", name: "fast", ms: "100" }), storage);
-      const result = await interpret(motionHandler.defineTransition({ motion: "O-8", name: "fade", config: "{ \"property\": \"opacity\", \"duration\": 200, \"easing\": \"ease-out\" }" }), storage);
+      const afterResult_duration_fast = await interpret(motionHandler.defineDuration({ motion: "O-1", name: "fast", ms: "100" }), storage);
+      const _pool = Object.assign({}, (afterResult_duration_fast?.output ?? {}));
+      const _fixtureInput = { motion: "O-8", name: "fade", config: "{ \"property\": \"opacity\", \"duration\": 200, \"easing\": \"ease-out\" }" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(motionHandler.defineTransition({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "transition_slide" -> ok', async () => {
       if (typeof motionHandler.defineTransition !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(motionHandler.defineDuration({ motion: "O-1", name: "fast", ms: "100" }), storage);
-      const result = await interpret(motionHandler.defineTransition({ motion: "O-9", name: "slide", config: "{ \"property\": \"transform\", \"duration\": 300, \"easing\": \"ease-in-out\", \"delay\": 50 }" }), storage);
+      const afterResult_duration_fast = await interpret(motionHandler.defineDuration({ motion: "O-1", name: "fast", ms: "100" }), storage);
+      const _pool = Object.assign({}, (afterResult_duration_fast?.output ?? {}));
+      const _fixtureInput = { motion: "O-9", name: "slide", config: "{ \"property\": \"transform\", \"duration\": 300, \"easing\": \"ease-in-out\", \"delay\": 50 }" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(motionHandler.defineTransition({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -272,8 +292,13 @@ describe('Motion functional handler', () => {
     it('fixture "transition_missing_property" -> invalid', async () => {
       if (typeof motionHandler.defineTransition !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(motionHandler.defineDuration({ motion: "O-1", name: "fast", ms: "100" }), storage);
-      const result = await interpret(motionHandler.defineTransition({ motion: "O-11", name: "incomplete", config: "{ \"duration\": 200 }" }), storage);
+      const afterResult_duration_fast = await interpret(motionHandler.defineDuration({ motion: "O-1", name: "fast", ms: "100" }), storage);
+      const _pool = Object.assign({}, (afterResult_duration_fast?.output ?? {}));
+      const _fixtureInput = { motion: "O-11", name: "incomplete", config: "{ \"duration\": 200 }" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(motionHandler.defineTransition({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('invalid'));
     });

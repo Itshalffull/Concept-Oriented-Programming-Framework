@@ -162,8 +162,13 @@ describe('InteractorEntity functional handler', () => {
     it('fixture "find_selection" -> ok', async () => {
       if (typeof interactorEntityHandler.findByCategory !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(interactorEntityHandler.register({ name: "single-choice", category: "selection", properties: "{\"dataType\":\"enum\",\"cardinality\":\"scalar\"}" }), storage);
-      const result = await interpret(interactorEntityHandler.findByCategory({ category: "selection" }), storage);
+      const afterResult_register_single_choice = await interpret(interactorEntityHandler.register({ name: "single-choice", category: "selection", properties: "{\"dataType\":\"enum\",\"cardinality\":\"scalar\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_single_choice?.output ?? {}));
+      const _fixtureInput = { category: "selection" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(interactorEntityHandler.findByCategory({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -231,8 +236,13 @@ describe('InteractorEntity functional handler', () => {
     it('fixture "matching_desktop" -> ok', async () => {
       if (typeof interactorEntityHandler.matchingWidgets !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(interactorEntityHandler.register({ name: "single-choice", category: "selection", properties: "{\"dataType\":\"enum\",\"cardinality\":\"scalar\"}" }), storage);
-      const result = await interpret(interactorEntityHandler.matchingWidgets({ interactor: "interactor-entity-1", context: "desktop" }), storage);
+      const afterResult_register_single_choice = await interpret(interactorEntityHandler.register({ name: "single-choice", category: "selection", properties: "{\"dataType\":\"enum\",\"cardinality\":\"scalar\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_single_choice?.output ?? {}));
+      const _fixtureInput = { interactor: "interactor-entity-1", context: "desktop" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(interactorEntityHandler.matchingWidgets({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -300,8 +310,13 @@ describe('InteractorEntity functional handler', () => {
     it('fixture "classified_valid" -> ok', async () => {
       if (typeof interactorEntityHandler.classifiedFields !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(interactorEntityHandler.register({ name: "single-choice", category: "selection", properties: "{\"dataType\":\"enum\",\"cardinality\":\"scalar\"}" }), storage);
-      const result = await interpret(interactorEntityHandler.classifiedFields({ interactor: "interactor-entity-1" }), storage);
+      const afterResult_register_single_choice = await interpret(interactorEntityHandler.register({ name: "single-choice", category: "selection", properties: "{\"dataType\":\"enum\",\"cardinality\":\"scalar\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_single_choice?.output ?? {}));
+      const _fixtureInput = { interactor: "interactor-entity-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(interactorEntityHandler.classifiedFields({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -369,8 +384,13 @@ describe('InteractorEntity functional handler', () => {
     it('fixture "coverage_report_valid" -> ok', async () => {
       if (typeof interactorEntityHandler.coverageReport !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(interactorEntityHandler.register({ name: "single-choice", category: "selection", properties: "{\"dataType\":\"enum\",\"cardinality\":\"scalar\"}" }), storage);
-      const result = await interpret(interactorEntityHandler.coverageReport({  }), storage);
+      const afterResult_register_single_choice = await interpret(interactorEntityHandler.register({ name: "single-choice", category: "selection", properties: "{\"dataType\":\"enum\",\"cardinality\":\"scalar\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_single_choice?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(interactorEntityHandler.coverageReport({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -431,8 +451,13 @@ describe('InteractorEntity functional handler', () => {
     it('fixture "get_interactor" -> ok', async () => {
       if (typeof interactorEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(interactorEntityHandler.register({ name: "single-choice", category: "selection", properties: "{\"dataType\":\"enum\",\"cardinality\":\"scalar\"}" }), storage);
-      const result = await interpret(interactorEntityHandler.get({ interactor: "interactor-entity-1" }), storage);
+      const afterResult_register_single_choice = await interpret(interactorEntityHandler.register({ name: "single-choice", category: "selection", properties: "{\"dataType\":\"enum\",\"cardinality\":\"scalar\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_single_choice?.output ?? {}));
+      const _fixtureInput = { interactor: "interactor-entity-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(interactorEntityHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

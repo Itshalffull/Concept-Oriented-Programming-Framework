@@ -169,8 +169,13 @@ describe('ConnectorPort functional handler', () => {
     it('fixture "remove_existing" -> ok', async () => {
       if (typeof connectorPortHandler.removePort !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" }), storage);
-      const result = await interpret(connectorPortHandler.removePort({ port: "port-1" }), storage);
+      const afterResult_add_data_output = await interpret(connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" }), storage);
+      const _pool = Object.assign({}, (afterResult_add_data_output?.output ?? {}));
+      const _fixtureInput = { port: "port-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(connectorPortHandler.removePort({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -239,8 +244,13 @@ describe('ConnectorPort functional handler', () => {
     it('fixture "move_to_left" -> ok', async () => {
       if (typeof connectorPortHandler.movePort !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" }), storage);
-      const result = await interpret(connectorPortHandler.movePort({ port: "port-1", side: "left", offset: "0.3" }), storage);
+      const afterResult_add_data_output = await interpret(connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" }), storage);
+      const _pool = Object.assign({}, (afterResult_add_data_output?.output ?? {}));
+      const _fixtureInput = { port: "port-1", side: "left", offset: "0.3" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(connectorPortHandler.movePort({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -378,8 +388,13 @@ describe('ConnectorPort functional handler', () => {
     it('fixture "increment_ok" -> ok', async () => {
       if (typeof connectorPortHandler.incrementConnection !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" }), storage);
-      const result = await interpret(connectorPortHandler.incrementConnection({ port: "port-1" }), storage);
+      const afterResult_add_data_output = await interpret(connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" }), storage);
+      const _pool = Object.assign({}, (afterResult_add_data_output?.output ?? {}));
+      const _fixtureInput = { port: "port-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(connectorPortHandler.incrementConnection({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -447,8 +462,13 @@ describe('ConnectorPort functional handler', () => {
     it('fixture "decrement_ok" -> ok', async () => {
       if (typeof connectorPortHandler.decrementConnection !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" }), storage);
-      const result = await interpret(connectorPortHandler.decrementConnection({ port: "port-1" }), storage);
+      const afterResult_add_data_output = await interpret(connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" }), storage);
+      const _pool = Object.assign({}, (afterResult_add_data_output?.output ?? {}));
+      const _fixtureInput = { port: "port-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(connectorPortHandler.decrementConnection({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -516,16 +536,26 @@ describe('ConnectorPort functional handler', () => {
     it('fixture "get_ports_for_node" -> ok', async () => {
       if (typeof connectorPortHandler.getPortsForOwner !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" }), storage);
-      const result = await interpret(connectorPortHandler.getPortsForOwner({ owner: "node-1" }), storage);
+      const afterResult_add_data_output = await interpret(connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" }), storage);
+      const _pool = Object.assign({}, (afterResult_add_data_output?.output ?? {}));
+      const _fixtureInput = { owner: "node-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(connectorPortHandler.getPortsForOwner({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_ports_for_unknown" -> ok', async () => {
       if (typeof connectorPortHandler.getPortsForOwner !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" }), storage);
-      const result = await interpret(connectorPortHandler.getPortsForOwner({ owner: "node-unknown" }), storage);
+      const afterResult_add_data_output = await interpret(connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" }), storage);
+      const _pool = Object.assign({}, (afterResult_add_data_output?.output ?? {}));
+      const _fixtureInput = { owner: "node-unknown" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(connectorPortHandler.getPortsForOwner({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

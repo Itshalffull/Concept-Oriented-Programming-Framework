@@ -162,16 +162,26 @@ describe('ScoreVoting functional handler', () => {
     it('fixture "score_two_candidates" -> ok', async () => {
       if (typeof scoreVotingHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreVotingHandler.configure({ minScore: "0.0", maxScore: "5.0", aggregation: "Mean" }), storage);
-      const result = await interpret(scoreVotingHandler.count({ config: "score-001", scoreBallots: "[{\"voter\":\"alice\",\"scores\":{\"A\":4,\"B\":2}},{\"voter\":\"bob\",\"scores\":{\"A\":3,\"B\":5}}]", weights: "{}" }), storage);
+      const afterResult_mean_zero_to_five = await interpret(scoreVotingHandler.configure({ minScore: "0.0", maxScore: "5.0", aggregation: "Mean" }), storage);
+      const _pool = Object.assign({}, (afterResult_mean_zero_to_five?.output ?? {}));
+      const _fixtureInput = { config: "score-001", scoreBallots: "[{\"voter\":\"alice\",\"scores\":{\"A\":4,\"B\":2}},{\"voter\":\"bob\",\"scores\":{\"A\":3,\"B\":5}}]", weights: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreVotingHandler.count({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "score_empty_ballots" -> error', async () => {
       if (typeof scoreVotingHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreVotingHandler.configure({ minScore: "0.0", maxScore: "5.0", aggregation: "Mean" }), storage);
-      const result = await interpret(scoreVotingHandler.count({ config: "score-001", scoreBallots: "[]", weights: "{}" }), storage);
+      const afterResult_mean_zero_to_five = await interpret(scoreVotingHandler.configure({ minScore: "0.0", maxScore: "5.0", aggregation: "Mean" }), storage);
+      const _pool = Object.assign({}, (afterResult_mean_zero_to_five?.output ?? {}));
+      const _fixtureInput = { config: "score-001", scoreBallots: "[]", weights: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreVotingHandler.count({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 

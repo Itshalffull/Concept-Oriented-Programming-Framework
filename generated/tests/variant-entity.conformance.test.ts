@@ -69,16 +69,26 @@ describe('VariantEntity imperative handler', () => {
     it('fixture "matching_valid" -> ok', async () => {
       if (typeof variantEntityHandler.matchingSyncs !== 'function') return;
       const storage = createInMemoryStorage();
-      await variantEntityHandler.register({ action: "Article/create", tag: "ok", fields: "[{\"name\":\"article\",\"typeExpr\":\"A\"}]" }, storage);
-      const result = await variantEntityHandler.matchingSyncs({ variant: "variant-entity-1" }, storage);
+      const afterResult_register_ok = await variantEntityHandler.register({ action: "Article/create", tag: "ok", fields: "[{\"name\":\"article\",\"typeExpr\":\"A\"}]" }, storage);
+      const _pool = Object.assign({}, (afterResult_register_ok?.output ?? {}));
+      const _fixtureInput = { variant: "variant-entity-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await variantEntityHandler.matchingSyncs({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "matching_missing" -> ok', async () => {
       if (typeof variantEntityHandler.matchingSyncs !== 'function') return;
       const storage = createInMemoryStorage();
-      await variantEntityHandler.register({ action: "Article/create", tag: "ok", fields: "[{\"name\":\"article\",\"typeExpr\":\"A\"}]" }, storage);
-      const result = await variantEntityHandler.matchingSyncs({ variant: "nonexistent-id" }, storage);
+      const afterResult_register_ok = await variantEntityHandler.register({ action: "Article/create", tag: "ok", fields: "[{\"name\":\"article\",\"typeExpr\":\"A\"}]" }, storage);
+      const _pool = Object.assign({}, (afterResult_register_ok?.output ?? {}));
+      const _fixtureInput = { variant: "nonexistent-id" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await variantEntityHandler.matchingSyncs({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -97,8 +107,13 @@ describe('VariantEntity imperative handler', () => {
     it('fixture "dead_check_valid" -> ok', async () => {
       if (typeof variantEntityHandler.isDead !== 'function') return;
       const storage = createInMemoryStorage();
-      await variantEntityHandler.register({ action: "Article/create", tag: "ok", fields: "[{\"name\":\"article\",\"typeExpr\":\"A\"}]" }, storage);
-      const result = await variantEntityHandler.isDead({ variant: "variant-entity-1" }, storage);
+      const afterResult_register_ok = await variantEntityHandler.register({ action: "Article/create", tag: "ok", fields: "[{\"name\":\"article\",\"typeExpr\":\"A\"}]" }, storage);
+      const _pool = Object.assign({}, (afterResult_register_ok?.output ?? {}));
+      const _fixtureInput = { variant: "variant-entity-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await variantEntityHandler.isDead({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -124,8 +139,13 @@ describe('VariantEntity imperative handler', () => {
     it('fixture "get_valid" -> ok', async () => {
       if (typeof variantEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await variantEntityHandler.register({ action: "Article/create", tag: "ok", fields: "[{\"name\":\"article\",\"typeExpr\":\"A\"}]" }, storage);
-      const result = await variantEntityHandler.get({ variant: "variant-entity-1" }, storage);
+      const afterResult_register_ok = await variantEntityHandler.register({ action: "Article/create", tag: "ok", fields: "[{\"name\":\"article\",\"typeExpr\":\"A\"}]" }, storage);
+      const _pool = Object.assign({}, (afterResult_register_ok?.output ?? {}));
+      const _fixtureInput = { variant: "variant-entity-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await variantEntityHandler.get({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -155,16 +155,26 @@ describe('Theme functional handler', () => {
     it('fixture "extend_dark_compact" -> ok', async () => {
       if (typeof themeHandler.extend !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(themeHandler.create({ theme: "H-1", name: "dark", overrides: "{ \"color-bg\": \"#1a1a1a\", \"color-text\": \"#ffffff\" }" }), storage);
-      const result = await interpret(themeHandler.extend({ theme: "H-3", base: "H-1", overrides: "{ \"spacing-unit\": 4 }" }), storage);
+      const afterResult_create_dark = await interpret(themeHandler.create({ theme: "H-1", name: "dark", overrides: "{ \"color-bg\": \"#1a1a1a\", \"color-text\": \"#ffffff\" }" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_dark?.output ?? {}));
+      const _fixtureInput = { theme: "H-3", base: "H-1", overrides: "{ \"spacing-unit\": 4 }" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(themeHandler.extend({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "extend_missing_base" -> notfound', async () => {
       if (typeof themeHandler.extend !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(themeHandler.create({ theme: "H-1", name: "dark", overrides: "{ \"color-bg\": \"#1a1a1a\", \"color-text\": \"#ffffff\" }" }), storage);
-      const result = await interpret(themeHandler.extend({ theme: "H-4", base: "H-nonexistent", overrides: "{ \"color-bg\": \"#222\" }" }), storage);
+      const afterResult_create_dark = await interpret(themeHandler.create({ theme: "H-1", name: "dark", overrides: "{ \"color-bg\": \"#1a1a1a\", \"color-text\": \"#ffffff\" }" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_dark?.output ?? {}));
+      const _fixtureInput = { theme: "H-4", base: "H-nonexistent", overrides: "{ \"color-bg\": \"#222\" }" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(themeHandler.extend({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
@@ -226,8 +236,13 @@ describe('Theme functional handler', () => {
     it('fixture "activate_dark" -> ok', async () => {
       if (typeof themeHandler.activate !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(themeHandler.create({ theme: "H-1", name: "dark", overrides: "{ \"color-bg\": \"#1a1a1a\", \"color-text\": \"#ffffff\" }" }), storage);
-      const result = await interpret(themeHandler.activate({ theme: "H-1", priority: "1" }), storage);
+      const afterResult_create_dark = await interpret(themeHandler.create({ theme: "H-1", name: "dark", overrides: "{ \"color-bg\": \"#1a1a1a\", \"color-text\": \"#ffffff\" }" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_dark?.output ?? {}));
+      const _fixtureInput = { theme: "H-1", priority: "1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(themeHandler.activate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -296,9 +311,14 @@ describe('Theme functional handler', () => {
     it('fixture "deactivate_dark" -> ok', async () => {
       if (typeof themeHandler.deactivate !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(themeHandler.create({ theme: "H-1", name: "dark", overrides: "{ \"color-bg\": \"#1a1a1a\", \"color-text\": \"#ffffff\" }" }), storage);
-      await interpret(themeHandler.activate({ theme: "H-1", priority: "1" }), storage);
-      const result = await interpret(themeHandler.deactivate({ theme: "H-1" }), storage);
+      const afterResult_create_dark = await interpret(themeHandler.create({ theme: "H-1", name: "dark", overrides: "{ \"color-bg\": \"#1a1a1a\", \"color-text\": \"#ffffff\" }" }), storage);
+      const afterResult_activate_dark = await interpret(themeHandler.activate({ theme: "H-1", priority: "1" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_dark?.output ?? {}), (afterResult_activate_dark?.output ?? {}));
+      const _fixtureInput = { theme: "H-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(themeHandler.deactivate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -367,8 +387,13 @@ describe('Theme functional handler', () => {
     it('fixture "resolve_dark" -> ok', async () => {
       if (typeof themeHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(themeHandler.create({ theme: "H-1", name: "dark", overrides: "{ \"color-bg\": \"#1a1a1a\", \"color-text\": \"#ffffff\" }" }), storage);
-      const result = await interpret(themeHandler.resolve({ theme: "H-1" }), storage);
+      const afterResult_create_dark = await interpret(themeHandler.create({ theme: "H-1", name: "dark", overrides: "{ \"color-bg\": \"#1a1a1a\", \"color-text\": \"#ffffff\" }" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_dark?.output ?? {}));
+      const _fixtureInput = { theme: "H-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(themeHandler.resolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

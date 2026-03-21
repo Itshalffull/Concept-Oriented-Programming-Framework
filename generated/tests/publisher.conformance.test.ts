@@ -155,8 +155,13 @@ describe('Publisher functional handler', () => {
     it('fixture "sign_existing" -> ok', async () => {
       if (typeof publisherHandler.sign !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(publisherHandler.package({ source_path: "/src/auth", kind: "library", manifest: {"module_id":"auth","version":"2.0.0","dependencies":["crypto"]} }), storage);
-      const result = await interpret(publisherHandler.sign({ publication: "pub-1" }), storage);
+      const afterResult_package_library = await interpret(publisherHandler.package({ source_path: "/src/auth", kind: "library", manifest: {"module_id":"auth","version":"2.0.0","dependencies":["crypto"]} }), storage);
+      const _pool = Object.assign({}, (afterResult_package_library?.output ?? {}));
+      const _fixtureInput = { publication: "pub-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(publisherHandler.sign({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('Publisher functional handler', () => {
     it('fixture "attest_ci_build" -> ok', async () => {
       if (typeof publisherHandler.attest !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(publisherHandler.package({ source_path: "/src/auth", kind: "library", manifest: {"module_id":"auth","version":"2.0.0","dependencies":["crypto"]} }), storage);
-      const result = await interpret(publisherHandler.attest({ publication: "pub-1", builder: "github-actions", source_repo: "https://github.com/org/repo", source_commit: "abc123def456" }), storage);
+      const afterResult_package_library = await interpret(publisherHandler.package({ source_path: "/src/auth", kind: "library", manifest: {"module_id":"auth","version":"2.0.0","dependencies":["crypto"]} }), storage);
+      const _pool = Object.assign({}, (afterResult_package_library?.output ?? {}));
+      const _fixtureInput = { publication: "pub-1", builder: "github-actions", source_repo: "https://github.com/org/repo", source_commit: "abc123def456" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(publisherHandler.attest({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('Publisher functional handler', () => {
     it('fixture "generate_sbom_existing" -> ok', async () => {
       if (typeof publisherHandler.generateSbom !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(publisherHandler.package({ source_path: "/src/auth", kind: "library", manifest: {"module_id":"auth","version":"2.0.0","dependencies":["crypto"]} }), storage);
-      const result = await interpret(publisherHandler.generateSbom({ publication: "pub-1" }), storage);
+      const afterResult_package_library = await interpret(publisherHandler.package({ source_path: "/src/auth", kind: "library", manifest: {"module_id":"auth","version":"2.0.0","dependencies":["crypto"]} }), storage);
+      const _pool = Object.assign({}, (afterResult_package_library?.output ?? {}));
+      const _fixtureInput = { publication: "pub-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(publisherHandler.generateSbom({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -362,8 +377,13 @@ describe('Publisher functional handler', () => {
     it('fixture "upload_to_registry" -> ok', async () => {
       if (typeof publisherHandler.upload !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(publisherHandler.package({ source_path: "/src/auth", kind: "library", manifest: {"module_id":"auth","version":"2.0.0","dependencies":["crypto"]} }), storage);
-      const result = await interpret(publisherHandler.upload({ publication: "pub-1", registry_url: "https://registry.example.com/api/v1" }), storage);
+      const afterResult_package_library = await interpret(publisherHandler.package({ source_path: "/src/auth", kind: "library", manifest: {"module_id":"auth","version":"2.0.0","dependencies":["crypto"]} }), storage);
+      const _pool = Object.assign({}, (afterResult_package_library?.output ?? {}));
+      const _fixtureInput = { publication: "pub-1", registry_url: "https://registry.example.com/api/v1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(publisherHandler.upload({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

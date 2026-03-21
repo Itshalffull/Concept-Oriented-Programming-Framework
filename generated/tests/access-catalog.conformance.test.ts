@@ -155,16 +155,26 @@ describe('AccessCatalog functional handler', () => {
     it('fixture "register_editor_role" -> ok', async () => {
       if (typeof accessCatalogHandler.registerRole !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(accessCatalogHandler.registerPermission({ entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" }), storage);
-      const result = await interpret(accessCatalogHandler.registerRole({ entry: "role-001", key: "editor", label: "Editor", description: "Content editor role", permissions: "[\"content.edit\",\"content.publish\"]" }), storage);
+      const afterResult_register_admin_perm = await interpret(accessCatalogHandler.registerPermission({ entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_admin_perm?.output ?? {}));
+      const _fixtureInput = { entry: "role-001", key: "editor", label: "Editor", description: "Content editor role", permissions: "[\"content.edit\",\"content.publish\"]" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(accessCatalogHandler.registerRole({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_empty_role" -> ok', async () => {
       if (typeof accessCatalogHandler.registerRole !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(accessCatalogHandler.registerPermission({ entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" }), storage);
-      const result = await interpret(accessCatalogHandler.registerRole({ entry: "", key: "editor", label: "Editor", description: "desc", permissions: "[]" }), storage);
+      const afterResult_register_admin_perm = await interpret(accessCatalogHandler.registerPermission({ entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_admin_perm?.output ?? {}));
+      const _fixtureInput = { entry: "", key: "editor", label: "Editor", description: "desc", permissions: "[]" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(accessCatalogHandler.registerRole({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -225,16 +235,26 @@ describe('AccessCatalog functional handler', () => {
     it('fixture "register_view_action" -> ok', async () => {
       if (typeof accessCatalogHandler.registerResourceAction !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(accessCatalogHandler.registerPermission({ entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" }), storage);
-      const result = await interpret(accessCatalogHandler.registerResourceAction({ entry: "action-001", catalog: "schema", key: "view", label: "View content" }), storage);
+      const afterResult_register_admin_perm = await interpret(accessCatalogHandler.registerPermission({ entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_admin_perm?.output ?? {}));
+      const _fixtureInput = { entry: "action-001", catalog: "schema", key: "view", label: "View content" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(accessCatalogHandler.registerResourceAction({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_empty_action" -> ok', async () => {
       if (typeof accessCatalogHandler.registerResourceAction !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(accessCatalogHandler.registerPermission({ entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" }), storage);
-      const result = await interpret(accessCatalogHandler.registerResourceAction({ entry: "", catalog: "schema", key: "view", label: "View" }), storage);
+      const afterResult_register_admin_perm = await interpret(accessCatalogHandler.registerPermission({ entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_admin_perm?.output ?? {}));
+      const _fixtureInput = { entry: "", catalog: "schema", key: "view", label: "View" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(accessCatalogHandler.registerResourceAction({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -295,8 +315,13 @@ describe('AccessCatalog functional handler', () => {
     it('fixture "list_all_perms" -> ok', async () => {
       if (typeof accessCatalogHandler.listPermissions !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(accessCatalogHandler.registerPermission({ entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" }), storage);
-      const result = await interpret(accessCatalogHandler.listPermissions({  }), storage);
+      const afterResult_register_admin_perm = await interpret(accessCatalogHandler.registerPermission({ entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_admin_perm?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(accessCatalogHandler.listPermissions({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -357,8 +382,13 @@ describe('AccessCatalog functional handler', () => {
     it('fixture "list_all_roles" -> ok', async () => {
       if (typeof accessCatalogHandler.listRoles !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(accessCatalogHandler.registerPermission({ entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" }), storage);
-      const result = await interpret(accessCatalogHandler.listRoles({  }), storage);
+      const afterResult_register_admin_perm = await interpret(accessCatalogHandler.registerPermission({ entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_admin_perm?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(accessCatalogHandler.listRoles({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -419,16 +449,26 @@ describe('AccessCatalog functional handler', () => {
     it('fixture "list_schema_actions" -> ok', async () => {
       if (typeof accessCatalogHandler.listResourceActions !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(accessCatalogHandler.registerPermission({ entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" }), storage);
-      const result = await interpret(accessCatalogHandler.listResourceActions({ catalog: "schema" }), storage);
+      const afterResult_register_admin_perm = await interpret(accessCatalogHandler.registerPermission({ entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_admin_perm?.output ?? {}));
+      const _fixtureInput = { catalog: "schema" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(accessCatalogHandler.listResourceActions({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "list_empty_catalog" -> ok', async () => {
       if (typeof accessCatalogHandler.listResourceActions !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(accessCatalogHandler.registerPermission({ entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" }), storage);
-      const result = await interpret(accessCatalogHandler.listResourceActions({ catalog: "" }), storage);
+      const afterResult_register_admin_perm = await interpret(accessCatalogHandler.registerPermission({ entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_admin_perm?.output ?? {}));
+      const _fixtureInput = { catalog: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(accessCatalogHandler.listResourceActions({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

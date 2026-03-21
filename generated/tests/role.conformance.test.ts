@@ -155,8 +155,13 @@ describe('Role functional handler', () => {
     it('fixture "assign_alice_admin" -> ok', async () => {
       if (typeof roleHandler.assign !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" }), storage);
-      const result = await interpret(roleHandler.assign({ role: "role-1", member: "alice", assignedBy: "system" }), storage);
+      const afterResult_create_admin = await interpret(roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_admin?.output ?? {}));
+      const _fixtureInput = { role: "role-1", member: "alice", assignedBy: "system" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(roleHandler.assign({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('Role functional handler', () => {
     it('fixture "revoke_alice" -> ok', async () => {
       if (typeof roleHandler.revoke !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" }), storage);
-      const result = await interpret(roleHandler.revoke({ role: "role-1", member: "alice" }), storage);
+      const afterResult_create_admin = await interpret(roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_admin?.output ?? {}));
+      const _fixtureInput = { role: "role-1", member: "alice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(roleHandler.revoke({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('Role functional handler', () => {
     it('fixture "check_alice_admin" -> ok', async () => {
       if (typeof roleHandler.check !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" }), storage);
-      const result = await interpret(roleHandler.check({ role: "role-1", member: "alice" }), storage);
+      const afterResult_create_admin = await interpret(roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_admin?.output ?? {}));
+      const _fixtureInput = { role: "role-1", member: "alice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(roleHandler.check({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -362,8 +377,13 @@ describe('Role functional handler', () => {
     it('fixture "dissolve_admin" -> ok', async () => {
       if (typeof roleHandler.dissolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" }), storage);
-      const result = await interpret(roleHandler.dissolve({ role: "role-1" }), storage);
+      const afterResult_create_admin = await interpret(roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_admin?.output ?? {}));
+      const _fixtureInput = { role: "role-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(roleHandler.dissolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

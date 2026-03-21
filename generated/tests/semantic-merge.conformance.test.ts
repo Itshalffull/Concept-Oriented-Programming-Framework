@@ -148,16 +148,26 @@ describe('SemanticMerge functional handler', () => {
     it('fixture "clean_semantic" -> ok', async () => {
       if (typeof semanticMergeHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(semanticMergeHandler.register({  }), storage);
-      const result = await interpret(semanticMergeHandler.execute({ base: "import os\ndef main():\n  pass", ours: "import os\ndef main():\n  pass", theirs: "import os\nimport sys\ndef main():\n  pass" }), storage);
+      const afterResult_valid = await interpret(semanticMergeHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { base: "import os\ndef main():\n  pass", ours: "import os\ndef main():\n  pass", theirs: "import os\nimport sys\ndef main():\n  pass" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(semanticMergeHandler.execute({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "conflict_semantic" -> ok', async () => {
       if (typeof semanticMergeHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(semanticMergeHandler.register({  }), storage);
-      const result = await interpret(semanticMergeHandler.execute({ base: "function foo() { return 1; }", ours: "function foo() { return 2; }", theirs: "function foo() { return 3; }" }), storage);
+      const afterResult_valid = await interpret(semanticMergeHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { base: "function foo() { return 1; }", ours: "function foo() { return 2; }", theirs: "function foo() { return 3; }" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(semanticMergeHandler.execute({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

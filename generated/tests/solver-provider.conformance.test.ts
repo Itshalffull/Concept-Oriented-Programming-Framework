@@ -63,8 +63,13 @@ describe('SolverProvider imperative handler', () => {
     it('fixture "valid_dispatch" -> ok', async () => {
       if (typeof solverProviderHandler.dispatch !== 'function') return;
       const storage = createInMemoryStorage();
-      await solverProviderHandler.register({ provider_id: "z3", name: "Z3 SMT Solver", supported_languages: "[\"smtlib\"]", supported_kinds: "[\"invariant\",\"precondition\",\"postcondition\",\"safety\"]", priority: "1" }, storage);
-      const result = await solverProviderHandler.dispatch({ property_ref: "prop-1", formal_language: "smtlib", kind: "invariant" }, storage);
+      const afterResult_valid_register = await solverProviderHandler.register({ provider_id: "z3", name: "Z3 SMT Solver", supported_languages: "[\"smtlib\"]", supported_kinds: "[\"invariant\",\"precondition\",\"postcondition\",\"safety\"]", priority: "1" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
+      const _fixtureInput = { property_ref: "prop-1", formal_language: "smtlib", kind: "invariant" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await solverProviderHandler.dispatch({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -91,8 +96,13 @@ describe('SolverProvider imperative handler', () => {
     it('fixture "valid_batch" -> ok', async () => {
       if (typeof solverProviderHandler.dispatch_batch !== 'function') return;
       const storage = createInMemoryStorage();
-      await solverProviderHandler.register({ provider_id: "z3", name: "Z3 SMT Solver", supported_languages: "[\"smtlib\"]", supported_kinds: "[\"invariant\",\"precondition\",\"postcondition\",\"safety\"]", priority: "1" }, storage);
-      const result = await solverProviderHandler.dispatch_batch({ property_refs: "[\"prop-1\",\"prop-2\"]" }, storage);
+      const afterResult_valid_register = await solverProviderHandler.register({ provider_id: "z3", name: "Z3 SMT Solver", supported_languages: "[\"smtlib\"]", supported_kinds: "[\"invariant\",\"precondition\",\"postcondition\",\"safety\"]", priority: "1" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
+      const _fixtureInput = { property_refs: "[\"prop-1\",\"prop-2\"]" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await solverProviderHandler.dispatch_batch({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -119,8 +129,13 @@ describe('SolverProvider imperative handler', () => {
     it('fixture "valid_health" -> ok', async () => {
       if (typeof solverProviderHandler.health_check !== 'function') return;
       const storage = createInMemoryStorage();
-      await solverProviderHandler.register({ provider_id: "z3", name: "Z3 SMT Solver", supported_languages: "[\"smtlib\"]", supported_kinds: "[\"invariant\",\"precondition\",\"postcondition\",\"safety\"]", priority: "1" }, storage);
-      const result = await solverProviderHandler.health_check({ provider_id: "z3" }, storage);
+      const afterResult_valid_register = await solverProviderHandler.register({ provider_id: "z3", name: "Z3 SMT Solver", supported_languages: "[\"smtlib\"]", supported_kinds: "[\"invariant\",\"precondition\",\"postcondition\",\"safety\"]", priority: "1" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
+      const _fixtureInput = { provider_id: "z3" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await solverProviderHandler.health_check({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -147,8 +162,13 @@ describe('SolverProvider imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof solverProviderHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await solverProviderHandler.register({ provider_id: "z3", name: "Z3 SMT Solver", supported_languages: "[\"smtlib\"]", supported_kinds: "[\"invariant\",\"precondition\",\"postcondition\",\"safety\"]", priority: "1" }, storage);
-      const result = await solverProviderHandler.list({  }, storage);
+      const afterResult_valid_register = await solverProviderHandler.register({ provider_id: "z3", name: "Z3 SMT Solver", supported_languages: "[\"smtlib\"]", supported_kinds: "[\"invariant\",\"precondition\",\"postcondition\",\"safety\"]", priority: "1" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await solverProviderHandler.list({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -167,8 +187,13 @@ describe('SolverProvider imperative handler', () => {
     it('fixture "valid_unregister" -> ok', async () => {
       if (typeof solverProviderHandler.unregister !== 'function') return;
       const storage = createInMemoryStorage();
-      await solverProviderHandler.register({ provider_id: "z3", name: "Z3 SMT Solver", supported_languages: "[\"smtlib\"]", supported_kinds: "[\"invariant\",\"precondition\",\"postcondition\",\"safety\"]", priority: "1" }, storage);
-      const result = await solverProviderHandler.unregister({ provider_id: "z3" }, storage);
+      const afterResult_valid_register = await solverProviderHandler.register({ provider_id: "z3", name: "Z3 SMT Solver", supported_languages: "[\"smtlib\"]", supported_kinds: "[\"invariant\",\"precondition\",\"postcondition\",\"safety\"]", priority: "1" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
+      const _fixtureInput = { provider_id: "z3" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await solverProviderHandler.unregister({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 

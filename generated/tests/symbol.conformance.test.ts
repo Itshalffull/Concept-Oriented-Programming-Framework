@@ -69,8 +69,13 @@ describe('Symbol imperative handler', () => {
     it('fixture "valid_resolve" -> ok', async () => {
       if (typeof symbolHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await symbolHandler.register({ symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }, storage);
-      const result = await symbolHandler.resolve({ symbolString: "clef/concept/Order" }, storage);
+      const afterResult_valid_register = await symbolHandler.register({ symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
+      const _fixtureInput = { symbolString: "clef/concept/Order" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await symbolHandler.resolve({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -96,16 +101,26 @@ describe('Symbol imperative handler', () => {
     it('fixture "find_functions" -> ok', async () => {
       if (typeof symbolHandler.findByKind !== 'function') return;
       const storage = createInMemoryStorage();
-      await symbolHandler.register({ symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }, storage);
-      const result = await symbolHandler.findByKind({ kind: "function", namespace: "ts/function/src/handlers" }, storage);
+      const afterResult_valid_register = await symbolHandler.register({ symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
+      const _fixtureInput = { kind: "function", namespace: "ts/function/src/handlers" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await symbolHandler.findByKind({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_all_concepts" -> ok', async () => {
       if (typeof symbolHandler.findByKind !== 'function') return;
       const storage = createInMemoryStorage();
-      await symbolHandler.register({ symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }, storage);
-      const result = await symbolHandler.findByKind({ kind: "concept", namespace: "" }, storage);
+      const afterResult_valid_register = await symbolHandler.register({ symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
+      const _fixtureInput = { kind: "concept", namespace: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await symbolHandler.findByKind({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -124,16 +139,26 @@ describe('Symbol imperative handler', () => {
     it('fixture "find_in_file" -> ok', async () => {
       if (typeof symbolHandler.findByFile !== 'function') return;
       const storage = createInMemoryStorage();
-      await symbolHandler.register({ symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }, storage);
-      const result = await symbolHandler.findByFile({ file: "src/handlers/user.ts" }, storage);
+      const afterResult_valid_register = await symbolHandler.register({ symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
+      const _fixtureInput = { file: "src/handlers/user.ts" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await symbolHandler.findByFile({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_in_empty_file" -> ok', async () => {
       if (typeof symbolHandler.findByFile !== 'function') return;
       const storage = createInMemoryStorage();
-      await symbolHandler.register({ symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }, storage);
-      const result = await symbolHandler.findByFile({ file: "src/empty.ts" }, storage);
+      const afterResult_valid_register = await symbolHandler.register({ symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
+      const _fixtureInput = { file: "src/empty.ts" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await symbolHandler.findByFile({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -152,8 +177,13 @@ describe('Symbol imperative handler', () => {
     it('fixture "valid_rename" -> ok', async () => {
       if (typeof symbolHandler.rename !== 'function') return;
       const storage = createInMemoryStorage();
-      await symbolHandler.register({ symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }, storage);
-      const result = await symbolHandler.rename({ symbol: "symbol-1", newName: "updateUser" }, storage);
+      const afterResult_valid_register = await symbolHandler.register({ symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
+      const _fixtureInput = { symbol: "symbol-1", newName: "updateUser" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await symbolHandler.rename({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -179,8 +209,13 @@ describe('Symbol imperative handler', () => {
     it('fixture "valid_get" -> ok', async () => {
       if (typeof symbolHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await symbolHandler.register({ symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }, storage);
-      const result = await symbolHandler.get({ symbol: "symbol-1" }, storage);
+      const afterResult_valid_register = await symbolHandler.register({ symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
+      const _fixtureInput = { symbol: "symbol-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await symbolHandler.get({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -162,8 +162,13 @@ describe('Signal functional handler', () => {
     it('fixture "valid_read" -> ok', async () => {
       if (typeof signalHandler.read !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(signalHandler.create({ signal: "G-1", kind: "state", initialValue: "hello" }), storage);
-      const result = await interpret(signalHandler.read({ signal: "G-1" }), storage);
+      const afterResult_valid_create_state = await interpret(signalHandler.create({ signal: "G-1", kind: "state", initialValue: "hello" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_create_state?.output ?? {}));
+      const _fixtureInput = { signal: "G-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(signalHandler.read({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -231,8 +236,13 @@ describe('Signal functional handler', () => {
     it('fixture "valid_write" -> ok', async () => {
       if (typeof signalHandler.write !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(signalHandler.create({ signal: "G-1", kind: "state", initialValue: "hello" }), storage);
-      const result = await interpret(signalHandler.write({ signal: "G-1", value: "world" }), storage);
+      const afterResult_valid_create_state = await interpret(signalHandler.create({ signal: "G-1", kind: "state", initialValue: "hello" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_create_state?.output ?? {}));
+      const _fixtureInput = { signal: "G-1", value: "world" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(signalHandler.write({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -300,8 +310,13 @@ describe('Signal functional handler', () => {
     it('fixture "valid_batch" -> ok', async () => {
       if (typeof signalHandler.batch !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(signalHandler.create({ signal: "G-1", kind: "state", initialValue: "hello" }), storage);
-      const result = await interpret(signalHandler.batch({ signals: "[{\"signal\":\"G-1\",\"value\":\"a\"},{\"signal\":\"G-2\",\"value\":\"b\"}]" }), storage);
+      const afterResult_valid_create_state = await interpret(signalHandler.create({ signal: "G-1", kind: "state", initialValue: "hello" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_create_state?.output ?? {}));
+      const _fixtureInput = { signals: "[{\"signal\":\"G-1\",\"value\":\"a\"},{\"signal\":\"G-2\",\"value\":\"b\"}]" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(signalHandler.batch({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -369,8 +384,13 @@ describe('Signal functional handler', () => {
     it('fixture "valid_dispose" -> ok', async () => {
       if (typeof signalHandler.dispose !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(signalHandler.create({ signal: "G-1", kind: "state", initialValue: "hello" }), storage);
-      const result = await interpret(signalHandler.dispose({ signal: "G-1" }), storage);
+      const afterResult_valid_create_state = await interpret(signalHandler.create({ signal: "G-1", kind: "state", initialValue: "hello" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_create_state?.output ?? {}));
+      const _fixtureInput = { signal: "G-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(signalHandler.dispose({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

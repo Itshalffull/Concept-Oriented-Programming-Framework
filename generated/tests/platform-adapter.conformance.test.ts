@@ -163,24 +163,39 @@ describe('PlatformAdapter functional handler', () => {
     it('fixture "nav_push" -> ok', async () => {
       if (typeof platformAdapterHandler.mapNavigation !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
-      const result = await interpret(platformAdapterHandler.mapNavigation({ adapter: "browser-adapter-1", transition: "{ \"type\": \"push\", \"destination\": \"articles\" }" }), storage);
+      const afterResult_register_browser = await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_browser?.output ?? {}));
+      const _fixtureInput = { adapter: "browser-adapter-1", transition: "{ \"type\": \"push\", \"destination\": \"articles\" }" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(platformAdapterHandler.mapNavigation({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "nav_replace" -> ok', async () => {
       if (typeof platformAdapterHandler.mapNavigation !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
-      const result = await interpret(platformAdapterHandler.mapNavigation({ adapter: "browser-adapter-1", transition: "{ \"type\": \"replace\", \"destination\": \"home\" }" }), storage);
+      const afterResult_register_browser = await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_browser?.output ?? {}));
+      const _fixtureInput = { adapter: "browser-adapter-1", transition: "{ \"type\": \"replace\", \"destination\": \"home\" }" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(platformAdapterHandler.mapNavigation({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "nav_not_registered" -> unsupported', async () => {
       if (typeof platformAdapterHandler.mapNavigation !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
-      const result = await interpret(platformAdapterHandler.mapNavigation({ adapter: "unknown-adapter", transition: "{ \"type\": \"push\" }" }), storage);
+      const afterResult_register_browser = await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_browser?.output ?? {}));
+      const _fixtureInput = { adapter: "unknown-adapter", transition: "{ \"type\": \"push\" }" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(platformAdapterHandler.mapNavigation({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('unsupported'));
     });
@@ -250,16 +265,26 @@ describe('PlatformAdapter functional handler', () => {
     it('fixture "zone_persistent" -> ok', async () => {
       if (typeof platformAdapterHandler.mapZone !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
-      const result = await interpret(platformAdapterHandler.mapZone({ adapter: "browser-adapter-1", role: "persistent" }), storage);
+      const afterResult_register_browser = await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_browser?.output ?? {}));
+      const _fixtureInput = { adapter: "browser-adapter-1", role: "persistent" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(platformAdapterHandler.mapZone({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "zone_navigated" -> ok', async () => {
       if (typeof platformAdapterHandler.mapZone !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
-      const result = await interpret(platformAdapterHandler.mapZone({ adapter: "browser-adapter-1", role: "navigated" }), storage);
+      const afterResult_register_browser = await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_browser?.output ?? {}));
+      const _fixtureInput = { adapter: "browser-adapter-1", role: "navigated" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(platformAdapterHandler.mapZone({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -328,24 +353,39 @@ describe('PlatformAdapter functional handler', () => {
     it('fixture "event_popstate" -> ok', async () => {
       if (typeof platformAdapterHandler.handlePlatformEvent !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
-      const result = await interpret(platformAdapterHandler.handlePlatformEvent({ adapter: "browser-adapter-1", event: "{ \"name\": \"popstate\" }" }), storage);
+      const afterResult_register_browser = await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_browser?.output ?? {}));
+      const _fixtureInput = { adapter: "browser-adapter-1", event: "{ \"name\": \"popstate\" }" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(platformAdapterHandler.handlePlatformEvent({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "event_hashchange" -> ok', async () => {
       if (typeof platformAdapterHandler.handlePlatformEvent !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
-      const result = await interpret(platformAdapterHandler.handlePlatformEvent({ adapter: "browser-adapter-1", event: "{ \"name\": \"hashchange\" }" }), storage);
+      const afterResult_register_browser = await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_browser?.output ?? {}));
+      const _fixtureInput = { adapter: "browser-adapter-1", event: "{ \"name\": \"hashchange\" }" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(platformAdapterHandler.handlePlatformEvent({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "event_not_registered" -> ignored', async () => {
       if (typeof platformAdapterHandler.handlePlatformEvent !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
-      const result = await interpret(platformAdapterHandler.handlePlatformEvent({ adapter: "unknown-adapter", event: "{ \"name\": \"popstate\" }" }), storage);
+      const afterResult_register_browser = await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_browser?.output ?? {}));
+      const _fixtureInput = { adapter: "unknown-adapter", event: "{ \"name\": \"popstate\" }" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(platformAdapterHandler.handlePlatformEvent({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('ignored'));
     });

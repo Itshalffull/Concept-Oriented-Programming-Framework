@@ -155,16 +155,26 @@ describe('Content functional handler', () => {
     it('fixture "pin_existing" -> ok', async () => {
       if (typeof contentHandler.pin !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(contentHandler.store({ data: "Hello, World!", name: "greeting.txt", contentType: "text/plain" }), storage);
-      const result = await interpret(contentHandler.pin({ cid: "abc123def456" }), storage);
+      const afterResult_store_text_file = await interpret(contentHandler.store({ data: "Hello, World!", name: "greeting.txt", contentType: "text/plain" }), storage);
+      const _pool = Object.assign({}, (afterResult_store_text_file?.output ?? {}));
+      const _fixtureInput = { cid: "abc123def456" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(contentHandler.pin({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "pin_empty_cid" -> ok', async () => {
       if (typeof contentHandler.pin !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(contentHandler.store({ data: "Hello, World!", name: "greeting.txt", contentType: "text/plain" }), storage);
-      const result = await interpret(contentHandler.pin({ cid: "" }), storage);
+      const afterResult_store_text_file = await interpret(contentHandler.store({ data: "Hello, World!", name: "greeting.txt", contentType: "text/plain" }), storage);
+      const _pool = Object.assign({}, (afterResult_store_text_file?.output ?? {}));
+      const _fixtureInput = { cid: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(contentHandler.pin({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -225,18 +235,28 @@ describe('Content functional handler', () => {
     it('fixture "unpin_existing" -> ok', async () => {
       if (typeof contentHandler.unpin !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(contentHandler.store({ data: "Hello, World!", name: "greeting.txt", contentType: "text/plain" }), storage);
-      await interpret(contentHandler.pin({ cid: "abc123def456" }), storage);
-      const result = await interpret(contentHandler.unpin({ cid: "abc123def456" }), storage);
+      const afterResult_store_text_file = await interpret(contentHandler.store({ data: "Hello, World!", name: "greeting.txt", contentType: "text/plain" }), storage);
+      const afterResult_pin_existing = await interpret(contentHandler.pin({ cid: "abc123def456" }), storage);
+      const _pool = Object.assign({}, (afterResult_store_text_file?.output ?? {}), (afterResult_pin_existing?.output ?? {}));
+      const _fixtureInput = { cid: "abc123def456" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(contentHandler.unpin({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "unpin_empty_cid" -> ok', async () => {
       if (typeof contentHandler.unpin !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(contentHandler.store({ data: "Hello, World!", name: "greeting.txt", contentType: "text/plain" }), storage);
-      await interpret(contentHandler.pin({ cid: "abc123def456" }), storage);
-      const result = await interpret(contentHandler.unpin({ cid: "" }), storage);
+      const afterResult_store_text_file = await interpret(contentHandler.store({ data: "Hello, World!", name: "greeting.txt", contentType: "text/plain" }), storage);
+      const afterResult_pin_existing = await interpret(contentHandler.pin({ cid: "abc123def456" }), storage);
+      const _pool = Object.assign({}, (afterResult_store_text_file?.output ?? {}), (afterResult_pin_existing?.output ?? {}));
+      const _fixtureInput = { cid: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(contentHandler.unpin({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -297,8 +317,13 @@ describe('Content functional handler', () => {
     it('fixture "resolve_existing" -> ok', async () => {
       if (typeof contentHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(contentHandler.store({ data: "Hello, World!", name: "greeting.txt", contentType: "text/plain" }), storage);
-      const result = await interpret(contentHandler.resolve({ cid: "abc123def456" }), storage);
+      const afterResult_store_text_file = await interpret(contentHandler.store({ data: "Hello, World!", name: "greeting.txt", contentType: "text/plain" }), storage);
+      const _pool = Object.assign({}, (afterResult_store_text_file?.output ?? {}));
+      const _fixtureInput = { cid: "abc123def456" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(contentHandler.resolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

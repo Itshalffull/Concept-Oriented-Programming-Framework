@@ -162,8 +162,13 @@ describe('VercelKVProvider functional handler', () => {
     it('fixture "get_session_cache" -> ok', async () => {
       if (typeof vercelKVProviderHandler.getCredentials !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(vercelKVProviderHandler.provision({ storeName: "session-cache", config: "{}" }), storage);
-      const result = await interpret(vercelKVProviderHandler.getCredentials({ storeName: "session-cache" }), storage);
+      const afterResult_provision_session_cache = await interpret(vercelKVProviderHandler.provision({ storeName: "session-cache", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_session_cache?.output ?? {}));
+      const _fixtureInput = { storeName: "session-cache" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(vercelKVProviderHandler.getCredentials({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -231,8 +236,13 @@ describe('VercelKVProvider functional handler', () => {
     it('fixture "destroy_session_cache" -> ok', async () => {
       if (typeof vercelKVProviderHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(vercelKVProviderHandler.provision({ storeName: "session-cache", config: "{}" }), storage);
-      const result = await interpret(vercelKVProviderHandler.destroy({ storeName: "session-cache" }), storage);
+      const afterResult_provision_session_cache = await interpret(vercelKVProviderHandler.provision({ storeName: "session-cache", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_session_cache?.output ?? {}));
+      const _fixtureInput = { storeName: "session-cache" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(vercelKVProviderHandler.destroy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -163,16 +163,26 @@ describe('AbiDecoderFieldMapping functional handler', () => {
     it('fixture "reverse_valid" -> ok', async () => {
       if (typeof abiDecoderFieldMappingHandler.reverse !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(abiDecoderFieldMappingHandler.apply({ data: "0x00000001", mapper: "abi-map-1", contract: "0xAbC123" }), storage);
-      const result = await interpret(abiDecoderFieldMappingHandler.reverse({ data: "{\"owner\":\"0xAbC123\",\"amount\":100}", mapper: "abi-map-1" }), storage);
+      const afterResult_apply_valid = await interpret(abiDecoderFieldMappingHandler.apply({ data: "0x00000001", mapper: "abi-map-1", contract: "0xAbC123" }), storage);
+      const _pool = Object.assign({}, (afterResult_apply_valid?.output ?? {}));
+      const _fixtureInput = { data: "{\"owner\":\"0xAbC123\",\"amount\":100}", mapper: "abi-map-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(abiDecoderFieldMappingHandler.reverse({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "reverse_missing_mapper" -> notfound', async () => {
       if (typeof abiDecoderFieldMappingHandler.reverse !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(abiDecoderFieldMappingHandler.apply({ data: "0x00000001", mapper: "abi-map-1", contract: "0xAbC123" }), storage);
-      const result = await interpret(abiDecoderFieldMappingHandler.reverse({ data: "{}", mapper: "nonexistent" }), storage);
+      const afterResult_apply_valid = await interpret(abiDecoderFieldMappingHandler.apply({ data: "0x00000001", mapper: "abi-map-1", contract: "0xAbC123" }), storage);
+      const _pool = Object.assign({}, (afterResult_apply_valid?.output ?? {}));
+      const _fixtureInput = { data: "{}", mapper: "nonexistent" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(abiDecoderFieldMappingHandler.reverse({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
@@ -241,16 +251,26 @@ describe('AbiDecoderFieldMapping functional handler', () => {
     it('fixture "register_valid" -> ok', async () => {
       if (typeof abiDecoderFieldMappingHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(abiDecoderFieldMappingHandler.apply({ data: "0x00000001", mapper: "abi-map-1", contract: "0xAbC123" }), storage);
-      const result = await interpret(abiDecoderFieldMappingHandler.register({ contract_abi: "[{\"type\":\"function\",\"name\":\"balanceOf\"}]", entity_schema: "TokenBalance", field_rules: "{\"balance\":\"balanceOf.output[0]\"}" }), storage);
+      const afterResult_apply_valid = await interpret(abiDecoderFieldMappingHandler.apply({ data: "0x00000001", mapper: "abi-map-1", contract: "0xAbC123" }), storage);
+      const _pool = Object.assign({}, (afterResult_apply_valid?.output ?? {}));
+      const _fixtureInput = { contract_abi: "[{\"type\":\"function\",\"name\":\"balanceOf\"}]", entity_schema: "TokenBalance", field_rules: "{\"balance\":\"balanceOf.output[0]\"}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(abiDecoderFieldMappingHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_no_abi" -> invalid', async () => {
       if (typeof abiDecoderFieldMappingHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(abiDecoderFieldMappingHandler.apply({ data: "0x00000001", mapper: "abi-map-1", contract: "0xAbC123" }), storage);
-      const result = await interpret(abiDecoderFieldMappingHandler.register({ contract_abi: "", entity_schema: "TokenBalance", field_rules: "{}" }), storage);
+      const afterResult_apply_valid = await interpret(abiDecoderFieldMappingHandler.apply({ data: "0x00000001", mapper: "abi-map-1", contract: "0xAbC123" }), storage);
+      const _pool = Object.assign({}, (afterResult_apply_valid?.output ?? {}));
+      const _fixtureInput = { contract_abi: "", entity_schema: "TokenBalance", field_rules: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(abiDecoderFieldMappingHandler.register({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('invalid'));
     });
@@ -258,8 +278,13 @@ describe('AbiDecoderFieldMapping functional handler', () => {
     it('fixture "register_bad_abi" -> invalid', async () => {
       if (typeof abiDecoderFieldMappingHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(abiDecoderFieldMappingHandler.apply({ data: "0x00000001", mapper: "abi-map-1", contract: "0xAbC123" }), storage);
-      const result = await interpret(abiDecoderFieldMappingHandler.register({ contract_abi: "not-json", entity_schema: "TokenBalance", field_rules: "{}" }), storage);
+      const afterResult_apply_valid = await interpret(abiDecoderFieldMappingHandler.apply({ data: "0x00000001", mapper: "abi-map-1", contract: "0xAbC123" }), storage);
+      const _pool = Object.assign({}, (afterResult_apply_valid?.output ?? {}));
+      const _fixtureInput = { contract_abi: "not-json", entity_schema: "TokenBalance", field_rules: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(abiDecoderFieldMappingHandler.register({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('invalid'));
     });

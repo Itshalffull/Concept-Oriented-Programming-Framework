@@ -155,8 +155,13 @@ describe('RustGen functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof rustGenHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(rustGenHandler.generate({ spec: "spec-001", manifest: {"name":"Order","uri":"urn:clef/Order","typeParams":[],"relations":[],"actions":[{"name":"create","params":[{"name":"title","type":{"kind":"primitive","primitive":"String"}}],"variants":[{"tag":"ok","fields":[{"name":"id","type":{"kind":"primitive","primitive":"String"}}],"prose":"Created."}]}],"invariants":[],"graphqlSchema":"","jsonSchemas":{"invocations":{},"completions":{}},"capabilities":[],"purpose":"Manage orders."} }), storage);
-      const result = await interpret(rustGenHandler.register({  }), storage);
+      const afterResult_valid_manifest = await interpret(rustGenHandler.generate({ spec: "spec-001", manifest: {"name":"Order","uri":"urn:clef/Order","typeParams":[],"relations":[],"actions":[{"name":"create","params":[{"name":"title","type":{"kind":"primitive","primitive":"String"}}],"variants":[{"tag":"ok","fields":[{"name":"id","type":{"kind":"primitive","primitive":"String"}}],"prose":"Created."}]}],"invariants":[],"graphqlSchema":"","jsonSchemas":{"invocations":{},"completions":{}},"capabilities":[],"purpose":"Manage orders."} }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_manifest?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(rustGenHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

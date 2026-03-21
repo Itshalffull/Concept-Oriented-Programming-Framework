@@ -162,8 +162,13 @@ describe('DerivedEntity functional handler', () => {
     it('fixture "get_trash" -> ok', async () => {
       if (typeof derivedEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(derivedEntityHandler.register({ name: "Trash", source: "specs/trash.derived", ast: "{\"composes\":[\"Article\",\"Label\"],\"syncs\":{\"required\":[\"trash-on-delete\"]}}" }), storage);
-      const result = await interpret(derivedEntityHandler.get({ name: "Trash" }), storage);
+      const afterResult_register_trash = await interpret(derivedEntityHandler.register({ name: "Trash", source: "specs/trash.derived", ast: "{\"composes\":[\"Article\",\"Label\"],\"syncs\":{\"required\":[\"trash-on-delete\"]}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_trash?.output ?? {}));
+      const _fixtureInput = { name: "Trash" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(derivedEntityHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -231,8 +236,13 @@ describe('DerivedEntity functional handler', () => {
     it('fixture "find_by_article" -> ok', async () => {
       if (typeof derivedEntityHandler.findByComposedConcept !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(derivedEntityHandler.register({ name: "Trash", source: "specs/trash.derived", ast: "{\"composes\":[\"Article\",\"Label\"],\"syncs\":{\"required\":[\"trash-on-delete\"]}}" }), storage);
-      const result = await interpret(derivedEntityHandler.findByComposedConcept({ concept: "Article" }), storage);
+      const afterResult_register_trash = await interpret(derivedEntityHandler.register({ name: "Trash", source: "specs/trash.derived", ast: "{\"composes\":[\"Article\",\"Label\"],\"syncs\":{\"required\":[\"trash-on-delete\"]}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_trash?.output ?? {}));
+      const _fixtureInput = { concept: "Article" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(derivedEntityHandler.findByComposedConcept({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -300,8 +310,13 @@ describe('DerivedEntity functional handler', () => {
     it('fixture "find_by_sync" -> ok', async () => {
       if (typeof derivedEntityHandler.findBySync !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(derivedEntityHandler.register({ name: "Trash", source: "specs/trash.derived", ast: "{\"composes\":[\"Article\",\"Label\"],\"syncs\":{\"required\":[\"trash-on-delete\"]}}" }), storage);
-      const result = await interpret(derivedEntityHandler.findBySync({ syncName: "trash-on-delete" }), storage);
+      const afterResult_register_trash = await interpret(derivedEntityHandler.register({ name: "Trash", source: "specs/trash.derived", ast: "{\"composes\":[\"Article\",\"Label\"],\"syncs\":{\"required\":[\"trash-on-delete\"]}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_trash?.output ?? {}));
+      const _fixtureInput = { syncName: "trash-on-delete" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(derivedEntityHandler.findBySync({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -369,8 +384,13 @@ describe('DerivedEntity functional handler', () => {
     it('fixture "tree_valid" -> ok', async () => {
       if (typeof derivedEntityHandler.compositionTree !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(derivedEntityHandler.register({ name: "Trash", source: "specs/trash.derived", ast: "{\"composes\":[\"Article\",\"Label\"],\"syncs\":{\"required\":[\"trash-on-delete\"]}}" }), storage);
-      const result = await interpret(derivedEntityHandler.compositionTree({ entity: "derived-entity-1" }), storage);
+      const afterResult_register_trash = await interpret(derivedEntityHandler.register({ name: "Trash", source: "specs/trash.derived", ast: "{\"composes\":[\"Article\",\"Label\"],\"syncs\":{\"required\":[\"trash-on-delete\"]}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_trash?.output ?? {}));
+      const _fixtureInput = { entity: "derived-entity-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(derivedEntityHandler.compositionTree({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -438,8 +458,13 @@ describe('DerivedEntity functional handler', () => {
     it('fixture "rollup_valid" -> ok', async () => {
       if (typeof derivedEntityHandler.traceRollup !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(derivedEntityHandler.register({ name: "Trash", source: "specs/trash.derived", ast: "{\"composes\":[\"Article\",\"Label\"],\"syncs\":{\"required\":[\"trash-on-delete\"]}}" }), storage);
-      const result = await interpret(derivedEntityHandler.traceRollup({ entity: "derived-entity-1", flowId: "flow-abc-123" }), storage);
+      const afterResult_register_trash = await interpret(derivedEntityHandler.register({ name: "Trash", source: "specs/trash.derived", ast: "{\"composes\":[\"Article\",\"Label\"],\"syncs\":{\"required\":[\"trash-on-delete\"]}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_trash?.output ?? {}));
+      const _fixtureInput = { entity: "derived-entity-1", flowId: "flow-abc-123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(derivedEntityHandler.traceRollup({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

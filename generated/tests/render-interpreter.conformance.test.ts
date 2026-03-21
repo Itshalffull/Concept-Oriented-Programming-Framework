@@ -62,16 +62,26 @@ describe('RenderInterpreter imperative handler', () => {
     it('fixture "execute_react" -> ok', async () => {
       if (typeof renderInterpreterHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await renderInterpreterHandler.register({ interpreter: "interp-react", target: "react", template: "jsx" }, storage);
-      const result = await renderInterpreterHandler.execute({ interpreter: "interp-react", program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", snapshot: "current" }, storage);
+      const afterResult_react_interpreter = await renderInterpreterHandler.register({ interpreter: "interp-react", target: "react", template: "jsx" }, storage);
+      const _pool = Object.assign({}, (afterResult_react_interpreter?.output ?? {}));
+      const _fixtureInput = { interpreter: "interp-react", program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", snapshot: "current" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await renderInterpreterHandler.execute({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "execute_unknown" -> notfound', async () => {
       if (typeof renderInterpreterHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await renderInterpreterHandler.register({ interpreter: "interp-react", target: "react", template: "jsx" }, storage);
-      const result = await renderInterpreterHandler.execute({ interpreter: "nonexistent", program: "{}", snapshot: "current" }, storage);
+      const afterResult_react_interpreter = await renderInterpreterHandler.register({ interpreter: "interp-react", target: "react", template: "jsx" }, storage);
+      const _pool = Object.assign({}, (afterResult_react_interpreter?.output ?? {}));
+      const _fixtureInput = { interpreter: "nonexistent", program: "{}", snapshot: "current" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await renderInterpreterHandler.execute({ ..._fixtureInput }, storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
@@ -91,16 +101,26 @@ describe('RenderInterpreter imperative handler', () => {
     it('fixture "dry_run_svelte" -> ok', async () => {
       if (typeof renderInterpreterHandler.dryRun !== 'function') return;
       const storage = createInMemoryStorage();
-      await renderInterpreterHandler.register({ interpreter: "interp-react", target: "react", template: "jsx" }, storage);
-      const result = await renderInterpreterHandler.dryRun({ interpreter: "interp-svelte", program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}" }, storage);
+      const afterResult_react_interpreter = await renderInterpreterHandler.register({ interpreter: "interp-react", target: "react", template: "jsx" }, storage);
+      const _pool = Object.assign({}, (afterResult_react_interpreter?.output ?? {}));
+      const _fixtureInput = { interpreter: "interp-svelte", program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await renderInterpreterHandler.dryRun({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "dry_run_unknown" -> notfound', async () => {
       if (typeof renderInterpreterHandler.dryRun !== 'function') return;
       const storage = createInMemoryStorage();
-      await renderInterpreterHandler.register({ interpreter: "interp-react", target: "react", template: "jsx" }, storage);
-      const result = await renderInterpreterHandler.dryRun({ interpreter: "nonexistent", program: "{}" }, storage);
+      const afterResult_react_interpreter = await renderInterpreterHandler.register({ interpreter: "interp-react", target: "react", template: "jsx" }, storage);
+      const _pool = Object.assign({}, (afterResult_react_interpreter?.output ?? {}));
+      const _fixtureInput = { interpreter: "nonexistent", program: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await renderInterpreterHandler.dryRun({ ..._fixtureInput }, storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
@@ -120,8 +140,13 @@ describe('RenderInterpreter imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof renderInterpreterHandler.listTargets !== 'function') return;
       const storage = createInMemoryStorage();
-      await renderInterpreterHandler.register({ interpreter: "interp-react", target: "react", template: "jsx" }, storage);
-      const result = await renderInterpreterHandler.listTargets({  }, storage);
+      const afterResult_react_interpreter = await renderInterpreterHandler.register({ interpreter: "interp-react", target: "react", template: "jsx" }, storage);
+      const _pool = Object.assign({}, (afterResult_react_interpreter?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await renderInterpreterHandler.listTargets({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 

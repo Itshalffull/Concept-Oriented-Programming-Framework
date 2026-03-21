@@ -162,16 +162,26 @@ describe('Majority functional handler', () => {
     it('fixture "clear_winner" -> ok', async () => {
       if (typeof majorityCountHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(majorityCountHandler.configure({ threshold: "0.5", binaryOnly: "true", tieBreaker: null }), storage);
-      const result = await interpret(majorityCountHandler.count({ config: "maj-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" }), storage);
+      const afterResult_standard_majority = await interpret(majorityCountHandler.configure({ threshold: "0.5", binaryOnly: "true", tieBreaker: null }), storage);
+      const _pool = Object.assign({}, (afterResult_standard_majority?.output ?? {}));
+      const _fixtureInput = { config: "maj-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(majorityCountHandler.count({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "no_ballots" -> error', async () => {
       if (typeof majorityCountHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(majorityCountHandler.configure({ threshold: "0.5", binaryOnly: "true", tieBreaker: null }), storage);
-      const result = await interpret(majorityCountHandler.count({ config: "maj-001", ballots: "[]", weights: "{}" }), storage);
+      const afterResult_standard_majority = await interpret(majorityCountHandler.configure({ threshold: "0.5", binaryOnly: "true", tieBreaker: null }), storage);
+      const _pool = Object.assign({}, (afterResult_standard_majority?.output ?? {}));
+      const _fixtureInput = { config: "maj-001", ballots: "[]", weights: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(majorityCountHandler.count({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 

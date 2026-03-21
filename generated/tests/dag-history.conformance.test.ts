@@ -162,8 +162,13 @@ describe('DAGHistory functional handler', () => {
     it('fixture "ancestors_existing" -> ok', async () => {
       if (typeof dagHistoryHandler.ancestors !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
-      const result = await interpret(dagHistoryHandler.ancestors({ nodeId: "dag-history-2" }), storage);
+      const afterResult_append_root = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_append_root?.output ?? {}));
+      const _fixtureInput = { nodeId: "dag-history-2" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(dagHistoryHandler.ancestors({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -231,8 +236,13 @@ describe('DAGHistory functional handler', () => {
     it('fixture "find_common" -> ok', async () => {
       if (typeof dagHistoryHandler.commonAncestor !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
-      const result = await interpret(dagHistoryHandler.commonAncestor({ a: "dag-history-2", b: "dag-history-3" }), storage);
+      const afterResult_append_root = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_append_root?.output ?? {}));
+      const _fixtureInput = { a: "dag-history-2", b: "dag-history-3" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(dagHistoryHandler.commonAncestor({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -300,8 +310,13 @@ describe('DAGHistory functional handler', () => {
     it('fixture "descendants_existing" -> ok', async () => {
       if (typeof dagHistoryHandler.descendants !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
-      const result = await interpret(dagHistoryHandler.descendants({ nodeId: "dag-history-1" }), storage);
+      const afterResult_append_root = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_append_root?.output ?? {}));
+      const _fixtureInput = { nodeId: "dag-history-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(dagHistoryHandler.descendants({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -369,8 +384,13 @@ describe('DAGHistory functional handler', () => {
     it('fixture "path_between" -> ok', async () => {
       if (typeof dagHistoryHandler.between !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
-      const result = await interpret(dagHistoryHandler.between({ from: "dag-history-1", to: "dag-history-3" }), storage);
+      const afterResult_append_root = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_append_root?.output ?? {}));
+      const _fixtureInput = { from: "dag-history-1", to: "dag-history-3" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(dagHistoryHandler.between({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -438,8 +458,13 @@ describe('DAGHistory functional handler', () => {
     it('fixture "get_existing" -> ok', async () => {
       if (typeof dagHistoryHandler.getNode !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
-      const result = await interpret(dagHistoryHandler.getNode({ nodeId: "dag-history-1" }), storage);
+      const afterResult_append_root = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_append_root?.output ?? {}));
+      const _fixtureInput = { nodeId: "dag-history-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(dagHistoryHandler.getNode({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

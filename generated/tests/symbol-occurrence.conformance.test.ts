@@ -155,8 +155,13 @@ describe('SymbolOccurrence functional handler', () => {
     it('fixture "valid_find_defs" -> ok', async () => {
       if (typeof symbolOccurrenceHandler.findDefinitions !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" }), storage);
-      const result = await interpret(symbolOccurrenceHandler.findDefinitions({ symbol: "clef/concept/Article" }), storage);
+      const afterResult_valid_record_def = await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_record_def?.output ?? {}));
+      const _fixtureInput = { symbol: "clef/concept/Article" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(symbolOccurrenceHandler.findDefinitions({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,16 +229,26 @@ describe('SymbolOccurrence functional handler', () => {
     it('fixture "valid_find_refs" -> ok', async () => {
       if (typeof symbolOccurrenceHandler.findReferences !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" }), storage);
-      const result = await interpret(symbolOccurrenceHandler.findReferences({ symbol: "clef/concept/Article", roleFilter: "" }), storage);
+      const afterResult_valid_record_def = await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_record_def?.output ?? {}));
+      const _fixtureInput = { symbol: "clef/concept/Article", roleFilter: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(symbolOccurrenceHandler.findReferences({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_refs_filtered" -> ok', async () => {
       if (typeof symbolOccurrenceHandler.findReferences !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" }), storage);
-      const result = await interpret(symbolOccurrenceHandler.findReferences({ symbol: "clef/concept/Article", roleFilter: "reference" }), storage);
+      const afterResult_valid_record_def = await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_record_def?.output ?? {}));
+      const _fixtureInput = { symbol: "clef/concept/Article", roleFilter: "reference" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(symbolOccurrenceHandler.findReferences({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -301,8 +316,13 @@ describe('SymbolOccurrence functional handler', () => {
     it('fixture "valid_find_at_pos" -> ok', async () => {
       if (typeof symbolOccurrenceHandler.findAtPosition !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" }), storage);
-      const result = await interpret(symbolOccurrenceHandler.findAtPosition({ file: "specs/article.concept", row: "2", col: "10" }), storage);
+      const afterResult_valid_record_def = await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_record_def?.output ?? {}));
+      const _fixtureInput = { file: "specs/article.concept", row: "2", col: "10" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(symbolOccurrenceHandler.findAtPosition({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -370,16 +390,26 @@ describe('SymbolOccurrence functional handler', () => {
     it('fixture "valid_find_in_file" -> ok', async () => {
       if (typeof symbolOccurrenceHandler.findInFile !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" }), storage);
-      const result = await interpret(symbolOccurrenceHandler.findInFile({ file: "specs/article.concept" }), storage);
+      const afterResult_valid_record_def = await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_record_def?.output ?? {}));
+      const _fixtureInput = { file: "specs/article.concept" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(symbolOccurrenceHandler.findInFile({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_in_empty_file" -> ok', async () => {
       if (typeof symbolOccurrenceHandler.findInFile !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" }), storage);
-      const result = await interpret(symbolOccurrenceHandler.findInFile({ file: "src/no-symbols.ts" }), storage);
+      const afterResult_valid_record_def = await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_record_def?.output ?? {}));
+      const _fixtureInput = { file: "src/no-symbols.ts" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(symbolOccurrenceHandler.findInFile({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -155,8 +155,13 @@ describe('FlakyTest functional handler', () => {
     it('fixture "quarantine_flaky" -> ok', async () => {
       if (typeof flakyTestHandler.quarantine !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(flakyTestHandler.record({ testId: "test_password_hash", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: "true", duration: "45" }), storage);
-      const result = await interpret(flakyTestHandler.quarantine({ testId: "test_timing", reason: "Timing-dependent, fails on slow CI", owner: "alice" }), storage);
+      const afterResult_record_pass = await interpret(flakyTestHandler.record({ testId: "test_password_hash", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: "true", duration: "45" }), storage);
+      const _pool = Object.assign({}, (afterResult_record_pass?.output ?? {}));
+      const _fixtureInput = { testId: "test_timing", reason: "Timing-dependent, fails on slow CI", owner: "alice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(flakyTestHandler.quarantine({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -225,8 +230,13 @@ describe('FlakyTest functional handler', () => {
     it('fixture "release_quarantined" -> ok', async () => {
       if (typeof flakyTestHandler.release !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(flakyTestHandler.record({ testId: "test_password_hash", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: "true", duration: "45" }), storage);
-      const result = await interpret(flakyTestHandler.release({ testId: "test_timing" }), storage);
+      const afterResult_record_pass = await interpret(flakyTestHandler.record({ testId: "test_password_hash", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: "true", duration: "45" }), storage);
+      const _pool = Object.assign({}, (afterResult_record_pass?.output ?? {}));
+      const _fixtureInput = { testId: "test_timing" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(flakyTestHandler.release({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -295,8 +305,13 @@ describe('FlakyTest functional handler', () => {
     it('fixture "is_quarantined_check" -> ok', async () => {
       if (typeof flakyTestHandler.isQuarantined !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(flakyTestHandler.record({ testId: "test_password_hash", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: "true", duration: "45" }), storage);
-      const result = await interpret(flakyTestHandler.isQuarantined({ testId: "test_timing" }), storage);
+      const afterResult_record_pass = await interpret(flakyTestHandler.record({ testId: "test_password_hash", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: "true", duration: "45" }), storage);
+      const _pool = Object.assign({}, (afterResult_record_pass?.output ?? {}));
+      const _fixtureInput = { testId: "test_timing" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(flakyTestHandler.isQuarantined({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -365,16 +380,26 @@ describe('FlakyTest functional handler', () => {
     it('fixture "report_all" -> ok', async () => {
       if (typeof flakyTestHandler.report !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(flakyTestHandler.record({ testId: "test_password_hash", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: "true", duration: "45" }), storage);
-      const result = await interpret(flakyTestHandler.report({  }), storage);
+      const afterResult_record_pass = await interpret(flakyTestHandler.record({ testId: "test_password_hash", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: "true", duration: "45" }), storage);
+      const _pool = Object.assign({}, (afterResult_record_pass?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(flakyTestHandler.report({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "report_unit_only" -> ok', async () => {
       if (typeof flakyTestHandler.report !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(flakyTestHandler.record({ testId: "test_password_hash", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: "true", duration: "45" }), storage);
-      const result = await interpret(flakyTestHandler.report({ testType: "unit" }), storage);
+      const afterResult_record_pass = await interpret(flakyTestHandler.record({ testId: "test_password_hash", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: "true", duration: "45" }), storage);
+      const _pool = Object.assign({}, (afterResult_record_pass?.output ?? {}));
+      const _fixtureInput = { testType: "unit" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(flakyTestHandler.report({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -435,16 +460,26 @@ describe('FlakyTest functional handler', () => {
     it('fixture "set_strict_policy" -> ok', async () => {
       if (typeof flakyTestHandler.setPolicy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(flakyTestHandler.record({ testId: "test_password_hash", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: "true", duration: "45" }), storage);
-      const result = await interpret(flakyTestHandler.setPolicy({ flipThreshold: "2", flipWindow: "3d", autoQuarantine: "true", retryCount: "2" }), storage);
+      const afterResult_record_pass = await interpret(flakyTestHandler.record({ testId: "test_password_hash", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: "true", duration: "45" }), storage);
+      const _pool = Object.assign({}, (afterResult_record_pass?.output ?? {}));
+      const _fixtureInput = { flipThreshold: "2", flipWindow: "3d", autoQuarantine: "true", retryCount: "2" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(flakyTestHandler.setPolicy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "set_lenient_policy" -> ok', async () => {
       if (typeof flakyTestHandler.setPolicy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(flakyTestHandler.record({ testId: "test_password_hash", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: "true", duration: "45" }), storage);
-      const result = await interpret(flakyTestHandler.setPolicy({ flipThreshold: "10", flipWindow: "30d", autoQuarantine: "false" }), storage);
+      const afterResult_record_pass = await interpret(flakyTestHandler.record({ testId: "test_password_hash", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: "true", duration: "45" }), storage);
+      const _pool = Object.assign({}, (afterResult_record_pass?.output ?? {}));
+      const _fixtureInput = { flipThreshold: "10", flipWindow: "30d", autoQuarantine: "false" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(flakyTestHandler.setPolicy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

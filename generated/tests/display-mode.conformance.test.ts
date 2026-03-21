@@ -62,8 +62,13 @@ describe('DisplayMode imperative handler', () => {
     it('fixture "resolve_article" -> ok', async () => {
       if (typeof displayModeHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
-      const result = await displayModeHandler.resolve({ schema: "Article", mode_id: "full" }, storage);
+      const afterResult_create_article_full = await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
+      const _pool = Object.assign({}, (afterResult_create_article_full?.output ?? {}));
+      const _fixtureInput = { schema: "Article", mode_id: "full" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await displayModeHandler.resolve({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -89,8 +94,13 @@ describe('DisplayMode imperative handler', () => {
     it('fixture "set_layout_triple" -> ok', async () => {
       if (typeof displayModeHandler.set_layout !== 'function') return;
       const storage = createInMemoryStorage();
-      await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
-      const result = await displayModeHandler.set_layout({ mode: "Article:full", layout: "triple-zone-default" }, storage);
+      const afterResult_create_article_full = await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
+      const _pool = Object.assign({}, (afterResult_create_article_full?.output ?? {}));
+      const _fixtureInput = { mode: "Article:full", layout: "triple-zone-default" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await displayModeHandler.set_layout({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -116,8 +126,13 @@ describe('DisplayMode imperative handler', () => {
     it('fixture "clear_existing_layout" -> ok', async () => {
       if (typeof displayModeHandler.clear_layout !== 'function') return;
       const storage = createInMemoryStorage();
-      await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
-      const result = await displayModeHandler.clear_layout({ mode: "Article:full" }, storage);
+      const afterResult_create_article_full = await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
+      const _pool = Object.assign({}, (afterResult_create_article_full?.output ?? {}));
+      const _fixtureInput = { mode: "Article:full" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await displayModeHandler.clear_layout({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -143,8 +158,13 @@ describe('DisplayMode imperative handler', () => {
     it('fixture "set_mapping_hero" -> ok', async () => {
       if (typeof displayModeHandler.set_component_mapping !== 'function') return;
       const storage = createInMemoryStorage();
-      await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
-      const result = await displayModeHandler.set_component_mapping({ mode: "Article:full", mapping: "article-hero-card" }, storage);
+      const afterResult_create_article_full = await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
+      const _pool = Object.assign({}, (afterResult_create_article_full?.output ?? {}));
+      const _fixtureInput = { mode: "Article:full", mapping: "article-hero-card" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await displayModeHandler.set_component_mapping({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -170,8 +190,13 @@ describe('DisplayMode imperative handler', () => {
     it('fixture "clear_comp_mapping" -> ok', async () => {
       if (typeof displayModeHandler.clear_component_mapping !== 'function') return;
       const storage = createInMemoryStorage();
-      await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
-      const result = await displayModeHandler.clear_component_mapping({ mode: "Article:full" }, storage);
+      const afterResult_create_article_full = await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
+      const _pool = Object.assign({}, (afterResult_create_article_full?.output ?? {}));
+      const _fixtureInput = { mode: "Article:full" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await displayModeHandler.clear_component_mapping({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -197,8 +222,13 @@ describe('DisplayMode imperative handler', () => {
     it('fixture "set_placements" -> ok', async () => {
       if (typeof displayModeHandler.set_flat_fields !== 'function') return;
       const storage = createInMemoryStorage();
-      await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
-      const result = await displayModeHandler.set_flat_fields({ mode: "Article:full", placements: "[\"fp-title\",\"fp-body\"]" }, storage);
+      const afterResult_create_article_full = await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
+      const _pool = Object.assign({}, (afterResult_create_article_full?.output ?? {}));
+      const _fixtureInput = { mode: "Article:full", placements: "[\"fp-title\",\"fp-body\"]" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await displayModeHandler.set_flat_fields({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +254,13 @@ describe('DisplayMode imperative handler', () => {
     it('fixture "get_existing_mode" -> ok', async () => {
       if (typeof displayModeHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
-      const result = await displayModeHandler.get({ mode: "Article:full" }, storage);
+      const afterResult_create_article_full = await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
+      const _pool = Object.assign({}, (afterResult_create_article_full?.output ?? {}));
+      const _fixtureInput = { mode: "Article:full" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await displayModeHandler.get({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -251,8 +286,13 @@ describe('DisplayMode imperative handler', () => {
     it('fixture "delete_existing" -> ok', async () => {
       if (typeof displayModeHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
-      await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
-      const result = await displayModeHandler.delete({ mode: "Article:full" }, storage);
+      const afterResult_create_article_full = await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
+      const _pool = Object.assign({}, (afterResult_create_article_full?.output ?? {}));
+      const _fixtureInput = { mode: "Article:full" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await displayModeHandler.delete({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -278,8 +318,13 @@ describe('DisplayMode imperative handler', () => {
     it('fixture "list_article_modes" -> ok', async () => {
       if (typeof displayModeHandler.list_for_schema !== 'function') return;
       const storage = createInMemoryStorage();
-      await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
-      const result = await displayModeHandler.list_for_schema({ schema: "Article" }, storage);
+      const afterResult_create_article_full = await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
+      const _pool = Object.assign({}, (afterResult_create_article_full?.output ?? {}));
+      const _fixtureInput = { schema: "Article" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await displayModeHandler.list_for_schema({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -305,8 +350,13 @@ describe('DisplayMode imperative handler', () => {
     it('fixture "list_all" -> ok', async () => {
       if (typeof displayModeHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
-      const result = await displayModeHandler.list({  }, storage);
+      const afterResult_create_article_full = await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
+      const _pool = Object.assign({}, (afterResult_create_article_full?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await displayModeHandler.list({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 

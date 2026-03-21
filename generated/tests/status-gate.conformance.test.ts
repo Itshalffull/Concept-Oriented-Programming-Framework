@@ -163,8 +163,13 @@ describe('StatusGate functional handler', () => {
     it('fixture "valid_update" -> ok', async () => {
       if (typeof statusGateHandler.update !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(statusGateHandler.report({ target: "abc123def456", context: "clef/verify", status: "passing", details: "All 5 invariants proved", provider: "exit-code", url: "" }), storage);
-      const result = await interpret(statusGateHandler.update({ gate: "gate-1710000000-abc123", status: "passing", details: "All checks passed" }), storage);
+      const afterResult_valid_report = await interpret(statusGateHandler.report({ target: "abc123def456", context: "clef/verify", status: "passing", details: "All 5 invariants proved", provider: "exit-code", url: "" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_report?.output ?? {}));
+      const _fixtureInput = { gate: "gate-1710000000-abc123", status: "passing", details: "All checks passed" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(statusGateHandler.update({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -233,8 +238,13 @@ describe('StatusGate functional handler', () => {
     it('fixture "valid_complete" -> ok', async () => {
       if (typeof statusGateHandler.complete !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(statusGateHandler.report({ target: "abc123def456", context: "clef/verify", status: "passing", details: "All 5 invariants proved", provider: "exit-code", url: "" }), storage);
-      const result = await interpret(statusGateHandler.complete({ gate: "gate-1710000000-abc123", final_status: "passing", details: "All green" }), storage);
+      const afterResult_valid_report = await interpret(statusGateHandler.report({ target: "abc123def456", context: "clef/verify", status: "passing", details: "All 5 invariants proved", provider: "exit-code", url: "" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_report?.output ?? {}));
+      const _fixtureInput = { gate: "gate-1710000000-abc123", final_status: "passing", details: "All green" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(statusGateHandler.complete({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -303,16 +313,26 @@ describe('StatusGate functional handler', () => {
     it('fixture "valid_configure" -> ok', async () => {
       if (typeof statusGateHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(statusGateHandler.report({ target: "abc123def456", context: "clef/verify", status: "passing", details: "All 5 invariants proved", provider: "exit-code", url: "" }), storage);
-      const result = await interpret(statusGateHandler.configure({ provider: "github", url: "https://api.github.com" }), storage);
+      const afterResult_valid_report = await interpret(statusGateHandler.report({ target: "abc123def456", context: "clef/verify", status: "passing", details: "All 5 invariants proved", provider: "exit-code", url: "" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_report?.output ?? {}));
+      const _fixtureInput = { provider: "github", url: "https://api.github.com" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(statusGateHandler.configure({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "exit_code_configure" -> ok', async () => {
       if (typeof statusGateHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(statusGateHandler.report({ target: "abc123def456", context: "clef/verify", status: "passing", details: "All 5 invariants proved", provider: "exit-code", url: "" }), storage);
-      const result = await interpret(statusGateHandler.configure({ provider: "exit-code", url: "" }), storage);
+      const afterResult_valid_report = await interpret(statusGateHandler.report({ target: "abc123def456", context: "clef/verify", status: "passing", details: "All 5 invariants proved", provider: "exit-code", url: "" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_report?.output ?? {}));
+      const _fixtureInput = { provider: "exit-code", url: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(statusGateHandler.configure({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -373,8 +393,13 @@ describe('StatusGate functional handler', () => {
     it('fixture "valid_get_status" -> ok', async () => {
       if (typeof statusGateHandler.get_status !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(statusGateHandler.report({ target: "abc123def456", context: "clef/verify", status: "passing", details: "All 5 invariants proved", provider: "exit-code", url: "" }), storage);
-      const result = await interpret(statusGateHandler.get_status({ gate: "gate-1710000000-abc123" }), storage);
+      const afterResult_valid_report = await interpret(statusGateHandler.report({ target: "abc123def456", context: "clef/verify", status: "passing", details: "All 5 invariants proved", provider: "exit-code", url: "" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_report?.output ?? {}));
+      const _fixtureInput = { gate: "gate-1710000000-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(statusGateHandler.get_status({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -443,16 +468,26 @@ describe('StatusGate functional handler', () => {
     it('fixture "valid_list" -> ok', async () => {
       if (typeof statusGateHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(statusGateHandler.report({ target: "abc123def456", context: "clef/verify", status: "passing", details: "All 5 invariants proved", provider: "exit-code", url: "" }), storage);
-      const result = await interpret(statusGateHandler.list({ target: "abc123def456" }), storage);
+      const afterResult_valid_report = await interpret(statusGateHandler.report({ target: "abc123def456", context: "clef/verify", status: "passing", details: "All 5 invariants proved", provider: "exit-code", url: "" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_report?.output ?? {}));
+      const _fixtureInput = { target: "abc123def456" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(statusGateHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_target_list" -> ok', async () => {
       if (typeof statusGateHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(statusGateHandler.report({ target: "abc123def456", context: "clef/verify", status: "passing", details: "All 5 invariants proved", provider: "exit-code", url: "" }), storage);
-      const result = await interpret(statusGateHandler.list({ target: "" }), storage);
+      const afterResult_valid_report = await interpret(statusGateHandler.report({ target: "abc123def456", context: "clef/verify", status: "passing", details: "All 5 invariants proved", provider: "exit-code", url: "" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_report?.output ?? {}));
+      const _fixtureInput = { target: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(statusGateHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

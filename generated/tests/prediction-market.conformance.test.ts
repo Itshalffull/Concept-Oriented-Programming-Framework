@@ -162,8 +162,13 @@ describe('PredictionMarket functional handler', () => {
     it('fixture "buy_shares" -> ok', async () => {
       if (typeof predictionMarketHandler.trade !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(predictionMarketHandler.createMarket({ question: "Will GDP grow by 3%?", outcomes: ["Yes","No"], deadline: "2026-12-31T23:59:59Z" }), storage);
-      const result = await interpret(predictionMarketHandler.trade({ market: "market-001", trader: "alice", outcome: "Yes", amount: "50.0" }), storage);
+      const afterResult_valid_market = await interpret(predictionMarketHandler.createMarket({ question: "Will GDP grow by 3%?", outcomes: ["Yes","No"], deadline: "2026-12-31T23:59:59Z" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_market?.output ?? {}));
+      const _fixtureInput = { market: "market-001", trader: "alice", outcome: "Yes", amount: "50.0" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(predictionMarketHandler.trade({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -231,8 +236,13 @@ describe('PredictionMarket functional handler', () => {
     it('fixture "resolve_market" -> ok', async () => {
       if (typeof predictionMarketHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(predictionMarketHandler.createMarket({ question: "Will GDP grow by 3%?", outcomes: ["Yes","No"], deadline: "2026-12-31T23:59:59Z" }), storage);
-      const result = await interpret(predictionMarketHandler.resolve({ market: "market-001", outcome: "Yes" }), storage);
+      const afterResult_valid_market = await interpret(predictionMarketHandler.createMarket({ question: "Will GDP grow by 3%?", outcomes: ["Yes","No"], deadline: "2026-12-31T23:59:59Z" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_market?.output ?? {}));
+      const _fixtureInput = { market: "market-001", outcome: "Yes" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(predictionMarketHandler.resolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -300,8 +310,13 @@ describe('PredictionMarket functional handler', () => {
     it('fixture "claim_valid" -> ok', async () => {
       if (typeof predictionMarketHandler.claimPayout !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(predictionMarketHandler.createMarket({ question: "Will GDP grow by 3%?", outcomes: ["Yes","No"], deadline: "2026-12-31T23:59:59Z" }), storage);
-      const result = await interpret(predictionMarketHandler.claimPayout({ market: "market-001", trader: "alice" }), storage);
+      const afterResult_valid_market = await interpret(predictionMarketHandler.createMarket({ question: "Will GDP grow by 3%?", outcomes: ["Yes","No"], deadline: "2026-12-31T23:59:59Z" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_market?.output ?? {}));
+      const _fixtureInput = { market: "market-001", trader: "alice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(predictionMarketHandler.claimPayout({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

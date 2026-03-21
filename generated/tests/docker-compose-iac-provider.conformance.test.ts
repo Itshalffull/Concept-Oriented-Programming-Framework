@@ -223,16 +223,26 @@ describe('DockerComposeIacProvider functional handler', () => {
     it('fixture "apply_compose" -> ok', async () => {
       if (typeof dockerComposeIacProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(dockerComposeIacProviderHandler.generate({ plan: "dp-001" }), storage);
-      const result = await interpret(dockerComposeIacProviderHandler.apply({ composeFile: "compose-001" }), storage);
+      const afterResult_generate_compose = await interpret(dockerComposeIacProviderHandler.generate({ plan: "dp-001" }), storage);
+      const _pool = Object.assign({}, (afterResult_generate_compose?.output ?? {}));
+      const _fixtureInput = { composeFile: "compose-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(dockerComposeIacProviderHandler.apply({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "apply_empty" -> ok', async () => {
       if (typeof dockerComposeIacProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(dockerComposeIacProviderHandler.generate({ plan: "dp-001" }), storage);
-      const result = await interpret(dockerComposeIacProviderHandler.apply({ composeFile: "" }), storage);
+      const afterResult_generate_compose = await interpret(dockerComposeIacProviderHandler.generate({ plan: "dp-001" }), storage);
+      const _pool = Object.assign({}, (afterResult_generate_compose?.output ?? {}));
+      const _fixtureInput = { composeFile: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(dockerComposeIacProviderHandler.apply({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('DockerComposeIacProvider functional handler', () => {
     it('fixture "teardown_compose" -> ok', async () => {
       if (typeof dockerComposeIacProviderHandler.teardown !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(dockerComposeIacProviderHandler.generate({ plan: "dp-001" }), storage);
-      const result = await interpret(dockerComposeIacProviderHandler.teardown({ composeFile: "compose-001" }), storage);
+      const afterResult_generate_compose = await interpret(dockerComposeIacProviderHandler.generate({ plan: "dp-001" }), storage);
+      const _pool = Object.assign({}, (afterResult_generate_compose?.output ?? {}));
+      const _fixtureInput = { composeFile: "compose-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(dockerComposeIacProviderHandler.teardown({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

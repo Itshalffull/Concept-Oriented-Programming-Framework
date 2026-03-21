@@ -162,8 +162,13 @@ describe('Polity functional handler', () => {
     it('fixture "valid_amend" -> ok', async () => {
       if (typeof polityHandler.amend !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(polityHandler.establish({ name: "Acme Co-op", purpose: "Democratic governance for Acme", values: ["transparency","equity"], scope: ["budgets","hiring"] }), storage);
-      const result = await interpret(polityHandler.amend({ polity: "polity-1", field: "purpose", newValue: "Updated governance mission" }), storage);
+      const afterResult_valid_establish = await interpret(polityHandler.establish({ name: "Acme Co-op", purpose: "Democratic governance for Acme", values: ["transparency","equity"], scope: ["budgets","hiring"] }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_establish?.output ?? {}));
+      const _fixtureInput = { polity: "polity-1", field: "purpose", newValue: "Updated governance mission" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(polityHandler.amend({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -231,8 +236,13 @@ describe('Polity functional handler', () => {
     it('fixture "valid_dissolve" -> ok', async () => {
       if (typeof polityHandler.dissolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(polityHandler.establish({ name: "Acme Co-op", purpose: "Democratic governance for Acme", values: ["transparency","equity"], scope: ["budgets","hiring"] }), storage);
-      const result = await interpret(polityHandler.dissolve({ polity: "polity-1", reason: "Merger with partner org" }), storage);
+      const afterResult_valid_establish = await interpret(polityHandler.establish({ name: "Acme Co-op", purpose: "Democratic governance for Acme", values: ["transparency","equity"], scope: ["budgets","hiring"] }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_establish?.output ?? {}));
+      const _fixtureInput = { polity: "polity-1", reason: "Merger with partner org" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(polityHandler.dissolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

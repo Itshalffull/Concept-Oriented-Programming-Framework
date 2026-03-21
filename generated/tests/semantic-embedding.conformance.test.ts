@@ -163,16 +163,26 @@ describe('SemanticEmbedding functional handler', () => {
     it('fixture "search_similar_top5" -> ok', async () => {
       if (typeof semanticEmbeddingHandler.searchSimilar !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(semanticEmbeddingHandler.compute({ unit: "def-123", model: "codeBERT" }), storage);
-      const result = await interpret(semanticEmbeddingHandler.searchSimilar({ queryVector: "[0.1, 0.2, 0.3]", topK: "5", language: "typescript", kind: "function" }), storage);
+      const afterResult_compute_codebert = await interpret(semanticEmbeddingHandler.compute({ unit: "def-123", model: "codeBERT" }), storage);
+      const _pool = Object.assign({}, (afterResult_compute_codebert?.output ?? {}));
+      const _fixtureInput = { queryVector: "[0.1, 0.2, 0.3]", topK: "5", language: "typescript", kind: "function" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(semanticEmbeddingHandler.searchSimilar({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "search_similar_all" -> ok', async () => {
       if (typeof semanticEmbeddingHandler.searchSimilar !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(semanticEmbeddingHandler.compute({ unit: "def-123", model: "codeBERT" }), storage);
-      const result = await interpret(semanticEmbeddingHandler.searchSimilar({ queryVector: "[0.5, -0.3, 0.8]", topK: "0", language: "", kind: "" }), storage);
+      const afterResult_compute_codebert = await interpret(semanticEmbeddingHandler.compute({ unit: "def-123", model: "codeBERT" }), storage);
+      const _pool = Object.assign({}, (afterResult_compute_codebert?.output ?? {}));
+      const _fixtureInput = { queryVector: "[0.5, -0.3, 0.8]", topK: "0", language: "", kind: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(semanticEmbeddingHandler.searchSimilar({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -233,16 +243,26 @@ describe('SemanticEmbedding functional handler', () => {
     it('fixture "nl_search_auth" -> ok', async () => {
       if (typeof semanticEmbeddingHandler.searchNaturalLanguage !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(semanticEmbeddingHandler.compute({ unit: "def-123", model: "codeBERT" }), storage);
-      const result = await interpret(semanticEmbeddingHandler.searchNaturalLanguage({ query: "authentication middleware", topK: "3" }), storage);
+      const afterResult_compute_codebert = await interpret(semanticEmbeddingHandler.compute({ unit: "def-123", model: "codeBERT" }), storage);
+      const _pool = Object.assign({}, (afterResult_compute_codebert?.output ?? {}));
+      const _fixtureInput = { query: "authentication middleware", topK: "3" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(semanticEmbeddingHandler.searchNaturalLanguage({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "nl_search_broad" -> ok', async () => {
       if (typeof semanticEmbeddingHandler.searchNaturalLanguage !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(semanticEmbeddingHandler.compute({ unit: "def-123", model: "codeBERT" }), storage);
-      const result = await interpret(semanticEmbeddingHandler.searchNaturalLanguage({ query: "data validation", topK: "10" }), storage);
+      const afterResult_compute_codebert = await interpret(semanticEmbeddingHandler.compute({ unit: "def-123", model: "codeBERT" }), storage);
+      const _pool = Object.assign({}, (afterResult_compute_codebert?.output ?? {}));
+      const _fixtureInput = { query: "data validation", topK: "10" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(semanticEmbeddingHandler.searchNaturalLanguage({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -303,8 +323,13 @@ describe('SemanticEmbedding functional handler', () => {
     it('fixture "get_existing" -> ok', async () => {
       if (typeof semanticEmbeddingHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(semanticEmbeddingHandler.compute({ unit: "def-123", model: "codeBERT" }), storage);
-      const result = await interpret(semanticEmbeddingHandler.get({ embedding: "semantic-embedding-1" }), storage);
+      const afterResult_compute_codebert = await interpret(semanticEmbeddingHandler.compute({ unit: "def-123", model: "codeBERT" }), storage);
+      const _pool = Object.assign({}, (afterResult_compute_codebert?.output ?? {}));
+      const _fixtureInput = { embedding: "semantic-embedding-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(semanticEmbeddingHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

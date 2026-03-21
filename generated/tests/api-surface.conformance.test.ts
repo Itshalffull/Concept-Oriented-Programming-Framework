@@ -162,16 +162,26 @@ describe('ApiSurface functional handler', () => {
     it('fixture "valid_surface" -> ok', async () => {
       if (typeof apiSurfaceHandler.entrypoint !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(apiSurfaceHandler.compose({ suite: "commerce", target: "rest", outputs: ["order-output","product-output"] }), storage);
-      const result = await interpret(apiSurfaceHandler.entrypoint({ surface: "api-surface-1" }), storage);
+      const afterResult_rest_surface = await interpret(apiSurfaceHandler.compose({ suite: "commerce", target: "rest", outputs: ["order-output","product-output"] }), storage);
+      const _pool = Object.assign({}, (afterResult_rest_surface?.output ?? {}));
+      const _fixtureInput = { surface: "api-surface-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(apiSurfaceHandler.entrypoint({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_surface" -> ok', async () => {
       if (typeof apiSurfaceHandler.entrypoint !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(apiSurfaceHandler.compose({ suite: "commerce", target: "rest", outputs: ["order-output","product-output"] }), storage);
-      const result = await interpret(apiSurfaceHandler.entrypoint({ surface: "" }), storage);
+      const afterResult_rest_surface = await interpret(apiSurfaceHandler.compose({ suite: "commerce", target: "rest", outputs: ["order-output","product-output"] }), storage);
+      const _pool = Object.assign({}, (afterResult_rest_surface?.output ?? {}));
+      const _fixtureInput = { surface: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(apiSurfaceHandler.entrypoint({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

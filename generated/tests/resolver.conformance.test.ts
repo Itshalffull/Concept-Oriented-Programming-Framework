@@ -155,16 +155,26 @@ describe('Resolver functional handler', () => {
     it('fixture "update_single_target" -> ok', async () => {
       if (typeof resolverHandler.update !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(resolverHandler.resolve({ constraints: [{"module_id":"auth","version_range":"^1.0.0","edge_type":"normal","environment":"all","features":[]}], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"false","allowed_updates":"minor"}, locked_versions: null }), storage);
-      const result = await interpret(resolverHandler.update({ resolution: "res-1", targets: ["auth"], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"true","allowed_updates":"minor"} }), storage);
+      const afterResult_resolve_simple = await interpret(resolverHandler.resolve({ constraints: [{"module_id":"auth","version_range":"^1.0.0","edge_type":"normal","environment":"all","features":[]}], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"false","allowed_updates":"minor"}, locked_versions: null }), storage);
+      const _pool = Object.assign({}, (afterResult_resolve_simple?.output ?? {}));
+      const _fixtureInput = { resolution: "res-1", targets: ["auth"], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"true","allowed_updates":"minor"} } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(resolverHandler.update({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "update_missing_resolution" -> error', async () => {
       if (typeof resolverHandler.update !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(resolverHandler.resolve({ constraints: [{"module_id":"auth","version_range":"^1.0.0","edge_type":"normal","environment":"all","features":[]}], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"false","allowed_updates":"minor"}, locked_versions: null }), storage);
-      const result = await interpret(resolverHandler.update({ resolution: "res-nonexistent", targets: ["auth"], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"false","allowed_updates":"major"} }), storage);
+      const afterResult_resolve_simple = await interpret(resolverHandler.resolve({ constraints: [{"module_id":"auth","version_range":"^1.0.0","edge_type":"normal","environment":"all","features":[]}], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"false","allowed_updates":"minor"}, locked_versions: null }), storage);
+      const _pool = Object.assign({}, (afterResult_resolve_simple?.output ?? {}));
+      const _fixtureInput = { resolution: "res-nonexistent", targets: ["auth"], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"false","allowed_updates":"major"} } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(resolverHandler.update({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -225,8 +235,13 @@ describe('Resolver functional handler', () => {
     it('fixture "explain_existing_module" -> ok', async () => {
       if (typeof resolverHandler.explain !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(resolverHandler.resolve({ constraints: [{"module_id":"auth","version_range":"^1.0.0","edge_type":"normal","environment":"all","features":[]}], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"false","allowed_updates":"minor"}, locked_versions: null }), storage);
-      const result = await interpret(resolverHandler.explain({ resolution: "res-1", module_id: "auth" }), storage);
+      const afterResult_resolve_simple = await interpret(resolverHandler.resolve({ constraints: [{"module_id":"auth","version_range":"^1.0.0","edge_type":"normal","environment":"all","features":[]}], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"false","allowed_updates":"minor"}, locked_versions: null }), storage);
+      const _pool = Object.assign({}, (afterResult_resolve_simple?.output ?? {}));
+      const _fixtureInput = { resolution: "res-1", module_id: "auth" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(resolverHandler.explain({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

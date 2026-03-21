@@ -33,12 +33,46 @@ function defaultInput(params: Array<{ name: string; type: string }>): string {
   }).join(', ');
 }
 
+/** Check if a fixture value is an output reference ($fixture.field) */
+function isRef(v: unknown): v is { type: 'ref'; fixture: string; field: string } {
+  return v !== null && typeof v === 'object' && (v as Record<string, unknown>).type === 'ref'
+    && 'fixture' in (v as Record<string, unknown>) && 'field' in (v as Record<string, unknown>);
+}
+
+/** Check if any value in the fixture input contains output references */
+function hasRefs(input: Record<string, unknown>): boolean {
+  return Object.values(input).some(isRef);
+}
+
 /**
  * Serialize a fixture input object to a TypeScript expression string.
+ * Literal values are JSON-serialized; output references are left as placeholders
+ * (they'll be resolved at test generation time using after-chain result vars).
  */
 function fixtureInputStr(input: Record<string, unknown>): string {
   return Object.entries(input)
     .map(([k, v]) => `${k}: ${JSON.stringify(v)}`)
+    .join(', ');
+}
+
+/**
+ * Serialize a fixture input to a TypeScript expression string, resolving
+ * output references ($fixture.field) to their captured after-chain variables.
+ */
+function fixtureInputStrWithRefs(
+  input: Record<string, unknown>,
+  resultVars: Map<string, string>,
+): string {
+  return Object.entries(input)
+    .map(([k, v]) => {
+      if (isRef(v)) {
+        const varName = resultVars.get(v.fixture);
+        if (varName) return `${k}: ${varName}?.output?.[${JSON.stringify(v.field)}]`;
+        // Ref target not found in after-chain; fall back to placeholder
+        return `${k}: undefined /* unresolved ref: $${v.fixture}.${v.field} */`;
+      }
+      return `${k}: ${JSON.stringify(v)}`;
+    })
     .join(', ');
 }
 
@@ -97,14 +131,22 @@ function buildFixtureIndex(allActions: TestPlanAction[]): Map<string, { actionNa
  * Resolve a fixture's `after` chain into setup code lines.
  * Recursively resolves transitive dependencies (after chains).
  */
+/**
+ * Resolve a fixture's `after` chain, capturing each step's result output.
+ * Returns { lines, resultVars } where resultVars maps fixture names to
+ * their result variable names (e.g., "afterResult_register_create").
+ * The captured outputs can then be used to override placeholder input
+ * values in the main fixture.
+ */
 function resolveAfterChain(
   fixture: TestPlanFixture,
   fixtureIndex: Map<string, { actionName: string; fixture: TestPlanFixture }>,
   handlerVar: string,
   style: HandlerStyle,
   visited = new Set<string>(),
-): string[] {
-  if (!fixture.after || fixture.after.length === 0) return [];
+  resultVars = new Map<string, string>(),
+): { lines: string[]; resultVars: Map<string, string> } {
+  if (!fixture.after || fixture.after.length === 0) return { lines: [], resultVars };
   const lines: string[] = [];
   for (const depName of fixture.after) {
     if (visited.has(depName)) continue; // prevent cycles
@@ -112,12 +154,15 @@ function resolveAfterChain(
     const dep = fixtureIndex.get(depName);
     if (!dep) continue; // referenced fixture not found
     // Resolve transitive deps first
-    lines.push(...resolveAfterChain(dep.fixture, fixtureIndex, handlerVar, style, visited));
-    // Then run this dependency
+    const sub = resolveAfterChain(dep.fixture, fixtureIndex, handlerVar, style, visited, resultVars);
+    lines.push(...sub.lines);
+    // Then run this dependency, capturing its result
     const depInput = fixtureInputStr(dep.fixture.input);
-    lines.push(`      ${invokeExpr(handlerVar, dep.actionName, depInput, style)};`);
+    const varName = `afterResult_${depName.replace(/[^a-zA-Z0-9]/g, '_')}`;
+    lines.push(`      const ${varName} = ${invokeExpr(handlerVar, dep.actionName, depInput, style)};`);
+    resultVars.set(depName, varName);
   }
-  return lines;
+  return { lines, resultVars };
 }
 
 function renderStructuralTests(handlerVar: string, action: TestPlanAction, style: HandlerStyle, allActions?: TestPlanAction[]): string[] {
@@ -199,12 +244,28 @@ function renderStructuralTests(handlerVar: string, action: TestPlanAction, style
       lines.push(`    it('fixture "${fixture.name}" -> ${fixture.expectedVariant}', async () => {`);
       lines.push(`      if (typeof ${handlerVar}.${action.name} !== 'function') return;`);
       lines.push(`      const storage = createInMemoryStorage();`);
-      // Run after-chain fixtures to seed storage
-      const afterLines = resolveAfterChain(fixture, fixtureIndex, handlerVar, style);
+      // Run after-chain fixtures to seed storage, capturing their outputs
+      const { lines: afterLines, resultVars } = resolveAfterChain(fixture, fixtureIndex, handlerVar, style);
       for (const line of afterLines) {
         lines.push(line);
       }
-      lines.push(`      const result = ${invokeExpr(handlerVar, action.name, fInput, style)};`);
+      // If fixture input contains $ref values, resolve them against after-chain results.
+      // Otherwise use literal input directly.
+      if (hasRefs(fixture.input) && resultVars.size > 0) {
+        const resolvedInput = fixtureInputStrWithRefs(fixture.input, resultVars);
+        lines.push(`      const result = ${invokeExpr(handlerVar, action.name, resolvedInput, style)};`);
+      } else if (resultVars.size > 0) {
+        // Legacy: after-chain exists but no $refs — merge outputs by field name match
+        const afterOutputExprs = [...resultVars.values()].map(v => `(${v}?.output ?? {})`);
+        lines.push(`      const _pool = Object.assign({}, ${afterOutputExprs.join(', ')});`);
+        lines.push(`      const _fixtureInput = { ${fInput} } as Record<string, unknown>;`);
+        lines.push(`      for (const [k, v] of Object.entries(_pool)) {`);
+        lines.push(`        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;`);
+        lines.push(`      }`);
+        lines.push(`      const result = ${invokeExpr(handlerVar, action.name, '..._fixtureInput', style)};`);
+      } else {
+        lines.push(`      const result = ${invokeExpr(handlerVar, action.name, fInput, style)};`);
+      }
       if (fixture.expectedVariant === 'error') {
         // Generic error fixture: any non-ok variant satisfies the expectation.
         // Concept specs use -> error as shorthand for "should fail" even when

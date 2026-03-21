@@ -223,8 +223,13 @@ describe('ConceptScaffoldGen functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof conceptScaffoldGenHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(conceptScaffoldGenHandler.generate({ name: "UserAccount", typeParam: "U", purpose: "Manage user accounts and authentication", stateFields: [{"name":"users","type":"set U"}], actions: [{"name":"create","params":[{"name":"email","type":"String"}],"variants":[{"name":"ok","params":[{"name":"user","type":"U"}],"description":"User created."}]}], version: "1", gate: "false", capabilities: ["persistent-storage"] }), storage);
-      const result = await interpret(conceptScaffoldGenHandler.register({  }), storage);
+      const afterResult_user_concept = await interpret(conceptScaffoldGenHandler.generate({ name: "UserAccount", typeParam: "U", purpose: "Manage user accounts and authentication", stateFields: [{"name":"users","type":"set U"}], actions: [{"name":"create","params":[{"name":"email","type":"String"}],"variants":[{"name":"ok","params":[{"name":"user","type":"U"}],"description":"User created."}]}], version: "1", gate: "false", capabilities: ["persistent-storage"] }), storage);
+      const _pool = Object.assign({}, (afterResult_user_concept?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(conceptScaffoldGenHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

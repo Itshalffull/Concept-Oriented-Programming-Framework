@@ -155,16 +155,26 @@ describe('ConflictResolution functional handler', () => {
     it('fixture "detect_conflict" -> ok', async () => {
       if (typeof conflictResolutionHandler.detect !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(conflictResolutionHandler.registerPolicy({ name: "last-writer-wins", priority: "1" }), storage);
-      const result = await interpret(conflictResolutionHandler.detect({ version1: "v1-abc", version2: "v2-def", context: "document-edit" }), storage);
+      const afterResult_register_lww = await interpret(conflictResolutionHandler.registerPolicy({ name: "last-writer-wins", priority: "1" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_lww?.output ?? {}));
+      const _fixtureInput = { version1: "v1-abc", version2: "v2-def", context: "document-edit" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(conflictResolutionHandler.detect({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "detect_same_versions" -> ok', async () => {
       if (typeof conflictResolutionHandler.detect !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(conflictResolutionHandler.registerPolicy({ name: "last-writer-wins", priority: "1" }), storage);
-      const result = await interpret(conflictResolutionHandler.detect({ version1: "v1-abc", version2: "v1-abc", context: "document-edit" }), storage);
+      const afterResult_register_lww = await interpret(conflictResolutionHandler.registerPolicy({ name: "last-writer-wins", priority: "1" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_lww?.output ?? {}));
+      const _fixtureInput = { version1: "v1-abc", version2: "v1-abc", context: "document-edit" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(conflictResolutionHandler.detect({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -225,8 +235,13 @@ describe('ConflictResolution functional handler', () => {
     it('fixture "resolve_with_policy" -> ok', async () => {
       if (typeof conflictResolutionHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(conflictResolutionHandler.registerPolicy({ name: "last-writer-wins", priority: "1" }), storage);
-      const result = await interpret(conflictResolutionHandler.resolve({ conflictId: "conflict-1", policyOverride: "last-writer-wins" }), storage);
+      const afterResult_register_lww = await interpret(conflictResolutionHandler.registerPolicy({ name: "last-writer-wins", priority: "1" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_lww?.output ?? {}));
+      const _fixtureInput = { conflictId: "conflict-1", policyOverride: "last-writer-wins" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(conflictResolutionHandler.resolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -294,8 +309,13 @@ describe('ConflictResolution functional handler', () => {
     it('fixture "manual_resolve_valid" -> ok', async () => {
       if (typeof conflictResolutionHandler.manualResolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(conflictResolutionHandler.registerPolicy({ name: "last-writer-wins", priority: "1" }), storage);
-      const result = await interpret(conflictResolutionHandler.manualResolve({ conflictId: "conflict-1", chosen: "v1-abc" }), storage);
+      const afterResult_register_lww = await interpret(conflictResolutionHandler.registerPolicy({ name: "last-writer-wins", priority: "1" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_lww?.output ?? {}));
+      const _fixtureInput = { conflictId: "conflict-1", chosen: "v1-abc" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(conflictResolutionHandler.manualResolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

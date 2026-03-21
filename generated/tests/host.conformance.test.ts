@@ -171,8 +171,13 @@ describe('Host functional handler', () => {
     it('fixture "ready_existing" -> ok', async () => {
       if (typeof hostHandler.ready !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(hostHandler.mount({ host: "W-1", concept: "urn:app/Article", view: "list", level: "page", zone: "primary" }), storage);
-      const result = await interpret(hostHandler.ready({ host: "W-1" }), storage);
+      const afterResult_mount_article_list = await interpret(hostHandler.mount({ host: "W-1", concept: "urn:app/Article", view: "list", level: "page", zone: "primary" }), storage);
+      const _pool = Object.assign({}, (afterResult_mount_article_list?.output ?? {}));
+      const _fixtureInput = { host: "W-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(hostHandler.ready({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -241,16 +246,26 @@ describe('Host functional handler', () => {
     it('fixture "track_binding" -> ok', async () => {
       if (typeof hostHandler.trackResource !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(hostHandler.mount({ host: "W-1", concept: "urn:app/Article", view: "list", level: "page", zone: "primary" }), storage);
-      const result = await interpret(hostHandler.trackResource({ host: "W-1", kind: "binding", ref: "bind-1" }), storage);
+      const afterResult_mount_article_list = await interpret(hostHandler.mount({ host: "W-1", concept: "urn:app/Article", view: "list", level: "page", zone: "primary" }), storage);
+      const _pool = Object.assign({}, (afterResult_mount_article_list?.output ?? {}));
+      const _fixtureInput = { host: "W-1", kind: "binding", ref: "bind-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(hostHandler.trackResource({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "track_machine" -> ok', async () => {
       if (typeof hostHandler.trackResource !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(hostHandler.mount({ host: "W-1", concept: "urn:app/Article", view: "list", level: "page", zone: "primary" }), storage);
-      const result = await interpret(hostHandler.trackResource({ host: "W-1", kind: "machine", ref: "machine-1" }), storage);
+      const afterResult_mount_article_list = await interpret(hostHandler.mount({ host: "W-1", concept: "urn:app/Article", view: "list", level: "page", zone: "primary" }), storage);
+      const _pool = Object.assign({}, (afterResult_mount_article_list?.output ?? {}));
+      const _fixtureInput = { host: "W-1", kind: "machine", ref: "machine-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(hostHandler.trackResource({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -319,8 +334,13 @@ describe('Host functional handler', () => {
     it('fixture "unmount_existing" -> ok', async () => {
       if (typeof hostHandler.unmount !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(hostHandler.mount({ host: "W-1", concept: "urn:app/Article", view: "list", level: "page", zone: "primary" }), storage);
-      const result = await interpret(hostHandler.unmount({ host: "W-1" }), storage);
+      const afterResult_mount_article_list = await interpret(hostHandler.mount({ host: "W-1", concept: "urn:app/Article", view: "list", level: "page", zone: "primary" }), storage);
+      const _pool = Object.assign({}, (afterResult_mount_article_list?.output ?? {}));
+      const _fixtureInput = { host: "W-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(hostHandler.unmount({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -389,8 +409,13 @@ describe('Host functional handler', () => {
     it('fixture "refresh_existing" -> ok', async () => {
       if (typeof hostHandler.refresh !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(hostHandler.mount({ host: "W-1", concept: "urn:app/Article", view: "list", level: "page", zone: "primary" }), storage);
-      const result = await interpret(hostHandler.refresh({ host: "W-1" }), storage);
+      const afterResult_mount_article_list = await interpret(hostHandler.mount({ host: "W-1", concept: "urn:app/Article", view: "list", level: "page", zone: "primary" }), storage);
+      const _pool = Object.assign({}, (afterResult_mount_article_list?.output ?? {}));
+      const _fixtureInput = { host: "W-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(hostHandler.refresh({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -459,8 +484,13 @@ describe('Host functional handler', () => {
     it('fixture "set_error_info" -> ok', async () => {
       if (typeof hostHandler.setError !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(hostHandler.mount({ host: "W-1", concept: "urn:app/Article", view: "list", level: "page", zone: "primary" }), storage);
-      const result = await interpret(hostHandler.setError({ host: "W-1", errorInfo: "RenderError: component failed to mount" }), storage);
+      const afterResult_mount_article_list = await interpret(hostHandler.mount({ host: "W-1", concept: "urn:app/Article", view: "list", level: "page", zone: "primary" }), storage);
+      const _pool = Object.assign({}, (afterResult_mount_article_list?.output ?? {}));
+      const _fixtureInput = { host: "W-1", errorInfo: "RenderError: component failed to mount" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(hostHandler.setError({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

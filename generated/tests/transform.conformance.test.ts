@@ -163,16 +163,26 @@ describe('Transform functional handler', () => {
     it('fixture "chain_two" -> ok', async () => {
       if (typeof transformHandler.chain !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(transformHandler.apply({ value: "Hello World!", transformId: "slugify" }), storage);
-      const result = await interpret(transformHandler.chain({ value: "Hello World!", transformIds: "slugify,strip_tags" }), storage);
+      const afterResult_apply_slugify = await interpret(transformHandler.apply({ value: "Hello World!", transformId: "slugify" }), storage);
+      const _pool = Object.assign({}, (afterResult_apply_slugify?.output ?? {}));
+      const _fixtureInput = { value: "Hello World!", transformIds: "slugify,strip_tags" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(transformHandler.chain({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "chain_empty" -> ok', async () => {
       if (typeof transformHandler.chain !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(transformHandler.apply({ value: "Hello World!", transformId: "slugify" }), storage);
-      const result = await interpret(transformHandler.chain({ value: "", transformIds: "slugify" }), storage);
+      const afterResult_apply_slugify = await interpret(transformHandler.apply({ value: "Hello World!", transformId: "slugify" }), storage);
+      const _pool = Object.assign({}, (afterResult_apply_slugify?.output ?? {}));
+      const _fixtureInput = { value: "", transformIds: "slugify" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(transformHandler.chain({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

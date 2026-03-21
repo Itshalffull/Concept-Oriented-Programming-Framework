@@ -62,8 +62,13 @@ describe('ContentStore imperative handler', () => {
     it('fixture "retrieve_existing" -> ok', async () => {
       if (typeof contentStoreHandler.retrieve !== 'function') return;
       const storage = createInMemoryStorage();
-      await contentStoreHandler.store({ data: "package-contents-v1", media_type: "application/tar+gzip" }, storage);
-      const result = await contentStoreHandler.retrieve({ hash: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2" }, storage);
+      const afterResult_store_tarball = await contentStoreHandler.store({ data: "package-contents-v1", media_type: "application/tar+gzip" }, storage);
+      const _pool = Object.assign({}, (afterResult_store_tarball?.output ?? {}));
+      const _fixtureInput = { hash: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await contentStoreHandler.retrieve({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -89,8 +94,13 @@ describe('ContentStore imperative handler', () => {
     it('fixture "verify_valid_hash" -> ok', async () => {
       if (typeof contentStoreHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
-      await contentStoreHandler.store({ data: "package-contents-v1", media_type: "application/tar+gzip" }, storage);
-      const result = await contentStoreHandler.verify({ hash: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2" }, storage);
+      const afterResult_store_tarball = await contentStoreHandler.store({ data: "package-contents-v1", media_type: "application/tar+gzip" }, storage);
+      const _pool = Object.assign({}, (afterResult_store_tarball?.output ?? {}));
+      const _fixtureInput = { hash: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await contentStoreHandler.verify({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -116,16 +126,26 @@ describe('ContentStore imperative handler', () => {
     it('fixture "gc_with_retained_hashes" -> ok', async () => {
       if (typeof contentStoreHandler.gc !== 'function') return;
       const storage = createInMemoryStorage();
-      await contentStoreHandler.store({ data: "package-contents-v1", media_type: "application/tar+gzip" }, storage);
-      const result = await contentStoreHandler.gc({ lockfile_hashes: ["hash1","hash2","hash3"] }, storage);
+      const afterResult_store_tarball = await contentStoreHandler.store({ data: "package-contents-v1", media_type: "application/tar+gzip" }, storage);
+      const _pool = Object.assign({}, (afterResult_store_tarball?.output ?? {}));
+      const _fixtureInput = { lockfile_hashes: ["hash1","hash2","hash3"] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await contentStoreHandler.gc({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "gc_empty_lockfile" -> ok', async () => {
       if (typeof contentStoreHandler.gc !== 'function') return;
       const storage = createInMemoryStorage();
-      await contentStoreHandler.store({ data: "package-contents-v1", media_type: "application/tar+gzip" }, storage);
-      const result = await contentStoreHandler.gc({ lockfile_hashes: [] }, storage);
+      const afterResult_store_tarball = await contentStoreHandler.store({ data: "package-contents-v1", media_type: "application/tar+gzip" }, storage);
+      const _pool = Object.assign({}, (afterResult_store_tarball?.output ?? {}));
+      const _fixtureInput = { lockfile_hashes: [] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await contentStoreHandler.gc({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -144,8 +164,13 @@ describe('ContentStore imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof contentStoreHandler.stats !== 'function') return;
       const storage = createInMemoryStorage();
-      await contentStoreHandler.store({ data: "package-contents-v1", media_type: "application/tar+gzip" }, storage);
-      const result = await contentStoreHandler.stats({  }, storage);
+      const afterResult_store_tarball = await contentStoreHandler.store({ data: "package-contents-v1", media_type: "application/tar+gzip" }, storage);
+      const _pool = Object.assign({}, (afterResult_store_tarball?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await contentStoreHandler.stats({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 

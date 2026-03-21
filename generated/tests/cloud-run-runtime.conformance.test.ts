@@ -162,8 +162,13 @@ describe('CloudRunRuntime functional handler', () => {
     it('fixture "deploy_gcr" -> ok', async () => {
       if (typeof cloudRunRuntimeHandler.deploy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(cloudRunRuntimeHandler.provision({ concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: "1", memory: "512" }), storage);
-      const result = await interpret(cloudRunRuntimeHandler.deploy({ service: "svc-abc123", imageUri: "gcr.io/my-gcp-project/user-api:v3" }), storage);
+      const afterResult_provision_standard = await interpret(cloudRunRuntimeHandler.provision({ concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: "1", memory: "512" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_standard?.output ?? {}));
+      const _fixtureInput = { service: "svc-abc123", imageUri: "gcr.io/my-gcp-project/user-api:v3" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(cloudRunRuntimeHandler.deploy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -231,8 +236,13 @@ describe('CloudRunRuntime functional handler', () => {
     it('fixture "traffic_split" -> ok', async () => {
       if (typeof cloudRunRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(cloudRunRuntimeHandler.provision({ concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: "1", memory: "512" }), storage);
-      const result = await interpret(cloudRunRuntimeHandler.setTrafficWeight({ service: "svc-abc123", weight: "50" }), storage);
+      const afterResult_provision_standard = await interpret(cloudRunRuntimeHandler.provision({ concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: "1", memory: "512" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_standard?.output ?? {}));
+      const _fixtureInput = { service: "svc-abc123", weight: "50" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(cloudRunRuntimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -300,16 +310,26 @@ describe('CloudRunRuntime functional handler', () => {
     it('fixture "rollback_to_rev" -> ok', async () => {
       if (typeof cloudRunRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(cloudRunRuntimeHandler.provision({ concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: "1", memory: "512" }), storage);
-      const result = await interpret(cloudRunRuntimeHandler.rollback({ service: "svc-abc123", targetRevision: "rev-20250101" }), storage);
+      const afterResult_provision_standard = await interpret(cloudRunRuntimeHandler.provision({ concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: "1", memory: "512" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_standard?.output ?? {}));
+      const _fixtureInput = { service: "svc-abc123", targetRevision: "rev-20250101" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(cloudRunRuntimeHandler.rollback({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "rollback_empty_revision" -> ok', async () => {
       if (typeof cloudRunRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(cloudRunRuntimeHandler.provision({ concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: "1", memory: "512" }), storage);
-      const result = await interpret(cloudRunRuntimeHandler.rollback({ service: "svc-abc123", targetRevision: "" }), storage);
+      const afterResult_provision_standard = await interpret(cloudRunRuntimeHandler.provision({ concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: "1", memory: "512" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_standard?.output ?? {}));
+      const _fixtureInput = { service: "svc-abc123", targetRevision: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(cloudRunRuntimeHandler.rollback({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -370,8 +390,13 @@ describe('CloudRunRuntime functional handler', () => {
     it('fixture "destroy_valid" -> ok', async () => {
       if (typeof cloudRunRuntimeHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(cloudRunRuntimeHandler.provision({ concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: "1", memory: "512" }), storage);
-      const result = await interpret(cloudRunRuntimeHandler.destroy({ service: "svc-abc123" }), storage);
+      const afterResult_provision_standard = await interpret(cloudRunRuntimeHandler.provision({ concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: "1", memory: "512" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_standard?.output ?? {}));
+      const _fixtureInput = { service: "svc-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(cloudRunRuntimeHandler.destroy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

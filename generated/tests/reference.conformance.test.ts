@@ -94,8 +94,13 @@ describe('Reference functional handler', () => {
     it('fixture "another_ref" -> ok', async () => {
       if (typeof referenceHandler.addRef !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(referenceHandler.addRef({ source: "page-1", target: "doc-1" }), storage);
-      const result = await interpret(referenceHandler.addRef({ source: "page-2", target: "doc-3" }), storage);
+      const afterResult_valid_add = await interpret(referenceHandler.addRef({ source: "page-1", target: "doc-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
+      const _fixtureInput = { source: "page-2", target: "doc-3" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(referenceHandler.addRef({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -164,8 +169,13 @@ describe('Reference functional handler', () => {
     it('fixture "valid_remove" -> ok', async () => {
       if (typeof referenceHandler.removeRef !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(referenceHandler.addRef({ source: "page-1", target: "doc-1" }), storage);
-      const result = await interpret(referenceHandler.removeRef({ source: "page-1", target: "doc-1" }), storage);
+      const afterResult_valid_add = await interpret(referenceHandler.addRef({ source: "page-1", target: "doc-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
+      const _fixtureInput = { source: "page-1", target: "doc-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(referenceHandler.removeRef({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -234,8 +244,13 @@ describe('Reference functional handler', () => {
     it('fixture "valid_refs" -> ok', async () => {
       if (typeof referenceHandler.getRefs !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(referenceHandler.addRef({ source: "page-1", target: "doc-1" }), storage);
-      const result = await interpret(referenceHandler.getRefs({ source: "page-1" }), storage);
+      const afterResult_valid_add = await interpret(referenceHandler.addRef({ source: "page-1", target: "doc-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
+      const _fixtureInput = { source: "page-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(referenceHandler.getRefs({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -304,16 +319,26 @@ describe('Reference functional handler', () => {
     it('fixture "valid_target" -> ok', async () => {
       if (typeof referenceHandler.resolveTarget !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(referenceHandler.addRef({ source: "page-1", target: "doc-1" }), storage);
-      const result = await interpret(referenceHandler.resolveTarget({ target: "doc-1" }), storage);
+      const afterResult_valid_add = await interpret(referenceHandler.addRef({ source: "page-1", target: "doc-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
+      const _fixtureInput = { target: "doc-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(referenceHandler.resolveTarget({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "broken_link" -> ok', async () => {
       if (typeof referenceHandler.resolveTarget !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(referenceHandler.addRef({ source: "page-1", target: "doc-1" }), storage);
-      const result = await interpret(referenceHandler.resolveTarget({ target: "nonexistent-target" }), storage);
+      const afterResult_valid_add = await interpret(referenceHandler.addRef({ source: "page-1", target: "doc-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
+      const _fixtureInput = { target: "nonexistent-target" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(referenceHandler.resolveTarget({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -155,8 +155,13 @@ describe('DestinationCatalog functional handler', () => {
     it('fixture "resolve_dashboard" -> ok', async () => {
       if (typeof destinationCatalogHandler.resolveByName !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(destinationCatalogHandler.register({ destination: "dest-1", name: "dashboard", targetConcept: "AppShell", targetView: "dashboard", href: "/admin", icon: "home", group: "Content" }), storage);
-      const result = await interpret(destinationCatalogHandler.resolveByName({ name: "dashboard" }), storage);
+      const afterResult_register_dashboard = await interpret(destinationCatalogHandler.register({ destination: "dest-1", name: "dashboard", targetConcept: "AppShell", targetView: "dashboard", href: "/admin", icon: "home", group: "Content" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_dashboard?.output ?? {}));
+      const _fixtureInput = { name: "dashboard" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(destinationCatalogHandler.resolveByName({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -225,16 +230,26 @@ describe('DestinationCatalog functional handler', () => {
     it('fixture "resolve_admin_href" -> ok', async () => {
       if (typeof destinationCatalogHandler.resolveByHref !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(destinationCatalogHandler.register({ destination: "dest-1", name: "dashboard", targetConcept: "AppShell", targetView: "dashboard", href: "/admin", icon: "home", group: "Content" }), storage);
-      const result = await interpret(destinationCatalogHandler.resolveByHref({ href: "/admin" }), storage);
+      const afterResult_register_dashboard = await interpret(destinationCatalogHandler.register({ destination: "dest-1", name: "dashboard", targetConcept: "AppShell", targetView: "dashboard", href: "/admin", icon: "home", group: "Content" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_dashboard?.output ?? {}));
+      const _fixtureInput = { href: "/admin" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(destinationCatalogHandler.resolveByHref({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_nested_href" -> ok', async () => {
       if (typeof destinationCatalogHandler.resolveByHref !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(destinationCatalogHandler.register({ destination: "dest-1", name: "dashboard", targetConcept: "AppShell", targetView: "dashboard", href: "/admin", icon: "home", group: "Content" }), storage);
-      const result = await interpret(destinationCatalogHandler.resolveByHref({ href: "/articles/42" }), storage);
+      const afterResult_register_dashboard = await interpret(destinationCatalogHandler.register({ destination: "dest-1", name: "dashboard", targetConcept: "AppShell", targetView: "dashboard", href: "/admin", icon: "home", group: "Content" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_dashboard?.output ?? {}));
+      const _fixtureInput = { href: "/articles/42" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(destinationCatalogHandler.resolveByHref({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -303,8 +318,13 @@ describe('DestinationCatalog functional handler', () => {
     it('fixture "list_all" -> ok', async () => {
       if (typeof destinationCatalogHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(destinationCatalogHandler.register({ destination: "dest-1", name: "dashboard", targetConcept: "AppShell", targetView: "dashboard", href: "/admin", icon: "home", group: "Content" }), storage);
-      const result = await interpret(destinationCatalogHandler.list({  }), storage);
+      const afterResult_register_dashboard = await interpret(destinationCatalogHandler.register({ destination: "dest-1", name: "dashboard", targetConcept: "AppShell", targetView: "dashboard", href: "/admin", icon: "home", group: "Content" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_dashboard?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(destinationCatalogHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

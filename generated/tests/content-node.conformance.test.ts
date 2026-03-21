@@ -155,8 +155,13 @@ describe('ContentNode functional handler', () => {
     it('fixture "update_content" -> ok', async () => {
       if (typeof contentNodeHandler.update !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
-      const result = await interpret(contentNodeHandler.update({ node: "node-1", content: "Updated wiki content" }), storage);
+      const afterResult_create_page_node = await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_page_node?.output ?? {}));
+      const _fixtureInput = { node: "node-1", content: "Updated wiki content" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(contentNodeHandler.update({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('ContentNode functional handler', () => {
     it('fixture "delete_node" -> ok', async () => {
       if (typeof contentNodeHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
-      const result = await interpret(contentNodeHandler.delete({ node: "node-1" }), storage);
+      const afterResult_create_page_node = await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_page_node?.output ?? {}));
+      const _fixtureInput = { node: "node-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(contentNodeHandler.delete({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('ContentNode functional handler', () => {
     it('fixture "get_node" -> ok', async () => {
       if (typeof contentNodeHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
-      const result = await interpret(contentNodeHandler.get({ node: "node-1" }), storage);
+      const afterResult_create_page_node = await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_page_node?.output ?? {}));
+      const _fixtureInput = { node: "node-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(contentNodeHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -362,16 +377,26 @@ describe('ContentNode functional handler', () => {
     it('fixture "set_metadata" -> ok', async () => {
       if (typeof contentNodeHandler.setMetadata !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
-      const result = await interpret(contentNodeHandler.setMetadata({ node: "node-1", metadata: "{\"tags\":[\"important\"],\"priority\":\"high\"}" }), storage);
+      const afterResult_create_page_node = await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_page_node?.output ?? {}));
+      const _fixtureInput = { node: "node-1", metadata: "{\"tags\":[\"important\"],\"priority\":\"high\"}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(contentNodeHandler.setMetadata({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "set_metadata_missing" -> error', async () => {
       if (typeof contentNodeHandler.setMetadata !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
-      const result = await interpret(contentNodeHandler.setMetadata({ node: "nonexistent", metadata: "{}" }), storage);
+      const afterResult_create_page_node = await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_page_node?.output ?? {}));
+      const _fixtureInput = { node: "nonexistent", metadata: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(contentNodeHandler.setMetadata({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -432,8 +457,13 @@ describe('ContentNode functional handler', () => {
     it('fixture "change_to_document" -> ok', async () => {
       if (typeof contentNodeHandler.changeType !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
-      const result = await interpret(contentNodeHandler.changeType({ node: "node-1", type: "document" }), storage);
+      const afterResult_create_page_node = await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_page_node?.output ?? {}));
+      const _fixtureInput = { node: "node-1", type: "document" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(contentNodeHandler.changeType({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

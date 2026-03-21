@@ -62,8 +62,13 @@ describe('GenerationProvenance imperative handler', () => {
     it('fixture "get_known_file" -> ok', async () => {
       if (typeof generationProvenanceHandler.getByFile !== 'function') return;
       const storage = createInMemoryStorage();
-      await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage);
-      const result = await generationProvenanceHandler.getByFile({ outputFile: "handlers/ts/article.handler.ts" }, storage);
+      const afterResult_record_handler = await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage);
+      const _pool = Object.assign({}, (afterResult_record_handler?.output ?? {}));
+      const _fixtureInput = { outputFile: "handlers/ts/article.handler.ts" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await generationProvenanceHandler.getByFile({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -89,16 +94,26 @@ describe('GenerationProvenance imperative handler', () => {
     it('fixture "find_scaffold_gen_files" -> ok', async () => {
       if (typeof generationProvenanceHandler.findByGenerator !== 'function') return;
       const storage = createInMemoryStorage();
-      await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage);
-      const result = await generationProvenanceHandler.findByGenerator({ generator: "HandlerScaffoldGen" }, storage);
+      const afterResult_record_handler = await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage);
+      const _pool = Object.assign({}, (afterResult_record_handler?.output ?? {}));
+      const _fixtureInput = { generator: "HandlerScaffoldGen" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await generationProvenanceHandler.findByGenerator({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_unknown_gen" -> ok', async () => {
       if (typeof generationProvenanceHandler.findByGenerator !== 'function') return;
       const storage = createInMemoryStorage();
-      await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage);
-      const result = await generationProvenanceHandler.findByGenerator({ generator: "NonexistentGen" }, storage);
+      const afterResult_record_handler = await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage);
+      const _pool = Object.assign({}, (afterResult_record_handler?.output ?? {}));
+      const _fixtureInput = { generator: "NonexistentGen" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await generationProvenanceHandler.findByGenerator({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -117,16 +132,26 @@ describe('GenerationProvenance imperative handler', () => {
     it('fixture "find_article_outputs" -> ok', async () => {
       if (typeof generationProvenanceHandler.findBySource !== 'function') return;
       const storage = createInMemoryStorage();
-      await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage);
-      const result = await generationProvenanceHandler.findBySource({ sourceSpec: "specs/app/article.concept" }, storage);
+      const afterResult_record_handler = await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage);
+      const _pool = Object.assign({}, (afterResult_record_handler?.output ?? {}));
+      const _fixtureInput = { sourceSpec: "specs/app/article.concept" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await generationProvenanceHandler.findBySource({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_no_outputs" -> ok', async () => {
       if (typeof generationProvenanceHandler.findBySource !== 'function') return;
       const storage = createInMemoryStorage();
-      await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage);
-      const result = await generationProvenanceHandler.findBySource({ sourceSpec: "specs/nonexistent.concept" }, storage);
+      const afterResult_record_handler = await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage);
+      const _pool = Object.assign({}, (afterResult_record_handler?.output ?? {}));
+      const _fixtureInput = { sourceSpec: "specs/nonexistent.concept" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await generationProvenanceHandler.findBySource({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -145,8 +170,13 @@ describe('GenerationProvenance imperative handler', () => {
     it('fixture "chain_handler" -> ok', async () => {
       if (typeof generationProvenanceHandler.generationChain !== 'function') return;
       const storage = createInMemoryStorage();
-      await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage);
-      const result = await generationProvenanceHandler.generationChain({ outputFile: "handlers/ts/article.handler.ts" }, storage);
+      const afterResult_record_handler = await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage);
+      const _pool = Object.assign({}, (afterResult_record_handler?.output ?? {}));
+      const _fixtureInput = { outputFile: "handlers/ts/article.handler.ts" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await generationProvenanceHandler.generationChain({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -172,8 +202,13 @@ describe('GenerationProvenance imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof generationProvenanceHandler.staleFiles !== 'function') return;
       const storage = createInMemoryStorage();
-      await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage);
-      const result = await generationProvenanceHandler.staleFiles({  }, storage);
+      const afterResult_record_handler = await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage);
+      const _pool = Object.assign({}, (afterResult_record_handler?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await generationProvenanceHandler.staleFiles({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -199,16 +234,26 @@ describe('GenerationProvenance imperative handler', () => {
     it('fixture "impact_scaffold_change" -> ok', async () => {
       if (typeof generationProvenanceHandler.impactOfGeneratorChange !== 'function') return;
       const storage = createInMemoryStorage();
-      await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage);
-      const result = await generationProvenanceHandler.impactOfGeneratorChange({ generator: "HandlerScaffoldGen" }, storage);
+      const afterResult_record_handler = await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage);
+      const _pool = Object.assign({}, (afterResult_record_handler?.output ?? {}));
+      const _fixtureInput = { generator: "HandlerScaffoldGen" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await generationProvenanceHandler.impactOfGeneratorChange({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "impact_unknown_gen" -> ok', async () => {
       if (typeof generationProvenanceHandler.impactOfGeneratorChange !== 'function') return;
       const storage = createInMemoryStorage();
-      await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage);
-      const result = await generationProvenanceHandler.impactOfGeneratorChange({ generator: "NonexistentGen" }, storage);
+      const afterResult_record_handler = await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage);
+      const _pool = Object.assign({}, (afterResult_record_handler?.output ?? {}));
+      const _fixtureInput = { generator: "NonexistentGen" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await generationProvenanceHandler.impactOfGeneratorChange({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -227,8 +272,13 @@ describe('GenerationProvenance imperative handler', () => {
     it('fixture "check_generated_file" -> ok', async () => {
       if (typeof generationProvenanceHandler.isGenerated !== 'function') return;
       const storage = createInMemoryStorage();
-      await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage);
-      const result = await generationProvenanceHandler.isGenerated({ file: "handlers/ts/article.handler.ts" }, storage);
+      const afterResult_record_handler = await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage);
+      const _pool = Object.assign({}, (afterResult_record_handler?.output ?? {}));
+      const _fixtureInput = { file: "handlers/ts/article.handler.ts" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await generationProvenanceHandler.isGenerated({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 

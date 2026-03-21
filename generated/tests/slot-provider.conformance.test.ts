@@ -155,8 +155,13 @@ describe('SlotProvider functional handler', () => {
     it('fixture "define_header" -> ok', async () => {
       if (typeof slotProviderHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(slotProviderHandler.initialize({ config: "{}" }), storage);
-      const result = await interpret(slotProviderHandler.define({ provider: "sp-1", name: "header", host: "dialog", position: "before-title" }), storage);
+      const afterResult_init_default = await interpret(slotProviderHandler.initialize({ config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_init_default?.output ?? {}));
+      const _fixtureInput = { provider: "sp-1", name: "header", host: "dialog", position: "before-title" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(slotProviderHandler.define({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('SlotProvider functional handler', () => {
     it('fixture "fill_slot" -> ok', async () => {
       if (typeof slotProviderHandler.fill !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(slotProviderHandler.initialize({ config: "{}" }), storage);
-      const result = await interpret(slotProviderHandler.fill({ provider: "sp-1", slot: "slot-1", content: "<h1>Title</h1>" }), storage);
+      const afterResult_init_default = await interpret(slotProviderHandler.initialize({ config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_init_default?.output ?? {}));
+      const _fixtureInput = { provider: "sp-1", slot: "slot-1", content: "<h1>Title</h1>" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(slotProviderHandler.fill({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('SlotProvider functional handler', () => {
     it('fixture "clear_slot" -> ok', async () => {
       if (typeof slotProviderHandler.clear !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(slotProviderHandler.initialize({ config: "{}" }), storage);
-      const result = await interpret(slotProviderHandler.clear({ provider: "sp-1", slot: "slot-1" }), storage);
+      const afterResult_init_default = await interpret(slotProviderHandler.initialize({ config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_init_default?.output ?? {}));
+      const _fixtureInput = { provider: "sp-1", slot: "slot-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(slotProviderHandler.clear({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -362,16 +377,26 @@ describe('SlotProvider functional handler', () => {
     it('fixture "get_slots_dialog" -> ok', async () => {
       if (typeof slotProviderHandler.getSlots !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(slotProviderHandler.initialize({ config: "{}" }), storage);
-      const result = await interpret(slotProviderHandler.getSlots({ host: "dialog" }), storage);
+      const afterResult_init_default = await interpret(slotProviderHandler.initialize({ config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_init_default?.output ?? {}));
+      const _fixtureInput = { host: "dialog" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(slotProviderHandler.getSlots({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_slots_empty" -> ok', async () => {
       if (typeof slotProviderHandler.getSlots !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(slotProviderHandler.initialize({ config: "{}" }), storage);
-      const result = await interpret(slotProviderHandler.getSlots({ host: "" }), storage);
+      const afterResult_init_default = await interpret(slotProviderHandler.initialize({ config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_init_default?.output ?? {}));
+      const _fixtureInput = { host: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(slotProviderHandler.getSlots({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

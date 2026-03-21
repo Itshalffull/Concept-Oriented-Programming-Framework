@@ -94,8 +94,13 @@ describe('JWT functional handler', () => {
     it('fixture "generate_another" -> ok', async () => {
       if (typeof jwtHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(jwtHandler.generate({ user: "user-alice" }), storage);
-      const result = await interpret(jwtHandler.generate({ user: "user-bob" }), storage);
+      const afterResult_generate_ok = await interpret(jwtHandler.generate({ user: "user-alice" }), storage);
+      const _pool = Object.assign({}, (afterResult_generate_ok?.output ?? {}));
+      const _fixtureInput = { user: "user-bob" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(jwtHandler.generate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -156,8 +161,13 @@ describe('JWT functional handler', () => {
     it('fixture "verify_ok" -> ok', async () => {
       if (typeof jwtHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(jwtHandler.generate({ user: "user-alice" }), storage);
-      const result = await interpret(jwtHandler.verify({ token: "valid.token.placeholder" }), storage);
+      const afterResult_generate_ok = await interpret(jwtHandler.generate({ user: "user-alice" }), storage);
+      const _pool = Object.assign({}, (afterResult_generate_ok?.output ?? {}));
+      const _fixtureInput = { token: "valid.token.placeholder" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(jwtHandler.verify({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

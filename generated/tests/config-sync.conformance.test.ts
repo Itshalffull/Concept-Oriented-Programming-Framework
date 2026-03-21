@@ -155,16 +155,26 @@ describe('ConfigSync functional handler', () => {
     it('fixture "import_valid" -> ok', async () => {
       if (typeof configSyncHandler.import !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(configSyncHandler.export({ config: "site-settings" }), storage);
-      const result = await interpret(configSyncHandler.import({ config: "site-settings", data: "{\"theme\":\"dark\",\"locale\":\"en\"}" }), storage);
+      const afterResult_export_site_config = await interpret(configSyncHandler.export({ config: "site-settings" }), storage);
+      const _pool = Object.assign({}, (afterResult_export_site_config?.output ?? {}));
+      const _fixtureInput = { config: "site-settings", data: "{\"theme\":\"dark\",\"locale\":\"en\"}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(configSyncHandler.import({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "import_empty_data" -> ok', async () => {
       if (typeof configSyncHandler.import !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(configSyncHandler.export({ config: "site-settings" }), storage);
-      const result = await interpret(configSyncHandler.import({ config: "site-settings", data: "" }), storage);
+      const afterResult_export_site_config = await interpret(configSyncHandler.export({ config: "site-settings" }), storage);
+      const _pool = Object.assign({}, (afterResult_export_site_config?.output ?? {}));
+      const _fixtureInput = { config: "site-settings", data: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(configSyncHandler.import({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -225,16 +235,26 @@ describe('ConfigSync functional handler', () => {
     it('fixture "override_production" -> ok', async () => {
       if (typeof configSyncHandler.override !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(configSyncHandler.export({ config: "site-settings" }), storage);
-      const result = await interpret(configSyncHandler.override({ config: "site-settings", layer: "production", values: "debug=false,cache_ttl=3600" }), storage);
+      const afterResult_export_site_config = await interpret(configSyncHandler.export({ config: "site-settings" }), storage);
+      const _pool = Object.assign({}, (afterResult_export_site_config?.output ?? {}));
+      const _fixtureInput = { config: "site-settings", layer: "production", values: "debug=false,cache_ttl=3600" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(configSyncHandler.override({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "override_empty_layer" -> ok', async () => {
       if (typeof configSyncHandler.override !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(configSyncHandler.export({ config: "site-settings" }), storage);
-      const result = await interpret(configSyncHandler.override({ config: "site-settings", layer: "", values: "debug=true" }), storage);
+      const afterResult_export_site_config = await interpret(configSyncHandler.export({ config: "site-settings" }), storage);
+      const _pool = Object.assign({}, (afterResult_export_site_config?.output ?? {}));
+      const _fixtureInput = { config: "site-settings", layer: "", values: "debug=true" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(configSyncHandler.override({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

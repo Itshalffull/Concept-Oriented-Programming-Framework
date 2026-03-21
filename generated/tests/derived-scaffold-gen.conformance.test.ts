@@ -230,8 +230,13 @@ describe('DerivedScaffoldGen functional handler', () => {
     it('fixture "valid_register" -> ok', async () => {
       if (typeof derivedScaffoldGenHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(derivedScaffoldGenHandler.generate({ name: "TaskBoard", typeParams: ["T"], purpose: "Compose task and board concepts into a unified workflow", composes: [{"name":"Task","typeParams":["T"]}], syncs: ["TaskCreated"], surfaceActions: [{"name":"addTask","params":[{"name":"title","type":"String"}],"matches":{"type":"action","concept":"Task","action":"create"}}], surfaceQueries: [], principle: ["A board organizes tasks into columns"] }), storage);
-      const result = await interpret(derivedScaffoldGenHandler.register({  }), storage);
+      const afterResult_valid_generate = await interpret(derivedScaffoldGenHandler.generate({ name: "TaskBoard", typeParams: ["T"], purpose: "Compose task and board concepts into a unified workflow", composes: [{"name":"Task","typeParams":["T"]}], syncs: ["TaskCreated"], surfaceActions: [{"name":"addTask","params":[{"name":"title","type":"String"}],"matches":{"type":"action","concept":"Task","action":"create"}}], surfaceQueries: [], principle: ["A board organizes tasks into columns"] }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_generate?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(derivedScaffoldGenHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

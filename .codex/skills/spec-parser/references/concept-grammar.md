@@ -139,28 +139,29 @@ Named input examples declared inside action blocks, after variants.
 
 ```
 action create(name: String, config: String) {
-  -> ok(item: T) { Created. }
+  -> ok(id: T) { Created. }
   -> error(message: String) { Failed. }
   fixture create_valid { name: "my-item", config: "{}" }
   fixture create_empty { name: "" } -> error
 }
 
-action get(name: String) {
+action get(id: T) {
   -> ok(item: T) { Found. }
   -> notfound(message: String) { Not found. }
-  fixture get_existing { name: "my-item" } after create_valid
-  fixture get_missing { name: "nonexistent" } -> error
+  fixture get_existing { id: $create_valid.id } after create_valid
+  fixture get_missing { id: "nonexistent" } -> notfound
 }
 ```
 
 - **name**: identifier describing the scenario
-- **input object**: `{ key: value, ... }` with strings, numbers, booleans, arrays, nested objects, `none`
+- **input object**: `{ key: value, ... }` with strings, numbers, booleans, arrays, nested objects, `none`, and `$fixture.field` output references
 - **after** (optional): comma-separated fixture names that must run first to seed storage
+- **$fixture.field** (output reference): references an output field from an after-chain fixture. At test time the after fixture runs first and its output is captured; `$ref` resolves to the actual runtime value (e.g., a generated UUID). Use instead of hardcoded placeholder IDs
 - **expected variant** (optional): `-> error`, `-> notfound`, etc. Defaults to `ok`
 
 **Rules:**
 - Every action needs at least one `ok` fixture and one negative fixture per error variant
-- Use `after` for reader actions that need data from a prior write action
+- Use `after` + `$ref` for reader actions — declare `after <writer_fixture>` and use `$writer_fixture.field` to reference the writer's output fields (e.g., `{ id: $create_ok.id } after create_ok`)
 - Fixture values must match handler expectations (JSON strings for `JSON.parse` params, arrays for iterable params)
 - The `after` chain resolves transitively
 

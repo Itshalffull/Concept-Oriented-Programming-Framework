@@ -55,16 +55,26 @@ describe('OnnxProvider imperative handler', () => {
     it('fixture "load_codebert" -> ok', async () => {
       if (typeof onnxProviderHandler.load !== 'function') return;
       const storage = createInMemoryStorage();
-      await onnxProviderHandler.list({  }, storage);
-      const result = await onnxProviderHandler.load({ name: "codebert", modelPath: "/models/codebert.onnx", device: "cpu", options: "{}" }, storage);
+      const afterResult_valid = await onnxProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { name: "codebert", modelPath: "/models/codebert.onnx", device: "cpu", options: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await onnxProviderHandler.load({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "load_gpu_model" -> ok', async () => {
       if (typeof onnxProviderHandler.load !== 'function') return;
       const storage = createInMemoryStorage();
-      await onnxProviderHandler.list({  }, storage);
-      const result = await onnxProviderHandler.load({ name: "resnet", modelPath: "/models/resnet50.onnx", device: "cuda", options: "{\"optimization_level\":99}" }, storage);
+      const afterResult_valid = await onnxProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { name: "resnet", modelPath: "/models/resnet50.onnx", device: "cuda", options: "{\"optimization_level\":99}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await onnxProviderHandler.load({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -83,16 +93,26 @@ describe('OnnxProvider imperative handler', () => {
     it('fixture "infer_codebert" -> ok', async () => {
       if (typeof onnxProviderHandler.infer !== 'function') return;
       const storage = createInMemoryStorage();
-      await onnxProviderHandler.list({  }, storage);
-      const result = await onnxProviderHandler.infer({ session: "codebert", inputs: "[[1,2,3]]", options: "{}" }, storage);
+      const afterResult_valid = await onnxProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { session: "codebert", inputs: "[[1,2,3]]", options: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await onnxProviderHandler.infer({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "infer_unknown_session" -> notFound', async () => {
       if (typeof onnxProviderHandler.infer !== 'function') return;
       const storage = createInMemoryStorage();
-      await onnxProviderHandler.list({  }, storage);
-      const result = await onnxProviderHandler.infer({ session: "nonexistent", inputs: "[]", options: "{}" }, storage);
+      const afterResult_valid = await onnxProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { session: "nonexistent", inputs: "[]", options: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await onnxProviderHandler.infer({ ..._fixtureInput }, storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notFound'));
     });
@@ -112,8 +132,13 @@ describe('OnnxProvider imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof onnxProviderHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await onnxProviderHandler.list({  }, storage);
-      const result = await onnxProviderHandler.list({  }, storage);
+      const afterResult_valid = await onnxProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await onnxProviderHandler.list({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 

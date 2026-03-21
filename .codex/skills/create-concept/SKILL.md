@@ -131,25 +131,25 @@ action create(name: String, config: String, tags: list String) {
   fixture badJson { name: "test", config: "not-json" } -> invalid
 }
 
-action get(name: String) {
+action get(id: T) {
   -> ok(item: T)
   -> notfound(message: String)
-  fixture get_existing { name: "my-item" } after valid
-  fixture get_missing { name: "nonexistent" } -> error
+  fixture get_existing { id: $valid.id } after valid
+  fixture get_missing { id: "nonexistent" } -> error
 }
 ```
 
-The `after` clause declares fixture dependencies — `get_existing` will run `valid` first to seed storage, ensuring the `get` action finds data. Dependencies resolve transitively.
+The `after` clause declares fixture dependencies — `get_existing` will run `valid` first to seed storage. The `$valid.id` syntax references the `id` output field from the `valid` fixture, ensuring `get` looks up the actual entity that was created (not a hardcoded placeholder).
 
 **Fixture rules:**
 1. **At least one `ok` fixture** per action — the happy path with realistic inputs
 2. **Negative fixtures** for each error variant — append `-> error`, `-> invalid`, etc.
-3. **Use `after` for reader actions** — if an ok fixture needs existing data, declare `after <writer_fixture>` to run the writer fixture first (e.g., `get` after `create`)
+3. **Use `after` + `$ref` for reader actions** — if an ok fixture needs existing data, declare `after <writer_fixture>` and use `$writer_fixture.field` to reference the writer's output fields (e.g., `{ id: $create_ok.id } after create_ok`). This ensures the reader uses the real ID/key that the writer produced, not a hardcoded placeholder
 4. **Match what the handler expects** — if the handler calls `JSON.parse(input.config)`, the fixture value must be valid JSON (or intentionally invalid for error fixtures)
 5. **Use realistic values** — not `"test"` or `"foo"`, but values that exercise the handler's real logic
 6. **Cover edge cases the fuzzer can't find** — structured formats (JSON strings, paths, URIs) that random strings will never produce
 
-**Fixture values support**: strings (`"text"`), numbers (`42`), booleans (`true`/`false`), arrays (`[1, 2]`), nested objects (`{ key: "value" }`), and `none` for null.
+**Fixture values support**: strings (`"text"`), numbers (`42`), booleans (`true`/`false`), arrays (`[1, 2]`), nested objects (`{ key: "value" }`), `none` for null, and `$fixture.field` for output references.
 
 See [references/concept-grammar.md](references/concept-grammar.md) for full fixture syntax.
 

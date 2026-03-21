@@ -101,8 +101,13 @@ describe('EventBus functional handler', () => {
     it('fixture "register_duplicate_event" -> error', async () => {
       if (typeof eventBusHandler.registerEventType !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
-      const result = await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{}" }), storage);
+      const afterResult_valid_register_event = await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_register_event?.output ?? {}));
+      const _fixtureInput = { name: "user.created", schema: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(eventBusHandler.registerEventType({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -163,16 +168,26 @@ describe('EventBus functional handler', () => {
     it('fixture "valid_subscribe" -> ok', async () => {
       if (typeof eventBusHandler.subscribe !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
-      const result = await interpret(eventBusHandler.subscribe({ event: "user.created", handler: "notifyAdmin", priority: "10" }), storage);
+      const afterResult_valid_register_event = await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_register_event?.output ?? {}));
+      const _fixtureInput = { event: "user.created", handler: "notifyAdmin", priority: "10" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(eventBusHandler.subscribe({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "subscribe_low_priority" -> ok', async () => {
       if (typeof eventBusHandler.subscribe !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
-      const result = await interpret(eventBusHandler.subscribe({ event: "user.login", handler: "logAccess", priority: "100" }), storage);
+      const afterResult_valid_register_event = await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_register_event?.output ?? {}));
+      const _fixtureInput = { event: "user.login", handler: "logAccess", priority: "100" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(eventBusHandler.subscribe({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -233,9 +248,14 @@ describe('EventBus functional handler', () => {
     it('fixture "valid_unsubscribe" -> ok', async () => {
       if (typeof eventBusHandler.unsubscribe !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
-      await interpret(eventBusHandler.subscribe({ event: "user.created", handler: "notifyAdmin", priority: "10" }), storage);
-      const result = await interpret(eventBusHandler.unsubscribe({ subscriptionId: "user.created:notifyAdmin:1234567890" }), storage);
+      const afterResult_valid_register_event = await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
+      const afterResult_valid_subscribe = await interpret(eventBusHandler.subscribe({ event: "user.created", handler: "notifyAdmin", priority: "10" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_register_event?.output ?? {}), (afterResult_valid_subscribe?.output ?? {}));
+      const _fixtureInput = { subscriptionId: "user.created:notifyAdmin:1234567890" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(eventBusHandler.unsubscribe({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -303,16 +323,26 @@ describe('EventBus functional handler', () => {
     it('fixture "valid_dispatch" -> ok', async () => {
       if (typeof eventBusHandler.dispatch !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
-      const result = await interpret(eventBusHandler.dispatch({ event: "user.created", data: "{\"userId\":\"u-123\",\"email\":\"alice@example.com\"}" }), storage);
+      const afterResult_valid_register_event = await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_register_event?.output ?? {}));
+      const _fixtureInput = { event: "user.created", data: "{\"userId\":\"u-123\",\"email\":\"alice@example.com\"}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(eventBusHandler.dispatch({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "dispatch_empty_data" -> ok', async () => {
       if (typeof eventBusHandler.dispatch !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
-      const result = await interpret(eventBusHandler.dispatch({ event: "user.login", data: "{}" }), storage);
+      const afterResult_valid_register_event = await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_register_event?.output ?? {}));
+      const _fixtureInput = { event: "user.login", data: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(eventBusHandler.dispatch({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -373,16 +403,26 @@ describe('EventBus functional handler', () => {
     it('fixture "valid_dispatch_async" -> ok', async () => {
       if (typeof eventBusHandler.dispatchAsync !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
-      const result = await interpret(eventBusHandler.dispatchAsync({ event: "user.created", data: "{\"userId\":\"u-456\"}" }), storage);
+      const afterResult_valid_register_event = await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_register_event?.output ?? {}));
+      const _fixtureInput = { event: "user.created", data: "{\"userId\":\"u-456\"}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(eventBusHandler.dispatchAsync({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "dispatch_async_empty" -> ok', async () => {
       if (typeof eventBusHandler.dispatchAsync !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
-      const result = await interpret(eventBusHandler.dispatchAsync({ event: "user.login", data: "{}" }), storage);
+      const afterResult_valid_register_event = await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_register_event?.output ?? {}));
+      const _fixtureInput = { event: "user.login", data: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(eventBusHandler.dispatchAsync({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -443,16 +483,26 @@ describe('EventBus functional handler', () => {
     it('fixture "valid_get_history" -> ok', async () => {
       if (typeof eventBusHandler.getHistory !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
-      const result = await interpret(eventBusHandler.getHistory({ event: "user.created", limit: "10" }), storage);
+      const afterResult_valid_register_event = await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_register_event?.output ?? {}));
+      const _fixtureInput = { event: "user.created", limit: "10" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(eventBusHandler.getHistory({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_history_small_limit" -> ok', async () => {
       if (typeof eventBusHandler.getHistory !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
-      const result = await interpret(eventBusHandler.getHistory({ event: "user.login", limit: "1" }), storage);
+      const afterResult_valid_register_event = await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_register_event?.output ?? {}));
+      const _fixtureInput = { event: "user.login", limit: "1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(eventBusHandler.getHistory({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

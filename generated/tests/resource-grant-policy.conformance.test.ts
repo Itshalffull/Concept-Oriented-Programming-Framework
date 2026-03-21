@@ -155,8 +155,13 @@ describe('ResourceGrantPolicy functional handler', () => {
     it('fixture "get_existing_grant" -> ok', async () => {
       if (typeof resourceGrantPolicyHandler.getGrant !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(resourceGrantPolicyHandler.setGrant({ grant: "schema:*:view", scope: "schema", resourcePattern: "*", actionName: "view", roles: "[\"admin\",\"editor\",\"viewer\"]" }), storage);
-      const result = await interpret(resourceGrantPolicyHandler.getGrant({ scope: "schema", resourcePattern: "*", actionName: "view" }), storage);
+      const afterResult_set_wildcard_view = await interpret(resourceGrantPolicyHandler.setGrant({ grant: "schema:*:view", scope: "schema", resourcePattern: "*", actionName: "view", roles: "[\"admin\",\"editor\",\"viewer\"]" }), storage);
+      const _pool = Object.assign({}, (afterResult_set_wildcard_view?.output ?? {}));
+      const _fixtureInput = { scope: "schema", resourcePattern: "*", actionName: "view" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(resourceGrantPolicyHandler.getGrant({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('ResourceGrantPolicy functional handler', () => {
     it('fixture "resolve_article_view" -> ok', async () => {
       if (typeof resourceGrantPolicyHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(resourceGrantPolicyHandler.setGrant({ grant: "schema:*:view", scope: "schema", resourcePattern: "*", actionName: "view", roles: "[\"admin\",\"editor\",\"viewer\"]" }), storage);
-      const result = await interpret(resourceGrantPolicyHandler.resolve({ scope: "schema", resource: "Article", actionName: "view" }), storage);
+      const afterResult_set_wildcard_view = await interpret(resourceGrantPolicyHandler.setGrant({ grant: "schema:*:view", scope: "schema", resourcePattern: "*", actionName: "view", roles: "[\"admin\",\"editor\",\"viewer\"]" }), storage);
+      const _pool = Object.assign({}, (afterResult_set_wildcard_view?.output ?? {}));
+      const _fixtureInput = { scope: "schema", resource: "Article", actionName: "view" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(resourceGrantPolicyHandler.resolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,16 +303,26 @@ describe('ResourceGrantPolicy functional handler', () => {
     it('fixture "list_by_scope" -> ok', async () => {
       if (typeof resourceGrantPolicyHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(resourceGrantPolicyHandler.setGrant({ grant: "schema:*:view", scope: "schema", resourcePattern: "*", actionName: "view", roles: "[\"admin\",\"editor\",\"viewer\"]" }), storage);
-      const result = await interpret(resourceGrantPolicyHandler.list({ scope: "schema" }), storage);
+      const afterResult_set_wildcard_view = await interpret(resourceGrantPolicyHandler.setGrant({ grant: "schema:*:view", scope: "schema", resourcePattern: "*", actionName: "view", roles: "[\"admin\",\"editor\",\"viewer\"]" }), storage);
+      const _pool = Object.assign({}, (afterResult_set_wildcard_view?.output ?? {}));
+      const _fixtureInput = { scope: "schema" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(resourceGrantPolicyHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "list_all" -> ok', async () => {
       if (typeof resourceGrantPolicyHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(resourceGrantPolicyHandler.setGrant({ grant: "schema:*:view", scope: "schema", resourcePattern: "*", actionName: "view", roles: "[\"admin\",\"editor\",\"viewer\"]" }), storage);
-      const result = await interpret(resourceGrantPolicyHandler.list({  }), storage);
+      const afterResult_set_wildcard_view = await interpret(resourceGrantPolicyHandler.setGrant({ grant: "schema:*:view", scope: "schema", resourcePattern: "*", actionName: "view", roles: "[\"admin\",\"editor\",\"viewer\"]" }), storage);
+      const _pool = Object.assign({}, (afterResult_set_wildcard_view?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(resourceGrantPolicyHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

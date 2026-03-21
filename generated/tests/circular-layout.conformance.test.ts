@@ -148,8 +148,13 @@ describe('CircularLayout functional handler', () => {
     it('fixture "valid_apply" -> ok', async () => {
       if (typeof circularLayoutHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(circularLayoutHandler.register({  }), storage);
-      const result = await interpret(circularLayoutHandler.apply({ canvas: "c1", items: ["a","b","c"] }), storage);
+      const afterResult_valid = await interpret(circularLayoutHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { canvas: "c1", items: ["a","b","c"] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(circularLayoutHandler.apply({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

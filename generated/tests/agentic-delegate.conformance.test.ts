@@ -155,8 +155,13 @@ describe('AgenticDelegate functional handler', () => {
     it('fixture "assume_voter_role" -> ok', async () => {
       if (typeof agenticDelegateHandler.assumeRole !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(agenticDelegateHandler.register({ name: "governance-bot", principal: "alice", autonomyLevel: "Supervised", allowedActions: ["vote","propose"] }), storage);
-      const result = await interpret(agenticDelegateHandler.assumeRole({ delegate: "delegate-1", role: "voter" }), storage);
+      const afterResult_register_assistant = await interpret(agenticDelegateHandler.register({ name: "governance-bot", principal: "alice", autonomyLevel: "Supervised", allowedActions: ["vote","propose"] }), storage);
+      const _pool = Object.assign({}, (afterResult_register_assistant?.output ?? {}));
+      const _fixtureInput = { delegate: "delegate-1", role: "voter" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(agenticDelegateHandler.assumeRole({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('AgenticDelegate functional handler', () => {
     it('fixture "release_current_role" -> ok', async () => {
       if (typeof agenticDelegateHandler.releaseRole !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(agenticDelegateHandler.register({ name: "governance-bot", principal: "alice", autonomyLevel: "Supervised", allowedActions: ["vote","propose"] }), storage);
-      const result = await interpret(agenticDelegateHandler.releaseRole({ delegate: "delegate-1" }), storage);
+      const afterResult_register_assistant = await interpret(agenticDelegateHandler.register({ name: "governance-bot", principal: "alice", autonomyLevel: "Supervised", allowedActions: ["vote","propose"] }), storage);
+      const _pool = Object.assign({}, (afterResult_register_assistant?.output ?? {}));
+      const _fixtureInput = { delegate: "delegate-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(agenticDelegateHandler.releaseRole({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('AgenticDelegate functional handler', () => {
     it('fixture "propose_vote" -> ok', async () => {
       if (typeof agenticDelegateHandler.proposeAction !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(agenticDelegateHandler.register({ name: "governance-bot", principal: "alice", autonomyLevel: "Supervised", allowedActions: ["vote","propose"] }), storage);
-      const result = await interpret(agenticDelegateHandler.proposeAction({ delegate: "delegate-1", action: "vote", rationale: "Community consensus needed" }), storage);
+      const afterResult_register_assistant = await interpret(agenticDelegateHandler.register({ name: "governance-bot", principal: "alice", autonomyLevel: "Supervised", allowedActions: ["vote","propose"] }), storage);
+      const _pool = Object.assign({}, (afterResult_register_assistant?.output ?? {}));
+      const _fixtureInput = { delegate: "delegate-1", action: "vote", rationale: "Community consensus needed" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(agenticDelegateHandler.proposeAction({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -362,8 +377,13 @@ describe('AgenticDelegate functional handler', () => {
     it('fixture "escalate_complex_decision" -> ok', async () => {
       if (typeof agenticDelegateHandler.escalate !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(agenticDelegateHandler.register({ name: "governance-bot", principal: "alice", autonomyLevel: "Supervised", allowedActions: ["vote","propose"] }), storage);
-      const result = await interpret(agenticDelegateHandler.escalate({ delegate: "delegate-1", action: "budget-approval", reason: "Exceeds autonomy threshold" }), storage);
+      const afterResult_register_assistant = await interpret(agenticDelegateHandler.register({ name: "governance-bot", principal: "alice", autonomyLevel: "Supervised", allowedActions: ["vote","propose"] }), storage);
+      const _pool = Object.assign({}, (afterResult_register_assistant?.output ?? {}));
+      const _fixtureInput = { delegate: "delegate-1", action: "budget-approval", reason: "Exceeds autonomy threshold" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(agenticDelegateHandler.escalate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -431,8 +451,13 @@ describe('AgenticDelegate functional handler', () => {
     it('fixture "upgrade_to_autonomous" -> ok', async () => {
       if (typeof agenticDelegateHandler.updateAutonomy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(agenticDelegateHandler.register({ name: "governance-bot", principal: "alice", autonomyLevel: "Supervised", allowedActions: ["vote","propose"] }), storage);
-      const result = await interpret(agenticDelegateHandler.updateAutonomy({ delegate: "delegate-1", autonomyLevel: "Autonomous" }), storage);
+      const afterResult_register_assistant = await interpret(agenticDelegateHandler.register({ name: "governance-bot", principal: "alice", autonomyLevel: "Supervised", allowedActions: ["vote","propose"] }), storage);
+      const _pool = Object.assign({}, (afterResult_register_assistant?.output ?? {}));
+      const _fixtureInput = { delegate: "delegate-1", autonomyLevel: "Autonomous" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(agenticDelegateHandler.updateAutonomy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

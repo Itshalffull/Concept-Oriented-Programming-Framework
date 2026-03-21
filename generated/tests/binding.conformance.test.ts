@@ -162,8 +162,13 @@ describe('Binding functional handler', () => {
     it('fixture "valid_sync" -> ok', async () => {
       if (typeof bindingHandler.sync !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(bindingHandler.bind({ binding: "B-1", concept: "Article", mode: "coupled" }), storage);
-      const result = await interpret(bindingHandler.sync({ binding: "B-1" }), storage);
+      const afterResult_valid_bind_coupled = await interpret(bindingHandler.bind({ binding: "B-1", concept: "Article", mode: "coupled" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_bind_coupled?.output ?? {}));
+      const _fixtureInput = { binding: "B-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(bindingHandler.sync({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -231,16 +236,26 @@ describe('Binding functional handler', () => {
     it('fixture "valid_invoke" -> ok', async () => {
       if (typeof bindingHandler.invoke !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(bindingHandler.bind({ binding: "B-1", concept: "Article", mode: "coupled" }), storage);
-      const result = await interpret(bindingHandler.invoke({ binding: "B-1", action: "create", input: "{\"title\":\"Hello World\"}" }), storage);
+      const afterResult_valid_bind_coupled = await interpret(bindingHandler.bind({ binding: "B-1", concept: "Article", mode: "coupled" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_bind_coupled?.output ?? {}));
+      const _fixtureInput = { binding: "B-1", action: "create", input: "{\"title\":\"Hello World\"}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(bindingHandler.invoke({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "invoke_nonexistent" -> error', async () => {
       if (typeof bindingHandler.invoke !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(bindingHandler.bind({ binding: "B-1", concept: "Article", mode: "coupled" }), storage);
-      const result = await interpret(bindingHandler.invoke({ binding: "B-999", action: "create", input: "{}" }), storage);
+      const afterResult_valid_bind_coupled = await interpret(bindingHandler.bind({ binding: "B-1", concept: "Article", mode: "coupled" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_bind_coupled?.output ?? {}));
+      const _fixtureInput = { binding: "B-999", action: "create", input: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(bindingHandler.invoke({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -301,8 +316,13 @@ describe('Binding functional handler', () => {
     it('fixture "valid_unbind" -> ok', async () => {
       if (typeof bindingHandler.unbind !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(bindingHandler.bind({ binding: "B-1", concept: "Article", mode: "coupled" }), storage);
-      const result = await interpret(bindingHandler.unbind({ binding: "B-1" }), storage);
+      const afterResult_valid_bind_coupled = await interpret(bindingHandler.bind({ binding: "B-1", concept: "Article", mode: "coupled" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_bind_coupled?.output ?? {}));
+      const _fixtureInput = { binding: "B-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(bindingHandler.unbind({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

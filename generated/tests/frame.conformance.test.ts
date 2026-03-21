@@ -155,8 +155,13 @@ describe('Frame functional handler', () => {
     it('fixture "valid_resize" -> ok', async () => {
       if (typeof frameHandler.resize !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(frameHandler.create({ canvas: "c1", name: "Group A", x: "0", y: "0", width: "400", height: "300" }), storage);
-      const result = await interpret(frameHandler.resize({ frame: "frame-1", width: "500", height: "400" }), storage);
+      const afterResult_valid_create = await interpret(frameHandler.create({ canvas: "c1", name: "Group A", x: "0", y: "0", width: "400", height: "300" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
+      const _fixtureInput = { frame: "frame-1", width: "500", height: "400" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(frameHandler.resize({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -225,8 +230,13 @@ describe('Frame functional handler', () => {
     it('fixture "valid_add_item" -> ok', async () => {
       if (typeof frameHandler.addItem !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(frameHandler.create({ canvas: "c1", name: "Group A", x: "0", y: "0", width: "400", height: "300" }), storage);
-      const result = await interpret(frameHandler.addItem({ frame: "frame-1", item_id: "item1" }), storage);
+      const afterResult_valid_create = await interpret(frameHandler.create({ canvas: "c1", name: "Group A", x: "0", y: "0", width: "400", height: "300" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
+      const _fixtureInput = { frame: "frame-1", item_id: "item1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(frameHandler.addItem({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -295,8 +305,13 @@ describe('Frame functional handler', () => {
     it('fixture "valid_remove_item" -> ok', async () => {
       if (typeof frameHandler.removeItem !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(frameHandler.create({ canvas: "c1", name: "Group A", x: "0", y: "0", width: "400", height: "300" }), storage);
-      const result = await interpret(frameHandler.removeItem({ frame: "frame-1", item_id: "item1" }), storage);
+      const afterResult_valid_create = await interpret(frameHandler.create({ canvas: "c1", name: "Group A", x: "0", y: "0", width: "400", height: "300" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
+      const _fixtureInput = { frame: "frame-1", item_id: "item1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(frameHandler.removeItem({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -365,8 +380,13 @@ describe('Frame functional handler', () => {
     it('fixture "valid_background" -> ok', async () => {
       if (typeof frameHandler.setBackground !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(frameHandler.create({ canvas: "c1", name: "Group A", x: "0", y: "0", width: "400", height: "300" }), storage);
-      const result = await interpret(frameHandler.setBackground({ frame: "frame-1", color: "#f0f0f0" }), storage);
+      const afterResult_valid_create = await interpret(frameHandler.create({ canvas: "c1", name: "Group A", x: "0", y: "0", width: "400", height: "300" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
+      const _fixtureInput = { frame: "frame-1", color: "#f0f0f0" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(frameHandler.setBackground({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -155,8 +155,13 @@ describe('SocialGraphVerification functional handler', () => {
     it('fixture "vouch_alice_for_bob" -> ok', async () => {
       if (typeof socialGraphVerificationHandler.addVouch !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(socialGraphVerificationHandler.configure({ minimumVouchers: "3", trustAlgorithm: "count" }), storage);
-      const result = await interpret(socialGraphVerificationHandler.addVouch({ config: "sg-cfg-1", voucher: "alice", candidate: "bob" }), storage);
+      const afterResult_configure_default = await interpret(socialGraphVerificationHandler.configure({ minimumVouchers: "3", trustAlgorithm: "count" }), storage);
+      const _pool = Object.assign({}, (afterResult_configure_default?.output ?? {}));
+      const _fixtureInput = { config: "sg-cfg-1", voucher: "alice", candidate: "bob" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(socialGraphVerificationHandler.addVouch({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('SocialGraphVerification functional handler', () => {
     it('fixture "revoke_existing_vouch" -> ok', async () => {
       if (typeof socialGraphVerificationHandler.revokeVouch !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(socialGraphVerificationHandler.configure({ minimumVouchers: "3", trustAlgorithm: "count" }), storage);
-      const result = await interpret(socialGraphVerificationHandler.revokeVouch({ config: "sg-cfg-1", voucher: "alice", candidate: "bob" }), storage);
+      const afterResult_configure_default = await interpret(socialGraphVerificationHandler.configure({ minimumVouchers: "3", trustAlgorithm: "count" }), storage);
+      const _pool = Object.assign({}, (afterResult_configure_default?.output ?? {}));
+      const _fixtureInput = { config: "sg-cfg-1", voucher: "alice", candidate: "bob" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(socialGraphVerificationHandler.revokeVouch({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('SocialGraphVerification functional handler', () => {
     it('fixture "verify_well_connected" -> ok', async () => {
       if (typeof socialGraphVerificationHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(socialGraphVerificationHandler.configure({ minimumVouchers: "3", trustAlgorithm: "count" }), storage);
-      const result = await interpret(socialGraphVerificationHandler.verify({ config: "sg-cfg-1", candidate: "bob" }), storage);
+      const afterResult_configure_default = await interpret(socialGraphVerificationHandler.configure({ minimumVouchers: "3", trustAlgorithm: "count" }), storage);
+      const _pool = Object.assign({}, (afterResult_configure_default?.output ?? {}));
+      const _fixtureInput = { config: "sg-cfg-1", candidate: "bob" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(socialGraphVerificationHandler.verify({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

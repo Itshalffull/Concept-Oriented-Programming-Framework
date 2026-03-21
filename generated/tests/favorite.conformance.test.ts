@@ -94,8 +94,13 @@ describe('Favorite functional handler', () => {
     it('fixture "favorite_another" -> ok', async () => {
       if (typeof favoriteHandler.favorite !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(favoriteHandler.favorite({ user: "user-alice", article: "art-101" }), storage);
-      const result = await interpret(favoriteHandler.favorite({ user: "user-bob", article: "art-202" }), storage);
+      const afterResult_favorite_ok = await interpret(favoriteHandler.favorite({ user: "user-alice", article: "art-101" }), storage);
+      const _pool = Object.assign({}, (afterResult_favorite_ok?.output ?? {}));
+      const _fixtureInput = { user: "user-bob", article: "art-202" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(favoriteHandler.favorite({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -156,16 +161,26 @@ describe('Favorite functional handler', () => {
     it('fixture "unfavorite_ok" -> ok', async () => {
       if (typeof favoriteHandler.unfavorite !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(favoriteHandler.favorite({ user: "user-alice", article: "art-101" }), storage);
-      const result = await interpret(favoriteHandler.unfavorite({ user: "user-alice", article: "art-101" }), storage);
+      const afterResult_favorite_ok = await interpret(favoriteHandler.favorite({ user: "user-alice", article: "art-101" }), storage);
+      const _pool = Object.assign({}, (afterResult_favorite_ok?.output ?? {}));
+      const _fixtureInput = { user: "user-alice", article: "art-101" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(favoriteHandler.unfavorite({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "unfavorite_not_in_set" -> ok', async () => {
       if (typeof favoriteHandler.unfavorite !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(favoriteHandler.favorite({ user: "user-alice", article: "art-101" }), storage);
-      const result = await interpret(favoriteHandler.unfavorite({ user: "user-carol", article: "art-999" }), storage);
+      const afterResult_favorite_ok = await interpret(favoriteHandler.favorite({ user: "user-alice", article: "art-101" }), storage);
+      const _pool = Object.assign({}, (afterResult_favorite_ok?.output ?? {}));
+      const _fixtureInput = { user: "user-carol", article: "art-999" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(favoriteHandler.unfavorite({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -226,16 +241,26 @@ describe('Favorite functional handler', () => {
     it('fixture "is_favorited_ok" -> ok', async () => {
       if (typeof favoriteHandler.isFavorited !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(favoriteHandler.favorite({ user: "user-alice", article: "art-101" }), storage);
-      const result = await interpret(favoriteHandler.isFavorited({ user: "user-alice", article: "art-101" }), storage);
+      const afterResult_favorite_ok = await interpret(favoriteHandler.favorite({ user: "user-alice", article: "art-101" }), storage);
+      const _pool = Object.assign({}, (afterResult_favorite_ok?.output ?? {}));
+      const _fixtureInput = { user: "user-alice", article: "art-101" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(favoriteHandler.isFavorited({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "is_favorited_unknown_user" -> ok', async () => {
       if (typeof favoriteHandler.isFavorited !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(favoriteHandler.favorite({ user: "user-alice", article: "art-101" }), storage);
-      const result = await interpret(favoriteHandler.isFavorited({ user: "user-unknown", article: "art-101" }), storage);
+      const afterResult_favorite_ok = await interpret(favoriteHandler.favorite({ user: "user-alice", article: "art-101" }), storage);
+      const _pool = Object.assign({}, (afterResult_favorite_ok?.output ?? {}));
+      const _fixtureInput = { user: "user-unknown", article: "art-101" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(favoriteHandler.isFavorited({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -296,16 +321,26 @@ describe('Favorite functional handler', () => {
     it('fixture "count_ok" -> ok', async () => {
       if (typeof favoriteHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(favoriteHandler.favorite({ user: "user-alice", article: "art-101" }), storage);
-      const result = await interpret(favoriteHandler.count({ article: "art-101" }), storage);
+      const afterResult_favorite_ok = await interpret(favoriteHandler.favorite({ user: "user-alice", article: "art-101" }), storage);
+      const _pool = Object.assign({}, (afterResult_favorite_ok?.output ?? {}));
+      const _fixtureInput = { article: "art-101" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(favoriteHandler.count({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "count_no_favorites" -> ok', async () => {
       if (typeof favoriteHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(favoriteHandler.favorite({ user: "user-alice", article: "art-101" }), storage);
-      const result = await interpret(favoriteHandler.count({ article: "art-unfavorited" }), storage);
+      const afterResult_favorite_ok = await interpret(favoriteHandler.favorite({ user: "user-alice", article: "art-101" }), storage);
+      const _pool = Object.assign({}, (afterResult_favorite_ok?.output ?? {}));
+      const _fixtureInput = { article: "art-unfavorited" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(favoriteHandler.count({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

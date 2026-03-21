@@ -155,8 +155,13 @@ describe('DesignTokenProvider functional handler', () => {
     it('fixture "resolve_color" -> ok', async () => {
       if (typeof designTokenProviderHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(designTokenProviderHandler.initialize({ config: "{\"theme\":\"light\"}" }), storage);
-      const result = await interpret(designTokenProviderHandler.resolve({ provider: "dtp-1", tokenName: "color.primary" }), storage);
+      const afterResult_init_with_theme = await interpret(designTokenProviderHandler.initialize({ config: "{\"theme\":\"light\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_init_with_theme?.output ?? {}));
+      const _fixtureInput = { provider: "dtp-1", tokenName: "color.primary" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(designTokenProviderHandler.resolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('DesignTokenProvider functional handler', () => {
     it('fixture "switch_to_dark" -> ok', async () => {
       if (typeof designTokenProviderHandler.switchTheme !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(designTokenProviderHandler.initialize({ config: "{\"theme\":\"light\"}" }), storage);
-      const result = await interpret(designTokenProviderHandler.switchTheme({ provider: "dtp-1", theme: "dark" }), storage);
+      const afterResult_init_with_theme = await interpret(designTokenProviderHandler.initialize({ config: "{\"theme\":\"light\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_init_with_theme?.output ?? {}));
+      const _fixtureInput = { provider: "dtp-1", theme: "dark" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(designTokenProviderHandler.switchTheme({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,16 +303,26 @@ describe('DesignTokenProvider functional handler', () => {
     it('fixture "get_tokens_valid" -> ok', async () => {
       if (typeof designTokenProviderHandler.getTokens !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(designTokenProviderHandler.initialize({ config: "{\"theme\":\"light\"}" }), storage);
-      const result = await interpret(designTokenProviderHandler.getTokens({ provider: "dtp-1" }), storage);
+      const afterResult_init_with_theme = await interpret(designTokenProviderHandler.initialize({ config: "{\"theme\":\"light\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_init_with_theme?.output ?? {}));
+      const _fixtureInput = { provider: "dtp-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(designTokenProviderHandler.getTokens({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_tokens_missing" -> ok', async () => {
       if (typeof designTokenProviderHandler.getTokens !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(designTokenProviderHandler.initialize({ config: "{\"theme\":\"light\"}" }), storage);
-      const result = await interpret(designTokenProviderHandler.getTokens({ provider: "nonexistent" }), storage);
+      const afterResult_init_with_theme = await interpret(designTokenProviderHandler.initialize({ config: "{\"theme\":\"light\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_init_with_theme?.output ?? {}));
+      const _fixtureInput = { provider: "nonexistent" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(designTokenProviderHandler.getTokens({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -363,8 +383,13 @@ describe('DesignTokenProvider functional handler', () => {
     it('fixture "export_css" -> ok', async () => {
       if (typeof designTokenProviderHandler.export !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(designTokenProviderHandler.initialize({ config: "{\"theme\":\"light\"}" }), storage);
-      const result = await interpret(designTokenProviderHandler.export({ provider: "dtp-1", format: "css" }), storage);
+      const afterResult_init_with_theme = await interpret(designTokenProviderHandler.initialize({ config: "{\"theme\":\"light\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_init_with_theme?.output ?? {}));
+      const _fixtureInput = { provider: "dtp-1", format: "css" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(designTokenProviderHandler.export({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

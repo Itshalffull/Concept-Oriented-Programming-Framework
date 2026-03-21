@@ -162,8 +162,13 @@ describe('Timelock functional handler', () => {
     it('fixture "execute_ready" -> ok', async () => {
       if (typeof timelockHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(timelockHandler.schedule({ operationHash: "0xdeadbeef", payload: "{\"action\":\"transfer\",\"to\":\"0x123\"}", delayHours: "48.0", gracePeriodHours: "24.0" }), storage);
-      const result = await interpret(timelockHandler.execute({ lock: "timelock-001" }), storage);
+      const afterResult_schedule_transfer = await interpret(timelockHandler.schedule({ operationHash: "0xdeadbeef", payload: "{\"action\":\"transfer\",\"to\":\"0x123\"}", delayHours: "48.0", gracePeriodHours: "24.0" }), storage);
+      const _pool = Object.assign({}, (afterResult_schedule_transfer?.output ?? {}));
+      const _fixtureInput = { lock: "timelock-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(timelockHandler.execute({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -231,8 +236,13 @@ describe('Timelock functional handler', () => {
     it('fixture "cancel_queued" -> ok', async () => {
       if (typeof timelockHandler.cancel !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(timelockHandler.schedule({ operationHash: "0xdeadbeef", payload: "{\"action\":\"transfer\",\"to\":\"0x123\"}", delayHours: "48.0", gracePeriodHours: "24.0" }), storage);
-      const result = await interpret(timelockHandler.cancel({ lock: "timelock-001", reason: "Governance vote rejected proposal" }), storage);
+      const afterResult_schedule_transfer = await interpret(timelockHandler.schedule({ operationHash: "0xdeadbeef", payload: "{\"action\":\"transfer\",\"to\":\"0x123\"}", delayHours: "48.0", gracePeriodHours: "24.0" }), storage);
+      const _pool = Object.assign({}, (afterResult_schedule_transfer?.output ?? {}));
+      const _fixtureInput = { lock: "timelock-001", reason: "Governance vote rejected proposal" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(timelockHandler.cancel({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

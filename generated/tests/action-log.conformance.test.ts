@@ -155,16 +155,26 @@ describe('ActionLog functional handler', () => {
     it('fixture "link_records" -> ok', async () => {
       if (typeof actionLogHandler.addEdge !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(actionLogHandler.append({ record: {"flow":"flow-42","concept":"UserAuth","action":"login","type":"completion","variant":"ok"} }), storage);
-      const result = await interpret(actionLogHandler.addEdge({ from: "rec-001", to: "rec-002", sync: "UserToProfile" }), storage);
+      const afterResult_completion_record = await interpret(actionLogHandler.append({ record: {"flow":"flow-42","concept":"UserAuth","action":"login","type":"completion","variant":"ok"} }), storage);
+      const _pool = Object.assign({}, (afterResult_completion_record?.output ?? {}));
+      const _fixtureInput = { from: "rec-001", to: "rec-002", sync: "UserToProfile" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(actionLogHandler.addEdge({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "link_with_different_sync" -> ok', async () => {
       if (typeof actionLogHandler.addEdge !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(actionLogHandler.append({ record: {"flow":"flow-42","concept":"UserAuth","action":"login","type":"completion","variant":"ok"} }), storage);
-      const result = await interpret(actionLogHandler.addEdge({ from: "rec-010", to: "rec-011", sync: "PaymentToInvoice" }), storage);
+      const afterResult_completion_record = await interpret(actionLogHandler.append({ record: {"flow":"flow-42","concept":"UserAuth","action":"login","type":"completion","variant":"ok"} }), storage);
+      const _pool = Object.assign({}, (afterResult_completion_record?.output ?? {}));
+      const _fixtureInput = { from: "rec-010", to: "rec-011", sync: "PaymentToInvoice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(actionLogHandler.addEdge({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -225,16 +235,26 @@ describe('ActionLog functional handler', () => {
     it('fixture "existing_flow" -> ok', async () => {
       if (typeof actionLogHandler.query !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(actionLogHandler.append({ record: {"flow":"flow-42","concept":"UserAuth","action":"login","type":"completion","variant":"ok"} }), storage);
-      const result = await interpret(actionLogHandler.query({ flow: "flow-42" }), storage);
+      const afterResult_completion_record = await interpret(actionLogHandler.append({ record: {"flow":"flow-42","concept":"UserAuth","action":"login","type":"completion","variant":"ok"} }), storage);
+      const _pool = Object.assign({}, (afterResult_completion_record?.output ?? {}));
+      const _fixtureInput = { flow: "flow-42" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(actionLogHandler.query({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_flow" -> ok', async () => {
       if (typeof actionLogHandler.query !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(actionLogHandler.append({ record: {"flow":"flow-42","concept":"UserAuth","action":"login","type":"completion","variant":"ok"} }), storage);
-      const result = await interpret(actionLogHandler.query({ flow: "nonexistent-flow" }), storage);
+      const afterResult_completion_record = await interpret(actionLogHandler.append({ record: {"flow":"flow-42","concept":"UserAuth","action":"login","type":"completion","variant":"ok"} }), storage);
+      const _pool = Object.assign({}, (afterResult_completion_record?.output ?? {}));
+      const _fixtureInput = { flow: "nonexistent-flow" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(actionLogHandler.query({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

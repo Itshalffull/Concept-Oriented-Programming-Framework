@@ -169,24 +169,39 @@ describe('Grouping functional handler', () => {
     it('fixture "classify_create" -> ok', async () => {
       if (typeof groupingHandler.classify !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(groupingHandler.group({ items: ["Order","Product","User"], config: "per-concept" }), storage);
-      const result = await interpret(groupingHandler.classify({ actionName: "createOrder" }), storage);
+      const afterResult_per_concept_strategy = await interpret(groupingHandler.group({ items: ["Order","Product","User"], config: "per-concept" }), storage);
+      const _pool = Object.assign({}, (afterResult_per_concept_strategy?.output ?? {}));
+      const _fixtureInput = { actionName: "createOrder" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(groupingHandler.classify({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "classify_read" -> ok', async () => {
       if (typeof groupingHandler.classify !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(groupingHandler.group({ items: ["Order","Product","User"], config: "per-concept" }), storage);
-      const result = await interpret(groupingHandler.classify({ actionName: "getUser" }), storage);
+      const afterResult_per_concept_strategy = await interpret(groupingHandler.group({ items: ["Order","Product","User"], config: "per-concept" }), storage);
+      const _pool = Object.assign({}, (afterResult_per_concept_strategy?.output ?? {}));
+      const _fixtureInput = { actionName: "getUser" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(groupingHandler.classify({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_action" -> ok', async () => {
       if (typeof groupingHandler.classify !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(groupingHandler.group({ items: ["Order","Product","User"], config: "per-concept" }), storage);
-      const result = await interpret(groupingHandler.classify({ actionName: "" }), storage);
+      const afterResult_per_concept_strategy = await interpret(groupingHandler.group({ items: ["Order","Product","User"], config: "per-concept" }), storage);
+      const _pool = Object.assign({}, (afterResult_per_concept_strategy?.output ?? {}));
+      const _fixtureInput = { actionName: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(groupingHandler.classify({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

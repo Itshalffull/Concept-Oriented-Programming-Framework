@@ -155,16 +155,26 @@ describe('Token functional handler', () => {
     it('fixture "get_tokens_user" -> ok', async () => {
       if (typeof tokenHandler.getAvailableTokens !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(tokenHandler.replace({ text: "Contact [user:mail] at [site:url]" }), storage);
-      const result = await interpret(tokenHandler.getAvailableTokens({ context: "user" }), storage);
+      const afterResult_replace_builtin = await interpret(tokenHandler.replace({ text: "Contact [user:mail] at [site:url]" }), storage);
+      const _pool = Object.assign({}, (afterResult_replace_builtin?.output ?? {}));
+      const _fixtureInput = { context: "user" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(tokenHandler.getAvailableTokens({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_tokens_empty" -> ok', async () => {
       if (typeof tokenHandler.getAvailableTokens !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(tokenHandler.replace({ text: "Contact [user:mail] at [site:url]" }), storage);
-      const result = await interpret(tokenHandler.getAvailableTokens({ context: "" }), storage);
+      const afterResult_replace_builtin = await interpret(tokenHandler.replace({ text: "Contact [user:mail] at [site:url]" }), storage);
+      const _pool = Object.assign({}, (afterResult_replace_builtin?.output ?? {}));
+      const _fixtureInput = { context: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(tokenHandler.getAvailableTokens({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -225,16 +235,26 @@ describe('Token functional handler', () => {
     it('fixture "scan_text" -> ok', async () => {
       if (typeof tokenHandler.scan !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(tokenHandler.replace({ text: "Contact [user:mail] at [site:url]" }), storage);
-      const result = await interpret(tokenHandler.scan({ text: "Hello [user:name], visit [site:url]" }), storage);
+      const afterResult_replace_builtin = await interpret(tokenHandler.replace({ text: "Contact [user:mail] at [site:url]" }), storage);
+      const _pool = Object.assign({}, (afterResult_replace_builtin?.output ?? {}));
+      const _fixtureInput = { text: "Hello [user:name], visit [site:url]" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(tokenHandler.scan({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "scan_no_tokens" -> ok', async () => {
       if (typeof tokenHandler.scan !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(tokenHandler.replace({ text: "Contact [user:mail] at [site:url]" }), storage);
-      const result = await interpret(tokenHandler.scan({ text: "no tokens here" }), storage);
+      const afterResult_replace_builtin = await interpret(tokenHandler.replace({ text: "Contact [user:mail] at [site:url]" }), storage);
+      const _pool = Object.assign({}, (afterResult_replace_builtin?.output ?? {}));
+      const _fixtureInput = { text: "no tokens here" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(tokenHandler.scan({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -295,16 +315,26 @@ describe('Token functional handler', () => {
     it('fixture "register_mail" -> ok', async () => {
       if (typeof tokenHandler.registerProvider !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(tokenHandler.replace({ text: "Contact [user:mail] at [site:url]" }), storage);
-      const result = await interpret(tokenHandler.registerProvider({ token: "user:mail", provider: "userMailProvider" }), storage);
+      const afterResult_replace_builtin = await interpret(tokenHandler.replace({ text: "Contact [user:mail] at [site:url]" }), storage);
+      const _pool = Object.assign({}, (afterResult_replace_builtin?.output ?? {}));
+      const _fixtureInput = { token: "user:mail", provider: "userMailProvider" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(tokenHandler.registerProvider({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_empty" -> ok', async () => {
       if (typeof tokenHandler.registerProvider !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(tokenHandler.replace({ text: "Contact [user:mail] at [site:url]" }), storage);
-      const result = await interpret(tokenHandler.registerProvider({ token: "", provider: "x" }), storage);
+      const afterResult_replace_builtin = await interpret(tokenHandler.replace({ text: "Contact [user:mail] at [site:url]" }), storage);
+      const _pool = Object.assign({}, (afterResult_replace_builtin?.output ?? {}));
+      const _fixtureInput = { token: "", provider: "x" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(tokenHandler.registerProvider({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

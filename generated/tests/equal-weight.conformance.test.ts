@@ -155,8 +155,13 @@ describe('EqualWeight functional handler', () => {
     it('fixture "get_alice" -> ok', async () => {
       if (typeof equalWeightHandler.getWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(equalWeightHandler.configure({ weightPerPerson: "1.0" }), storage);
-      const result = await interpret(equalWeightHandler.getWeight({ config: "ew-cfg-001", participant: "alice" }), storage);
+      const afterResult_configure_default = await interpret(equalWeightHandler.configure({ weightPerPerson: "1.0" }), storage);
+      const _pool = Object.assign({}, (afterResult_configure_default?.output ?? {}));
+      const _fixtureInput = { config: "ew-cfg-001", participant: "alice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(equalWeightHandler.getWeight({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

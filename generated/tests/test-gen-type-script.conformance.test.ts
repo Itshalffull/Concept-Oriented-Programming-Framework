@@ -88,8 +88,13 @@ describe('TestGenTypeScript imperative handler', () => {
     it('fixture "list_valid" -> ok', async () => {
       if (typeof testGenTypeScriptHandler.listRendered !== 'function') return;
       const storage = createInMemoryStorage();
-      await testGenTypeScriptHandler.render({ test_plan: "{\"conceptName\":\"Counter\",\"actions\":[{\"name\":\"increment\",\"params\":[],\"variants\":[\"ok\"]}],\"examples\":[],\"properties\":[],\"stateInvariants\":[],\"liveness\":[],\"contracts\":[]}", output_path: "generated/tests/counter.test.typescript" }, storage);
-      const result = await testGenTypeScriptHandler.listRendered({ concept_ref: "clef/concept/Counter" }, storage);
+      const afterResult_render_valid = await testGenTypeScriptHandler.render({ test_plan: "{\"conceptName\":\"Counter\",\"actions\":[{\"name\":\"increment\",\"params\":[],\"variants\":[\"ok\"]}],\"examples\":[],\"properties\":[],\"stateInvariants\":[],\"liveness\":[],\"contracts\":[]}", output_path: "generated/tests/counter.test.typescript" }, storage);
+      const _pool = Object.assign({}, (afterResult_render_valid?.output ?? {}));
+      const _fixtureInput = { concept_ref: "clef/concept/Counter" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await testGenTypeScriptHandler.listRendered({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 

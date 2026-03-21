@@ -230,8 +230,13 @@ describe('Diff functional handler', () => {
     it('fixture "apply_patch" -> ok', async () => {
       if (typeof diffHandler.patch !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(diffHandler.registerProvider({ name: "myers", contentTypes: ["text/plain"] }), storage);
-      const result = await interpret(diffHandler.patch({ content: "line1\nline2", editScript: "[{\"type\":\"equal\",\"line\":0,\"content\":\"line1\"},{\"type\":\"insert\",\"line\":1,\"content\":\"line3\"}]" }), storage);
+      const afterResult_register_myers = await interpret(diffHandler.registerProvider({ name: "myers", contentTypes: ["text/plain"] }), storage);
+      const _pool = Object.assign({}, (afterResult_register_myers?.output ?? {}));
+      const _fixtureInput = { content: "line1\nline2", editScript: "[{\"type\":\"equal\",\"line\":0,\"content\":\"line1\"},{\"type\":\"insert\",\"line\":1,\"content\":\"line3\"}]" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(diffHandler.patch({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

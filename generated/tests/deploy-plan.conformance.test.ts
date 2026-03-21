@@ -237,8 +237,13 @@ describe('DeployPlan functional handler', () => {
     it('fixture "execute_plan" -> ok', async () => {
       if (typeof deployPlanHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(deployPlanHandler.plan({ manifest: "my-app", environment: "staging" }), storage);
-      const result = await interpret(deployPlanHandler.execute({ plan: "dp-abc123" }), storage);
+      const afterResult_plan_valid = await interpret(deployPlanHandler.plan({ manifest: "my-app", environment: "staging" }), storage);
+      const _pool = Object.assign({}, (afterResult_plan_valid?.output ?? {}));
+      const _fixtureInput = { plan: "dp-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(deployPlanHandler.execute({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -306,8 +311,13 @@ describe('DeployPlan functional handler', () => {
     it('fixture "rollback_plan" -> ok', async () => {
       if (typeof deployPlanHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(deployPlanHandler.plan({ manifest: "my-app", environment: "staging" }), storage);
-      const result = await interpret(deployPlanHandler.rollback({ plan: "dp-abc123" }), storage);
+      const afterResult_plan_valid = await interpret(deployPlanHandler.plan({ manifest: "my-app", environment: "staging" }), storage);
+      const _pool = Object.assign({}, (afterResult_plan_valid?.output ?? {}));
+      const _fixtureInput = { plan: "dp-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(deployPlanHandler.rollback({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -375,8 +385,13 @@ describe('DeployPlan functional handler', () => {
     it('fixture "status_plan" -> ok', async () => {
       if (typeof deployPlanHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(deployPlanHandler.plan({ manifest: "my-app", environment: "staging" }), storage);
-      const result = await interpret(deployPlanHandler.status({ plan: "dp-abc123" }), storage);
+      const afterResult_plan_valid = await interpret(deployPlanHandler.plan({ manifest: "my-app", environment: "staging" }), storage);
+      const _pool = Object.assign({}, (afterResult_plan_valid?.output ?? {}));
+      const _fixtureInput = { plan: "dp-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(deployPlanHandler.status({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

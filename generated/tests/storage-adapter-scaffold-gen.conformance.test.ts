@@ -230,8 +230,13 @@ describe('StorageAdapterScaffoldGen functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof storageAdapterScaffoldGenHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(storageAdapterScaffoldGenHandler.generate({ name: "AppStorage", backend: "sqlite" }), storage);
-      const result = await interpret(storageAdapterScaffoldGenHandler.register({  }), storage);
+      const afterResult_valid_sqlite = await interpret(storageAdapterScaffoldGenHandler.generate({ name: "AppStorage", backend: "sqlite" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_sqlite?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(storageAdapterScaffoldGenHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -155,8 +155,13 @@ describe('PessimisticLock functional handler', () => {
     it('fixture "checkin_existing_lock" -> ok', async () => {
       if (typeof pessimisticLockHandler.checkIn !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" }), storage);
-      const result = await interpret(pessimisticLockHandler.checkIn({ lockId: "pessimistic-lock-1" }), storage);
+      const afterResult_checkout_with_duration = await interpret(pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" }), storage);
+      const _pool = Object.assign({}, (afterResult_checkout_with_duration?.output ?? {}));
+      const _fixtureInput = { lockId: "pessimistic-lock-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(pessimisticLockHandler.checkIn({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('PessimisticLock functional handler', () => {
     it('fixture "break_existing_lock" -> ok', async () => {
       if (typeof pessimisticLockHandler.breakLock !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" }), storage);
-      const result = await interpret(pessimisticLockHandler.breakLock({ lockId: "pessimistic-lock-1", breaker: "admin@example.com", reason: "Emergency release for blocked deployment" }), storage);
+      const afterResult_checkout_with_duration = await interpret(pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" }), storage);
+      const _pool = Object.assign({}, (afterResult_checkout_with_duration?.output ?? {}));
+      const _fixtureInput = { lockId: "pessimistic-lock-1", breaker: "admin@example.com", reason: "Emergency release for blocked deployment" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(pessimisticLockHandler.breakLock({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('PessimisticLock functional handler', () => {
     it('fixture "renew_existing_lock" -> ok', async () => {
       if (typeof pessimisticLockHandler.renew !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" }), storage);
-      const result = await interpret(pessimisticLockHandler.renew({ lockId: "pessimistic-lock-1", additionalDuration: "1800" }), storage);
+      const afterResult_checkout_with_duration = await interpret(pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" }), storage);
+      const _pool = Object.assign({}, (afterResult_checkout_with_duration?.output ?? {}));
+      const _fixtureInput = { lockId: "pessimistic-lock-1", additionalDuration: "1800" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(pessimisticLockHandler.renew({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -362,16 +377,26 @@ describe('PessimisticLock functional handler', () => {
     it('fixture "query_all_locks" -> ok', async () => {
       if (typeof pessimisticLockHandler.queryLocks !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" }), storage);
-      const result = await interpret(pessimisticLockHandler.queryLocks({ resource: null }), storage);
+      const afterResult_checkout_with_duration = await interpret(pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" }), storage);
+      const _pool = Object.assign({}, (afterResult_checkout_with_duration?.output ?? {}));
+      const _fixtureInput = { resource: null } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(pessimisticLockHandler.queryLocks({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "query_locks_by_resource" -> ok', async () => {
       if (typeof pessimisticLockHandler.queryLocks !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" }), storage);
-      const result = await interpret(pessimisticLockHandler.queryLocks({ resource: "design-doc.pdf" }), storage);
+      const afterResult_checkout_with_duration = await interpret(pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" }), storage);
+      const _pool = Object.assign({}, (afterResult_checkout_with_duration?.output ?? {}));
+      const _fixtureInput = { resource: "design-doc.pdf" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(pessimisticLockHandler.queryLocks({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -432,16 +457,26 @@ describe('PessimisticLock functional handler', () => {
     it('fixture "query_queue_existing" -> ok', async () => {
       if (typeof pessimisticLockHandler.queryQueue !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" }), storage);
-      const result = await interpret(pessimisticLockHandler.queryQueue({ resource: "design-doc.pdf" }), storage);
+      const afterResult_checkout_with_duration = await interpret(pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" }), storage);
+      const _pool = Object.assign({}, (afterResult_checkout_with_duration?.output ?? {}));
+      const _fixtureInput = { resource: "design-doc.pdf" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(pessimisticLockHandler.queryQueue({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "query_queue_empty_resource" -> ok', async () => {
       if (typeof pessimisticLockHandler.queryQueue !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" }), storage);
-      const result = await interpret(pessimisticLockHandler.queryQueue({ resource: "" }), storage);
+      const afterResult_checkout_with_duration = await interpret(pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" }), storage);
+      const _pool = Object.assign({}, (afterResult_checkout_with_duration?.output ?? {}));
+      const _fixtureInput = { resource: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(pessimisticLockHandler.queryQueue({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

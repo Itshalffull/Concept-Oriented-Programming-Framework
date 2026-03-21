@@ -155,8 +155,13 @@ describe('ContentDigest functional handler', () => {
     it('fixture "lookup_hash" -> ok', async () => {
       if (typeof contentDigestHandler.lookup !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(contentDigestHandler.compute({ unit: "def-unit-1", algorithm: "structural-normalized" }), storage);
-      const result = await interpret(contentDigestHandler.lookup({ hash: "a1b2c3d4e5f6" }), storage);
+      const afterResult_compute_sha = await interpret(contentDigestHandler.compute({ unit: "def-unit-1", algorithm: "structural-normalized" }), storage);
+      const _pool = Object.assign({}, (afterResult_compute_sha?.output ?? {}));
+      const _fixtureInput = { hash: "a1b2c3d4e5f6" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(contentDigestHandler.lookup({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('ContentDigest functional handler', () => {
     it('fixture "equiv_check" -> ok', async () => {
       if (typeof contentDigestHandler.equivalent !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(contentDigestHandler.compute({ unit: "def-unit-1", algorithm: "structural-normalized" }), storage);
-      const result = await interpret(contentDigestHandler.equivalent({ a: "def-unit-1", b: "def-unit-2" }), storage);
+      const afterResult_compute_sha = await interpret(contentDigestHandler.compute({ unit: "def-unit-1", algorithm: "structural-normalized" }), storage);
+      const _pool = Object.assign({}, (afterResult_compute_sha?.output ?? {}));
+      const _fixtureInput = { a: "def-unit-1", b: "def-unit-2" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(contentDigestHandler.equivalent({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

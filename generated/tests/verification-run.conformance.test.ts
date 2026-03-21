@@ -70,16 +70,26 @@ describe('VerificationRun imperative handler', () => {
     it('fixture "valid_complete" -> ok', async () => {
       if (typeof verificationRunHandler.complete !== 'function') return;
       const storage = createInMemoryStorage();
-      await verificationRunHandler.start({ target_symbol: "clef/concept/Password", properties: ["prop-1","prop-2"], solver: "z3", timeout_ms: "30000" }, storage);
-      const result = await verificationRunHandler.complete({ results: "{\"prop-1\":\"proved\",\"prop-2\":\"refuted\"}", resource_usage: "{\"total_time_ms\":1200}" }, storage);
+      const afterResult_valid_start = await verificationRunHandler.start({ target_symbol: "clef/concept/Password", properties: ["prop-1","prop-2"], solver: "z3", timeout_ms: "30000" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
+      const _fixtureInput = { results: "{\"prop-1\":\"proved\",\"prop-2\":\"refuted\"}", resource_usage: "{\"total_time_ms\":1200}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await verificationRunHandler.complete({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_run" -> notfound', async () => {
       if (typeof verificationRunHandler.complete !== 'function') return;
       const storage = createInMemoryStorage();
-      await verificationRunHandler.start({ target_symbol: "clef/concept/Password", properties: ["prop-1","prop-2"], solver: "z3", timeout_ms: "30000" }, storage);
-      const result = await verificationRunHandler.complete({ id: "vr-nonexistent", results: "{}", resource_usage: "{}" }, storage);
+      const afterResult_valid_start = await verificationRunHandler.start({ target_symbol: "clef/concept/Password", properties: ["prop-1","prop-2"], solver: "z3", timeout_ms: "30000" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
+      const _fixtureInput = { id: "vr-nonexistent", results: "{}", resource_usage: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await verificationRunHandler.complete({ ..._fixtureInput }, storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
@@ -99,16 +109,26 @@ describe('VerificationRun imperative handler', () => {
     it('fixture "valid_timeout" -> ok', async () => {
       if (typeof verificationRunHandler.timeout !== 'function') return;
       const storage = createInMemoryStorage();
-      await verificationRunHandler.start({ target_symbol: "clef/concept/Password", properties: ["prop-1","prop-2"], solver: "z3", timeout_ms: "30000" }, storage);
-      const result = await verificationRunHandler.timeout({ partial_results: "{\"prop-1\":\"proved\"}" }, storage);
+      const afterResult_valid_start = await verificationRunHandler.start({ target_symbol: "clef/concept/Password", properties: ["prop-1","prop-2"], solver: "z3", timeout_ms: "30000" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
+      const _fixtureInput = { partial_results: "{\"prop-1\":\"proved\"}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await verificationRunHandler.timeout({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_partial" -> ok', async () => {
       if (typeof verificationRunHandler.timeout !== 'function') return;
       const storage = createInMemoryStorage();
-      await verificationRunHandler.start({ target_symbol: "clef/concept/Password", properties: ["prop-1","prop-2"], solver: "z3", timeout_ms: "30000" }, storage);
-      const result = await verificationRunHandler.timeout({ partial_results: "{}" }, storage);
+      const afterResult_valid_start = await verificationRunHandler.start({ target_symbol: "clef/concept/Password", properties: ["prop-1","prop-2"], solver: "z3", timeout_ms: "30000" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
+      const _fixtureInput = { partial_results: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await verificationRunHandler.timeout({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -127,8 +147,13 @@ describe('VerificationRun imperative handler', () => {
     it('fixture "valid_cancel" -> ok', async () => {
       if (typeof verificationRunHandler.cancel !== 'function') return;
       const storage = createInMemoryStorage();
-      await verificationRunHandler.start({ target_symbol: "clef/concept/Password", properties: ["prop-1","prop-2"], solver: "z3", timeout_ms: "30000" }, storage);
-      const result = await verificationRunHandler.cancel({  }, storage);
+      const afterResult_valid_start = await verificationRunHandler.start({ target_symbol: "clef/concept/Password", properties: ["prop-1","prop-2"], solver: "z3", timeout_ms: "30000" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await verificationRunHandler.cancel({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -155,8 +180,13 @@ describe('VerificationRun imperative handler', () => {
     it('fixture "valid_status" -> ok', async () => {
       if (typeof verificationRunHandler.get_status !== 'function') return;
       const storage = createInMemoryStorage();
-      await verificationRunHandler.start({ target_symbol: "clef/concept/Password", properties: ["prop-1","prop-2"], solver: "z3", timeout_ms: "30000" }, storage);
-      const result = await verificationRunHandler.get_status({  }, storage);
+      const afterResult_valid_start = await verificationRunHandler.start({ target_symbol: "clef/concept/Password", properties: ["prop-1","prop-2"], solver: "z3", timeout_ms: "30000" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await verificationRunHandler.get_status({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -162,8 +162,13 @@ describe('Sdk functional handler', () => {
     it('fixture "publish_to_npm" -> ok', async () => {
       if (typeof sdkHandler.publish !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(sdkHandler.generate({ projection: "user-projection", language: "typescript", config: "{\"packageName\":\"@acme/user-sdk\",\"version\":\"1.0.0\"}" }), storage);
-      const result = await interpret(sdkHandler.publish({ package: "sdk-typescript-12345", registry: "npm" }), storage);
+      const afterResult_typescript_sdk = await interpret(sdkHandler.generate({ projection: "user-projection", language: "typescript", config: "{\"packageName\":\"@acme/user-sdk\",\"version\":\"1.0.0\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_typescript_sdk?.output ?? {}));
+      const _fixtureInput = { package: "sdk-typescript-12345", registry: "npm" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(sdkHandler.publish({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

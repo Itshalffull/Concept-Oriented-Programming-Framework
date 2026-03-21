@@ -148,24 +148,39 @@ describe('TokenRemapProvider functional handler', () => {
     it('fixture "remap_token_path" -> ok', async () => {
       if (typeof tokenRemapProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(tokenRemapProviderHandler.register({  }), storage);
-      const result = await interpret(tokenRemapProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"token\",\"path\":\"palette.primary\"}]}", spec: "{\"mappings\":{\"palette.primary\":\"palette.dark\"}}" }), storage);
+      const afterResult_valid = await interpret(tokenRemapProviderHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { program: "{\"instructions\":[{\"tag\":\"token\",\"path\":\"palette.primary\"}]}", spec: "{\"mappings\":{\"palette.primary\":\"palette.dark\"}}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(tokenRemapProviderHandler.apply({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_mappings" -> ok', async () => {
       if (typeof tokenRemapProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(tokenRemapProviderHandler.register({  }), storage);
-      const result = await interpret(tokenRemapProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"mappings\":{}}" }), storage);
+      const afterResult_valid = await interpret(tokenRemapProviderHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"mappings\":{}}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(tokenRemapProviderHandler.apply({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_program_json" -> error', async () => {
       if (typeof tokenRemapProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(tokenRemapProviderHandler.register({  }), storage);
-      const result = await interpret(tokenRemapProviderHandler.apply({ program: "<<<not-json>>>", spec: "{}" }), storage);
+      const afterResult_valid = await interpret(tokenRemapProviderHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { program: "<<<not-json>>>", spec: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(tokenRemapProviderHandler.apply({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 

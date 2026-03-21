@@ -162,16 +162,26 @@ describe('StorageProvider functional handler', () => {
     it('fixture "configure_ttl" -> ok', async () => {
       if (typeof storageProviderHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(storageProviderHandler.provision({ storeName: "session-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}" }), storage);
-      const result = await interpret(storageProviderHandler.configure({ store: "session-kv", settings: "{\"ttl\": 3600}" }), storage);
+      const afterResult_provision_kv = await interpret(storageProviderHandler.provision({ storeName: "session-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_kv?.output ?? {}));
+      const _fixtureInput = { store: "session-kv", settings: "{\"ttl\": 3600}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(storageProviderHandler.configure({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_missing" -> error', async () => {
       if (typeof storageProviderHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(storageProviderHandler.provision({ storeName: "session-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}" }), storage);
-      const result = await interpret(storageProviderHandler.configure({ store: "", settings: "{}" }), storage);
+      const afterResult_provision_kv = await interpret(storageProviderHandler.provision({ storeName: "session-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_kv?.output ?? {}));
+      const _fixtureInput = { store: "", settings: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(storageProviderHandler.configure({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -232,8 +242,13 @@ describe('StorageProvider functional handler', () => {
     it('fixture "get_creds" -> ok', async () => {
       if (typeof storageProviderHandler.getCredentials !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(storageProviderHandler.provision({ storeName: "session-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}" }), storage);
-      const result = await interpret(storageProviderHandler.getCredentials({ store: "session-kv" }), storage);
+      const afterResult_provision_kv = await interpret(storageProviderHandler.provision({ storeName: "session-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_kv?.output ?? {}));
+      const _fixtureInput = { store: "session-kv" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(storageProviderHandler.getCredentials({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -301,8 +316,13 @@ describe('StorageProvider functional handler', () => {
     it('fixture "destroy_valid" -> ok', async () => {
       if (typeof storageProviderHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(storageProviderHandler.provision({ storeName: "session-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}" }), storage);
-      const result = await interpret(storageProviderHandler.destroy({ store: "session-kv" }), storage);
+      const afterResult_provision_kv = await interpret(storageProviderHandler.provision({ storeName: "session-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_kv?.output ?? {}));
+      const _fixtureInput = { store: "session-kv" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(storageProviderHandler.destroy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

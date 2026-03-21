@@ -155,8 +155,13 @@ describe('ScoreIndex functional handler', () => {
     it('fixture "upsert_sync" -> ok', async () => {
       if (typeof scoreIndexHandler.upsertSync !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }), storage);
-      const result = await interpret(scoreIndexHandler.upsertSync({ name: "onUserCreate", annotation: "eager", file: "/specs/syncs.sync" }), storage);
+      const afterResult_upsert_user = await interpret(scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }), storage);
+      const _pool = Object.assign({}, (afterResult_upsert_user?.output ?? {}));
+      const _fixtureInput = { name: "onUserCreate", annotation: "eager", file: "/specs/syncs.sync" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreIndexHandler.upsertSync({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('ScoreIndex functional handler', () => {
     it('fixture "upsert_fn" -> ok', async () => {
       if (typeof scoreIndexHandler.upsertSymbol !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }), storage);
-      const result = await interpret(scoreIndexHandler.upsertSymbol({ name: "handleCreate", kind: "function", file: "/src/handler.ts", line: "42" }), storage);
+      const afterResult_upsert_user = await interpret(scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }), storage);
+      const _pool = Object.assign({}, (afterResult_upsert_user?.output ?? {}));
+      const _fixtureInput = { name: "handleCreate", kind: "function", file: "/src/handler.ts", line: "42" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreIndexHandler.upsertSymbol({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('ScoreIndex functional handler', () => {
     it('fixture "upsert_file" -> ok', async () => {
       if (typeof scoreIndexHandler.upsertFile !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }), storage);
-      const result = await interpret(scoreIndexHandler.upsertFile({ path: "/src/handler.ts", language: "typescript", role: "source" }), storage);
+      const afterResult_upsert_user = await interpret(scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }), storage);
+      const _pool = Object.assign({}, (afterResult_upsert_user?.output ?? {}));
+      const _fixtureInput = { path: "/src/handler.ts", language: "typescript", role: "source" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreIndexHandler.upsertFile({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -362,8 +377,13 @@ describe('ScoreIndex functional handler', () => {
     it('fixture "upsert_handler" -> ok', async () => {
       if (typeof scoreIndexHandler.upsertHandler !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }), storage);
-      const result = await interpret(scoreIndexHandler.upsertHandler({ concept: "Flag", language: "typescript", file: "/handlers/ts/flag.handler.ts", lineCount: "80" }), storage);
+      const afterResult_upsert_user = await interpret(scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }), storage);
+      const _pool = Object.assign({}, (afterResult_upsert_user?.output ?? {}));
+      const _fixtureInput = { concept: "Flag", language: "typescript", file: "/handlers/ts/flag.handler.ts", lineCount: "80" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreIndexHandler.upsertHandler({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -431,8 +451,13 @@ describe('ScoreIndex functional handler', () => {
     it('fixture "upsert_widget" -> ok', async () => {
       if (typeof scoreIndexHandler.upsertWidgetImpl !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }), storage);
-      const result = await interpret(scoreIndexHandler.upsertWidgetImpl({ widget: "dialog", framework: "react", file: "/generated/Dialog.tsx", component: "Dialog" }), storage);
+      const afterResult_upsert_user = await interpret(scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }), storage);
+      const _pool = Object.assign({}, (afterResult_upsert_user?.output ?? {}));
+      const _fixtureInput = { widget: "dialog", framework: "react", file: "/generated/Dialog.tsx", component: "Dialog" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreIndexHandler.upsertWidgetImpl({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -500,8 +525,13 @@ describe('ScoreIndex functional handler', () => {
     it('fixture "upsert_theme" -> ok', async () => {
       if (typeof scoreIndexHandler.upsertThemeImpl !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }), storage);
-      const result = await interpret(scoreIndexHandler.upsertThemeImpl({ theme: "light", platform: "css", file: "/generated/light.css", tokenCount: "42" }), storage);
+      const afterResult_upsert_user = await interpret(scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }), storage);
+      const _pool = Object.assign({}, (afterResult_upsert_user?.output ?? {}));
+      const _fixtureInput = { theme: "light", platform: "css", file: "/generated/light.css", tokenCount: "42" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreIndexHandler.upsertThemeImpl({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -569,8 +599,13 @@ describe('ScoreIndex functional handler', () => {
     it('fixture "upsert_deploy" -> ok', async () => {
       if (typeof scoreIndexHandler.upsertDeployment !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }), storage);
-      const result = await interpret(scoreIndexHandler.upsertDeployment({ name: "conduit-prod", app: "conduit", file: "/deploy/prod.yaml" }), storage);
+      const afterResult_upsert_user = await interpret(scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }), storage);
+      const _pool = Object.assign({}, (afterResult_upsert_user?.output ?? {}));
+      const _fixtureInput = { name: "conduit-prod", app: "conduit", file: "/deploy/prod.yaml" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreIndexHandler.upsertDeployment({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -638,8 +673,13 @@ describe('ScoreIndex functional handler', () => {
     it('fixture "upsert_suite" -> ok', async () => {
       if (typeof scoreIndexHandler.upsertSuiteManifest !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }), storage);
-      const result = await interpret(scoreIndexHandler.upsertSuiteManifest({ name: "identity", version: "1.0.0", file: "/suites/identity/suite.yaml" }), storage);
+      const afterResult_upsert_user = await interpret(scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }), storage);
+      const _pool = Object.assign({}, (afterResult_upsert_user?.output ?? {}));
+      const _fixtureInput = { name: "identity", version: "1.0.0", file: "/suites/identity/suite.yaml" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreIndexHandler.upsertSuiteManifest({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -707,8 +747,13 @@ describe('ScoreIndex functional handler', () => {
     it('fixture "upsert_iface" -> ok', async () => {
       if (typeof scoreIndexHandler.upsertInterface !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }), storage);
-      const result = await interpret(scoreIndexHandler.upsertInterface({ name: "conduit-api", endpointCount: "12", file: "/interfaces/api.yaml" }), storage);
+      const afterResult_upsert_user = await interpret(scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }), storage);
+      const _pool = Object.assign({}, (afterResult_upsert_user?.output ?? {}));
+      const _fixtureInput = { name: "conduit-api", endpointCount: "12", file: "/interfaces/api.yaml" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreIndexHandler.upsertInterface({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -776,16 +821,26 @@ describe('ScoreIndex functional handler', () => {
     it('fixture "remove_file" -> ok', async () => {
       if (typeof scoreIndexHandler.removeByFile !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }), storage);
-      const result = await interpret(scoreIndexHandler.removeByFile({ path: "/src/handler.ts" }), storage);
+      const afterResult_upsert_user = await interpret(scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }), storage);
+      const _pool = Object.assign({}, (afterResult_upsert_user?.output ?? {}));
+      const _fixtureInput = { path: "/src/handler.ts" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreIndexHandler.removeByFile({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "remove_empty" -> ok', async () => {
       if (typeof scoreIndexHandler.removeByFile !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }), storage);
-      const result = await interpret(scoreIndexHandler.removeByFile({ path: "" }), storage);
+      const afterResult_upsert_user = await interpret(scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }), storage);
+      const _pool = Object.assign({}, (afterResult_upsert_user?.output ?? {}));
+      const _fixtureInput = { path: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreIndexHandler.removeByFile({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -846,8 +901,13 @@ describe('ScoreIndex functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof scoreIndexHandler.clear !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }), storage);
-      const result = await interpret(scoreIndexHandler.clear({  }), storage);
+      const afterResult_upsert_user = await interpret(scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }), storage);
+      const _pool = Object.assign({}, (afterResult_upsert_user?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreIndexHandler.clear({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -908,8 +968,13 @@ describe('ScoreIndex functional handler', () => {
     it('fixture "valid_2" -> ok', async () => {
       if (typeof scoreIndexHandler.stats !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }), storage);
-      const result = await interpret(scoreIndexHandler.stats({  }), storage);
+      const afterResult_upsert_user = await interpret(scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }), storage);
+      const _pool = Object.assign({}, (afterResult_upsert_user?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreIndexHandler.stats({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -162,8 +162,13 @@ describe('FluxProvider functional handler', () => {
     it('fixture "reconcile_ks" -> ok', async () => {
       if (typeof fluxProviderHandler.reconciliationStatus !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(fluxProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
-      const result = await interpret(fluxProviderHandler.reconciliationStatus({ kustomization: "ks-prod-001" }), storage);
+      const afterResult_emit_prod = await interpret(fluxProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
+      const _pool = Object.assign({}, (afterResult_emit_prod?.output ?? {}));
+      const _fixtureInput = { kustomization: "ks-prod-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(fluxProviderHandler.reconciliationStatus({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -231,16 +236,26 @@ describe('FluxProvider functional handler', () => {
     it('fixture "helm_nginx" -> ok', async () => {
       if (typeof fluxProviderHandler.helmRelease !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(fluxProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
-      const result = await interpret(fluxProviderHandler.helmRelease({ kustomization: "ks-prod-001", chart: "nginx-ingress", values: "{\"replicas\": 3}" }), storage);
+      const afterResult_emit_prod = await interpret(fluxProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
+      const _pool = Object.assign({}, (afterResult_emit_prod?.output ?? {}));
+      const _fixtureInput = { kustomization: "ks-prod-001", chart: "nginx-ingress", values: "{\"replicas\": 3}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(fluxProviderHandler.helmRelease({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "helm_empty_chart" -> error', async () => {
       if (typeof fluxProviderHandler.helmRelease !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(fluxProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
-      const result = await interpret(fluxProviderHandler.helmRelease({ kustomization: "ks-prod-001", chart: "", values: "{}" }), storage);
+      const afterResult_emit_prod = await interpret(fluxProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
+      const _pool = Object.assign({}, (afterResult_emit_prod?.output ?? {}));
+      const _fixtureInput = { kustomization: "ks-prod-001", chart: "", values: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(fluxProviderHandler.helmRelease({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 

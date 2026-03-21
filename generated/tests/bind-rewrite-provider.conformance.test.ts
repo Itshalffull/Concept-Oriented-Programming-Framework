@@ -148,24 +148,39 @@ describe('BindRewriteProvider functional handler', () => {
     it('fixture "rewrite_bind_expr" -> ok', async () => {
       if (typeof bindRewriteProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(bindRewriteProviderHandler.register({  }), storage);
-      const result = await interpret(bindRewriteProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"bind\",\"expr\":\"?variant\"}]}", spec: "{\"rewrites\":{\"?variant\":\"?custom\"}}" }), storage);
+      const afterResult_valid = await interpret(bindRewriteProviderHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { program: "{\"instructions\":[{\"tag\":\"bind\",\"expr\":\"?variant\"}]}", spec: "{\"rewrites\":{\"?variant\":\"?custom\"}}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(bindRewriteProviderHandler.apply({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_rewrites" -> ok', async () => {
       if (typeof bindRewriteProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(bindRewriteProviderHandler.register({  }), storage);
-      const result = await interpret(bindRewriteProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"rewrites\":{}}" }), storage);
+      const afterResult_valid = await interpret(bindRewriteProviderHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"rewrites\":{}}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(bindRewriteProviderHandler.apply({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_program_json" -> error', async () => {
       if (typeof bindRewriteProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(bindRewriteProviderHandler.register({  }), storage);
-      const result = await interpret(bindRewriteProviderHandler.apply({ program: "not-json", spec: "{}" }), storage);
+      const afterResult_valid = await interpret(bindRewriteProviderHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { program: "not-json", spec: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(bindRewriteProviderHandler.apply({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 

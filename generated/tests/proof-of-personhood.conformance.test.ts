@@ -155,8 +155,13 @@ describe('ProofOfPersonhood functional handler', () => {
     it('fixture "confirm_valid" -> ok', async () => {
       if (typeof proofOfPersonhoodHandler.confirmVerification !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(proofOfPersonhoodHandler.requestVerification({ candidate: "alice", method: "Biometric", expiryDays: "365" }), storage);
-      const result = await interpret(proofOfPersonhoodHandler.confirmVerification({ verification: "pop-1001" }), storage);
+      const afterResult_request_biometric = await interpret(proofOfPersonhoodHandler.requestVerification({ candidate: "alice", method: "Biometric", expiryDays: "365" }), storage);
+      const _pool = Object.assign({}, (afterResult_request_biometric?.output ?? {}));
+      const _fixtureInput = { verification: "pop-1001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(proofOfPersonhoodHandler.confirmVerification({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('ProofOfPersonhood functional handler', () => {
     it('fixture "reject_with_reason" -> ok', async () => {
       if (typeof proofOfPersonhoodHandler.rejectVerification !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(proofOfPersonhoodHandler.requestVerification({ candidate: "alice", method: "Biometric", expiryDays: "365" }), storage);
-      const result = await interpret(proofOfPersonhoodHandler.rejectVerification({ verification: "pop-1001", reason: "Fraudulent proof submission" }), storage);
+      const afterResult_request_biometric = await interpret(proofOfPersonhoodHandler.requestVerification({ candidate: "alice", method: "Biometric", expiryDays: "365" }), storage);
+      const _pool = Object.assign({}, (afterResult_request_biometric?.output ?? {}));
+      const _fixtureInput = { verification: "pop-1001", reason: "Fraudulent proof submission" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(proofOfPersonhoodHandler.rejectVerification({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('ProofOfPersonhood functional handler', () => {
     it('fixture "check_valid_status" -> ok', async () => {
       if (typeof proofOfPersonhoodHandler.checkStatus !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(proofOfPersonhoodHandler.requestVerification({ candidate: "alice", method: "Biometric", expiryDays: "365" }), storage);
-      const result = await interpret(proofOfPersonhoodHandler.checkStatus({ verification: "pop-1001" }), storage);
+      const afterResult_request_biometric = await interpret(proofOfPersonhoodHandler.requestVerification({ candidate: "alice", method: "Biometric", expiryDays: "365" }), storage);
+      const _pool = Object.assign({}, (afterResult_request_biometric?.output ?? {}));
+      const _fixtureInput = { verification: "pop-1001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(proofOfPersonhoodHandler.checkStatus({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

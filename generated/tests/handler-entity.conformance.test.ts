@@ -155,8 +155,13 @@ describe('HandlerEntity functional handler', () => {
     it('fixture "get_article_ts" -> ok', async () => {
       if (typeof handlerEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
-      const result = await interpret(handlerEntityHandler.get({ concept: "Article", language: "typescript" }), storage);
+      const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
+      const _fixtureInput = { concept: "Article", language: "typescript" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(handlerEntityHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('HandlerEntity functional handler', () => {
     it('fixture "get_by_article_file" -> ok', async () => {
       if (typeof handlerEntityHandler.getByFile !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
-      const result = await interpret(handlerEntityHandler.getByFile({ sourceFile: "handlers/ts/article.handler.ts" }), storage);
+      const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
+      const _fixtureInput = { sourceFile: "handlers/ts/article.handler.ts" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(handlerEntityHandler.getByFile({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,16 +303,26 @@ describe('HandlerEntity functional handler', () => {
     it('fixture "find_article_handlers" -> ok', async () => {
       if (typeof handlerEntityHandler.findByConcept !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
-      const result = await interpret(handlerEntityHandler.findByConcept({ concept: "Article" }), storage);
+      const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
+      const _fixtureInput = { concept: "Article" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(handlerEntityHandler.findByConcept({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_nonexistent_concept" -> ok', async () => {
       if (typeof handlerEntityHandler.findByConcept !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
-      const result = await interpret(handlerEntityHandler.findByConcept({ concept: "Nonexistent" }), storage);
+      const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
+      const _fixtureInput = { concept: "Nonexistent" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(handlerEntityHandler.findByConcept({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -363,16 +383,26 @@ describe('HandlerEntity functional handler', () => {
     it('fixture "find_typescript_handlers" -> ok', async () => {
       if (typeof handlerEntityHandler.findByLanguage !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
-      const result = await interpret(handlerEntityHandler.findByLanguage({ language: "typescript" }), storage);
+      const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
+      const _fixtureInput = { language: "typescript" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(handlerEntityHandler.findByLanguage({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_unknown_language" -> ok', async () => {
       if (typeof handlerEntityHandler.findByLanguage !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
-      const result = await interpret(handlerEntityHandler.findByLanguage({ language: "cobol" }), storage);
+      const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
+      const _fixtureInput = { language: "cobol" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(handlerEntityHandler.findByLanguage({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -433,8 +463,13 @@ describe('HandlerEntity functional handler', () => {
     it('fixture "get_create_method" -> ok', async () => {
       if (typeof handlerEntityHandler.getActionMethod !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
-      const result = await interpret(handlerEntityHandler.getActionMethod({ handler: "handler-001", actionName: "create" }), storage);
+      const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
+      const _fixtureInput = { handler: "handler-001", actionName: "create" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(handlerEntityHandler.getActionMethod({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -502,8 +537,13 @@ describe('HandlerEntity functional handler', () => {
     it('fixture "gaps_article" -> ok', async () => {
       if (typeof handlerEntityHandler.implementationGaps !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
-      const result = await interpret(handlerEntityHandler.implementationGaps({ concept: "Article" }), storage);
+      const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
+      const _fixtureInput = { concept: "Article" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(handlerEntityHandler.implementationGaps({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -571,16 +611,26 @@ describe('HandlerEntity functional handler', () => {
     it('fixture "deps_article" -> ok', async () => {
       if (typeof handlerEntityHandler.getDependencies !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
-      const result = await interpret(handlerEntityHandler.getDependencies({ handler: "handler-001" }), storage);
+      const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
+      const _fixtureInput = { handler: "handler-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(handlerEntityHandler.getDependencies({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "deps_nonexistent" -> ok', async () => {
       if (typeof handlerEntityHandler.getDependencies !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
-      const result = await interpret(handlerEntityHandler.getDependencies({ handler: "nonexistent-handler" }), storage);
+      const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
+      const _fixtureInput = { handler: "nonexistent-handler" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(handlerEntityHandler.getDependencies({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -641,16 +691,26 @@ describe('HandlerEntity functional handler', () => {
     it('fixture "storage_article" -> ok', async () => {
       if (typeof handlerEntityHandler.getStorageUsage !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
-      const result = await interpret(handlerEntityHandler.getStorageUsage({ handler: "handler-001" }), storage);
+      const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
+      const _fixtureInput = { handler: "handler-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(handlerEntityHandler.getStorageUsage({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "storage_nonexistent" -> ok', async () => {
       if (typeof handlerEntityHandler.getStorageUsage !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
-      const result = await interpret(handlerEntityHandler.getStorageUsage({ handler: "nonexistent-handler" }), storage);
+      const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
+      const _fixtureInput = { handler: "nonexistent-handler" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(handlerEntityHandler.getStorageUsage({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -711,8 +771,13 @@ describe('HandlerEntity functional handler', () => {
     it('fixture "resolve_handler_frame" -> ok', async () => {
       if (typeof handlerEntityHandler.resolveStackFrame !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
-      const result = await interpret(handlerEntityHandler.resolveStackFrame({ file: "handlers/ts/article.handler.ts", line: "15", col: "4" }), storage);
+      const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
+      const _fixtureInput = { file: "handlers/ts/article.handler.ts", line: "15", col: "4" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(handlerEntityHandler.resolveStackFrame({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -780,8 +845,13 @@ describe('HandlerEntity functional handler', () => {
     it('fixture "resolve_ast_valid" -> ok', async () => {
       if (typeof handlerEntityHandler.resolveToAstNode !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
-      const result = await interpret(handlerEntityHandler.resolveToAstNode({ handler: "handler-001", line: "10", col: "5" }), storage);
+      const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
+      const _fixtureInput = { handler: "handler-001", line: "10", col: "5" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(handlerEntityHandler.resolveToAstNode({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -849,16 +919,26 @@ describe('HandlerEntity functional handler', () => {
     it('fixture "resolve_trace" -> ok', async () => {
       if (typeof handlerEntityHandler.resolveStackTrace !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
-      const result = await interpret(handlerEntityHandler.resolveStackTrace({ stackTrace: "Error: fail\n    at create (handlers/ts/article.handler.ts:15:4)" }), storage);
+      const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
+      const _fixtureInput = { stackTrace: "Error: fail\n    at create (handlers/ts/article.handler.ts:15:4)" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(handlerEntityHandler.resolveStackTrace({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_empty_trace" -> ok', async () => {
       if (typeof handlerEntityHandler.resolveStackTrace !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
-      const result = await interpret(handlerEntityHandler.resolveStackTrace({ stackTrace: "" }), storage);
+      const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
+      const _fixtureInput = { stackTrace: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(handlerEntityHandler.resolveStackTrace({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -919,8 +999,13 @@ describe('HandlerEntity functional handler', () => {
     it('fixture "trace_create_returns" -> ok', async () => {
       if (typeof handlerEntityHandler.traceToVariantReturn !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
-      const result = await interpret(handlerEntityHandler.traceToVariantReturn({ handler: "handler-001", actionName: "create" }), storage);
+      const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
+      const _fixtureInput = { handler: "handler-001", actionName: "create" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(handlerEntityHandler.traceToVariantReturn({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -988,8 +1073,13 @@ describe('HandlerEntity functional handler', () => {
     it('fixture "trace_create_storage" -> ok', async () => {
       if (typeof handlerEntityHandler.traceToStorageCalls !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
-      const result = await interpret(handlerEntityHandler.traceToStorageCalls({ handler: "handler-001", actionName: "create" }), storage);
+      const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
+      const _fixtureInput = { handler: "handler-001", actionName: "create" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(handlerEntityHandler.traceToStorageCalls({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -1125,16 +1215,26 @@ describe('HandlerEntity functional handler', () => {
     it('fixture "find_article_errors" -> ok', async () => {
       if (typeof handlerEntityHandler.findByError !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
-      const result = await interpret(handlerEntityHandler.findByError({ errorSymbol: "clef/concept/Article", since: "2026-01-01" }), storage);
+      const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
+      const _fixtureInput = { errorSymbol: "clef/concept/Article", since: "2026-01-01" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(handlerEntityHandler.findByError({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_unknown_errors" -> ok', async () => {
       if (typeof handlerEntityHandler.findByError !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
-      const result = await interpret(handlerEntityHandler.findByError({ errorSymbol: "nonexistent/symbol", since: "2026-01-01" }), storage);
+      const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
+      const _fixtureInput = { errorSymbol: "nonexistent/symbol", since: "2026-01-01" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(handlerEntityHandler.findByError({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -1195,8 +1295,13 @@ describe('HandlerEntity functional handler', () => {
     it('fixture "source_article_create" -> ok', async () => {
       if (typeof handlerEntityHandler.sourceForAction !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
-      const result = await interpret(handlerEntityHandler.sourceForAction({ concept: "Article", actionName: "create" }), storage);
+      const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_article_handler?.output ?? {}));
+      const _fixtureInput = { concept: "Article", actionName: "create" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(handlerEntityHandler.sourceForAction({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

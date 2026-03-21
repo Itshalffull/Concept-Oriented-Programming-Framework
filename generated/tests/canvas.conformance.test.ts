@@ -62,8 +62,13 @@ describe('Canvas imperative handler', () => {
     it('fixture "valid_move" -> ok', async () => {
       if (typeof canvasHandler.moveNode !== 'function') return;
       const storage = createInMemoryStorage();
-      await canvasHandler.addNode({ canvas: "board-1", node: "card-a", x: "100", y: "200" }, storage);
-      const result = await canvasHandler.moveNode({ canvas: "board-1", node: "card-a", x: "300", y: "400" }, storage);
+      const afterResult_valid_add = await canvasHandler.addNode({ canvas: "board-1", node: "card-a", x: "100", y: "200" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
+      const _fixtureInput = { canvas: "board-1", node: "card-a", x: "300", y: "400" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await canvasHandler.moveNode({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -90,8 +95,13 @@ describe('Canvas imperative handler', () => {
     it('fixture "valid_group" -> ok', async () => {
       if (typeof canvasHandler.groupNodes !== 'function') return;
       const storage = createInMemoryStorage();
-      await canvasHandler.addNode({ canvas: "board-1", node: "card-a", x: "100", y: "200" }, storage);
-      const result = await canvasHandler.groupNodes({ canvas: "board-1", nodes: "[\"card-a\",\"card-b\"]", group: "section-1" }, storage);
+      const afterResult_valid_add = await canvasHandler.addNode({ canvas: "board-1", node: "card-a", x: "100", y: "200" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
+      const _fixtureInput = { canvas: "board-1", nodes: "[\"card-a\",\"card-b\"]", group: "section-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await canvasHandler.groupNodes({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -118,8 +128,13 @@ describe('Canvas imperative handler', () => {
     it('fixture "valid_remove" -> ok', async () => {
       if (typeof canvasHandler.removeItem !== 'function') return;
       const storage = createInMemoryStorage();
-      await canvasHandler.addNode({ canvas: "board-1", node: "card-a", x: "100", y: "200" }, storage);
-      const result = await canvasHandler.removeItem({ canvas: "board-1", node: "card-a" }, storage);
+      const afterResult_valid_add = await canvasHandler.addNode({ canvas: "board-1", node: "card-a", x: "100", y: "200" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
+      const _fixtureInput = { canvas: "board-1", node: "card-a" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await canvasHandler.removeItem({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -146,8 +161,13 @@ describe('Canvas imperative handler', () => {
     it('fixture "valid_resize" -> ok', async () => {
       if (typeof canvasHandler.resizeItem !== 'function') return;
       const storage = createInMemoryStorage();
-      await canvasHandler.addNode({ canvas: "board-1", node: "card-a", x: "100", y: "200" }, storage);
-      const result = await canvasHandler.resizeItem({ canvas: "board-1", node: "card-a", width: "200", height: "150" }, storage);
+      const afterResult_valid_add = await canvasHandler.addNode({ canvas: "board-1", node: "card-a", x: "100", y: "200" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
+      const _fixtureInput = { canvas: "board-1", node: "card-a", width: "200", height: "150" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await canvasHandler.resizeItem({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 

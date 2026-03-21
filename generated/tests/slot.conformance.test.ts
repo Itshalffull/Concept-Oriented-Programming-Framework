@@ -163,8 +163,13 @@ describe('Slot functional handler', () => {
     it('fixture "valid_fill" -> ok', async () => {
       if (typeof slotHandler.fill !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(slotHandler.define({ name: "header", host: "dialog", position: "before-title", fallback: "Default Header" }), storage);
-      const result = await interpret(slotHandler.fill({ content: "<h2>Custom Header</h2>" }), storage);
+      const afterResult_valid_define = await interpret(slotHandler.define({ name: "header", host: "dialog", position: "before-title", fallback: "Default Header" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
+      const _fixtureInput = { content: "<h2>Custom Header</h2>" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(slotHandler.fill({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -233,8 +238,13 @@ describe('Slot functional handler', () => {
     it('fixture "valid_clear" -> ok', async () => {
       if (typeof slotHandler.clear !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(slotHandler.define({ name: "header", host: "dialog", position: "before-title", fallback: "Default Header" }), storage);
-      const result = await interpret(slotHandler.clear({  }), storage);
+      const afterResult_valid_define = await interpret(slotHandler.define({ name: "header", host: "dialog", position: "before-title", fallback: "Default Header" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(slotHandler.clear({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

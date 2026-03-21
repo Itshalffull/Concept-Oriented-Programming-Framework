@@ -230,8 +230,13 @@ describe('ClaudeSkillsTarget functional handler', () => {
     it('fixture "list_skills_suite" -> ok', async () => {
       if (typeof claudeSkillsTargetHandler.listSkills !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(claudeSkillsTargetHandler.generate({ projection: "{\"conceptName\":\"SpecParser\",\"conceptManifest\":\"{\\\"name\\\":\\\"SpecParser\\\",\\\"purpose\\\":\\\"Parse concept specs\\\",\\\"actions\\\":[]}\"}", config: "{\"progressive\":true}" }), storage);
-      const result = await interpret(claudeSkillsTargetHandler.listSkills({ suite: "core" }), storage);
+      const afterResult_generate_with_workflow = await interpret(claudeSkillsTargetHandler.generate({ projection: "{\"conceptName\":\"SpecParser\",\"conceptManifest\":\"{\\\"name\\\":\\\"SpecParser\\\",\\\"purpose\\\":\\\"Parse concept specs\\\",\\\"actions\\\":[]}\"}", config: "{\"progressive\":true}" }), storage);
+      const _pool = Object.assign({}, (afterResult_generate_with_workflow?.output ?? {}));
+      const _fixtureInput = { suite: "core" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(claudeSkillsTargetHandler.listSkills({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

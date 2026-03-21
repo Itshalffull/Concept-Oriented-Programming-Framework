@@ -155,24 +155,39 @@ describe('SeedData functional handler', () => {
     it('fixture "valid_register" -> ok', async () => {
       if (typeof seedDataHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(seedDataHandler.discover({ base_path: "/project/seeds" }), storage);
-      const result = await interpret(seedDataHandler.register({ source_path: "/project/seeds/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: ["{\"schema\":\"Shape\"}"] }), storage);
+      const afterResult_valid_discover = await interpret(seedDataHandler.discover({ base_path: "/project/seeds" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_discover?.output ?? {}));
+      const _fixtureInput = { source_path: "/project/seeds/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: ["{\"schema\":\"Shape\"}"] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(seedDataHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_interactor" -> ok', async () => {
       if (typeof seedDataHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(seedDataHandler.discover({ base_path: "/project/seeds" }), storage);
-      const result = await interpret(seedDataHandler.register({ source_path: "/project/seeds/interactor.seeds.yaml", concept_uri: "urn:clef/Interactor", action_name: "define", entries: ["{\"name\":\"spatial-canvas\"}"] }), storage);
+      const afterResult_valid_discover = await interpret(seedDataHandler.discover({ base_path: "/project/seeds" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_discover?.output ?? {}));
+      const _fixtureInput = { source_path: "/project/seeds/interactor.seeds.yaml", concept_uri: "urn:clef/Interactor", action_name: "define", entries: ["{\"name\":\"spatial-canvas\"}"] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(seedDataHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_duplicate" -> error', async () => {
       if (typeof seedDataHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(seedDataHandler.discover({ base_path: "/project/seeds" }), storage);
-      const result = await interpret(seedDataHandler.register({ source_path: "/project/seeds/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: ["{\"schema\":\"Shape\"}"] }), storage);
+      const afterResult_valid_discover = await interpret(seedDataHandler.discover({ base_path: "/project/seeds" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_discover?.output ?? {}));
+      const _fixtureInput = { source_path: "/project/seeds/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: ["{\"schema\":\"Shape\"}"] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(seedDataHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -233,8 +248,13 @@ describe('SeedData functional handler', () => {
     it('fixture "valid_apply" -> ok', async () => {
       if (typeof seedDataHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(seedDataHandler.discover({ base_path: "/project/seeds" }), storage);
-      const result = await interpret(seedDataHandler.apply({ seed: "seed-1" }), storage);
+      const afterResult_valid_discover = await interpret(seedDataHandler.discover({ base_path: "/project/seeds" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_discover?.output ?? {}));
+      const _fixtureInput = { seed: "seed-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(seedDataHandler.apply({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -302,8 +322,13 @@ describe('SeedData functional handler', () => {
     it('fixture "valid_apply_all" -> ok', async () => {
       if (typeof seedDataHandler.applyAll !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(seedDataHandler.discover({ base_path: "/project/seeds" }), storage);
-      const result = await interpret(seedDataHandler.applyAll({  }), storage);
+      const afterResult_valid_discover = await interpret(seedDataHandler.discover({ base_path: "/project/seeds" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_discover?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(seedDataHandler.applyAll({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -364,8 +389,13 @@ describe('SeedData functional handler', () => {
     it('fixture "valid_status" -> ok', async () => {
       if (typeof seedDataHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(seedDataHandler.discover({ base_path: "/project/seeds" }), storage);
-      const result = await interpret(seedDataHandler.status({  }), storage);
+      const afterResult_valid_discover = await interpret(seedDataHandler.discover({ base_path: "/project/seeds" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_discover?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(seedDataHandler.status({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -426,8 +456,13 @@ describe('SeedData functional handler', () => {
     it('fixture "valid_reset" -> ok', async () => {
       if (typeof seedDataHandler.reset !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(seedDataHandler.discover({ base_path: "/project/seeds" }), storage);
-      const result = await interpret(seedDataHandler.reset({ seed: "seed-1" }), storage);
+      const afterResult_valid_discover = await interpret(seedDataHandler.discover({ base_path: "/project/seeds" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_discover?.output ?? {}));
+      const _fixtureInput = { seed: "seed-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(seedDataHandler.reset({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

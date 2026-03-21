@@ -155,8 +155,13 @@ describe('EloRating functional handler', () => {
     it('fixture "outcome_alice_wins" -> ok', async () => {
       if (typeof eloRatingHandler.recordOutcome !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(eloRatingHandler.configure({ kFactor: "32.0", initialRating: "1500.0" }), storage);
-      const result = await interpret(eloRatingHandler.recordOutcome({ config: "elo-001", winner: "alice", loser: "bob" }), storage);
+      const afterResult_configure_standard = await interpret(eloRatingHandler.configure({ kFactor: "32.0", initialRating: "1500.0" }), storage);
+      const _pool = Object.assign({}, (afterResult_configure_standard?.output ?? {}));
+      const _fixtureInput = { config: "elo-001", winner: "alice", loser: "bob" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(eloRatingHandler.recordOutcome({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('EloRating functional handler', () => {
     it('fixture "draw_match" -> ok', async () => {
       if (typeof eloRatingHandler.recordDraw !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(eloRatingHandler.configure({ kFactor: "32.0", initialRating: "1500.0" }), storage);
-      const result = await interpret(eloRatingHandler.recordDraw({ config: "elo-001", participantA: "alice", participantB: "bob" }), storage);
+      const afterResult_configure_standard = await interpret(eloRatingHandler.configure({ kFactor: "32.0", initialRating: "1500.0" }), storage);
+      const _pool = Object.assign({}, (afterResult_configure_standard?.output ?? {}));
+      const _fixtureInput = { config: "elo-001", participantA: "alice", participantB: "bob" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(eloRatingHandler.recordDraw({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('EloRating functional handler', () => {
     it('fixture "get_alice_rating" -> ok', async () => {
       if (typeof eloRatingHandler.getRating !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(eloRatingHandler.configure({ kFactor: "32.0", initialRating: "1500.0" }), storage);
-      const result = await interpret(eloRatingHandler.getRating({ config: "elo-001", participant: "alice" }), storage);
+      const afterResult_configure_standard = await interpret(eloRatingHandler.configure({ kFactor: "32.0", initialRating: "1500.0" }), storage);
+      const _pool = Object.assign({}, (afterResult_configure_standard?.output ?? {}));
+      const _fixtureInput = { config: "elo-001", participant: "alice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(eloRatingHandler.getRating({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

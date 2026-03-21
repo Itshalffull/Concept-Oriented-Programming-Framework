@@ -162,16 +162,26 @@ describe('TypeScriptBuilder functional handler', () => {
     it('fixture "test_unit" -> ok', async () => {
       if (typeof typeScriptBuilderHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(typeScriptBuilderHandler.build({ source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: {"mode":"release"} }), storage);
-      const result = await interpret(typeScriptBuilderHandler.test({ build: "tsb-001", toolchainPath: "/usr/local/bin/tsc", testType: "unit" }), storage);
+      const afterResult_build_node_release = await interpret(typeScriptBuilderHandler.build({ source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: {"mode":"release"} }), storage);
+      const _pool = Object.assign({}, (afterResult_build_node_release?.output ?? {}));
+      const _fixtureInput = { build: "tsb-001", toolchainPath: "/usr/local/bin/tsc", testType: "unit" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(typeScriptBuilderHandler.test({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "test_with_invocation" -> ok', async () => {
       if (typeof typeScriptBuilderHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(typeScriptBuilderHandler.build({ source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: {"mode":"release"} }), storage);
-      const result = await interpret(typeScriptBuilderHandler.test({ build: "tsb-001", toolchainPath: "/usr/local/bin/tsc", invocation: {"command":"npx vitest run","args":["--reporter=json"],"outputFormat":"vitest-json"}, testType: "unit" }), storage);
+      const afterResult_build_node_release = await interpret(typeScriptBuilderHandler.build({ source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: {"mode":"release"} }), storage);
+      const _pool = Object.assign({}, (afterResult_build_node_release?.output ?? {}));
+      const _fixtureInput = { build: "tsb-001", toolchainPath: "/usr/local/bin/tsc", invocation: {"command":"npx vitest run","args":["--reporter=json"],"outputFormat":"vitest-json"}, testType: "unit" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(typeScriptBuilderHandler.test({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -239,16 +249,26 @@ describe('TypeScriptBuilder functional handler', () => {
     it('fixture "package_npm" -> ok', async () => {
       if (typeof typeScriptBuilderHandler.package !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(typeScriptBuilderHandler.build({ source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: {"mode":"release"} }), storage);
-      const result = await interpret(typeScriptBuilderHandler.package({ build: "tsb-001", format: "npm" }), storage);
+      const afterResult_build_node_release = await interpret(typeScriptBuilderHandler.build({ source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: {"mode":"release"} }), storage);
+      const _pool = Object.assign({}, (afterResult_build_node_release?.output ?? {}));
+      const _fixtureInput = { build: "tsb-001", format: "npm" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(typeScriptBuilderHandler.package({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "package_bundle" -> ok', async () => {
       if (typeof typeScriptBuilderHandler.package !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(typeScriptBuilderHandler.build({ source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: {"mode":"release"} }), storage);
-      const result = await interpret(typeScriptBuilderHandler.package({ build: "tsb-001", format: "bundle" }), storage);
+      const afterResult_build_node_release = await interpret(typeScriptBuilderHandler.build({ source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: {"mode":"release"} }), storage);
+      const _pool = Object.assign({}, (afterResult_build_node_release?.output ?? {}));
+      const _fixtureInput = { build: "tsb-001", format: "bundle" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(typeScriptBuilderHandler.package({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -316,8 +336,13 @@ describe('TypeScriptBuilder functional handler', () => {
     it('fixture "register_valid" -> ok', async () => {
       if (typeof typeScriptBuilderHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(typeScriptBuilderHandler.build({ source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: {"mode":"release"} }), storage);
-      const result = await interpret(typeScriptBuilderHandler.register({  }), storage);
+      const afterResult_build_node_release = await interpret(typeScriptBuilderHandler.build({ source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: {"mode":"release"} }), storage);
+      const _pool = Object.assign({}, (afterResult_build_node_release?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(typeScriptBuilderHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -155,8 +155,13 @@ describe('AppTemplate functional handler', () => {
     it('fixture "valid_detail" -> ok', async () => {
       if (typeof appTemplateHandler.detail !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(appTemplateHandler.list({ category: null }), storage);
-      const result = await interpret(appTemplateHandler.detail({ name: "social" }), storage);
+      const afterResult_list_all = await interpret(appTemplateHandler.list({ category: null }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { name: "social" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(appTemplateHandler.detail({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,16 +229,26 @@ describe('AppTemplate functional handler', () => {
     it('fixture "valid_customize" -> ok', async () => {
       if (typeof appTemplateHandler.customize !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(appTemplateHandler.list({ category: null }), storage);
-      const result = await interpret(appTemplateHandler.customize({ template: "social", add: "[\"Graph\"]", remove: "[\"Favorite\"]", features: "{}" }), storage);
+      const afterResult_list_all = await interpret(appTemplateHandler.list({ category: null }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { template: "social", add: "[\"Graph\"]", remove: "[\"Favorite\"]", features: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(appTemplateHandler.customize({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "customize_remove_required" -> error', async () => {
       if (typeof appTemplateHandler.customize !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(appTemplateHandler.list({ category: null }), storage);
-      const result = await interpret(appTemplateHandler.customize({ template: "social", add: "[]", remove: "[\"User\"]", features: "{}" }), storage);
+      const afterResult_list_all = await interpret(appTemplateHandler.list({ category: null }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { template: "social", add: "[]", remove: "[\"User\"]", features: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(appTemplateHandler.customize({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -294,8 +309,13 @@ describe('AppTemplate functional handler', () => {
     it('fixture "valid_register" -> ok', async () => {
       if (typeof appTemplateHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(appTemplateHandler.list({ category: null }), storage);
-      const result = await interpret(appTemplateHandler.register({ name: "my-custom", description: "Custom app template", category: "tool", modules: "[\"User\",\"ContentNode\"]", syncs: "[]" }), storage);
+      const afterResult_list_all = await interpret(appTemplateHandler.list({ category: null }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { name: "my-custom", description: "Custom app template", category: "tool", modules: "[\"User\",\"ContentNode\"]", syncs: "[]" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(appTemplateHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

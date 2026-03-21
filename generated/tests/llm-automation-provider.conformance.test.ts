@@ -148,40 +148,65 @@ describe('LLMAutomationProvider functional handler', () => {
     it('fixture "summarize_with_gpt4" -> ok', async () => {
       if (typeof llmAutomationProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(llmAutomationProviderHandler.register({  }), storage);
-      const result = await interpret(llmAutomationProviderHandler.execute({ action_payload: "{\"action\":\"summarize\",\"text\":\"Long document...\"}", model_config: "{\"model\":\"gpt-4\",\"temperature\":0.3}" }), storage);
+      const afterResult_valid = await interpret(llmAutomationProviderHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { action_payload: "{\"action\":\"summarize\",\"text\":\"Long document...\"}", model_config: "{\"model\":\"gpt-4\",\"temperature\":0.3}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(llmAutomationProviderHandler.execute({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_payload" -> error', async () => {
       if (typeof llmAutomationProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(llmAutomationProviderHandler.register({  }), storage);
-      const result = await interpret(llmAutomationProviderHandler.execute({ action_payload: "", model_config: "{\"model\":\"gpt-4\"}" }), storage);
+      const afterResult_valid = await interpret(llmAutomationProviderHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { action_payload: "", model_config: "{\"model\":\"gpt-4\"}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(llmAutomationProviderHandler.execute({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
     it('fixture "missing_config" -> error', async () => {
       if (typeof llmAutomationProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(llmAutomationProviderHandler.register({  }), storage);
-      const result = await interpret(llmAutomationProviderHandler.execute({ action_payload: "{\"action\":\"classify\"}", model_config: "" }), storage);
+      const afterResult_valid = await interpret(llmAutomationProviderHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { action_payload: "{\"action\":\"classify\"}", model_config: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(llmAutomationProviderHandler.execute({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
     it('fixture "invalid_config_json" -> error', async () => {
       if (typeof llmAutomationProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(llmAutomationProviderHandler.register({  }), storage);
-      const result = await interpret(llmAutomationProviderHandler.execute({ action_payload: "{\"action\":\"classify\"}", model_config: "not-json" }), storage);
+      const afterResult_valid = await interpret(llmAutomationProviderHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { action_payload: "{\"action\":\"classify\"}", model_config: "not-json" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(llmAutomationProviderHandler.execute({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
     it('fixture "config_missing_model" -> error', async () => {
       if (typeof llmAutomationProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(llmAutomationProviderHandler.register({  }), storage);
-      const result = await interpret(llmAutomationProviderHandler.execute({ action_payload: "{\"action\":\"classify\"}", model_config: "{\"temperature\":0.5}" }), storage);
+      const afterResult_valid = await interpret(llmAutomationProviderHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { action_payload: "{\"action\":\"classify\"}", model_config: "{\"temperature\":0.5}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(llmAutomationProviderHandler.execute({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 

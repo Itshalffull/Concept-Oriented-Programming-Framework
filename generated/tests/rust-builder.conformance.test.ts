@@ -155,8 +155,13 @@ describe('RustBuilder functional handler', () => {
     it('fixture "test_crate" -> ok', async () => {
       if (typeof rustBuilderHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(rustBuilderHandler.build({ source: "./src/lib.rs", toolchainPath: "/usr/local/bin/rustc", platform: "linux-x86_64", config: {"mode":"release"} }), storage);
-      const result = await interpret(rustBuilderHandler.test({ build: "rsb-001", toolchainPath: "/usr/local/bin/rustc", testType: "unit" }), storage);
+      const afterResult_build_crate = await interpret(rustBuilderHandler.build({ source: "./src/lib.rs", toolchainPath: "/usr/local/bin/rustc", platform: "linux-x86_64", config: {"mode":"release"} }), storage);
+      const _pool = Object.assign({}, (afterResult_build_crate?.output ?? {}));
+      const _fixtureInput = { build: "rsb-001", toolchainPath: "/usr/local/bin/rustc", testType: "unit" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(rustBuilderHandler.test({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('RustBuilder functional handler', () => {
     it('fixture "package_binary" -> ok', async () => {
       if (typeof rustBuilderHandler.package !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(rustBuilderHandler.build({ source: "./src/lib.rs", toolchainPath: "/usr/local/bin/rustc", platform: "linux-x86_64", config: {"mode":"release"} }), storage);
-      const result = await interpret(rustBuilderHandler.package({ build: "rsb-001", format: "binary" }), storage);
+      const afterResult_build_crate = await interpret(rustBuilderHandler.build({ source: "./src/lib.rs", toolchainPath: "/usr/local/bin/rustc", platform: "linux-x86_64", config: {"mode":"release"} }), storage);
+      const _pool = Object.assign({}, (afterResult_build_crate?.output ?? {}));
+      const _fixtureInput = { build: "rsb-001", format: "binary" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(rustBuilderHandler.package({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('RustBuilder functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof rustBuilderHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(rustBuilderHandler.build({ source: "./src/lib.rs", toolchainPath: "/usr/local/bin/rustc", platform: "linux-x86_64", config: {"mode":"release"} }), storage);
-      const result = await interpret(rustBuilderHandler.register({  }), storage);
+      const afterResult_build_crate = await interpret(rustBuilderHandler.build({ source: "./src/lib.rs", toolchainPath: "/usr/local/bin/rustc", platform: "linux-x86_64", config: {"mode":"release"} }), storage);
+      const _pool = Object.assign({}, (afterResult_build_crate?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(rustBuilderHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

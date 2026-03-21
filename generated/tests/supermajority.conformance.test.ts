@@ -162,16 +162,26 @@ describe('Supermajority functional handler', () => {
     it('fixture "supermajority_reached" -> ok', async () => {
       if (typeof supermajorityHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(supermajorityHandler.configure({ threshold: "0.6667", roundingMode: "floor", abstentionsCount: "false" }), storage);
-      const result = await interpret(supermajorityHandler.count({ config: "supermaj-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" }), storage);
+      const afterResult_two_thirds = await interpret(supermajorityHandler.configure({ threshold: "0.6667", roundingMode: "floor", abstentionsCount: "false" }), storage);
+      const _pool = Object.assign({}, (afterResult_two_thirds?.output ?? {}));
+      const _fixtureInput = { config: "supermaj-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(supermajorityHandler.count({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "no_ballots" -> error', async () => {
       if (typeof supermajorityHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(supermajorityHandler.configure({ threshold: "0.6667", roundingMode: "floor", abstentionsCount: "false" }), storage);
-      const result = await interpret(supermajorityHandler.count({ config: "supermaj-001", ballots: "[]", weights: "{}" }), storage);
+      const afterResult_two_thirds = await interpret(supermajorityHandler.configure({ threshold: "0.6667", roundingMode: "floor", abstentionsCount: "false" }), storage);
+      const _pool = Object.assign({}, (afterResult_two_thirds?.output ?? {}));
+      const _fixtureInput = { config: "supermaj-001", ballots: "[]", weights: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(supermajorityHandler.count({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 

@@ -162,16 +162,26 @@ describe('ActionEntity functional handler', () => {
     it('fixture "find_article" -> ok', async () => {
       if (typeof actionEntityHandler.findByConcept !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(actionEntityHandler.register({ concept: "Article", name: "create", params: "[{\"name\":\"title\",\"type\":\"String\"}]", variantRefs: "[\"ok\",\"error\"]" }), storage);
-      const result = await interpret(actionEntityHandler.findByConcept({ concept: "Article" }), storage);
+      const afterResult_register_create = await interpret(actionEntityHandler.register({ concept: "Article", name: "create", params: "[{\"name\":\"title\",\"type\":\"String\"}]", variantRefs: "[\"ok\",\"error\"]" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_create?.output ?? {}));
+      const _fixtureInput = { concept: "Article" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(actionEntityHandler.findByConcept({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_empty" -> ok', async () => {
       if (typeof actionEntityHandler.findByConcept !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(actionEntityHandler.register({ concept: "Article", name: "create", params: "[{\"name\":\"title\",\"type\":\"String\"}]", variantRefs: "[\"ok\",\"error\"]" }), storage);
-      const result = await interpret(actionEntityHandler.findByConcept({ concept: "" }), storage);
+      const afterResult_register_create = await interpret(actionEntityHandler.register({ concept: "Article", name: "create", params: "[{\"name\":\"title\",\"type\":\"String\"}]", variantRefs: "[\"ok\",\"error\"]" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_create?.output ?? {}));
+      const _fixtureInput = { concept: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(actionEntityHandler.findByConcept({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -232,8 +242,13 @@ describe('ActionEntity functional handler', () => {
     it('fixture "triggering_valid" -> ok', async () => {
       if (typeof actionEntityHandler.triggeringSyncs !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(actionEntityHandler.register({ concept: "Article", name: "create", params: "[{\"name\":\"title\",\"type\":\"String\"}]", variantRefs: "[\"ok\",\"error\"]" }), storage);
-      const result = await interpret(actionEntityHandler.triggeringSyncs({ action: "action-entity-1" }), storage);
+      const afterResult_register_create = await interpret(actionEntityHandler.register({ concept: "Article", name: "create", params: "[{\"name\":\"title\",\"type\":\"String\"}]", variantRefs: "[\"ok\",\"error\"]" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_create?.output ?? {}));
+      const _fixtureInput = { action: "action-entity-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(actionEntityHandler.triggeringSyncs({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -301,8 +316,13 @@ describe('ActionEntity functional handler', () => {
     it('fixture "invoking_valid" -> ok', async () => {
       if (typeof actionEntityHandler.invokingSyncs !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(actionEntityHandler.register({ concept: "Article", name: "create", params: "[{\"name\":\"title\",\"type\":\"String\"}]", variantRefs: "[\"ok\",\"error\"]" }), storage);
-      const result = await interpret(actionEntityHandler.invokingSyncs({ action: "action-entity-1" }), storage);
+      const afterResult_register_create = await interpret(actionEntityHandler.register({ concept: "Article", name: "create", params: "[{\"name\":\"title\",\"type\":\"String\"}]", variantRefs: "[\"ok\",\"error\"]" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_create?.output ?? {}));
+      const _fixtureInput = { action: "action-entity-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(actionEntityHandler.invokingSyncs({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -370,8 +390,13 @@ describe('ActionEntity functional handler', () => {
     it('fixture "impl_valid" -> ok', async () => {
       if (typeof actionEntityHandler.implementations !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(actionEntityHandler.register({ concept: "Article", name: "create", params: "[{\"name\":\"title\",\"type\":\"String\"}]", variantRefs: "[\"ok\",\"error\"]" }), storage);
-      const result = await interpret(actionEntityHandler.implementations({ action: "action-entity-1" }), storage);
+      const afterResult_register_create = await interpret(actionEntityHandler.register({ concept: "Article", name: "create", params: "[{\"name\":\"title\",\"type\":\"String\"}]", variantRefs: "[\"ok\",\"error\"]" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_create?.output ?? {}));
+      const _fixtureInput = { action: "action-entity-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(actionEntityHandler.implementations({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -439,8 +464,13 @@ describe('ActionEntity functional handler', () => {
     it('fixture "exposures_valid" -> ok', async () => {
       if (typeof actionEntityHandler.interfaceExposures !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(actionEntityHandler.register({ concept: "Article", name: "create", params: "[{\"name\":\"title\",\"type\":\"String\"}]", variantRefs: "[\"ok\",\"error\"]" }), storage);
-      const result = await interpret(actionEntityHandler.interfaceExposures({ action: "action-entity-1" }), storage);
+      const afterResult_register_create = await interpret(actionEntityHandler.register({ concept: "Article", name: "create", params: "[{\"name\":\"title\",\"type\":\"String\"}]", variantRefs: "[\"ok\",\"error\"]" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_create?.output ?? {}));
+      const _fixtureInput = { action: "action-entity-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(actionEntityHandler.interfaceExposures({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -508,8 +538,13 @@ describe('ActionEntity functional handler', () => {
     it('fixture "get_valid" -> ok', async () => {
       if (typeof actionEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(actionEntityHandler.register({ concept: "Article", name: "create", params: "[{\"name\":\"title\",\"type\":\"String\"}]", variantRefs: "[\"ok\",\"error\"]" }), storage);
-      const result = await interpret(actionEntityHandler.get({ action: "action-entity-1" }), storage);
+      const afterResult_register_create = await interpret(actionEntityHandler.register({ concept: "Article", name: "create", params: "[{\"name\":\"title\",\"type\":\"String\"}]", variantRefs: "[\"ok\",\"error\"]" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_create?.output ?? {}));
+      const _fixtureInput = { action: "action-entity-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(actionEntityHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

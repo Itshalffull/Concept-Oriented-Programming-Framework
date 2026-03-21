@@ -148,8 +148,13 @@ describe('EntityReflector functional handler', () => {
     it('fixture "valid_reflect_provider" -> ok', async () => {
       if (typeof entityReflectorHandler.reflectProvider !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(entityReflectorHandler.reflect({  }), storage);
-      const result = await interpret(entityReflectorHandler.reflectProvider({ provider_name: "concept" }), storage);
+      const afterResult_valid_reflect = await interpret(entityReflectorHandler.reflect({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_reflect?.output ?? {}));
+      const _fixtureInput = { provider_name: "concept" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(entityReflectorHandler.reflectProvider({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -217,8 +222,13 @@ describe('EntityReflector functional handler', () => {
     it('fixture "valid_register" -> ok', async () => {
       if (typeof entityReflectorHandler.registerProvider !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(entityReflectorHandler.reflect({  }), storage);
-      const result = await interpret(entityReflectorHandler.registerProvider({ provider_name: "widget" }), storage);
+      const afterResult_valid_reflect = await interpret(entityReflectorHandler.reflect({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_reflect?.output ?? {}));
+      const _fixtureInput = { provider_name: "widget" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(entityReflectorHandler.registerProvider({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -286,8 +296,13 @@ describe('EntityReflector functional handler', () => {
     it('fixture "valid_status" -> ok', async () => {
       if (typeof entityReflectorHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(entityReflectorHandler.reflect({  }), storage);
-      const result = await interpret(entityReflectorHandler.status({  }), storage);
+      const afterResult_valid_reflect = await interpret(entityReflectorHandler.reflect({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_reflect?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(entityReflectorHandler.status({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

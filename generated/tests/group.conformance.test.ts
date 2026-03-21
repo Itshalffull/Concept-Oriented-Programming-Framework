@@ -155,8 +155,13 @@ describe('Group functional handler', () => {
     it('fixture "add_member_as_editor" -> ok', async () => {
       if (typeof groupHandler.addMember !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(groupHandler.createGroup({ group: "team-engineering", name: "Engineering Team" }), storage);
-      const result = await interpret(groupHandler.addMember({ group: "team-engineering", user: "alice@example.com", role: "editor" }), storage);
+      const afterResult_create_team_group = await interpret(groupHandler.createGroup({ group: "team-engineering", name: "Engineering Team" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_team_group?.output ?? {}));
+      const _fixtureInput = { group: "team-engineering", user: "alice@example.com", role: "editor" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(groupHandler.addMember({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('Group functional handler', () => {
     it('fixture "assign_admin_role" -> ok', async () => {
       if (typeof groupHandler.assignGroupRole !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(groupHandler.createGroup({ group: "team-engineering", name: "Engineering Team" }), storage);
-      const result = await interpret(groupHandler.assignGroupRole({ group: "team-engineering", user: "alice@example.com", role: "admin" }), storage);
+      const afterResult_create_team_group = await interpret(groupHandler.createGroup({ group: "team-engineering", name: "Engineering Team" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_team_group?.output ?? {}));
+      const _fixtureInput = { group: "team-engineering", user: "alice@example.com", role: "admin" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(groupHandler.assignGroupRole({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('Group functional handler', () => {
     it('fixture "add_document_content" -> ok', async () => {
       if (typeof groupHandler.addContent !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(groupHandler.createGroup({ group: "team-engineering", name: "Engineering Team" }), storage);
-      const result = await interpret(groupHandler.addContent({ group: "team-engineering", content: "doc-design-spec-v2" }), storage);
+      const afterResult_create_team_group = await interpret(groupHandler.createGroup({ group: "team-engineering", name: "Engineering Team" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_team_group?.output ?? {}));
+      const _fixtureInput = { group: "team-engineering", content: "doc-design-spec-v2" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(groupHandler.addContent({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -362,8 +377,13 @@ describe('Group functional handler', () => {
     it('fixture "check_member_read" -> ok', async () => {
       if (typeof groupHandler.checkGroupAccess !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(groupHandler.createGroup({ group: "team-engineering", name: "Engineering Team" }), storage);
-      const result = await interpret(groupHandler.checkGroupAccess({ group: "team-engineering", user: "alice@example.com", permission: "read" }), storage);
+      const afterResult_create_team_group = await interpret(groupHandler.createGroup({ group: "team-engineering", name: "Engineering Team" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_team_group?.output ?? {}));
+      const _fixtureInput = { group: "team-engineering", user: "alice@example.com", permission: "read" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(groupHandler.checkGroupAccess({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

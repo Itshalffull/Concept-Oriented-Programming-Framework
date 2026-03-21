@@ -148,8 +148,13 @@ describe('ExternalCall functional handler', () => {
     it('fixture "register_http" -> ok', async () => {
       if (typeof externalCallHandler.registerProtocol !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(externalCallHandler.listProtocols({  }), storage);
-      const result = await interpret(externalCallHandler.registerProtocol({ protocol: "http", providerName: "HttpProvider" }), storage);
+      const afterResult_valid = await interpret(externalCallHandler.listProtocols({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { protocol: "http", providerName: "HttpProvider" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(externalCallHandler.registerProtocol({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -218,16 +223,26 @@ describe('ExternalCall functional handler', () => {
     it('fixture "http_get" -> ok', async () => {
       if (typeof externalCallHandler.dispatch !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(externalCallHandler.listProtocols({  }), storage);
-      const result = await interpret(externalCallHandler.dispatch({ protocol: "http", operation: "GET", endpoint: "https://api.example.com/users", payload: "{}", config: "{\"timeout\": 5000}" }), storage);
+      const afterResult_valid = await interpret(externalCallHandler.listProtocols({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { protocol: "http", operation: "GET", endpoint: "https://api.example.com/users", payload: "{}", config: "{\"timeout\": 5000}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(externalCallHandler.dispatch({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_protocol" -> protocolNotFound', async () => {
       if (typeof externalCallHandler.dispatch !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(externalCallHandler.listProtocols({  }), storage);
-      const result = await interpret(externalCallHandler.dispatch({ protocol: "ftp", operation: "LIST", endpoint: "ftp://files.example.com", payload: "{}", config: "{}" }), storage);
+      const afterResult_valid = await interpret(externalCallHandler.listProtocols({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { protocol: "ftp", operation: "LIST", endpoint: "ftp://files.example.com", payload: "{}", config: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(externalCallHandler.dispatch({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('protocolNotFound'));
     });
@@ -235,8 +250,13 @@ describe('ExternalCall functional handler', () => {
     it('fixture "bad_request" -> error', async () => {
       if (typeof externalCallHandler.dispatch !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(externalCallHandler.listProtocols({  }), storage);
-      const result = await interpret(externalCallHandler.dispatch({ protocol: "http", operation: "POST", endpoint: "https://api.example.com/invalid", payload: "{\"broken\": true}", config: "{}" }), storage);
+      const afterResult_valid = await interpret(externalCallHandler.listProtocols({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { protocol: "http", operation: "POST", endpoint: "https://api.example.com/invalid", payload: "{\"broken\": true}", config: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(externalCallHandler.dispatch({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -297,8 +317,13 @@ describe('ExternalCall functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof externalCallHandler.listProtocols !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(externalCallHandler.listProtocols({  }), storage);
-      const result = await interpret(externalCallHandler.listProtocols({  }), storage);
+      const afterResult_valid = await interpret(externalCallHandler.listProtocols({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(externalCallHandler.listProtocols({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -162,8 +162,13 @@ describe('LambdaRuntime functional handler', () => {
     it('fixture "deploy_s3" -> ok', async () => {
       if (typeof lambdaRuntimeHandler.deploy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(lambdaRuntimeHandler.provision({ concept: "UserAuth", memory: "256", timeout: "30", region: "us-east-1" }), storage);
-      const result = await interpret(lambdaRuntimeHandler.deploy({ function: "fn-abc123", artifactLocation: "s3://deploy-bucket/user-auth.zip" }), storage);
+      const afterResult_provision_standard = await interpret(lambdaRuntimeHandler.provision({ concept: "UserAuth", memory: "256", timeout: "30", region: "us-east-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_standard?.output ?? {}));
+      const _fixtureInput = { function: "fn-abc123", artifactLocation: "s3://deploy-bucket/user-auth.zip" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(lambdaRuntimeHandler.deploy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -231,8 +236,13 @@ describe('LambdaRuntime functional handler', () => {
     it('fixture "traffic_canary" -> ok', async () => {
       if (typeof lambdaRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(lambdaRuntimeHandler.provision({ concept: "UserAuth", memory: "256", timeout: "30", region: "us-east-1" }), storage);
-      const result = await interpret(lambdaRuntimeHandler.setTrafficWeight({ function: "fn-abc123", aliasWeight: "10" }), storage);
+      const afterResult_provision_standard = await interpret(lambdaRuntimeHandler.provision({ concept: "UserAuth", memory: "256", timeout: "30", region: "us-east-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_standard?.output ?? {}));
+      const _fixtureInput = { function: "fn-abc123", aliasWeight: "10" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(lambdaRuntimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -300,8 +310,13 @@ describe('LambdaRuntime functional handler', () => {
     it('fixture "rollback_to_v2" -> ok', async () => {
       if (typeof lambdaRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(lambdaRuntimeHandler.provision({ concept: "UserAuth", memory: "256", timeout: "30", region: "us-east-1" }), storage);
-      const result = await interpret(lambdaRuntimeHandler.rollback({ function: "fn-abc123", targetVersion: "2" }), storage);
+      const afterResult_provision_standard = await interpret(lambdaRuntimeHandler.provision({ concept: "UserAuth", memory: "256", timeout: "30", region: "us-east-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_standard?.output ?? {}));
+      const _fixtureInput = { function: "fn-abc123", targetVersion: "2" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(lambdaRuntimeHandler.rollback({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -369,8 +384,13 @@ describe('LambdaRuntime functional handler', () => {
     it('fixture "destroy_valid" -> ok', async () => {
       if (typeof lambdaRuntimeHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(lambdaRuntimeHandler.provision({ concept: "UserAuth", memory: "256", timeout: "30", region: "us-east-1" }), storage);
-      const result = await interpret(lambdaRuntimeHandler.destroy({ function: "fn-abc123" }), storage);
+      const afterResult_provision_standard = await interpret(lambdaRuntimeHandler.provision({ concept: "UserAuth", memory: "256", timeout: "30", region: "us-east-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_standard?.output ?? {}));
+      const _fixtureInput = { function: "fn-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(lambdaRuntimeHandler.destroy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

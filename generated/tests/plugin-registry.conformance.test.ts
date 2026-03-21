@@ -155,16 +155,26 @@ describe('PluginRegistry functional handler', () => {
     it('fixture "discover_formatters" -> ok', async () => {
       if (typeof pluginRegistryHandler.discover !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
-      const result = await interpret(pluginRegistryHandler.discover({ type: "formatter" }), storage);
+      const afterResult_register_formatter = await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_formatter?.output ?? {}));
+      const _fixtureInput = { type: "formatter" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(pluginRegistryHandler.discover({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "discover_empty_type" -> ok', async () => {
       if (typeof pluginRegistryHandler.discover !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
-      const result = await interpret(pluginRegistryHandler.discover({ type: "" }), storage);
+      const afterResult_register_formatter = await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_formatter?.output ?? {}));
+      const _fixtureInput = { type: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(pluginRegistryHandler.discover({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -225,8 +235,13 @@ describe('PluginRegistry functional handler', () => {
     it('fixture "create_with_config" -> ok', async () => {
       if (typeof pluginRegistryHandler.createInstance !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
-      const result = await interpret(pluginRegistryHandler.createInstance({ plugin: "formatter:markdown-fmt", config: "{\"lineWidth\":80}" }), storage);
+      const afterResult_register_formatter = await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_formatter?.output ?? {}));
+      const _fixtureInput = { plugin: "formatter:markdown-fmt", config: "{\"lineWidth\":80}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(pluginRegistryHandler.createInstance({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -294,16 +309,26 @@ describe('PluginRegistry functional handler', () => {
     it('fixture "get_formatter_defs" -> ok', async () => {
       if (typeof pluginRegistryHandler.getDefinitions !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
-      const result = await interpret(pluginRegistryHandler.getDefinitions({ type: "formatter" }), storage);
+      const afterResult_register_formatter = await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_formatter?.output ?? {}));
+      const _fixtureInput = { type: "formatter" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(pluginRegistryHandler.getDefinitions({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_unknown_defs" -> ok', async () => {
       if (typeof pluginRegistryHandler.getDefinitions !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
-      const result = await interpret(pluginRegistryHandler.getDefinitions({ type: "" }), storage);
+      const afterResult_register_formatter = await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_formatter?.output ?? {}));
+      const _fixtureInput = { type: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(pluginRegistryHandler.getDefinitions({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -364,16 +389,26 @@ describe('PluginRegistry functional handler', () => {
     it('fixture "alter_formatters" -> ok', async () => {
       if (typeof pluginRegistryHandler.alterDefinitions !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
-      const result = await interpret(pluginRegistryHandler.alterDefinitions({ type: "formatter", alterations: "{\"deprecated\":true}" }), storage);
+      const afterResult_register_formatter = await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_formatter?.output ?? {}));
+      const _fixtureInput = { type: "formatter", alterations: "{\"deprecated\":true}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(pluginRegistryHandler.alterDefinitions({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "alter_missing_type" -> error', async () => {
       if (typeof pluginRegistryHandler.alterDefinitions !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
-      const result = await interpret(pluginRegistryHandler.alterDefinitions({ type: "", alterations: "{}" }), storage);
+      const afterResult_register_formatter = await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_formatter?.output ?? {}));
+      const _fixtureInput = { type: "", alterations: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(pluginRegistryHandler.alterDefinitions({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -434,16 +469,26 @@ describe('PluginRegistry functional handler', () => {
     it('fixture "derive_variant" -> ok', async () => {
       if (typeof pluginRegistryHandler.derivePlugins !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
-      const result = await interpret(pluginRegistryHandler.derivePlugins({ plugin: "formatter:markdown-fmt", config: "{\"strict\":true}" }), storage);
+      const afterResult_register_formatter = await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_formatter?.output ?? {}));
+      const _fixtureInput = { plugin: "formatter:markdown-fmt", config: "{\"strict\":true}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(pluginRegistryHandler.derivePlugins({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "derive_nonexistent" -> error', async () => {
       if (typeof pluginRegistryHandler.derivePlugins !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
-      const result = await interpret(pluginRegistryHandler.derivePlugins({ plugin: "nonexistent:plugin", config: "{}" }), storage);
+      const afterResult_register_formatter = await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_formatter?.output ?? {}));
+      const _fixtureInput = { plugin: "nonexistent:plugin", config: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(pluginRegistryHandler.derivePlugins({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 

@@ -162,8 +162,13 @@ describe('MediaAsset functional handler', () => {
     it('fixture "extract_existing" -> ok', async () => {
       if (typeof mediaAssetHandler.extractMetadata !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg" }), storage);
-      const result = await interpret(mediaAssetHandler.extractMetadata({ asset: "img-001" }), storage);
+      const afterResult_create_image = await interpret(mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_image?.output ?? {}));
+      const _fixtureInput = { asset: "img-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(mediaAssetHandler.extractMetadata({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -232,8 +237,13 @@ describe('MediaAsset functional handler', () => {
     it('fixture "thumb_existing" -> ok', async () => {
       if (typeof mediaAssetHandler.generateThumbnail !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg" }), storage);
-      const result = await interpret(mediaAssetHandler.generateThumbnail({ asset: "img-001" }), storage);
+      const afterResult_create_image = await interpret(mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_image?.output ?? {}));
+      const _fixtureInput = { asset: "img-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(mediaAssetHandler.generateThumbnail({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -302,8 +312,13 @@ describe('MediaAsset functional handler', () => {
     it('fixture "get_existing" -> ok', async () => {
       if (typeof mediaAssetHandler.getMedia !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg" }), storage);
-      const result = await interpret(mediaAssetHandler.getMedia({ asset: "img-001" }), storage);
+      const afterResult_create_image = await interpret(mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_image?.output ?? {}));
+      const _fixtureInput = { asset: "img-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(mediaAssetHandler.getMedia({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

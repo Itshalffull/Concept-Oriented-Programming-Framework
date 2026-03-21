@@ -162,16 +162,26 @@ describe('LocalRuntime functional handler', () => {
     it('fixture "deploy_restart" -> ok', async () => {
       if (typeof localRuntimeHandler.deploy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(localRuntimeHandler.provision({ concept: "ApiServer", command: "node server.js", port: "3000" }), storage);
-      const result = await interpret(localRuntimeHandler.deploy({ process: "proc-abc123", command: "node server.js --production" }), storage);
+      const afterResult_provision_node = await interpret(localRuntimeHandler.provision({ concept: "ApiServer", command: "node server.js", port: "3000" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_node?.output ?? {}));
+      const _fixtureInput = { process: "proc-abc123", command: "node server.js --production" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(localRuntimeHandler.deploy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "deploy_missing_process" -> ok', async () => {
       if (typeof localRuntimeHandler.deploy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(localRuntimeHandler.provision({ concept: "ApiServer", command: "node server.js", port: "3000" }), storage);
-      const result = await interpret(localRuntimeHandler.deploy({ process: "", command: "node app.js" }), storage);
+      const afterResult_provision_node = await interpret(localRuntimeHandler.provision({ concept: "ApiServer", command: "node server.js", port: "3000" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_node?.output ?? {}));
+      const _fixtureInput = { process: "", command: "node app.js" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(localRuntimeHandler.deploy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -232,16 +242,26 @@ describe('LocalRuntime functional handler', () => {
     it('fixture "traffic_local" -> ok', async () => {
       if (typeof localRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(localRuntimeHandler.provision({ concept: "ApiServer", command: "node server.js", port: "3000" }), storage);
-      const result = await interpret(localRuntimeHandler.setTrafficWeight({ process: "proc-abc123", weight: "100" }), storage);
+      const afterResult_provision_node = await interpret(localRuntimeHandler.provision({ concept: "ApiServer", command: "node server.js", port: "3000" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_node?.output ?? {}));
+      const _fixtureInput = { process: "proc-abc123", weight: "100" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(localRuntimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "traffic_no_process" -> ok', async () => {
       if (typeof localRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(localRuntimeHandler.provision({ concept: "ApiServer", command: "node server.js", port: "3000" }), storage);
-      const result = await interpret(localRuntimeHandler.setTrafficWeight({ process: "", weight: "50" }), storage);
+      const afterResult_provision_node = await interpret(localRuntimeHandler.provision({ concept: "ApiServer", command: "node server.js", port: "3000" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_node?.output ?? {}));
+      const _fixtureInput = { process: "", weight: "50" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(localRuntimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -302,16 +322,26 @@ describe('LocalRuntime functional handler', () => {
     it('fixture "rollback_previous" -> ok', async () => {
       if (typeof localRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(localRuntimeHandler.provision({ concept: "ApiServer", command: "node server.js", port: "3000" }), storage);
-      const result = await interpret(localRuntimeHandler.rollback({ process: "proc-abc123", previousCommand: "node server.js" }), storage);
+      const afterResult_provision_node = await interpret(localRuntimeHandler.provision({ concept: "ApiServer", command: "node server.js", port: "3000" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_node?.output ?? {}));
+      const _fixtureInput = { process: "proc-abc123", previousCommand: "node server.js" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(localRuntimeHandler.rollback({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "rollback_missing_process" -> ok', async () => {
       if (typeof localRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(localRuntimeHandler.provision({ concept: "ApiServer", command: "node server.js", port: "3000" }), storage);
-      const result = await interpret(localRuntimeHandler.rollback({ process: "", previousCommand: "node old.js" }), storage);
+      const afterResult_provision_node = await interpret(localRuntimeHandler.provision({ concept: "ApiServer", command: "node server.js", port: "3000" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_node?.output ?? {}));
+      const _fixtureInput = { process: "", previousCommand: "node old.js" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(localRuntimeHandler.rollback({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -372,8 +402,13 @@ describe('LocalRuntime functional handler', () => {
     it('fixture "destroy_valid" -> ok', async () => {
       if (typeof localRuntimeHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(localRuntimeHandler.provision({ concept: "ApiServer", command: "node server.js", port: "3000" }), storage);
-      const result = await interpret(localRuntimeHandler.destroy({ process: "proc-abc123" }), storage);
+      const afterResult_provision_node = await interpret(localRuntimeHandler.provision({ concept: "ApiServer", command: "node server.js", port: "3000" }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_node?.output ?? {}));
+      const _fixtureInput = { process: "proc-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(localRuntimeHandler.destroy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

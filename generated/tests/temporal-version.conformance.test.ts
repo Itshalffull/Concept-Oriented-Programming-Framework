@@ -62,16 +62,26 @@ describe('TemporalVersion imperative handler', () => {
     it('fixture "query_system_time" -> ok', async () => {
       if (typeof temporalVersionHandler.asOf !== 'function') return;
       const storage = createInMemoryStorage();
-      await temporalVersionHandler.record({ contentHash: "sha256:abc123def456", validFrom: "2025-01-01T00:00:00Z", validTo: null, metadata: "{\"author\":\"alice\"}" }, storage);
-      const result = await temporalVersionHandler.asOf({ systemTime: "2025-06-15T12:00:00Z", validTime: null }, storage);
+      const afterResult_record_version = await temporalVersionHandler.record({ contentHash: "sha256:abc123def456", validFrom: "2025-01-01T00:00:00Z", validTo: null, metadata: "{\"author\":\"alice\"}" }, storage);
+      const _pool = Object.assign({}, (afterResult_record_version?.output ?? {}));
+      const _fixtureInput = { systemTime: "2025-06-15T12:00:00Z", validTime: null } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await temporalVersionHandler.asOf({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "query_both_times" -> ok', async () => {
       if (typeof temporalVersionHandler.asOf !== 'function') return;
       const storage = createInMemoryStorage();
-      await temporalVersionHandler.record({ contentHash: "sha256:abc123def456", validFrom: "2025-01-01T00:00:00Z", validTo: null, metadata: "{\"author\":\"alice\"}" }, storage);
-      const result = await temporalVersionHandler.asOf({ systemTime: "2025-06-15T12:00:00Z", validTime: "2025-01-01T00:00:00Z" }, storage);
+      const afterResult_record_version = await temporalVersionHandler.record({ contentHash: "sha256:abc123def456", validFrom: "2025-01-01T00:00:00Z", validTo: null, metadata: "{\"author\":\"alice\"}" }, storage);
+      const _pool = Object.assign({}, (afterResult_record_version?.output ?? {}));
+      const _fixtureInput = { systemTime: "2025-06-15T12:00:00Z", validTime: "2025-01-01T00:00:00Z" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await temporalVersionHandler.asOf({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -97,8 +107,13 @@ describe('TemporalVersion imperative handler', () => {
     it('fixture "between_system" -> ok', async () => {
       if (typeof temporalVersionHandler.between !== 'function') return;
       const storage = createInMemoryStorage();
-      await temporalVersionHandler.record({ contentHash: "sha256:abc123def456", validFrom: "2025-01-01T00:00:00Z", validTo: null, metadata: "{\"author\":\"alice\"}" }, storage);
-      const result = await temporalVersionHandler.between({ start: "2025-01-01T00:00:00Z", end: "2025-12-31T23:59:59Z", dimension: "system" }, storage);
+      const afterResult_record_version = await temporalVersionHandler.record({ contentHash: "sha256:abc123def456", validFrom: "2025-01-01T00:00:00Z", validTo: null, metadata: "{\"author\":\"alice\"}" }, storage);
+      const _pool = Object.assign({}, (afterResult_record_version?.output ?? {}));
+      const _fixtureInput = { start: "2025-01-01T00:00:00Z", end: "2025-12-31T23:59:59Z", dimension: "system" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await temporalVersionHandler.between({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -124,8 +139,13 @@ describe('TemporalVersion imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof temporalVersionHandler.current !== 'function') return;
       const storage = createInMemoryStorage();
-      await temporalVersionHandler.record({ contentHash: "sha256:abc123def456", validFrom: "2025-01-01T00:00:00Z", validTo: null, metadata: "{\"author\":\"alice\"}" }, storage);
-      const result = await temporalVersionHandler.current({  }, storage);
+      const afterResult_record_version = await temporalVersionHandler.record({ contentHash: "sha256:abc123def456", validFrom: "2025-01-01T00:00:00Z", validTo: null, metadata: "{\"author\":\"alice\"}" }, storage);
+      const _pool = Object.assign({}, (afterResult_record_version?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await temporalVersionHandler.current({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -144,8 +164,13 @@ describe('TemporalVersion imperative handler', () => {
     it('fixture "supersede_existing" -> ok', async () => {
       if (typeof temporalVersionHandler.supersede !== 'function') return;
       const storage = createInMemoryStorage();
-      await temporalVersionHandler.record({ contentHash: "sha256:abc123def456", validFrom: "2025-01-01T00:00:00Z", validTo: null, metadata: "{\"author\":\"alice\"}" }, storage);
-      const result = await temporalVersionHandler.supersede({ versionId: "temporal-version-1", contentHash: "sha256:newcontent789" }, storage);
+      const afterResult_record_version = await temporalVersionHandler.record({ contentHash: "sha256:abc123def456", validFrom: "2025-01-01T00:00:00Z", validTo: null, metadata: "{\"author\":\"alice\"}" }, storage);
+      const _pool = Object.assign({}, (afterResult_record_version?.output ?? {}));
+      const _fixtureInput = { versionId: "temporal-version-1", contentHash: "sha256:newcontent789" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await temporalVersionHandler.supersede({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 

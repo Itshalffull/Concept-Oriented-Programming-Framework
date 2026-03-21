@@ -216,8 +216,13 @@ describe('SurfaceComponentScaffoldGen functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof surfaceComponentScaffoldGenHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(surfaceComponentScaffoldGenHandler.generate({ name: "Accordion", parts: ["root","item","trigger","content"], states: ["closed","open"], events: ["toggle"], role: "region", requires: null, affordance: null, props: [], compose: [] }), storage);
-      const result = await interpret(surfaceComponentScaffoldGenHandler.register({  }), storage);
+      const afterResult_valid_component = await interpret(surfaceComponentScaffoldGenHandler.generate({ name: "Accordion", parts: ["root","item","trigger","content"], states: ["closed","open"], events: ["toggle"], role: "region", requires: null, affordance: null, props: [], compose: [] }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_component?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(surfaceComponentScaffoldGenHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

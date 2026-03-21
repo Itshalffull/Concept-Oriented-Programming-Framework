@@ -171,16 +171,26 @@ describe('GraphAnalysis functional handler', () => {
     it('fixture "register_provider" -> ok', async () => {
       if (typeof graphAnalysisHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null }), storage);
-      const result = await interpret(graphAnalysisHandler.register({ algorithm: "custom-centrality", category: "centrality", provider: "MyCentralityProvider" }), storage);
+      const afterResult_pagerank_analysis = await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null }), storage);
+      const _pool = Object.assign({}, (afterResult_pagerank_analysis?.output ?? {}));
+      const _fixtureInput = { algorithm: "custom-centrality", category: "centrality", provider: "MyCentralityProvider" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(graphAnalysisHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_community" -> ok', async () => {
       if (typeof graphAnalysisHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null }), storage);
-      const result = await interpret(graphAnalysisHandler.register({ algorithm: "spectral", category: "community", provider: "SpectralProvider" }), storage);
+      const afterResult_pagerank_analysis = await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null }), storage);
+      const _pool = Object.assign({}, (afterResult_pagerank_analysis?.output ?? {}));
+      const _fixtureInput = { algorithm: "spectral", category: "community", provider: "SpectralProvider" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(graphAnalysisHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -241,8 +251,13 @@ describe('GraphAnalysis functional handler', () => {
     it('fixture "existing_result" -> ok', async () => {
       if (typeof graphAnalysisHandler.getResult !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null }), storage);
-      const result = await interpret(graphAnalysisHandler.getResult({ result: "result-001" }), storage);
+      const afterResult_pagerank_analysis = await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null }), storage);
+      const _pool = Object.assign({}, (afterResult_pagerank_analysis?.output ?? {}));
+      const _fixtureInput = { result: "result-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(graphAnalysisHandler.getResult({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -311,8 +326,13 @@ describe('GraphAnalysis functional handler', () => {
     it('fixture "for_graph" -> ok', async () => {
       if (typeof graphAnalysisHandler.listResults !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null }), storage);
-      const result = await interpret(graphAnalysisHandler.listResults({ graph: "{\"nodes\":[\"a\"],\"edges\":[]}" }), storage);
+      const afterResult_pagerank_analysis = await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null }), storage);
+      const _pool = Object.assign({}, (afterResult_pagerank_analysis?.output ?? {}));
+      const _fixtureInput = { graph: "{\"nodes\":[\"a\"],\"edges\":[]}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(graphAnalysisHandler.listResults({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -373,16 +393,26 @@ describe('GraphAnalysis functional handler', () => {
     it('fixture "all_algorithms" -> ok', async () => {
       if (typeof graphAnalysisHandler.listAlgorithms !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null }), storage);
-      const result = await interpret(graphAnalysisHandler.listAlgorithms({ category: null }), storage);
+      const afterResult_pagerank_analysis = await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null }), storage);
+      const _pool = Object.assign({}, (afterResult_pagerank_analysis?.output ?? {}));
+      const _fixtureInput = { category: null } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(graphAnalysisHandler.listAlgorithms({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "centrality_only" -> ok', async () => {
       if (typeof graphAnalysisHandler.listAlgorithms !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null }), storage);
-      const result = await interpret(graphAnalysisHandler.listAlgorithms({ category: "centrality" }), storage);
+      const afterResult_pagerank_analysis = await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null }), storage);
+      const _pool = Object.assign({}, (afterResult_pagerank_analysis?.output ?? {}));
+      const _fixtureInput = { category: "centrality" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(graphAnalysisHandler.listAlgorithms({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -443,8 +473,13 @@ describe('GraphAnalysis functional handler', () => {
     it('fixture "clear_graph" -> ok', async () => {
       if (typeof graphAnalysisHandler.clearResults !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null }), storage);
-      const result = await interpret(graphAnalysisHandler.clearResults({ graph: "{\"nodes\":[\"a\"],\"edges\":[]}" }), storage);
+      const afterResult_pagerank_analysis = await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null }), storage);
+      const _pool = Object.assign({}, (afterResult_pagerank_analysis?.output ?? {}));
+      const _fixtureInput = { graph: "{\"nodes\":[\"a\"],\"edges\":[]}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(graphAnalysisHandler.clearResults({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

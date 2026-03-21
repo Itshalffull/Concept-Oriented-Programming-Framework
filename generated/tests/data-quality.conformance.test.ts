@@ -164,8 +164,13 @@ describe('DataQuality functional handler', () => {
     it('fixture "quarantine_item" -> ok', async () => {
       if (typeof dataQualityHandler.quarantine !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(dataQualityHandler.validate({ item: "{\"title\":\"Test Article\",\"body\":\"Full content here\"}", rulesetId: "article_rules" }), storage);
-      const result = await interpret(dataQualityHandler.quarantine({ itemId: "item-1", violations: "[{\"rule\":\"required\",\"field\":\"title\"}]" }), storage);
+      const afterResult_validate_ok = await interpret(dataQualityHandler.validate({ item: "{\"title\":\"Test Article\",\"body\":\"Full content here\"}", rulesetId: "article_rules" }), storage);
+      const _pool = Object.assign({}, (afterResult_validate_ok?.output ?? {}));
+      const _fixtureInput = { itemId: "item-1", violations: "[{\"rule\":\"required\",\"field\":\"title\"}]" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(dataQualityHandler.quarantine({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -226,8 +231,13 @@ describe('DataQuality functional handler', () => {
     it('fixture "release_quarantined" -> ok', async () => {
       if (typeof dataQualityHandler.release !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(dataQualityHandler.validate({ item: "{\"title\":\"Test Article\",\"body\":\"Full content here\"}", rulesetId: "article_rules" }), storage);
-      const result = await interpret(dataQualityHandler.release({ itemId: "item-1" }), storage);
+      const afterResult_validate_ok = await interpret(dataQualityHandler.validate({ item: "{\"title\":\"Test Article\",\"body\":\"Full content here\"}", rulesetId: "article_rules" }), storage);
+      const _pool = Object.assign({}, (afterResult_validate_ok?.output ?? {}));
+      const _fixtureInput = { itemId: "item-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(dataQualityHandler.release({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -296,8 +306,13 @@ describe('DataQuality functional handler', () => {
     it('fixture "profile_articles" -> ok', async () => {
       if (typeof dataQualityHandler.profile !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(dataQualityHandler.validate({ item: "{\"title\":\"Test Article\",\"body\":\"Full content here\"}", rulesetId: "article_rules" }), storage);
-      const result = await interpret(dataQualityHandler.profile({ datasetQuery: "SELECT * FROM articles" }), storage);
+      const afterResult_validate_ok = await interpret(dataQualityHandler.validate({ item: "{\"title\":\"Test Article\",\"body\":\"Full content here\"}", rulesetId: "article_rules" }), storage);
+      const _pool = Object.assign({}, (afterResult_validate_ok?.output ?? {}));
+      const _fixtureInput = { datasetQuery: "SELECT * FROM articles" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(dataQualityHandler.profile({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -358,8 +373,13 @@ describe('DataQuality functional handler', () => {
     it('fixture "reconcile_author" -> ok', async () => {
       if (typeof dataQualityHandler.reconcile !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(dataQualityHandler.validate({ item: "{\"title\":\"Test Article\",\"body\":\"Full content here\"}", rulesetId: "article_rules" }), storage);
-      const result = await interpret(dataQualityHandler.reconcile({ field: "author_name", knowledgeBase: "wikidata" }), storage);
+      const afterResult_validate_ok = await interpret(dataQualityHandler.validate({ item: "{\"title\":\"Test Article\",\"body\":\"Full content here\"}", rulesetId: "article_rules" }), storage);
+      const _pool = Object.assign({}, (afterResult_validate_ok?.output ?? {}));
+      const _fixtureInput = { field: "author_name", knowledgeBase: "wikidata" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(dataQualityHandler.reconcile({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

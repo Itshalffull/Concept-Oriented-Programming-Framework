@@ -155,8 +155,13 @@ describe('WidgetPropEntity functional handler', () => {
     it('fixture "find_dialog" -> ok', async () => {
       if (typeof widgetPropEntityHandler.findByWidget !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetPropEntityHandler.register({ widget: "dialog", name: "closeOnEscape", typeExpr: "Bool", defaultValue: "true" }), storage);
-      const result = await interpret(widgetPropEntityHandler.findByWidget({ widget: "dialog" }), storage);
+      const afterResult_register_close_escape = await interpret(widgetPropEntityHandler.register({ widget: "dialog", name: "closeOnEscape", typeExpr: "Bool", defaultValue: "true" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_close_escape?.output ?? {}));
+      const _fixtureInput = { widget: "dialog" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetPropEntityHandler.findByWidget({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('WidgetPropEntity functional handler', () => {
     it('fixture "trace_prop" -> ok', async () => {
       if (typeof widgetPropEntityHandler.traceToField !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetPropEntityHandler.register({ widget: "dialog", name: "closeOnEscape", typeExpr: "Bool", defaultValue: "true" }), storage);
-      const result = await interpret(widgetPropEntityHandler.traceToField({ prop: "widget-prop-entity-1" }), storage);
+      const afterResult_register_close_escape = await interpret(widgetPropEntityHandler.register({ widget: "dialog", name: "closeOnEscape", typeExpr: "Bool", defaultValue: "true" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_close_escape?.output ?? {}));
+      const _fixtureInput = { prop: "widget-prop-entity-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetPropEntityHandler.traceToField({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('WidgetPropEntity functional handler', () => {
     it('fixture "get_prop" -> ok', async () => {
       if (typeof widgetPropEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetPropEntityHandler.register({ widget: "dialog", name: "closeOnEscape", typeExpr: "Bool", defaultValue: "true" }), storage);
-      const result = await interpret(widgetPropEntityHandler.get({ prop: "widget-prop-entity-1" }), storage);
+      const afterResult_register_close_escape = await interpret(widgetPropEntityHandler.register({ widget: "dialog", name: "closeOnEscape", typeExpr: "Bool", defaultValue: "true" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_close_escape?.output ?? {}));
+      const _fixtureInput = { prop: "widget-prop-entity-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetPropEntityHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -163,8 +163,13 @@ describe('Rollout functional handler', () => {
     it('fixture "advance_active" -> ok', async () => {
       if (typeof rolloutHandler.advance !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] }), storage);
-      const result = await interpret(rolloutHandler.advance({ rollout: "ro-active-001" }), storage);
+      const afterResult_canary_rollout = await interpret(rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] }), storage);
+      const _pool = Object.assign({}, (afterResult_canary_rollout?.output ?? {}));
+      const _fixtureInput = { rollout: "ro-active-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(rolloutHandler.advance({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -233,16 +238,26 @@ describe('Rollout functional handler', () => {
     it('fixture "pause_active" -> ok', async () => {
       if (typeof rolloutHandler.pause !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] }), storage);
-      const result = await interpret(rolloutHandler.pause({ rollout: "ro-active-001", reason: "High error rate detected" }), storage);
+      const afterResult_canary_rollout = await interpret(rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] }), storage);
+      const _pool = Object.assign({}, (afterResult_canary_rollout?.output ?? {}));
+      const _fixtureInput = { rollout: "ro-active-001", reason: "High error rate detected" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(rolloutHandler.pause({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "pause_missing" -> ok', async () => {
       if (typeof rolloutHandler.pause !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] }), storage);
-      const result = await interpret(rolloutHandler.pause({ rollout: "ro-nonexistent", reason: "Manual pause" }), storage);
+      const afterResult_canary_rollout = await interpret(rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] }), storage);
+      const _pool = Object.assign({}, (afterResult_canary_rollout?.output ?? {}));
+      const _fixtureInput = { rollout: "ro-nonexistent", reason: "Manual pause" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(rolloutHandler.pause({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -303,16 +318,26 @@ describe('Rollout functional handler', () => {
     it('fixture "resume_paused" -> ok', async () => {
       if (typeof rolloutHandler.resume !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] }), storage);
-      const result = await interpret(rolloutHandler.resume({ rollout: "ro-paused-001" }), storage);
+      const afterResult_canary_rollout = await interpret(rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] }), storage);
+      const _pool = Object.assign({}, (afterResult_canary_rollout?.output ?? {}));
+      const _fixtureInput = { rollout: "ro-paused-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(rolloutHandler.resume({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "resume_missing" -> ok', async () => {
       if (typeof rolloutHandler.resume !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] }), storage);
-      const result = await interpret(rolloutHandler.resume({ rollout: "ro-nonexistent" }), storage);
+      const afterResult_canary_rollout = await interpret(rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] }), storage);
+      const _pool = Object.assign({}, (afterResult_canary_rollout?.output ?? {}));
+      const _fixtureInput = { rollout: "ro-nonexistent" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(rolloutHandler.resume({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -373,8 +398,13 @@ describe('Rollout functional handler', () => {
     it('fixture "abort_active" -> ok', async () => {
       if (typeof rolloutHandler.abort !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] }), storage);
-      const result = await interpret(rolloutHandler.abort({ rollout: "ro-active-001" }), storage);
+      const afterResult_canary_rollout = await interpret(rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] }), storage);
+      const _pool = Object.assign({}, (afterResult_canary_rollout?.output ?? {}));
+      const _fixtureInput = { rollout: "ro-active-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(rolloutHandler.abort({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -443,16 +473,26 @@ describe('Rollout functional handler', () => {
     it('fixture "status_existing" -> ok', async () => {
       if (typeof rolloutHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] }), storage);
-      const result = await interpret(rolloutHandler.status({ rollout: "ro-active-001" }), storage);
+      const afterResult_canary_rollout = await interpret(rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] }), storage);
+      const _pool = Object.assign({}, (afterResult_canary_rollout?.output ?? {}));
+      const _fixtureInput = { rollout: "ro-active-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(rolloutHandler.status({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "status_unknown" -> ok', async () => {
       if (typeof rolloutHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] }), storage);
-      const result = await interpret(rolloutHandler.status({ rollout: "ro-nonexistent" }), storage);
+      const afterResult_canary_rollout = await interpret(rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] }), storage);
+      const _pool = Object.assign({}, (afterResult_canary_rollout?.output ?? {}));
+      const _fixtureInput = { rollout: "ro-nonexistent" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(rolloutHandler.status({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

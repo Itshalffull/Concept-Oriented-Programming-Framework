@@ -155,8 +155,13 @@ describe('FileArtifact functional handler', () => {
     it('fixture "set_provenance" -> ok', async () => {
       if (typeof fileArtifactHandler.setProvenance !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(fileArtifactHandler.register({ node: "src/handler.ts", role: "source", language: "typescript" }), storage);
-      const result = await interpret(fileArtifactHandler.setProvenance({ artifact: "artifact-1", spec: "user.concept", generator: "clef-gen" }), storage);
+      const afterResult_register_source = await interpret(fileArtifactHandler.register({ node: "src/handler.ts", role: "source", language: "typescript" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_source?.output ?? {}));
+      const _fixtureInput = { artifact: "artifact-1", spec: "user.concept", generator: "clef-gen" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(fileArtifactHandler.setProvenance({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,16 +229,26 @@ describe('FileArtifact functional handler', () => {
     it('fixture "find_source" -> ok', async () => {
       if (typeof fileArtifactHandler.findByRole !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(fileArtifactHandler.register({ node: "src/handler.ts", role: "source", language: "typescript" }), storage);
-      const result = await interpret(fileArtifactHandler.findByRole({ role: "source" }), storage);
+      const afterResult_register_source = await interpret(fileArtifactHandler.register({ node: "src/handler.ts", role: "source", language: "typescript" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_source?.output ?? {}));
+      const _fixtureInput = { role: "source" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(fileArtifactHandler.findByRole({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_empty_role" -> ok', async () => {
       if (typeof fileArtifactHandler.findByRole !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(fileArtifactHandler.register({ node: "src/handler.ts", role: "source", language: "typescript" }), storage);
-      const result = await interpret(fileArtifactHandler.findByRole({ role: "" }), storage);
+      const afterResult_register_source = await interpret(fileArtifactHandler.register({ node: "src/handler.ts", role: "source", language: "typescript" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_source?.output ?? {}));
+      const _fixtureInput = { role: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(fileArtifactHandler.findByRole({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -294,8 +309,13 @@ describe('FileArtifact functional handler', () => {
     it('fixture "find_generated" -> ok', async () => {
       if (typeof fileArtifactHandler.findGeneratedFrom !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(fileArtifactHandler.register({ node: "src/handler.ts", role: "source", language: "typescript" }), storage);
-      const result = await interpret(fileArtifactHandler.findGeneratedFrom({ spec: "user.concept" }), storage);
+      const afterResult_register_source = await interpret(fileArtifactHandler.register({ node: "src/handler.ts", role: "source", language: "typescript" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_source?.output ?? {}));
+      const _fixtureInput = { spec: "user.concept" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(fileArtifactHandler.findGeneratedFrom({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -363,8 +383,13 @@ describe('FileArtifact functional handler', () => {
     it('fixture "get_artifact" -> ok', async () => {
       if (typeof fileArtifactHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(fileArtifactHandler.register({ node: "src/handler.ts", role: "source", language: "typescript" }), storage);
-      const result = await interpret(fileArtifactHandler.get({ artifact: "artifact-1" }), storage);
+      const afterResult_register_source = await interpret(fileArtifactHandler.register({ node: "src/handler.ts", role: "source", language: "typescript" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_source?.output ?? {}));
+      const _fixtureInput = { artifact: "artifact-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(fileArtifactHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

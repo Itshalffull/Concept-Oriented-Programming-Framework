@@ -62,8 +62,13 @@ describe('TargetProfile imperative handler', () => {
     it('fixture "valid_set_backend" -> ok', async () => {
       if (typeof targetProfileHandler.setBackendLanguages !== 'function') return;
       const storage = createInMemoryStorage();
-      await targetProfileHandler.create({ name: "fullstack-ts" }, storage);
-      const result = await targetProfileHandler.setBackendLanguages({ profileId: "profile-1", values: "[\"typescript\",\"rust\"]" }, storage);
+      const afterResult_valid_create = await targetProfileHandler.create({ name: "fullstack-ts" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
+      const _fixtureInput = { profileId: "profile-1", values: "[\"typescript\",\"rust\"]" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await targetProfileHandler.setBackendLanguages({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -89,8 +94,13 @@ describe('TargetProfile imperative handler', () => {
     it('fixture "valid_set_frontend" -> ok', async () => {
       if (typeof targetProfileHandler.setFrontendFrameworks !== 'function') return;
       const storage = createInMemoryStorage();
-      await targetProfileHandler.create({ name: "fullstack-ts" }, storage);
-      const result = await targetProfileHandler.setFrontendFrameworks({ profileId: "profile-1", values: "[\"react\",\"svelte\"]" }, storage);
+      const afterResult_valid_create = await targetProfileHandler.create({ name: "fullstack-ts" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
+      const _fixtureInput = { profileId: "profile-1", values: "[\"react\",\"svelte\"]" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await targetProfileHandler.setFrontendFrameworks({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -116,8 +126,13 @@ describe('TargetProfile imperative handler', () => {
     it('fixture "valid_set_api" -> ok', async () => {
       if (typeof targetProfileHandler.setApiInterfaces !== 'function') return;
       const storage = createInMemoryStorage();
-      await targetProfileHandler.create({ name: "fullstack-ts" }, storage);
-      const result = await targetProfileHandler.setApiInterfaces({ profileId: "profile-1", values: "[\"rest\",\"graphql\"]" }, storage);
+      const afterResult_valid_create = await targetProfileHandler.create({ name: "fullstack-ts" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
+      const _fixtureInput = { profileId: "profile-1", values: "[\"rest\",\"graphql\"]" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await targetProfileHandler.setApiInterfaces({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -143,8 +158,13 @@ describe('TargetProfile imperative handler', () => {
     it('fixture "valid_set_sdk" -> ok', async () => {
       if (typeof targetProfileHandler.setSdkLanguages !== 'function') return;
       const storage = createInMemoryStorage();
-      await targetProfileHandler.create({ name: "fullstack-ts" }, storage);
-      const result = await targetProfileHandler.setSdkLanguages({ profileId: "profile-1", values: "[\"typescript\",\"python\"]" }, storage);
+      const afterResult_valid_create = await targetProfileHandler.create({ name: "fullstack-ts" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
+      const _fixtureInput = { profileId: "profile-1", values: "[\"typescript\",\"python\"]" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await targetProfileHandler.setSdkLanguages({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -170,8 +190,13 @@ describe('TargetProfile imperative handler', () => {
     it('fixture "valid_set_deploy" -> ok', async () => {
       if (typeof targetProfileHandler.setDeployTargets !== 'function') return;
       const storage = createInMemoryStorage();
-      await targetProfileHandler.create({ name: "fullstack-ts" }, storage);
-      const result = await targetProfileHandler.setDeployTargets({ profileId: "profile-1", values: "[\"vercel\",\"lambda\"]" }, storage);
+      const afterResult_valid_create = await targetProfileHandler.create({ name: "fullstack-ts" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
+      const _fixtureInput = { profileId: "profile-1", values: "[\"vercel\",\"lambda\"]" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await targetProfileHandler.setDeployTargets({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -197,8 +222,13 @@ describe('TargetProfile imperative handler', () => {
     it('fixture "valid_set_storage" -> ok', async () => {
       if (typeof targetProfileHandler.setStorageAdapters !== 'function') return;
       const storage = createInMemoryStorage();
-      await targetProfileHandler.create({ name: "fullstack-ts" }, storage);
-      const result = await targetProfileHandler.setStorageAdapters({ profileId: "profile-1", values: "[\"postgres\",\"memory\"]" }, storage);
+      const afterResult_valid_create = await targetProfileHandler.create({ name: "fullstack-ts" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
+      const _fixtureInput = { profileId: "profile-1", values: "[\"postgres\",\"memory\"]" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await targetProfileHandler.setStorageAdapters({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +254,13 @@ describe('TargetProfile imperative handler', () => {
     it('fixture "valid_set_transport" -> ok', async () => {
       if (typeof targetProfileHandler.setTransportAdapters !== 'function') return;
       const storage = createInMemoryStorage();
-      await targetProfileHandler.create({ name: "fullstack-ts" }, storage);
-      const result = await targetProfileHandler.setTransportAdapters({ profileId: "profile-1", values: "[\"http\",\"ws\"]" }, storage);
+      const afterResult_valid_create = await targetProfileHandler.create({ name: "fullstack-ts" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
+      const _fixtureInput = { profileId: "profile-1", values: "[\"http\",\"ws\"]" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await targetProfileHandler.setTransportAdapters({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -277,8 +312,13 @@ describe('TargetProfile imperative handler', () => {
     it('fixture "valid_derive" -> ok', async () => {
       if (typeof targetProfileHandler.deriveModules !== 'function') return;
       const storage = createInMemoryStorage();
-      await targetProfileHandler.create({ name: "fullstack-ts" }, storage);
-      const result = await targetProfileHandler.deriveModules({ profileId: "profile-1" }, storage);
+      const afterResult_valid_create = await targetProfileHandler.create({ name: "fullstack-ts" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
+      const _fixtureInput = { profileId: "profile-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await targetProfileHandler.deriveModules({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -304,8 +344,13 @@ describe('TargetProfile imperative handler', () => {
     it('fixture "list_all_options" -> ok', async () => {
       if (typeof targetProfileHandler.listOptions !== 'function') return;
       const storage = createInMemoryStorage();
-      await targetProfileHandler.create({ name: "fullstack-ts" }, storage);
-      const result = await targetProfileHandler.listOptions({  }, storage);
+      const afterResult_valid_create = await targetProfileHandler.create({ name: "fullstack-ts" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await targetProfileHandler.listOptions({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 

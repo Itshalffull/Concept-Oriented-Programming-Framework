@@ -162,8 +162,13 @@ describe('WidgetStateEntity functional handler', () => {
     it('fixture "find_dialog" -> ok', async () => {
       if (typeof widgetStateEntityHandler.findByWidget !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "closed", initial: "true" }), storage);
-      const result = await interpret(widgetStateEntityHandler.findByWidget({ widget: "dialog" }), storage);
+      const afterResult_register_closed = await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "closed", initial: "true" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_closed?.output ?? {}));
+      const _fixtureInput = { widget: "dialog" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetStateEntityHandler.findByWidget({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -231,16 +236,26 @@ describe('WidgetStateEntity functional handler', () => {
     it('fixture "reachable_valid" -> ok', async () => {
       if (typeof widgetStateEntityHandler.reachableFrom !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "closed", initial: "true" }), storage);
-      const result = await interpret(widgetStateEntityHandler.reachableFrom({ widgetState: "widget-state-entity-1" }), storage);
+      const afterResult_register_closed = await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "closed", initial: "true" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_closed?.output ?? {}));
+      const _fixtureInput = { widgetState: "widget-state-entity-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetStateEntityHandler.reachableFrom({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "reachable_missing" -> ok', async () => {
       if (typeof widgetStateEntityHandler.reachableFrom !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "closed", initial: "true" }), storage);
-      const result = await interpret(widgetStateEntityHandler.reachableFrom({ widgetState: "nonexistent-id" }), storage);
+      const afterResult_register_closed = await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "closed", initial: "true" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_closed?.output ?? {}));
+      const _fixtureInput = { widgetState: "nonexistent-id" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetStateEntityHandler.reachableFrom({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -301,16 +316,26 @@ describe('WidgetStateEntity functional handler', () => {
     it('fixture "unreachable_dialog" -> ok', async () => {
       if (typeof widgetStateEntityHandler.unreachableStates !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "closed", initial: "true" }), storage);
-      const result = await interpret(widgetStateEntityHandler.unreachableStates({ widget: "dialog" }), storage);
+      const afterResult_register_closed = await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "closed", initial: "true" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_closed?.output ?? {}));
+      const _fixtureInput = { widget: "dialog" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetStateEntityHandler.unreachableStates({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "unreachable_empty" -> ok', async () => {
       if (typeof widgetStateEntityHandler.unreachableStates !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "closed", initial: "true" }), storage);
-      const result = await interpret(widgetStateEntityHandler.unreachableStates({ widget: "" }), storage);
+      const afterResult_register_closed = await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "closed", initial: "true" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_closed?.output ?? {}));
+      const _fixtureInput = { widget: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetStateEntityHandler.unreachableStates({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -371,8 +396,13 @@ describe('WidgetStateEntity functional handler', () => {
     it('fixture "trace_open_event" -> ok', async () => {
       if (typeof widgetStateEntityHandler.traceEvent !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "closed", initial: "true" }), storage);
-      const result = await interpret(widgetStateEntityHandler.traceEvent({ widget: "dialog", event: "open" }), storage);
+      const afterResult_register_closed = await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "closed", initial: "true" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_closed?.output ?? {}));
+      const _fixtureInput = { widget: "dialog", event: "open" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetStateEntityHandler.traceEvent({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -440,8 +470,13 @@ describe('WidgetStateEntity functional handler', () => {
     it('fixture "get_valid" -> ok', async () => {
       if (typeof widgetStateEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "closed", initial: "true" }), storage);
-      const result = await interpret(widgetStateEntityHandler.get({ widgetState: "widget-state-entity-1" }), storage);
+      const afterResult_register_closed = await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "closed", initial: "true" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_closed?.output ?? {}));
+      const _fixtureInput = { widgetState: "widget-state-entity-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetStateEntityHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

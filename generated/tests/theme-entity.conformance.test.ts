@@ -155,8 +155,13 @@ describe('ThemeEntity functional handler', () => {
     it('fixture "get_light" -> ok', async () => {
       if (typeof themeEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
-      const result = await interpret(themeEntityHandler.get({ name: "light" }), storage);
+      const afterResult_register_light = await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_light?.output ?? {}));
+      const _fixtureInput = { name: "light" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(themeEntityHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('ThemeEntity functional handler', () => {
     it('fixture "resolve_primary" -> ok', async () => {
       if (typeof themeEntityHandler.resolveToken !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
-      const result = await interpret(themeEntityHandler.resolveToken({ theme: "theme-entity-1", tokenPath: "palette.primary" }), storage);
+      const afterResult_register_light = await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_light?.output ?? {}));
+      const _fixtureInput = { theme: "theme-entity-1", tokenPath: "palette.primary" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(themeEntityHandler.resolveToken({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('ThemeEntity functional handler', () => {
     it('fixture "audit_theme" -> ok', async () => {
       if (typeof themeEntityHandler.contrastAudit !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
-      const result = await interpret(themeEntityHandler.contrastAudit({ theme: "theme-entity-1" }), storage);
+      const afterResult_register_light = await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_light?.output ?? {}));
+      const _fixtureInput = { theme: "theme-entity-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(themeEntityHandler.contrastAudit({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -430,16 +445,26 @@ describe('ThemeEntity functional handler', () => {
     it('fixture "affected_primary" -> ok', async () => {
       if (typeof themeEntityHandler.affectedWidgets !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
-      const result = await interpret(themeEntityHandler.affectedWidgets({ theme: "theme-entity-1", changedToken: "color.primary" }), storage);
+      const afterResult_register_light = await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_light?.output ?? {}));
+      const _fixtureInput = { theme: "theme-entity-1", changedToken: "color.primary" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(themeEntityHandler.affectedWidgets({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "affected_missing" -> ok', async () => {
       if (typeof themeEntityHandler.affectedWidgets !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
-      const result = await interpret(themeEntityHandler.affectedWidgets({ theme: "nonexistent", changedToken: "x" }), storage);
+      const afterResult_register_light = await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_light?.output ?? {}));
+      const _fixtureInput = { theme: "nonexistent", changedToken: "x" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(themeEntityHandler.affectedWidgets({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -500,16 +525,26 @@ describe('ThemeEntity functional handler', () => {
     it('fixture "outputs_theme" -> ok', async () => {
       if (typeof themeEntityHandler.generatedOutputs !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
-      const result = await interpret(themeEntityHandler.generatedOutputs({ theme: "theme-entity-1" }), storage);
+      const afterResult_register_light = await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_light?.output ?? {}));
+      const _fixtureInput = { theme: "theme-entity-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(themeEntityHandler.generatedOutputs({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "outputs_missing" -> ok', async () => {
       if (typeof themeEntityHandler.generatedOutputs !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
-      const result = await interpret(themeEntityHandler.generatedOutputs({ theme: "nonexistent" }), storage);
+      const afterResult_register_light = await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_light?.output ?? {}));
+      const _fixtureInput = { theme: "nonexistent" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(themeEntityHandler.generatedOutputs({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

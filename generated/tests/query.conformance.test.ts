@@ -162,8 +162,13 @@ describe('Query functional handler', () => {
     it('fixture "execute_parsed" -> ok', async () => {
       if (typeof queryHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(queryHandler.parse({ query: "q-001", expression: "status = 'active'" }), storage);
-      const result = await interpret(queryHandler.execute({ query: "q-001" }), storage);
+      const afterResult_parse_status_filter = await interpret(queryHandler.parse({ query: "q-001", expression: "status = 'active'" }), storage);
+      const _pool = Object.assign({}, (afterResult_parse_status_filter?.output ?? {}));
+      const _fixtureInput = { query: "q-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(queryHandler.execute({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -231,8 +236,13 @@ describe('Query functional handler', () => {
     it('fixture "subscribe_parsed" -> ok', async () => {
       if (typeof queryHandler.subscribe !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(queryHandler.parse({ query: "q-001", expression: "status = 'active'" }), storage);
-      const result = await interpret(queryHandler.subscribe({ query: "q-001" }), storage);
+      const afterResult_parse_status_filter = await interpret(queryHandler.parse({ query: "q-001", expression: "status = 'active'" }), storage);
+      const _pool = Object.assign({}, (afterResult_parse_status_filter?.output ?? {}));
+      const _fixtureInput = { query: "q-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(queryHandler.subscribe({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -300,8 +310,13 @@ describe('Query functional handler', () => {
     it('fixture "add_status_filter" -> ok', async () => {
       if (typeof queryHandler.addFilter !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(queryHandler.parse({ query: "q-001", expression: "status = 'active'" }), storage);
-      const result = await interpret(queryHandler.addFilter({ query: "q-001", filter: "status = 'active'" }), storage);
+      const afterResult_parse_status_filter = await interpret(queryHandler.parse({ query: "q-001", expression: "status = 'active'" }), storage);
+      const _pool = Object.assign({}, (afterResult_parse_status_filter?.output ?? {}));
+      const _fixtureInput = { query: "q-001", filter: "status = 'active'" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(queryHandler.addFilter({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -369,8 +384,13 @@ describe('Query functional handler', () => {
     it('fixture "add_date_sort" -> ok', async () => {
       if (typeof queryHandler.addSort !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(queryHandler.parse({ query: "q-001", expression: "status = 'active'" }), storage);
-      const result = await interpret(queryHandler.addSort({ query: "q-001", sort: "createdAt DESC" }), storage);
+      const afterResult_parse_status_filter = await interpret(queryHandler.parse({ query: "q-001", expression: "status = 'active'" }), storage);
+      const _pool = Object.assign({}, (afterResult_parse_status_filter?.output ?? {}));
+      const _fixtureInput = { query: "q-001", sort: "createdAt DESC" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(queryHandler.addSort({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -438,8 +458,13 @@ describe('Query functional handler', () => {
     it('fixture "set_org_scope" -> ok', async () => {
       if (typeof queryHandler.setScope !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(queryHandler.parse({ query: "q-001", expression: "status = 'active'" }), storage);
-      const result = await interpret(queryHandler.setScope({ query: "q-001", scope: "organization/acme" }), storage);
+      const afterResult_parse_status_filter = await interpret(queryHandler.parse({ query: "q-001", expression: "status = 'active'" }), storage);
+      const _pool = Object.assign({}, (afterResult_parse_status_filter?.output ?? {}));
+      const _fixtureInput = { query: "q-001", scope: "organization/acme" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(queryHandler.setScope({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

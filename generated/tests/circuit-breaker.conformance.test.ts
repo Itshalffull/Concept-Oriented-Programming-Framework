@@ -156,8 +156,13 @@ describe('CircuitBreaker functional handler', () => {
     it('fixture "healthy_endpoint" -> ok', async () => {
       if (typeof circuitBreakerHandler.check !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(circuitBreakerHandler.configure({ endpoint: "payments-api", failureThreshold: "5", successThreshold: "2", resetTimeoutMs: "30000" }), storage);
-      const result = await interpret(circuitBreakerHandler.check({ endpoint: "payments-api" }), storage);
+      const afterResult_api_breaker = await interpret(circuitBreakerHandler.configure({ endpoint: "payments-api", failureThreshold: "5", successThreshold: "2", resetTimeoutMs: "30000" }), storage);
+      const _pool = Object.assign({}, (afterResult_api_breaker?.output ?? {}));
+      const _fixtureInput = { endpoint: "payments-api" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(circuitBreakerHandler.check({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -226,8 +231,13 @@ describe('CircuitBreaker functional handler', () => {
     it('fixture "success_recorded" -> ok', async () => {
       if (typeof circuitBreakerHandler.recordSuccess !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(circuitBreakerHandler.configure({ endpoint: "payments-api", failureThreshold: "5", successThreshold: "2", resetTimeoutMs: "30000" }), storage);
-      const result = await interpret(circuitBreakerHandler.recordSuccess({ endpoint: "payments-api" }), storage);
+      const afterResult_api_breaker = await interpret(circuitBreakerHandler.configure({ endpoint: "payments-api", failureThreshold: "5", successThreshold: "2", resetTimeoutMs: "30000" }), storage);
+      const _pool = Object.assign({}, (afterResult_api_breaker?.output ?? {}));
+      const _fixtureInput = { endpoint: "payments-api" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(circuitBreakerHandler.recordSuccess({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -296,8 +306,13 @@ describe('CircuitBreaker functional handler', () => {
     it('fixture "failure_recorded" -> ok', async () => {
       if (typeof circuitBreakerHandler.recordFailure !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(circuitBreakerHandler.configure({ endpoint: "payments-api", failureThreshold: "5", successThreshold: "2", resetTimeoutMs: "30000" }), storage);
-      const result = await interpret(circuitBreakerHandler.recordFailure({ endpoint: "payments-api" }), storage);
+      const afterResult_api_breaker = await interpret(circuitBreakerHandler.configure({ endpoint: "payments-api", failureThreshold: "5", successThreshold: "2", resetTimeoutMs: "30000" }), storage);
+      const _pool = Object.assign({}, (afterResult_api_breaker?.output ?? {}));
+      const _fixtureInput = { endpoint: "payments-api" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(circuitBreakerHandler.recordFailure({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -366,8 +381,13 @@ describe('CircuitBreaker functional handler', () => {
     it('fixture "reset_breaker" -> ok', async () => {
       if (typeof circuitBreakerHandler.reset !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(circuitBreakerHandler.configure({ endpoint: "payments-api", failureThreshold: "5", successThreshold: "2", resetTimeoutMs: "30000" }), storage);
-      const result = await interpret(circuitBreakerHandler.reset({ endpoint: "payments-api" }), storage);
+      const afterResult_api_breaker = await interpret(circuitBreakerHandler.configure({ endpoint: "payments-api", failureThreshold: "5", successThreshold: "2", resetTimeoutMs: "30000" }), storage);
+      const _pool = Object.assign({}, (afterResult_api_breaker?.output ?? {}));
+      const _fixtureInput = { endpoint: "payments-api" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(circuitBreakerHandler.reset({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -436,8 +456,13 @@ describe('CircuitBreaker functional handler', () => {
     it('fixture "get_status" -> ok', async () => {
       if (typeof circuitBreakerHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(circuitBreakerHandler.configure({ endpoint: "payments-api", failureThreshold: "5", successThreshold: "2", resetTimeoutMs: "30000" }), storage);
-      const result = await interpret(circuitBreakerHandler.get({ endpoint: "payments-api" }), storage);
+      const afterResult_api_breaker = await interpret(circuitBreakerHandler.configure({ endpoint: "payments-api", failureThreshold: "5", successThreshold: "2", resetTimeoutMs: "30000" }), storage);
+      const _pool = Object.assign({}, (afterResult_api_breaker?.output ?? {}));
+      const _fixtureInput = { endpoint: "payments-api" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(circuitBreakerHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

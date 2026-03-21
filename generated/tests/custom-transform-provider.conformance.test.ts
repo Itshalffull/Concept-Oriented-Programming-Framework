@@ -148,24 +148,39 @@ describe('CustomTransformProvider functional handler', () => {
     it('fixture "replace_focus_strategy" -> ok', async () => {
       if (typeof customTransformProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(customTransformProviderHandler.register({  }), storage);
-      const result = await interpret(customTransformProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"focus\",\"strategy\":\"roving\"}]}", spec: "{\"match\":{\"tag\":\"focus\",\"strategy\":\"roving\"},\"replace\":{\"strategy\":\"trap\"}}" }), storage);
+      const afterResult_valid = await interpret(customTransformProviderHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { program: "{\"instructions\":[{\"tag\":\"focus\",\"strategy\":\"roving\"}]}", spec: "{\"match\":{\"tag\":\"focus\",\"strategy\":\"roving\"},\"replace\":{\"strategy\":\"trap\"}}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(customTransformProviderHandler.apply({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "no_matches" -> ok', async () => {
       if (typeof customTransformProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(customTransformProviderHandler.register({  }), storage);
-      const result = await interpret(customTransformProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"match\":{\"tag\":\"nonexistent\"},\"replace\":{}}" }), storage);
+      const afterResult_valid = await interpret(customTransformProviderHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"match\":{\"tag\":\"nonexistent\"},\"replace\":{}}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(customTransformProviderHandler.apply({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_program_json" -> error', async () => {
       if (typeof customTransformProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(customTransformProviderHandler.register({  }), storage);
-      const result = await interpret(customTransformProviderHandler.apply({ program: "bad-json", spec: "{}" }), storage);
+      const afterResult_valid = await interpret(customTransformProviderHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { program: "bad-json", spec: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(customTransformProviderHandler.apply({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 

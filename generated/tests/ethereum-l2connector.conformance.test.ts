@@ -163,16 +163,26 @@ describe('EthereumL2Connector functional handler', () => {
     it('fixture "write_transfer" -> ok', async () => {
       if (typeof ethereumL2ConnectorHandler.write !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(ethereumL2ConnectorHandler.read({ connector: "eth-l2-1", query: "{\"method\":\"getOwner\"}" }), storage);
-      const result = await interpret(ethereumL2ConnectorHandler.write({ connector: "eth-l2-1", data: "{\"method\":\"transfer\",\"args\":[\"0xabc\",100]}" }), storage);
+      const afterResult_read_owner = await interpret(ethereumL2ConnectorHandler.read({ connector: "eth-l2-1", query: "{\"method\":\"getOwner\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_read_owner?.output ?? {}));
+      const _fixtureInput = { connector: "eth-l2-1", data: "{\"method\":\"transfer\",\"args\":[\"0xabc\",100]}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(ethereumL2ConnectorHandler.write({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "write_missing" -> notfound', async () => {
       if (typeof ethereumL2ConnectorHandler.write !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(ethereumL2ConnectorHandler.read({ connector: "eth-l2-1", query: "{\"method\":\"getOwner\"}" }), storage);
-      const result = await interpret(ethereumL2ConnectorHandler.write({ connector: "eth-l2-missing", data: "{}" }), storage);
+      const afterResult_read_owner = await interpret(ethereumL2ConnectorHandler.read({ connector: "eth-l2-1", query: "{\"method\":\"getOwner\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_read_owner?.output ?? {}));
+      const _fixtureInput = { connector: "eth-l2-missing", data: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(ethereumL2ConnectorHandler.write({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
@@ -241,8 +251,13 @@ describe('EthereumL2Connector functional handler', () => {
     it('fixture "test_connected" -> ok', async () => {
       if (typeof ethereumL2ConnectorHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(ethereumL2ConnectorHandler.read({ connector: "eth-l2-1", query: "{\"method\":\"getOwner\"}" }), storage);
-      const result = await interpret(ethereumL2ConnectorHandler.test({ connector: "eth-l2-1" }), storage);
+      const afterResult_read_owner = await interpret(ethereumL2ConnectorHandler.read({ connector: "eth-l2-1", query: "{\"method\":\"getOwner\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_read_owner?.output ?? {}));
+      const _fixtureInput = { connector: "eth-l2-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(ethereumL2ConnectorHandler.test({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -311,8 +326,13 @@ describe('EthereumL2Connector functional handler', () => {
     it('fixture "discover_existing" -> ok', async () => {
       if (typeof ethereumL2ConnectorHandler.discover !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(ethereumL2ConnectorHandler.read({ connector: "eth-l2-1", query: "{\"method\":\"getOwner\"}" }), storage);
-      const result = await interpret(ethereumL2ConnectorHandler.discover({ connector: "eth-l2-1" }), storage);
+      const afterResult_read_owner = await interpret(ethereumL2ConnectorHandler.read({ connector: "eth-l2-1", query: "{\"method\":\"getOwner\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_read_owner?.output ?? {}));
+      const _fixtureInput = { connector: "eth-l2-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(ethereumL2ConnectorHandler.discover({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

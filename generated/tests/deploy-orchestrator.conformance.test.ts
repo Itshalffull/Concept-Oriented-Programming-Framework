@@ -187,8 +187,13 @@ describe('DeployOrchestrator functional handler', () => {
     it('fixture "deploy_all_production" -> ok', async () => {
       if (typeof deployOrchestratorHandler.deployAll !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(deployOrchestratorHandler.deploy({ manifestPath: "./clef-web/deploy/vercel.deploy.yaml", environment: "production" }), storage);
-      const result = await interpret(deployOrchestratorHandler.deployAll({ projectRoot: "./", environment: "production" }), storage);
+      const afterResult_production_deploy = await interpret(deployOrchestratorHandler.deploy({ manifestPath: "./clef-web/deploy/vercel.deploy.yaml", environment: "production" }), storage);
+      const _pool = Object.assign({}, (afterResult_production_deploy?.output ?? {}));
+      const _fixtureInput = { projectRoot: "./", environment: "production" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(deployOrchestratorHandler.deployAll({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -257,8 +262,13 @@ describe('DeployOrchestrator functional handler', () => {
     it('fixture "check_status" -> ok', async () => {
       if (typeof deployOrchestratorHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(deployOrchestratorHandler.deploy({ manifestPath: "./clef-web/deploy/vercel.deploy.yaml", environment: "production" }), storage);
-      const result = await interpret(deployOrchestratorHandler.status({ run: "run-1710000000-abc123" }), storage);
+      const afterResult_production_deploy = await interpret(deployOrchestratorHandler.deploy({ manifestPath: "./clef-web/deploy/vercel.deploy.yaml", environment: "production" }), storage);
+      const _pool = Object.assign({}, (afterResult_production_deploy?.output ?? {}));
+      const _fixtureInput = { run: "run-1710000000-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(deployOrchestratorHandler.status({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

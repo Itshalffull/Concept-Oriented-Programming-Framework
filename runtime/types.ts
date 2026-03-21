@@ -230,11 +230,19 @@ export interface ActionDecl {
 
 export interface FixtureDecl {
   name: string;
+  /** Input values — literals or output references ({ type: 'ref', fixture: string, field: string }) */
   input: Record<string, unknown>;
   /** Expected variant, e.g. 'ok' or 'error'. Defaults to 'ok'. */
   expectedVariant: string;
   /** Fixture names that must run first to seed storage (e.g. create before get). */
   after?: string[];
+}
+
+/** A reference to an output field from a previously-run fixture */
+export interface FixtureOutputRef {
+  type: 'ref';
+  fixture: string;
+  field: string;
 }
 
 export interface ParamDecl {

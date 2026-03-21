@@ -70,8 +70,13 @@ describe('KernelBoot imperative handler', () => {
     it('fixture "valid_status" -> ok', async () => {
       if (typeof kernelBootHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
-      await kernelBootHandler.boot({ projectRoot: "./", manifestPath: "deploy.yaml" }, storage);
-      const result = await kernelBootHandler.status({ kernel: "kernel-20260301-abc123" }, storage);
+      const afterResult_valid_boot = await kernelBootHandler.boot({ projectRoot: "./", manifestPath: "deploy.yaml" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_boot?.output ?? {}));
+      const _fixtureInput = { kernel: "kernel-20260301-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await kernelBootHandler.status({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -98,8 +103,13 @@ describe('KernelBoot imperative handler', () => {
     it('fixture "valid_shutdown" -> ok', async () => {
       if (typeof kernelBootHandler.shutdown !== 'function') return;
       const storage = createInMemoryStorage();
-      await kernelBootHandler.boot({ projectRoot: "./", manifestPath: "deploy.yaml" }, storage);
-      const result = await kernelBootHandler.shutdown({ kernel: "kernel-20260301-abc123" }, storage);
+      const afterResult_valid_boot = await kernelBootHandler.boot({ projectRoot: "./", manifestPath: "deploy.yaml" }, storage);
+      const _pool = Object.assign({}, (afterResult_valid_boot?.output ?? {}));
+      const _fixtureInput = { kernel: "kernel-20260301-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await kernelBootHandler.shutdown({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 

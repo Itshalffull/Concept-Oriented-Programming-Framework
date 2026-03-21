@@ -148,8 +148,13 @@ describe('GridLayout functional handler', () => {
     it('fixture "valid_apply" -> ok', async () => {
       if (typeof gridLayoutHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(gridLayoutHandler.register({  }), storage);
-      const result = await interpret(gridLayoutHandler.apply({ canvas: "c1", items: ["a","b","c","d"] }), storage);
+      const afterResult_valid = await interpret(gridLayoutHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { canvas: "c1", items: ["a","b","c","d"] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(gridLayoutHandler.apply({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

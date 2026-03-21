@@ -169,8 +169,13 @@ describe('ProjectInit functional handler', () => {
     it('fixture "valid_write_manifest" -> ok', async () => {
       if (typeof projectInitHandler.writeManifest !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }), storage);
-      const result = await interpret(projectInitHandler.writeManifest({ init: "init-1" }), storage);
+      const afterResult_valid_create = await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
+      const _fixtureInput = { init: "init-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(projectInitHandler.writeManifest({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -238,8 +243,13 @@ describe('ProjectInit functional handler', () => {
     it('fixture "valid_write_interfaces" -> ok', async () => {
       if (typeof projectInitHandler.writeInterfaceManifests !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }), storage);
-      const result = await interpret(projectInitHandler.writeInterfaceManifests({ init: "init-1" }), storage);
+      const afterResult_valid_create = await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
+      const _fixtureInput = { init: "init-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(projectInitHandler.writeInterfaceManifests({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -307,8 +317,13 @@ describe('ProjectInit functional handler', () => {
     it('fixture "valid_write_deploy" -> ok', async () => {
       if (typeof projectInitHandler.writeDeployManifests !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }), storage);
-      const result = await interpret(projectInitHandler.writeDeployManifests({ init: "init-1" }), storage);
+      const afterResult_valid_create = await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
+      const _fixtureInput = { init: "init-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(projectInitHandler.writeDeployManifests({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -376,8 +391,13 @@ describe('ProjectInit functional handler', () => {
     it('fixture "valid_write_derived" -> ok', async () => {
       if (typeof projectInitHandler.writeDerivedConcepts !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }), storage);
-      const result = await interpret(projectInitHandler.writeDerivedConcepts({ init: "init-1" }), storage);
+      const afterResult_valid_create = await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
+      const _fixtureInput = { init: "init-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(projectInitHandler.writeDerivedConcepts({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -445,8 +465,13 @@ describe('ProjectInit functional handler', () => {
     it('fixture "valid_trigger_install" -> ok', async () => {
       if (typeof projectInitHandler.triggerInstall !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }), storage);
-      const result = await interpret(projectInitHandler.triggerInstall({ init: "init-1" }), storage);
+      const afterResult_valid_create = await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
+      const _fixtureInput = { init: "init-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(projectInitHandler.triggerInstall({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -514,8 +539,13 @@ describe('ProjectInit functional handler', () => {
     it('fixture "valid_trigger_generate" -> ok', async () => {
       if (typeof projectInitHandler.triggerGenerate !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }), storage);
-      const result = await interpret(projectInitHandler.triggerGenerate({ init: "init-1" }), storage);
+      const afterResult_valid_create = await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
+      const _fixtureInput = { init: "init-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(projectInitHandler.triggerGenerate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -583,8 +613,13 @@ describe('ProjectInit functional handler', () => {
     it('fixture "valid_complete" -> ok', async () => {
       if (typeof projectInitHandler.complete !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }), storage);
-      const result = await interpret(projectInitHandler.complete({ init: "init-1" }), storage);
+      const afterResult_valid_create = await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
+      const _fixtureInput = { init: "init-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(projectInitHandler.complete({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

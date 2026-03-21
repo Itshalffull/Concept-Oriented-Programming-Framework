@@ -163,16 +163,26 @@ describe('Navigator functional handler', () => {
     it('fixture "valid_go" -> ok', async () => {
       if (typeof navigatorHandler.go !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(navigatorHandler.register({ name: "detail", targetConcept: "Article", targetView: "detail", paramsSchema: "", meta: "" }), storage);
-      const result = await interpret(navigatorHandler.go({ params: "{\"id\":\"article-42\"}" }), storage);
+      const afterResult_valid_register = await interpret(navigatorHandler.register({ name: "detail", targetConcept: "Article", targetView: "detail", paramsSchema: "", meta: "" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
+      const _fixtureInput = { params: "{\"id\":\"article-42\"}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(navigatorHandler.go({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "no_params" -> ok', async () => {
       if (typeof navigatorHandler.go !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(navigatorHandler.register({ name: "detail", targetConcept: "Article", targetView: "detail", paramsSchema: "", meta: "" }), storage);
-      const result = await interpret(navigatorHandler.go({ params: "" }), storage);
+      const afterResult_valid_register = await interpret(navigatorHandler.register({ name: "detail", targetConcept: "Article", targetView: "detail", paramsSchema: "", meta: "" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
+      const _fixtureInput = { params: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(navigatorHandler.go({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -241,8 +251,13 @@ describe('Navigator functional handler', () => {
     it('fixture "valid_back" -> ok', async () => {
       if (typeof navigatorHandler.back !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(navigatorHandler.register({ name: "detail", targetConcept: "Article", targetView: "detail", paramsSchema: "", meta: "" }), storage);
-      const result = await interpret(navigatorHandler.back({  }), storage);
+      const afterResult_valid_register = await interpret(navigatorHandler.register({ name: "detail", targetConcept: "Article", targetView: "detail", paramsSchema: "", meta: "" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(navigatorHandler.back({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -311,8 +326,13 @@ describe('Navigator functional handler', () => {
     it('fixture "valid_forward" -> ok', async () => {
       if (typeof navigatorHandler.forward !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(navigatorHandler.register({ name: "detail", targetConcept: "Article", targetView: "detail", paramsSchema: "", meta: "" }), storage);
-      const result = await interpret(navigatorHandler.forward({  }), storage);
+      const afterResult_valid_register = await interpret(navigatorHandler.register({ name: "detail", targetConcept: "Article", targetView: "detail", paramsSchema: "", meta: "" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(navigatorHandler.forward({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -381,8 +401,13 @@ describe('Navigator functional handler', () => {
     it('fixture "valid_replace" -> ok', async () => {
       if (typeof navigatorHandler.replace !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(navigatorHandler.register({ name: "detail", targetConcept: "Article", targetView: "detail", paramsSchema: "", meta: "" }), storage);
-      const result = await interpret(navigatorHandler.replace({ params: "{\"id\":\"article-99\"}" }), storage);
+      const afterResult_valid_register = await interpret(navigatorHandler.register({ name: "detail", targetConcept: "Article", targetView: "detail", paramsSchema: "", meta: "" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
+      const _fixtureInput = { params: "{\"id\":\"article-99\"}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(navigatorHandler.replace({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -451,8 +476,13 @@ describe('Navigator functional handler', () => {
     it('fixture "valid_guard" -> ok', async () => {
       if (typeof navigatorHandler.addGuard !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(navigatorHandler.register({ name: "detail", targetConcept: "Article", targetView: "detail", paramsSchema: "", meta: "" }), storage);
-      const result = await interpret(navigatorHandler.addGuard({ guard: "unsaved-changes-check" }), storage);
+      const afterResult_valid_register = await interpret(navigatorHandler.register({ name: "detail", targetConcept: "Article", targetView: "detail", paramsSchema: "", meta: "" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
+      const _fixtureInput = { guard: "unsaved-changes-check" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(navigatorHandler.addGuard({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -521,8 +551,13 @@ describe('Navigator functional handler', () => {
     it('fixture "valid_remove_guard" -> ok', async () => {
       if (typeof navigatorHandler.removeGuard !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(navigatorHandler.register({ name: "detail", targetConcept: "Article", targetView: "detail", paramsSchema: "", meta: "" }), storage);
-      const result = await interpret(navigatorHandler.removeGuard({ guard: "unsaved-changes-check" }), storage);
+      const afterResult_valid_register = await interpret(navigatorHandler.register({ name: "detail", targetConcept: "Article", targetView: "detail", paramsSchema: "", meta: "" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
+      const _fixtureInput = { guard: "unsaved-changes-check" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(navigatorHandler.removeGuard({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

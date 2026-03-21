@@ -55,16 +55,26 @@ describe('HttpProvider imperative handler', () => {
     it('fixture "configure_test_api" -> ok', async () => {
       if (typeof httpProviderHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
-      await httpProviderHandler.list({  }, storage);
-      const result = await httpProviderHandler.configure({ name: "test-api", baseUrl: "https://api.example.com", headers: "{\"Authorization\":\"Bearer tok\"}", timeout: "5000" }, storage);
+      const afterResult_valid = await httpProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { name: "test-api", baseUrl: "https://api.example.com", headers: "{\"Authorization\":\"Bearer tok\"}", timeout: "5000" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await httpProviderHandler.configure({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_internal" -> ok', async () => {
       if (typeof httpProviderHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
-      await httpProviderHandler.list({  }, storage);
-      const result = await httpProviderHandler.configure({ name: "internal-svc", baseUrl: "http://localhost:8080", headers: "{}", timeout: "30000" }, storage);
+      const afterResult_valid = await httpProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { name: "internal-svc", baseUrl: "http://localhost:8080", headers: "{}", timeout: "30000" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await httpProviderHandler.configure({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -83,24 +93,39 @@ describe('HttpProvider imperative handler', () => {
     it('fixture "get_health" -> ok', async () => {
       if (typeof httpProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await httpProviderHandler.list({  }, storage);
-      const result = await httpProviderHandler.execute({ instance: "test-api", method: "GET", path: "/health", body: "", headers: "{}" }, storage);
+      const afterResult_valid = await httpProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { instance: "test-api", method: "GET", path: "/health", body: "", headers: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await httpProviderHandler.execute({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "post_data" -> ok', async () => {
       if (typeof httpProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await httpProviderHandler.list({  }, storage);
-      const result = await httpProviderHandler.execute({ instance: "test-api", method: "POST", path: "/users", body: "{\"name\":\"Alice\"}", headers: "{\"Content-Type\":\"application/json\"}" }, storage);
+      const afterResult_valid = await httpProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { instance: "test-api", method: "POST", path: "/users", body: "{\"name\":\"Alice\"}", headers: "{\"Content-Type\":\"application/json\"}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await httpProviderHandler.execute({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "execute_unknown_instance" -> notFound', async () => {
       if (typeof httpProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await httpProviderHandler.list({  }, storage);
-      const result = await httpProviderHandler.execute({ instance: "nonexistent", method: "GET", path: "/", body: "", headers: "{}" }, storage);
+      const afterResult_valid = await httpProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { instance: "nonexistent", method: "GET", path: "/", body: "", headers: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await httpProviderHandler.execute({ ..._fixtureInput }, storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notFound'));
     });
@@ -120,8 +145,13 @@ describe('HttpProvider imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof httpProviderHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await httpProviderHandler.list({  }, storage);
-      const result = await httpProviderHandler.list({  }, storage);
+      const afterResult_valid = await httpProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await httpProviderHandler.list({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -163,8 +163,13 @@ describe('Enricher functional handler', () => {
     it('fixture "suggest_for_item" -> ok', async () => {
       if (typeof enricherHandler.suggest !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(enricherHandler.enrich({ itemId: "item-1", enricherId: "auto_tag" }), storage);
-      const result = await interpret(enricherHandler.suggest({ itemId: "item-1" }), storage);
+      const afterResult_enrich_auto_tag = await interpret(enricherHandler.enrich({ itemId: "item-1", enricherId: "auto_tag" }), storage);
+      const _pool = Object.assign({}, (afterResult_enrich_auto_tag?.output ?? {}));
+      const _fixtureInput = { itemId: "item-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(enricherHandler.suggest({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -233,8 +238,13 @@ describe('Enricher functional handler', () => {
     it('fixture "accept_enrichment" -> ok', async () => {
       if (typeof enricherHandler.accept !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(enricherHandler.enrich({ itemId: "item-1", enricherId: "auto_tag" }), storage);
-      const result = await interpret(enricherHandler.accept({ itemId: "item-1", enrichmentId: "enr-1" }), storage);
+      const afterResult_enrich_auto_tag = await interpret(enricherHandler.enrich({ itemId: "item-1", enricherId: "auto_tag" }), storage);
+      const _pool = Object.assign({}, (afterResult_enrich_auto_tag?.output ?? {}));
+      const _fixtureInput = { itemId: "item-1", enrichmentId: "enr-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(enricherHandler.accept({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -303,9 +313,14 @@ describe('Enricher functional handler', () => {
     it('fixture "reject_enrichment" -> ok', async () => {
       if (typeof enricherHandler.reject !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(enricherHandler.enrich({ itemId: "item-1", enricherId: "auto_tag" }), storage);
-      await interpret(enricherHandler.accept({ itemId: "item-1", enrichmentId: "enr-1" }), storage);
-      const result = await interpret(enricherHandler.reject({ itemId: "item-1", enrichmentId: "enr-2" }), storage);
+      const afterResult_enrich_auto_tag = await interpret(enricherHandler.enrich({ itemId: "item-1", enricherId: "auto_tag" }), storage);
+      const afterResult_accept_enrichment = await interpret(enricherHandler.accept({ itemId: "item-1", enrichmentId: "enr-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_enrich_auto_tag?.output ?? {}), (afterResult_accept_enrichment?.output ?? {}));
+      const _fixtureInput = { itemId: "item-1", enrichmentId: "enr-2" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(enricherHandler.reject({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -374,8 +389,13 @@ describe('Enricher functional handler', () => {
     it('fixture "refresh_30d" -> ok', async () => {
       if (typeof enricherHandler.refreshStale !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(enricherHandler.enrich({ itemId: "item-1", enricherId: "auto_tag" }), storage);
-      const result = await interpret(enricherHandler.refreshStale({ olderThan: "2026-02-18T00:00:00Z" }), storage);
+      const afterResult_enrich_auto_tag = await interpret(enricherHandler.enrich({ itemId: "item-1", enricherId: "auto_tag" }), storage);
+      const _pool = Object.assign({}, (afterResult_enrich_auto_tag?.output ?? {}));
+      const _fixtureInput = { olderThan: "2026-02-18T00:00:00Z" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(enricherHandler.refreshStale({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

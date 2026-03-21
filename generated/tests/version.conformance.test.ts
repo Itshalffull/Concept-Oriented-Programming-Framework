@@ -94,8 +94,13 @@ describe('Version functional handler', () => {
     it('fixture "another_snapshot" -> ok', async () => {
       if (typeof versionHandler.snapshot !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(versionHandler.snapshot({ version: "v1", entity: "doc-1", data: "initial content", author: "alice" }), storage);
-      const result = await interpret(versionHandler.snapshot({ version: "v2", entity: "doc-1", data: "updated content", author: "bob" }), storage);
+      const afterResult_valid_snapshot = await interpret(versionHandler.snapshot({ version: "v1", entity: "doc-1", data: "initial content", author: "alice" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_snapshot?.output ?? {}));
+      const _fixtureInput = { version: "v2", entity: "doc-1", data: "updated content", author: "bob" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(versionHandler.snapshot({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -156,16 +161,26 @@ describe('Version functional handler', () => {
     it('fixture "valid_list" -> ok', async () => {
       if (typeof versionHandler.listVersions !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(versionHandler.snapshot({ version: "v1", entity: "doc-1", data: "initial content", author: "alice" }), storage);
-      const result = await interpret(versionHandler.listVersions({ entity: "doc-1" }), storage);
+      const afterResult_valid_snapshot = await interpret(versionHandler.snapshot({ version: "v1", entity: "doc-1", data: "initial content", author: "alice" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_snapshot?.output ?? {}));
+      const _fixtureInput = { entity: "doc-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(versionHandler.listVersions({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "list_unknown_entity" -> ok', async () => {
       if (typeof versionHandler.listVersions !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(versionHandler.snapshot({ version: "v1", entity: "doc-1", data: "initial content", author: "alice" }), storage);
-      const result = await interpret(versionHandler.listVersions({ entity: "nonexistent" }), storage);
+      const afterResult_valid_snapshot = await interpret(versionHandler.snapshot({ version: "v1", entity: "doc-1", data: "initial content", author: "alice" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_snapshot?.output ?? {}));
+      const _fixtureInput = { entity: "nonexistent" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(versionHandler.listVersions({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -226,8 +241,13 @@ describe('Version functional handler', () => {
     it('fixture "valid_rollback" -> ok', async () => {
       if (typeof versionHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(versionHandler.snapshot({ version: "v1", entity: "doc-1", data: "initial content", author: "alice" }), storage);
-      const result = await interpret(versionHandler.rollback({ version: "v1" }), storage);
+      const afterResult_valid_snapshot = await interpret(versionHandler.snapshot({ version: "v1", entity: "doc-1", data: "initial content", author: "alice" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_snapshot?.output ?? {}));
+      const _fixtureInput = { version: "v1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(versionHandler.rollback({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

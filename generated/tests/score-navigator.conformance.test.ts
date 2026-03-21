@@ -164,8 +164,13 @@ describe('ScoreNavigator functional handler', () => {
     it('fixture "valid_traverse" -> ok', async () => {
       if (typeof scoreNavigatorHandler.traverse !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreNavigatorHandler.show({ kind: "concept", name: "User" }), storage);
-      const result = await interpret(scoreNavigatorHandler.traverse({ relation: "actions", target: "register" }), storage);
+      const afterResult_valid_show = await interpret(scoreNavigatorHandler.show({ kind: "concept", name: "User" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_show?.output ?? {}));
+      const _fixtureInput = { relation: "actions", target: "register" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreNavigatorHandler.traverse({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -242,8 +247,13 @@ describe('ScoreNavigator functional handler', () => {
     it('fixture "valid_back" -> ok', async () => {
       if (typeof scoreNavigatorHandler.back !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreNavigatorHandler.show({ kind: "concept", name: "User" }), storage);
-      const result = await interpret(scoreNavigatorHandler.back({  }), storage);
+      const afterResult_valid_show = await interpret(scoreNavigatorHandler.show({ kind: "concept", name: "User" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_show?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreNavigatorHandler.back({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -312,8 +322,13 @@ describe('ScoreNavigator functional handler', () => {
     it('fixture "valid_list" -> ok', async () => {
       if (typeof scoreNavigatorHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(scoreNavigatorHandler.show({ kind: "concept", name: "User" }), storage);
-      const result = await interpret(scoreNavigatorHandler.list({ kind: "concept" }), storage);
+      const afterResult_valid_show = await interpret(scoreNavigatorHandler.show({ kind: "concept", name: "User" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_show?.output ?? {}));
+      const _fixtureInput = { kind: "concept" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(scoreNavigatorHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

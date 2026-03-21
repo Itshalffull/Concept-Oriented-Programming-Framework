@@ -162,8 +162,13 @@ describe('DeploymentEntity functional handler', () => {
     it('fixture "get_existing" -> ok', async () => {
       if (typeof deploymentEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
-      const result = await interpret(deploymentEntityHandler.get({ name: "conduit-prod" }), storage);
+      const afterResult_register_prod = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_prod?.output ?? {}));
+      const _fixtureInput = { name: "conduit-prod" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(deploymentEntityHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -231,16 +236,26 @@ describe('DeploymentEntity functional handler', () => {
     it('fixture "list_runtimes" -> ok', async () => {
       if (typeof deploymentEntityHandler.listRuntimes !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
-      const result = await interpret(deploymentEntityHandler.listRuntimes({ deployment: "deploy-001" }), storage);
+      const afterResult_register_prod = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_prod?.output ?? {}));
+      const _fixtureInput = { deployment: "deploy-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(deploymentEntityHandler.listRuntimes({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "list_runtimes_missing" -> ok', async () => {
       if (typeof deploymentEntityHandler.listRuntimes !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
-      const result = await interpret(deploymentEntityHandler.listRuntimes({ deployment: "deploy-missing" }), storage);
+      const afterResult_register_prod = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_prod?.output ?? {}));
+      const _fixtureInput = { deployment: "deploy-missing" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(deploymentEntityHandler.listRuntimes({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -301,8 +316,13 @@ describe('DeploymentEntity functional handler', () => {
     it('fixture "find_user_runtime" -> ok', async () => {
       if (typeof deploymentEntityHandler.findConceptRuntime !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
-      const result = await interpret(deploymentEntityHandler.findConceptRuntime({ deployment: "deploy-001", concept: "User" }), storage);
+      const afterResult_register_prod = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_prod?.output ?? {}));
+      const _fixtureInput = { deployment: "deploy-001", concept: "User" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(deploymentEntityHandler.findConceptRuntime({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -370,8 +390,13 @@ describe('DeploymentEntity functional handler', () => {
     it('fixture "find_article_sync" -> ok', async () => {
       if (typeof deploymentEntityHandler.findSyncEngine !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
-      const result = await interpret(deploymentEntityHandler.findSyncEngine({ deployment: "deploy-001", sync: "ArticlePublishSync" }), storage);
+      const afterResult_register_prod = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_prod?.output ?? {}));
+      const _fixtureInput = { deployment: "deploy-001", sync: "ArticlePublishSync" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(deploymentEntityHandler.findSyncEngine({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -439,16 +464,26 @@ describe('DeploymentEntity functional handler', () => {
     it('fixture "topology_existing" -> ok', async () => {
       if (typeof deploymentEntityHandler.topology !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
-      const result = await interpret(deploymentEntityHandler.topology({ deployment: "deploy-001" }), storage);
+      const afterResult_register_prod = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_prod?.output ?? {}));
+      const _fixtureInput = { deployment: "deploy-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(deploymentEntityHandler.topology({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "topology_missing" -> ok', async () => {
       if (typeof deploymentEntityHandler.topology !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
-      const result = await interpret(deploymentEntityHandler.topology({ deployment: "deploy-missing" }), storage);
+      const afterResult_register_prod = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_prod?.output ?? {}));
+      const _fixtureInput = { deployment: "deploy-missing" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(deploymentEntityHandler.topology({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -509,8 +544,13 @@ describe('DeploymentEntity functional handler', () => {
     it('fixture "route_cross_runtime" -> ok', async () => {
       if (typeof deploymentEntityHandler.transportRoutes !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
-      const result = await interpret(deploymentEntityHandler.transportRoutes({ deployment: "deploy-001", fromConcept: "User", toConcept: "Notification" }), storage);
+      const afterResult_register_prod = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_prod?.output ?? {}));
+      const _fixtureInput = { deployment: "deploy-001", fromConcept: "User", toConcept: "Notification" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(deploymentEntityHandler.transportRoutes({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -578,16 +618,26 @@ describe('DeploymentEntity functional handler', () => {
     it('fixture "storage_topology" -> ok', async () => {
       if (typeof deploymentEntityHandler.storageTopology !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
-      const result = await interpret(deploymentEntityHandler.storageTopology({ deployment: "deploy-001" }), storage);
+      const afterResult_register_prod = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_prod?.output ?? {}));
+      const _fixtureInput = { deployment: "deploy-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(deploymentEntityHandler.storageTopology({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "storage_topology_missing" -> ok', async () => {
       if (typeof deploymentEntityHandler.storageTopology !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
-      const result = await interpret(deploymentEntityHandler.storageTopology({ deployment: "deploy-missing" }), storage);
+      const afterResult_register_prod = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_prod?.output ?? {}));
+      const _fixtureInput = { deployment: "deploy-missing" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(deploymentEntityHandler.storageTopology({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -648,16 +698,26 @@ describe('DeploymentEntity functional handler', () => {
     it('fixture "diff_prod_staging" -> ok', async () => {
       if (typeof deploymentEntityHandler.environmentDiff !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
-      const result = await interpret(deploymentEntityHandler.environmentDiff({ deploymentA: "deploy-prod", deploymentB: "deploy-staging" }), storage);
+      const afterResult_register_prod = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_prod?.output ?? {}));
+      const _fixtureInput = { deploymentA: "deploy-prod", deploymentB: "deploy-staging" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(deploymentEntityHandler.environmentDiff({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "diff_same" -> ok', async () => {
       if (typeof deploymentEntityHandler.environmentDiff !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
-      const result = await interpret(deploymentEntityHandler.environmentDiff({ deploymentA: "deploy-prod", deploymentB: "deploy-prod" }), storage);
+      const afterResult_register_prod = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_prod?.output ?? {}));
+      const _fixtureInput = { deploymentA: "deploy-prod", deploymentB: "deploy-prod" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(deploymentEntityHandler.environmentDiff({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

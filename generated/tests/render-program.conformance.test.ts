@@ -63,8 +63,13 @@ describe('RenderProgram imperative handler', () => {
     it('fixture "add_root_element" -> ok', async () => {
       if (typeof renderProgramHandler.element !== 'function') return;
       const storage = createInMemoryStorage();
-      await renderProgramHandler.create({ program: "card-widget" }, storage);
-      const result = await renderProgramHandler.element({ program: "card-widget", part: "root", role: "container" }, storage);
+      const afterResult_new_program = await renderProgramHandler.create({ program: "card-widget" }, storage);
+      const _pool = Object.assign({}, (afterResult_new_program?.output ?? {}));
+      const _fixtureInput = { program: "card-widget", part: "root", role: "container" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await renderProgramHandler.element({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -91,8 +96,13 @@ describe('RenderProgram imperative handler', () => {
     it('fixture "add_text" -> ok', async () => {
       if (typeof renderProgramHandler.text !== 'function') return;
       const storage = createInMemoryStorage();
-      await renderProgramHandler.create({ program: "card-widget" }, storage);
-      const result = await renderProgramHandler.text({ program: "card-widget", part: "root", content: "Hello World" }, storage);
+      const afterResult_new_program = await renderProgramHandler.create({ program: "card-widget" }, storage);
+      const _pool = Object.assign({}, (afterResult_new_program?.output ?? {}));
+      const _fixtureInput = { program: "card-widget", part: "root", content: "Hello World" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await renderProgramHandler.text({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -119,8 +129,13 @@ describe('RenderProgram imperative handler', () => {
     it('fixture "add_label_prop" -> ok', async () => {
       if (typeof renderProgramHandler.prop !== 'function') return;
       const storage = createInMemoryStorage();
-      await renderProgramHandler.create({ program: "card-widget" }, storage);
-      const result = await renderProgramHandler.prop({ program: "card-widget", name: "label", propType: "string", defaultValue: "Click" }, storage);
+      const afterResult_new_program = await renderProgramHandler.create({ program: "card-widget" }, storage);
+      const _pool = Object.assign({}, (afterResult_new_program?.output ?? {}));
+      const _fixtureInput = { program: "card-widget", name: "label", propType: "string", defaultValue: "Click" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await renderProgramHandler.prop({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -147,8 +162,13 @@ describe('RenderProgram imperative handler', () => {
     it('fixture "bind_data_value" -> ok', async () => {
       if (typeof renderProgramHandler.bind !== 'function') return;
       const storage = createInMemoryStorage();
-      await renderProgramHandler.create({ program: "card-widget" }, storage);
-      const result = await renderProgramHandler.bind({ program: "card-widget", part: "root", attr: "data-value", expr: "props.value" }, storage);
+      const afterResult_new_program = await renderProgramHandler.create({ program: "card-widget" }, storage);
+      const _pool = Object.assign({}, (afterResult_new_program?.output ?? {}));
+      const _fixtureInput = { program: "card-widget", part: "root", attr: "data-value", expr: "props.value" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await renderProgramHandler.bind({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -175,8 +195,13 @@ describe('RenderProgram imperative handler', () => {
     it('fixture "define_idle_state" -> ok', async () => {
       if (typeof renderProgramHandler.stateDef !== 'function') return;
       const storage = createInMemoryStorage();
-      await renderProgramHandler.create({ program: "card-widget" }, storage);
-      const result = await renderProgramHandler.stateDef({ program: "card-widget", name: "idle", initial: "true" }, storage);
+      const afterResult_new_program = await renderProgramHandler.create({ program: "card-widget" }, storage);
+      const _pool = Object.assign({}, (afterResult_new_program?.output ?? {}));
+      const _fixtureInput = { program: "card-widget", name: "idle", initial: "true" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await renderProgramHandler.stateDef({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -203,8 +228,13 @@ describe('RenderProgram imperative handler', () => {
     it('fixture "add_click_transition" -> ok', async () => {
       if (typeof renderProgramHandler.transition !== 'function') return;
       const storage = createInMemoryStorage();
-      await renderProgramHandler.create({ program: "card-widget" }, storage);
-      const result = await renderProgramHandler.transition({ program: "card-widget", fromState: "idle", event: "click", toState: "active" }, storage);
+      const afterResult_new_program = await renderProgramHandler.create({ program: "card-widget" }, storage);
+      const _pool = Object.assign({}, (afterResult_new_program?.output ?? {}));
+      const _fixtureInput = { program: "card-widget", fromState: "idle", event: "click", toState: "active" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await renderProgramHandler.transition({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -231,8 +261,13 @@ describe('RenderProgram imperative handler', () => {
     it('fixture "add_aria_label" -> ok', async () => {
       if (typeof renderProgramHandler.aria !== 'function') return;
       const storage = createInMemoryStorage();
-      await renderProgramHandler.create({ program: "card-widget" }, storage);
-      const result = await renderProgramHandler.aria({ program: "card-widget", part: "root", attr: "aria-label", value: "Main card" }, storage);
+      const afterResult_new_program = await renderProgramHandler.create({ program: "card-widget" }, storage);
+      const _pool = Object.assign({}, (afterResult_new_program?.output ?? {}));
+      const _fixtureInput = { program: "card-widget", part: "root", attr: "aria-label", value: "Main card" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await renderProgramHandler.aria({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -259,8 +294,13 @@ describe('RenderProgram imperative handler', () => {
     it('fixture "map_enter_key" -> ok', async () => {
       if (typeof renderProgramHandler.keyboard !== 'function') return;
       const storage = createInMemoryStorage();
-      await renderProgramHandler.create({ program: "card-widget" }, storage);
-      const result = await renderProgramHandler.keyboard({ program: "card-widget", key: "Enter", event: "activate" }, storage);
+      const afterResult_new_program = await renderProgramHandler.create({ program: "card-widget" }, storage);
+      const _pool = Object.assign({}, (afterResult_new_program?.output ?? {}));
+      const _fixtureInput = { program: "card-widget", key: "Enter", event: "activate" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await renderProgramHandler.keyboard({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -287,8 +327,13 @@ describe('RenderProgram imperative handler', () => {
     it('fixture "set_focus_trap" -> ok', async () => {
       if (typeof renderProgramHandler.focus !== 'function') return;
       const storage = createInMemoryStorage();
-      await renderProgramHandler.create({ program: "card-widget" }, storage);
-      const result = await renderProgramHandler.focus({ program: "card-widget", strategy: "trap", initialPart: "root" }, storage);
+      const afterResult_new_program = await renderProgramHandler.create({ program: "card-widget" }, storage);
+      const _pool = Object.assign({}, (afterResult_new_program?.output ?? {}));
+      const _fixtureInput = { program: "card-widget", strategy: "trap", initialPart: "root" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await renderProgramHandler.focus({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -315,8 +360,13 @@ describe('RenderProgram imperative handler', () => {
     it('fixture "compose_badge" -> ok', async () => {
       if (typeof renderProgramHandler.compose !== 'function') return;
       const storage = createInMemoryStorage();
-      await renderProgramHandler.create({ program: "card-widget" }, storage);
-      const result = await renderProgramHandler.compose({ program: "card-widget", widget: "Badge", slot: "header" }, storage);
+      const afterResult_new_program = await renderProgramHandler.create({ program: "card-widget" }, storage);
+      const _pool = Object.assign({}, (afterResult_new_program?.output ?? {}));
+      const _fixtureInput = { program: "card-widget", widget: "Badge", slot: "header" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await renderProgramHandler.compose({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -343,8 +393,13 @@ describe('RenderProgram imperative handler', () => {
     it('fixture "add_primary_token" -> ok', async () => {
       if (typeof renderProgramHandler.token !== 'function') return;
       const storage = createInMemoryStorage();
-      await renderProgramHandler.create({ program: "card-widget" }, storage);
-      const result = await renderProgramHandler.token({ program: "card-widget", path: "palette.primary", fallback: "#000" }, storage);
+      const afterResult_new_program = await renderProgramHandler.create({ program: "card-widget" }, storage);
+      const _pool = Object.assign({}, (afterResult_new_program?.output ?? {}));
+      const _fixtureInput = { program: "card-widget", path: "palette.primary", fallback: "#000" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await renderProgramHandler.token({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -371,8 +426,13 @@ describe('RenderProgram imperative handler', () => {
     it('fixture "seal_program" -> ok', async () => {
       if (typeof renderProgramHandler.pure !== 'function') return;
       const storage = createInMemoryStorage();
-      await renderProgramHandler.create({ program: "card-widget" }, storage);
-      const result = await renderProgramHandler.pure({ program: "card-widget", output: "CardWidget" }, storage);
+      const afterResult_new_program = await renderProgramHandler.create({ program: "card-widget" }, storage);
+      const _pool = Object.assign({}, (afterResult_new_program?.output ?? {}));
+      const _fixtureInput = { program: "card-widget", output: "CardWidget" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await renderProgramHandler.pure({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -162,16 +162,26 @@ describe('RankedChoice functional handler', () => {
     it('fixture "count_three_candidates" -> ok', async () => {
       if (typeof rankedChoiceHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(rankedChoiceHandler.configure({ eliminationMethod: "InstantRunoff", seats: "1" }), storage);
-      const result = await interpret(rankedChoiceHandler.count({ config: "rcv-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]}]", weights: "{}" }), storage);
+      const afterResult_irv_single_seat = await interpret(rankedChoiceHandler.configure({ eliminationMethod: "InstantRunoff", seats: "1" }), storage);
+      const _pool = Object.assign({}, (afterResult_irv_single_seat?.output ?? {}));
+      const _fixtureInput = { config: "rcv-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]}]", weights: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(rankedChoiceHandler.count({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "count_empty_ballots" -> error', async () => {
       if (typeof rankedChoiceHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(rankedChoiceHandler.configure({ eliminationMethod: "InstantRunoff", seats: "1" }), storage);
-      const result = await interpret(rankedChoiceHandler.count({ config: "rcv-001", rankedBallots: "[]", weights: "{}" }), storage);
+      const afterResult_irv_single_seat = await interpret(rankedChoiceHandler.configure({ eliminationMethod: "InstantRunoff", seats: "1" }), storage);
+      const _pool = Object.assign({}, (afterResult_irv_single_seat?.output ?? {}));
+      const _fixtureInput = { config: "rcv-001", rankedBallots: "[]", weights: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(rankedChoiceHandler.count({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -232,8 +242,13 @@ describe('RankedChoice functional handler', () => {
     it('fixture "get_round_one" -> ok', async () => {
       if (typeof rankedChoiceHandler.getRoundDetail !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(rankedChoiceHandler.configure({ eliminationMethod: "InstantRunoff", seats: "1" }), storage);
-      const result = await interpret(rankedChoiceHandler.getRoundDetail({ config: "rcv-001", roundNumber: "1" }), storage);
+      const afterResult_irv_single_seat = await interpret(rankedChoiceHandler.configure({ eliminationMethod: "InstantRunoff", seats: "1" }), storage);
+      const _pool = Object.assign({}, (afterResult_irv_single_seat?.output ?? {}));
+      const _fixtureInput = { config: "rcv-001", roundNumber: "1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(rankedChoiceHandler.getRoundDetail({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

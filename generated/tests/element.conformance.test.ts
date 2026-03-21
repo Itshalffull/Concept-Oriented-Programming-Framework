@@ -162,8 +162,13 @@ describe('Element functional handler', () => {
     it('fixture "valid_nest" -> ok', async () => {
       if (typeof elementHandler.nest !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(elementHandler.create({ element: "E-1", kind: "field", label: "Title", dataType: "String" }), storage);
-      const result = await interpret(elementHandler.nest({ parent: "E-2", child: "E-1" }), storage);
+      const afterResult_valid_create_field = await interpret(elementHandler.create({ element: "E-1", kind: "field", label: "Title", dataType: "String" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_create_field?.output ?? {}));
+      const _fixtureInput = { parent: "E-2", child: "E-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(elementHandler.nest({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -231,16 +236,26 @@ describe('Element functional handler', () => {
     it('fixture "valid_constraints" -> ok', async () => {
       if (typeof elementHandler.setConstraints !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(elementHandler.create({ element: "E-1", kind: "field", label: "Title", dataType: "String" }), storage);
-      const result = await interpret(elementHandler.setConstraints({ element: "E-1", constraints: "{\"minLength\":1,\"maxLength\":255}" }), storage);
+      const afterResult_valid_create_field = await interpret(elementHandler.create({ element: "E-1", kind: "field", label: "Title", dataType: "String" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_create_field?.output ?? {}));
+      const _fixtureInput = { element: "E-1", constraints: "{\"minLength\":1,\"maxLength\":255}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(elementHandler.setConstraints({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "constraints_nonexistent" -> error', async () => {
       if (typeof elementHandler.setConstraints !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(elementHandler.create({ element: "E-1", kind: "field", label: "Title", dataType: "String" }), storage);
-      const result = await interpret(elementHandler.setConstraints({ element: "E-999", constraints: "{}" }), storage);
+      const afterResult_valid_create_field = await interpret(elementHandler.create({ element: "E-1", kind: "field", label: "Title", dataType: "String" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_create_field?.output ?? {}));
+      const _fixtureInput = { element: "E-999", constraints: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(elementHandler.setConstraints({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -301,16 +316,26 @@ describe('Element functional handler', () => {
     it('fixture "valid_enrich" -> ok', async () => {
       if (typeof elementHandler.enrich !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(elementHandler.create({ element: "E-1", kind: "field", label: "Title", dataType: "String" }), storage);
-      const result = await interpret(elementHandler.enrich({ element: "E-1", interactorType: "text-short", interactorProps: "{\"placeholder\":\"Enter title\"}" }), storage);
+      const afterResult_valid_create_field = await interpret(elementHandler.create({ element: "E-1", kind: "field", label: "Title", dataType: "String" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_create_field?.output ?? {}));
+      const _fixtureInput = { element: "E-1", interactorType: "text-short", interactorProps: "{\"placeholder\":\"Enter title\"}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(elementHandler.enrich({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "enrich_nonexistent" -> error', async () => {
       if (typeof elementHandler.enrich !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(elementHandler.create({ element: "E-1", kind: "field", label: "Title", dataType: "String" }), storage);
-      const result = await interpret(elementHandler.enrich({ element: "E-999", interactorType: "text-short", interactorProps: "{}" }), storage);
+      const afterResult_valid_create_field = await interpret(elementHandler.create({ element: "E-1", kind: "field", label: "Title", dataType: "String" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_create_field?.output ?? {}));
+      const _fixtureInput = { element: "E-999", interactorType: "text-short", interactorProps: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(elementHandler.enrich({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -371,8 +396,13 @@ describe('Element functional handler', () => {
     it('fixture "valid_assign_widget" -> ok', async () => {
       if (typeof elementHandler.assignWidget !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(elementHandler.create({ element: "E-1", kind: "field", label: "Title", dataType: "String" }), storage);
-      const result = await interpret(elementHandler.assignWidget({ element: "E-1", widget: "TextInput" }), storage);
+      const afterResult_valid_create_field = await interpret(elementHandler.create({ element: "E-1", kind: "field", label: "Title", dataType: "String" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_create_field?.output ?? {}));
+      const _fixtureInput = { element: "E-1", widget: "TextInput" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(elementHandler.assignWidget({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -440,8 +470,13 @@ describe('Element functional handler', () => {
     it('fixture "valid_remove" -> ok', async () => {
       if (typeof elementHandler.remove !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(elementHandler.create({ element: "E-1", kind: "field", label: "Title", dataType: "String" }), storage);
-      const result = await interpret(elementHandler.remove({ element: "E-1" }), storage);
+      const afterResult_valid_create_field = await interpret(elementHandler.create({ element: "E-1", kind: "field", label: "Title", dataType: "String" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_create_field?.output ?? {}));
+      const _fixtureInput = { element: "E-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(elementHandler.remove({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -179,8 +179,13 @@ describe('QualitySignal functional handler', () => {
     it('fixture "latest_unit" -> ok', async () => {
       if (typeof qualitySignalHandler.latest !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(qualitySignalHandler.record({ target_symbol: "clef/concept/Password", dimension: "unit", status: "pass", severity: "gate", summary: "All 42 unit tests passed" }), storage);
-      const result = await interpret(qualitySignalHandler.latest({ target_symbol: "clef/concept/Password", dimension: "unit" }), storage);
+      const afterResult_record_pass = await interpret(qualitySignalHandler.record({ target_symbol: "clef/concept/Password", dimension: "unit", status: "pass", severity: "gate", summary: "All 42 unit tests passed" }), storage);
+      const _pool = Object.assign({}, (afterResult_record_pass?.output ?? {}));
+      const _fixtureInput = { target_symbol: "clef/concept/Password", dimension: "unit" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(qualitySignalHandler.latest({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -257,16 +262,26 @@ describe('QualitySignal functional handler', () => {
     it('fixture "rollup_single" -> ok', async () => {
       if (typeof qualitySignalHandler.rollup !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(qualitySignalHandler.record({ target_symbol: "clef/concept/Password", dimension: "unit", status: "pass", severity: "gate", summary: "All 42 unit tests passed" }), storage);
-      const result = await interpret(qualitySignalHandler.rollup({ target_symbols: ["clef/concept/Password"] }), storage);
+      const afterResult_record_pass = await interpret(qualitySignalHandler.record({ target_symbol: "clef/concept/Password", dimension: "unit", status: "pass", severity: "gate", summary: "All 42 unit tests passed" }), storage);
+      const _pool = Object.assign({}, (afterResult_record_pass?.output ?? {}));
+      const _fixtureInput = { target_symbols: ["clef/concept/Password"] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(qualitySignalHandler.rollup({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "rollup_multiple" -> ok', async () => {
       if (typeof qualitySignalHandler.rollup !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(qualitySignalHandler.record({ target_symbol: "clef/concept/Password", dimension: "unit", status: "pass", severity: "gate", summary: "All 42 unit tests passed" }), storage);
-      const result = await interpret(qualitySignalHandler.rollup({ target_symbols: ["clef/concept/Password","clef/concept/Auth"], dimensions: ["unit","formal"] }), storage);
+      const afterResult_record_pass = await interpret(qualitySignalHandler.record({ target_symbol: "clef/concept/Password", dimension: "unit", status: "pass", severity: "gate", summary: "All 42 unit tests passed" }), storage);
+      const _pool = Object.assign({}, (afterResult_record_pass?.output ?? {}));
+      const _fixtureInput = { target_symbols: ["clef/concept/Password","clef/concept/Auth"], dimensions: ["unit","formal"] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(qualitySignalHandler.rollup({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -335,16 +350,26 @@ describe('QualitySignal functional handler', () => {
     it('fixture "explain_all_dims" -> ok', async () => {
       if (typeof qualitySignalHandler.explain !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(qualitySignalHandler.record({ target_symbol: "clef/concept/Password", dimension: "unit", status: "pass", severity: "gate", summary: "All 42 unit tests passed" }), storage);
-      const result = await interpret(qualitySignalHandler.explain({ target_symbol: "clef/concept/Password" }), storage);
+      const afterResult_record_pass = await interpret(qualitySignalHandler.record({ target_symbol: "clef/concept/Password", dimension: "unit", status: "pass", severity: "gate", summary: "All 42 unit tests passed" }), storage);
+      const _pool = Object.assign({}, (afterResult_record_pass?.output ?? {}));
+      const _fixtureInput = { target_symbol: "clef/concept/Password" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(qualitySignalHandler.explain({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "explain_filtered" -> ok', async () => {
       if (typeof qualitySignalHandler.explain !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(qualitySignalHandler.record({ target_symbol: "clef/concept/Password", dimension: "unit", status: "pass", severity: "gate", summary: "All 42 unit tests passed" }), storage);
-      const result = await interpret(qualitySignalHandler.explain({ target_symbol: "clef/concept/Auth", dimensions: ["unit","conformance"] }), storage);
+      const afterResult_record_pass = await interpret(qualitySignalHandler.record({ target_symbol: "clef/concept/Password", dimension: "unit", status: "pass", severity: "gate", summary: "All 42 unit tests passed" }), storage);
+      const _pool = Object.assign({}, (afterResult_record_pass?.output ?? {}));
+      const _fixtureInput = { target_symbol: "clef/concept/Auth", dimensions: ["unit","conformance"] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(qualitySignalHandler.explain({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -163,24 +163,39 @@ describe('TestSelection functional handler', () => {
     it('fixture "select_no_budget" -> ok', async () => {
       if (typeof testSelectionHandler.select !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(testSelectionHandler.analyze({ changedSources: ["./specs/password.concept"] }), storage);
-      const result = await interpret(testSelectionHandler.select({ affectedTests: [{"testId":"test_hash","language":"typescript","testType":"unit","relevance":"1.0"}] }), storage);
+      const afterResult_analyze_concept_change = await interpret(testSelectionHandler.analyze({ changedSources: ["./specs/password.concept"] }), storage);
+      const _pool = Object.assign({}, (afterResult_analyze_concept_change?.output ?? {}));
+      const _fixtureInput = { affectedTests: [{"testId":"test_hash","language":"typescript","testType":"unit","relevance":"1.0"}] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(testSelectionHandler.select({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "select_with_budget" -> ok', async () => {
       if (typeof testSelectionHandler.select !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(testSelectionHandler.analyze({ changedSources: ["./specs/password.concept"] }), storage);
-      const result = await interpret(testSelectionHandler.select({ affectedTests: [{"testId":"test_hash","language":"typescript","testType":"unit","relevance":"1.0"}], budget: {"maxDuration":"5000","maxTests":"10"} }), storage);
+      const afterResult_analyze_concept_change = await interpret(testSelectionHandler.analyze({ changedSources: ["./specs/password.concept"] }), storage);
+      const _pool = Object.assign({}, (afterResult_analyze_concept_change?.output ?? {}));
+      const _fixtureInput = { affectedTests: [{"testId":"test_hash","language":"typescript","testType":"unit","relevance":"1.0"}], budget: {"maxDuration":"5000","maxTests":"10"} } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(testSelectionHandler.select({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "select_empty" -> ok', async () => {
       if (typeof testSelectionHandler.select !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(testSelectionHandler.analyze({ changedSources: ["./specs/password.concept"] }), storage);
-      const result = await interpret(testSelectionHandler.select({ affectedTests: [] }), storage);
+      const afterResult_analyze_concept_change = await interpret(testSelectionHandler.analyze({ changedSources: ["./specs/password.concept"] }), storage);
+      const _pool = Object.assign({}, (afterResult_analyze_concept_change?.output ?? {}));
+      const _fixtureInput = { affectedTests: [] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(testSelectionHandler.select({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -241,16 +256,26 @@ describe('TestSelection functional handler', () => {
     it('fixture "record_unit" -> ok', async () => {
       if (typeof testSelectionHandler.record !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(testSelectionHandler.analyze({ changedSources: ["./specs/password.concept"] }), storage);
-      const result = await interpret(testSelectionHandler.record({ testId: "test_password_hash", language: "typescript", testType: "unit", coveredSources: ["./specs/password.concept","generated/ts/password.ts"], duration: "45", passed: "true" }), storage);
+      const afterResult_analyze_concept_change = await interpret(testSelectionHandler.analyze({ changedSources: ["./specs/password.concept"] }), storage);
+      const _pool = Object.assign({}, (afterResult_analyze_concept_change?.output ?? {}));
+      const _fixtureInput = { testId: "test_password_hash", language: "typescript", testType: "unit", coveredSources: ["./specs/password.concept","generated/ts/password.ts"], duration: "45", passed: "true" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(testSelectionHandler.record({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "record_failing" -> ok', async () => {
       if (typeof testSelectionHandler.record !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(testSelectionHandler.analyze({ changedSources: ["./specs/password.concept"] }), storage);
-      const result = await interpret(testSelectionHandler.record({ testId: "test_auth_flow", language: "rust", testType: "integration", coveredSources: ["./specs/auth.concept"], duration: "1200", passed: "false" }), storage);
+      const afterResult_analyze_concept_change = await interpret(testSelectionHandler.analyze({ changedSources: ["./specs/password.concept"] }), storage);
+      const _pool = Object.assign({}, (afterResult_analyze_concept_change?.output ?? {}));
+      const _fixtureInput = { testId: "test_auth_flow", language: "rust", testType: "integration", coveredSources: ["./specs/auth.concept"], duration: "1200", passed: "false" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(testSelectionHandler.record({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -311,8 +336,13 @@ describe('TestSelection functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof testSelectionHandler.statistics !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(testSelectionHandler.analyze({ changedSources: ["./specs/password.concept"] }), storage);
-      const result = await interpret(testSelectionHandler.statistics({  }), storage);
+      const afterResult_analyze_concept_change = await interpret(testSelectionHandler.analyze({ changedSources: ["./specs/password.concept"] }), storage);
+      const _pool = Object.assign({}, (afterResult_analyze_concept_change?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(testSelectionHandler.statistics({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

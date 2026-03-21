@@ -53,6 +53,7 @@ type TokenType =
   | 'RPAREN'
   | 'AT'
   | 'PIPE'
+  | 'DOLLAR'
   | 'SEP'
   | 'PROSE'
   | 'EOF';
@@ -265,6 +266,12 @@ function tokenize(source: string): Token[] {
       } else {
         pushToken('INT_LIT', num, l, c);
       }
+      continue;
+    }
+
+    if (ch === '$') {
+      advance();
+      pushToken('DOLLAR', '$', l, c);
       continue;
     }
 
@@ -914,6 +921,14 @@ class Parser {
       const nested = this.parseFixtureObject();
       this.expect('RBRACE');
       return nested;
+    }
+    // Fixture output reference: $fixtureName.field
+    if (tok.type === 'DOLLAR') {
+      this.advance(); // consume '$'
+      const refFixture = this.expectIdent().value;
+      this.expect('DOT');
+      const refField = this.expectIdent().value;
+      return { type: 'ref', fixture: refFixture, field: refField };
     }
     // Fallback: treat as string
     this.advance();

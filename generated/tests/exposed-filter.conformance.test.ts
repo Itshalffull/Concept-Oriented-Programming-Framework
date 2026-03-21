@@ -155,8 +155,13 @@ describe('ExposedFilter functional handler', () => {
     it('fixture "valid_input" -> ok', async () => {
       if (typeof exposedFilterHandler.collectInput !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(exposedFilterHandler.expose({ filter: "status-filter", fieldName: "status", operator: "eq", defaultValue: "active" }), storage);
-      const result = await interpret(exposedFilterHandler.collectInput({ filter: "status-filter", value: "archived" }), storage);
+      const afterResult_valid_expose = await interpret(exposedFilterHandler.expose({ filter: "status-filter", fieldName: "status", operator: "eq", defaultValue: "active" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_expose?.output ?? {}));
+      const _fixtureInput = { filter: "status-filter", value: "archived" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(exposedFilterHandler.collectInput({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('ExposedFilter functional handler', () => {
     it('fixture "apply_existing" -> ok', async () => {
       if (typeof exposedFilterHandler.applyToQuery !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(exposedFilterHandler.expose({ filter: "status-filter", fieldName: "status", operator: "eq", defaultValue: "active" }), storage);
-      const result = await interpret(exposedFilterHandler.applyToQuery({ filter: "status-filter" }), storage);
+      const afterResult_valid_expose = await interpret(exposedFilterHandler.expose({ filter: "status-filter", fieldName: "status", operator: "eq", defaultValue: "active" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_expose?.output ?? {}));
+      const _fixtureInput = { filter: "status-filter" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(exposedFilterHandler.applyToQuery({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('ExposedFilter functional handler', () => {
     it('fixture "reset_existing" -> ok', async () => {
       if (typeof exposedFilterHandler.resetToDefaults !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(exposedFilterHandler.expose({ filter: "status-filter", fieldName: "status", operator: "eq", defaultValue: "active" }), storage);
-      const result = await interpret(exposedFilterHandler.resetToDefaults({ filter: "status-filter" }), storage);
+      const afterResult_valid_expose = await interpret(exposedFilterHandler.expose({ filter: "status-filter", fieldName: "status", operator: "eq", defaultValue: "active" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_expose?.output ?? {}));
+      const _fixtureInput = { filter: "status-filter" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(exposedFilterHandler.resetToDefaults({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

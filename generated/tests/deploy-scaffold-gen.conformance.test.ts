@@ -230,8 +230,13 @@ describe('DeployScaffoldGen functional handler', () => {
     it('fixture "valid_register" -> ok', async () => {
       if (typeof deployScaffoldGenHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(deployScaffoldGenHandler.generate({ appName: "inventory-service", runtimes: [{"name":"api","type":"node","transport":"http","storage":"sqlite"}], concepts: [{"name":"Product","runtime":"api"}] }), storage);
-      const result = await interpret(deployScaffoldGenHandler.register({  }), storage);
+      const afterResult_valid_generate = await interpret(deployScaffoldGenHandler.generate({ appName: "inventory-service", runtimes: [{"name":"api","type":"node","transport":"http","storage":"sqlite"}], concepts: [{"name":"Product","runtime":"api"}] }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_generate?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(deployScaffoldGenHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

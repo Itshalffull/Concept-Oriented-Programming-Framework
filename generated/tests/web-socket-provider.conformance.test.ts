@@ -55,16 +55,26 @@ describe('WebSocketProvider imperative handler', () => {
     it('fixture "configure_events" -> ok', async () => {
       if (typeof webSocketProviderHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
-      await webSocketProviderHandler.list({  }, storage);
-      const result = await webSocketProviderHandler.configure({ name: "events", url: "wss://events.example.com", protocols: "[]" }, storage);
+      const afterResult_valid = await webSocketProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { name: "events", url: "wss://events.example.com", protocols: "[]" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await webSocketProviderHandler.configure({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_with_protocol" -> ok', async () => {
       if (typeof webSocketProviderHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
-      await webSocketProviderHandler.list({  }, storage);
-      const result = await webSocketProviderHandler.configure({ name: "chat", url: "wss://chat.example.com/ws", protocols: "[\"graphql-ws\"]" }, storage);
+      const afterResult_valid = await webSocketProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { name: "chat", url: "wss://chat.example.com/ws", protocols: "[\"graphql-ws\"]" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await webSocketProviderHandler.configure({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -83,8 +93,13 @@ describe('WebSocketProvider imperative handler', () => {
     it('fixture "send_json_message" -> ok', async () => {
       if (typeof webSocketProviderHandler.send !== 'function') return;
       const storage = createInMemoryStorage();
-      await webSocketProviderHandler.list({  }, storage);
-      const result = await webSocketProviderHandler.send({ connection: "events", message: "{\"type\":\"subscribe\",\"channel\":\"deploys\"}" }, storage);
+      const afterResult_valid = await webSocketProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { connection: "events", message: "{\"type\":\"subscribe\",\"channel\":\"deploys\"}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await webSocketProviderHandler.send({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -111,8 +126,13 @@ describe('WebSocketProvider imperative handler', () => {
     it('fixture "receive_from_events" -> ok', async () => {
       if (typeof webSocketProviderHandler.receive !== 'function') return;
       const storage = createInMemoryStorage();
-      await webSocketProviderHandler.list({  }, storage);
-      const result = await webSocketProviderHandler.receive({ connection: "events" }, storage);
+      const afterResult_valid = await webSocketProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { connection: "events" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await webSocketProviderHandler.receive({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -139,8 +159,13 @@ describe('WebSocketProvider imperative handler', () => {
     it('fixture "close_events" -> ok', async () => {
       if (typeof webSocketProviderHandler.close !== 'function') return;
       const storage = createInMemoryStorage();
-      await webSocketProviderHandler.list({  }, storage);
-      const result = await webSocketProviderHandler.close({ connection: "events" }, storage);
+      const afterResult_valid = await webSocketProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { connection: "events" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await webSocketProviderHandler.close({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -167,8 +192,13 @@ describe('WebSocketProvider imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof webSocketProviderHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await webSocketProviderHandler.list({  }, storage);
-      const result = await webSocketProviderHandler.list({  }, storage);
+      const afterResult_valid = await webSocketProviderHandler.list({  }, storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await webSocketProviderHandler.list({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 

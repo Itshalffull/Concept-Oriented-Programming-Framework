@@ -164,8 +164,13 @@ describe('ContractTest functional handler', () => {
     it('fixture "verify_rust_ts" -> ok', async () => {
       if (typeof contractTestHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(contractTestHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage);
-      const result = await interpret(contractTestHandler.verify({ contract: "ctr-pwd-001", producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" }), storage);
+      const afterResult_generate_password = await interpret(contractTestHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage);
+      const _pool = Object.assign({}, (afterResult_generate_password?.output ?? {}));
+      const _fixtureInput = { contract: "ctr-pwd-001", producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(contractTestHandler.verify({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -242,16 +247,26 @@ describe('ContractTest functional handler', () => {
     it('fixture "matrix_all" -> ok', async () => {
       if (typeof contractTestHandler.matrix !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(contractTestHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage);
-      const result = await interpret(contractTestHandler.matrix({  }), storage);
+      const afterResult_generate_password = await interpret(contractTestHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage);
+      const _pool = Object.assign({}, (afterResult_generate_password?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(contractTestHandler.matrix({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "matrix_filtered" -> ok', async () => {
       if (typeof contractTestHandler.matrix !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(contractTestHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage);
-      const result = await interpret(contractTestHandler.matrix({ concepts: ["password","auth"] }), storage);
+      const afterResult_generate_password = await interpret(contractTestHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage);
+      const _pool = Object.assign({}, (afterResult_generate_password?.output ?? {}));
+      const _fixtureInput = { concepts: ["password","auth"] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(contractTestHandler.matrix({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -312,16 +327,26 @@ describe('ContractTest functional handler', () => {
     it('fixture "can_deploy_ts" -> ok', async () => {
       if (typeof contractTestHandler.canDeploy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(contractTestHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage);
-      const result = await interpret(contractTestHandler.canDeploy({ concept: "password", language: "typescript" }), storage);
+      const afterResult_generate_password = await interpret(contractTestHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage);
+      const _pool = Object.assign({}, (afterResult_generate_password?.output ?? {}));
+      const _fixtureInput = { concept: "password", language: "typescript" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(contractTestHandler.canDeploy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "can_deploy_rust" -> ok', async () => {
       if (typeof contractTestHandler.canDeploy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(contractTestHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage);
-      const result = await interpret(contractTestHandler.canDeploy({ concept: "password", language: "rust" }), storage);
+      const afterResult_generate_password = await interpret(contractTestHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage);
+      const _pool = Object.assign({}, (afterResult_generate_password?.output ?? {}));
+      const _fixtureInput = { concept: "password", language: "rust" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(contractTestHandler.canDeploy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

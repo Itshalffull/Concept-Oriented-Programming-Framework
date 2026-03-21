@@ -148,8 +148,13 @@ describe('AddWinsResolution functional handler', () => {
     it('fixture "resolve_set_union" -> ok', async () => {
       if (typeof addWinsResolutionHandler.attemptResolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(addWinsResolutionHandler.register({  }), storage);
-      const result = await interpret(addWinsResolutionHandler.attemptResolve({ base: null, v1: "[\"tag-a\", \"tag-b\"]", v2: "[\"tag-b\", \"tag-c\"]", context: "tags" }), storage);
+      const afterResult_valid = await interpret(addWinsResolutionHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { base: null, v1: "[\"tag-a\", \"tag-b\"]", v2: "[\"tag-b\", \"tag-c\"]", context: "tags" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(addWinsResolutionHandler.attemptResolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

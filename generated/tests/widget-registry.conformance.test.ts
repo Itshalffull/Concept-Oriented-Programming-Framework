@@ -163,16 +163,26 @@ describe('WidgetRegistry functional handler', () => {
     it('fixture "query_by_concept" -> ok', async () => {
       if (typeof widgetRegistryHandler.query !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetRegistryHandler.register({ widget: "approval-detail", interactor: "entity-detail", concept: "Approval", suite: "governance", tags: "[]", specificity: "20", contractVersion: "1", contractSlots: "[]", contractActions: "[]", secondaryRoles: "[]" }), storage);
-      const result = await interpret(widgetRegistryHandler.query({ concept: "Approval" }), storage);
+      const afterResult_valid_register = await interpret(widgetRegistryHandler.register({ widget: "approval-detail", interactor: "entity-detail", concept: "Approval", suite: "governance", tags: "[]", specificity: "20", contractVersion: "1", contractSlots: "[]", contractActions: "[]", secondaryRoles: "[]" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
+      const _fixtureInput = { concept: "Approval" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetRegistryHandler.query({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "query_by_suite" -> ok', async () => {
       if (typeof widgetRegistryHandler.query !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetRegistryHandler.register({ widget: "approval-detail", interactor: "entity-detail", concept: "Approval", suite: "governance", tags: "[]", specificity: "20", contractVersion: "1", contractSlots: "[]", contractActions: "[]", secondaryRoles: "[]" }), storage);
-      const result = await interpret(widgetRegistryHandler.query({ suite: "governance" }), storage);
+      const afterResult_valid_register = await interpret(widgetRegistryHandler.register({ widget: "approval-detail", interactor: "entity-detail", concept: "Approval", suite: "governance", tags: "[]", specificity: "20", contractVersion: "1", contractSlots: "[]", contractActions: "[]", secondaryRoles: "[]" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
+      const _fixtureInput = { suite: "governance" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetRegistryHandler.query({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -241,8 +251,13 @@ describe('WidgetRegistry functional handler', () => {
     it('fixture "valid_remove" -> ok', async () => {
       if (typeof widgetRegistryHandler.remove !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(widgetRegistryHandler.register({ widget: "approval-detail", interactor: "entity-detail", concept: "Approval", suite: "governance", tags: "[]", specificity: "20", contractVersion: "1", contractSlots: "[]", contractActions: "[]", secondaryRoles: "[]" }), storage);
-      const result = await interpret(widgetRegistryHandler.remove({  }), storage);
+      const afterResult_valid_register = await interpret(widgetRegistryHandler.register({ widget: "approval-detail", interactor: "entity-detail", concept: "Approval", suite: "governance", tags: "[]", specificity: "20", contractVersion: "1", contractSlots: "[]", contractActions: "[]", secondaryRoles: "[]" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(widgetRegistryHandler.remove({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

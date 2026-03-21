@@ -164,16 +164,26 @@ describe('BuildCache functional handler', () => {
     it('fixture "record_deterministic" -> ok', async () => {
       if (typeof buildCacheHandler.record !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
-      const result = await interpret(buildCacheHandler.record({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", outputHash: "xyz789", outputRef: ".clef-cache/ts/password", sourceLocator: "./specs/password.concept", deterministic: "true" }), storage);
+      const afterResult_check_cached = await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
+      const _pool = Object.assign({}, (afterResult_check_cached?.output ?? {}));
+      const _fixtureInput = { stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", outputHash: "xyz789", outputRef: ".clef-cache/ts/password", sourceLocator: "./specs/password.concept", deterministic: "true" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(buildCacheHandler.record({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "record_nondeterministic" -> ok', async () => {
       if (typeof buildCacheHandler.record !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
-      const result = await interpret(buildCacheHandler.record({ stepKey: "framework:LLMGen:summary", inputHash: "abc123", outputHash: "xyz789", deterministic: "false" }), storage);
+      const afterResult_check_cached = await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
+      const _pool = Object.assign({}, (afterResult_check_cached?.output ?? {}));
+      const _fixtureInput = { stepKey: "framework:LLMGen:summary", inputHash: "abc123", outputHash: "xyz789", deterministic: "false" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(buildCacheHandler.record({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -234,8 +244,13 @@ describe('BuildCache functional handler', () => {
     it('fixture "invalidate_existing" -> ok', async () => {
       if (typeof buildCacheHandler.invalidate !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
-      const result = await interpret(buildCacheHandler.invalidate({ stepKey: "framework:TypeScriptGen:password" }), storage);
+      const afterResult_check_cached = await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
+      const _pool = Object.assign({}, (afterResult_check_cached?.output ?? {}));
+      const _fixtureInput = { stepKey: "framework:TypeScriptGen:password" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(buildCacheHandler.invalidate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -304,16 +319,26 @@ describe('BuildCache functional handler', () => {
     it('fixture "invalidate_by_source" -> ok', async () => {
       if (typeof buildCacheHandler.invalidateBySource !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
-      const result = await interpret(buildCacheHandler.invalidateBySource({ sourceLocator: "./specs/password.concept" }), storage);
+      const afterResult_check_cached = await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
+      const _pool = Object.assign({}, (afterResult_check_cached?.output ?? {}));
+      const _fixtureInput = { sourceLocator: "./specs/password.concept" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(buildCacheHandler.invalidateBySource({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalidate_by_missing_source" -> ok', async () => {
       if (typeof buildCacheHandler.invalidateBySource !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
-      const result = await interpret(buildCacheHandler.invalidateBySource({ sourceLocator: "./specs/nonexistent.concept" }), storage);
+      const afterResult_check_cached = await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
+      const _pool = Object.assign({}, (afterResult_check_cached?.output ?? {}));
+      const _fixtureInput = { sourceLocator: "./specs/nonexistent.concept" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(buildCacheHandler.invalidateBySource({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -374,16 +399,26 @@ describe('BuildCache functional handler', () => {
     it('fixture "invalidate_by_kind" -> ok', async () => {
       if (typeof buildCacheHandler.invalidateByKind !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
-      const result = await interpret(buildCacheHandler.invalidateByKind({ kindName: "ConceptManifest" }), storage);
+      const afterResult_check_cached = await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
+      const _pool = Object.assign({}, (afterResult_check_cached?.output ?? {}));
+      const _fixtureInput = { kindName: "ConceptManifest" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(buildCacheHandler.invalidateByKind({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalidate_by_unknown_kind" -> ok', async () => {
       if (typeof buildCacheHandler.invalidateByKind !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
-      const result = await interpret(buildCacheHandler.invalidateByKind({ kindName: "UnknownKind" }), storage);
+      const afterResult_check_cached = await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
+      const _pool = Object.assign({}, (afterResult_check_cached?.output ?? {}));
+      const _fixtureInput = { kindName: "UnknownKind" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(buildCacheHandler.invalidateByKind({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -444,8 +479,13 @@ describe('BuildCache functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof buildCacheHandler.invalidateAll !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
-      const result = await interpret(buildCacheHandler.invalidateAll({  }), storage);
+      const afterResult_check_cached = await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
+      const _pool = Object.assign({}, (afterResult_check_cached?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(buildCacheHandler.invalidateAll({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -506,8 +546,13 @@ describe('BuildCache functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof buildCacheHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
-      const result = await interpret(buildCacheHandler.status({  }), storage);
+      const afterResult_check_cached = await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
+      const _pool = Object.assign({}, (afterResult_check_cached?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(buildCacheHandler.status({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -568,8 +613,13 @@ describe('BuildCache functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof buildCacheHandler.staleSteps !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
-      const result = await interpret(buildCacheHandler.staleSteps({  }), storage);
+      const afterResult_check_cached = await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
+      const _pool = Object.assign({}, (afterResult_check_cached?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(buildCacheHandler.staleSteps({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

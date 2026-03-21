@@ -162,8 +162,13 @@ describe('Env functional handler', () => {
     it('fixture "promote_staging_to_prod" -> ok', async () => {
       if (typeof envHandler.promote !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(envHandler.resolve({ environment: "staging" }), storage);
-      const result = await interpret(envHandler.promote({ fromEnv: "env-staging-001", toEnv: "env-prod-001", suiteName: "auth-suite" }), storage);
+      const afterResult_resolve_staging = await interpret(envHandler.resolve({ environment: "staging" }), storage);
+      const _pool = Object.assign({}, (afterResult_resolve_staging?.output ?? {}));
+      const _fixtureInput = { fromEnv: "env-staging-001", toEnv: "env-prod-001", suiteName: "auth-suite" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(envHandler.promote({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

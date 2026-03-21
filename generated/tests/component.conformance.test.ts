@@ -224,8 +224,13 @@ describe('Component functional handler', () => {
     it('fixture "place_in_header" -> ok', async () => {
       if (typeof componentHandler.place !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(componentHandler.register({ component: "hero-banner", config: "{ \"type\": \"banner\", \"height\": 400 }" }), storage);
-      const result = await interpret(componentHandler.place({ component: "hero-banner", region: "header" }), storage);
+      const afterResult_register_hero = await interpret(componentHandler.register({ component: "hero-banner", config: "{ \"type\": \"banner\", \"height\": 400 }" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_hero?.output ?? {}));
+      const _fixtureInput = { component: "hero-banner", region: "header" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(componentHandler.place({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -294,16 +299,26 @@ describe('Component functional handler', () => {
     it('fixture "set_visible_true" -> ok', async () => {
       if (typeof componentHandler.setVisibility !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(componentHandler.register({ component: "hero-banner", config: "{ \"type\": \"banner\", \"height\": 400 }" }), storage);
-      const result = await interpret(componentHandler.setVisibility({ component: "hero-banner", visible: "true" }), storage);
+      const afterResult_register_hero = await interpret(componentHandler.register({ component: "hero-banner", config: "{ \"type\": \"banner\", \"height\": 400 }" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_hero?.output ?? {}));
+      const _fixtureInput = { component: "hero-banner", visible: "true" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(componentHandler.setVisibility({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "set_visible_false" -> ok', async () => {
       if (typeof componentHandler.setVisibility !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(componentHandler.register({ component: "hero-banner", config: "{ \"type\": \"banner\", \"height\": 400 }" }), storage);
-      const result = await interpret(componentHandler.setVisibility({ component: "hero-banner", visible: "false" }), storage);
+      const afterResult_register_hero = await interpret(componentHandler.register({ component: "hero-banner", config: "{ \"type\": \"banner\", \"height\": 400 }" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_hero?.output ?? {}));
+      const _fixtureInput = { component: "hero-banner", visible: "false" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(componentHandler.setVisibility({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -372,8 +387,13 @@ describe('Component functional handler', () => {
     it('fixture "evaluate_homepage" -> ok', async () => {
       if (typeof componentHandler.evaluateVisibility !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(componentHandler.register({ component: "hero-banner", config: "{ \"type\": \"banner\", \"height\": 400 }" }), storage);
-      const result = await interpret(componentHandler.evaluateVisibility({ component: "hero-banner", context: "homepage" }), storage);
+      const afterResult_register_hero = await interpret(componentHandler.register({ component: "hero-banner", config: "{ \"type\": \"banner\", \"height\": 400 }" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_hero?.output ?? {}));
+      const _fixtureInput = { component: "hero-banner", context: "homepage" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(componentHandler.evaluateVisibility({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

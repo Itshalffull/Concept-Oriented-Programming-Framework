@@ -171,8 +171,13 @@ describe('AnalysisRule functional handler', () => {
     it('fixture "valid_evaluate" -> ok', async () => {
       if (typeof analysisRuleHandler.evaluate !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(analysisRuleHandler.create({ name: "dead-variants", engine: "graph-traversal", source: "[{\"match\":\"unused\",\"message\":\"Dead variant detected\"}]", severity: "warning", category: "dead-code" }), storage);
-      const result = await interpret(analysisRuleHandler.evaluate({  }), storage);
+      const afterResult_valid_create = await interpret(analysisRuleHandler.create({ name: "dead-variants", engine: "graph-traversal", source: "[{\"match\":\"unused\",\"message\":\"Dead variant detected\"}]", severity: "warning", category: "dead-code" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(analysisRuleHandler.evaluate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -241,16 +246,26 @@ describe('AnalysisRule functional handler', () => {
     it('fixture "all_rules" -> ok', async () => {
       if (typeof analysisRuleHandler.evaluateAll !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(analysisRuleHandler.create({ name: "dead-variants", engine: "graph-traversal", source: "[{\"match\":\"unused\",\"message\":\"Dead variant detected\"}]", severity: "warning", category: "dead-code" }), storage);
-      const result = await interpret(analysisRuleHandler.evaluateAll({ category: "" }), storage);
+      const afterResult_valid_create = await interpret(analysisRuleHandler.create({ name: "dead-variants", engine: "graph-traversal", source: "[{\"match\":\"unused\",\"message\":\"Dead variant detected\"}]", severity: "warning", category: "dead-code" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
+      const _fixtureInput = { category: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(analysisRuleHandler.evaluateAll({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "by_category" -> ok', async () => {
       if (typeof analysisRuleHandler.evaluateAll !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(analysisRuleHandler.create({ name: "dead-variants", engine: "graph-traversal", source: "[{\"match\":\"unused\",\"message\":\"Dead variant detected\"}]", severity: "warning", category: "dead-code" }), storage);
-      const result = await interpret(analysisRuleHandler.evaluateAll({ category: "dead-code" }), storage);
+      const afterResult_valid_create = await interpret(analysisRuleHandler.create({ name: "dead-variants", engine: "graph-traversal", source: "[{\"match\":\"unused\",\"message\":\"Dead variant detected\"}]", severity: "warning", category: "dead-code" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
+      const _fixtureInput = { category: "dead-code" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(analysisRuleHandler.evaluateAll({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -311,8 +326,13 @@ describe('AnalysisRule functional handler', () => {
     it('fixture "valid_get" -> ok', async () => {
       if (typeof analysisRuleHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(analysisRuleHandler.create({ name: "dead-variants", engine: "graph-traversal", source: "[{\"match\":\"unused\",\"message\":\"Dead variant detected\"}]", severity: "warning", category: "dead-code" }), storage);
-      const result = await interpret(analysisRuleHandler.get({  }), storage);
+      const afterResult_valid_create = await interpret(analysisRuleHandler.create({ name: "dead-variants", engine: "graph-traversal", source: "[{\"match\":\"unused\",\"message\":\"Dead variant detected\"}]", severity: "warning", category: "dead-code" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(analysisRuleHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

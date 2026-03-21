@@ -148,16 +148,26 @@ describe('RecursiveMerge functional handler', () => {
     it('fixture "clean_recursive" -> ok', async () => {
       if (typeof recursiveMergeHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(recursiveMergeHandler.register({  }), storage);
-      const result = await interpret(recursiveMergeHandler.execute({ base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3" }), storage);
+      const afterResult_valid = await interpret(recursiveMergeHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(recursiveMergeHandler.execute({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "conflict_recursive" -> ok', async () => {
       if (typeof recursiveMergeHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(recursiveMergeHandler.register({  }), storage);
-      const result = await interpret(recursiveMergeHandler.execute({ base: "line1", ours: "lineA", theirs: "lineB" }), storage);
+      const afterResult_valid = await interpret(recursiveMergeHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { base: "line1", ours: "lineA", theirs: "lineB" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(recursiveMergeHandler.execute({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

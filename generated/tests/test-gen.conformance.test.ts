@@ -78,16 +78,26 @@ describe('TestGen imperative handler', () => {
     it('fixture "build_plan_basic" -> ok', async () => {
       if (typeof testGenHandler.buildTestPlan !== 'function') return;
       const storage = createInMemoryStorage();
-      await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }, storage);
-      const result = await testGenHandler.buildTestPlan({ concept_ref: "clef/concept/User", concept_data: "{\"name\":\"User\",\"actions\":[],\"invariants\":[]}" }, storage);
+      const afterResult_generate_typescript = await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }, storage);
+      const _pool = Object.assign({}, (afterResult_generate_typescript?.output ?? {}));
+      const _fixtureInput = { concept_ref: "clef/concept/User", concept_data: "{\"name\":\"User\",\"actions\":[],\"invariants\":[]}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await testGenHandler.buildTestPlan({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "build_plan_missing_ref" -> invalid', async () => {
       if (typeof testGenHandler.buildTestPlan !== 'function') return;
       const storage = createInMemoryStorage();
-      await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }, storage);
-      const result = await testGenHandler.buildTestPlan({ concept_ref: "", concept_data: "{}" }, storage);
+      const afterResult_generate_typescript = await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }, storage);
+      const _pool = Object.assign({}, (afterResult_generate_typescript?.output ?? {}));
+      const _fixtureInput = { concept_ref: "", concept_data: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await testGenHandler.buildTestPlan({ ..._fixtureInput }, storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('invalid'));
     });
@@ -107,16 +117,26 @@ describe('TestGen imperative handler', () => {
     it('fixture "regenerate_existing" -> ok', async () => {
       if (typeof testGenHandler.regenerate !== 'function') return;
       const storage = createInMemoryStorage();
-      await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }, storage);
-      const result = await testGenHandler.regenerate({ generation: "tg-abc123" }, storage);
+      const afterResult_generate_typescript = await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }, storage);
+      const _pool = Object.assign({}, (afterResult_generate_typescript?.output ?? {}));
+      const _fixtureInput = { generation: "tg-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await testGenHandler.regenerate({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "regenerate_missing" -> ok', async () => {
       if (typeof testGenHandler.regenerate !== 'function') return;
       const storage = createInMemoryStorage();
-      await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }, storage);
-      const result = await testGenHandler.regenerate({ generation: "tg-nonexistent" }, storage);
+      const afterResult_generate_typescript = await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }, storage);
+      const _pool = Object.assign({}, (afterResult_generate_typescript?.output ?? {}));
+      const _fixtureInput = { generation: "tg-nonexistent" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await testGenHandler.regenerate({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -135,16 +155,26 @@ describe('TestGen imperative handler', () => {
     it('fixture "list_all" -> ok', async () => {
       if (typeof testGenHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }, storage);
-      const result = await testGenHandler.list({  }, storage);
+      const afterResult_generate_typescript = await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }, storage);
+      const _pool = Object.assign({}, (afterResult_generate_typescript?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await testGenHandler.list({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "list_by_concept" -> ok', async () => {
       if (typeof testGenHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }, storage);
-      const result = await testGenHandler.list({ concept_ref: "clef/concept/Password" }, storage);
+      const afterResult_generate_typescript = await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }, storage);
+      const _pool = Object.assign({}, (afterResult_generate_typescript?.output ?? {}));
+      const _fixtureInput = { concept_ref: "clef/concept/Password" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await testGenHandler.list({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -163,16 +193,26 @@ describe('TestGen imperative handler', () => {
     it('fixture "configure_runs" -> ok', async () => {
       if (typeof testGenHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
-      await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }, storage);
-      const result = await testGenHandler.configure({ generation: "tg-abc123", num_runs: "50000" }, storage);
+      const afterResult_generate_typescript = await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }, storage);
+      const _pool = Object.assign({}, (afterResult_generate_typescript?.output ?? {}));
+      const _fixtureInput = { generation: "tg-abc123", num_runs: "50000" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await testGenHandler.configure({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_fuzz" -> ok', async () => {
       if (typeof testGenHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
-      await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }, storage);
-      const result = await testGenHandler.configure({ generation: "tg-abc123", fuzz_duration_s: "120", shrink_enabled: "true" }, storage);
+      const afterResult_generate_typescript = await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }, storage);
+      const _pool = Object.assign({}, (afterResult_generate_typescript?.output ?? {}));
+      const _fixtureInput = { generation: "tg-abc123", fuzz_duration_s: "120", shrink_enabled: "true" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await testGenHandler.configure({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -191,16 +231,26 @@ describe('TestGen imperative handler', () => {
     it('fixture "coverage_password" -> ok', async () => {
       if (typeof testGenHandler.coverage !== 'function') return;
       const storage = createInMemoryStorage();
-      await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }, storage);
-      const result = await testGenHandler.coverage({ concept_ref: "clef/concept/Password" }, storage);
+      const afterResult_generate_typescript = await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }, storage);
+      const _pool = Object.assign({}, (afterResult_generate_typescript?.output ?? {}));
+      const _fixtureInput = { concept_ref: "clef/concept/Password" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await testGenHandler.coverage({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "coverage_missing" -> ok', async () => {
       if (typeof testGenHandler.coverage !== 'function') return;
       const storage = createInMemoryStorage();
-      await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }, storage);
-      const result = await testGenHandler.coverage({ concept_ref: "" }, storage);
+      const afterResult_generate_typescript = await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }, storage);
+      const _pool = Object.assign({}, (afterResult_generate_typescript?.output ?? {}));
+      const _fixtureInput = { concept_ref: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await testGenHandler.coverage({ ..._fixtureInput }, storage);
       expect(result.variant).toBe('ok');
     });
 

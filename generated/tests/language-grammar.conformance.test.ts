@@ -155,8 +155,13 @@ describe('LanguageGrammar functional handler', () => {
     it('fixture "resolve_ts" -> ok', async () => {
       if (typeof languageGrammarHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(languageGrammarHandler.register({ name: "typescript", extensions: "[\".ts\",\".tsx\"]", parserWasmPath: "tree-sitter-typescript.wasm", nodeTypes: "{}" }), storage);
-      const result = await interpret(languageGrammarHandler.resolve({ fileExtension: ".ts" }), storage);
+      const afterResult_register_typescript = await interpret(languageGrammarHandler.register({ name: "typescript", extensions: "[\".ts\",\".tsx\"]", parserWasmPath: "tree-sitter-typescript.wasm", nodeTypes: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_typescript?.output ?? {}));
+      const _fixtureInput = { fileExtension: ".ts" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(languageGrammarHandler.resolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('LanguageGrammar functional handler', () => {
     it('fixture "resolve_mime_ts" -> ok', async () => {
       if (typeof languageGrammarHandler.resolveByMime !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(languageGrammarHandler.register({ name: "typescript", extensions: "[\".ts\",\".tsx\"]", parserWasmPath: "tree-sitter-typescript.wasm", nodeTypes: "{}" }), storage);
-      const result = await interpret(languageGrammarHandler.resolveByMime({ mimeType: "text/typescript" }), storage);
+      const afterResult_register_typescript = await interpret(languageGrammarHandler.register({ name: "typescript", extensions: "[\".ts\",\".tsx\"]", parserWasmPath: "tree-sitter-typescript.wasm", nodeTypes: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_typescript?.output ?? {}));
+      const _fixtureInput = { mimeType: "text/typescript" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(languageGrammarHandler.resolveByMime({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('LanguageGrammar functional handler', () => {
     it('fixture "get_grammar" -> ok', async () => {
       if (typeof languageGrammarHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(languageGrammarHandler.register({ name: "typescript", extensions: "[\".ts\",\".tsx\"]", parserWasmPath: "tree-sitter-typescript.wasm", nodeTypes: "{}" }), storage);
-      const result = await interpret(languageGrammarHandler.get({ grammar: "grammar-1" }), storage);
+      const afterResult_register_typescript = await interpret(languageGrammarHandler.register({ name: "typescript", extensions: "[\".ts\",\".tsx\"]", parserWasmPath: "tree-sitter-typescript.wasm", nodeTypes: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_typescript?.output ?? {}));
+      const _fixtureInput = { grammar: "grammar-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(languageGrammarHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -362,8 +377,13 @@ describe('LanguageGrammar functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof languageGrammarHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(languageGrammarHandler.register({ name: "typescript", extensions: "[\".ts\",\".tsx\"]", parserWasmPath: "tree-sitter-typescript.wasm", nodeTypes: "{}" }), storage);
-      const result = await interpret(languageGrammarHandler.list({  }), storage);
+      const afterResult_register_typescript = await interpret(languageGrammarHandler.register({ name: "typescript", extensions: "[\".ts\",\".tsx\"]", parserWasmPath: "tree-sitter-typescript.wasm", nodeTypes: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_typescript?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(languageGrammarHandler.list({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

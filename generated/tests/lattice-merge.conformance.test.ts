@@ -148,16 +148,26 @@ describe('LatticeMerge functional handler', () => {
     it('fixture "merge_g_counter" -> ok', async () => {
       if (typeof latticeMergeHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(latticeMergeHandler.register({  }), storage);
-      const result = await interpret(latticeMergeHandler.execute({ base: "{\"type\":\"g-counter\",\"counters\":{\"a\":1}}", ours: "{\"type\":\"g-counter\",\"counters\":{\"a\":2}}", theirs: "{\"type\":\"g-counter\",\"counters\":{\"a\":1,\"b\":3}}" }), storage);
+      const afterResult_valid = await interpret(latticeMergeHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { base: "{\"type\":\"g-counter\",\"counters\":{\"a\":1}}", ours: "{\"type\":\"g-counter\",\"counters\":{\"a\":2}}", theirs: "{\"type\":\"g-counter\",\"counters\":{\"a\":1,\"b\":3}}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(latticeMergeHandler.execute({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_crdt_json" -> error', async () => {
       if (typeof latticeMergeHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(latticeMergeHandler.register({  }), storage);
-      const result = await interpret(latticeMergeHandler.execute({ base: "not-json", ours: "{\"type\":\"g-counter\"}", theirs: "{\"type\":\"g-counter\"}" }), storage);
+      const afterResult_valid = await interpret(latticeMergeHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { base: "not-json", ours: "{\"type\":\"g-counter\"}", theirs: "{\"type\":\"g-counter\"}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(latticeMergeHandler.execute({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 

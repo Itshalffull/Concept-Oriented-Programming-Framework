@@ -101,8 +101,13 @@ describe('SymbolRelationship functional handler', () => {
     it('fixture "add_duplicate" -> ok', async () => {
       if (typeof symbolRelationshipHandler.add !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage);
-      const result = await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage);
+      const afterResult_valid_add = await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
+      const _fixtureInput = { source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(symbolRelationshipHandler.add({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -163,16 +168,26 @@ describe('SymbolRelationship functional handler', () => {
     it('fixture "find_from_source" -> ok', async () => {
       if (typeof symbolRelationshipHandler.findFrom !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage);
-      const result = await interpret(symbolRelationshipHandler.findFrom({ source: "ts/class/UserHandler", kind: "implements" }), storage);
+      const afterResult_valid_add = await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
+      const _fixtureInput = { source: "ts/class/UserHandler", kind: "implements" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(symbolRelationshipHandler.findFrom({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_from_all_kinds" -> ok', async () => {
       if (typeof symbolRelationshipHandler.findFrom !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage);
-      const result = await interpret(symbolRelationshipHandler.findFrom({ source: "ts/class/UserHandler", kind: "" }), storage);
+      const afterResult_valid_add = await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
+      const _fixtureInput = { source: "ts/class/UserHandler", kind: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(symbolRelationshipHandler.findFrom({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -233,16 +248,26 @@ describe('SymbolRelationship functional handler', () => {
     it('fixture "find_to_target" -> ok', async () => {
       if (typeof symbolRelationshipHandler.findTo !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage);
-      const result = await interpret(symbolRelationshipHandler.findTo({ target: "ts/interface/IHandler", kind: "implements" }), storage);
+      const afterResult_valid_add = await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
+      const _fixtureInput = { target: "ts/interface/IHandler", kind: "implements" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(symbolRelationshipHandler.findTo({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_to_all_kinds" -> ok', async () => {
       if (typeof symbolRelationshipHandler.findTo !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage);
-      const result = await interpret(symbolRelationshipHandler.findTo({ target: "ts/interface/IHandler", kind: "" }), storage);
+      const afterResult_valid_add = await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
+      const _fixtureInput = { target: "ts/interface/IHandler", kind: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(symbolRelationshipHandler.findTo({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -303,16 +328,26 @@ describe('SymbolRelationship functional handler', () => {
     it('fixture "forward_closure" -> ok', async () => {
       if (typeof symbolRelationshipHandler.transitiveClosure !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage);
-      const result = await interpret(symbolRelationshipHandler.transitiveClosure({ start: "ts/class/BaseHandler", kind: "extends", direction: "forward" }), storage);
+      const afterResult_valid_add = await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
+      const _fixtureInput = { start: "ts/class/BaseHandler", kind: "extends", direction: "forward" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(symbolRelationshipHandler.transitiveClosure({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "backward_closure" -> ok', async () => {
       if (typeof symbolRelationshipHandler.transitiveClosure !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage);
-      const result = await interpret(symbolRelationshipHandler.transitiveClosure({ start: "ts/class/AdminHandler", kind: "extends", direction: "backward" }), storage);
+      const afterResult_valid_add = await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
+      const _fixtureInput = { start: "ts/class/AdminHandler", kind: "extends", direction: "backward" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(symbolRelationshipHandler.transitiveClosure({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -373,8 +408,13 @@ describe('SymbolRelationship functional handler', () => {
     it('fixture "valid_get" -> ok', async () => {
       if (typeof symbolRelationshipHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage);
-      const result = await interpret(symbolRelationshipHandler.get({ relationship: "symbol-relationship-1" }), storage);
+      const afterResult_valid_add = await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
+      const _fixtureInput = { relationship: "symbol-relationship-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(symbolRelationshipHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

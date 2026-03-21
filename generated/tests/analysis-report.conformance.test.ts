@@ -247,8 +247,13 @@ describe('AnalysisReport functional handler', () => {
     it('fixture "existing_report" -> ok', async () => {
       if (typeof analysisReportHandler.getReport !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" }), storage);
-      const result = await interpret(analysisReportHandler.getReport({ report: "report-001" }), storage);
+      const afterResult_table_report = await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" }), storage);
+      const _pool = Object.assign({}, (afterResult_table_report?.output ?? {}));
+      const _fixtureInput = { report: "report-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(analysisReportHandler.getReport({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -317,16 +322,26 @@ describe('AnalysisReport functional handler', () => {
     it('fixture "all_reports" -> ok', async () => {
       if (typeof analysisReportHandler.listReports !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" }), storage);
-      const result = await interpret(analysisReportHandler.listReports({ result: null }), storage);
+      const afterResult_table_report = await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" }), storage);
+      const _pool = Object.assign({}, (afterResult_table_report?.output ?? {}));
+      const _fixtureInput = { result: null } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(analysisReportHandler.listReports({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "filtered" -> ok', async () => {
       if (typeof analysisReportHandler.listReports !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" }), storage);
-      const result = await interpret(analysisReportHandler.listReports({ result: "result-abc" }), storage);
+      const afterResult_table_report = await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" }), storage);
+      const _pool = Object.assign({}, (afterResult_table_report?.output ?? {}));
+      const _fixtureInput = { result: "result-abc" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(analysisReportHandler.listReports({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -387,16 +402,26 @@ describe('AnalysisReport functional handler', () => {
     it('fixture "csv_export" -> ok', async () => {
       if (typeof analysisReportHandler.exportReport !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" }), storage);
-      const result = await interpret(analysisReportHandler.exportReport({ report: "report-001", outputFormat: "csv" }), storage);
+      const afterResult_table_report = await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" }), storage);
+      const _pool = Object.assign({}, (afterResult_table_report?.output ?? {}));
+      const _fixtureInput = { report: "report-001", outputFormat: "csv" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(analysisReportHandler.exportReport({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "markdown_export" -> ok', async () => {
       if (typeof analysisReportHandler.exportReport !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" }), storage);
-      const result = await interpret(analysisReportHandler.exportReport({ report: "report-001", outputFormat: "markdown" }), storage);
+      const afterResult_table_report = await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" }), storage);
+      const _pool = Object.assign({}, (afterResult_table_report?.output ?? {}));
+      const _fixtureInput = { report: "report-001", outputFormat: "markdown" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(analysisReportHandler.exportReport({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -155,8 +155,13 @@ describe('Cache functional handler', () => {
     it('fixture "get_existing" -> ok', async () => {
       if (typeof cacheHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(cacheHandler.set({ bin: "render", key: "home-page", data: "<html>home</html>", tags: "page,frontpage", maxAge: "600" }), storage);
-      const result = await interpret(cacheHandler.get({ bin: "render", key: "home-page" }), storage);
+      const afterResult_set_page_cache = await interpret(cacheHandler.set({ bin: "render", key: "home-page", data: "<html>home</html>", tags: "page,frontpage", maxAge: "600" }), storage);
+      const _pool = Object.assign({}, (afterResult_set_page_cache?.output ?? {}));
+      const _fixtureInput = { bin: "render", key: "home-page" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(cacheHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('Cache functional handler', () => {
     it('fixture "invalidate_existing" -> ok', async () => {
       if (typeof cacheHandler.invalidate !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(cacheHandler.set({ bin: "render", key: "home-page", data: "<html>home</html>", tags: "page,frontpage", maxAge: "600" }), storage);
-      const result = await interpret(cacheHandler.invalidate({ bin: "render", key: "home-page" }), storage);
+      const afterResult_set_page_cache = await interpret(cacheHandler.set({ bin: "render", key: "home-page", data: "<html>home</html>", tags: "page,frontpage", maxAge: "600" }), storage);
+      const _pool = Object.assign({}, (afterResult_set_page_cache?.output ?? {}));
+      const _fixtureInput = { bin: "render", key: "home-page" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(cacheHandler.invalidate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,16 +303,26 @@ describe('Cache functional handler', () => {
     it('fixture "invalidate_page_tags" -> ok', async () => {
       if (typeof cacheHandler.invalidateByTags !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(cacheHandler.set({ bin: "render", key: "home-page", data: "<html>home</html>", tags: "page,frontpage", maxAge: "600" }), storage);
-      const result = await interpret(cacheHandler.invalidateByTags({ tags: "page,frontpage" }), storage);
+      const afterResult_set_page_cache = await interpret(cacheHandler.set({ bin: "render", key: "home-page", data: "<html>home</html>", tags: "page,frontpage", maxAge: "600" }), storage);
+      const _pool = Object.assign({}, (afterResult_set_page_cache?.output ?? {}));
+      const _fixtureInput = { tags: "page,frontpage" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(cacheHandler.invalidateByTags({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalidate_empty_tags" -> ok', async () => {
       if (typeof cacheHandler.invalidateByTags !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(cacheHandler.set({ bin: "render", key: "home-page", data: "<html>home</html>", tags: "page,frontpage", maxAge: "600" }), storage);
-      const result = await interpret(cacheHandler.invalidateByTags({ tags: "" }), storage);
+      const afterResult_set_page_cache = await interpret(cacheHandler.set({ bin: "render", key: "home-page", data: "<html>home</html>", tags: "page,frontpage", maxAge: "600" }), storage);
+      const _pool = Object.assign({}, (afterResult_set_page_cache?.output ?? {}));
+      const _fixtureInput = { tags: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(cacheHandler.invalidateByTags({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

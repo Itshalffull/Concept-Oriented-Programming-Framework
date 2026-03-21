@@ -162,16 +162,26 @@ describe('SyncEntity functional handler', () => {
     it('fixture "find_article" -> ok', async () => {
       if (typeof syncEntityHandler.findByConcept !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage);
-      const result = await interpret(syncEntityHandler.findByConcept({ concept: "Article" }), storage);
+      const afterResult_register_publish_sync = await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_publish_sync?.output ?? {}));
+      const _fixtureInput = { concept: "Article" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(syncEntityHandler.findByConcept({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_nonexistent" -> ok', async () => {
       if (typeof syncEntityHandler.findByConcept !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage);
-      const result = await interpret(syncEntityHandler.findByConcept({ concept: "NonexistentConcept" }), storage);
+      const afterResult_register_publish_sync = await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_publish_sync?.output ?? {}));
+      const _fixtureInput = { concept: "NonexistentConcept" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(syncEntityHandler.findByConcept({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -232,16 +242,26 @@ describe('SyncEntity functional handler', () => {
     it('fixture "find_publish_ok" -> ok', async () => {
       if (typeof syncEntityHandler.findTriggerableBy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage);
-      const result = await interpret(syncEntityHandler.findTriggerableBy({ action: "publish", variant: "ok" }), storage);
+      const afterResult_register_publish_sync = await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_publish_sync?.output ?? {}));
+      const _fixtureInput = { action: "publish", variant: "ok" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(syncEntityHandler.findTriggerableBy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_create_any" -> ok', async () => {
       if (typeof syncEntityHandler.findTriggerableBy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage);
-      const result = await interpret(syncEntityHandler.findTriggerableBy({ action: "create", variant: "" }), storage);
+      const afterResult_register_publish_sync = await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_publish_sync?.output ?? {}));
+      const _fixtureInput = { action: "create", variant: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(syncEntityHandler.findTriggerableBy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -302,8 +322,13 @@ describe('SyncEntity functional handler', () => {
     it('fixture "chain_publish" -> ok', async () => {
       if (typeof syncEntityHandler.chainFrom !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage);
-      const result = await interpret(syncEntityHandler.chainFrom({ action: "publish", variant: "ok", depth: "3" }), storage);
+      const afterResult_register_publish_sync = await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_publish_sync?.output ?? {}));
+      const _fixtureInput = { action: "publish", variant: "ok", depth: "3" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(syncEntityHandler.chainFrom({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -371,8 +396,13 @@ describe('SyncEntity functional handler', () => {
     it('fixture "find_dead_ends_valid" -> ok', async () => {
       if (typeof syncEntityHandler.findDeadEnds !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage);
-      const result = await interpret(syncEntityHandler.findDeadEnds({  }), storage);
+      const afterResult_register_publish_sync = await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_publish_sync?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(syncEntityHandler.findDeadEnds({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -433,8 +463,13 @@ describe('SyncEntity functional handler', () => {
     it('fixture "find_orphans_valid" -> ok', async () => {
       if (typeof syncEntityHandler.findOrphanVariants !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage);
-      const result = await interpret(syncEntityHandler.findOrphanVariants({  }), storage);
+      const afterResult_register_publish_sync = await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_publish_sync?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(syncEntityHandler.findOrphanVariants({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -495,8 +530,13 @@ describe('SyncEntity functional handler', () => {
     it('fixture "get_existing" -> ok', async () => {
       if (typeof syncEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage);
-      const result = await interpret(syncEntityHandler.get({ sync: "sync-entity-1" }), storage);
+      const afterResult_register_publish_sync = await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_publish_sync?.output ?? {}));
+      const _fixtureInput = { sync: "sync-entity-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(syncEntityHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

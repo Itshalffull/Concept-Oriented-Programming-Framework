@@ -169,8 +169,13 @@ describe('Migration functional handler', () => {
     it('fixture "expand_valid" -> ok', async () => {
       if (typeof migrationHandler.expand !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(migrationHandler.plan({ concept: "UserProfile", fromVersion: "1", toVersion: "3" }), storage);
-      const result = await interpret(migrationHandler.expand({ migration: "mig-abc123" }), storage);
+      const afterResult_plan_upgrade = await interpret(migrationHandler.plan({ concept: "UserProfile", fromVersion: "1", toVersion: "3" }), storage);
+      const _pool = Object.assign({}, (afterResult_plan_upgrade?.output ?? {}));
+      const _fixtureInput = { migration: "mig-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(migrationHandler.expand({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -238,8 +243,13 @@ describe('Migration functional handler', () => {
     it('fixture "migrate_valid" -> ok', async () => {
       if (typeof migrationHandler.migrate !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(migrationHandler.plan({ concept: "UserProfile", fromVersion: "1", toVersion: "3" }), storage);
-      const result = await interpret(migrationHandler.migrate({ migration: "mig-abc123" }), storage);
+      const afterResult_plan_upgrade = await interpret(migrationHandler.plan({ concept: "UserProfile", fromVersion: "1", toVersion: "3" }), storage);
+      const _pool = Object.assign({}, (afterResult_plan_upgrade?.output ?? {}));
+      const _fixtureInput = { migration: "mig-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(migrationHandler.migrate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -307,8 +317,13 @@ describe('Migration functional handler', () => {
     it('fixture "contract_valid" -> ok', async () => {
       if (typeof migrationHandler.contract !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(migrationHandler.plan({ concept: "UserProfile", fromVersion: "1", toVersion: "3" }), storage);
-      const result = await interpret(migrationHandler.contract({ migration: "mig-abc123" }), storage);
+      const afterResult_plan_upgrade = await interpret(migrationHandler.plan({ concept: "UserProfile", fromVersion: "1", toVersion: "3" }), storage);
+      const _pool = Object.assign({}, (afterResult_plan_upgrade?.output ?? {}));
+      const _fixtureInput = { migration: "mig-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(migrationHandler.contract({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -376,8 +391,13 @@ describe('Migration functional handler', () => {
     it('fixture "status_valid" -> ok', async () => {
       if (typeof migrationHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(migrationHandler.plan({ concept: "UserProfile", fromVersion: "1", toVersion: "3" }), storage);
-      const result = await interpret(migrationHandler.status({ migration: "mig-abc123" }), storage);
+      const afterResult_plan_upgrade = await interpret(migrationHandler.plan({ concept: "UserProfile", fromVersion: "1", toVersion: "3" }), storage);
+      const _pool = Object.assign({}, (afterResult_plan_upgrade?.output ?? {}));
+      const _fixtureInput = { migration: "mig-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(migrationHandler.status({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

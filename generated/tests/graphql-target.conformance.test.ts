@@ -108,8 +108,13 @@ describe('GraphqlTarget functional handler', () => {
     it('fixture "federation_conflict" -> ok', async () => {
       if (typeof graphqlTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(graphqlTargetHandler.generate({ projection: "order-projection", config: "{}" }), storage);
-      const result = await interpret(graphqlTargetHandler.generate({ projection: "item-projection", config: "{\"federation\":true,\"federationConflict\":true}" }), storage);
+      const afterResult_with_default_config = await interpret(graphqlTargetHandler.generate({ projection: "order-projection", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_with_default_config?.output ?? {}));
+      const _fixtureInput = { projection: "item-projection", config: "{\"federation\":true,\"federationConflict\":true}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(graphqlTargetHandler.generate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -238,8 +243,13 @@ describe('GraphqlTarget functional handler', () => {
     it('fixture "list_order_operations" -> ok', async () => {
       if (typeof graphqlTargetHandler.listOperations !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(graphqlTargetHandler.generate({ projection: "order-projection", config: "{}" }), storage);
-      const result = await interpret(graphqlTargetHandler.listOperations({ concept: "Order" }), storage);
+      const afterResult_with_default_config = await interpret(graphqlTargetHandler.generate({ projection: "order-projection", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_with_default_config?.output ?? {}));
+      const _fixtureInput = { concept: "Order" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(graphqlTargetHandler.listOperations({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

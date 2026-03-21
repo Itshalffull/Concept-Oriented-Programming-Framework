@@ -169,8 +169,13 @@ describe('ThemeComplianceProvider functional handler', () => {
     it('fixture "existing_check" -> ok', async () => {
       if (typeof themeComplianceProviderHandler.getResults !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(themeComplianceProviderHandler.verify({ check: "chk-1", program: "card-widget", tokens: ["color.primary","spacing.md"], manifest: "default-theme" }), storage);
-      const result = await interpret(themeComplianceProviderHandler.getResults({ check: "chk-1" }), storage);
+      const afterResult_valid_tokens = await interpret(themeComplianceProviderHandler.verify({ check: "chk-1", program: "card-widget", tokens: ["color.primary","spacing.md"], manifest: "default-theme" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_tokens?.output ?? {}));
+      const _fixtureInput = { check: "chk-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(themeComplianceProviderHandler.getResults({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

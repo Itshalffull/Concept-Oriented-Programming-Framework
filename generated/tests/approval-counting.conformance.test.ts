@@ -162,16 +162,26 @@ describe('ApprovalCounting functional handler', () => {
     it('fixture "count_approvals" -> ok', async () => {
       if (typeof approvalCountingHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(approvalCountingHandler.configure({ maxApprovals: null, winnerCount: "1" }), storage);
-      const result = await interpret(approvalCountingHandler.count({ config: "approval-001", approvalSets: "[{\"voter\":\"alice\",\"approvals\":[\"A\",\"B\"]},{\"voter\":\"bob\",\"approvals\":[\"B\",\"C\"]}]", weights: "{}" }), storage);
+      const afterResult_single_winner_unlimited = await interpret(approvalCountingHandler.configure({ maxApprovals: null, winnerCount: "1" }), storage);
+      const _pool = Object.assign({}, (afterResult_single_winner_unlimited?.output ?? {}));
+      const _fixtureInput = { config: "approval-001", approvalSets: "[{\"voter\":\"alice\",\"approvals\":[\"A\",\"B\"]},{\"voter\":\"bob\",\"approvals\":[\"B\",\"C\"]}]", weights: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(approvalCountingHandler.count({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "count_no_ballots" -> error', async () => {
       if (typeof approvalCountingHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(approvalCountingHandler.configure({ maxApprovals: null, winnerCount: "1" }), storage);
-      const result = await interpret(approvalCountingHandler.count({ config: "approval-001", approvalSets: "[]", weights: "{}" }), storage);
+      const afterResult_single_winner_unlimited = await interpret(approvalCountingHandler.configure({ maxApprovals: null, winnerCount: "1" }), storage);
+      const _pool = Object.assign({}, (afterResult_single_winner_unlimited?.output ?? {}));
+      const _fixtureInput = { config: "approval-001", approvalSets: "[]", weights: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(approvalCountingHandler.count({ ..._fixtureInput }), storage);
       expect(result.variant).not.toBe('ok');
     });
 

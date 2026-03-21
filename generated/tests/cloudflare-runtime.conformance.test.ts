@@ -155,8 +155,13 @@ describe('CloudflareRuntime functional handler', () => {
     it('fixture "deploy_script" -> ok', async () => {
       if (typeof cloudflareRuntimeHandler.deploy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
-      const result = await interpret(cloudflareRuntimeHandler.deploy({ worker: "wkr-001", scriptContent: "export default { fetch() { return new Response('OK') } }" }), storage);
+      const afterResult_provision_worker = await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_worker?.output ?? {}));
+      const _fixtureInput = { worker: "wkr-001", scriptContent: "export default { fetch() { return new Response('OK') } }" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(cloudflareRuntimeHandler.deploy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,16 +229,26 @@ describe('CloudflareRuntime functional handler', () => {
     it('fixture "set_weight_50" -> ok', async () => {
       if (typeof cloudflareRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
-      const result = await interpret(cloudflareRuntimeHandler.setTrafficWeight({ worker: "wkr-001", weight: "50" }), storage);
+      const afterResult_provision_worker = await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_worker?.output ?? {}));
+      const _fixtureInput = { worker: "wkr-001", weight: "50" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(cloudflareRuntimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "set_weight_negative" -> ok', async () => {
       if (typeof cloudflareRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
-      const result = await interpret(cloudflareRuntimeHandler.setTrafficWeight({ worker: "wkr-001", weight: "-1" }), storage);
+      const afterResult_provision_worker = await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_worker?.output ?? {}));
+      const _fixtureInput = { worker: "wkr-001", weight: "-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(cloudflareRuntimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -294,16 +309,26 @@ describe('CloudflareRuntime functional handler', () => {
     it('fixture "rollback_to_v1" -> ok', async () => {
       if (typeof cloudflareRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
-      const result = await interpret(cloudflareRuntimeHandler.rollback({ worker: "wkr-001", targetVersion: "1" }), storage);
+      const afterResult_provision_worker = await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_worker?.output ?? {}));
+      const _fixtureInput = { worker: "wkr-001", targetVersion: "1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(cloudflareRuntimeHandler.rollback({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "rollback_empty_version" -> ok', async () => {
       if (typeof cloudflareRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
-      const result = await interpret(cloudflareRuntimeHandler.rollback({ worker: "wkr-001", targetVersion: "" }), storage);
+      const afterResult_provision_worker = await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_worker?.output ?? {}));
+      const _fixtureInput = { worker: "wkr-001", targetVersion: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(cloudflareRuntimeHandler.rollback({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -364,16 +389,26 @@ describe('CloudflareRuntime functional handler', () => {
     it('fixture "destroy_worker" -> ok', async () => {
       if (typeof cloudflareRuntimeHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
-      const result = await interpret(cloudflareRuntimeHandler.destroy({ worker: "wkr-001" }), storage);
+      const afterResult_provision_worker = await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_worker?.output ?? {}));
+      const _fixtureInput = { worker: "wkr-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(cloudflareRuntimeHandler.destroy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "destroy_empty" -> ok', async () => {
       if (typeof cloudflareRuntimeHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
-      const result = await interpret(cloudflareRuntimeHandler.destroy({ worker: "" }), storage);
+      const afterResult_provision_worker = await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
+      const _pool = Object.assign({}, (afterResult_provision_worker?.output ?? {}));
+      const _fixtureInput = { worker: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(cloudflareRuntimeHandler.destroy({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

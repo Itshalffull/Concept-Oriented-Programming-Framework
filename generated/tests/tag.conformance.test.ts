@@ -155,8 +155,13 @@ describe('Tag functional handler', () => {
     it('fixture "remove_existing_tag" -> ok', async () => {
       if (typeof tagHandler.removeTag !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(tagHandler.addTag({ entity: "page-42", tag: "important" }), storage);
-      const result = await interpret(tagHandler.removeTag({ entity: "page-42", tag: "important" }), storage);
+      const afterResult_add_tag_to_page = await interpret(tagHandler.addTag({ entity: "page-42", tag: "important" }), storage);
+      const _pool = Object.assign({}, (afterResult_add_tag_to_page?.output ?? {}));
+      const _fixtureInput = { entity: "page-42", tag: "important" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(tagHandler.removeTag({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,16 +229,26 @@ describe('Tag functional handler', () => {
     it('fixture "get_by_existing_tag" -> ok', async () => {
       if (typeof tagHandler.getByTag !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(tagHandler.addTag({ entity: "page-42", tag: "important" }), storage);
-      const result = await interpret(tagHandler.getByTag({ tag: "important" }), storage);
+      const afterResult_add_tag_to_page = await interpret(tagHandler.addTag({ entity: "page-42", tag: "important" }), storage);
+      const _pool = Object.assign({}, (afterResult_add_tag_to_page?.output ?? {}));
+      const _fixtureInput = { tag: "important" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(tagHandler.getByTag({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_by_empty_tag" -> ok', async () => {
       if (typeof tagHandler.getByTag !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(tagHandler.addTag({ entity: "page-42", tag: "important" }), storage);
-      const result = await interpret(tagHandler.getByTag({ tag: "" }), storage);
+      const afterResult_add_tag_to_page = await interpret(tagHandler.addTag({ entity: "page-42", tag: "important" }), storage);
+      const _pool = Object.assign({}, (afterResult_add_tag_to_page?.output ?? {}));
+      const _fixtureInput = { tag: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(tagHandler.getByTag({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -294,8 +309,13 @@ describe('Tag functional handler', () => {
     it('fixture "get_children_of_tag" -> ok', async () => {
       if (typeof tagHandler.getChildren !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(tagHandler.addTag({ entity: "page-42", tag: "important" }), storage);
-      const result = await interpret(tagHandler.getChildren({ tag: "engineering" }), storage);
+      const afterResult_add_tag_to_page = await interpret(tagHandler.addTag({ entity: "page-42", tag: "important" }), storage);
+      const _pool = Object.assign({}, (afterResult_add_tag_to_page?.output ?? {}));
+      const _fixtureInput = { tag: "engineering" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(tagHandler.getChildren({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -363,8 +383,13 @@ describe('Tag functional handler', () => {
     it('fixture "rename_existing_tag" -> ok', async () => {
       if (typeof tagHandler.rename !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(tagHandler.addTag({ entity: "page-42", tag: "important" }), storage);
-      const result = await interpret(tagHandler.rename({ tag: "important", name: "critical" }), storage);
+      const afterResult_add_tag_to_page = await interpret(tagHandler.addTag({ entity: "page-42", tag: "important" }), storage);
+      const _pool = Object.assign({}, (afterResult_add_tag_to_page?.output ?? {}));
+      const _fixtureInput = { tag: "important", name: "critical" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(tagHandler.rename({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

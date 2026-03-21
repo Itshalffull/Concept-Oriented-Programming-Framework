@@ -155,8 +155,13 @@ describe('TypeSystem functional handler', () => {
     it('fixture "resolve_existing" -> ok', async () => {
       if (typeof typeSystemHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(typeSystemHandler.registerType({ type: "email", schema: "{\"type\":\"string\"}", constraints: "{\"format\":\"email\"}" }), storage);
-      const result = await interpret(typeSystemHandler.resolve({ type: "email" }), storage);
+      const afterResult_register_string_type = await interpret(typeSystemHandler.registerType({ type: "email", schema: "{\"type\":\"string\"}", constraints: "{\"format\":\"email\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_string_type?.output ?? {}));
+      const _fixtureInput = { type: "email" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(typeSystemHandler.resolve({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('TypeSystem functional handler', () => {
     it('fixture "navigate_nested" -> ok', async () => {
       if (typeof typeSystemHandler.navigate !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(typeSystemHandler.registerType({ type: "email", schema: "{\"type\":\"string\"}", constraints: "{\"format\":\"email\"}" }), storage);
-      const result = await interpret(typeSystemHandler.navigate({ type: "user", path: "address.city" }), storage);
+      const afterResult_register_string_type = await interpret(typeSystemHandler.registerType({ type: "email", schema: "{\"type\":\"string\"}", constraints: "{\"format\":\"email\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_string_type?.output ?? {}));
+      const _fixtureInput = { type: "user", path: "address.city" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(typeSystemHandler.navigate({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

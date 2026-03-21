@@ -223,8 +223,13 @@ describe('PulumiProvider functional handler', () => {
     it('fixture "apply_stack" -> ok', async () => {
       if (typeof pulumiProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(pulumiProviderHandler.generate({ plan: "dp-001-auth-suite" }), storage);
-      const result = await interpret(pulumiProviderHandler.apply({ stack: "stack-abc123" }), storage);
+      const afterResult_generate_plan = await interpret(pulumiProviderHandler.generate({ plan: "dp-001-auth-suite" }), storage);
+      const _pool = Object.assign({}, (afterResult_generate_plan?.output ?? {}));
+      const _fixtureInput = { stack: "stack-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(pulumiProviderHandler.apply({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -292,8 +297,13 @@ describe('PulumiProvider functional handler', () => {
     it('fixture "teardown_stack" -> ok', async () => {
       if (typeof pulumiProviderHandler.teardown !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(pulumiProviderHandler.generate({ plan: "dp-001-auth-suite" }), storage);
-      const result = await interpret(pulumiProviderHandler.teardown({ stack: "stack-abc123" }), storage);
+      const afterResult_generate_plan = await interpret(pulumiProviderHandler.generate({ plan: "dp-001-auth-suite" }), storage);
+      const _pool = Object.assign({}, (afterResult_generate_plan?.output ?? {}));
+      const _fixtureInput = { stack: "stack-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(pulumiProviderHandler.teardown({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

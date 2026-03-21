@@ -178,8 +178,13 @@ describe('Elevation functional handler', () => {
     it('fixture "get_existing" -> ok', async () => {
       if (typeof elevationHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(elevationHandler.define({ elevation: "W-1", level: "1", shadow: "[{ \"y\": 2, \"blur\": 4, \"color\": \"rgba(0,0,0,0.1)\" }]" }), storage);
-      const result = await interpret(elevationHandler.get({ elevation: "W-1" }), storage);
+      const afterResult_define_raised = await interpret(elevationHandler.define({ elevation: "W-1", level: "1", shadow: "[{ \"y\": 2, \"blur\": 4, \"color\": \"rgba(0,0,0,0.1)\" }]" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_raised?.output ?? {}));
+      const _fixtureInput = { elevation: "W-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(elevationHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -248,8 +253,13 @@ describe('Elevation functional handler', () => {
     it('fixture "scale_from_black" -> ok', async () => {
       if (typeof elevationHandler.generateScale !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(elevationHandler.define({ elevation: "W-1", level: "1", shadow: "[{ \"y\": 2, \"blur\": 4, \"color\": \"rgba(0,0,0,0.1)\" }]" }), storage);
-      const result = await interpret(elevationHandler.generateScale({ baseColor: "0,0,0" }), storage);
+      const afterResult_define_raised = await interpret(elevationHandler.define({ elevation: "W-1", level: "1", shadow: "[{ \"y\": 2, \"blur\": 4, \"color\": \"rgba(0,0,0,0.1)\" }]" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_raised?.output ?? {}));
+      const _fixtureInput = { baseColor: "0,0,0" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(elevationHandler.generateScale({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

@@ -230,8 +230,13 @@ describe('HandlerScaffoldGen functional handler', () => {
     it('fixture "valid_register" -> ok', async () => {
       if (typeof handlerScaffoldGenHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(handlerScaffoldGenHandler.generate({ conceptName: "Order", actions: [{"name":"create","params":[{"name":"title","type":"String"}],"variants":[{"name":"ok","params":[{"name":"item","type":"String"}]},{"name":"error","params":[{"name":"message","type":"String"}]}]}], style: "functional" }), storage);
-      const result = await interpret(handlerScaffoldGenHandler.register({  }), storage);
+      const afterResult_valid_generate = await interpret(handlerScaffoldGenHandler.generate({ conceptName: "Order", actions: [{"name":"create","params":[{"name":"title","type":"String"}],"variants":[{"name":"ok","params":[{"name":"item","type":"String"}]},{"name":"error","params":[{"name":"message","type":"String"}]}]}], style: "functional" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_generate?.output ?? {}));
+      const _fixtureInput = {  } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(handlerScaffoldGenHandler.register({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

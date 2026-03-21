@@ -155,8 +155,13 @@ describe('ConceptEntity functional handler', () => {
     it('fixture "get_article" -> ok', async () => {
       if (typeof conceptEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }), storage);
-      const result = await interpret(conceptEntityHandler.get({ name: "Article" }), storage);
+      const afterResult_register_article = await interpret(conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_article?.output ?? {}));
+      const _fixtureInput = { name: "Article" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(conceptEntityHandler.get({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -224,8 +229,13 @@ describe('ConceptEntity functional handler', () => {
     it('fixture "find_persistent_storage" -> ok', async () => {
       if (typeof conceptEntityHandler.findByCapability !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }), storage);
-      const result = await interpret(conceptEntityHandler.findByCapability({ capability: "persistent-storage" }), storage);
+      const afterResult_register_article = await interpret(conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_article?.output ?? {}));
+      const _fixtureInput = { capability: "persistent-storage" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(conceptEntityHandler.findByCapability({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -293,8 +303,13 @@ describe('ConceptEntity functional handler', () => {
     it('fixture "find_governance_suite" -> ok', async () => {
       if (typeof conceptEntityHandler.findBySuite !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }), storage);
-      const result = await interpret(conceptEntityHandler.findBySuite({ suite: "governance" }), storage);
+      const afterResult_register_article = await interpret(conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_article?.output ?? {}));
+      const _fixtureInput = { suite: "governance" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(conceptEntityHandler.findBySuite({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -362,8 +377,13 @@ describe('ConceptEntity functional handler', () => {
     it('fixture "artifacts_for_article" -> ok', async () => {
       if (typeof conceptEntityHandler.generatedArtifacts !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }), storage);
-      const result = await interpret(conceptEntityHandler.generatedArtifacts({ entity: "concept-entity-1" }), storage);
+      const afterResult_register_article = await interpret(conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_article?.output ?? {}));
+      const _fixtureInput = { entity: "concept-entity-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(conceptEntityHandler.generatedArtifacts({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -431,8 +451,13 @@ describe('ConceptEntity functional handler', () => {
     it('fixture "syncs_for_article" -> ok', async () => {
       if (typeof conceptEntityHandler.participatingSyncs !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }), storage);
-      const result = await interpret(conceptEntityHandler.participatingSyncs({ entity: "concept-entity-1" }), storage);
+      const afterResult_register_article = await interpret(conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_article?.output ?? {}));
+      const _fixtureInput = { entity: "concept-entity-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(conceptEntityHandler.participatingSyncs({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -500,8 +525,13 @@ describe('ConceptEntity functional handler', () => {
     it('fixture "compatible_concepts" -> ok', async () => {
       if (typeof conceptEntityHandler.checkCompatibility !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }), storage);
-      const result = await interpret(conceptEntityHandler.checkCompatibility({ a: "concept-entity-1", b: "concept-entity-2" }), storage);
+      const afterResult_register_article = await interpret(conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_article?.output ?? {}));
+      const _fixtureInput = { a: "concept-entity-1", b: "concept-entity-2" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(conceptEntityHandler.checkCompatibility({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

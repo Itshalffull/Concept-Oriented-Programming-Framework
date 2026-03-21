@@ -94,8 +94,13 @@ describe('Follow functional handler', () => {
     it('fixture "follow_another" -> ok', async () => {
       if (typeof followHandler.follow !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(followHandler.follow({ user: "user-alice", target: "user-bob" }), storage);
-      const result = await interpret(followHandler.follow({ user: "user-carol", target: "user-dave" }), storage);
+      const afterResult_follow_ok = await interpret(followHandler.follow({ user: "user-alice", target: "user-bob" }), storage);
+      const _pool = Object.assign({}, (afterResult_follow_ok?.output ?? {}));
+      const _fixtureInput = { user: "user-carol", target: "user-dave" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(followHandler.follow({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -156,16 +161,26 @@ describe('Follow functional handler', () => {
     it('fixture "unfollow_ok" -> ok', async () => {
       if (typeof followHandler.unfollow !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(followHandler.follow({ user: "user-alice", target: "user-bob" }), storage);
-      const result = await interpret(followHandler.unfollow({ user: "user-alice", target: "user-bob" }), storage);
+      const afterResult_follow_ok = await interpret(followHandler.follow({ user: "user-alice", target: "user-bob" }), storage);
+      const _pool = Object.assign({}, (afterResult_follow_ok?.output ?? {}));
+      const _fixtureInput = { user: "user-alice", target: "user-bob" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(followHandler.unfollow({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "unfollow_not_following" -> ok', async () => {
       if (typeof followHandler.unfollow !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(followHandler.follow({ user: "user-alice", target: "user-bob" }), storage);
-      const result = await interpret(followHandler.unfollow({ user: "user-carol", target: "user-unknown" }), storage);
+      const afterResult_follow_ok = await interpret(followHandler.follow({ user: "user-alice", target: "user-bob" }), storage);
+      const _pool = Object.assign({}, (afterResult_follow_ok?.output ?? {}));
+      const _fixtureInput = { user: "user-carol", target: "user-unknown" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(followHandler.unfollow({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -226,16 +241,26 @@ describe('Follow functional handler', () => {
     it('fixture "is_following_ok" -> ok', async () => {
       if (typeof followHandler.isFollowing !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(followHandler.follow({ user: "user-alice", target: "user-bob" }), storage);
-      const result = await interpret(followHandler.isFollowing({ user: "user-alice", target: "user-bob" }), storage);
+      const afterResult_follow_ok = await interpret(followHandler.follow({ user: "user-alice", target: "user-bob" }), storage);
+      const _pool = Object.assign({}, (afterResult_follow_ok?.output ?? {}));
+      const _fixtureInput = { user: "user-alice", target: "user-bob" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(followHandler.isFollowing({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "is_following_unknown_user" -> ok', async () => {
       if (typeof followHandler.isFollowing !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(followHandler.follow({ user: "user-alice", target: "user-bob" }), storage);
-      const result = await interpret(followHandler.isFollowing({ user: "user-unknown", target: "user-bob" }), storage);
+      const afterResult_follow_ok = await interpret(followHandler.follow({ user: "user-alice", target: "user-bob" }), storage);
+      const _pool = Object.assign({}, (afterResult_follow_ok?.output ?? {}));
+      const _fixtureInput = { user: "user-unknown", target: "user-bob" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(followHandler.isFollowing({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
