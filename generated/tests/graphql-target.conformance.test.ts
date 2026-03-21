@@ -108,6 +108,7 @@ describe('GraphqlTarget functional handler', () => {
     it('fixture "federation_conflict" -> ok', async () => {
       if (typeof graphqlTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(graphqlTargetHandler.generate({ projection: "order-projection", config: "{}" }), storage);
       const result = await interpret(graphqlTargetHandler.generate({ projection: "item-projection", config: "{\"federation\":true,\"federationConflict\":true}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -237,6 +238,7 @@ describe('GraphqlTarget functional handler', () => {
     it('fixture "list_order_operations" -> ok', async () => {
       if (typeof graphqlTargetHandler.listOperations !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(graphqlTargetHandler.generate({ projection: "order-projection", config: "{}" }), storage);
       const result = await interpret(graphqlTargetHandler.listOperations({ concept: "Order" }), storage);
       expect(result.variant).toBe('ok');
     });

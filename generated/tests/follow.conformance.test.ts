@@ -94,6 +94,7 @@ describe('Follow functional handler', () => {
     it('fixture "follow_another" -> ok', async () => {
       if (typeof followHandler.follow !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(followHandler.follow({ user: "user-alice", target: "user-bob" }), storage);
       const result = await interpret(followHandler.follow({ user: "user-carol", target: "user-dave" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -155,6 +156,7 @@ describe('Follow functional handler', () => {
     it('fixture "unfollow_ok" -> ok', async () => {
       if (typeof followHandler.unfollow !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(followHandler.follow({ user: "user-alice", target: "user-bob" }), storage);
       const result = await interpret(followHandler.unfollow({ user: "user-alice", target: "user-bob" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +164,7 @@ describe('Follow functional handler', () => {
     it('fixture "unfollow_not_following" -> ok', async () => {
       if (typeof followHandler.unfollow !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(followHandler.follow({ user: "user-alice", target: "user-bob" }), storage);
       const result = await interpret(followHandler.unfollow({ user: "user-carol", target: "user-unknown" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +226,7 @@ describe('Follow functional handler', () => {
     it('fixture "is_following_ok" -> ok', async () => {
       if (typeof followHandler.isFollowing !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(followHandler.follow({ user: "user-alice", target: "user-bob" }), storage);
       const result = await interpret(followHandler.isFollowing({ user: "user-alice", target: "user-bob" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +234,7 @@ describe('Follow functional handler', () => {
     it('fixture "is_following_unknown_user" -> ok', async () => {
       if (typeof followHandler.isFollowing !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(followHandler.follow({ user: "user-alice", target: "user-bob" }), storage);
       const result = await interpret(followHandler.isFollowing({ user: "user-unknown", target: "user-bob" }), storage);
       expect(result.variant).toBe('ok');
     });

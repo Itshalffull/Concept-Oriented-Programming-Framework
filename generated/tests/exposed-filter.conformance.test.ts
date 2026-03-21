@@ -155,6 +155,7 @@ describe('ExposedFilter functional handler', () => {
     it('fixture "valid_input" -> ok', async () => {
       if (typeof exposedFilterHandler.collectInput !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(exposedFilterHandler.expose({ filter: "status-filter", fieldName: "status", operator: "eq", defaultValue: "active" }), storage);
       const result = await interpret(exposedFilterHandler.collectInput({ filter: "status-filter", value: "archived" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('ExposedFilter functional handler', () => {
     it('fixture "apply_existing" -> ok', async () => {
       if (typeof exposedFilterHandler.applyToQuery !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(exposedFilterHandler.expose({ filter: "status-filter", fieldName: "status", operator: "eq", defaultValue: "active" }), storage);
       const result = await interpret(exposedFilterHandler.applyToQuery({ filter: "status-filter" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('ExposedFilter functional handler', () => {
     it('fixture "reset_existing" -> ok', async () => {
       if (typeof exposedFilterHandler.resetToDefaults !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(exposedFilterHandler.expose({ filter: "status-filter", fieldName: "status", operator: "eq", defaultValue: "active" }), storage);
       const result = await interpret(exposedFilterHandler.resetToDefaults({ filter: "status-filter" }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -94,6 +94,7 @@ describe('JWT functional handler', () => {
     it('fixture "generate_another" -> ok', async () => {
       if (typeof jwtHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(jwtHandler.generate({ user: "user-alice" }), storage);
       const result = await interpret(jwtHandler.generate({ user: "user-bob" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -155,6 +156,7 @@ describe('JWT functional handler', () => {
     it('fixture "verify_ok" -> ok', async () => {
       if (typeof jwtHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(jwtHandler.generate({ user: "user-alice" }), storage);
       const result = await interpret(jwtHandler.verify({ token: "valid.token.placeholder" }), storage);
       expect(result.variant).toBe('ok');
     });

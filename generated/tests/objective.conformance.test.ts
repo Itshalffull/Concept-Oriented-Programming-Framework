@@ -155,6 +155,7 @@ describe('Objective functional handler', () => {
     it('fixture "update_halfway" -> ok', async () => {
       if (typeof objectiveHandler.updateProgress !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(objectiveHandler.create({ title: "Increase Revenue", description: "Grow quarterly revenue by 20%", owner: "cfo@acme.com", metricRefs: ["metric-revenue"], targetDate: "2026-12-31" }), storage);
       const result = await interpret(objectiveHandler.updateProgress({ objective: "objective-001", currentValue: "50.0" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('Objective functional handler', () => {
     it('fixture "evaluate_existing" -> ok', async () => {
       if (typeof objectiveHandler.evaluate !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(objectiveHandler.create({ title: "Increase Revenue", description: "Grow quarterly revenue by 20%", owner: "cfo@acme.com", metricRefs: ["metric-revenue"], targetDate: "2026-12-31" }), storage);
       const result = await interpret(objectiveHandler.evaluate({ objective: "objective-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('Objective functional handler', () => {
     it('fixture "cancel_with_reason" -> ok', async () => {
       if (typeof objectiveHandler.cancel !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(objectiveHandler.create({ title: "Increase Revenue", description: "Grow quarterly revenue by 20%", owner: "cfo@acme.com", metricRefs: ["metric-revenue"], targetDate: "2026-12-31" }), storage);
       const result = await interpret(objectiveHandler.cancel({ objective: "objective-001", reason: "Budget constraints" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -298,6 +301,7 @@ describe('Objective functional handler', () => {
     it('fixture "cancel_nonexistent" -> ok', async () => {
       if (typeof objectiveHandler.cancel !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(objectiveHandler.create({ title: "Increase Revenue", description: "Grow quarterly revenue by 20%", owner: "cfo@acme.com", metricRefs: ["metric-revenue"], targetDate: "2026-12-31" }), storage);
       const result = await interpret(objectiveHandler.cancel({ objective: "objective-nonexistent", reason: "N/A" }), storage);
       expect(result.variant).toBe('ok');
     });

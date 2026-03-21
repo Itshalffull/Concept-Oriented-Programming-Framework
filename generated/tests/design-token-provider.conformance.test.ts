@@ -155,6 +155,7 @@ describe('DesignTokenProvider functional handler', () => {
     it('fixture "resolve_color" -> ok', async () => {
       if (typeof designTokenProviderHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(designTokenProviderHandler.initialize({ config: "{\"theme\":\"light\"}" }), storage);
       const result = await interpret(designTokenProviderHandler.resolve({ provider: "dtp-1", tokenName: "color.primary" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('DesignTokenProvider functional handler', () => {
     it('fixture "switch_to_dark" -> ok', async () => {
       if (typeof designTokenProviderHandler.switchTheme !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(designTokenProviderHandler.initialize({ config: "{\"theme\":\"light\"}" }), storage);
       const result = await interpret(designTokenProviderHandler.switchTheme({ provider: "dtp-1", theme: "dark" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('DesignTokenProvider functional handler', () => {
     it('fixture "get_tokens_valid" -> ok', async () => {
       if (typeof designTokenProviderHandler.getTokens !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(designTokenProviderHandler.initialize({ config: "{\"theme\":\"light\"}" }), storage);
       const result = await interpret(designTokenProviderHandler.getTokens({ provider: "dtp-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -298,6 +301,7 @@ describe('DesignTokenProvider functional handler', () => {
     it('fixture "get_tokens_missing" -> ok', async () => {
       if (typeof designTokenProviderHandler.getTokens !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(designTokenProviderHandler.initialize({ config: "{\"theme\":\"light\"}" }), storage);
       const result = await interpret(designTokenProviderHandler.getTokens({ provider: "nonexistent" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +363,7 @@ describe('DesignTokenProvider functional handler', () => {
     it('fixture "export_css" -> ok', async () => {
       if (typeof designTokenProviderHandler.export !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(designTokenProviderHandler.initialize({ config: "{\"theme\":\"light\"}" }), storage);
       const result = await interpret(designTokenProviderHandler.export({ provider: "dtp-1", format: "css" }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -155,6 +155,7 @@ describe('SwiftToolchain functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof swiftToolchainHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(swiftToolchainHandler.resolve({ platform: "macos", versionConstraint: ">=5.10" }), storage);
       const result = await interpret(swiftToolchainHandler.register({  }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -230,6 +230,7 @@ describe('McpTarget functional handler', () => {
     it('fixture "list_tools_agent" -> ok', async () => {
       if (typeof mcpTargetHandler.listTools !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(mcpTargetHandler.generate({ projection: "agent-projection", config: "{\"serverName\":\"agent-mcp\",\"transport\":\"stdio\"}" }), storage);
       const result = await interpret(mcpTargetHandler.listTools({ concept: "Agent" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -237,6 +238,7 @@ describe('McpTarget functional handler', () => {
     it('fixture "list_tools_score" -> ok', async () => {
       if (typeof mcpTargetHandler.listTools !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(mcpTargetHandler.generate({ projection: "agent-projection", config: "{\"serverName\":\"agent-mcp\",\"transport\":\"stdio\"}" }), storage);
       const result = await interpret(mcpTargetHandler.listTools({ concept: "ScoreApi" }), storage);
       expect(result.variant).toBe('ok');
     });

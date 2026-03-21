@@ -69,6 +69,7 @@ describe('ChangeStream imperative handler', () => {
     it('fixture "subscribe_from_start" -> ok', async () => {
       if (typeof changeStreamHandler.subscribe !== 'function') return;
       const storage = createInMemoryStorage();
+      await changeStreamHandler.append({ type: "insert", before: null, after: "{\"id\":1,\"name\":\"alice\"}", source: "users-db" }, storage);
       const result = await changeStreamHandler.subscribe({ fromOffset: "0" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -76,6 +77,7 @@ describe('ChangeStream imperative handler', () => {
     it('fixture "subscribe_from_head" -> ok', async () => {
       if (typeof changeStreamHandler.subscribe !== 'function') return;
       const storage = createInMemoryStorage();
+      await changeStreamHandler.append({ type: "insert", before: null, after: "{\"id\":1,\"name\":\"alice\"}", source: "users-db" }, storage);
       const result = await changeStreamHandler.subscribe({ fromOffset: null }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -95,6 +97,7 @@ describe('ChangeStream imperative handler', () => {
     it('fixture "read_batch" -> ok', async () => {
       if (typeof changeStreamHandler.read !== 'function') return;
       const storage = createInMemoryStorage();
+      await changeStreamHandler.append({ type: "insert", before: null, after: "{\"id\":1,\"name\":\"alice\"}", source: "users-db" }, storage);
       const result = await changeStreamHandler.read({ subscriptionId: "sub-1", maxCount: "10" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -121,6 +124,7 @@ describe('ChangeStream imperative handler', () => {
     it('fixture "ack_offset" -> ok', async () => {
       if (typeof changeStreamHandler.acknowledge !== 'function') return;
       const storage = createInMemoryStorage();
+      await changeStreamHandler.append({ type: "insert", before: null, after: "{\"id\":1,\"name\":\"alice\"}", source: "users-db" }, storage);
       const result = await changeStreamHandler.acknowledge({ consumer: "analytics-worker", offset: "42" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -128,6 +132,7 @@ describe('ChangeStream imperative handler', () => {
     it('fixture "ack_empty_consumer" -> ok', async () => {
       if (typeof changeStreamHandler.acknowledge !== 'function') return;
       const storage = createInMemoryStorage();
+      await changeStreamHandler.append({ type: "insert", before: null, after: "{\"id\":1,\"name\":\"alice\"}", source: "users-db" }, storage);
       const result = await changeStreamHandler.acknowledge({ consumer: "", offset: "1" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -147,6 +152,7 @@ describe('ChangeStream imperative handler', () => {
     it('fixture "replay_range" -> ok', async () => {
       if (typeof changeStreamHandler.replay !== 'function') return;
       const storage = createInMemoryStorage();
+      await changeStreamHandler.append({ type: "insert", before: null, after: "{\"id\":1,\"name\":\"alice\"}", source: "users-db" }, storage);
       const result = await changeStreamHandler.replay({ from: "1", to: "10" }, storage);
       expect(result.variant).toBe('ok');
     });

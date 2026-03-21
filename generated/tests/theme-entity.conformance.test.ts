@@ -155,6 +155,7 @@ describe('ThemeEntity functional handler', () => {
     it('fixture "get_light" -> ok', async () => {
       if (typeof themeEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
       const result = await interpret(themeEntityHandler.get({ name: "light" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('ThemeEntity functional handler', () => {
     it('fixture "resolve_primary" -> ok', async () => {
       if (typeof themeEntityHandler.resolveToken !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
       const result = await interpret(themeEntityHandler.resolveToken({ theme: "theme-entity-1", tokenPath: "palette.primary" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('ThemeEntity functional handler', () => {
     it('fixture "audit_theme" -> ok', async () => {
       if (typeof themeEntityHandler.contrastAudit !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
       const result = await interpret(themeEntityHandler.contrastAudit({ theme: "theme-entity-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -427,6 +430,7 @@ describe('ThemeEntity functional handler', () => {
     it('fixture "affected_primary" -> ok', async () => {
       if (typeof themeEntityHandler.affectedWidgets !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
       const result = await interpret(themeEntityHandler.affectedWidgets({ theme: "theme-entity-1", changedToken: "color.primary" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -434,6 +438,7 @@ describe('ThemeEntity functional handler', () => {
     it('fixture "affected_missing" -> ok', async () => {
       if (typeof themeEntityHandler.affectedWidgets !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
       const result = await interpret(themeEntityHandler.affectedWidgets({ theme: "nonexistent", changedToken: "x" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -495,6 +500,7 @@ describe('ThemeEntity functional handler', () => {
     it('fixture "outputs_theme" -> ok', async () => {
       if (typeof themeEntityHandler.generatedOutputs !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
       const result = await interpret(themeEntityHandler.generatedOutputs({ theme: "theme-entity-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -502,6 +508,7 @@ describe('ThemeEntity functional handler', () => {
     it('fixture "outputs_missing" -> ok', async () => {
       if (typeof themeEntityHandler.generatedOutputs !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
       const result = await interpret(themeEntityHandler.generatedOutputs({ theme: "nonexistent" }), storage);
       expect(result.variant).toBe('ok');
     });

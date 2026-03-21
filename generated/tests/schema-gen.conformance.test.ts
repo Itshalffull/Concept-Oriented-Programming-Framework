@@ -155,6 +155,7 @@ describe('SchemaGen functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof schemaGenHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(schemaGenHandler.generate({ spec: "s1", ast: {"name":"Invoice","typeParams":["T"],"purpose":"Manage invoices.","state":[],"actions":[{"name":"create","params":[],"variants":[{"name":"ok","params":[],"description":"Created."}]}],"invariants":[],"capabilities":[]} }), storage);
       const result = await interpret(schemaGenHandler.register({  }), storage);
       expect(result.variant).toBe('ok');
     });

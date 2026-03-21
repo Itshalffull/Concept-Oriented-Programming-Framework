@@ -216,6 +216,7 @@ describe('SurfaceComponentScaffoldGen functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof surfaceComponentScaffoldGenHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(surfaceComponentScaffoldGenHandler.generate({ name: "Accordion", parts: ["root","item","trigger","content"], states: ["closed","open"], events: ["toggle"], role: "region", requires: null, affordance: null, props: [], compose: [] }), storage);
       const result = await interpret(surfaceComponentScaffoldGenHandler.register({  }), storage);
       expect(result.variant).toBe('ok');
     });

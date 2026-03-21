@@ -162,6 +162,7 @@ describe('Execution functional handler', () => {
     it('fixture "execute_pending" -> ok', async () => {
       if (typeof executionHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(executionHandler.schedule({ sourceRef: "proposal-001", actions: ["transfer(from: treasury, to: alice, amount: 100)"], executor: "governance-bot" }), storage);
       const result = await interpret(executionHandler.execute({ execution: "execution-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -231,6 +232,7 @@ describe('Execution functional handler', () => {
     it('fixture "rollback_completed" -> ok', async () => {
       if (typeof executionHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(executionHandler.schedule({ sourceRef: "proposal-001", actions: ["transfer(from: treasury, to: alice, amount: 100)"], executor: "governance-bot" }), storage);
       const result = await interpret(executionHandler.rollback({ execution: "execution-001" }), storage);
       expect(result.variant).toBe('ok');
     });

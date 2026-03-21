@@ -155,6 +155,7 @@ describe('Attribution functional handler', () => {
     it('fixture "blame_existing_doc" -> ok', async () => {
       if (typeof attributionHandler.blame !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(attributionHandler.attribute({ contentRef: "doc-main-ts", region: "lines:10-25", agent: "alice@example.com", changeRef: "commit-abc123" }), storage);
       const result = await interpret(attributionHandler.blame({ contentRef: "doc-main-ts" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +163,7 @@ describe('Attribution functional handler', () => {
     it('fixture "blame_unknown_doc" -> ok', async () => {
       if (typeof attributionHandler.blame !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(attributionHandler.attribute({ contentRef: "doc-main-ts", region: "lines:10-25", agent: "alice@example.com", changeRef: "commit-abc123" }), storage);
       const result = await interpret(attributionHandler.blame({ contentRef: "nonexistent-doc" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +225,7 @@ describe('Attribution functional handler', () => {
     it('fixture "history_known_region" -> ok', async () => {
       if (typeof attributionHandler.history !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(attributionHandler.attribute({ contentRef: "doc-main-ts", region: "lines:10-25", agent: "alice@example.com", changeRef: "commit-abc123" }), storage);
       const result = await interpret(attributionHandler.history({ contentRef: "doc-main-ts", region: "lines:10-25" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +294,7 @@ describe('Attribution functional handler', () => {
     it('fixture "set_ownership_glob" -> ok', async () => {
       if (typeof attributionHandler.setOwnership !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(attributionHandler.attribute({ contentRef: "doc-main-ts", region: "lines:10-25", agent: "alice@example.com", changeRef: "commit-abc123" }), storage);
       const result = await interpret(attributionHandler.setOwnership({ pattern: "src/auth/**", owners: ["alice@example.com","bob@example.com"] }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -298,6 +302,7 @@ describe('Attribution functional handler', () => {
     it('fixture "set_ownership_empty_owners" -> ok', async () => {
       if (typeof attributionHandler.setOwnership !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(attributionHandler.attribute({ contentRef: "doc-main-ts", region: "lines:10-25", agent: "alice@example.com", changeRef: "commit-abc123" }), storage);
       const result = await interpret(attributionHandler.setOwnership({ pattern: "src/**", owners: [] }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +364,7 @@ describe('Attribution functional handler', () => {
     it('fixture "query_matching_path" -> ok', async () => {
       if (typeof attributionHandler.queryOwners !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(attributionHandler.attribute({ contentRef: "doc-main-ts", region: "lines:10-25", agent: "alice@example.com", changeRef: "commit-abc123" }), storage);
       const result = await interpret(attributionHandler.queryOwners({ path: "src/auth/login.ts" }), storage);
       expect(result.variant).toBe('ok');
     });

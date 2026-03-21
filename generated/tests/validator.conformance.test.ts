@@ -155,6 +155,7 @@ describe('Validator functional handler', () => {
     it('fixture "add_email_rule" -> ok', async () => {
       if (typeof validatorHandler.addRule !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(validatorHandler.registerConstraint({ validator: "user-form", constraint: "required" }), storage);
       const result = await interpret(validatorHandler.addRule({ validator: "user-form", field: "email", rule: "required|email" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +360,7 @@ describe('Validator functional handler', () => {
     it('fixture "add_custom_phone" -> ok', async () => {
       if (typeof validatorHandler.addCustomValidator !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(validatorHandler.registerConstraint({ validator: "user-form", constraint: "required" }), storage);
       const result = await interpret(validatorHandler.addCustomValidator({ validator: "user-form", name: "phone", implementation: "return /^\\d{10}$/.test(value)" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -366,6 +368,7 @@ describe('Validator functional handler', () => {
     it('fixture "add_custom_empty_name" -> ok', async () => {
       if (typeof validatorHandler.addCustomValidator !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(validatorHandler.registerConstraint({ validator: "user-form", constraint: "required" }), storage);
       const result = await interpret(validatorHandler.addCustomValidator({ validator: "user-form", name: "", implementation: "return true" }), storage);
       expect(result.variant).toBe('ok');
     });

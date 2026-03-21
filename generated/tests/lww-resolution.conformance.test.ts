@@ -148,6 +148,7 @@ describe('LWWResolution functional handler', () => {
     it('fixture "resolve_later_wins" -> ok', async () => {
       if (typeof lWWResolutionHandler.attemptResolve !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(lWWResolutionHandler.register({  }), storage);
       const result = await interpret(lWWResolutionHandler.attemptResolve({ base: null, v1: "{\"_ts\": \"2026-01-15T10:00:00Z\", \"value\": \"alice\"}", v2: "{\"_ts\": \"2026-01-15T11:00:00Z\", \"value\": \"bob\"}", context: "document-field" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -155,6 +156,7 @@ describe('LWWResolution functional handler', () => {
     it('fixture "resolve_identical_timestamps" -> error', async () => {
       if (typeof lWWResolutionHandler.attemptResolve !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(lWWResolutionHandler.register({  }), storage);
       const result = await interpret(lWWResolutionHandler.attemptResolve({ base: null, v1: "{\"_ts\": \"2026-01-15T10:00:00Z\"}", v2: "{\"_ts\": \"2026-01-15T10:00:00Z\"}", context: "field" }), storage);
       expect(result.variant).not.toBe('ok');
     });

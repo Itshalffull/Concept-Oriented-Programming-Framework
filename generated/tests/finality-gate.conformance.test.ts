@@ -162,6 +162,7 @@ describe('FinalityGate functional handler', () => {
     it('fixture "confirm_finalized" -> ok', async () => {
       if (typeof finalityGateHandler.confirm !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(finalityGateHandler.submit({ operationRef: "gov-prop-300", providerRef: "chain-finality-eth" }), storage);
       const result = await interpret(finalityGateHandler.confirm({ gate: "finality-001", proof: "block-hash-0xabc123" }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -155,6 +155,7 @@ describe('Flag functional handler', () => {
     it('fixture "unflag_existing" -> ok', async () => {
       if (typeof flagHandler.unflag !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(flagHandler.flag({ flagging: "flag-1", flagType: "bookmark", entity: "article-42", user: "user-7" }), storage);
       const result = await interpret(flagHandler.unflag({ flagging: "flag-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('Flag functional handler', () => {
     it('fixture "is_flagged_check" -> ok', async () => {
       if (typeof flagHandler.isFlagged !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(flagHandler.flag({ flagging: "flag-1", flagType: "bookmark", entity: "article-42", user: "user-7" }), storage);
       const result = await interpret(flagHandler.isFlagged({ flagType: "bookmark", entity: "article-42", user: "user-7" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +232,7 @@ describe('Flag functional handler', () => {
     it('fixture "is_flagged_empty_type" -> ok', async () => {
       if (typeof flagHandler.isFlagged !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(flagHandler.flag({ flagging: "flag-1", flagType: "bookmark", entity: "article-42", user: "user-7" }), storage);
       const result = await interpret(flagHandler.isFlagged({ flagType: "", entity: "article-42", user: "user-7" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +294,7 @@ describe('Flag functional handler', () => {
     it('fixture "get_count_likes" -> ok', async () => {
       if (typeof flagHandler.getCount !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(flagHandler.flag({ flagging: "flag-1", flagType: "bookmark", entity: "article-42", user: "user-7" }), storage);
       const result = await interpret(flagHandler.getCount({ flagType: "like", entity: "article-42" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -298,6 +302,7 @@ describe('Flag functional handler', () => {
     it('fixture "get_count_empty" -> ok', async () => {
       if (typeof flagHandler.getCount !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(flagHandler.flag({ flagging: "flag-1", flagType: "bookmark", entity: "article-42", user: "user-7" }), storage);
       const result = await interpret(flagHandler.getCount({ flagType: "", entity: "" }), storage);
       expect(result.variant).toBe('ok');
     });

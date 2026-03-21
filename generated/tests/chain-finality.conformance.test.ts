@@ -162,6 +162,7 @@ describe('ChainFinality functional handler', () => {
     it('fixture "check_finalized" -> ok', async () => {
       if (typeof chainFinalityHandler.checkFinality !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(chainFinalityHandler.track({ operationRef: "gov-prop-101", txHash: "0xabc123def456", chainId: "ethereum-mainnet", requiredConfirmations: "12", submittedBlock: "19500000" }), storage);
       const result = await interpret(chainFinalityHandler.checkFinality({ entry: "chain-001", currentBlock: "19500020" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -169,6 +170,7 @@ describe('ChainFinality functional handler', () => {
     it('fixture "check_pending" -> ok', async () => {
       if (typeof chainFinalityHandler.checkFinality !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(chainFinalityHandler.track({ operationRef: "gov-prop-101", txHash: "0xabc123def456", chainId: "ethereum-mainnet", requiredConfirmations: "12", submittedBlock: "19500000" }), storage);
       const result = await interpret(chainFinalityHandler.checkFinality({ entry: "chain-001", currentBlock: "19500005" }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -62,6 +62,7 @@ describe('SpatialConnector imperative handler', () => {
     it('fixture "valid_promote" -> ok', async () => {
       if (typeof spatialConnectorHandler.promote !== 'function') return;
       const storage = createInMemoryStorage();
+      await spatialConnectorHandler.draw({ canvas: "c1", source: "node-a", target: "node-b", type: "visual" }, storage);
       const result = await spatialConnectorHandler.promote({ connector: "connector-1" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -89,6 +90,7 @@ describe('SpatialConnector imperative handler', () => {
     it('fixture "valid_demote" -> ok', async () => {
       if (typeof spatialConnectorHandler.demote !== 'function') return;
       const storage = createInMemoryStorage();
+      await spatialConnectorHandler.draw({ canvas: "c1", source: "node-a", target: "node-b", type: "visual" }, storage);
       const result = await spatialConnectorHandler.demote({ connector: "connector-1" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -116,6 +118,7 @@ describe('SpatialConnector imperative handler', () => {
     it('fixture "valid_surface" -> ok', async () => {
       if (typeof spatialConnectorHandler.surface !== 'function') return;
       const storage = createInMemoryStorage();
+      await spatialConnectorHandler.draw({ canvas: "c1", source: "node-a", target: "node-b", type: "visual" }, storage);
       const result = await spatialConnectorHandler.surface({ canvas: "c1", source: "node-a", target: "node-b" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -143,6 +146,7 @@ describe('SpatialConnector imperative handler', () => {
     it('fixture "valid_hide" -> ok', async () => {
       if (typeof spatialConnectorHandler.hide !== 'function') return;
       const storage = createInMemoryStorage();
+      await spatialConnectorHandler.draw({ canvas: "c1", source: "node-a", target: "node-b", type: "visual" }, storage);
       const result = await spatialConnectorHandler.hide({ connector: "connector-1" }, storage);
       expect(result.variant).toBe('ok');
     });

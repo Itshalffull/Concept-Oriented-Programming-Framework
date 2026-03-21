@@ -162,6 +162,7 @@ describe('WidgetImplementationEntity functional handler', () => {
     it('fixture "get_react_dialog" -> ok', async () => {
       if (typeof widgetImplementationEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
       const result = await interpret(widgetImplementationEntityHandler.get({ widget: "dialog", framework: "react" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +231,7 @@ describe('WidgetImplementationEntity functional handler', () => {
     it('fixture "get_by_file" -> ok', async () => {
       if (typeof widgetImplementationEntityHandler.getByFile !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
       const result = await interpret(widgetImplementationEntityHandler.getByFile({ sourceFile: "generated/surface/dialog/Dialog.tsx" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -305,6 +307,7 @@ describe('WidgetImplementationEntity functional handler', () => {
     it('fixture "find_dialog" -> ok', async () => {
       if (typeof widgetImplementationEntityHandler.findByWidget !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
       const result = await interpret(widgetImplementationEntityHandler.findByWidget({ widget: "dialog" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -319,6 +322,7 @@ describe('WidgetImplementationEntity functional handler', () => {
     it('fixture "find_empty_widget" -> ok', async () => {
       if (typeof widgetImplementationEntityHandler.findByWidget !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
       const result = await interpret(widgetImplementationEntityHandler.findByWidget({ widget: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -380,6 +384,7 @@ describe('WidgetImplementationEntity functional handler', () => {
     it('fixture "find_react" -> ok', async () => {
       if (typeof widgetImplementationEntityHandler.findByFramework !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
       const result = await interpret(widgetImplementationEntityHandler.findByFramework({ framework: "react" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -387,6 +392,7 @@ describe('WidgetImplementationEntity functional handler', () => {
     it('fixture "find_empty_framework" -> ok', async () => {
       if (typeof widgetImplementationEntityHandler.findByFramework !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
       const result = await interpret(widgetImplementationEntityHandler.findByFramework({ framework: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -448,6 +454,7 @@ describe('WidgetImplementationEntity functional handler', () => {
     it('fixture "mapping_valid" -> ok', async () => {
       if (typeof widgetImplementationEntityHandler.anatomyMapping !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
       const result = await interpret(widgetImplementationEntityHandler.anatomyMapping({ impl: "impl-uuid-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -455,6 +462,7 @@ describe('WidgetImplementationEntity functional handler', () => {
     it('fixture "mapping_missing" -> ok', async () => {
       if (typeof widgetImplementationEntityHandler.anatomyMapping !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
       const result = await interpret(widgetImplementationEntityHandler.anatomyMapping({ impl: "nonexistent-id" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -584,6 +592,7 @@ describe('WidgetImplementationEntity functional handler', () => {
     it('fixture "resolve_frame" -> ok', async () => {
       if (typeof widgetImplementationEntityHandler.resolveRenderFrame !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
       const result = await interpret(widgetImplementationEntityHandler.resolveRenderFrame({ file: "generated/surface/dialog/Dialog.tsx", line: "42", col: "8" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -652,6 +661,7 @@ describe('WidgetImplementationEntity functional handler', () => {
     it('fixture "resolve_node" -> ok', async () => {
       if (typeof widgetImplementationEntityHandler.resolveToAstNode !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(widgetImplementationEntityHandler.register({ widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }), storage);
       const result = await interpret(widgetImplementationEntityHandler.resolveToAstNode({ impl: "impl-uuid-1", line: "15", col: "4" }), storage);
       expect(result.variant).toBe('ok');
     });

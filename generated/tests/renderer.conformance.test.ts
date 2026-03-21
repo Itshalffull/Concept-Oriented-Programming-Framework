@@ -155,6 +155,7 @@ describe('Renderer functional handler', () => {
     it('fixture "register_sidebar" -> ok', async () => {
       if (typeof rendererHandler.autoPlaceholder !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(rendererHandler.render({ renderer: "main-renderer", tree: "<page><header/><body/></page>" }), storage);
       const result = await interpret(rendererHandler.autoPlaceholder({ renderer: "main-renderer", name: "sidebar" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('Renderer functional handler', () => {
     it('fixture "stream_page" -> ok', async () => {
       if (typeof rendererHandler.stream !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(rendererHandler.render({ renderer: "main-renderer", tree: "<page><header/><body/></page>" }), storage);
       const result = await interpret(rendererHandler.stream({ renderer: "main-renderer", tree: "<page><header/></page>" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('Renderer functional handler', () => {
     it('fixture "merge_tags" -> ok', async () => {
       if (typeof rendererHandler.mergeCacheability !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(rendererHandler.render({ renderer: "main-renderer", tree: "<page><header/><body/></page>" }), storage);
       const result = await interpret(rendererHandler.mergeCacheability({ renderer: "main-renderer", tags: "{\"page\":300,\"user\":60}" }), storage);
       expect(result.variant).toBe('ok');
     });

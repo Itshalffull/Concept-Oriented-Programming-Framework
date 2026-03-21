@@ -155,6 +155,7 @@ describe('ProofOfPersonhood functional handler', () => {
     it('fixture "confirm_valid" -> ok', async () => {
       if (typeof proofOfPersonhoodHandler.confirmVerification !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(proofOfPersonhoodHandler.requestVerification({ candidate: "alice", method: "Biometric", expiryDays: "365" }), storage);
       const result = await interpret(proofOfPersonhoodHandler.confirmVerification({ verification: "pop-1001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('ProofOfPersonhood functional handler', () => {
     it('fixture "reject_with_reason" -> ok', async () => {
       if (typeof proofOfPersonhoodHandler.rejectVerification !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(proofOfPersonhoodHandler.requestVerification({ candidate: "alice", method: "Biometric", expiryDays: "365" }), storage);
       const result = await interpret(proofOfPersonhoodHandler.rejectVerification({ verification: "pop-1001", reason: "Fraudulent proof submission" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('ProofOfPersonhood functional handler', () => {
     it('fixture "check_valid_status" -> ok', async () => {
       if (typeof proofOfPersonhoodHandler.checkStatus !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(proofOfPersonhoodHandler.requestVerification({ candidate: "alice", method: "Biometric", expiryDays: "365" }), storage);
       const result = await interpret(proofOfPersonhoodHandler.checkStatus({ verification: "pop-1001" }), storage);
       expect(result.variant).toBe('ok');
     });

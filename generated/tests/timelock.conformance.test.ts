@@ -162,6 +162,7 @@ describe('Timelock functional handler', () => {
     it('fixture "execute_ready" -> ok', async () => {
       if (typeof timelockHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(timelockHandler.schedule({ operationHash: "0xdeadbeef", payload: "{\"action\":\"transfer\",\"to\":\"0x123\"}", delayHours: "48.0", gracePeriodHours: "24.0" }), storage);
       const result = await interpret(timelockHandler.execute({ lock: "timelock-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +231,7 @@ describe('Timelock functional handler', () => {
     it('fixture "cancel_queued" -> ok', async () => {
       if (typeof timelockHandler.cancel !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(timelockHandler.schedule({ operationHash: "0xdeadbeef", payload: "{\"action\":\"transfer\",\"to\":\"0x123\"}", delayHours: "48.0", gracePeriodHours: "24.0" }), storage);
       const result = await interpret(timelockHandler.cancel({ lock: "timelock-001", reason: "Governance vote rejected proposal" }), storage);
       expect(result.variant).toBe('ok');
     });

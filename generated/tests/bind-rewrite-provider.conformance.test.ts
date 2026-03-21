@@ -148,6 +148,7 @@ describe('BindRewriteProvider functional handler', () => {
     it('fixture "rewrite_bind_expr" -> ok', async () => {
       if (typeof bindRewriteProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(bindRewriteProviderHandler.register({  }), storage);
       const result = await interpret(bindRewriteProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"bind\",\"expr\":\"?variant\"}]}", spec: "{\"rewrites\":{\"?variant\":\"?custom\"}}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -155,6 +156,7 @@ describe('BindRewriteProvider functional handler', () => {
     it('fixture "empty_rewrites" -> ok', async () => {
       if (typeof bindRewriteProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(bindRewriteProviderHandler.register({  }), storage);
       const result = await interpret(bindRewriteProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"rewrites\":{}}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +164,7 @@ describe('BindRewriteProvider functional handler', () => {
     it('fixture "invalid_program_json" -> error', async () => {
       if (typeof bindRewriteProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(bindRewriteProviderHandler.register({  }), storage);
       const result = await interpret(bindRewriteProviderHandler.apply({ program: "not-json", spec: "{}" }), storage);
       expect(result.variant).not.toBe('ok');
     });

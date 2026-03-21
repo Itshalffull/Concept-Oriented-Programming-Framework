@@ -230,6 +230,7 @@ describe('ClaudeSkillsTarget functional handler', () => {
     it('fixture "list_skills_suite" -> ok', async () => {
       if (typeof claudeSkillsTargetHandler.listSkills !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(claudeSkillsTargetHandler.generate({ projection: "{\"conceptName\":\"SpecParser\",\"conceptManifest\":\"{\\\"name\\\":\\\"SpecParser\\\",\\\"purpose\\\":\\\"Parse concept specs\\\",\\\"actions\\\":[]}\"}", config: "{\"progressive\":true}" }), storage);
       const result = await interpret(claudeSkillsTargetHandler.listSkills({ suite: "core" }), storage);
       expect(result.variant).toBe('ok');
     });

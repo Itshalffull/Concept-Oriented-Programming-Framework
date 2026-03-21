@@ -156,6 +156,7 @@ describe('SyncPair functional handler', () => {
     it('fixture "sync_existing" -> ok', async () => {
       if (typeof syncPairHandler.sync !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(syncPairHandler.link({ pairId: "pair-1", idA: "local-42", idB: "remote-99" }), storage);
       const result = await interpret(syncPairHandler.sync({ pairId: "pair-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -225,6 +226,7 @@ describe('SyncPair functional handler', () => {
     it('fixture "detect_existing" -> ok', async () => {
       if (typeof syncPairHandler.detectConflicts !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(syncPairHandler.link({ pairId: "pair-1", idA: "local-42", idB: "remote-99" }), storage);
       const result = await interpret(syncPairHandler.detectConflicts({ pairId: "pair-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -294,6 +296,7 @@ describe('SyncPair functional handler', () => {
     it('fixture "resolve_conflict" -> ok', async () => {
       if (typeof syncPairHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(syncPairHandler.link({ pairId: "pair-1", idA: "local-42", idB: "remote-99" }), storage);
       const result = await interpret(syncPairHandler.resolve({ conflictId: "conflict-1", resolution: "keep_local" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -363,6 +366,7 @@ describe('SyncPair functional handler', () => {
     it('fixture "unlink_existing" -> ok', async () => {
       if (typeof syncPairHandler.unlink !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(syncPairHandler.link({ pairId: "pair-1", idA: "local-42", idB: "remote-99" }), storage);
       const result = await interpret(syncPairHandler.unlink({ pairId: "pair-1", idA: "local-42" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -432,6 +436,7 @@ describe('SyncPair functional handler', () => {
     it('fixture "changelog_recent" -> ok', async () => {
       if (typeof syncPairHandler.getChangeLog !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(syncPairHandler.link({ pairId: "pair-1", idA: "local-42", idB: "remote-99" }), storage);
       const result = await interpret(syncPairHandler.getChangeLog({ pairId: "pair-1", since: "2026-01-01T00:00:00Z" }), storage);
       expect(result.variant).toBe('ok');
     });

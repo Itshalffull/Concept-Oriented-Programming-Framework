@@ -155,6 +155,7 @@ describe('PageAsRecord functional handler', () => {
     it('fixture "set_title" -> ok', async () => {
       if (typeof pageAsRecordHandler.setProperty !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(pageAsRecordHandler.create({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\"]}" }), storage);
       const result = await interpret(pageAsRecordHandler.setProperty({ page: "meeting-notes", key: "title", value: "Weekly Standup" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('PageAsRecord functional handler', () => {
     it('fixture "get_title" -> ok', async () => {
       if (typeof pageAsRecordHandler.getProperty !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(pageAsRecordHandler.create({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\"]}" }), storage);
       const result = await interpret(pageAsRecordHandler.getProperty({ page: "meeting-notes", key: "title" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('PageAsRecord functional handler', () => {
     it('fixture "append_text" -> ok', async () => {
       if (typeof pageAsRecordHandler.appendToBody !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(pageAsRecordHandler.create({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\"]}" }), storage);
       const result = await interpret(pageAsRecordHandler.appendToBody({ page: "meeting-notes", content: "Action items from today" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +362,7 @@ describe('PageAsRecord functional handler', () => {
     it('fixture "attach_schema" -> ok', async () => {
       if (typeof pageAsRecordHandler.attachToSchema !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(pageAsRecordHandler.create({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\"]}" }), storage);
       const result = await interpret(pageAsRecordHandler.attachToSchema({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\",\"attendees\"]}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -366,6 +370,7 @@ describe('PageAsRecord functional handler', () => {
     it('fixture "attach_to_missing" -> error', async () => {
       if (typeof pageAsRecordHandler.attachToSchema !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(pageAsRecordHandler.create({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\"]}" }), storage);
       const result = await interpret(pageAsRecordHandler.attachToSchema({ page: "nonexistent", schema: "{}" }), storage);
       expect(result.variant).not.toBe('ok');
     });

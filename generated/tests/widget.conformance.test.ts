@@ -156,6 +156,7 @@ describe('Widget functional handler', () => {
     it('fixture "valid_get" -> ok', async () => {
       if (typeof widgetHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(widgetHandler.register({ name: "dialog", ast: "{\"type\":\"widget\",\"states\":[\"open\",\"closed\"]}", category: "overlay" }), storage);
       const result = await interpret(widgetHandler.get({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -225,6 +226,7 @@ describe('Widget functional handler', () => {
     it('fixture "list_all" -> ok', async () => {
       if (typeof widgetHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(widgetHandler.register({ name: "dialog", ast: "{\"type\":\"widget\",\"states\":[\"open\",\"closed\"]}", category: "overlay" }), storage);
       const result = await interpret(widgetHandler.list({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -232,6 +234,7 @@ describe('Widget functional handler', () => {
     it('fixture "list_by_category" -> ok', async () => {
       if (typeof widgetHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(widgetHandler.register({ name: "dialog", ast: "{\"type\":\"widget\",\"states\":[\"open\",\"closed\"]}", category: "overlay" }), storage);
       const result = await interpret(widgetHandler.list({ category: "overlay" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -293,6 +296,7 @@ describe('Widget functional handler', () => {
     it('fixture "valid_unregister" -> ok', async () => {
       if (typeof widgetHandler.unregister !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(widgetHandler.register({ name: "dialog", ast: "{\"type\":\"widget\",\"states\":[\"open\",\"closed\"]}", category: "overlay" }), storage);
       const result = await interpret(widgetHandler.unregister({  }), storage);
       expect(result.variant).toBe('ok');
     });

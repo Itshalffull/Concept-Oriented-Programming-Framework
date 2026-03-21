@@ -155,6 +155,7 @@ describe('SymbolOccurrence functional handler', () => {
     it('fixture "valid_find_defs" -> ok', async () => {
       if (typeof symbolOccurrenceHandler.findDefinitions !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" }), storage);
       const result = await interpret(symbolOccurrenceHandler.findDefinitions({ symbol: "clef/concept/Article" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('SymbolOccurrence functional handler', () => {
     it('fixture "valid_find_refs" -> ok', async () => {
       if (typeof symbolOccurrenceHandler.findReferences !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" }), storage);
       const result = await interpret(symbolOccurrenceHandler.findReferences({ symbol: "clef/concept/Article", roleFilter: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +232,7 @@ describe('SymbolOccurrence functional handler', () => {
     it('fixture "find_refs_filtered" -> ok', async () => {
       if (typeof symbolOccurrenceHandler.findReferences !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" }), storage);
       const result = await interpret(symbolOccurrenceHandler.findReferences({ symbol: "clef/concept/Article", roleFilter: "reference" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -298,6 +301,7 @@ describe('SymbolOccurrence functional handler', () => {
     it('fixture "valid_find_at_pos" -> ok', async () => {
       if (typeof symbolOccurrenceHandler.findAtPosition !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" }), storage);
       const result = await interpret(symbolOccurrenceHandler.findAtPosition({ file: "specs/article.concept", row: "2", col: "10" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -366,6 +370,7 @@ describe('SymbolOccurrence functional handler', () => {
     it('fixture "valid_find_in_file" -> ok', async () => {
       if (typeof symbolOccurrenceHandler.findInFile !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" }), storage);
       const result = await interpret(symbolOccurrenceHandler.findInFile({ file: "specs/article.concept" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -373,6 +378,7 @@ describe('SymbolOccurrence functional handler', () => {
     it('fixture "find_in_empty_file" -> ok', async () => {
       if (typeof symbolOccurrenceHandler.findInFile !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" }), storage);
       const result = await interpret(symbolOccurrenceHandler.findInFile({ file: "src/no-symbols.ts" }), storage);
       expect(result.variant).toBe('ok');
     });

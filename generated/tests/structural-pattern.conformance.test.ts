@@ -155,6 +155,7 @@ describe('StructuralPattern functional handler', () => {
     it('fixture "match_pattern" -> ok', async () => {
       if (typeof structuralPatternHandler.match !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(structuralPatternHandler.create({ syntax: "tree-sitter-query", source: "(function_declaration) @fn", language: "typescript" }), storage);
       const result = await interpret(structuralPatternHandler.match({ pattern: "pat-1", tree: "tree-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('StructuralPattern functional handler', () => {
     it('fixture "match_project" -> ok', async () => {
       if (typeof structuralPatternHandler.matchProject !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(structuralPatternHandler.create({ syntax: "tree-sitter-query", source: "(function_declaration) @fn", language: "typescript" }), storage);
       const result = await interpret(structuralPatternHandler.matchProject({ pattern: "pat-1" }), storage);
       expect(result.variant).toBe('ok');
     });

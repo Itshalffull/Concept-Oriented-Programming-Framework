@@ -155,6 +155,7 @@ describe('Deliberation functional handler', () => {
     it('fixture "add_argument" -> ok', async () => {
       if (typeof deliberationHandler.addEntry !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(deliberationHandler.open({ proposalRef: "proposal-budget-2026" }), storage);
       const result = await interpret(deliberationHandler.addEntry({ thread: "thread-001", author: "alice", content: "The budget increase is justified by projected revenue growth", entryType: "argument", parentEntry: null }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +163,7 @@ describe('Deliberation functional handler', () => {
     it('fixture "add_reply" -> ok', async () => {
       if (typeof deliberationHandler.addEntry !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(deliberationHandler.open({ proposalRef: "proposal-budget-2026" }), storage);
       const result = await interpret(deliberationHandler.addEntry({ thread: "thread-001", author: "bob", content: "Revenue projections may be overly optimistic", entryType: "response", parentEntry: "entry-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +232,7 @@ describe('Deliberation functional handler', () => {
     it('fixture "signal_agree" -> ok', async () => {
       if (typeof deliberationHandler.signal !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(deliberationHandler.open({ proposalRef: "proposal-budget-2026" }), storage);
       const result = await interpret(deliberationHandler.signal({ thread: "thread-001", signaller: "carol", signal: "agree" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -298,6 +301,7 @@ describe('Deliberation functional handler', () => {
     it('fixture "close_open_thread" -> ok', async () => {
       if (typeof deliberationHandler.close !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(deliberationHandler.open({ proposalRef: "proposal-budget-2026" }), storage);
       const result = await interpret(deliberationHandler.close({ thread: "thread-001" }), storage);
       expect(result.variant).toBe('ok');
     });

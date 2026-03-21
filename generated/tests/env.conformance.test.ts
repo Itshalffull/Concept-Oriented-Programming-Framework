@@ -162,6 +162,7 @@ describe('Env functional handler', () => {
     it('fixture "promote_staging_to_prod" -> ok', async () => {
       if (typeof envHandler.promote !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(envHandler.resolve({ environment: "staging" }), storage);
       const result = await interpret(envHandler.promote({ fromEnv: "env-staging-001", toEnv: "env-prod-001", suiteName: "auth-suite" }), storage);
       expect(result.variant).toBe('ok');
     });

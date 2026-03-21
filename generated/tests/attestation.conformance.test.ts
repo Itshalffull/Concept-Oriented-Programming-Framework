@@ -155,6 +155,7 @@ describe('Attestation functional handler', () => {
     it('fixture "revoke_by_attester" -> ok', async () => {
       if (typeof attestationHandler.revoke !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(attestationHandler.attest({ schema: "kyc-identity", attester: "civic-authority", recipient: "alice", data: "{\"level\":\"basic\"}", expiry: "2027-12-31T00:00:00Z" }), storage);
       const result = await interpret(attestationHandler.revoke({ attestation: "attest-1001", revoker: "civic-authority" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('Attestation functional handler', () => {
     it('fixture "verify_valid" -> ok', async () => {
       if (typeof attestationHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(attestationHandler.attest({ schema: "kyc-identity", attester: "civic-authority", recipient: "alice", data: "{\"level\":\"basic\"}", expiry: "2027-12-31T00:00:00Z" }), storage);
       const result = await interpret(attestationHandler.verify({ attestation: "attest-1001" }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -155,6 +155,7 @@ describe('EmbeddingCache functional handler', () => {
     it('fixture "known_digest" -> ok', async () => {
       if (typeof embeddingCacheHandler.lookup !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(embeddingCacheHandler.warm({ path: "/var/cache/embeddings.json" }), storage);
       const result = await interpret(embeddingCacheHandler.lookup({ digest: "sha256:abc123def456" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('EmbeddingCache functional handler', () => {
     it('fixture "store_embedding" -> ok', async () => {
       if (typeof embeddingCacheHandler.put !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(embeddingCacheHandler.warm({ path: "/var/cache/embeddings.json" }), storage);
       const result = await interpret(embeddingCacheHandler.put({ digest: "sha256:abc123", vector: "[0.1,0.2,0.3]", model: "text-embedding-ada-002", dimensions: "3", sourceKind: "concept", sourceKey: "UserProfile" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('EmbeddingCache functional handler', () => {
     it('fixture "flush_to_disk" -> ok', async () => {
       if (typeof embeddingCacheHandler.flush !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(embeddingCacheHandler.warm({ path: "/var/cache/embeddings.json" }), storage);
       const result = await interpret(embeddingCacheHandler.flush({ path: "/var/cache/embeddings.json" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +362,7 @@ describe('EmbeddingCache functional handler', () => {
     it('fixture "evict_existing" -> ok', async () => {
       if (typeof embeddingCacheHandler.evict !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(embeddingCacheHandler.warm({ path: "/var/cache/embeddings.json" }), storage);
       const result = await interpret(embeddingCacheHandler.evict({ digest: "sha256:def456" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -427,6 +431,7 @@ describe('EmbeddingCache functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof embeddingCacheHandler.stats !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(embeddingCacheHandler.warm({ path: "/var/cache/embeddings.json" }), storage);
       const result = await interpret(embeddingCacheHandler.stats({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -488,6 +493,7 @@ describe('EmbeddingCache functional handler', () => {
     it('fixture "config_lookup" -> ok', async () => {
       if (typeof embeddingCacheHandler.lookupWithConfig !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(embeddingCacheHandler.warm({ path: "/var/cache/embeddings.json" }), storage);
       const result = await interpret(embeddingCacheHandler.lookupWithConfig({ digest: "sha256:abc123", model: "text-embedding-ada-002", dimensions: "1536" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -556,6 +562,7 @@ describe('EmbeddingCache functional handler', () => {
     it('fixture "store_with_config" -> ok', async () => {
       if (typeof embeddingCacheHandler.putWithConfig !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(embeddingCacheHandler.warm({ path: "/var/cache/embeddings.json" }), storage);
       const result = await interpret(embeddingCacheHandler.putWithConfig({ digest: "sha256:abc123", model: "text-embedding-ada-002", dimensions: "1536", vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User" }), storage);
       expect(result.variant).toBe('ok');
     });

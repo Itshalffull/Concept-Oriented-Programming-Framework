@@ -155,6 +155,7 @@ describe('AppTemplate functional handler', () => {
     it('fixture "valid_detail" -> ok', async () => {
       if (typeof appTemplateHandler.detail !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(appTemplateHandler.list({ category: null }), storage);
       const result = await interpret(appTemplateHandler.detail({ name: "social" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('AppTemplate functional handler', () => {
     it('fixture "valid_customize" -> ok', async () => {
       if (typeof appTemplateHandler.customize !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(appTemplateHandler.list({ category: null }), storage);
       const result = await interpret(appTemplateHandler.customize({ template: "social", add: "[\"Graph\"]", remove: "[\"Favorite\"]", features: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +232,7 @@ describe('AppTemplate functional handler', () => {
     it('fixture "customize_remove_required" -> error', async () => {
       if (typeof appTemplateHandler.customize !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(appTemplateHandler.list({ category: null }), storage);
       const result = await interpret(appTemplateHandler.customize({ template: "social", add: "[]", remove: "[\"User\"]", features: "{}" }), storage);
       expect(result.variant).not.toBe('ok');
     });
@@ -291,6 +294,7 @@ describe('AppTemplate functional handler', () => {
     it('fixture "valid_register" -> ok', async () => {
       if (typeof appTemplateHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(appTemplateHandler.list({ category: null }), storage);
       const result = await interpret(appTemplateHandler.register({ name: "my-custom", description: "Custom app template", category: "tool", modules: "[\"User\",\"ContentNode\"]", syncs: "[]" }), storage);
       expect(result.variant).toBe('ok');
     });

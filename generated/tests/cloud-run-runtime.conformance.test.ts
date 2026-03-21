@@ -162,6 +162,7 @@ describe('CloudRunRuntime functional handler', () => {
     it('fixture "deploy_gcr" -> ok', async () => {
       if (typeof cloudRunRuntimeHandler.deploy !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(cloudRunRuntimeHandler.provision({ concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: "1", memory: "512" }), storage);
       const result = await interpret(cloudRunRuntimeHandler.deploy({ service: "svc-abc123", imageUri: "gcr.io/my-gcp-project/user-api:v3" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +231,7 @@ describe('CloudRunRuntime functional handler', () => {
     it('fixture "traffic_split" -> ok', async () => {
       if (typeof cloudRunRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(cloudRunRuntimeHandler.provision({ concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: "1", memory: "512" }), storage);
       const result = await interpret(cloudRunRuntimeHandler.setTrafficWeight({ service: "svc-abc123", weight: "50" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -298,6 +300,7 @@ describe('CloudRunRuntime functional handler', () => {
     it('fixture "rollback_to_rev" -> ok', async () => {
       if (typeof cloudRunRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(cloudRunRuntimeHandler.provision({ concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: "1", memory: "512" }), storage);
       const result = await interpret(cloudRunRuntimeHandler.rollback({ service: "svc-abc123", targetRevision: "rev-20250101" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -305,6 +308,7 @@ describe('CloudRunRuntime functional handler', () => {
     it('fixture "rollback_empty_revision" -> ok', async () => {
       if (typeof cloudRunRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(cloudRunRuntimeHandler.provision({ concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: "1", memory: "512" }), storage);
       const result = await interpret(cloudRunRuntimeHandler.rollback({ service: "svc-abc123", targetRevision: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -366,6 +370,7 @@ describe('CloudRunRuntime functional handler', () => {
     it('fixture "destroy_valid" -> ok', async () => {
       if (typeof cloudRunRuntimeHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(cloudRunRuntimeHandler.provision({ concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: "1", memory: "512" }), storage);
       const result = await interpret(cloudRunRuntimeHandler.destroy({ service: "svc-abc123" }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -94,6 +94,7 @@ describe('Alias functional handler', () => {
     it('fixture "another_alias" -> ok', async () => {
       if (typeof aliasHandler.addAlias !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(aliasHandler.addAlias({ entity: "page-123", name: "homepage" }), storage);
       const result = await interpret(aliasHandler.addAlias({ entity: "page-456", name: "about-us" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -163,6 +164,7 @@ describe('Alias functional handler', () => {
     it('fixture "valid_remove" -> ok', async () => {
       if (typeof aliasHandler.removeAlias !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(aliasHandler.addAlias({ entity: "page-123", name: "homepage" }), storage);
       const result = await interpret(aliasHandler.removeAlias({ entity: "page-123", name: "homepage" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -232,6 +234,7 @@ describe('Alias functional handler', () => {
     it('fixture "valid_resolve" -> ok', async () => {
       if (typeof aliasHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(aliasHandler.addAlias({ entity: "page-123", name: "homepage" }), storage);
       const result = await interpret(aliasHandler.resolve({ name: "homepage" }), storage);
       expect(result.variant).toBe('ok');
     });

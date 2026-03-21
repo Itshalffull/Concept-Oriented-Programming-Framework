@@ -162,6 +162,7 @@ describe('DiagramExport functional handler', () => {
     it('fixture "import_json" -> ok', async () => {
       if (typeof diagramExportHandler.importDiagram !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(diagramExportHandler.export({ canvas_id: "canvas-1", format: "svg", options: {"width":"1920","height":"1080","embed_data":"true"} }), storage);
       const result = await interpret(diagramExportHandler.importDiagram({ data: "{\"nodes\":[]}", format: "json", target_canvas: "canvas-5" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +231,7 @@ describe('DiagramExport functional handler', () => {
     it('fixture "detect_json" -> ok', async () => {
       if (typeof diagramExportHandler.detectFormat !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(diagramExportHandler.export({ canvas_id: "canvas-1", format: "svg", options: {"width":"1920","height":"1080","embed_data":"true"} }), storage);
       const result = await interpret(diagramExportHandler.detectFormat({ data: "{\"nodes\":[]}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -237,6 +239,7 @@ describe('DiagramExport functional handler', () => {
     it('fixture "detect_svg" -> ok', async () => {
       if (typeof diagramExportHandler.detectFormat !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(diagramExportHandler.export({ canvas_id: "canvas-1", format: "svg", options: {"width":"1920","height":"1080","embed_data":"true"} }), storage);
       const result = await interpret(diagramExportHandler.detectFormat({ data: "<svg xmlns=\"http://www.w3.org/2000/svg\"></svg>" }), storage);
       expect(result.variant).toBe('ok');
     });

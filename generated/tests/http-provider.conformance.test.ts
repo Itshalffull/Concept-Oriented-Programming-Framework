@@ -55,6 +55,7 @@ describe('HttpProvider imperative handler', () => {
     it('fixture "configure_test_api" -> ok', async () => {
       if (typeof httpProviderHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
+      await httpProviderHandler.list({  }, storage);
       const result = await httpProviderHandler.configure({ name: "test-api", baseUrl: "https://api.example.com", headers: "{\"Authorization\":\"Bearer tok\"}", timeout: "5000" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -62,6 +63,7 @@ describe('HttpProvider imperative handler', () => {
     it('fixture "configure_internal" -> ok', async () => {
       if (typeof httpProviderHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
+      await httpProviderHandler.list({  }, storage);
       const result = await httpProviderHandler.configure({ name: "internal-svc", baseUrl: "http://localhost:8080", headers: "{}", timeout: "30000" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -81,6 +83,7 @@ describe('HttpProvider imperative handler', () => {
     it('fixture "get_health" -> ok', async () => {
       if (typeof httpProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
+      await httpProviderHandler.list({  }, storage);
       const result = await httpProviderHandler.execute({ instance: "test-api", method: "GET", path: "/health", body: "", headers: "{}" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -88,6 +91,7 @@ describe('HttpProvider imperative handler', () => {
     it('fixture "post_data" -> ok', async () => {
       if (typeof httpProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
+      await httpProviderHandler.list({  }, storage);
       const result = await httpProviderHandler.execute({ instance: "test-api", method: "POST", path: "/users", body: "{\"name\":\"Alice\"}", headers: "{\"Content-Type\":\"application/json\"}" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -95,6 +99,7 @@ describe('HttpProvider imperative handler', () => {
     it('fixture "execute_unknown_instance" -> notFound', async () => {
       if (typeof httpProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
+      await httpProviderHandler.list({  }, storage);
       const result = await httpProviderHandler.execute({ instance: "nonexistent", method: "GET", path: "/", body: "", headers: "{}" }, storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notFound'));
@@ -115,6 +120,7 @@ describe('HttpProvider imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof httpProviderHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      await httpProviderHandler.list({  }, storage);
       const result = await httpProviderHandler.list({  }, storage);
       expect(result.variant).toBe('ok');
     });

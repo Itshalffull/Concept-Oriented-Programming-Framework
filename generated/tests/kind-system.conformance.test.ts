@@ -162,6 +162,7 @@ describe('KindSystem functional handler', () => {
     it('fixture "connect_parse" -> ok', async () => {
       if (typeof kindSystemHandler.connect !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(kindSystemHandler.define({ name: "ConceptDSL", category: "source" }), storage);
       const result = await interpret(kindSystemHandler.connect({ from: "ConceptDSL", to: "ConceptAST", relation: "parses_to", transformName: "ConceptParser" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -239,6 +240,7 @@ describe('KindSystem functional handler', () => {
     it('fixture "route_connected" -> ok', async () => {
       if (typeof kindSystemHandler.route !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(kindSystemHandler.define({ name: "ConceptDSL", category: "source" }), storage);
       const result = await interpret(kindSystemHandler.route({ from: "ConceptDSL", to: "TypeScriptFiles" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -246,6 +248,7 @@ describe('KindSystem functional handler', () => {
     it('fixture "route_same" -> ok', async () => {
       if (typeof kindSystemHandler.route !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(kindSystemHandler.define({ name: "ConceptDSL", category: "source" }), storage);
       const result = await interpret(kindSystemHandler.route({ from: "ConceptAST", to: "ConceptAST" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -376,6 +379,7 @@ describe('KindSystem functional handler', () => {
     it('fixture "dependents_ast" -> ok', async () => {
       if (typeof kindSystemHandler.dependents !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(kindSystemHandler.define({ name: "ConceptDSL", category: "source" }), storage);
       const result = await interpret(kindSystemHandler.dependents({ kind: "ConceptAST" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -383,6 +387,7 @@ describe('KindSystem functional handler', () => {
     it('fixture "dependents_leaf" -> ok', async () => {
       if (typeof kindSystemHandler.dependents !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(kindSystemHandler.define({ name: "ConceptDSL", category: "source" }), storage);
       const result = await interpret(kindSystemHandler.dependents({ kind: "TypeScriptFiles" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -444,6 +449,7 @@ describe('KindSystem functional handler', () => {
     it('fixture "producers_ast" -> ok', async () => {
       if (typeof kindSystemHandler.producers !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(kindSystemHandler.define({ name: "ConceptDSL", category: "source" }), storage);
       const result = await interpret(kindSystemHandler.producers({ kind: "ConceptAST" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -451,6 +457,7 @@ describe('KindSystem functional handler', () => {
     it('fixture "producers_source" -> ok', async () => {
       if (typeof kindSystemHandler.producers !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(kindSystemHandler.define({ name: "ConceptDSL", category: "source" }), storage);
       const result = await interpret(kindSystemHandler.producers({ kind: "ConceptDSL" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -512,6 +519,7 @@ describe('KindSystem functional handler', () => {
     it('fixture "consumers_ast" -> ok', async () => {
       if (typeof kindSystemHandler.consumers !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(kindSystemHandler.define({ name: "ConceptDSL", category: "source" }), storage);
       const result = await interpret(kindSystemHandler.consumers({ kind: "ConceptAST" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -519,6 +527,7 @@ describe('KindSystem functional handler', () => {
     it('fixture "consumers_artifact" -> ok', async () => {
       if (typeof kindSystemHandler.consumers !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(kindSystemHandler.define({ name: "ConceptDSL", category: "source" }), storage);
       const result = await interpret(kindSystemHandler.consumers({ kind: "TypeScriptFiles" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -580,6 +589,7 @@ describe('KindSystem functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof kindSystemHandler.graph !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(kindSystemHandler.define({ name: "ConceptDSL", category: "source" }), storage);
       const result = await interpret(kindSystemHandler.graph({  }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -162,6 +162,7 @@ describe('Delegation functional handler', () => {
     it('fixture "valid_undelegate" -> ok', async () => {
       if (typeof delegationHandler.undelegate !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(delegationHandler.delegate({ from: "alice", to: "bob", scope: "budgets", expiresAt: "2026-12-31T23:59:59Z" }), storage);
       const result = await interpret(delegationHandler.undelegate({ from: "alice", to: "bob" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +231,7 @@ describe('Delegation functional handler', () => {
     it('fixture "weight_lookup" -> ok', async () => {
       if (typeof delegationHandler.getEffectiveWeight !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(delegationHandler.delegate({ from: "alice", to: "bob", scope: "budgets", expiresAt: "2026-12-31T23:59:59Z" }), storage);
       const result = await interpret(delegationHandler.getEffectiveWeight({ participant: "bob" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -237,6 +239,7 @@ describe('Delegation functional handler', () => {
     it('fixture "weight_scoped" -> ok', async () => {
       if (typeof delegationHandler.getEffectiveWeight !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(delegationHandler.delegate({ from: "alice", to: "bob", scope: "budgets", expiresAt: "2026-12-31T23:59:59Z" }), storage);
       const result = await interpret(delegationHandler.getEffectiveWeight({ participant: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });

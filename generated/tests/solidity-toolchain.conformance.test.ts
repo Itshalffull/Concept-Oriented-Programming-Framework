@@ -169,6 +169,7 @@ describe('SolidityToolchain functional handler', () => {
     it('fixture "register_valid" -> ok', async () => {
       if (typeof solidityToolchainHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(solidityToolchainHandler.resolve({ platform: "shanghai", versionConstraint: ">=0.8.20" }), storage);
       const result = await interpret(solidityToolchainHandler.register({  }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -88,6 +88,7 @@ describe('TestGenTypeScript imperative handler', () => {
     it('fixture "list_valid" -> ok', async () => {
       if (typeof testGenTypeScriptHandler.listRendered !== 'function') return;
       const storage = createInMemoryStorage();
+      await testGenTypeScriptHandler.render({ test_plan: "{\"conceptName\":\"Counter\",\"actions\":[{\"name\":\"increment\",\"params\":[],\"variants\":[\"ok\"]}],\"examples\":[],\"properties\":[],\"stateInvariants\":[],\"liveness\":[],\"contracts\":[]}", output_path: "generated/tests/counter.test.typescript" }, storage);
       const result = await testGenTypeScriptHandler.listRendered({ concept_ref: "clef/concept/Counter" }, storage);
       expect(result.variant).toBe('ok');
     });

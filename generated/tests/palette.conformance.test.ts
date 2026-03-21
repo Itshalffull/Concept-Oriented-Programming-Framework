@@ -171,6 +171,7 @@ describe('Palette functional handler', () => {
     it('fixture "assign_primary" -> ok', async () => {
       if (typeof paletteHandler.assignRole !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(paletteHandler.generate({ palette: "C-1", name: "blue", seed: "#3b82f6" }), storage);
       const result = await interpret(paletteHandler.assignRole({ palette: "C-1", role: "primary" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -178,6 +179,7 @@ describe('Palette functional handler', () => {
     it('fixture "assign_accent" -> ok', async () => {
       if (typeof paletteHandler.assignRole !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(paletteHandler.generate({ palette: "C-1", name: "blue", seed: "#3b82f6" }), storage);
       const result = await interpret(paletteHandler.assignRole({ palette: "C-2", role: "accent" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -247,6 +249,7 @@ describe('Palette functional handler', () => {
     it('fixture "contrast_blue_white" -> ok', async () => {
       if (typeof paletteHandler.checkContrast !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(paletteHandler.generate({ palette: "C-1", name: "blue", seed: "#3b82f6" }), storage);
       const result = await interpret(paletteHandler.checkContrast({ foreground: "C-1", background: "C-2" }), storage);
       expect(result.variant).toBe('ok');
     });

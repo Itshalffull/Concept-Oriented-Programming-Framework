@@ -155,6 +155,7 @@ describe('Merge functional handler', () => {
     it('fixture "clean_merge" -> ok', async () => {
       if (typeof mergeHandler.merge !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(mergeHandler.registerStrategy({ name: "three-way", contentTypes: ["text/plain"] }), storage);
       const result = await interpret(mergeHandler.merge({ base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3", strategy: null }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +163,7 @@ describe('Merge functional handler', () => {
     it('fixture "conflicting_merge" -> ok', async () => {
       if (typeof mergeHandler.merge !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(mergeHandler.registerStrategy({ name: "three-way", contentTypes: ["text/plain"] }), storage);
       const result = await interpret(mergeHandler.merge({ base: "line1", ours: "lineA", theirs: "lineB", strategy: null }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +232,7 @@ describe('Merge functional handler', () => {
     it('fixture "resolve_first" -> ok', async () => {
       if (typeof mergeHandler.resolveConflict !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(mergeHandler.registerStrategy({ name: "three-way", contentTypes: ["text/plain"] }), storage);
       const result = await interpret(mergeHandler.resolveConflict({ mergeId: "merge-1", conflictIndex: "0", resolution: "resolved line" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -298,6 +301,7 @@ describe('Merge functional handler', () => {
     it('fixture "finalize_resolved" -> ok', async () => {
       if (typeof mergeHandler.finalize !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(mergeHandler.registerStrategy({ name: "three-way", contentTypes: ["text/plain"] }), storage);
       const result = await interpret(mergeHandler.finalize({ mergeId: "merge-1" }), storage);
       expect(result.variant).toBe('ok');
     });

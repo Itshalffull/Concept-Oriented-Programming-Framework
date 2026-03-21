@@ -148,6 +148,7 @@ describe('A11yAdaptProvider functional handler', () => {
     it('fixture "modify_aria_label" -> ok', async () => {
       if (typeof a11yAdaptProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(a11yAdaptProviderHandler.register({  }), storage);
       const result = await interpret(a11yAdaptProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"aria\",\"attr\":\"aria-label\",\"value\":\"Card\"},{\"tag\":\"pure\",\"output\":\"W\"}]}", spec: "{\"modifications\":[{\"match\":{\"tag\":\"aria\",\"attr\":\"aria-label\"},\"set\":{\"value\":\"Accessible Card\"}}]}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -155,6 +156,7 @@ describe('A11yAdaptProvider functional handler', () => {
     it('fixture "inject_aria_live" -> ok', async () => {
       if (typeof a11yAdaptProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(a11yAdaptProviderHandler.register({  }), storage);
       const result = await interpret(a11yAdaptProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"additions\":[{\"tag\":\"aria\",\"attr\":\"aria-live\",\"value\":\"polite\"}]}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +164,7 @@ describe('A11yAdaptProvider functional handler', () => {
     it('fixture "invalid_spec_json" -> error', async () => {
       if (typeof a11yAdaptProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(a11yAdaptProviderHandler.register({  }), storage);
       const result = await interpret(a11yAdaptProviderHandler.apply({ program: "{\"instructions\":[]}", spec: "bad-json" }), storage);
       expect(result.variant).not.toBe('ok');
     });

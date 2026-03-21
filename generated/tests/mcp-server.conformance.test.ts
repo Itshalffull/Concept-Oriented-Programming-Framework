@@ -162,6 +162,7 @@ describe('McpServer functional handler', () => {
     it('fixture "valid_register_tool" -> ok', async () => {
       if (typeof mcpServerHandler.registerTool !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(mcpServerHandler.start({ manifestPath: "examples/devtools/devtools.interface.yaml", transport: "stdio" }), storage);
       const result = await interpret(mcpServerHandler.registerTool({ name: "user_create", concept: "User", action: "create", description: "Create a new user account", schema: "{\"type\":\"object\",\"properties\":{\"email\":{\"type\":\"string\"}},\"required\":[\"email\"]}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -169,6 +170,7 @@ describe('McpServer functional handler', () => {
     it('fixture "duplicate_tool" -> duplicate', async () => {
       if (typeof mcpServerHandler.registerTool !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(mcpServerHandler.start({ manifestPath: "examples/devtools/devtools.interface.yaml", transport: "stdio" }), storage);
       const result = await interpret(mcpServerHandler.registerTool({ name: "user_create", concept: "User", action: "create", description: "duplicate entry", schema: "{}" }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('duplicate'));
@@ -231,6 +233,7 @@ describe('McpServer functional handler', () => {
     it('fixture "valid_call" -> ok', async () => {
       if (typeof mcpServerHandler.handleCall !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(mcpServerHandler.start({ manifestPath: "examples/devtools/devtools.interface.yaml", transport: "stdio" }), storage);
       const result = await interpret(mcpServerHandler.handleCall({ toolName: "user_create", arguments: "{\"email\":\"alice@example.com\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -238,6 +241,7 @@ describe('McpServer functional handler', () => {
     it('fixture "unknown_tool" -> notfound', async () => {
       if (typeof mcpServerHandler.handleCall !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(mcpServerHandler.start({ manifestPath: "examples/devtools/devtools.interface.yaml", transport: "stdio" }), storage);
       const result = await interpret(mcpServerHandler.handleCall({ toolName: "nonexistent_tool", arguments: "{}" }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notfound'));
@@ -300,6 +304,7 @@ describe('McpServer functional handler', () => {
     it('fixture "valid_stop" -> ok', async () => {
       if (typeof mcpServerHandler.stop !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(mcpServerHandler.start({ manifestPath: "examples/devtools/devtools.interface.yaml", transport: "stdio" }), storage);
       const result = await interpret(mcpServerHandler.stop({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -361,6 +366,7 @@ describe('McpServer functional handler', () => {
     it('fixture "valid_list_tools" -> ok', async () => {
       if (typeof mcpServerHandler.listTools !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(mcpServerHandler.start({ manifestPath: "examples/devtools/devtools.interface.yaml", transport: "stdio" }), storage);
       const result = await interpret(mcpServerHandler.listTools({  }), storage);
       expect(result.variant).toBe('ok');
     });

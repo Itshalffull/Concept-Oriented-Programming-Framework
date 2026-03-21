@@ -162,6 +162,7 @@ describe('BordaCount functional handler', () => {
     it('fixture "borda_three_voters" -> ok', async () => {
       if (typeof bordaCountHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(bordaCountHandler.configure({ pointScheme: "Standard" }), storage);
       const result = await interpret(bordaCountHandler.count({ config: "borda-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]},{\"voter\":\"carol\",\"ranking\":[\"A\",\"C\",\"B\"]}]", weights: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -169,6 +170,7 @@ describe('BordaCount functional handler', () => {
     it('fixture "borda_no_ballots" -> error', async () => {
       if (typeof bordaCountHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(bordaCountHandler.configure({ pointScheme: "Standard" }), storage);
       const result = await interpret(bordaCountHandler.count({ config: "borda-001", rankedBallots: "[]", weights: "{}" }), storage);
       expect(result.variant).not.toBe('ok');
     });

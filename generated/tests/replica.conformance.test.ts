@@ -62,6 +62,7 @@ describe('Replica imperative handler', () => {
     it('fixture "receive_from_known_peer" -> ok', async () => {
       if (typeof replicaHandler.receiveRemote !== 'function') return;
       const storage = createInMemoryStorage();
+      await replicaHandler.localUpdate({ op: "insert:hello-world" }, storage);
       const result = await replicaHandler.receiveRemote({ op: "update:field=value", fromReplica: "replica-2" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -88,6 +89,7 @@ describe('Replica imperative handler', () => {
     it('fixture "sync_known_peer" -> ok', async () => {
       if (typeof replicaHandler.sync !== 'function') return;
       const storage = createInMemoryStorage();
+      await replicaHandler.localUpdate({ op: "insert:hello-world" }, storage);
       const result = await replicaHandler.sync({ peer: "replica-2" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -114,6 +116,7 @@ describe('Replica imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof replicaHandler.getState !== 'function') return;
       const storage = createInMemoryStorage();
+      await replicaHandler.localUpdate({ op: "insert:hello-world" }, storage);
       const result = await replicaHandler.getState({  }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -133,6 +136,7 @@ describe('Replica imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof replicaHandler.fork !== 'function') return;
       const storage = createInMemoryStorage();
+      await replicaHandler.localUpdate({ op: "insert:hello-world" }, storage);
       const result = await replicaHandler.fork({  }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -152,6 +156,7 @@ describe('Replica imperative handler', () => {
     it('fixture "add_new_peer" -> ok', async () => {
       if (typeof replicaHandler.addPeer !== 'function') return;
       const storage = createInMemoryStorage();
+      await replicaHandler.localUpdate({ op: "insert:hello-world" }, storage);
       const result = await replicaHandler.addPeer({ peerId: "replica-3" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -159,6 +164,7 @@ describe('Replica imperative handler', () => {
     it('fixture "add_empty_peer" -> ok', async () => {
       if (typeof replicaHandler.addPeer !== 'function') return;
       const storage = createInMemoryStorage();
+      await replicaHandler.localUpdate({ op: "insert:hello-world" }, storage);
       const result = await replicaHandler.addPeer({ peerId: "" }, storage);
       expect(result.variant).toBe('ok');
     });

@@ -94,6 +94,7 @@ describe('User functional handler', () => {
     it('fixture "duplicate_name" -> ok', async () => {
       if (typeof userHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(userHandler.register({ user: "u-001", name: "Alice Chen", email: "alice@example.com" }), storage);
       const result = await interpret(userHandler.register({ user: "u-002", name: "Alice Chen", email: "other@example.com" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -101,6 +102,7 @@ describe('User functional handler', () => {
     it('fixture "duplicate_email" -> ok', async () => {
       if (typeof userHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(userHandler.register({ user: "u-001", name: "Alice Chen", email: "alice@example.com" }), storage);
       const result = await interpret(userHandler.register({ user: "u-003", name: "Bob Smith", email: "alice@example.com" }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -230,6 +230,7 @@ describe('TerraformProvider functional handler', () => {
     it('fixture "apply_workspace" -> ok', async () => {
       if (typeof terraformProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(terraformProviderHandler.generate({ plan: "dp-001" }), storage);
       const result = await interpret(terraformProviderHandler.apply({ workspace: "ws-prod-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -298,6 +299,7 @@ describe('TerraformProvider functional handler', () => {
     it('fixture "teardown_workspace" -> ok', async () => {
       if (typeof terraformProviderHandler.teardown !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(terraformProviderHandler.generate({ plan: "dp-001" }), storage);
       const result = await interpret(terraformProviderHandler.teardown({ workspace: "ws-prod-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -305,6 +307,7 @@ describe('TerraformProvider functional handler', () => {
     it('fixture "teardown_nonexistent" -> ok', async () => {
       if (typeof terraformProviderHandler.teardown !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(terraformProviderHandler.generate({ plan: "dp-001" }), storage);
       const result = await interpret(terraformProviderHandler.teardown({ workspace: "" }), storage);
       expect(result.variant).toBe('ok');
     });

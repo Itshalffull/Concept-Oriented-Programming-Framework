@@ -155,6 +155,7 @@ describe('PlatformBindingCatalog functional handler', () => {
     it('fixture "resolve_exact" -> ok', async () => {
       if (typeof platformBindingCatalogHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(platformBindingCatalogHandler.register({ binding: "nav-browser-1", platform: "browser", destinationPattern: "/articles/*", bindingKind: "navigation", payload: "{ \"pushState\": true }" }), storage);
       const result = await interpret(platformBindingCatalogHandler.resolve({ platform: "browser", destination: "/articles/42", bindingKind: "navigation" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -224,6 +225,7 @@ describe('PlatformBindingCatalog functional handler', () => {
     it('fixture "list_all" -> ok', async () => {
       if (typeof platformBindingCatalogHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(platformBindingCatalogHandler.register({ binding: "nav-browser-1", platform: "browser", destinationPattern: "/articles/*", bindingKind: "navigation", payload: "{ \"pushState\": true }" }), storage);
       const result = await interpret(platformBindingCatalogHandler.list({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -231,6 +233,7 @@ describe('PlatformBindingCatalog functional handler', () => {
     it('fixture "list_by_platform" -> ok', async () => {
       if (typeof platformBindingCatalogHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(platformBindingCatalogHandler.register({ binding: "nav-browser-1", platform: "browser", destinationPattern: "/articles/*", bindingKind: "navigation", payload: "{ \"pushState\": true }" }), storage);
       const result = await interpret(platformBindingCatalogHandler.list({ platform: "browser" }), storage);
       expect(result.variant).toBe('ok');
     });

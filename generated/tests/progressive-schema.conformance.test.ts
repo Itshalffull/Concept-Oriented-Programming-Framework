@@ -155,6 +155,7 @@ describe('ProgressiveSchema functional handler', () => {
     it('fixture "detect_existing" -> ok', async () => {
       if (typeof progressiveSchemaHandler.detectStructure !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(progressiveSchemaHandler.captureFreeform({ content: "Meeting with John on 2026-03-01 about #project-x" }), storage);
       const result = await interpret(progressiveSchemaHandler.detectStructure({ itemId: "ps-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -224,6 +225,7 @@ describe('ProgressiveSchema functional handler', () => {
     it('fixture "accept_date" -> ok', async () => {
       if (typeof progressiveSchemaHandler.acceptSuggestion !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(progressiveSchemaHandler.captureFreeform({ content: "Meeting with John on 2026-03-01 about #project-x" }), storage);
       const result = await interpret(progressiveSchemaHandler.acceptSuggestion({ itemId: "ps-1", suggestionId: "sug-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -293,6 +295,7 @@ describe('ProgressiveSchema functional handler', () => {
     it('fixture "reject_tag" -> ok', async () => {
       if (typeof progressiveSchemaHandler.rejectSuggestion !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(progressiveSchemaHandler.captureFreeform({ content: "Meeting with John on 2026-03-01 about #project-x" }), storage);
       const result = await interpret(progressiveSchemaHandler.rejectSuggestion({ itemId: "ps-1", suggestionId: "sug-2" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -362,6 +365,7 @@ describe('ProgressiveSchema functional handler', () => {
     it('fixture "promote_to_article" -> ok', async () => {
       if (typeof progressiveSchemaHandler.promote !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(progressiveSchemaHandler.captureFreeform({ content: "Meeting with John on 2026-03-01 about #project-x" }), storage);
       const result = await interpret(progressiveSchemaHandler.promote({ itemId: "ps-1", targetSchema: "Article" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -431,6 +435,7 @@ describe('ProgressiveSchema functional handler', () => {
     it('fixture "infer_from_items" -> ok', async () => {
       if (typeof progressiveSchemaHandler.inferSchema !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(progressiveSchemaHandler.captureFreeform({ content: "Meeting with John on 2026-03-01 about #project-x" }), storage);
       const result = await interpret(progressiveSchemaHandler.inferSchema({ items: "[\"ps-1\",\"ps-2\",\"ps-3\"]" }), storage);
       expect(result.variant).toBe('ok');
     });

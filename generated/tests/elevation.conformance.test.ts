@@ -178,6 +178,7 @@ describe('Elevation functional handler', () => {
     it('fixture "get_existing" -> ok', async () => {
       if (typeof elevationHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(elevationHandler.define({ elevation: "W-1", level: "1", shadow: "[{ \"y\": 2, \"blur\": 4, \"color\": \"rgba(0,0,0,0.1)\" }]" }), storage);
       const result = await interpret(elevationHandler.get({ elevation: "W-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -247,6 +248,7 @@ describe('Elevation functional handler', () => {
     it('fixture "scale_from_black" -> ok', async () => {
       if (typeof elevationHandler.generateScale !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(elevationHandler.define({ elevation: "W-1", level: "1", shadow: "[{ \"y\": 2, \"blur\": 4, \"color\": \"rgba(0,0,0,0.1)\" }]" }), storage);
       const result = await interpret(elevationHandler.generateScale({ baseColor: "0,0,0" }), storage);
       expect(result.variant).toBe('ok');
     });

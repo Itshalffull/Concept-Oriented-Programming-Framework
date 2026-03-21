@@ -148,6 +148,7 @@ describe('HierarchicalLayout functional handler', () => {
     it('fixture "valid_apply" -> ok', async () => {
       if (typeof hierarchicalLayoutHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(hierarchicalLayoutHandler.register({  }), storage);
       const result = await interpret(hierarchicalLayoutHandler.apply({ canvas: "c1", items: ["root","child1","child2"] }), storage);
       expect(result.variant).toBe('ok');
     });

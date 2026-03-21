@@ -162,6 +162,7 @@ describe('VercelKVProvider functional handler', () => {
     it('fixture "get_session_cache" -> ok', async () => {
       if (typeof vercelKVProviderHandler.getCredentials !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(vercelKVProviderHandler.provision({ storeName: "session-cache", config: "{}" }), storage);
       const result = await interpret(vercelKVProviderHandler.getCredentials({ storeName: "session-cache" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +231,7 @@ describe('VercelKVProvider functional handler', () => {
     it('fixture "destroy_session_cache" -> ok', async () => {
       if (typeof vercelKVProviderHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(vercelKVProviderHandler.provision({ storeName: "session-cache", config: "{}" }), storage);
       const result = await interpret(vercelKVProviderHandler.destroy({ storeName: "session-cache" }), storage);
       expect(result.variant).toBe('ok');
     });

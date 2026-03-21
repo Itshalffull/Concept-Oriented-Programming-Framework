@@ -155,6 +155,7 @@ describe('RetentionPolicy functional handler', () => {
     it('fixture "apply_litigation_hold" -> ok', async () => {
       if (typeof retentionPolicyHandler.applyHold !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(retentionPolicyHandler.setRetention({ recordType: "audit", period: "7", unit: "years", dispositionAction: "archive" }), storage);
       const result = await interpret(retentionPolicyHandler.applyHold({ name: "litigation-2024", scope: "matter:123/*", reason: "pending lawsuit", issuer: "legal-dept" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +163,7 @@ describe('RetentionPolicy functional handler', () => {
     it('fixture "empty_hold_name" -> ok', async () => {
       if (typeof retentionPolicyHandler.applyHold !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(retentionPolicyHandler.setRetention({ recordType: "audit", period: "7", unit: "years", dispositionAction: "archive" }), storage);
       const result = await interpret(retentionPolicyHandler.applyHold({ name: "", scope: "matter:*", reason: "test", issuer: "admin" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +225,7 @@ describe('RetentionPolicy functional handler', () => {
     it('fixture "release_existing" -> ok', async () => {
       if (typeof retentionPolicyHandler.releaseHold !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(retentionPolicyHandler.setRetention({ recordType: "audit", period: "7", unit: "years", dispositionAction: "archive" }), storage);
       const result = await interpret(retentionPolicyHandler.releaseHold({ holdId: "hold-1", releasedBy: "legal-dept", reason: "case settled" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +294,7 @@ describe('RetentionPolicy functional handler', () => {
     it('fixture "check_record" -> ok', async () => {
       if (typeof retentionPolicyHandler.checkDisposition !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(retentionPolicyHandler.setRetention({ recordType: "audit", period: "7", unit: "years", dispositionAction: "archive" }), storage);
       const result = await interpret(retentionPolicyHandler.checkDisposition({ record: "audit:2023-invoice-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +363,7 @@ describe('RetentionPolicy functional handler', () => {
     it('fixture "dispose_record" -> ok', async () => {
       if (typeof retentionPolicyHandler.dispose !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(retentionPolicyHandler.setRetention({ recordType: "audit", period: "7", unit: "years", dispositionAction: "archive" }), storage);
       const result = await interpret(retentionPolicyHandler.dispose({ record: "audit:2020-old-doc", disposedBy: "system" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -366,6 +371,7 @@ describe('RetentionPolicy functional handler', () => {
     it('fixture "dispose_empty_record" -> ok', async () => {
       if (typeof retentionPolicyHandler.dispose !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(retentionPolicyHandler.setRetention({ recordType: "audit", period: "7", unit: "years", dispositionAction: "archive" }), storage);
       const result = await interpret(retentionPolicyHandler.dispose({ record: "", disposedBy: "system" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -427,6 +433,7 @@ describe('RetentionPolicy functional handler', () => {
     it('fixture "audit_all" -> ok', async () => {
       if (typeof retentionPolicyHandler.auditLog !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(retentionPolicyHandler.setRetention({ recordType: "audit", period: "7", unit: "years", dispositionAction: "archive" }), storage);
       const result = await interpret(retentionPolicyHandler.auditLog({ record: null }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -434,6 +441,7 @@ describe('RetentionPolicy functional handler', () => {
     it('fixture "audit_specific" -> ok', async () => {
       if (typeof retentionPolicyHandler.auditLog !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(retentionPolicyHandler.setRetention({ recordType: "audit", period: "7", unit: "years", dispositionAction: "archive" }), storage);
       const result = await interpret(retentionPolicyHandler.auditLog({ record: "audit:2023-invoice-001" }), storage);
       expect(result.variant).toBe('ok');
     });

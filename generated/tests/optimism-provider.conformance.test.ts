@@ -155,6 +155,7 @@ describe('OptimismProvider functional handler', () => {
     it('fixture "poll_existing" -> ok', async () => {
       if (typeof optimismProviderHandler.poll !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(optimismProviderHandler.register({ rpc_url: "https://mainnet.optimism.io", l1_bridge_address: "0x99C9fc46f92E8a1c0deC1b1747d010903E884bE1" }), storage);
       const result = await interpret(optimismProviderHandler.poll({ provider: "op-provider-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('OptimismProvider functional handler', () => {
     it('fixture "check_finalized_tx" -> ok', async () => {
       if (typeof optimismProviderHandler.checkFinality !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(optimismProviderHandler.register({ rpc_url: "https://mainnet.optimism.io", l1_bridge_address: "0x99C9fc46f92E8a1c0deC1b1747d010903E884bE1" }), storage);
       const result = await interpret(optimismProviderHandler.checkFinality({ provider: "op-provider-1", tx_hash: "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('OptimismProvider functional handler', () => {
     it('fixture "relay_valid_message" -> ok', async () => {
       if (typeof optimismProviderHandler.relayMessage !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(optimismProviderHandler.register({ rpc_url: "https://mainnet.optimism.io", l1_bridge_address: "0x99C9fc46f92E8a1c0deC1b1747d010903E884bE1" }), storage);
       const result = await interpret(optimismProviderHandler.relayMessage({ provider: "op-provider-1", message_hash: "0xdeadbeef1234567890abcdef1234567890abcdef1234567890abcdef12345678" }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -155,6 +155,7 @@ describe('DefinitionUnit functional handler', () => {
     it('fixture "find_by_symbol" -> ok', async () => {
       if (typeof definitionUnitHandler.findBySymbol !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(definitionUnitHandler.extract({ tree: "tree-1", startByte: "0", endByte: "100" }), storage);
       const result = await interpret(definitionUnitHandler.findBySymbol({ symbol: "src/app.ts:handleRequest" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('DefinitionUnit functional handler', () => {
     it('fixture "find_ts_functions" -> ok', async () => {
       if (typeof definitionUnitHandler.findByPattern !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(definitionUnitHandler.extract({ tree: "tree-1", startByte: "0", endByte: "100" }), storage);
       const result = await interpret(definitionUnitHandler.findByPattern({ kind: "function", language: "typescript", namePattern: "handle.*" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +232,7 @@ describe('DefinitionUnit functional handler', () => {
     it('fixture "find_all" -> ok', async () => {
       if (typeof definitionUnitHandler.findByPattern !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(definitionUnitHandler.extract({ tree: "tree-1", startByte: "0", endByte: "100" }), storage);
       const result = await interpret(definitionUnitHandler.findByPattern({ kind: "", language: "", namePattern: "" }), storage);
       expect(result.variant).toBe('ok');
     });

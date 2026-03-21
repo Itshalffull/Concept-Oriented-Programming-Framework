@@ -155,6 +155,7 @@ describe('Provenance functional handler', () => {
     it('fixture "trace_existing" -> ok', async () => {
       if (typeof provenanceHandler.trace !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(provenanceHandler.record({ entity: "item-1", activity: "capture", agent: "system", inputs: "" }), storage);
       const result = await interpret(provenanceHandler.trace({ entityId: "item-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -224,6 +225,7 @@ describe('Provenance functional handler', () => {
     it('fixture "audit_batch" -> ok', async () => {
       if (typeof provenanceHandler.audit !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(provenanceHandler.record({ entity: "item-1", activity: "capture", agent: "system", inputs: "" }), storage);
       const result = await interpret(provenanceHandler.audit({ batchId: "batch-2026-03-01" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -293,6 +295,7 @@ describe('Provenance functional handler', () => {
     it('fixture "rollback_batch" -> ok', async () => {
       if (typeof provenanceHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(provenanceHandler.record({ entity: "item-1", activity: "capture", agent: "system", inputs: "" }), storage);
       const result = await interpret(provenanceHandler.rollback({ batchId: "batch-2026-03-01" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -431,6 +434,7 @@ describe('Provenance functional handler', () => {
     it('fixture "reproduce_existing" -> ok', async () => {
       if (typeof provenanceHandler.reproduce !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(provenanceHandler.record({ entity: "item-1", activity: "capture", agent: "system", inputs: "" }), storage);
       const result = await interpret(provenanceHandler.reproduce({ entityId: "item-1" }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -88,6 +88,7 @@ describe('TestGenSolidity imperative handler', () => {
     it('fixture "list_valid" -> ok', async () => {
       if (typeof testGenSolidityHandler.listRendered !== 'function') return;
       const storage = createInMemoryStorage();
+      await testGenSolidityHandler.render({ test_plan: "{\"conceptName\":\"Counter\",\"actions\":[{\"name\":\"increment\",\"params\":[],\"variants\":[\"ok\"]}],\"examples\":[],\"properties\":[],\"stateInvariants\":[],\"liveness\":[],\"contracts\":[]}", output_path: "generated/tests/counter.test.solidity" }, storage);
       const result = await testGenSolidityHandler.listRendered({ concept_ref: "clef/concept/Counter" }, storage);
       expect(result.variant).toBe('ok');
     });

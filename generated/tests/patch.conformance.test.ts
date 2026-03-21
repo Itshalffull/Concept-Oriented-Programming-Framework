@@ -155,6 +155,7 @@ describe('Patch functional handler', () => {
     it('fixture "apply_existing" -> ok', async () => {
       if (typeof patchHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(patchHandler.create({ base: "sha256:aaa111", target: "sha256:bbb222", effect: "[{\"type\":\"equal\",\"line\":0,\"content\":\"hello\"}]" }), storage);
       const result = await interpret(patchHandler.apply({ patchId: "patch-1", content: "hello\nworld" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('Patch functional handler', () => {
     it('fixture "invert_existing" -> ok', async () => {
       if (typeof patchHandler.invert !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(patchHandler.create({ base: "sha256:aaa111", target: "sha256:bbb222", effect: "[{\"type\":\"equal\",\"line\":0,\"content\":\"hello\"}]" }), storage);
       const result = await interpret(patchHandler.invert({ patchId: "patch-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('Patch functional handler', () => {
     it('fixture "compose_sequential" -> ok', async () => {
       if (typeof patchHandler.compose !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(patchHandler.create({ base: "sha256:aaa111", target: "sha256:bbb222", effect: "[{\"type\":\"equal\",\"line\":0,\"content\":\"hello\"}]" }), storage);
       const result = await interpret(patchHandler.compose({ first: "patch-1", second: "patch-2" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +362,7 @@ describe('Patch functional handler', () => {
     it('fixture "commute_independent" -> ok', async () => {
       if (typeof patchHandler.commute !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(patchHandler.create({ base: "sha256:aaa111", target: "sha256:bbb222", effect: "[{\"type\":\"equal\",\"line\":0,\"content\":\"hello\"}]" }), storage);
       const result = await interpret(patchHandler.commute({ p1: "patch-1", p2: "patch-2" }), storage);
       expect(result.variant).toBe('ok');
     });

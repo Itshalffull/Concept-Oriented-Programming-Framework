@@ -155,6 +155,7 @@ describe('Graph functional handler', () => {
     it('fixture "remove_existing_node" -> ok', async () => {
       if (typeof graphHandler.removeNode !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(graphHandler.addNode({ graph: "social-network", node: "alice" }), storage);
       const result = await interpret(graphHandler.removeNode({ graph: "social-network", node: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('Graph functional handler', () => {
     it('fixture "add_edge_ab" -> ok', async () => {
       if (typeof graphHandler.addEdge !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(graphHandler.addNode({ graph: "social-network", node: "alice" }), storage);
       const result = await interpret(graphHandler.addEdge({ graph: "social-network", source: "alice", target: "bob" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('Graph functional handler', () => {
     it('fixture "remove_edge_ab" -> ok', async () => {
       if (typeof graphHandler.removeEdge !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(graphHandler.addNode({ graph: "social-network", node: "alice" }), storage);
       const result = await interpret(graphHandler.removeEdge({ graph: "social-network", source: "alice", target: "bob" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +362,7 @@ describe('Graph functional handler', () => {
     it('fixture "neighbors_depth_1" -> ok', async () => {
       if (typeof graphHandler.getNeighbors !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(graphHandler.addNode({ graph: "social-network", node: "alice" }), storage);
       const result = await interpret(graphHandler.getNeighbors({ graph: "social-network", node: "alice", depth: "1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -427,6 +431,7 @@ describe('Graph functional handler', () => {
     it('fixture "filter_by_type" -> ok', async () => {
       if (typeof graphHandler.filterNodes !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(graphHandler.addNode({ graph: "social-network", node: "alice" }), storage);
       const result = await interpret(graphHandler.filterNodes({ graph: "social-network", filter: "type=person" }), storage);
       expect(result.variant).toBe('ok');
     });

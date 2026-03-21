@@ -155,6 +155,7 @@ describe('DockerComposeRuntime functional handler', () => {
     it('fixture "deploy_service" -> ok', async () => {
       if (typeof dockerComposeRuntimeHandler.deploy !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(dockerComposeRuntimeHandler.provision({ concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }), storage);
       const result = await interpret(dockerComposeRuntimeHandler.deploy({ service: "dc-001", imageUri: "user-service:latest" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('DockerComposeRuntime functional handler', () => {
     it('fixture "set_traffic" -> ok', async () => {
       if (typeof dockerComposeRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(dockerComposeRuntimeHandler.provision({ concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }), storage);
       const result = await interpret(dockerComposeRuntimeHandler.setTrafficWeight({ service: "dc-001", weight: "100" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +232,7 @@ describe('DockerComposeRuntime functional handler', () => {
     it('fixture "set_traffic_negative" -> ok', async () => {
       if (typeof dockerComposeRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(dockerComposeRuntimeHandler.provision({ concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }), storage);
       const result = await interpret(dockerComposeRuntimeHandler.setTrafficWeight({ service: "dc-001", weight: "-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +294,7 @@ describe('DockerComposeRuntime functional handler', () => {
     it('fixture "rollback_image" -> ok', async () => {
       if (typeof dockerComposeRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(dockerComposeRuntimeHandler.provision({ concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }), storage);
       const result = await interpret(dockerComposeRuntimeHandler.rollback({ service: "dc-001", targetImage: "user-service:v1.0.0" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -298,6 +302,7 @@ describe('DockerComposeRuntime functional handler', () => {
     it('fixture "rollback_empty" -> ok', async () => {
       if (typeof dockerComposeRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(dockerComposeRuntimeHandler.provision({ concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }), storage);
       const result = await interpret(dockerComposeRuntimeHandler.rollback({ service: "dc-001", targetImage: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +364,7 @@ describe('DockerComposeRuntime functional handler', () => {
     it('fixture "destroy_service" -> ok', async () => {
       if (typeof dockerComposeRuntimeHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(dockerComposeRuntimeHandler.provision({ concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }), storage);
       const result = await interpret(dockerComposeRuntimeHandler.destroy({ service: "dc-001" }), storage);
       expect(result.variant).toBe('ok');
     });

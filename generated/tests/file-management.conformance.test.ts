@@ -101,6 +101,7 @@ describe('FileManagement functional handler', () => {
     it('fixture "upload_duplicate" -> ok', async () => {
       if (typeof fileManagementHandler.upload !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(fileManagementHandler.upload({ file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" }), storage);
       const result = await interpret(fileManagementHandler.upload({ file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +163,7 @@ describe('FileManagement functional handler', () => {
     it('fixture "add_usage_ok" -> ok', async () => {
       if (typeof fileManagementHandler.addUsage !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(fileManagementHandler.upload({ file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" }), storage);
       const result = await interpret(fileManagementHandler.addUsage({ file: "report.pdf", entity: "article-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -231,6 +233,7 @@ describe('FileManagement functional handler', () => {
     it('fixture "remove_usage_ok" -> ok', async () => {
       if (typeof fileManagementHandler.removeUsage !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(fileManagementHandler.upload({ file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" }), storage);
       const result = await interpret(fileManagementHandler.removeUsage({ file: "report.pdf", entity: "article-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -300,6 +303,7 @@ describe('FileManagement functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof fileManagementHandler.garbageCollect !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(fileManagementHandler.upload({ file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" }), storage);
       const result = await interpret(fileManagementHandler.garbageCollect({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -361,6 +365,7 @@ describe('FileManagement functional handler', () => {
     it('fixture "get_existing" -> ok', async () => {
       if (typeof fileManagementHandler.getFile !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(fileManagementHandler.upload({ file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" }), storage);
       const result = await interpret(fileManagementHandler.getFile({ file: "report.pdf" }), storage);
       expect(result.variant).toBe('ok');
     });

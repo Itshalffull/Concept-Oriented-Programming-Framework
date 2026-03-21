@@ -230,6 +230,7 @@ describe('StorageAdapterScaffoldGen functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof storageAdapterScaffoldGenHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(storageAdapterScaffoldGenHandler.generate({ name: "AppStorage", backend: "sqlite" }), storage);
       const result = await interpret(storageAdapterScaffoldGenHandler.register({  }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -62,6 +62,7 @@ describe('Installer imperative handler', () => {
     it('fixture "activate_staged" -> ok', async () => {
       if (typeof installerHandler.activate !== 'function') return;
       const storage = createInMemoryStorage();
+      await installerHandler.stage({ lockfile_entries: [{"module_id":"auth","version":"1.0.0","content_hash":"sha256:abc123","target_path":"node_modules/auth","kind":"library"}], project_root: "/workspace/my-project" }, storage);
       const result = await installerHandler.activate({ installation: "inst-1" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -88,6 +89,7 @@ describe('Installer imperative handler', () => {
     it('fixture "rollback_with_previous" -> ok', async () => {
       if (typeof installerHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
+      await installerHandler.stage({ lockfile_entries: [{"module_id":"auth","version":"1.0.0","content_hash":"sha256:abc123","target_path":"node_modules/auth","kind":"library"}], project_root: "/workspace/my-project" }, storage);
       const result = await installerHandler.rollback({ installation: "inst-2" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -114,6 +116,7 @@ describe('Installer imperative handler', () => {
     it('fixture "clean_keep_two" -> ok', async () => {
       if (typeof installerHandler.clean !== 'function') return;
       const storage = createInMemoryStorage();
+      await installerHandler.stage({ lockfile_entries: [{"module_id":"auth","version":"1.0.0","content_hash":"sha256:abc123","target_path":"node_modules/auth","kind":"library"}], project_root: "/workspace/my-project" }, storage);
       const result = await installerHandler.clean({ keep_generations: "2" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -121,6 +124,7 @@ describe('Installer imperative handler', () => {
     it('fixture "clean_keep_zero" -> ok', async () => {
       if (typeof installerHandler.clean !== 'function') return;
       const storage = createInMemoryStorage();
+      await installerHandler.stage({ lockfile_entries: [{"module_id":"auth","version":"1.0.0","content_hash":"sha256:abc123","target_path":"node_modules/auth","kind":"library"}], project_root: "/workspace/my-project" }, storage);
       const result = await installerHandler.clean({ keep_generations: "0" }, storage);
       expect(result.variant).toBe('ok');
     });

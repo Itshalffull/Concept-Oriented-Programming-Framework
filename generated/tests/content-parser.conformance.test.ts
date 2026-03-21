@@ -155,6 +155,7 @@ describe('ContentParser functional handler', () => {
     it('fixture "register_tag_extractor" -> ok', async () => {
       if (typeof contentParserHandler.registerExtractor !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(contentParserHandler.registerFormat({ name: "markdown", grammar: "{\"block\":\"paragraph\"}" }), storage);
       const result = await interpret(contentParserHandler.registerExtractor({ name: "tags", pattern: "#(\\w+)" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +163,7 @@ describe('ContentParser functional handler', () => {
     it('fixture "register_empty_extractor" -> ok', async () => {
       if (typeof contentParserHandler.registerExtractor !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(contentParserHandler.registerFormat({ name: "markdown", grammar: "{\"block\":\"paragraph\"}" }), storage);
       const result = await interpret(contentParserHandler.registerExtractor({ name: "", pattern: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('ContentParser functional handler', () => {
     it('fixture "extract_refs" -> ok', async () => {
       if (typeof contentParserHandler.extractRefs !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(contentParserHandler.registerFormat({ name: "markdown", grammar: "{\"block\":\"paragraph\"}" }), storage);
       const result = await interpret(contentParserHandler.extractRefs({ content: "doc-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +362,7 @@ describe('ContentParser functional handler', () => {
     it('fixture "extract_tags" -> ok', async () => {
       if (typeof contentParserHandler.extractTags !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(contentParserHandler.registerFormat({ name: "markdown", grammar: "{\"block\":\"paragraph\"}" }), storage);
       const result = await interpret(contentParserHandler.extractTags({ content: "doc-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -427,6 +431,7 @@ describe('ContentParser functional handler', () => {
     it('fixture "extract_props" -> ok', async () => {
       if (typeof contentParserHandler.extractProperties !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(contentParserHandler.registerFormat({ name: "markdown", grammar: "{\"block\":\"paragraph\"}" }), storage);
       const result = await interpret(contentParserHandler.extractProperties({ content: "doc-1" }), storage);
       expect(result.variant).toBe('ok');
     });

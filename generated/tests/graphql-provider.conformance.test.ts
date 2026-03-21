@@ -55,6 +55,7 @@ describe('GraphqlProvider imperative handler', () => {
     it('fixture "configure_github" -> ok', async () => {
       if (typeof graphqlProviderHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
+      await graphqlProviderHandler.list({  }, storage);
       const result = await graphqlProviderHandler.configure({ name: "github-api", url: "https://api.github.com/graphql", headers: "{\"Authorization\":\"Bearer ghp_token\"}", schemaRef: "github-schema" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -62,6 +63,7 @@ describe('GraphqlProvider imperative handler', () => {
     it('fixture "configure_local" -> ok', async () => {
       if (typeof graphqlProviderHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
+      await graphqlProviderHandler.list({  }, storage);
       const result = await graphqlProviderHandler.configure({ name: "local-gql", url: "http://localhost:4000/graphql", headers: "{}", schemaRef: "" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -81,6 +83,7 @@ describe('GraphqlProvider imperative handler', () => {
     it('fixture "query_viewer" -> ok', async () => {
       if (typeof graphqlProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
+      await graphqlProviderHandler.list({  }, storage);
       const result = await graphqlProviderHandler.execute({ endpoint: "github-api", query: "{ viewer { login } }", variables: "{}", operationType: "query" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -88,6 +91,7 @@ describe('GraphqlProvider imperative handler', () => {
     it('fixture "mutation_create" -> ok', async () => {
       if (typeof graphqlProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
+      await graphqlProviderHandler.list({  }, storage);
       const result = await graphqlProviderHandler.execute({ endpoint: "github-api", query: "mutation { createIssue(input: {}) { id } }", variables: "{}", operationType: "mutation" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -95,6 +99,7 @@ describe('GraphqlProvider imperative handler', () => {
     it('fixture "execute_unknown_endpoint" -> notFound', async () => {
       if (typeof graphqlProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
+      await graphqlProviderHandler.list({  }, storage);
       const result = await graphqlProviderHandler.execute({ endpoint: "nonexistent", query: "{ test }", variables: "{}", operationType: "query" }, storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notFound'));
@@ -115,6 +120,7 @@ describe('GraphqlProvider imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof graphqlProviderHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      await graphqlProviderHandler.list({  }, storage);
       const result = await graphqlProviderHandler.list({  }, storage);
       expect(result.variant).toBe('ok');
     });

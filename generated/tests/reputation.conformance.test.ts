@@ -62,6 +62,7 @@ describe('Reputation imperative handler', () => {
     it('fixture "burn_penalty" -> ok', async () => {
       if (typeof reputationHandler.burn !== 'function') return;
       const storage = createInMemoryStorage();
+      await reputationHandler.earn({ participant: "alice", amount: "10.0", reason: "code-review" }, storage);
       const result = await reputationHandler.burn({ participant: "alice", amount: "5.0" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -88,6 +89,7 @@ describe('Reputation imperative handler', () => {
     it('fixture "decay_alice" -> ok', async () => {
       if (typeof reputationHandler.decay !== 'function') return;
       const storage = createInMemoryStorage();
+      await reputationHandler.earn({ participant: "alice", amount: "10.0", reason: "code-review" }, storage);
       const result = await reputationHandler.decay({ participant: "alice", decayFactor: "0.1" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -114,6 +116,7 @@ describe('Reputation imperative handler', () => {
     it('fixture "get_alice_score" -> ok', async () => {
       if (typeof reputationHandler.getScore !== 'function') return;
       const storage = createInMemoryStorage();
+      await reputationHandler.earn({ participant: "alice", amount: "10.0", reason: "code-review" }, storage);
       const result = await reputationHandler.getScore({ participant: "alice" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -140,6 +143,7 @@ describe('Reputation imperative handler', () => {
     it('fixture "recalculate_alice" -> ok', async () => {
       if (typeof reputationHandler.recalculate !== 'function') return;
       const storage = createInMemoryStorage();
+      await reputationHandler.earn({ participant: "alice", amount: "10.0", reason: "code-review" }, storage);
       const result = await reputationHandler.recalculate({ participant: "alice" }, storage);
       expect(result.variant).toBe('ok');
     });

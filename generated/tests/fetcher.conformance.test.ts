@@ -155,6 +155,7 @@ describe('Fetcher functional handler', () => {
     it('fixture "fetch_batch_two_items" -> ok', async () => {
       if (typeof fetcherHandler.fetchBatch !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(fetcherHandler.fetch({ module_id: "lodash", version: "4.17.21", source_url: "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz", expected_hash: "sha256:abc123" }), storage);
       const result = await interpret(fetcherHandler.fetchBatch({ items: [{"module_id":"lodash","version":"4.17.21","source_url":"https://registry.example.com/lodash.tgz","expected_hash":"sha256:abc"},{"module_id":"express","version":"4.18.2","source_url":"https://registry.example.com/express.tgz","expected_hash":"sha256:def"}] }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +163,7 @@ describe('Fetcher functional handler', () => {
     it('fixture "fetch_batch_empty" -> ok', async () => {
       if (typeof fetcherHandler.fetchBatch !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(fetcherHandler.fetch({ module_id: "lodash", version: "4.17.21", source_url: "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz", expected_hash: "sha256:abc123" }), storage);
       const result = await interpret(fetcherHandler.fetchBatch({ items: [] }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +225,7 @@ describe('Fetcher functional handler', () => {
     it('fixture "cancel_active_download" -> ok', async () => {
       if (typeof fetcherHandler.cancel !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(fetcherHandler.fetch({ module_id: "lodash", version: "4.17.21", source_url: "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz", expected_hash: "sha256:abc123" }), storage);
       const result = await interpret(fetcherHandler.cancel({ download: "dl-1" }), storage);
       expect(result.variant).toBe('ok');
     });

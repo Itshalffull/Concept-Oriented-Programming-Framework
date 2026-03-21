@@ -155,6 +155,7 @@ describe('Membership functional handler', () => {
     it('fixture "leave_alice" -> ok', async () => {
       if (typeof membershipHandler.leave !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(membershipHandler.join({ member: "alice", polity: "dao-governance" }), storage);
       const result = await interpret(membershipHandler.leave({ member: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('Membership functional handler', () => {
     it('fixture "suspend_bob" -> ok', async () => {
       if (typeof membershipHandler.suspend !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(membershipHandler.join({ member: "alice", polity: "dao-governance" }), storage);
       const result = await interpret(membershipHandler.suspend({ member: "bob", until: "2027-01-01T00:00:00Z" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('Membership functional handler', () => {
     it('fixture "reinstate_bob" -> ok', async () => {
       if (typeof membershipHandler.reinstate !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(membershipHandler.join({ member: "alice", polity: "dao-governance" }), storage);
       const result = await interpret(membershipHandler.reinstate({ member: "bob" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +362,7 @@ describe('Membership functional handler', () => {
     it('fixture "kick_charlie" -> ok', async () => {
       if (typeof membershipHandler.kick !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(membershipHandler.join({ member: "alice", polity: "dao-governance" }), storage);
       const result = await interpret(membershipHandler.kick({ member: "charlie" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -427,6 +431,7 @@ describe('Membership functional handler', () => {
     it('fixture "update_rules" -> ok', async () => {
       if (typeof membershipHandler.updateRules !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(membershipHandler.join({ member: "alice", polity: "dao-governance" }), storage);
       const result = await interpret(membershipHandler.updateRules({ polity: "dao-governance", joinConditions: "stake >= 100", exitConditions: "30-day-cooldown" }), storage);
       expect(result.variant).toBe('ok');
     });

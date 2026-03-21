@@ -155,6 +155,7 @@ describe('Backlink functional handler', () => {
     it('fixture "valid_mentions" -> ok', async () => {
       if (typeof backlinkHandler.getUnlinkedMentions !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(backlinkHandler.getBacklinks({ entity: "doc-1" }), storage);
       const result = await interpret(backlinkHandler.getUnlinkedMentions({ entity: "doc-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +163,7 @@ describe('Backlink functional handler', () => {
     it('fixture "no_mentions" -> ok', async () => {
       if (typeof backlinkHandler.getUnlinkedMentions !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(backlinkHandler.getBacklinks({ entity: "doc-1" }), storage);
       const result = await interpret(backlinkHandler.getUnlinkedMentions({ entity: "orphaned-doc" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +225,7 @@ describe('Backlink functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof backlinkHandler.reindex !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(backlinkHandler.getBacklinks({ entity: "doc-1" }), storage);
       const result = await interpret(backlinkHandler.reindex({  }), storage);
       expect(result.variant).toBe('ok');
     });

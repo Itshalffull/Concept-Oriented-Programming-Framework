@@ -169,6 +169,7 @@ describe('Annotation functional handler', () => {
     it('fixture "resolve_existing" -> ok', async () => {
       if (typeof annotationHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(annotationHandler.annotate({ concept: "ScoreApi", scope: "concept", metadata: "{\"tool-permissions\":[\"Read\",\"Bash\"],\"examples\":[\"score create MyScore\"]}" }), storage);
       const result = await interpret(annotationHandler.resolve({ concept: "ScoreApi" }), storage);
       expect(result.variant).toBe('ok');
     });

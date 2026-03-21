@@ -70,6 +70,7 @@ describe('KernelBoot imperative handler', () => {
     it('fixture "valid_status" -> ok', async () => {
       if (typeof kernelBootHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
+      await kernelBootHandler.boot({ projectRoot: "./", manifestPath: "deploy.yaml" }, storage);
       const result = await kernelBootHandler.status({ kernel: "kernel-20260301-abc123" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -97,6 +98,7 @@ describe('KernelBoot imperative handler', () => {
     it('fixture "valid_shutdown" -> ok', async () => {
       if (typeof kernelBootHandler.shutdown !== 'function') return;
       const storage = createInMemoryStorage();
+      await kernelBootHandler.boot({ projectRoot: "./", manifestPath: "deploy.yaml" }, storage);
       const result = await kernelBootHandler.shutdown({ kernel: "kernel-20260301-abc123" }, storage);
       expect(result.variant).toBe('ok');
     });

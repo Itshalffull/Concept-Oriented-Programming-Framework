@@ -170,6 +170,7 @@ describe('DependenceGraph functional handler', () => {
     it('fixture "all_kinds" -> ok', async () => {
       if (typeof dependenceGraphHandler.queryDependents !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(dependenceGraphHandler.compute({ scopeRef: "src/handler.ts" }), storage);
       const result = await interpret(dependenceGraphHandler.queryDependents({ symbol: "clef/state-field/Article/title", edgeKinds: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -177,6 +178,7 @@ describe('DependenceGraph functional handler', () => {
     it('fixture "data_deps_only" -> ok', async () => {
       if (typeof dependenceGraphHandler.queryDependents !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(dependenceGraphHandler.compute({ scopeRef: "src/handler.ts" }), storage);
       const result = await interpret(dependenceGraphHandler.queryDependents({ symbol: "clef/state-field/Article/title", edgeKinds: "data-dep" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -238,6 +240,7 @@ describe('DependenceGraph functional handler', () => {
     it('fixture "all_kinds" -> ok', async () => {
       if (typeof dependenceGraphHandler.queryDependencies !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(dependenceGraphHandler.compute({ scopeRef: "src/handler.ts" }), storage);
       const result = await interpret(dependenceGraphHandler.queryDependencies({ symbol: "clef/state-field/Article/title", edgeKinds: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -245,6 +248,7 @@ describe('DependenceGraph functional handler', () => {
     it('fixture "call_only" -> ok', async () => {
       if (typeof dependenceGraphHandler.queryDependencies !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(dependenceGraphHandler.compute({ scopeRef: "src/handler.ts" }), storage);
       const result = await interpret(dependenceGraphHandler.queryDependencies({ symbol: "clef/action/Article/publish", edgeKinds: "call" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -306,6 +310,7 @@ describe('DependenceGraph functional handler', () => {
     it('fixture "valid_forward" -> ok', async () => {
       if (typeof dependenceGraphHandler.sliceForward !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(dependenceGraphHandler.compute({ scopeRef: "src/handler.ts" }), storage);
       const result = await interpret(dependenceGraphHandler.sliceForward({ criterion: "clef/state-field/Article/title" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -313,6 +318,7 @@ describe('DependenceGraph functional handler', () => {
     it('fixture "action_criterion" -> ok', async () => {
       if (typeof dependenceGraphHandler.sliceForward !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(dependenceGraphHandler.compute({ scopeRef: "src/handler.ts" }), storage);
       const result = await interpret(dependenceGraphHandler.sliceForward({ criterion: "clef/action/Article/publish" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -374,6 +380,7 @@ describe('DependenceGraph functional handler', () => {
     it('fixture "valid_backward" -> ok', async () => {
       if (typeof dependenceGraphHandler.sliceBackward !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(dependenceGraphHandler.compute({ scopeRef: "src/handler.ts" }), storage);
       const result = await interpret(dependenceGraphHandler.sliceBackward({ criterion: "clef/state-field/Article/title" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -381,6 +388,7 @@ describe('DependenceGraph functional handler', () => {
     it('fixture "output_criterion" -> ok', async () => {
       if (typeof dependenceGraphHandler.sliceBackward !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(dependenceGraphHandler.compute({ scopeRef: "src/handler.ts" }), storage);
       const result = await interpret(dependenceGraphHandler.sliceBackward({ criterion: "clef/output/report.json" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -442,6 +450,7 @@ describe('DependenceGraph functional handler', () => {
     it('fixture "single_change" -> ok', async () => {
       if (typeof dependenceGraphHandler.impactAnalysis !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(dependenceGraphHandler.compute({ scopeRef: "src/handler.ts" }), storage);
       const result = await interpret(dependenceGraphHandler.impactAnalysis({ changed: "[\"clef/state-field/Article/title\"]" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -449,6 +458,7 @@ describe('DependenceGraph functional handler', () => {
     it('fixture "multi_change" -> ok', async () => {
       if (typeof dependenceGraphHandler.impactAnalysis !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(dependenceGraphHandler.compute({ scopeRef: "src/handler.ts" }), storage);
       const result = await interpret(dependenceGraphHandler.impactAnalysis({ changed: "[\"clef/action/Article/publish\",\"clef/state-field/Article/status\"]" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -510,6 +520,7 @@ describe('DependenceGraph functional handler', () => {
     it('fixture "valid_get" -> ok', async () => {
       if (typeof dependenceGraphHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(dependenceGraphHandler.compute({ scopeRef: "src/handler.ts" }), storage);
       const result = await interpret(dependenceGraphHandler.get({  }), storage);
       expect(result.variant).toBe('ok');
     });

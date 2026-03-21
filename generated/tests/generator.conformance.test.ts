@@ -169,6 +169,7 @@ describe('Generator functional handler', () => {
     it('fixture "valid_plan" -> ok', async () => {
       if (typeof generatorHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(generatorHandler.plan({ suite: "commerce", interfaceManifest: "{\"targets\":[\"rest\",\"graphql\"],\"concepts\":[\"Order\",\"Product\"],\"outputDir\":\"generated/commerce\"}" }), storage);
       const result = await interpret(generatorHandler.generate({ plan: "plan-commerce-12345" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -237,6 +238,7 @@ describe('Generator functional handler', () => {
     it('fixture "regenerate_rest_only" -> ok', async () => {
       if (typeof generatorHandler.regenerate !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(generatorHandler.plan({ suite: "commerce", interfaceManifest: "{\"targets\":[\"rest\",\"graphql\"],\"concepts\":[\"Order\",\"Product\"],\"outputDir\":\"generated/commerce\"}" }), storage);
       const result = await interpret(generatorHandler.regenerate({ plan: "plan-commerce-12345", targets: ["rest"] }), storage);
       expect(result.variant).toBe('ok');
     });

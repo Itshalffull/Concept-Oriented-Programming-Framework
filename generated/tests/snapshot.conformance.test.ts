@@ -155,6 +155,7 @@ describe('Snapshot functional handler', () => {
     it('fixture "approve_changed" -> ok', async () => {
       if (typeof snapshotHandler.approve !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(snapshotHandler.compare({ outputPath: "generated/ts/password.ts", currentContent: "export const hash = (pw: string) => pw;" }), storage);
       const result = await interpret(snapshotHandler.approve({ path: "generated/ts/password.ts", approver: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -224,6 +225,7 @@ describe('Snapshot functional handler', () => {
     it('fixture "approve_all" -> ok', async () => {
       if (typeof snapshotHandler.approveAll !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(snapshotHandler.compare({ outputPath: "generated/ts/password.ts", currentContent: "export const hash = (pw: string) => pw;" }), storage);
       const result = await interpret(snapshotHandler.approveAll({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -231,6 +233,7 @@ describe('Snapshot functional handler', () => {
     it('fixture "approve_all_filtered" -> ok', async () => {
       if (typeof snapshotHandler.approveAll !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(snapshotHandler.compare({ outputPath: "generated/ts/password.ts", currentContent: "export const hash = (pw: string) => pw;" }), storage);
       const result = await interpret(snapshotHandler.approveAll({ paths: ["generated/ts/"] }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -292,6 +295,7 @@ describe('Snapshot functional handler', () => {
     it('fixture "reject_changed" -> ok', async () => {
       if (typeof snapshotHandler.reject !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(snapshotHandler.compare({ outputPath: "generated/ts/password.ts", currentContent: "export const hash = (pw: string) => pw;" }), storage);
       const result = await interpret(snapshotHandler.reject({ path: "generated/ts/password.ts" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -361,6 +365,7 @@ describe('Snapshot functional handler', () => {
     it('fixture "status_all" -> ok', async () => {
       if (typeof snapshotHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(snapshotHandler.compare({ outputPath: "generated/ts/password.ts", currentContent: "export const hash = (pw: string) => pw;" }), storage);
       const result = await interpret(snapshotHandler.status({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -368,6 +373,7 @@ describe('Snapshot functional handler', () => {
     it('fixture "status_filtered" -> ok', async () => {
       if (typeof snapshotHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(snapshotHandler.compare({ outputPath: "generated/ts/password.ts", currentContent: "export const hash = (pw: string) => pw;" }), storage);
       const result = await interpret(snapshotHandler.status({ paths: ["generated/ts/"] }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -498,6 +504,7 @@ describe('Snapshot functional handler', () => {
     it('fixture "clean_generated" -> ok', async () => {
       if (typeof snapshotHandler.clean !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(snapshotHandler.compare({ outputPath: "generated/ts/password.ts", currentContent: "export const hash = (pw: string) => pw;" }), storage);
       const result = await interpret(snapshotHandler.clean({ outputDir: "generated/ts" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -505,6 +512,7 @@ describe('Snapshot functional handler', () => {
     it('fixture "clean_all" -> ok', async () => {
       if (typeof snapshotHandler.clean !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(snapshotHandler.compare({ outputPath: "generated/ts/password.ts", currentContent: "export const hash = (pw: string) => pw;" }), storage);
       const result = await interpret(snapshotHandler.clean({ outputDir: "generated" }), storage);
       expect(result.variant).toBe('ok');
     });

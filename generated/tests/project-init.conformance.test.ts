@@ -169,6 +169,7 @@ describe('ProjectInit functional handler', () => {
     it('fixture "valid_write_manifest" -> ok', async () => {
       if (typeof projectInitHandler.writeManifest !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }), storage);
       const result = await interpret(projectInitHandler.writeManifest({ init: "init-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -237,6 +238,7 @@ describe('ProjectInit functional handler', () => {
     it('fixture "valid_write_interfaces" -> ok', async () => {
       if (typeof projectInitHandler.writeInterfaceManifests !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }), storage);
       const result = await interpret(projectInitHandler.writeInterfaceManifests({ init: "init-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -305,6 +307,7 @@ describe('ProjectInit functional handler', () => {
     it('fixture "valid_write_deploy" -> ok', async () => {
       if (typeof projectInitHandler.writeDeployManifests !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }), storage);
       const result = await interpret(projectInitHandler.writeDeployManifests({ init: "init-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -373,6 +376,7 @@ describe('ProjectInit functional handler', () => {
     it('fixture "valid_write_derived" -> ok', async () => {
       if (typeof projectInitHandler.writeDerivedConcepts !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }), storage);
       const result = await interpret(projectInitHandler.writeDerivedConcepts({ init: "init-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -441,6 +445,7 @@ describe('ProjectInit functional handler', () => {
     it('fixture "valid_trigger_install" -> ok', async () => {
       if (typeof projectInitHandler.triggerInstall !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }), storage);
       const result = await interpret(projectInitHandler.triggerInstall({ init: "init-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -509,6 +514,7 @@ describe('ProjectInit functional handler', () => {
     it('fixture "valid_trigger_generate" -> ok', async () => {
       if (typeof projectInitHandler.triggerGenerate !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }), storage);
       const result = await interpret(projectInitHandler.triggerGenerate({ init: "init-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -577,6 +583,7 @@ describe('ProjectInit functional handler', () => {
     it('fixture "valid_complete" -> ok', async () => {
       if (typeof projectInitHandler.complete !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }), storage);
       const result = await interpret(projectInitHandler.complete({ init: "init-1" }), storage);
       expect(result.variant).toBe('ok');
     });

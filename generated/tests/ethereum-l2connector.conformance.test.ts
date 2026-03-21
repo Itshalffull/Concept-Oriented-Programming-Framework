@@ -163,6 +163,7 @@ describe('EthereumL2Connector functional handler', () => {
     it('fixture "write_transfer" -> ok', async () => {
       if (typeof ethereumL2ConnectorHandler.write !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(ethereumL2ConnectorHandler.read({ connector: "eth-l2-1", query: "{\"method\":\"getOwner\"}" }), storage);
       const result = await interpret(ethereumL2ConnectorHandler.write({ connector: "eth-l2-1", data: "{\"method\":\"transfer\",\"args\":[\"0xabc\",100]}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -170,6 +171,7 @@ describe('EthereumL2Connector functional handler', () => {
     it('fixture "write_missing" -> notfound', async () => {
       if (typeof ethereumL2ConnectorHandler.write !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(ethereumL2ConnectorHandler.read({ connector: "eth-l2-1", query: "{\"method\":\"getOwner\"}" }), storage);
       const result = await interpret(ethereumL2ConnectorHandler.write({ connector: "eth-l2-missing", data: "{}" }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notfound'));
@@ -239,6 +241,7 @@ describe('EthereumL2Connector functional handler', () => {
     it('fixture "test_connected" -> ok', async () => {
       if (typeof ethereumL2ConnectorHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(ethereumL2ConnectorHandler.read({ connector: "eth-l2-1", query: "{\"method\":\"getOwner\"}" }), storage);
       const result = await interpret(ethereumL2ConnectorHandler.test({ connector: "eth-l2-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -308,6 +311,7 @@ describe('EthereumL2Connector functional handler', () => {
     it('fixture "discover_existing" -> ok', async () => {
       if (typeof ethereumL2ConnectorHandler.discover !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(ethereumL2ConnectorHandler.read({ connector: "eth-l2-1", query: "{\"method\":\"getOwner\"}" }), storage);
       const result = await interpret(ethereumL2ConnectorHandler.discover({ connector: "eth-l2-1" }), storage);
       expect(result.variant).toBe('ok');
     });

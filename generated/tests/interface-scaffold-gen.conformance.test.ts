@@ -230,6 +230,7 @@ describe('InterfaceScaffoldGen functional handler', () => {
     it('fixture "valid_register" -> ok', async () => {
       if (typeof interfaceScaffoldGenHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(interfaceScaffoldGenHandler.generate({ name: "commerce-api", targets: ["rest","graphql"], sdks: ["typescript","python"] }), storage);
       const result = await interpret(interfaceScaffoldGenHandler.register({  }), storage);
       expect(result.variant).toBe('ok');
     });

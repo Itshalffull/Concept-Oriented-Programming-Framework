@@ -62,6 +62,7 @@ describe('ContentEmbedding imperative handler', () => {
     it('fixture "remove_existing" -> ok', async () => {
       if (typeof contentEmbeddingHandler.remove !== 'function') return;
       const storage = createInMemoryStorage();
+      await contentEmbeddingHandler.index({ entity_id: "node-42", source_type: "page", text: "Introduction to concept-oriented programming", model: "text-embedding-3-small" }, storage);
       const result = await contentEmbeddingHandler.remove({ entity_id: "node-42" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -69,6 +70,7 @@ describe('ContentEmbedding imperative handler', () => {
     it('fixture "remove_missing" -> ok', async () => {
       if (typeof contentEmbeddingHandler.remove !== 'function') return;
       const storage = createInMemoryStorage();
+      await contentEmbeddingHandler.index({ entity_id: "node-42", source_type: "page", text: "Introduction to concept-oriented programming", model: "text-embedding-3-small" }, storage);
       const result = await contentEmbeddingHandler.remove({ entity_id: "" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -88,6 +90,7 @@ describe('ContentEmbedding imperative handler', () => {
     it('fixture "get_existing" -> ok', async () => {
       if (typeof contentEmbeddingHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await contentEmbeddingHandler.index({ entity_id: "node-42", source_type: "page", text: "Introduction to concept-oriented programming", model: "text-embedding-3-small" }, storage);
       const result = await contentEmbeddingHandler.get({ entity_id: "node-42" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -114,6 +117,7 @@ describe('ContentEmbedding imperative handler', () => {
     it('fixture "search_pages" -> ok', async () => {
       if (typeof contentEmbeddingHandler.searchSimilar !== 'function') return;
       const storage = createInMemoryStorage();
+      await contentEmbeddingHandler.index({ entity_id: "node-42", source_type: "page", text: "Introduction to concept-oriented programming", model: "text-embedding-3-small" }, storage);
       const result = await contentEmbeddingHandler.searchSimilar({ entity_id: "node-42", topK: "5", source_type: "page" }, storage);
       expect(result.variant).toBe('ok');
     });

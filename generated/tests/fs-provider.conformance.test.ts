@@ -55,6 +55,7 @@ describe('FsProvider imperative handler', () => {
     it('fixture "read_existing_file" -> ok', async () => {
       if (typeof fsProviderHandler.read !== 'function') return;
       const storage = createInMemoryStorage();
+      await fsProviderHandler.list({  }, storage);
       const result = await fsProviderHandler.read({ path: "/tmp/test.txt" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -82,6 +83,7 @@ describe('FsProvider imperative handler', () => {
     it('fixture "write_file" -> ok', async () => {
       if (typeof fsProviderHandler.write !== 'function') return;
       const storage = createInMemoryStorage();
+      await fsProviderHandler.list({  }, storage);
       const result = await fsProviderHandler.write({ path: "/tmp/output.txt", content: "hello world" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -108,6 +110,7 @@ describe('FsProvider imperative handler', () => {
     it('fixture "check_existing" -> ok', async () => {
       if (typeof fsProviderHandler.exists !== 'function') return;
       const storage = createInMemoryStorage();
+      await fsProviderHandler.list({  }, storage);
       const result = await fsProviderHandler.exists({ path: "/tmp/test.txt" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -115,6 +118,7 @@ describe('FsProvider imperative handler', () => {
     it('fixture "check_missing" -> ok', async () => {
       if (typeof fsProviderHandler.exists !== 'function') return;
       const storage = createInMemoryStorage();
+      await fsProviderHandler.list({  }, storage);
       const result = await fsProviderHandler.exists({ path: "/tmp/nonexistent" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -134,6 +138,7 @@ describe('FsProvider imperative handler', () => {
     it('fixture "delete_existing" -> ok', async () => {
       if (typeof fsProviderHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
+      await fsProviderHandler.list({  }, storage);
       const result = await fsProviderHandler.delete({ path: "/tmp/test.txt" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -161,6 +166,7 @@ describe('FsProvider imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof fsProviderHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      await fsProviderHandler.list({  }, storage);
       const result = await fsProviderHandler.list({  }, storage);
       expect(result.variant).toBe('ok');
     });

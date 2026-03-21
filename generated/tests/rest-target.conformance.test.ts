@@ -237,6 +237,7 @@ describe('RestTarget functional handler', () => {
     it('fixture "list_user_routes" -> ok', async () => {
       if (typeof restTargetHandler.listRoutes !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(restTargetHandler.generate({ projection: "user-projection", config: "{}" }), storage);
       const result = await interpret(restTargetHandler.listRoutes({ concept: "User" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -244,6 +245,7 @@ describe('RestTarget functional handler', () => {
     it('fixture "empty_concept" -> ok', async () => {
       if (typeof restTargetHandler.listRoutes !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(restTargetHandler.generate({ projection: "user-projection", config: "{}" }), storage);
       const result = await interpret(restTargetHandler.listRoutes({ concept: "" }), storage);
       expect(result.variant).toBe('ok');
     });

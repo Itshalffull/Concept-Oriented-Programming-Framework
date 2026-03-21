@@ -101,6 +101,7 @@ describe('DesignToken functional handler', () => {
     it('fixture "define_duplicate" -> ok', async () => {
       if (typeof designTokenHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage);
       const result = await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +163,7 @@ describe('DesignToken functional handler', () => {
     it('fixture "valid_alias" -> ok', async () => {
       if (typeof designTokenHandler.alias !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage);
       const result = await interpret(designTokenHandler.alias({ token: "primary-color", name: "primary-color", reference: "blue-500", tier: "semantic" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +232,7 @@ describe('DesignToken functional handler', () => {
     it('fixture "valid_resolve" -> ok', async () => {
       if (typeof designTokenHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage);
       const result = await interpret(designTokenHandler.resolve({ token: "blue-500" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -298,6 +301,7 @@ describe('DesignToken functional handler', () => {
     it('fixture "valid_update" -> ok', async () => {
       if (typeof designTokenHandler.update !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage);
       const result = await interpret(designTokenHandler.update({ token: "blue-500", value: "#2563eb" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -366,6 +370,7 @@ describe('DesignToken functional handler', () => {
     it('fixture "valid_remove" -> ok', async () => {
       if (typeof designTokenHandler.remove !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage);
       const result = await interpret(designTokenHandler.remove({ token: "blue-500" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -434,6 +439,7 @@ describe('DesignToken functional handler', () => {
     it('fixture "export_css" -> ok', async () => {
       if (typeof designTokenHandler.export !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage);
       const result = await interpret(designTokenHandler.export({ format: "css" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -441,6 +447,7 @@ describe('DesignToken functional handler', () => {
     it('fixture "export_dtcg" -> ok', async () => {
       if (typeof designTokenHandler.export !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage);
       const result = await interpret(designTokenHandler.export({ format: "dtcg" }), storage);
       expect(result.variant).toBe('ok');
     });

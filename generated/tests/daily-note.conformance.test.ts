@@ -94,6 +94,7 @@ describe('DailyNote functional handler', () => {
     it('fixture "today_existing" -> ok', async () => {
       if (typeof dailyNoteHandler.getOrCreateToday !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(dailyNoteHandler.getOrCreateToday({ note: "daily-2026-03-20" }), storage);
       const result = await interpret(dailyNoteHandler.getOrCreateToday({ note: "daily-2026-03-20" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -155,6 +156,7 @@ describe('DailyNote functional handler', () => {
     it('fixture "navigate_existing" -> ok', async () => {
       if (typeof dailyNoteHandler.navigateToDate !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(dailyNoteHandler.getOrCreateToday({ note: "daily-2026-03-20" }), storage);
       const result = await interpret(dailyNoteHandler.navigateToDate({ date: "2026-03-20" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -224,6 +226,7 @@ describe('DailyNote functional handler', () => {
     it('fixture "list_five" -> ok', async () => {
       if (typeof dailyNoteHandler.listRecent !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(dailyNoteHandler.getOrCreateToday({ note: "daily-2026-03-20" }), storage);
       const result = await interpret(dailyNoteHandler.listRecent({ count: "5" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -231,6 +234,7 @@ describe('DailyNote functional handler', () => {
     it('fixture "list_one" -> ok', async () => {
       if (typeof dailyNoteHandler.listRecent !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(dailyNoteHandler.getOrCreateToday({ note: "daily-2026-03-20" }), storage);
       const result = await interpret(dailyNoteHandler.listRecent({ count: "1" }), storage);
       expect(result.variant).toBe('ok');
     });

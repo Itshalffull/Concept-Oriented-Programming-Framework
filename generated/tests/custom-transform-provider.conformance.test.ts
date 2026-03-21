@@ -148,6 +148,7 @@ describe('CustomTransformProvider functional handler', () => {
     it('fixture "replace_focus_strategy" -> ok', async () => {
       if (typeof customTransformProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(customTransformProviderHandler.register({  }), storage);
       const result = await interpret(customTransformProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"focus\",\"strategy\":\"roving\"}]}", spec: "{\"match\":{\"tag\":\"focus\",\"strategy\":\"roving\"},\"replace\":{\"strategy\":\"trap\"}}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -155,6 +156,7 @@ describe('CustomTransformProvider functional handler', () => {
     it('fixture "no_matches" -> ok', async () => {
       if (typeof customTransformProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(customTransformProviderHandler.register({  }), storage);
       const result = await interpret(customTransformProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"match\":{\"tag\":\"nonexistent\"},\"replace\":{}}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +164,7 @@ describe('CustomTransformProvider functional handler', () => {
     it('fixture "invalid_program_json" -> error', async () => {
       if (typeof customTransformProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(customTransformProviderHandler.register({  }), storage);
       const result = await interpret(customTransformProviderHandler.apply({ program: "bad-json", spec: "{}" }), storage);
       expect(result.variant).not.toBe('ok');
     });

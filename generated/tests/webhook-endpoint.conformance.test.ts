@@ -62,6 +62,7 @@ describe('WebhookEndpoint imperative handler', () => {
     it('fixture "resolve_deploy" -> ok', async () => {
       if (typeof webhookEndpointHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
+      await webhookEndpointHandler.register({ name: "deploy-webhook", url: "https://hooks.example.com/deploy", headers: "{\"X-Secret\":\"s3cret\"}" }, storage);
       const result = await webhookEndpointHandler.resolve({ name: "deploy-webhook" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -89,6 +90,7 @@ describe('WebhookEndpoint imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof webhookEndpointHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      await webhookEndpointHandler.register({ name: "deploy-webhook", url: "https://hooks.example.com/deploy", headers: "{\"X-Secret\":\"s3cret\"}" }, storage);
       const result = await webhookEndpointHandler.list({  }, storage);
       expect(result.variant).toBe('ok');
     });

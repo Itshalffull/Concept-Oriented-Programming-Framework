@@ -155,6 +155,7 @@ describe('Weight functional handler', () => {
     it('fixture "snap_governance" -> ok', async () => {
       if (typeof weightHandler.snapshot !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(weightHandler.updateWeight({ participant: "alice", source: "staking", value: "100.0" }), storage);
       const result = await interpret(weightHandler.snapshot({ snapshotRef: "epoch-42", participants: "[\"alice\",\"bob\"]" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('Weight functional handler', () => {
     it('fixture "get_alice_weight" -> ok', async () => {
       if (typeof weightHandler.getWeight !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(weightHandler.updateWeight({ participant: "alice", source: "staking", value: "100.0" }), storage);
       const result = await interpret(weightHandler.getWeight({ participant: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('Weight functional handler', () => {
     it('fixture "get_from_snapshot" -> ok', async () => {
       if (typeof weightHandler.getWeightFromSnapshot !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(weightHandler.updateWeight({ participant: "alice", source: "staking", value: "100.0" }), storage);
       const result = await interpret(weightHandler.getWeightFromSnapshot({ snapshot: "snapshot-epoch-42", participant: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });

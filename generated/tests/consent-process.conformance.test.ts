@@ -155,6 +155,7 @@ describe('ConsentProcess functional handler', () => {
     it('fixture "advance_to_clarifying" -> ok', async () => {
       if (typeof consentProcessHandler.advancePhase !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(consentProcessHandler.initiate({ proposalRef: "proposal-budget-2026" }), storage);
       const result = await interpret(consentProcessHandler.advancePhase({ process: "consent-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('ConsentProcess functional handler', () => {
     it('fixture "raise_paramount" -> ok', async () => {
       if (typeof consentProcessHandler.raiseObjection !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(consentProcessHandler.initiate({ proposalRef: "proposal-budget-2026" }), storage);
       const result = await interpret(consentProcessHandler.raiseObjection({ process: "consent-001", objector: "alice", reason: "Exceeds annual budget limit", isParamount: "true" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('ConsentProcess functional handler', () => {
     it('fixture "integrate_first_objection" -> ok', async () => {
       if (typeof consentProcessHandler.integrateObjection !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(consentProcessHandler.initiate({ proposalRef: "proposal-budget-2026" }), storage);
       const result = await interpret(consentProcessHandler.integrateObjection({ process: "consent-001", objectionIndex: "0", amendment: "Cap budget at 80% of original request" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +362,7 @@ describe('ConsentProcess functional handler', () => {
     it('fixture "resolve_clean" -> ok', async () => {
       if (typeof consentProcessHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(consentProcessHandler.initiate({ proposalRef: "proposal-budget-2026" }), storage);
       const result = await interpret(consentProcessHandler.resolve({ process: "consent-001" }), storage);
       expect(result.variant).toBe('ok');
     });

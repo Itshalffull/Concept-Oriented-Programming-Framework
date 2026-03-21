@@ -155,6 +155,7 @@ describe('AccessControl functional handler', () => {
     it('fixture "orIf_allowed" -> ok', async () => {
       if (typeof accessControlHandler.orIf !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(accessControlHandler.check({ resource: "document:123", action: "read", context: "user:alice" }), storage);
       const result = await interpret(accessControlHandler.orIf({ left: "neutral", right: "allowed" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('AccessControl functional handler', () => {
     it('fixture "andIf_both_allowed" -> ok', async () => {
       if (typeof accessControlHandler.andIf !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(accessControlHandler.check({ resource: "document:123", action: "read", context: "user:alice" }), storage);
       const result = await interpret(accessControlHandler.andIf({ left: "allowed", right: "allowed" }), storage);
       expect(result.variant).toBe('ok');
     });

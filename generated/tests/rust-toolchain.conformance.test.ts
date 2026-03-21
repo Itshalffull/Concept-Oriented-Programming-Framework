@@ -155,6 +155,7 @@ describe('RustToolchain functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof rustToolchainHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(rustToolchainHandler.resolve({ platform: "x86_64-linux", versionConstraint: ">=1.75" }), storage);
       const result = await interpret(rustToolchainHandler.register({  }), storage);
       expect(result.variant).toBe('ok');
     });

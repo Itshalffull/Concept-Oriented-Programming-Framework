@@ -148,6 +148,7 @@ describe('ForceDirectedLayout functional handler', () => {
     it('fixture "valid_apply" -> ok', async () => {
       if (typeof forceDirectedLayoutHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(forceDirectedLayoutHandler.register({  }), storage);
       const result = await interpret(forceDirectedLayoutHandler.apply({ canvas: "c1", items: ["a","b","c"] }), storage);
       expect(result.variant).toBe('ok');
     });

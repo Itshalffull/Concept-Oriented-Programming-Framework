@@ -155,6 +155,7 @@ describe('Tag functional handler', () => {
     it('fixture "remove_existing_tag" -> ok', async () => {
       if (typeof tagHandler.removeTag !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(tagHandler.addTag({ entity: "page-42", tag: "important" }), storage);
       const result = await interpret(tagHandler.removeTag({ entity: "page-42", tag: "important" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('Tag functional handler', () => {
     it('fixture "get_by_existing_tag" -> ok', async () => {
       if (typeof tagHandler.getByTag !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(tagHandler.addTag({ entity: "page-42", tag: "important" }), storage);
       const result = await interpret(tagHandler.getByTag({ tag: "important" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +232,7 @@ describe('Tag functional handler', () => {
     it('fixture "get_by_empty_tag" -> ok', async () => {
       if (typeof tagHandler.getByTag !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(tagHandler.addTag({ entity: "page-42", tag: "important" }), storage);
       const result = await interpret(tagHandler.getByTag({ tag: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +294,7 @@ describe('Tag functional handler', () => {
     it('fixture "get_children_of_tag" -> ok', async () => {
       if (typeof tagHandler.getChildren !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(tagHandler.addTag({ entity: "page-42", tag: "important" }), storage);
       const result = await interpret(tagHandler.getChildren({ tag: "engineering" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +363,7 @@ describe('Tag functional handler', () => {
     it('fixture "rename_existing_tag" -> ok', async () => {
       if (typeof tagHandler.rename !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(tagHandler.addTag({ entity: "page-42", tag: "important" }), storage);
       const result = await interpret(tagHandler.rename({ tag: "important", name: "critical" }), storage);
       expect(result.variant).toBe('ok');
     });

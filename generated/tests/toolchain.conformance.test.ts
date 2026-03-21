@@ -244,6 +244,7 @@ describe('Toolchain functional handler', () => {
     it('fixture "list_all" -> ok', async () => {
       if (typeof toolchainHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(toolchainHandler.resolve({ language: "swift", platform: "linux-arm64" }), storage);
       const result = await interpret(toolchainHandler.list({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -251,6 +252,7 @@ describe('Toolchain functional handler', () => {
     it('fixture "list_by_language" -> ok', async () => {
       if (typeof toolchainHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(toolchainHandler.resolve({ language: "swift", platform: "linux-arm64" }), storage);
       const result = await interpret(toolchainHandler.list({ language: "typescript" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -258,6 +260,7 @@ describe('Toolchain functional handler', () => {
     it('fixture "list_by_category" -> ok', async () => {
       if (typeof toolchainHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(toolchainHandler.resolve({ language: "swift", platform: "linux-arm64" }), storage);
       const result = await interpret(toolchainHandler.list({ category: "unit-runner" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -319,6 +322,7 @@ describe('Toolchain functional handler', () => {
     it('fixture "capabilities_existing" -> ok', async () => {
       if (typeof toolchainHandler.capabilities !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(toolchainHandler.resolve({ language: "swift", platform: "linux-arm64" }), storage);
       const result = await interpret(toolchainHandler.capabilities({ tool: "tc-abc123" }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -162,6 +162,7 @@ describe('Guard functional handler', () => {
     it('fixture "checkpre_allowed" -> ok', async () => {
       if (typeof guardHandler.checkPre !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(guardHandler.register({ name: "balance-check", targetAction: "transfer", checkType: "Pre", condition: "balance > amount" }), storage);
       const result = await interpret(guardHandler.checkPre({ guard: "guard-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +231,7 @@ describe('Guard functional handler', () => {
     it('fixture "checkpost_passed" -> ok', async () => {
       if (typeof guardHandler.checkPost !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(guardHandler.register({ name: "balance-check", targetAction: "transfer", checkType: "Pre", condition: "balance > amount" }), storage);
       const result = await interpret(guardHandler.checkPost({ guard: "guard-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -298,6 +300,7 @@ describe('Guard functional handler', () => {
     it('fixture "enable_guard" -> ok', async () => {
       if (typeof guardHandler.enable !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(guardHandler.register({ name: "balance-check", targetAction: "transfer", checkType: "Pre", condition: "balance > amount" }), storage);
       const result = await interpret(guardHandler.enable({ guard: "guard-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -366,6 +369,8 @@ describe('Guard functional handler', () => {
     it('fixture "disable_guard" -> ok', async () => {
       if (typeof guardHandler.disable !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(guardHandler.register({ name: "balance-check", targetAction: "transfer", checkType: "Pre", condition: "balance > amount" }), storage);
+      await interpret(guardHandler.enable({ guard: "guard-001" }), storage);
       const result = await interpret(guardHandler.disable({ guard: "guard-001" }), storage);
       expect(result.variant).toBe('ok');
     });

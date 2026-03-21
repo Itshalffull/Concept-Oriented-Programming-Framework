@@ -155,6 +155,7 @@ describe('FileCatalog functional handler', () => {
     it('fixture "valid_register_provider" -> ok', async () => {
       if (typeof fileCatalogHandler.registerProvider !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(fileCatalogHandler.discover({ base_paths: "/project/specs,/project/syncs" }), storage);
       const result = await interpret(fileCatalogHandler.registerProvider({ provider_name: "concept", kind: "concept", file_pattern: ".concept" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +163,7 @@ describe('FileCatalog functional handler', () => {
     it('fixture "register_widget_provider" -> ok', async () => {
       if (typeof fileCatalogHandler.registerProvider !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(fileCatalogHandler.discover({ base_paths: "/project/specs,/project/syncs" }), storage);
       const result = await interpret(fileCatalogHandler.registerProvider({ provider_name: "widget", kind: "widget", file_pattern: ".widget" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -169,6 +171,7 @@ describe('FileCatalog functional handler', () => {
     it('fixture "register_duplicate_provider" -> ok', async () => {
       if (typeof fileCatalogHandler.registerProvider !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(fileCatalogHandler.discover({ base_paths: "/project/specs,/project/syncs" }), storage);
       const result = await interpret(fileCatalogHandler.registerProvider({ provider_name: "concept", kind: "concept", file_pattern: ".concept" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +233,7 @@ describe('FileCatalog functional handler', () => {
     it('fixture "valid_get" -> ok', async () => {
       if (typeof fileCatalogHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(fileCatalogHandler.discover({ base_paths: "/project/specs,/project/syncs" }), storage);
       const result = await interpret(fileCatalogHandler.get({ name: "Article", kind: "concept" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -298,6 +302,7 @@ describe('FileCatalog functional handler', () => {
     it('fixture "list_concepts" -> ok', async () => {
       if (typeof fileCatalogHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(fileCatalogHandler.discover({ base_paths: "/project/specs,/project/syncs" }), storage);
       const result = await interpret(fileCatalogHandler.list({ kind: "concept" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -305,6 +310,7 @@ describe('FileCatalog functional handler', () => {
     it('fixture "list_all" -> ok', async () => {
       if (typeof fileCatalogHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(fileCatalogHandler.discover({ base_paths: "/project/specs,/project/syncs" }), storage);
       const result = await interpret(fileCatalogHandler.list({ kind: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -366,6 +372,7 @@ describe('FileCatalog functional handler', () => {
     it('fixture "valid_list_suite" -> ok', async () => {
       if (typeof fileCatalogHandler.listForSuite !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(fileCatalogHandler.discover({ base_paths: "/project/specs,/project/syncs" }), storage);
       const result = await interpret(fileCatalogHandler.listForSuite({ suite: "foundation" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -373,6 +380,7 @@ describe('FileCatalog functional handler', () => {
     it('fixture "list_unknown_suite" -> ok', async () => {
       if (typeof fileCatalogHandler.listForSuite !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(fileCatalogHandler.discover({ base_paths: "/project/specs,/project/syncs" }), storage);
       const result = await interpret(fileCatalogHandler.listForSuite({ suite: "nonexistent-suite" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -434,6 +442,7 @@ describe('FileCatalog functional handler', () => {
     it('fixture "valid_sync_paths" -> ok', async () => {
       if (typeof fileCatalogHandler.syncFilePathsForSuite !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(fileCatalogHandler.discover({ base_paths: "/project/specs,/project/syncs" }), storage);
       const result = await interpret(fileCatalogHandler.syncFilePathsForSuite({ suite: "foundation" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -441,6 +450,7 @@ describe('FileCatalog functional handler', () => {
     it('fixture "sync_paths_unknown" -> ok', async () => {
       if (typeof fileCatalogHandler.syncFilePathsForSuite !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(fileCatalogHandler.discover({ base_paths: "/project/specs,/project/syncs" }), storage);
       const result = await interpret(fileCatalogHandler.syncFilePathsForSuite({ suite: "nonexistent-suite" }), storage);
       expect(result.variant).toBe('ok');
     });

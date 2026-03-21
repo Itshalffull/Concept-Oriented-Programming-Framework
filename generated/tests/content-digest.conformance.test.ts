@@ -155,6 +155,7 @@ describe('ContentDigest functional handler', () => {
     it('fixture "lookup_hash" -> ok', async () => {
       if (typeof contentDigestHandler.lookup !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(contentDigestHandler.compute({ unit: "def-unit-1", algorithm: "structural-normalized" }), storage);
       const result = await interpret(contentDigestHandler.lookup({ hash: "a1b2c3d4e5f6" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('ContentDigest functional handler', () => {
     it('fixture "equiv_check" -> ok', async () => {
       if (typeof contentDigestHandler.equivalent !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(contentDigestHandler.compute({ unit: "def-unit-1", algorithm: "structural-normalized" }), storage);
       const result = await interpret(contentDigestHandler.equivalent({ a: "def-unit-1", b: "def-unit-2" }), storage);
       expect(result.variant).toBe('ok');
     });

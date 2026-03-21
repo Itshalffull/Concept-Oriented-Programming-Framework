@@ -155,6 +155,7 @@ describe('Schema functional handler', () => {
     it('fixture "add_tags_field" -> ok', async () => {
       if (typeof schemaHandler.addField !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(schemaHandler.defineSchema({ schema: "article", fields: "title,body,author" }), storage);
       const result = await interpret(schemaHandler.addField({ schema: "article", field: "tags" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('Schema functional handler', () => {
     it('fixture "extend_blog_from_article" -> ok', async () => {
       if (typeof schemaHandler.extendSchema !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(schemaHandler.defineSchema({ schema: "article", fields: "title,body,author" }), storage);
       const result = await interpret(schemaHandler.extendSchema({ schema: "blog-post", parent: "article" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('Schema functional handler', () => {
     it('fixture "apply_article_to_page" -> ok', async () => {
       if (typeof schemaHandler.applyTo !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(schemaHandler.defineSchema({ schema: "article", fields: "title,body,author" }), storage);
       const result = await interpret(schemaHandler.applyTo({ entity_id: "page-1", schema: "article" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +362,7 @@ describe('Schema functional handler', () => {
     it('fixture "remove_article_from_page" -> ok', async () => {
       if (typeof schemaHandler.removeFrom !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(schemaHandler.defineSchema({ schema: "article", fields: "title,body,author" }), storage);
       const result = await interpret(schemaHandler.removeFrom({ entity_id: "page-1", schema: "article" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -427,6 +431,7 @@ describe('Schema functional handler', () => {
     it('fixture "get_article_entities" -> ok', async () => {
       if (typeof schemaHandler.getAssociations !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(schemaHandler.defineSchema({ schema: "article", fields: "title,body,author" }), storage);
       const result = await interpret(schemaHandler.getAssociations({ schema: "article" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -495,6 +500,7 @@ describe('Schema functional handler', () => {
     it('fixture "export_article" -> ok', async () => {
       if (typeof schemaHandler.export !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(schemaHandler.defineSchema({ schema: "article", fields: "title,body,author" }), storage);
       const result = await interpret(schemaHandler.export({ schema: "article" }), storage);
       expect(result.variant).toBe('ok');
     });

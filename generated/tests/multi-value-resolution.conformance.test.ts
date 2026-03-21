@@ -148,6 +148,7 @@ describe('MultiValueResolution functional handler', () => {
     it('fixture "resolve_two_values" -> ok', async () => {
       if (typeof multiValueResolutionHandler.attemptResolve !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(multiValueResolutionHandler.register({  }), storage);
       const result = await interpret(multiValueResolutionHandler.attemptResolve({ base: null, v1: "cart-item-a", v2: "cart-item-b", context: "shopping-cart" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -155,6 +156,7 @@ describe('MultiValueResolution functional handler', () => {
     it('fixture "resolve_with_base" -> ok', async () => {
       if (typeof multiValueResolutionHandler.attemptResolve !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(multiValueResolutionHandler.register({  }), storage);
       const result = await interpret(multiValueResolutionHandler.attemptResolve({ base: "original-value", v1: "edit-alice", v2: "edit-bob", context: "annotations" }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -55,6 +55,7 @@ describe('OnnxProvider imperative handler', () => {
     it('fixture "load_codebert" -> ok', async () => {
       if (typeof onnxProviderHandler.load !== 'function') return;
       const storage = createInMemoryStorage();
+      await onnxProviderHandler.list({  }, storage);
       const result = await onnxProviderHandler.load({ name: "codebert", modelPath: "/models/codebert.onnx", device: "cpu", options: "{}" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -62,6 +63,7 @@ describe('OnnxProvider imperative handler', () => {
     it('fixture "load_gpu_model" -> ok', async () => {
       if (typeof onnxProviderHandler.load !== 'function') return;
       const storage = createInMemoryStorage();
+      await onnxProviderHandler.list({  }, storage);
       const result = await onnxProviderHandler.load({ name: "resnet", modelPath: "/models/resnet50.onnx", device: "cuda", options: "{\"optimization_level\":99}" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -81,6 +83,7 @@ describe('OnnxProvider imperative handler', () => {
     it('fixture "infer_codebert" -> ok', async () => {
       if (typeof onnxProviderHandler.infer !== 'function') return;
       const storage = createInMemoryStorage();
+      await onnxProviderHandler.list({  }, storage);
       const result = await onnxProviderHandler.infer({ session: "codebert", inputs: "[[1,2,3]]", options: "{}" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -88,6 +91,7 @@ describe('OnnxProvider imperative handler', () => {
     it('fixture "infer_unknown_session" -> notFound', async () => {
       if (typeof onnxProviderHandler.infer !== 'function') return;
       const storage = createInMemoryStorage();
+      await onnxProviderHandler.list({  }, storage);
       const result = await onnxProviderHandler.infer({ session: "nonexistent", inputs: "[]", options: "{}" }, storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notFound'));
@@ -108,6 +112,7 @@ describe('OnnxProvider imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof onnxProviderHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      await onnxProviderHandler.list({  }, storage);
       const result = await onnxProviderHandler.list({  }, storage);
       expect(result.variant).toBe('ok');
     });

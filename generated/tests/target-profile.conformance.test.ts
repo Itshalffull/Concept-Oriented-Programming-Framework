@@ -62,6 +62,7 @@ describe('TargetProfile imperative handler', () => {
     it('fixture "valid_set_backend" -> ok', async () => {
       if (typeof targetProfileHandler.setBackendLanguages !== 'function') return;
       const storage = createInMemoryStorage();
+      await targetProfileHandler.create({ name: "fullstack-ts" }, storage);
       const result = await targetProfileHandler.setBackendLanguages({ profileId: "profile-1", values: "[\"typescript\",\"rust\"]" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -88,6 +89,7 @@ describe('TargetProfile imperative handler', () => {
     it('fixture "valid_set_frontend" -> ok', async () => {
       if (typeof targetProfileHandler.setFrontendFrameworks !== 'function') return;
       const storage = createInMemoryStorage();
+      await targetProfileHandler.create({ name: "fullstack-ts" }, storage);
       const result = await targetProfileHandler.setFrontendFrameworks({ profileId: "profile-1", values: "[\"react\",\"svelte\"]" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -114,6 +116,7 @@ describe('TargetProfile imperative handler', () => {
     it('fixture "valid_set_api" -> ok', async () => {
       if (typeof targetProfileHandler.setApiInterfaces !== 'function') return;
       const storage = createInMemoryStorage();
+      await targetProfileHandler.create({ name: "fullstack-ts" }, storage);
       const result = await targetProfileHandler.setApiInterfaces({ profileId: "profile-1", values: "[\"rest\",\"graphql\"]" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -140,6 +143,7 @@ describe('TargetProfile imperative handler', () => {
     it('fixture "valid_set_sdk" -> ok', async () => {
       if (typeof targetProfileHandler.setSdkLanguages !== 'function') return;
       const storage = createInMemoryStorage();
+      await targetProfileHandler.create({ name: "fullstack-ts" }, storage);
       const result = await targetProfileHandler.setSdkLanguages({ profileId: "profile-1", values: "[\"typescript\",\"python\"]" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -166,6 +170,7 @@ describe('TargetProfile imperative handler', () => {
     it('fixture "valid_set_deploy" -> ok', async () => {
       if (typeof targetProfileHandler.setDeployTargets !== 'function') return;
       const storage = createInMemoryStorage();
+      await targetProfileHandler.create({ name: "fullstack-ts" }, storage);
       const result = await targetProfileHandler.setDeployTargets({ profileId: "profile-1", values: "[\"vercel\",\"lambda\"]" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -192,6 +197,7 @@ describe('TargetProfile imperative handler', () => {
     it('fixture "valid_set_storage" -> ok', async () => {
       if (typeof targetProfileHandler.setStorageAdapters !== 'function') return;
       const storage = createInMemoryStorage();
+      await targetProfileHandler.create({ name: "fullstack-ts" }, storage);
       const result = await targetProfileHandler.setStorageAdapters({ profileId: "profile-1", values: "[\"postgres\",\"memory\"]" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -218,6 +224,7 @@ describe('TargetProfile imperative handler', () => {
     it('fixture "valid_set_transport" -> ok', async () => {
       if (typeof targetProfileHandler.setTransportAdapters !== 'function') return;
       const storage = createInMemoryStorage();
+      await targetProfileHandler.create({ name: "fullstack-ts" }, storage);
       const result = await targetProfileHandler.setTransportAdapters({ profileId: "profile-1", values: "[\"http\",\"ws\"]" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -270,6 +277,7 @@ describe('TargetProfile imperative handler', () => {
     it('fixture "valid_derive" -> ok', async () => {
       if (typeof targetProfileHandler.deriveModules !== 'function') return;
       const storage = createInMemoryStorage();
+      await targetProfileHandler.create({ name: "fullstack-ts" }, storage);
       const result = await targetProfileHandler.deriveModules({ profileId: "profile-1" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -296,6 +304,7 @@ describe('TargetProfile imperative handler', () => {
     it('fixture "list_all_options" -> ok', async () => {
       if (typeof targetProfileHandler.listOptions !== 'function') return;
       const storage = createInMemoryStorage();
+      await targetProfileHandler.create({ name: "fullstack-ts" }, storage);
       const result = await targetProfileHandler.listOptions({  }, storage);
       expect(result.variant).toBe('ok');
     });

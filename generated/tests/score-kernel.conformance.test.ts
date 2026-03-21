@@ -62,6 +62,7 @@ describe('ScoreKernel imperative handler', () => {
     it('fixture "discover_src" -> ok', async () => {
       if (typeof scoreKernelHandler.discover !== 'function') return;
       const storage = createInMemoryStorage();
+      await scoreKernelHandler.boot({ projectRoot: "/home/user/my-project" }, storage);
       const result = await scoreKernelHandler.discover({ kernel: "kernel-1", basePaths: "src,specs" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -88,6 +89,7 @@ describe('ScoreKernel imperative handler', () => {
     it('fixture "status_valid" -> ok', async () => {
       if (typeof scoreKernelHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
+      await scoreKernelHandler.boot({ projectRoot: "/home/user/my-project" }, storage);
       const result = await scoreKernelHandler.status({ kernel: "kernel-1" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -114,6 +116,7 @@ describe('ScoreKernel imperative handler', () => {
     it('fixture "connect_local" -> ok', async () => {
       if (typeof scoreKernelHandler.connectRuntime !== 'function') return;
       const storage = createInMemoryStorage();
+      await scoreKernelHandler.boot({ projectRoot: "/home/user/my-project" }, storage);
       const result = await scoreKernelHandler.connectRuntime({ kernel: "kernel-1", endpoint: "ws://localhost:8080/changes" }, storage);
       expect(result.variant).toBe('ok');
     });

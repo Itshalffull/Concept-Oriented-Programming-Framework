@@ -216,6 +216,7 @@ describe('SuiteScaffoldGen functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof suiteScaffoldGenHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(suiteScaffoldGenHandler.generate({ name: "auth-suite", description: "Authentication and authorization suite", concepts: ["User","Session","Role"] }), storage);
       const result = await interpret(suiteScaffoldGenHandler.register({  }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -162,6 +162,7 @@ describe('Binding functional handler', () => {
     it('fixture "valid_sync" -> ok', async () => {
       if (typeof bindingHandler.sync !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(bindingHandler.bind({ binding: "B-1", concept: "Article", mode: "coupled" }), storage);
       const result = await interpret(bindingHandler.sync({ binding: "B-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +231,7 @@ describe('Binding functional handler', () => {
     it('fixture "valid_invoke" -> ok', async () => {
       if (typeof bindingHandler.invoke !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(bindingHandler.bind({ binding: "B-1", concept: "Article", mode: "coupled" }), storage);
       const result = await interpret(bindingHandler.invoke({ binding: "B-1", action: "create", input: "{\"title\":\"Hello World\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -237,6 +239,7 @@ describe('Binding functional handler', () => {
     it('fixture "invoke_nonexistent" -> error', async () => {
       if (typeof bindingHandler.invoke !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(bindingHandler.bind({ binding: "B-1", concept: "Article", mode: "coupled" }), storage);
       const result = await interpret(bindingHandler.invoke({ binding: "B-999", action: "create", input: "{}" }), storage);
       expect(result.variant).not.toBe('ok');
     });
@@ -298,6 +301,7 @@ describe('Binding functional handler', () => {
     it('fixture "valid_unbind" -> ok', async () => {
       if (typeof bindingHandler.unbind !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(bindingHandler.bind({ binding: "B-1", concept: "Article", mode: "coupled" }), storage);
       const result = await interpret(bindingHandler.unbind({ binding: "B-1" }), storage);
       expect(result.variant).toBe('ok');
     });

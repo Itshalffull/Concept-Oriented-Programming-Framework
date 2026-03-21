@@ -94,6 +94,7 @@ describe('ProjectScaffold functional handler', () => {
     it('fixture "another_project" -> ok', async () => {
       if (typeof projectScaffoldHandler.scaffold !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(projectScaffoldHandler.scaffold({ name: "inventory-app" }), storage);
       const result = await interpret(projectScaffoldHandler.scaffold({ name: "billing-service" }), storage);
       expect(result.variant).toBe('ok');
     });

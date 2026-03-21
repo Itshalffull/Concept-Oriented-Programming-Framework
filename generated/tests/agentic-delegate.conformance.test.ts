@@ -155,6 +155,7 @@ describe('AgenticDelegate functional handler', () => {
     it('fixture "assume_voter_role" -> ok', async () => {
       if (typeof agenticDelegateHandler.assumeRole !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(agenticDelegateHandler.register({ name: "governance-bot", principal: "alice", autonomyLevel: "Supervised", allowedActions: ["vote","propose"] }), storage);
       const result = await interpret(agenticDelegateHandler.assumeRole({ delegate: "delegate-1", role: "voter" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('AgenticDelegate functional handler', () => {
     it('fixture "release_current_role" -> ok', async () => {
       if (typeof agenticDelegateHandler.releaseRole !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(agenticDelegateHandler.register({ name: "governance-bot", principal: "alice", autonomyLevel: "Supervised", allowedActions: ["vote","propose"] }), storage);
       const result = await interpret(agenticDelegateHandler.releaseRole({ delegate: "delegate-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('AgenticDelegate functional handler', () => {
     it('fixture "propose_vote" -> ok', async () => {
       if (typeof agenticDelegateHandler.proposeAction !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(agenticDelegateHandler.register({ name: "governance-bot", principal: "alice", autonomyLevel: "Supervised", allowedActions: ["vote","propose"] }), storage);
       const result = await interpret(agenticDelegateHandler.proposeAction({ delegate: "delegate-1", action: "vote", rationale: "Community consensus needed" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +362,7 @@ describe('AgenticDelegate functional handler', () => {
     it('fixture "escalate_complex_decision" -> ok', async () => {
       if (typeof agenticDelegateHandler.escalate !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(agenticDelegateHandler.register({ name: "governance-bot", principal: "alice", autonomyLevel: "Supervised", allowedActions: ["vote","propose"] }), storage);
       const result = await interpret(agenticDelegateHandler.escalate({ delegate: "delegate-1", action: "budget-approval", reason: "Exceeds autonomy threshold" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -427,6 +431,7 @@ describe('AgenticDelegate functional handler', () => {
     it('fixture "upgrade_to_autonomous" -> ok', async () => {
       if (typeof agenticDelegateHandler.updateAutonomy !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(agenticDelegateHandler.register({ name: "governance-bot", principal: "alice", autonomyLevel: "Supervised", allowedActions: ["vote","propose"] }), storage);
       const result = await interpret(agenticDelegateHandler.updateAutonomy({ delegate: "delegate-1", autonomyLevel: "Autonomous" }), storage);
       expect(result.variant).toBe('ok');
     });

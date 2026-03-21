@@ -148,6 +148,7 @@ describe('SemanticMerge functional handler', () => {
     it('fixture "clean_semantic" -> ok', async () => {
       if (typeof semanticMergeHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(semanticMergeHandler.register({  }), storage);
       const result = await interpret(semanticMergeHandler.execute({ base: "import os\ndef main():\n  pass", ours: "import os\ndef main():\n  pass", theirs: "import os\nimport sys\ndef main():\n  pass" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -155,6 +156,7 @@ describe('SemanticMerge functional handler', () => {
     it('fixture "conflict_semantic" -> ok', async () => {
       if (typeof semanticMergeHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(semanticMergeHandler.register({  }), storage);
       const result = await interpret(semanticMergeHandler.execute({ base: "function foo() { return 1; }", ours: "function foo() { return 2; }", theirs: "function foo() { return 3; }" }), storage);
       expect(result.variant).toBe('ok');
     });

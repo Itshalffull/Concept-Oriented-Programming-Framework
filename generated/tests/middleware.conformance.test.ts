@@ -162,6 +162,7 @@ describe('Middleware functional handler', () => {
     it('fixture "inject_single" -> ok', async () => {
       if (typeof middlewareHandler.inject !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(middlewareHandler.resolve({ traits: ["auth"], target: "rest" }), storage);
       const result = await interpret(middlewareHandler.inject({ output: "app.get('/api', handler)", middlewares: ["bearer-check"], target: "rest" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -169,6 +170,7 @@ describe('Middleware functional handler', () => {
     it('fixture "inject_multiple" -> ok', async () => {
       if (typeof middlewareHandler.inject !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(middlewareHandler.resolve({ traits: ["auth"], target: "rest" }), storage);
       const result = await interpret(middlewareHandler.inject({ output: "server.addService(svc)", middlewares: ["auth-interceptor","logging"], target: "grpc" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -176,6 +178,7 @@ describe('Middleware functional handler', () => {
     it('fixture "inject_empty" -> ok', async () => {
       if (typeof middlewareHandler.inject !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(middlewareHandler.resolve({ traits: ["auth"], target: "rest" }), storage);
       const result = await interpret(middlewareHandler.inject({ output: "", middlewares: [], target: "rest" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -237,6 +240,7 @@ describe('Middleware functional handler', () => {
     it('fixture "register_bearer" -> ok', async () => {
       if (typeof middlewareHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(middlewareHandler.resolve({ traits: ["auth"], target: "rest" }), storage);
       const result = await interpret(middlewareHandler.register({ trait: "auth", target: "rest", implementation: "bearer-check", position: "auth" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -244,6 +248,7 @@ describe('Middleware functional handler', () => {
     it('fixture "register_logging" -> ok', async () => {
       if (typeof middlewareHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(middlewareHandler.resolve({ traits: ["auth"], target: "rest" }), storage);
       const result = await interpret(middlewareHandler.register({ trait: "logging", target: "grpc", implementation: "grpc-logger", position: "before-auth" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -251,6 +256,7 @@ describe('Middleware functional handler', () => {
     it('fixture "register_empty_trait" -> ok', async () => {
       if (typeof middlewareHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(middlewareHandler.resolve({ traits: ["auth"], target: "rest" }), storage);
       const result = await interpret(middlewareHandler.register({ trait: "", target: "rest", implementation: "noop", position: "auth" }), storage);
       expect(result.variant).toBe('ok');
     });

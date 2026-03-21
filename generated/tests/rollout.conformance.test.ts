@@ -163,6 +163,7 @@ describe('Rollout functional handler', () => {
     it('fixture "advance_active" -> ok', async () => {
       if (typeof rolloutHandler.advance !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] }), storage);
       const result = await interpret(rolloutHandler.advance({ rollout: "ro-active-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -232,6 +233,7 @@ describe('Rollout functional handler', () => {
     it('fixture "pause_active" -> ok', async () => {
       if (typeof rolloutHandler.pause !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] }), storage);
       const result = await interpret(rolloutHandler.pause({ rollout: "ro-active-001", reason: "High error rate detected" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -239,6 +241,7 @@ describe('Rollout functional handler', () => {
     it('fixture "pause_missing" -> ok', async () => {
       if (typeof rolloutHandler.pause !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] }), storage);
       const result = await interpret(rolloutHandler.pause({ rollout: "ro-nonexistent", reason: "Manual pause" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -300,6 +303,7 @@ describe('Rollout functional handler', () => {
     it('fixture "resume_paused" -> ok', async () => {
       if (typeof rolloutHandler.resume !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] }), storage);
       const result = await interpret(rolloutHandler.resume({ rollout: "ro-paused-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -307,6 +311,7 @@ describe('Rollout functional handler', () => {
     it('fixture "resume_missing" -> ok', async () => {
       if (typeof rolloutHandler.resume !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] }), storage);
       const result = await interpret(rolloutHandler.resume({ rollout: "ro-nonexistent" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -368,6 +373,7 @@ describe('Rollout functional handler', () => {
     it('fixture "abort_active" -> ok', async () => {
       if (typeof rolloutHandler.abort !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] }), storage);
       const result = await interpret(rolloutHandler.abort({ rollout: "ro-active-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -437,6 +443,7 @@ describe('Rollout functional handler', () => {
     it('fixture "status_existing" -> ok', async () => {
       if (typeof rolloutHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] }), storage);
       const result = await interpret(rolloutHandler.status({ rollout: "ro-active-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -444,6 +451,7 @@ describe('Rollout functional handler', () => {
     it('fixture "status_unknown" -> ok', async () => {
       if (typeof rolloutHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] }), storage);
       const result = await interpret(rolloutHandler.status({ rollout: "ro-nonexistent" }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -216,6 +216,7 @@ describe('SyncScaffoldGen functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof syncScaffoldGenHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(syncScaffoldGenHandler.generate({ name: "OnUserCreate", trigger: {"concept":"User","action":"create"}, conditions: [], effects: [{"concept":"Notification","action":"send","params":[{"field":"userId","value":"?userId"}]}], thenBlocks: [] }), storage);
       const result = await interpret(syncScaffoldGenHandler.register({  }), storage);
       expect(result.variant).toBe('ok');
     });

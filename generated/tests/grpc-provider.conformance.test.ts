@@ -55,6 +55,7 @@ describe('GrpcProvider imperative handler', () => {
     it('fixture "configure_user_service" -> ok', async () => {
       if (typeof grpcProviderHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
+      await grpcProviderHandler.list({  }, storage);
       const result = await grpcProviderHandler.configure({ name: "user-service", target: "localhost:50051", protoRef: "user.proto", options: "{}" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -62,6 +63,7 @@ describe('GrpcProvider imperative handler', () => {
     it('fixture "configure_with_tls" -> ok', async () => {
       if (typeof grpcProviderHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
+      await grpcProviderHandler.list({  }, storage);
       const result = await grpcProviderHandler.configure({ name: "auth-service", target: "auth.prod:443", protoRef: "auth.proto", options: "{\"tls\":true}" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -81,6 +83,7 @@ describe('GrpcProvider imperative handler', () => {
     it('fixture "get_user" -> ok', async () => {
       if (typeof grpcProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
+      await grpcProviderHandler.list({  }, storage);
       const result = await grpcProviderHandler.execute({ channel: "user-service", service: "UserService", method: "GetUser", payload: "{\"id\":42}" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -88,6 +91,7 @@ describe('GrpcProvider imperative handler', () => {
     it('fixture "execute_unknown_channel" -> notFound', async () => {
       if (typeof grpcProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
+      await grpcProviderHandler.list({  }, storage);
       const result = await grpcProviderHandler.execute({ channel: "nonexistent", service: "Svc", method: "Call", payload: "{}" }, storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notFound'));
@@ -108,6 +112,7 @@ describe('GrpcProvider imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof grpcProviderHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      await grpcProviderHandler.list({  }, storage);
       const result = await grpcProviderHandler.list({  }, storage);
       expect(result.variant).toBe('ok');
     });

@@ -162,6 +162,7 @@ describe('Resource functional handler', () => {
     it('fixture "get_existing" -> ok', async () => {
       if (typeof resourceHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(resourceHandler.upsert({ locator: "./specs/password.concept", kind: "concept-spec", digest: "sha256-abc123", size: "1024" }), storage);
       const result = await interpret(resourceHandler.get({ locator: "./specs/password.concept" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -231,6 +232,7 @@ describe('Resource functional handler', () => {
     it('fixture "list_all" -> ok', async () => {
       if (typeof resourceHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(resourceHandler.upsert({ locator: "./specs/password.concept", kind: "concept-spec", digest: "sha256-abc123", size: "1024" }), storage);
       const result = await interpret(resourceHandler.list({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -238,6 +240,7 @@ describe('Resource functional handler', () => {
     it('fixture "list_by_kind" -> ok', async () => {
       if (typeof resourceHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(resourceHandler.upsert({ locator: "./specs/password.concept", kind: "concept-spec", digest: "sha256-abc123", size: "1024" }), storage);
       const result = await interpret(resourceHandler.list({ kind: "concept-spec" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -299,6 +302,7 @@ describe('Resource functional handler', () => {
     it('fixture "remove_existing" -> ok', async () => {
       if (typeof resourceHandler.remove !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(resourceHandler.upsert({ locator: "./specs/password.concept", kind: "concept-spec", digest: "sha256-abc123", size: "1024" }), storage);
       const result = await interpret(resourceHandler.remove({ locator: "./specs/password.concept" }), storage);
       expect(result.variant).toBe('ok');
     });

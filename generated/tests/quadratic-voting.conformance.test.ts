@@ -155,6 +155,7 @@ describe('QuadraticVoting functional handler', () => {
     it('fixture "allocate_alice" -> ok', async () => {
       if (typeof quadraticVotingHandler.allocateCredits !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(quadraticVotingHandler.configure({ creditBudget: "100.0" }), storage);
       const result = await interpret(quadraticVotingHandler.allocateCredits({ config: "qv-001", voter: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('QuadraticVoting functional handler', () => {
     it('fixture "cast_five_votes" -> ok', async () => {
       if (typeof quadraticVotingHandler.castVotes !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(quadraticVotingHandler.configure({ creditBudget: "100.0" }), storage);
       const result = await interpret(quadraticVotingHandler.castVotes({ config: "qv-001", voter: "alice", issue: "budget-increase", numberOfVotes: "5" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('QuadraticVoting functional handler', () => {
     it('fixture "tally_issue" -> ok', async () => {
       if (typeof quadraticVotingHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(quadraticVotingHandler.configure({ creditBudget: "100.0" }), storage);
       const result = await interpret(quadraticVotingHandler.count({ config: "qv-001", issue: "budget-increase" }), storage);
       expect(result.variant).toBe('ok');
     });

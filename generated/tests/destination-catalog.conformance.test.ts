@@ -155,6 +155,7 @@ describe('DestinationCatalog functional handler', () => {
     it('fixture "resolve_dashboard" -> ok', async () => {
       if (typeof destinationCatalogHandler.resolveByName !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(destinationCatalogHandler.register({ destination: "dest-1", name: "dashboard", targetConcept: "AppShell", targetView: "dashboard", href: "/admin", icon: "home", group: "Content" }), storage);
       const result = await interpret(destinationCatalogHandler.resolveByName({ name: "dashboard" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -224,6 +225,7 @@ describe('DestinationCatalog functional handler', () => {
     it('fixture "resolve_admin_href" -> ok', async () => {
       if (typeof destinationCatalogHandler.resolveByHref !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(destinationCatalogHandler.register({ destination: "dest-1", name: "dashboard", targetConcept: "AppShell", targetView: "dashboard", href: "/admin", icon: "home", group: "Content" }), storage);
       const result = await interpret(destinationCatalogHandler.resolveByHref({ href: "/admin" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -231,6 +233,7 @@ describe('DestinationCatalog functional handler', () => {
     it('fixture "resolve_nested_href" -> ok', async () => {
       if (typeof destinationCatalogHandler.resolveByHref !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(destinationCatalogHandler.register({ destination: "dest-1", name: "dashboard", targetConcept: "AppShell", targetView: "dashboard", href: "/admin", icon: "home", group: "Content" }), storage);
       const result = await interpret(destinationCatalogHandler.resolveByHref({ href: "/articles/42" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -300,6 +303,7 @@ describe('DestinationCatalog functional handler', () => {
     it('fixture "list_all" -> ok', async () => {
       if (typeof destinationCatalogHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(destinationCatalogHandler.register({ destination: "dest-1", name: "dashboard", targetConcept: "AppShell", targetView: "dashboard", href: "/admin", icon: "home", group: "Content" }), storage);
       const result = await interpret(destinationCatalogHandler.list({  }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -169,6 +169,7 @@ describe('ThemeComplianceProvider functional handler', () => {
     it('fixture "existing_check" -> ok', async () => {
       if (typeof themeComplianceProviderHandler.getResults !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(themeComplianceProviderHandler.verify({ check: "chk-1", program: "card-widget", tokens: ["color.primary","spacing.md"], manifest: "default-theme" }), storage);
       const result = await interpret(themeComplianceProviderHandler.getResults({ check: "chk-1" }), storage);
       expect(result.variant).toBe('ok');
     });

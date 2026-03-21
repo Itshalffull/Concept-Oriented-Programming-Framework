@@ -163,6 +163,7 @@ describe('PlatformAdapter functional handler', () => {
     it('fixture "nav_push" -> ok', async () => {
       if (typeof platformAdapterHandler.mapNavigation !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
       const result = await interpret(platformAdapterHandler.mapNavigation({ adapter: "browser-adapter-1", transition: "{ \"type\": \"push\", \"destination\": \"articles\" }" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -170,6 +171,7 @@ describe('PlatformAdapter functional handler', () => {
     it('fixture "nav_replace" -> ok', async () => {
       if (typeof platformAdapterHandler.mapNavigation !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
       const result = await interpret(platformAdapterHandler.mapNavigation({ adapter: "browser-adapter-1", transition: "{ \"type\": \"replace\", \"destination\": \"home\" }" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -177,6 +179,7 @@ describe('PlatformAdapter functional handler', () => {
     it('fixture "nav_not_registered" -> unsupported', async () => {
       if (typeof platformAdapterHandler.mapNavigation !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
       const result = await interpret(platformAdapterHandler.mapNavigation({ adapter: "unknown-adapter", transition: "{ \"type\": \"push\" }" }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('unsupported'));
@@ -247,6 +250,7 @@ describe('PlatformAdapter functional handler', () => {
     it('fixture "zone_persistent" -> ok', async () => {
       if (typeof platformAdapterHandler.mapZone !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
       const result = await interpret(platformAdapterHandler.mapZone({ adapter: "browser-adapter-1", role: "persistent" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -254,6 +258,7 @@ describe('PlatformAdapter functional handler', () => {
     it('fixture "zone_navigated" -> ok', async () => {
       if (typeof platformAdapterHandler.mapZone !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
       const result = await interpret(platformAdapterHandler.mapZone({ adapter: "browser-adapter-1", role: "navigated" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -323,6 +328,7 @@ describe('PlatformAdapter functional handler', () => {
     it('fixture "event_popstate" -> ok', async () => {
       if (typeof platformAdapterHandler.handlePlatformEvent !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
       const result = await interpret(platformAdapterHandler.handlePlatformEvent({ adapter: "browser-adapter-1", event: "{ \"name\": \"popstate\" }" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -330,6 +336,7 @@ describe('PlatformAdapter functional handler', () => {
     it('fixture "event_hashchange" -> ok', async () => {
       if (typeof platformAdapterHandler.handlePlatformEvent !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
       const result = await interpret(platformAdapterHandler.handlePlatformEvent({ adapter: "browser-adapter-1", event: "{ \"name\": \"hashchange\" }" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -337,6 +344,7 @@ describe('PlatformAdapter functional handler', () => {
     it('fixture "event_not_registered" -> ignored', async () => {
       if (typeof platformAdapterHandler.handlePlatformEvent !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
       const result = await interpret(platformAdapterHandler.handlePlatformEvent({ adapter: "unknown-adapter", event: "{ \"name\": \"popstate\" }" }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('ignored'));

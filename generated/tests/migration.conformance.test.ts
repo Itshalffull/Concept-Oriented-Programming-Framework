@@ -169,6 +169,7 @@ describe('Migration functional handler', () => {
     it('fixture "expand_valid" -> ok', async () => {
       if (typeof migrationHandler.expand !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(migrationHandler.plan({ concept: "UserProfile", fromVersion: "1", toVersion: "3" }), storage);
       const result = await interpret(migrationHandler.expand({ migration: "mig-abc123" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -237,6 +238,7 @@ describe('Migration functional handler', () => {
     it('fixture "migrate_valid" -> ok', async () => {
       if (typeof migrationHandler.migrate !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(migrationHandler.plan({ concept: "UserProfile", fromVersion: "1", toVersion: "3" }), storage);
       const result = await interpret(migrationHandler.migrate({ migration: "mig-abc123" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -305,6 +307,7 @@ describe('Migration functional handler', () => {
     it('fixture "contract_valid" -> ok', async () => {
       if (typeof migrationHandler.contract !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(migrationHandler.plan({ concept: "UserProfile", fromVersion: "1", toVersion: "3" }), storage);
       const result = await interpret(migrationHandler.contract({ migration: "mig-abc123" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -373,6 +376,7 @@ describe('Migration functional handler', () => {
     it('fixture "status_valid" -> ok', async () => {
       if (typeof migrationHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(migrationHandler.plan({ concept: "UserProfile", fromVersion: "1", toVersion: "3" }), storage);
       const result = await interpret(migrationHandler.status({ migration: "mig-abc123" }), storage);
       expect(result.variant).toBe('ok');
     });

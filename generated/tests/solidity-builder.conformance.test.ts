@@ -155,6 +155,7 @@ describe('SolidityBuilder functional handler', () => {
     it('fixture "test_contract" -> ok', async () => {
       if (typeof solidityBuilderHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(solidityBuilderHandler.build({ source: "./contracts/Token.sol", toolchainPath: "/usr/local/bin/solc", platform: "evm-shanghai", config: {"mode":"release"} }), storage);
       const result = await interpret(solidityBuilderHandler.test({ build: "solb-001", toolchainPath: "/usr/local/bin/solc", testType: "unit" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('SolidityBuilder functional handler', () => {
     it('fixture "package_abi" -> ok', async () => {
       if (typeof solidityBuilderHandler.package !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(solidityBuilderHandler.build({ source: "./contracts/Token.sol", toolchainPath: "/usr/local/bin/solc", platform: "evm-shanghai", config: {"mode":"release"} }), storage);
       const result = await interpret(solidityBuilderHandler.package({ build: "solb-001", format: "abi-bundle" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('SolidityBuilder functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof solidityBuilderHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(solidityBuilderHandler.build({ source: "./contracts/Token.sol", toolchainPath: "/usr/local/bin/solc", platform: "evm-shanghai", config: {"mode":"release"} }), storage);
       const result = await interpret(solidityBuilderHandler.register({  }), storage);
       expect(result.variant).toBe('ok');
     });

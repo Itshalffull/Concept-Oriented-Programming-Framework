@@ -237,6 +237,7 @@ describe('GrpcTarget functional handler', () => {
     it('fixture "list_payment_rpcs" -> ok', async () => {
       if (typeof grpcTargetHandler.listRpcs !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(grpcTargetHandler.generate({ projection: "payment-projection", config: "{}" }), storage);
       const result = await interpret(grpcTargetHandler.listRpcs({ concept: "Payment" }), storage);
       expect(result.variant).toBe('ok');
     });

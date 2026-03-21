@@ -179,6 +179,7 @@ describe('Typography functional handler', () => {
     it('fixture "fontstack_heading" -> ok', async () => {
       if (typeof typographyHandler.defineFontStack !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(typographyHandler.defineScale({ typography: "X-1", baseSize: "16.0", ratio: "1.25", steps: "6" }), storage);
       const result = await interpret(typographyHandler.defineFontStack({ typography: "X-6", name: "heading", fonts: "[\"Inter\", \"Helvetica Neue\", \"Arial\"]", category: "sans-serif" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -186,6 +187,7 @@ describe('Typography functional handler', () => {
     it('fixture "fontstack_mono" -> ok', async () => {
       if (typeof typographyHandler.defineFontStack !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(typographyHandler.defineScale({ typography: "X-1", baseSize: "16.0", ratio: "1.25", steps: "6" }), storage);
       const result = await interpret(typographyHandler.defineFontStack({ typography: "X-7", name: "code", fonts: "JetBrains Mono, Fira Code, Consolas", category: "monospace" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -255,6 +257,7 @@ describe('Typography functional handler', () => {
     it('fixture "style_heading1" -> ok', async () => {
       if (typeof typographyHandler.defineStyle !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(typographyHandler.defineScale({ typography: "X-1", baseSize: "16.0", ratio: "1.25", steps: "6" }), storage);
       const result = await interpret(typographyHandler.defineStyle({ typography: "X-9", name: "heading-1", config: "{ \"fontSize\": 32, \"fontWeight\": 700, \"lineHeight\": 1.2, \"letterSpacing\": \"-0.02em\" }" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -262,6 +265,7 @@ describe('Typography functional handler', () => {
     it('fixture "style_body" -> ok', async () => {
       if (typeof typographyHandler.defineStyle !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(typographyHandler.defineScale({ typography: "X-1", baseSize: "16.0", ratio: "1.25", steps: "6" }), storage);
       const result = await interpret(typographyHandler.defineStyle({ typography: "X-10", name: "body", config: "{ \"fontSize\": 16, \"fontWeight\": 400, \"lineHeight\": 1.5 }" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -277,6 +281,7 @@ describe('Typography functional handler', () => {
     it('fixture "style_missing_fontSize" -> invalid', async () => {
       if (typeof typographyHandler.defineStyle !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(typographyHandler.defineScale({ typography: "X-1", baseSize: "16.0", ratio: "1.25", steps: "6" }), storage);
       const result = await interpret(typographyHandler.defineStyle({ typography: "X-12", name: "incomplete", config: "{ \"fontWeight\": 400 }" }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('invalid'));

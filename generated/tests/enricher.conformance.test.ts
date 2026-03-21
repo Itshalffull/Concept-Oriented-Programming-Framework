@@ -163,6 +163,7 @@ describe('Enricher functional handler', () => {
     it('fixture "suggest_for_item" -> ok', async () => {
       if (typeof enricherHandler.suggest !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(enricherHandler.enrich({ itemId: "item-1", enricherId: "auto_tag" }), storage);
       const result = await interpret(enricherHandler.suggest({ itemId: "item-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -232,6 +233,7 @@ describe('Enricher functional handler', () => {
     it('fixture "accept_enrichment" -> ok', async () => {
       if (typeof enricherHandler.accept !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(enricherHandler.enrich({ itemId: "item-1", enricherId: "auto_tag" }), storage);
       const result = await interpret(enricherHandler.accept({ itemId: "item-1", enrichmentId: "enr-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -301,6 +303,8 @@ describe('Enricher functional handler', () => {
     it('fixture "reject_enrichment" -> ok', async () => {
       if (typeof enricherHandler.reject !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(enricherHandler.enrich({ itemId: "item-1", enricherId: "auto_tag" }), storage);
+      await interpret(enricherHandler.accept({ itemId: "item-1", enrichmentId: "enr-1" }), storage);
       const result = await interpret(enricherHandler.reject({ itemId: "item-1", enrichmentId: "enr-2" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -370,6 +374,7 @@ describe('Enricher functional handler', () => {
     it('fixture "refresh_30d" -> ok', async () => {
       if (typeof enricherHandler.refreshStale !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(enricherHandler.enrich({ itemId: "item-1", enricherId: "auto_tag" }), storage);
       const result = await interpret(enricherHandler.refreshStale({ olderThan: "2026-02-18T00:00:00Z" }), storage);
       expect(result.variant).toBe('ok');
     });

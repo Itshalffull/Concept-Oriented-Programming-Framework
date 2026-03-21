@@ -148,6 +148,7 @@ describe('LLMAutomationProvider functional handler', () => {
     it('fixture "summarize_with_gpt4" -> ok', async () => {
       if (typeof llmAutomationProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(llmAutomationProviderHandler.register({  }), storage);
       const result = await interpret(llmAutomationProviderHandler.execute({ action_payload: "{\"action\":\"summarize\",\"text\":\"Long document...\"}", model_config: "{\"model\":\"gpt-4\",\"temperature\":0.3}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -155,6 +156,7 @@ describe('LLMAutomationProvider functional handler', () => {
     it('fixture "missing_payload" -> error', async () => {
       if (typeof llmAutomationProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(llmAutomationProviderHandler.register({  }), storage);
       const result = await interpret(llmAutomationProviderHandler.execute({ action_payload: "", model_config: "{\"model\":\"gpt-4\"}" }), storage);
       expect(result.variant).not.toBe('ok');
     });
@@ -162,6 +164,7 @@ describe('LLMAutomationProvider functional handler', () => {
     it('fixture "missing_config" -> error', async () => {
       if (typeof llmAutomationProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(llmAutomationProviderHandler.register({  }), storage);
       const result = await interpret(llmAutomationProviderHandler.execute({ action_payload: "{\"action\":\"classify\"}", model_config: "" }), storage);
       expect(result.variant).not.toBe('ok');
     });
@@ -169,6 +172,7 @@ describe('LLMAutomationProvider functional handler', () => {
     it('fixture "invalid_config_json" -> error', async () => {
       if (typeof llmAutomationProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(llmAutomationProviderHandler.register({  }), storage);
       const result = await interpret(llmAutomationProviderHandler.execute({ action_payload: "{\"action\":\"classify\"}", model_config: "not-json" }), storage);
       expect(result.variant).not.toBe('ok');
     });
@@ -176,6 +180,7 @@ describe('LLMAutomationProvider functional handler', () => {
     it('fixture "config_missing_model" -> error', async () => {
       if (typeof llmAutomationProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(llmAutomationProviderHandler.register({  }), storage);
       const result = await interpret(llmAutomationProviderHandler.execute({ action_payload: "{\"action\":\"classify\"}", model_config: "{\"temperature\":0.5}" }), storage);
       expect(result.variant).not.toBe('ok');
     });

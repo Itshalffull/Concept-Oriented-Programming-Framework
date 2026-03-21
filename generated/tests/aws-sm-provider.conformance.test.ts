@@ -162,6 +162,7 @@ describe('AwsSmProvider functional handler', () => {
     it('fixture "rotate_db_password" -> ok', async () => {
       if (typeof awsSmProviderHandler.rotate !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(awsSmProviderHandler.fetch({ secretId: "prod/db-password", versionStage: "AWSCURRENT" }), storage);
       const result = await interpret(awsSmProviderHandler.rotate({ secretId: "prod/db-password" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -169,6 +170,7 @@ describe('AwsSmProvider functional handler', () => {
     it('fixture "rotate_empty_id" -> ok', async () => {
       if (typeof awsSmProviderHandler.rotate !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(awsSmProviderHandler.fetch({ secretId: "prod/db-password", versionStage: "AWSCURRENT" }), storage);
       const result = await interpret(awsSmProviderHandler.rotate({ secretId: "" }), storage);
       expect(result.variant).toBe('ok');
     });

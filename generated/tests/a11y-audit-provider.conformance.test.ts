@@ -162,6 +162,7 @@ describe('A11yAuditProvider functional handler', () => {
     it('fixture "existing_audit" -> ok', async () => {
       if (typeof a11yAuditProviderHandler.getFindings !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(a11yAuditProviderHandler.audit({ audit: "aud-1", program: "dialog-widget", instructions: "[{\"tag\":\"element\",\"part\":\"root\",\"role\":\"container\"},{\"tag\":\"aria\",\"part\":\"root\",\"attr\":\"role\",\"value\":\"dialog\"},{\"tag\":\"aria\",\"part\":\"root\",\"attr\":\"label\",\"value\":\"Confirm\"},{\"tag\":\"focus\",\"strategy\":\"trap\"}]", parts: ["root"] }), storage);
       const result = await interpret(a11yAuditProviderHandler.getFindings({ audit: "aud-1" }), storage);
       expect(result.variant).toBe('ok');
     });

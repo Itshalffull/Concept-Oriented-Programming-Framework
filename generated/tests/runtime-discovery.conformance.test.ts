@@ -164,6 +164,7 @@ describe('RuntimeDiscovery functional handler', () => {
     it('fixture "valid_list_projects" -> ok', async () => {
       if (typeof runtimeDiscoveryHandler.listProjects !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(runtimeDiscoveryHandler.scan({ directory: "/app/clef-base" }), storage);
       const result = await interpret(runtimeDiscoveryHandler.listProjects({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -225,6 +226,7 @@ describe('RuntimeDiscovery functional handler', () => {
     it('fixture "valid_list_runtimes" -> ok', async () => {
       if (typeof runtimeDiscoveryHandler.listRuntimes !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(runtimeDiscoveryHandler.scan({ directory: "/app/clef-base" }), storage);
       const result = await interpret(runtimeDiscoveryHandler.listRuntimes({ project: "proj-app-clef-base" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -294,6 +296,7 @@ describe('RuntimeDiscovery functional handler', () => {
     it('fixture "valid_resolve_endpoint" -> ok', async () => {
       if (typeof runtimeDiscoveryHandler.resolveEndpoint !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(runtimeDiscoveryHandler.scan({ directory: "/app/clef-base" }), storage);
       const result = await interpret(runtimeDiscoveryHandler.resolveEndpoint({ project: "proj-app-clef-base", runtime: "api" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -371,6 +374,7 @@ describe('RuntimeDiscovery functional handler', () => {
     it('fixture "valid_resolve_creds" -> ok', async () => {
       if (typeof runtimeDiscoveryHandler.resolveCredentials !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(runtimeDiscoveryHandler.scan({ directory: "/app/clef-base" }), storage);
       const result = await interpret(runtimeDiscoveryHandler.resolveCredentials({ project: "proj-app-clef-base", runtime: "api" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -440,6 +444,7 @@ describe('RuntimeDiscovery functional handler', () => {
     it('fixture "valid_select" -> ok', async () => {
       if (typeof runtimeDiscoveryHandler.selectRuntime !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(runtimeDiscoveryHandler.scan({ directory: "/app/clef-base" }), storage);
       const result = await interpret(runtimeDiscoveryHandler.selectRuntime({ project: "proj-app-clef-base", runtime: "api" }), storage);
       expect(result.variant).toBe('ok');
     });

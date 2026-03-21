@@ -155,6 +155,7 @@ describe('Content functional handler', () => {
     it('fixture "pin_existing" -> ok', async () => {
       if (typeof contentHandler.pin !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(contentHandler.store({ data: "Hello, World!", name: "greeting.txt", contentType: "text/plain" }), storage);
       const result = await interpret(contentHandler.pin({ cid: "abc123def456" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +163,7 @@ describe('Content functional handler', () => {
     it('fixture "pin_empty_cid" -> ok', async () => {
       if (typeof contentHandler.pin !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(contentHandler.store({ data: "Hello, World!", name: "greeting.txt", contentType: "text/plain" }), storage);
       const result = await interpret(contentHandler.pin({ cid: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +225,8 @@ describe('Content functional handler', () => {
     it('fixture "unpin_existing" -> ok', async () => {
       if (typeof contentHandler.unpin !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(contentHandler.store({ data: "Hello, World!", name: "greeting.txt", contentType: "text/plain" }), storage);
+      await interpret(contentHandler.pin({ cid: "abc123def456" }), storage);
       const result = await interpret(contentHandler.unpin({ cid: "abc123def456" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +234,8 @@ describe('Content functional handler', () => {
     it('fixture "unpin_empty_cid" -> ok', async () => {
       if (typeof contentHandler.unpin !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(contentHandler.store({ data: "Hello, World!", name: "greeting.txt", contentType: "text/plain" }), storage);
+      await interpret(contentHandler.pin({ cid: "abc123def456" }), storage);
       const result = await interpret(contentHandler.unpin({ cid: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +297,7 @@ describe('Content functional handler', () => {
     it('fixture "resolve_existing" -> ok', async () => {
       if (typeof contentHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(contentHandler.store({ data: "Hello, World!", name: "greeting.txt", contentType: "text/plain" }), storage);
       const result = await interpret(contentHandler.resolve({ cid: "abc123def456" }), storage);
       expect(result.variant).toBe('ok');
     });

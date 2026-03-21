@@ -62,6 +62,7 @@ describe('VersionContext imperative handler', () => {
     it('fixture "pop_existing" -> ok', async () => {
       if (typeof versionContextHandler.pop !== 'function') return;
       const storage = createInMemoryStorage();
+      await versionContextHandler.push({ user: "alice", space_id: "space-redesign" }, storage);
       const result = await versionContextHandler.pop({ user: "alice", space_id: "space-redesign" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -69,6 +70,7 @@ describe('VersionContext imperative handler', () => {
     it('fixture "pop_not_on_stack" -> ok', async () => {
       if (typeof versionContextHandler.pop !== 'function') return;
       const storage = createInMemoryStorage();
+      await versionContextHandler.push({ user: "alice", space_id: "space-redesign" }, storage);
       const result = await versionContextHandler.pop({ user: "alice", space_id: "space-nonexistent" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -88,6 +90,7 @@ describe('VersionContext imperative handler', () => {
     it('fixture "get_active" -> ok', async () => {
       if (typeof versionContextHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await versionContextHandler.push({ user: "alice", space_id: "space-redesign" }, storage);
       const result = await versionContextHandler.get({ user: "alice" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -115,6 +118,7 @@ describe('VersionContext imperative handler', () => {
     it('fixture "resolve_with_context" -> ok', async () => {
       if (typeof versionContextHandler.resolve_for !== 'function') return;
       const storage = createInMemoryStorage();
+      await versionContextHandler.push({ user: "alice", space_id: "space-redesign" }, storage);
       const result = await versionContextHandler.resolve_for({ user: "alice", entity_id: "article-42" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -122,6 +126,7 @@ describe('VersionContext imperative handler', () => {
     it('fixture "resolve_base_user" -> ok', async () => {
       if (typeof versionContextHandler.resolve_for !== 'function') return;
       const storage = createInMemoryStorage();
+      await versionContextHandler.push({ user: "alice", space_id: "space-redesign" }, storage);
       const result = await versionContextHandler.resolve_for({ user: "unknown-user", entity_id: "article-42" }, storage);
       expect(result.variant).toBe('ok');
     });

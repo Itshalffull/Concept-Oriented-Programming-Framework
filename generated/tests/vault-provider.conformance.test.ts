@@ -162,6 +162,7 @@ describe('VaultProvider functional handler', () => {
     it('fixture "renew_active_lease" -> ok', async () => {
       if (typeof vaultProviderHandler.renewLease !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(vaultProviderHandler.fetch({ path: "secret/data/db-password" }), storage);
       const result = await interpret(vaultProviderHandler.renewLease({ leaseId: "lease-abc-123" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +231,7 @@ describe('VaultProvider functional handler', () => {
     it('fixture "rotate_db_secret" -> ok', async () => {
       if (typeof vaultProviderHandler.rotate !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(vaultProviderHandler.fetch({ path: "secret/data/db-password" }), storage);
       const result = await interpret(vaultProviderHandler.rotate({ path: "secret/data/db-password" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -237,6 +239,7 @@ describe('VaultProvider functional handler', () => {
     it('fixture "rotate_empty_path" -> ok', async () => {
       if (typeof vaultProviderHandler.rotate !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(vaultProviderHandler.fetch({ path: "secret/data/db-password" }), storage);
       const result = await interpret(vaultProviderHandler.rotate({ path: "" }), storage);
       expect(result.variant).toBe('ok');
     });

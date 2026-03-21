@@ -164,6 +164,7 @@ describe('DataQuality functional handler', () => {
     it('fixture "quarantine_item" -> ok', async () => {
       if (typeof dataQualityHandler.quarantine !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(dataQualityHandler.validate({ item: "{\"title\":\"Test Article\",\"body\":\"Full content here\"}", rulesetId: "article_rules" }), storage);
       const result = await interpret(dataQualityHandler.quarantine({ itemId: "item-1", violations: "[{\"rule\":\"required\",\"field\":\"title\"}]" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -225,6 +226,7 @@ describe('DataQuality functional handler', () => {
     it('fixture "release_quarantined" -> ok', async () => {
       if (typeof dataQualityHandler.release !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(dataQualityHandler.validate({ item: "{\"title\":\"Test Article\",\"body\":\"Full content here\"}", rulesetId: "article_rules" }), storage);
       const result = await interpret(dataQualityHandler.release({ itemId: "item-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -294,6 +296,7 @@ describe('DataQuality functional handler', () => {
     it('fixture "profile_articles" -> ok', async () => {
       if (typeof dataQualityHandler.profile !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(dataQualityHandler.validate({ item: "{\"title\":\"Test Article\",\"body\":\"Full content here\"}", rulesetId: "article_rules" }), storage);
       const result = await interpret(dataQualityHandler.profile({ datasetQuery: "SELECT * FROM articles" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -355,6 +358,7 @@ describe('DataQuality functional handler', () => {
     it('fixture "reconcile_author" -> ok', async () => {
       if (typeof dataQualityHandler.reconcile !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(dataQualityHandler.validate({ item: "{\"title\":\"Test Article\",\"body\":\"Full content here\"}", rulesetId: "article_rules" }), storage);
       const result = await interpret(dataQualityHandler.reconcile({ field: "author_name", knowledgeBase: "wikidata" }), storage);
       expect(result.variant).toBe('ok');
     });

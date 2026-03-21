@@ -162,6 +162,7 @@ describe('UISchema functional handler', () => {
     it('fixture "valid_override" -> ok', async () => {
       if (typeof uiSchemaHandler.override !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(uiSchemaHandler.inspect({ schema: "S-1", conceptSpec: "{\"name\":\"Article\",\"fields\":[{\"name\":\"title\",\"type\":\"String\"},{\"name\":\"body\",\"type\":\"String\"}],\"actions\":[{\"name\":\"create\"}]}" }), storage);
       const result = await interpret(uiSchemaHandler.override({ schema: "S-1", overrides: "{\"layout\":\"horizontal\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +231,7 @@ describe('UISchema functional handler', () => {
     it('fixture "valid_get_schema" -> ok', async () => {
       if (typeof uiSchemaHandler.getSchema !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(uiSchemaHandler.inspect({ schema: "S-1", conceptSpec: "{\"name\":\"Article\",\"fields\":[{\"name\":\"title\",\"type\":\"String\"},{\"name\":\"body\",\"type\":\"String\"}],\"actions\":[{\"name\":\"create\"}]}" }), storage);
       const result = await interpret(uiSchemaHandler.getSchema({ schema: "S-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -298,6 +300,7 @@ describe('UISchema functional handler', () => {
     it('fixture "valid_get_elements" -> ok', async () => {
       if (typeof uiSchemaHandler.getElements !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(uiSchemaHandler.inspect({ schema: "S-1", conceptSpec: "{\"name\":\"Article\",\"fields\":[{\"name\":\"title\",\"type\":\"String\"},{\"name\":\"body\",\"type\":\"String\"}],\"actions\":[{\"name\":\"create\"}]}" }), storage);
       const result = await interpret(uiSchemaHandler.getElements({ schema: "S-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -366,6 +369,7 @@ describe('UISchema functional handler', () => {
     it('fixture "valid_get_entity" -> ok', async () => {
       if (typeof uiSchemaHandler.getEntityElement !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(uiSchemaHandler.inspect({ schema: "S-1", conceptSpec: "{\"name\":\"Article\",\"fields\":[{\"name\":\"title\",\"type\":\"String\"},{\"name\":\"body\",\"type\":\"String\"}],\"actions\":[{\"name\":\"create\"}]}" }), storage);
       const result = await interpret(uiSchemaHandler.getEntityElement({ schema: "S-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -434,6 +438,7 @@ describe('UISchema functional handler', () => {
     it('fixture "valid_mark_resolved" -> ok', async () => {
       if (typeof uiSchemaHandler.markResolved !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(uiSchemaHandler.inspect({ schema: "S-1", conceptSpec: "{\"name\":\"Article\",\"fields\":[{\"name\":\"title\",\"type\":\"String\"},{\"name\":\"body\",\"type\":\"String\"}],\"actions\":[{\"name\":\"create\"}]}" }), storage);
       const result = await interpret(uiSchemaHandler.markResolved({ schema: "S-1" }), storage);
       expect(result.variant).toBe('ok');
     });

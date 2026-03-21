@@ -155,6 +155,7 @@ describe('PessimisticLock functional handler', () => {
     it('fixture "checkin_existing_lock" -> ok', async () => {
       if (typeof pessimisticLockHandler.checkIn !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" }), storage);
       const result = await interpret(pessimisticLockHandler.checkIn({ lockId: "pessimistic-lock-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('PessimisticLock functional handler', () => {
     it('fixture "break_existing_lock" -> ok', async () => {
       if (typeof pessimisticLockHandler.breakLock !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" }), storage);
       const result = await interpret(pessimisticLockHandler.breakLock({ lockId: "pessimistic-lock-1", breaker: "admin@example.com", reason: "Emergency release for blocked deployment" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('PessimisticLock functional handler', () => {
     it('fixture "renew_existing_lock" -> ok', async () => {
       if (typeof pessimisticLockHandler.renew !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" }), storage);
       const result = await interpret(pessimisticLockHandler.renew({ lockId: "pessimistic-lock-1", additionalDuration: "1800" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +362,7 @@ describe('PessimisticLock functional handler', () => {
     it('fixture "query_all_locks" -> ok', async () => {
       if (typeof pessimisticLockHandler.queryLocks !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" }), storage);
       const result = await interpret(pessimisticLockHandler.queryLocks({ resource: null }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -366,6 +370,7 @@ describe('PessimisticLock functional handler', () => {
     it('fixture "query_locks_by_resource" -> ok', async () => {
       if (typeof pessimisticLockHandler.queryLocks !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" }), storage);
       const result = await interpret(pessimisticLockHandler.queryLocks({ resource: "design-doc.pdf" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -427,6 +432,7 @@ describe('PessimisticLock functional handler', () => {
     it('fixture "query_queue_existing" -> ok', async () => {
       if (typeof pessimisticLockHandler.queryQueue !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" }), storage);
       const result = await interpret(pessimisticLockHandler.queryQueue({ resource: "design-doc.pdf" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -434,6 +440,7 @@ describe('PessimisticLock functional handler', () => {
     it('fixture "query_queue_empty_resource" -> ok', async () => {
       if (typeof pessimisticLockHandler.queryQueue !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" }), storage);
       const result = await interpret(pessimisticLockHandler.queryQueue({ resource: "" }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -230,6 +230,7 @@ describe('NextjsTarget functional handler', () => {
     it('fixture "list_user_routes" -> ok', async () => {
       if (typeof nextjsTargetHandler.listRoutes !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(nextjsTargetHandler.generate({ projection: "{\"conceptManifest\":{\"name\":\"User\",\"actions\":[]}}", config: "{}" }), storage);
       const result = await interpret(nextjsTargetHandler.listRoutes({ concept: "User" }), storage);
       expect(result.variant).toBe('ok');
     });

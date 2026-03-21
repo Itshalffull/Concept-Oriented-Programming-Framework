@@ -155,6 +155,7 @@ describe('SybilResistance functional handler', () => {
     it('fixture "challenge_verified_user" -> ok', async () => {
       if (typeof sybilResistanceHandler.challenge !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(sybilResistanceHandler.verify({ candidate: "alice", method: "biometric", evidence: "fingerprint-hash-abc123" }), storage);
       const result = await interpret(sybilResistanceHandler.challenge({ targetId: "alice", challenger: "bob", evidence: "duplicate-account-evidence" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('SybilResistance functional handler', () => {
     it('fixture "resolve_upheld" -> ok', async () => {
       if (typeof sybilResistanceHandler.resolveChallenge !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(sybilResistanceHandler.verify({ candidate: "alice", method: "biometric", evidence: "fingerprint-hash-abc123" }), storage);
       const result = await interpret(sybilResistanceHandler.resolveChallenge({ challengeId: "challenge-1001", outcome: "upheld" }), storage);
       expect(result.variant).toBe('ok');
     });

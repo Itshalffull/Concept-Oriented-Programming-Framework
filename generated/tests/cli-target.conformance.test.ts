@@ -237,6 +237,7 @@ describe('CliTarget functional handler', () => {
     it('fixture "list_task_commands" -> ok', async () => {
       if (typeof cliTargetHandler.listCommands !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(cliTargetHandler.generate({ projection: "task-projection", config: "{}" }), storage);
       const result = await interpret(cliTargetHandler.listCommands({ concept: "Task" }), storage);
       expect(result.variant).toBe('ok');
     });

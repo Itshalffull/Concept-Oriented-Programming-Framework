@@ -155,6 +155,7 @@ describe('Authentication functional handler', () => {
     it('fixture "login_valid" -> ok', async () => {
       if (typeof authenticationHandler.login !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(authenticationHandler.register({ user: "alice", provider: "local", credentials: "secret123" }), storage);
       const result = await interpret(authenticationHandler.login({ user: "alice", credentials: "secret123" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('Authentication functional handler', () => {
     it('fixture "logout_existing" -> ok', async () => {
       if (typeof authenticationHandler.logout !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(authenticationHandler.register({ user: "alice", provider: "local", credentials: "secret123" }), storage);
       const result = await interpret(authenticationHandler.logout({ user: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('Authentication functional handler', () => {
     it('fixture "auth_valid_token" -> ok', async () => {
       if (typeof authenticationHandler.authenticate !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(authenticationHandler.register({ user: "alice", provider: "local", credentials: "secret123" }), storage);
       const result = await interpret(authenticationHandler.authenticate({ token: "tok-abc-123" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +362,7 @@ describe('Authentication functional handler', () => {
     it('fixture "reset_existing" -> ok', async () => {
       if (typeof authenticationHandler.resetPassword !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(authenticationHandler.register({ user: "alice", provider: "local", credentials: "secret123" }), storage);
       const result = await interpret(authenticationHandler.resetPassword({ user: "alice", newCredentials: "newpass456" }), storage);
       expect(result.variant).toBe('ok');
     });

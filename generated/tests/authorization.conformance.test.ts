@@ -155,6 +155,7 @@ describe('Authorization functional handler', () => {
     it('fixture "revoke_publish" -> ok', async () => {
       if (typeof authorizationHandler.revokePermission !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(authorizationHandler.grantPermission({ role: "admin", permission: "write" }), storage);
       const result = await interpret(authorizationHandler.revokePermission({ role: "editor", permission: "publish" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('Authorization functional handler', () => {
     it('fixture "assign_admin" -> ok', async () => {
       if (typeof authorizationHandler.assignRole !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(authorizationHandler.grantPermission({ role: "admin", permission: "write" }), storage);
       const result = await interpret(authorizationHandler.assignRole({ user: "alice", role: "admin" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('Authorization functional handler', () => {
     it('fixture "check_granted" -> ok', async () => {
       if (typeof authorizationHandler.checkPermission !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(authorizationHandler.grantPermission({ role: "admin", permission: "write" }), storage);
       const result = await interpret(authorizationHandler.checkPermission({ user: "alice", permission: "write" }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -148,6 +148,7 @@ describe('EntityReflector functional handler', () => {
     it('fixture "valid_reflect_provider" -> ok', async () => {
       if (typeof entityReflectorHandler.reflectProvider !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(entityReflectorHandler.reflect({  }), storage);
       const result = await interpret(entityReflectorHandler.reflectProvider({ provider_name: "concept" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -216,6 +217,7 @@ describe('EntityReflector functional handler', () => {
     it('fixture "valid_register" -> ok', async () => {
       if (typeof entityReflectorHandler.registerProvider !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(entityReflectorHandler.reflect({  }), storage);
       const result = await interpret(entityReflectorHandler.registerProvider({ provider_name: "widget" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -284,6 +286,7 @@ describe('EntityReflector functional handler', () => {
     it('fixture "valid_status" -> ok', async () => {
       if (typeof entityReflectorHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(entityReflectorHandler.reflect({  }), storage);
       const result = await interpret(entityReflectorHandler.status({  }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -94,6 +94,7 @@ describe('ToolDiscovery functional handler', () => {
     it('fixture "duplicate_register" -> duplicate', async () => {
       if (typeof toolDiscoveryHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(toolDiscoveryHandler.register({ name: "score_query", briefDescription: "Run GraphQL queries against Score index", fullDescription: "Execute a GraphQL query against the materialized Score index and return structured results", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{\"type\": \"object\", \"properties\": {\"graphql\": {\"type\": \"string\"}}}", alwaysLoaded: "true" }), storage);
       const result = await interpret(toolDiscoveryHandler.register({ name: "score_query", briefDescription: "Duplicate tool", fullDescription: "This is a duplicate", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{}", alwaysLoaded: "false" }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('duplicate'));
@@ -156,6 +157,7 @@ describe('ToolDiscovery functional handler', () => {
     it('fixture "valid_search" -> ok', async () => {
       if (typeof toolDiscoveryHandler.searchTools !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(toolDiscoveryHandler.register({ name: "score_query", briefDescription: "Run GraphQL queries against Score index", fullDescription: "Execute a GraphQL query against the materialized Score index and return structured results", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{\"type\": \"object\", \"properties\": {\"graphql\": {\"type\": \"string\"}}}", alwaysLoaded: "true" }), storage);
       const result = await interpret(toolDiscoveryHandler.searchTools({ query: "graphql query", limit: "5" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -233,6 +235,7 @@ describe('ToolDiscovery functional handler', () => {
     it('fixture "valid_describe" -> ok', async () => {
       if (typeof toolDiscoveryHandler.describeTools !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(toolDiscoveryHandler.register({ name: "score_query", briefDescription: "Run GraphQL queries against Score index", fullDescription: "Execute a GraphQL query against the materialized Score index and return structured results", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{\"type\": \"object\", \"properties\": {\"graphql\": {\"type\": \"string\"}}}", alwaysLoaded: "true" }), storage);
       const result = await interpret(toolDiscoveryHandler.describeTools({ tools: ["score_query","score_navigate"] }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -240,6 +243,7 @@ describe('ToolDiscovery functional handler', () => {
     it('fixture "empty_tools" -> ok', async () => {
       if (typeof toolDiscoveryHandler.describeTools !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(toolDiscoveryHandler.register({ name: "score_query", briefDescription: "Run GraphQL queries against Score index", fullDescription: "Execute a GraphQL query against the materialized Score index and return structured results", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{\"type\": \"object\", \"properties\": {\"graphql\": {\"type\": \"string\"}}}", alwaysLoaded: "true" }), storage);
       const result = await interpret(toolDiscoveryHandler.describeTools({ tools: [] }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -301,6 +305,7 @@ describe('ToolDiscovery functional handler', () => {
     it('fixture "valid_list_categories" -> ok', async () => {
       if (typeof toolDiscoveryHandler.listCategories !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(toolDiscoveryHandler.register({ name: "score_query", briefDescription: "Run GraphQL queries against Score index", fullDescription: "Execute a GraphQL query against the materialized Score index and return structured results", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{\"type\": \"object\", \"properties\": {\"graphql\": {\"type\": \"string\"}}}", alwaysLoaded: "true" }), storage);
       const result = await interpret(toolDiscoveryHandler.listCategories({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -362,6 +367,7 @@ describe('ToolDiscovery functional handler', () => {
     it('fixture "valid_category" -> ok', async () => {
       if (typeof toolDiscoveryHandler.getCategory !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(toolDiscoveryHandler.register({ name: "score_query", briefDescription: "Run GraphQL queries against Score index", fullDescription: "Execute a GraphQL query against the materialized Score index and return structured results", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{\"type\": \"object\", \"properties\": {\"graphql\": {\"type\": \"string\"}}}", alwaysLoaded: "true" }), storage);
       const result = await interpret(toolDiscoveryHandler.getCategory({ category: "score" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -439,6 +445,7 @@ describe('ToolDiscovery functional handler', () => {
     it('fixture "valid_always_loaded" -> ok', async () => {
       if (typeof toolDiscoveryHandler.getAlwaysLoaded !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(toolDiscoveryHandler.register({ name: "score_query", briefDescription: "Run GraphQL queries against Score index", fullDescription: "Execute a GraphQL query against the materialized Score index and return structured results", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{\"type\": \"object\", \"properties\": {\"graphql\": {\"type\": \"string\"}}}", alwaysLoaded: "true" }), storage);
       const result = await interpret(toolDiscoveryHandler.getAlwaysLoaded({  }), storage);
       expect(result.variant).toBe('ok');
     });

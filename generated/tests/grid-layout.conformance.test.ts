@@ -148,6 +148,7 @@ describe('GridLayout functional handler', () => {
     it('fixture "valid_apply" -> ok', async () => {
       if (typeof gridLayoutHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(gridLayoutHandler.register({  }), storage);
       const result = await interpret(gridLayoutHandler.apply({ canvas: "c1", items: ["a","b","c","d"] }), storage);
       expect(result.variant).toBe('ok');
     });

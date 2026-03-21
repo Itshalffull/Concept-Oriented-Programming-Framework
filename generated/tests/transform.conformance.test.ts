@@ -163,6 +163,7 @@ describe('Transform functional handler', () => {
     it('fixture "chain_two" -> ok', async () => {
       if (typeof transformHandler.chain !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(transformHandler.apply({ value: "Hello World!", transformId: "slugify" }), storage);
       const result = await interpret(transformHandler.chain({ value: "Hello World!", transformIds: "slugify,strip_tags" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -170,6 +171,7 @@ describe('Transform functional handler', () => {
     it('fixture "chain_empty" -> ok', async () => {
       if (typeof transformHandler.chain !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(transformHandler.apply({ value: "Hello World!", transformId: "slugify" }), storage);
       const result = await interpret(transformHandler.chain({ value: "", transformIds: "slugify" }), storage);
       expect(result.variant).toBe('ok');
     });

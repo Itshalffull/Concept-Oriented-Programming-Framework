@@ -169,6 +169,7 @@ describe('ConnectorPort functional handler', () => {
     it('fixture "remove_existing" -> ok', async () => {
       if (typeof connectorPortHandler.removePort !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" }), storage);
       const result = await interpret(connectorPortHandler.removePort({ port: "port-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -238,6 +239,7 @@ describe('ConnectorPort functional handler', () => {
     it('fixture "move_to_left" -> ok', async () => {
       if (typeof connectorPortHandler.movePort !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" }), storage);
       const result = await interpret(connectorPortHandler.movePort({ port: "port-1", side: "left", offset: "0.3" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -376,6 +378,7 @@ describe('ConnectorPort functional handler', () => {
     it('fixture "increment_ok" -> ok', async () => {
       if (typeof connectorPortHandler.incrementConnection !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" }), storage);
       const result = await interpret(connectorPortHandler.incrementConnection({ port: "port-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -444,6 +447,7 @@ describe('ConnectorPort functional handler', () => {
     it('fixture "decrement_ok" -> ok', async () => {
       if (typeof connectorPortHandler.decrementConnection !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" }), storage);
       const result = await interpret(connectorPortHandler.decrementConnection({ port: "port-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -512,6 +516,7 @@ describe('ConnectorPort functional handler', () => {
     it('fixture "get_ports_for_node" -> ok', async () => {
       if (typeof connectorPortHandler.getPortsForOwner !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" }), storage);
       const result = await interpret(connectorPortHandler.getPortsForOwner({ owner: "node-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -519,6 +524,7 @@ describe('ConnectorPort functional handler', () => {
     it('fixture "get_ports_for_unknown" -> ok', async () => {
       if (typeof connectorPortHandler.getPortsForOwner !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" }), storage);
       const result = await interpret(connectorPortHandler.getPortsForOwner({ owner: "node-unknown" }), storage);
       expect(result.variant).toBe('ok');
     });

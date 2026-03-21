@@ -163,6 +163,7 @@ describe('StatusGate functional handler', () => {
     it('fixture "valid_update" -> ok', async () => {
       if (typeof statusGateHandler.update !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(statusGateHandler.report({ target: "abc123def456", context: "clef/verify", status: "passing", details: "All 5 invariants proved", provider: "exit-code", url: "" }), storage);
       const result = await interpret(statusGateHandler.update({ gate: "gate-1710000000-abc123", status: "passing", details: "All checks passed" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -232,6 +233,7 @@ describe('StatusGate functional handler', () => {
     it('fixture "valid_complete" -> ok', async () => {
       if (typeof statusGateHandler.complete !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(statusGateHandler.report({ target: "abc123def456", context: "clef/verify", status: "passing", details: "All 5 invariants proved", provider: "exit-code", url: "" }), storage);
       const result = await interpret(statusGateHandler.complete({ gate: "gate-1710000000-abc123", final_status: "passing", details: "All green" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -301,6 +303,7 @@ describe('StatusGate functional handler', () => {
     it('fixture "valid_configure" -> ok', async () => {
       if (typeof statusGateHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(statusGateHandler.report({ target: "abc123def456", context: "clef/verify", status: "passing", details: "All 5 invariants proved", provider: "exit-code", url: "" }), storage);
       const result = await interpret(statusGateHandler.configure({ provider: "github", url: "https://api.github.com" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -308,6 +311,7 @@ describe('StatusGate functional handler', () => {
     it('fixture "exit_code_configure" -> ok', async () => {
       if (typeof statusGateHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(statusGateHandler.report({ target: "abc123def456", context: "clef/verify", status: "passing", details: "All 5 invariants proved", provider: "exit-code", url: "" }), storage);
       const result = await interpret(statusGateHandler.configure({ provider: "exit-code", url: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -369,6 +373,7 @@ describe('StatusGate functional handler', () => {
     it('fixture "valid_get_status" -> ok', async () => {
       if (typeof statusGateHandler.get_status !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(statusGateHandler.report({ target: "abc123def456", context: "clef/verify", status: "passing", details: "All 5 invariants proved", provider: "exit-code", url: "" }), storage);
       const result = await interpret(statusGateHandler.get_status({ gate: "gate-1710000000-abc123" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -438,6 +443,7 @@ describe('StatusGate functional handler', () => {
     it('fixture "valid_list" -> ok', async () => {
       if (typeof statusGateHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(statusGateHandler.report({ target: "abc123def456", context: "clef/verify", status: "passing", details: "All 5 invariants proved", provider: "exit-code", url: "" }), storage);
       const result = await interpret(statusGateHandler.list({ target: "abc123def456" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -445,6 +451,7 @@ describe('StatusGate functional handler', () => {
     it('fixture "empty_target_list" -> ok', async () => {
       if (typeof statusGateHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(statusGateHandler.report({ target: "abc123def456", context: "clef/verify", status: "passing", details: "All 5 invariants proved", provider: "exit-code", url: "" }), storage);
       const result = await interpret(statusGateHandler.list({ target: "" }), storage);
       expect(result.variant).toBe('ok');
     });

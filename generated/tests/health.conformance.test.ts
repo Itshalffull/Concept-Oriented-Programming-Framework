@@ -162,6 +162,7 @@ describe('Health functional handler', () => {
     it('fixture "check_auth_sync" -> ok', async () => {
       if (typeof healthHandler.checkSync !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(healthHandler.checkConcept({ concept: "User", runtime: "server" }), storage);
       const result = await interpret(healthHandler.checkSync({ sync: "auth-session-sync", concepts: ["User","Session"] }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -169,6 +170,7 @@ describe('Health functional handler', () => {
     it('fixture "check_sync_empty" -> ok', async () => {
       if (typeof healthHandler.checkSync !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(healthHandler.checkConcept({ concept: "User", runtime: "server" }), storage);
       const result = await interpret(healthHandler.checkSync({ sync: "", concepts: [] }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +232,7 @@ describe('Health functional handler', () => {
     it('fixture "check_auth_suite" -> ok', async () => {
       if (typeof healthHandler.checkSuite !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(healthHandler.checkConcept({ concept: "User", runtime: "server" }), storage);
       const result = await interpret(healthHandler.checkSuite({ suite: "auth-suite", environment: "staging" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -237,6 +240,7 @@ describe('Health functional handler', () => {
     it('fixture "check_suite_prod" -> ok', async () => {
       if (typeof healthHandler.checkSuite !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(healthHandler.checkConcept({ concept: "User", runtime: "server" }), storage);
       const result = await interpret(healthHandler.checkSuite({ suite: "payments", environment: "production" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -244,6 +248,7 @@ describe('Health functional handler', () => {
     it('fixture "check_suite_empty" -> ok', async () => {
       if (typeof healthHandler.checkSuite !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(healthHandler.checkConcept({ concept: "User", runtime: "server" }), storage);
       const result = await interpret(healthHandler.checkSuite({ suite: "", environment: "staging" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -305,6 +310,7 @@ describe('Health functional handler', () => {
     it('fixture "check_invariant" -> ok', async () => {
       if (typeof healthHandler.checkInvariant !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(healthHandler.checkConcept({ concept: "User", runtime: "server" }), storage);
       const result = await interpret(healthHandler.checkInvariant({ concept: "User", invariant: "valid-email" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -312,6 +318,7 @@ describe('Health functional handler', () => {
     it('fixture "check_invariant_empty" -> ok', async () => {
       if (typeof healthHandler.checkInvariant !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(healthHandler.checkConcept({ concept: "User", runtime: "server" }), storage);
       const result = await interpret(healthHandler.checkInvariant({ concept: "", invariant: "valid-email" }), storage);
       expect(result.variant).toBe('ok');
     });

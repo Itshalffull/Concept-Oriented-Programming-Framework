@@ -247,6 +247,7 @@ describe('AnalysisReport functional handler', () => {
     it('fixture "existing_report" -> ok', async () => {
       if (typeof analysisReportHandler.getReport !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" }), storage);
       const result = await interpret(analysisReportHandler.getReport({ report: "report-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -316,6 +317,7 @@ describe('AnalysisReport functional handler', () => {
     it('fixture "all_reports" -> ok', async () => {
       if (typeof analysisReportHandler.listReports !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" }), storage);
       const result = await interpret(analysisReportHandler.listReports({ result: null }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -323,6 +325,7 @@ describe('AnalysisReport functional handler', () => {
     it('fixture "filtered" -> ok', async () => {
       if (typeof analysisReportHandler.listReports !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" }), storage);
       const result = await interpret(analysisReportHandler.listReports({ result: "result-abc" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -384,6 +387,7 @@ describe('AnalysisReport functional handler', () => {
     it('fixture "csv_export" -> ok', async () => {
       if (typeof analysisReportHandler.exportReport !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" }), storage);
       const result = await interpret(analysisReportHandler.exportReport({ report: "report-001", outputFormat: "csv" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -391,6 +395,7 @@ describe('AnalysisReport functional handler', () => {
     it('fixture "markdown_export" -> ok', async () => {
       if (typeof analysisReportHandler.exportReport !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" }), storage);
       const result = await interpret(analysisReportHandler.exportReport({ report: "report-001", outputFormat: "markdown" }), storage);
       expect(result.variant).toBe('ok');
     });

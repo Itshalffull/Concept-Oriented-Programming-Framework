@@ -164,6 +164,7 @@ describe('ContractTest functional handler', () => {
     it('fixture "verify_rust_ts" -> ok', async () => {
       if (typeof contractTestHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(contractTestHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage);
       const result = await interpret(contractTestHandler.verify({ contract: "ctr-pwd-001", producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -241,6 +242,7 @@ describe('ContractTest functional handler', () => {
     it('fixture "matrix_all" -> ok', async () => {
       if (typeof contractTestHandler.matrix !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(contractTestHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage);
       const result = await interpret(contractTestHandler.matrix({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -248,6 +250,7 @@ describe('ContractTest functional handler', () => {
     it('fixture "matrix_filtered" -> ok', async () => {
       if (typeof contractTestHandler.matrix !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(contractTestHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage);
       const result = await interpret(contractTestHandler.matrix({ concepts: ["password","auth"] }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -309,6 +312,7 @@ describe('ContractTest functional handler', () => {
     it('fixture "can_deploy_ts" -> ok', async () => {
       if (typeof contractTestHandler.canDeploy !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(contractTestHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage);
       const result = await interpret(contractTestHandler.canDeploy({ concept: "password", language: "typescript" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -316,6 +320,7 @@ describe('ContractTest functional handler', () => {
     it('fixture "can_deploy_rust" -> ok', async () => {
       if (typeof contractTestHandler.canDeploy !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(contractTestHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage);
       const result = await interpret(contractTestHandler.canDeploy({ concept: "password", language: "rust" }), storage);
       expect(result.variant).toBe('ok');
     });

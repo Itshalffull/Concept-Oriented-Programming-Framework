@@ -148,6 +148,7 @@ describe('CircularLayout functional handler', () => {
     it('fixture "valid_apply" -> ok', async () => {
       if (typeof circularLayoutHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(circularLayoutHandler.register({  }), storage);
       const result = await interpret(circularLayoutHandler.apply({ canvas: "c1", items: ["a","b","c"] }), storage);
       expect(result.variant).toBe('ok');
     });

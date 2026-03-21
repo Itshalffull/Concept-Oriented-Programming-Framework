@@ -155,6 +155,7 @@ describe('ContentStorage functional handler', () => {
     it('fixture "load_existing" -> ok', async () => {
       if (typeof contentStorageHandler.load !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(contentStorageHandler.save({ record: "user-profile-1", data: "{\"name\":\"Alice\",\"email\":\"alice@example.com\"}" }), storage);
       const result = await interpret(contentStorageHandler.load({ record: "user-profile-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('ContentStorage functional handler', () => {
     it('fixture "delete_existing" -> ok', async () => {
       if (typeof contentStorageHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(contentStorageHandler.save({ record: "user-profile-1", data: "{\"name\":\"Alice\",\"email\":\"alice@example.com\"}" }), storage);
       const result = await interpret(contentStorageHandler.delete({ record: "user-profile-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('ContentStorage functional handler', () => {
     it('fixture "query_by_type" -> ok', async () => {
       if (typeof contentStorageHandler.query !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(contentStorageHandler.save({ record: "user-profile-1", data: "{\"name\":\"Alice\",\"email\":\"alice@example.com\"}" }), storage);
       const result = await interpret(contentStorageHandler.query({ filter: "{\"type\":\"profile\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +362,7 @@ describe('ContentStorage functional handler', () => {
     it('fixture "gen_schema" -> ok', async () => {
       if (typeof contentStorageHandler.generateSchema !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(contentStorageHandler.save({ record: "user-profile-1", data: "{\"name\":\"Alice\",\"email\":\"alice@example.com\"}" }), storage);
       const result = await interpret(contentStorageHandler.generateSchema({ record: "user-profile-1" }), storage);
       expect(result.variant).toBe('ok');
     });

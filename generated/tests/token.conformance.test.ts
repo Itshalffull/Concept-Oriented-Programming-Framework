@@ -155,6 +155,7 @@ describe('Token functional handler', () => {
     it('fixture "get_tokens_user" -> ok', async () => {
       if (typeof tokenHandler.getAvailableTokens !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(tokenHandler.replace({ text: "Contact [user:mail] at [site:url]" }), storage);
       const result = await interpret(tokenHandler.getAvailableTokens({ context: "user" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +163,7 @@ describe('Token functional handler', () => {
     it('fixture "get_tokens_empty" -> ok', async () => {
       if (typeof tokenHandler.getAvailableTokens !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(tokenHandler.replace({ text: "Contact [user:mail] at [site:url]" }), storage);
       const result = await interpret(tokenHandler.getAvailableTokens({ context: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +225,7 @@ describe('Token functional handler', () => {
     it('fixture "scan_text" -> ok', async () => {
       if (typeof tokenHandler.scan !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(tokenHandler.replace({ text: "Contact [user:mail] at [site:url]" }), storage);
       const result = await interpret(tokenHandler.scan({ text: "Hello [user:name], visit [site:url]" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +233,7 @@ describe('Token functional handler', () => {
     it('fixture "scan_no_tokens" -> ok', async () => {
       if (typeof tokenHandler.scan !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(tokenHandler.replace({ text: "Contact [user:mail] at [site:url]" }), storage);
       const result = await interpret(tokenHandler.scan({ text: "no tokens here" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +295,7 @@ describe('Token functional handler', () => {
     it('fixture "register_mail" -> ok', async () => {
       if (typeof tokenHandler.registerProvider !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(tokenHandler.replace({ text: "Contact [user:mail] at [site:url]" }), storage);
       const result = await interpret(tokenHandler.registerProvider({ token: "user:mail", provider: "userMailProvider" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -298,6 +303,7 @@ describe('Token functional handler', () => {
     it('fixture "register_empty" -> ok', async () => {
       if (typeof tokenHandler.registerProvider !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(tokenHandler.replace({ text: "Contact [user:mail] at [site:url]" }), storage);
       const result = await interpret(tokenHandler.registerProvider({ token: "", provider: "x" }), storage);
       expect(result.variant).toBe('ok');
     });

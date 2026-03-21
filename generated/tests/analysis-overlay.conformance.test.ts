@@ -178,6 +178,7 @@ describe('AnalysisOverlay functional handler', () => {
     it('fixture "remove_existing" -> ok', async () => {
       if (typeof analysisOverlayHandler.remove !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage);
       const result = await interpret(analysisOverlayHandler.remove({ overlay: "overlay-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -247,6 +248,7 @@ describe('AnalysisOverlay functional handler', () => {
     it('fixture "toggle_existing" -> ok', async () => {
       if (typeof analysisOverlayHandler.toggle !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage);
       const result = await interpret(analysisOverlayHandler.toggle({ overlay: "overlay-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -316,6 +318,7 @@ describe('AnalysisOverlay functional handler', () => {
     it('fixture "list_canvas" -> ok', async () => {
       if (typeof analysisOverlayHandler.listOverlays !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage);
       const result = await interpret(analysisOverlayHandler.listOverlays({ canvas: "canvas-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -323,6 +326,7 @@ describe('AnalysisOverlay functional handler', () => {
     it('fixture "list_empty" -> ok', async () => {
       if (typeof analysisOverlayHandler.listOverlays !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage);
       const result = await interpret(analysisOverlayHandler.listOverlays({ canvas: "canvas-empty" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -384,6 +388,7 @@ describe('AnalysisOverlay functional handler', () => {
     it('fixture "update_scale" -> ok', async () => {
       if (typeof analysisOverlayHandler.updateConfig !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage);
       const result = await interpret(analysisOverlayHandler.updateConfig({ overlay: "overlay-001", config: "{\"minScale\":1.0,\"maxScale\":5.0}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -391,6 +396,7 @@ describe('AnalysisOverlay functional handler', () => {
     it('fixture "update_missing" -> notfound', async () => {
       if (typeof analysisOverlayHandler.updateConfig !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage);
       const result = await interpret(analysisOverlayHandler.updateConfig({ overlay: "overlay-nonexistent", config: "{}" }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notfound'));

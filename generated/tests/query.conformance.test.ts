@@ -162,6 +162,7 @@ describe('Query functional handler', () => {
     it('fixture "execute_parsed" -> ok', async () => {
       if (typeof queryHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(queryHandler.parse({ query: "q-001", expression: "status = 'active'" }), storage);
       const result = await interpret(queryHandler.execute({ query: "q-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +231,7 @@ describe('Query functional handler', () => {
     it('fixture "subscribe_parsed" -> ok', async () => {
       if (typeof queryHandler.subscribe !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(queryHandler.parse({ query: "q-001", expression: "status = 'active'" }), storage);
       const result = await interpret(queryHandler.subscribe({ query: "q-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -298,6 +300,7 @@ describe('Query functional handler', () => {
     it('fixture "add_status_filter" -> ok', async () => {
       if (typeof queryHandler.addFilter !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(queryHandler.parse({ query: "q-001", expression: "status = 'active'" }), storage);
       const result = await interpret(queryHandler.addFilter({ query: "q-001", filter: "status = 'active'" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -366,6 +369,7 @@ describe('Query functional handler', () => {
     it('fixture "add_date_sort" -> ok', async () => {
       if (typeof queryHandler.addSort !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(queryHandler.parse({ query: "q-001", expression: "status = 'active'" }), storage);
       const result = await interpret(queryHandler.addSort({ query: "q-001", sort: "createdAt DESC" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -434,6 +438,7 @@ describe('Query functional handler', () => {
     it('fixture "set_org_scope" -> ok', async () => {
       if (typeof queryHandler.setScope !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(queryHandler.parse({ query: "q-001", expression: "status = 'active'" }), storage);
       const result = await interpret(queryHandler.setScope({ query: "q-001", scope: "organization/acme" }), storage);
       expect(result.variant).toBe('ok');
     });

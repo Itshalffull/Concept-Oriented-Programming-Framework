@@ -156,6 +156,7 @@ describe('SyncedContent functional handler', () => {
     it('fixture "edit_content" -> ok', async () => {
       if (typeof syncedContentHandler.editOriginal !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(syncedContentHandler.createReference({ ref: "ref-1", original: "doc-main" }), storage);
       const result = await interpret(syncedContentHandler.editOriginal({ original: "doc-main", content: "Updated paragraph text" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -225,6 +226,7 @@ describe('SyncedContent functional handler', () => {
     it('fixture "delete_ref" -> ok', async () => {
       if (typeof syncedContentHandler.deleteReference !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(syncedContentHandler.createReference({ ref: "ref-1", original: "doc-main" }), storage);
       const result = await interpret(syncedContentHandler.deleteReference({ ref: "ref-1" }), storage);
       expect(result.variant).toBe('ok');
     });

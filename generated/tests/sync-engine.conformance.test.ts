@@ -155,6 +155,7 @@ describe('SyncEngine functional handler', () => {
     it('fixture "valid_completion" -> ok', async () => {
       if (typeof syncEngineHandler.onCompletion !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(syncEngineHandler.registerSync({ sync: {"name":"OnUserCreate","annotations":["eager"],"when":[{"concept":"urn:clef/User","action":"create","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/Notification","action":"send","fields":[]}]} }), storage);
       const result = await interpret(syncEngineHandler.onCompletion({ completion: {"id":"c-001","concept":"urn:clef/User","action":"create","input":{},"variant":"ok","output":{},"flow":"flow-001","timestamp":"2025-01-15T10:30:00Z"} }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -216,6 +217,7 @@ describe('SyncEngine functional handler', () => {
     it('fixture "valid_evaluate" -> ok', async () => {
       if (typeof syncEngineHandler.evaluateWhere !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(syncEngineHandler.registerSync({ sync: {"name":"OnUserCreate","annotations":["eager"],"when":[{"concept":"urn:clef/User","action":"create","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/Notification","action":"send","fields":[]}]} }), storage);
       const result = await interpret(syncEngineHandler.evaluateWhere({ bindings: {}, queries: [] }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -284,6 +286,7 @@ describe('SyncEngine functional handler', () => {
     it('fixture "valid_queue" -> ok', async () => {
       if (typeof syncEngineHandler.queueSync !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(syncEngineHandler.registerSync({ sync: {"name":"OnUserCreate","annotations":["eager"],"when":[{"concept":"urn:clef/User","action":"create","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/Notification","action":"send","fields":[]}]} }), storage);
       const result = await interpret(syncEngineHandler.queueSync({ sync: {"name":"EventualSync","annotations":["eventual"],"when":[{"concept":"urn:clef/A","action":"act","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/B","action":"do","fields":[]}]}, bindings: {}, flow: "flow-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -345,6 +348,7 @@ describe('SyncEngine functional handler', () => {
     it('fixture "concept_online" -> ok', async () => {
       if (typeof syncEngineHandler.onAvailabilityChange !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(syncEngineHandler.registerSync({ sync: {"name":"OnUserCreate","annotations":["eager"],"when":[{"concept":"urn:clef/User","action":"create","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/Notification","action":"send","fields":[]}]} }), storage);
       const result = await interpret(syncEngineHandler.onAvailabilityChange({ conceptUri: "urn:clef/Notification", available: "true" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -352,6 +356,7 @@ describe('SyncEngine functional handler', () => {
     it('fixture "concept_offline" -> ok', async () => {
       if (typeof syncEngineHandler.onAvailabilityChange !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(syncEngineHandler.registerSync({ sync: {"name":"OnUserCreate","annotations":["eager"],"when":[{"concept":"urn:clef/User","action":"create","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/Notification","action":"send","fields":[]}]} }), storage);
       const result = await interpret(syncEngineHandler.onAvailabilityChange({ conceptUri: "urn:clef/Notification", available: "false" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -413,6 +418,7 @@ describe('SyncEngine functional handler', () => {
     it('fixture "valid_drain" -> ok', async () => {
       if (typeof syncEngineHandler.drainConflicts !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(syncEngineHandler.registerSync({ sync: {"name":"OnUserCreate","annotations":["eager"],"when":[{"concept":"urn:clef/User","action":"create","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/Notification","action":"send","fields":[]}]} }), storage);
       const result = await interpret(syncEngineHandler.drainConflicts({  }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -162,6 +162,7 @@ describe('GcpSmProvider functional handler', () => {
     it('fixture "rotate_db_password" -> ok', async () => {
       if (typeof gcpSmProviderHandler.rotate !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(gcpSmProviderHandler.fetch({ secretId: "db-password", version: "latest" }), storage);
       const result = await interpret(gcpSmProviderHandler.rotate({ secretId: "db-password" }), storage);
       expect(result.variant).toBe('ok');
     });

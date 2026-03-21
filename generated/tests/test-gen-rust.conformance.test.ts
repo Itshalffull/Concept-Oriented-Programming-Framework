@@ -88,6 +88,7 @@ describe('TestGenRust imperative handler', () => {
     it('fixture "list_valid" -> ok', async () => {
       if (typeof testGenRustHandler.listRendered !== 'function') return;
       const storage = createInMemoryStorage();
+      await testGenRustHandler.render({ test_plan: "{\"conceptName\":\"Counter\",\"actions\":[{\"name\":\"increment\",\"params\":[],\"variants\":[\"ok\"]}],\"examples\":[],\"properties\":[],\"stateInvariants\":[],\"liveness\":[],\"contracts\":[]}", output_path: "generated/tests/counter.test.rust" }, storage);
       const result = await testGenRustHandler.listRendered({ concept_ref: "clef/concept/Counter" }, storage);
       expect(result.variant).toBe('ok');
     });

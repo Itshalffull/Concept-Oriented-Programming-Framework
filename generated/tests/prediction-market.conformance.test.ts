@@ -162,6 +162,7 @@ describe('PredictionMarket functional handler', () => {
     it('fixture "buy_shares" -> ok', async () => {
       if (typeof predictionMarketHandler.trade !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(predictionMarketHandler.createMarket({ question: "Will GDP grow by 3%?", outcomes: ["Yes","No"], deadline: "2026-12-31T23:59:59Z" }), storage);
       const result = await interpret(predictionMarketHandler.trade({ market: "market-001", trader: "alice", outcome: "Yes", amount: "50.0" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +231,7 @@ describe('PredictionMarket functional handler', () => {
     it('fixture "resolve_market" -> ok', async () => {
       if (typeof predictionMarketHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(predictionMarketHandler.createMarket({ question: "Will GDP grow by 3%?", outcomes: ["Yes","No"], deadline: "2026-12-31T23:59:59Z" }), storage);
       const result = await interpret(predictionMarketHandler.resolve({ market: "market-001", outcome: "Yes" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -298,6 +300,7 @@ describe('PredictionMarket functional handler', () => {
     it('fixture "claim_valid" -> ok', async () => {
       if (typeof predictionMarketHandler.claimPayout !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(predictionMarketHandler.createMarket({ question: "Will GDP grow by 3%?", outcomes: ["Yes","No"], deadline: "2026-12-31T23:59:59Z" }), storage);
       const result = await interpret(predictionMarketHandler.claimPayout({ market: "market-001", trader: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });

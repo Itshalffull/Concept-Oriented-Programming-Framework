@@ -170,6 +170,7 @@ describe('ProgramSlice functional handler', () => {
     it('fixture "valid_files" -> ok', async () => {
       if (typeof programSliceHandler.filesInSlice !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(programSliceHandler.compute({ criterion: "clef/state-field/Article/title", direction: "forward" }), storage);
       const result = await interpret(programSliceHandler.filesInSlice({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -177,6 +178,7 @@ describe('ProgramSlice functional handler', () => {
     it('fixture "empty_slice" -> ok', async () => {
       if (typeof programSliceHandler.filesInSlice !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(programSliceHandler.compute({ criterion: "clef/state-field/Article/title", direction: "forward" }), storage);
       const result = await interpret(programSliceHandler.filesInSlice({ slice: "program-slice-empty" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -238,6 +240,7 @@ describe('ProgramSlice functional handler', () => {
     it('fixture "valid_symbols" -> ok', async () => {
       if (typeof programSliceHandler.symbolsInSlice !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(programSliceHandler.compute({ criterion: "clef/state-field/Article/title", direction: "forward" }), storage);
       const result = await interpret(programSliceHandler.symbolsInSlice({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -245,6 +248,7 @@ describe('ProgramSlice functional handler', () => {
     it('fixture "empty_slice" -> ok', async () => {
       if (typeof programSliceHandler.symbolsInSlice !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(programSliceHandler.compute({ criterion: "clef/state-field/Article/title", direction: "forward" }), storage);
       const result = await interpret(programSliceHandler.symbolsInSlice({ slice: "program-slice-empty" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -306,6 +310,7 @@ describe('ProgramSlice functional handler', () => {
     it('fixture "valid_get" -> ok', async () => {
       if (typeof programSliceHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(programSliceHandler.compute({ criterion: "clef/state-field/Article/title", direction: "forward" }), storage);
       const result = await interpret(programSliceHandler.get({  }), storage);
       expect(result.variant).toBe('ok');
     });

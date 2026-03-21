@@ -94,6 +94,7 @@ describe('Version functional handler', () => {
     it('fixture "another_snapshot" -> ok', async () => {
       if (typeof versionHandler.snapshot !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(versionHandler.snapshot({ version: "v1", entity: "doc-1", data: "initial content", author: "alice" }), storage);
       const result = await interpret(versionHandler.snapshot({ version: "v2", entity: "doc-1", data: "updated content", author: "bob" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -155,6 +156,7 @@ describe('Version functional handler', () => {
     it('fixture "valid_list" -> ok', async () => {
       if (typeof versionHandler.listVersions !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(versionHandler.snapshot({ version: "v1", entity: "doc-1", data: "initial content", author: "alice" }), storage);
       const result = await interpret(versionHandler.listVersions({ entity: "doc-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +164,7 @@ describe('Version functional handler', () => {
     it('fixture "list_unknown_entity" -> ok', async () => {
       if (typeof versionHandler.listVersions !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(versionHandler.snapshot({ version: "v1", entity: "doc-1", data: "initial content", author: "alice" }), storage);
       const result = await interpret(versionHandler.listVersions({ entity: "nonexistent" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +226,7 @@ describe('Version functional handler', () => {
     it('fixture "valid_rollback" -> ok', async () => {
       if (typeof versionHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(versionHandler.snapshot({ version: "v1", entity: "doc-1", data: "initial content", author: "alice" }), storage);
       const result = await interpret(versionHandler.rollback({ version: "v1" }), storage);
       expect(result.variant).toBe('ok');
     });

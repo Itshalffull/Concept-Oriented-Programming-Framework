@@ -162,6 +162,7 @@ describe('Majority functional handler', () => {
     it('fixture "clear_winner" -> ok', async () => {
       if (typeof majorityCountHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(majorityCountHandler.configure({ threshold: "0.5", binaryOnly: "true", tieBreaker: null }), storage);
       const result = await interpret(majorityCountHandler.count({ config: "maj-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -169,6 +170,7 @@ describe('Majority functional handler', () => {
     it('fixture "no_ballots" -> error', async () => {
       if (typeof majorityCountHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(majorityCountHandler.configure({ threshold: "0.5", binaryOnly: "true", tieBreaker: null }), storage);
       const result = await interpret(majorityCountHandler.count({ config: "maj-001", ballots: "[]", weights: "{}" }), storage);
       expect(result.variant).not.toBe('ok');
     });

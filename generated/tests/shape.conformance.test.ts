@@ -155,6 +155,7 @@ describe('Shape functional handler', () => {
     it('fixture "resolve_button" -> ok', async () => {
       if (typeof shapeHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" }), storage);
       const result = await interpret(shapeHandler.resolve({ shapeId: "shape-1", element: "button" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +163,7 @@ describe('Shape functional handler', () => {
     it('fixture "resolve_card" -> ok', async () => {
       if (typeof shapeHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" }), storage);
       const result = await interpret(shapeHandler.resolve({ shapeId: "shape-1", element: "card" }), storage);
       expect(result.variant).toBe('ok');
     });

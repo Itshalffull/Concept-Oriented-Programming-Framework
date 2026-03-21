@@ -163,6 +163,7 @@ describe('WidgetResolver functional handler', () => {
     it('fixture "valid_resolveAll" -> ok', async () => {
       if (typeof widgetResolverHandler.resolveAll !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(widgetResolverHandler.resolve({ element: "single-choice", context: "{\"platform\":\"browser\",\"viewport\":\"desktop\"}" }), storage);
       const result = await interpret(widgetResolverHandler.resolveAll({ elements: "[\"single-choice\",\"text-edit\"]", context: "{\"platform\":\"browser\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -170,6 +171,7 @@ describe('WidgetResolver functional handler', () => {
     it('fixture "empty_elements" -> ok', async () => {
       if (typeof widgetResolverHandler.resolveAll !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(widgetResolverHandler.resolve({ element: "single-choice", context: "{\"platform\":\"browser\",\"viewport\":\"desktop\"}" }), storage);
       const result = await interpret(widgetResolverHandler.resolveAll({ elements: "[]", context: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -231,6 +233,7 @@ describe('WidgetResolver functional handler', () => {
     it('fixture "valid_override" -> ok', async () => {
       if (typeof widgetResolverHandler.override !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(widgetResolverHandler.resolve({ element: "single-choice", context: "{\"platform\":\"browser\",\"viewport\":\"desktop\"}" }), storage);
       const result = await interpret(widgetResolverHandler.override({ element: "single-choice", widget: "custom-picker" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -300,6 +303,7 @@ describe('WidgetResolver functional handler', () => {
     it('fixture "valid_weights" -> ok', async () => {
       if (typeof widgetResolverHandler.setWeights !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(widgetResolverHandler.resolve({ element: "single-choice", context: "{\"platform\":\"browser\",\"viewport\":\"desktop\"}" }), storage);
       const result = await interpret(widgetResolverHandler.setWeights({ weights: "{\"specificity\":0.4,\"conditionMatch\":0.3,\"popularity\":0.2,\"recency\":0.1}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -307,6 +311,7 @@ describe('WidgetResolver functional handler', () => {
     it('fixture "bad_sum" -> invalid', async () => {
       if (typeof widgetResolverHandler.setWeights !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(widgetResolverHandler.resolve({ element: "single-choice", context: "{\"platform\":\"browser\",\"viewport\":\"desktop\"}" }), storage);
       const result = await interpret(widgetResolverHandler.setWeights({ weights: "{\"specificity\":0.5,\"conditionMatch\":0.8}" }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('invalid'));
@@ -377,6 +382,7 @@ describe('WidgetResolver functional handler', () => {
     it('fixture "valid_explain" -> ok', async () => {
       if (typeof widgetResolverHandler.explain !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(widgetResolverHandler.resolve({ element: "single-choice", context: "{\"platform\":\"browser\",\"viewport\":\"desktop\"}" }), storage);
       const result = await interpret(widgetResolverHandler.explain({ element: "single-choice", context: "{\"platform\":\"browser\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -384,6 +390,7 @@ describe('WidgetResolver functional handler', () => {
     it('fixture "missing_resolver" -> notfound', async () => {
       if (typeof widgetResolverHandler.explain !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(widgetResolverHandler.resolve({ element: "single-choice", context: "{\"platform\":\"browser\",\"viewport\":\"desktop\"}" }), storage);
       const result = await interpret(widgetResolverHandler.explain({ resolver: "nonexistent-resolver", element: "single-choice", context: "{}" }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notfound'));

@@ -94,6 +94,7 @@ describe('Relation functional handler', () => {
     it('fixture "duplicate_define" -> exists', async () => {
       if (typeof relationHandler.defineRelation !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(relationHandler.defineRelation({ relation: "parent-child", schema: "{\"forward_label\":\"parent of\",\"reverse_label\":\"child of\",\"cardinality\":\"one-to-many\"}" }), storage);
       const result = await interpret(relationHandler.defineRelation({ relation: "parent-child", schema: "{}" }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('exists'));
@@ -156,6 +157,7 @@ describe('Relation functional handler', () => {
     it('fixture "valid_link" -> ok', async () => {
       if (typeof relationHandler.link !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(relationHandler.defineRelation({ relation: "parent-child", schema: "{\"forward_label\":\"parent of\",\"reverse_label\":\"child of\",\"cardinality\":\"one-to-many\"}" }), storage);
       const result = await interpret(relationHandler.link({ relation: "parent-child", source: "alice", target: "bob" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -225,6 +227,7 @@ describe('Relation functional handler', () => {
     it('fixture "valid_unlink" -> ok', async () => {
       if (typeof relationHandler.unlink !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(relationHandler.defineRelation({ relation: "parent-child", schema: "{\"forward_label\":\"parent of\",\"reverse_label\":\"child of\",\"cardinality\":\"one-to-many\"}" }), storage);
       const result = await interpret(relationHandler.unlink({ relation: "parent-child", source: "alice", target: "bob" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -294,6 +297,7 @@ describe('Relation functional handler', () => {
     it('fixture "valid_related" -> ok', async () => {
       if (typeof relationHandler.getRelated !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(relationHandler.defineRelation({ relation: "parent-child", schema: "{\"forward_label\":\"parent of\",\"reverse_label\":\"child of\",\"cardinality\":\"one-to-many\"}" }), storage);
       const result = await interpret(relationHandler.getRelated({ relation: "parent-child", entity: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });

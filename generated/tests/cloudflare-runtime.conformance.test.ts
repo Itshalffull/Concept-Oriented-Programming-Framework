@@ -155,6 +155,7 @@ describe('CloudflareRuntime functional handler', () => {
     it('fixture "deploy_script" -> ok', async () => {
       if (typeof cloudflareRuntimeHandler.deploy !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
       const result = await interpret(cloudflareRuntimeHandler.deploy({ worker: "wkr-001", scriptContent: "export default { fetch() { return new Response('OK') } }" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('CloudflareRuntime functional handler', () => {
     it('fixture "set_weight_50" -> ok', async () => {
       if (typeof cloudflareRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
       const result = await interpret(cloudflareRuntimeHandler.setTrafficWeight({ worker: "wkr-001", weight: "50" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +232,7 @@ describe('CloudflareRuntime functional handler', () => {
     it('fixture "set_weight_negative" -> ok', async () => {
       if (typeof cloudflareRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
       const result = await interpret(cloudflareRuntimeHandler.setTrafficWeight({ worker: "wkr-001", weight: "-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +294,7 @@ describe('CloudflareRuntime functional handler', () => {
     it('fixture "rollback_to_v1" -> ok', async () => {
       if (typeof cloudflareRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
       const result = await interpret(cloudflareRuntimeHandler.rollback({ worker: "wkr-001", targetVersion: "1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -298,6 +302,7 @@ describe('CloudflareRuntime functional handler', () => {
     it('fixture "rollback_empty_version" -> ok', async () => {
       if (typeof cloudflareRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
       const result = await interpret(cloudflareRuntimeHandler.rollback({ worker: "wkr-001", targetVersion: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +364,7 @@ describe('CloudflareRuntime functional handler', () => {
     it('fixture "destroy_worker" -> ok', async () => {
       if (typeof cloudflareRuntimeHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
       const result = await interpret(cloudflareRuntimeHandler.destroy({ worker: "wkr-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -366,6 +372,7 @@ describe('CloudflareRuntime functional handler', () => {
     it('fixture "destroy_empty" -> ok', async () => {
       if (typeof cloudflareRuntimeHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
       const result = await interpret(cloudflareRuntimeHandler.destroy({ worker: "" }), storage);
       expect(result.variant).toBe('ok');
     });

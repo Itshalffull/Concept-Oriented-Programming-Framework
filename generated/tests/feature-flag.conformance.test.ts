@@ -62,6 +62,7 @@ describe('FeatureFlag imperative handler', () => {
     it('fixture "disable_existing_flag" -> ok', async () => {
       if (typeof featureFlagHandler.disable !== 'function') return;
       const storage = createInMemoryStorage();
+      await featureFlagHandler.enable({ flag: "flag-1" }, storage);
       const result = await featureFlagHandler.disable({ flag: "flag-1" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -88,6 +89,7 @@ describe('FeatureFlag imperative handler', () => {
     it('fixture "unify_compatible_flags" -> ok', async () => {
       if (typeof featureFlagHandler.unify !== 'function') return;
       const storage = createInMemoryStorage();
+      await featureFlagHandler.enable({ flag: "flag-1" }, storage);
       const result = await featureFlagHandler.unify({ flags: ["flag-1","flag-2"] }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -95,6 +97,7 @@ describe('FeatureFlag imperative handler', () => {
     it('fixture "unify_empty_flags" -> ok', async () => {
       if (typeof featureFlagHandler.unify !== 'function') return;
       const storage = createInMemoryStorage();
+      await featureFlagHandler.enable({ flag: "flag-1" }, storage);
       const result = await featureFlagHandler.unify({ flags: [] }, storage);
       expect(result.variant).toBe('ok');
     });

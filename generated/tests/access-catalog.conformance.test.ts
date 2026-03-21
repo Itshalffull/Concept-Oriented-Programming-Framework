@@ -155,6 +155,7 @@ describe('AccessCatalog functional handler', () => {
     it('fixture "register_editor_role" -> ok', async () => {
       if (typeof accessCatalogHandler.registerRole !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(accessCatalogHandler.registerPermission({ entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" }), storage);
       const result = await interpret(accessCatalogHandler.registerRole({ entry: "role-001", key: "editor", label: "Editor", description: "Content editor role", permissions: "[\"content.edit\",\"content.publish\"]" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +163,7 @@ describe('AccessCatalog functional handler', () => {
     it('fixture "register_empty_role" -> ok', async () => {
       if (typeof accessCatalogHandler.registerRole !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(accessCatalogHandler.registerPermission({ entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" }), storage);
       const result = await interpret(accessCatalogHandler.registerRole({ entry: "", key: "editor", label: "Editor", description: "desc", permissions: "[]" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +225,7 @@ describe('AccessCatalog functional handler', () => {
     it('fixture "register_view_action" -> ok', async () => {
       if (typeof accessCatalogHandler.registerResourceAction !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(accessCatalogHandler.registerPermission({ entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" }), storage);
       const result = await interpret(accessCatalogHandler.registerResourceAction({ entry: "action-001", catalog: "schema", key: "view", label: "View content" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +233,7 @@ describe('AccessCatalog functional handler', () => {
     it('fixture "register_empty_action" -> ok', async () => {
       if (typeof accessCatalogHandler.registerResourceAction !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(accessCatalogHandler.registerPermission({ entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" }), storage);
       const result = await interpret(accessCatalogHandler.registerResourceAction({ entry: "", catalog: "schema", key: "view", label: "View" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +295,7 @@ describe('AccessCatalog functional handler', () => {
     it('fixture "list_all_perms" -> ok', async () => {
       if (typeof accessCatalogHandler.listPermissions !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(accessCatalogHandler.registerPermission({ entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" }), storage);
       const result = await interpret(accessCatalogHandler.listPermissions({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -352,6 +357,7 @@ describe('AccessCatalog functional handler', () => {
     it('fixture "list_all_roles" -> ok', async () => {
       if (typeof accessCatalogHandler.listRoles !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(accessCatalogHandler.registerPermission({ entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" }), storage);
       const result = await interpret(accessCatalogHandler.listRoles({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -413,6 +419,7 @@ describe('AccessCatalog functional handler', () => {
     it('fixture "list_schema_actions" -> ok', async () => {
       if (typeof accessCatalogHandler.listResourceActions !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(accessCatalogHandler.registerPermission({ entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" }), storage);
       const result = await interpret(accessCatalogHandler.listResourceActions({ catalog: "schema" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -420,6 +427,7 @@ describe('AccessCatalog functional handler', () => {
     it('fixture "list_empty_catalog" -> ok', async () => {
       if (typeof accessCatalogHandler.listResourceActions !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(accessCatalogHandler.registerPermission({ entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" }), storage);
       const result = await interpret(accessCatalogHandler.listResourceActions({ catalog: "" }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -155,6 +155,7 @@ describe('OptimisticApproval functional handler', () => {
     it('fixture "challenge_pending" -> ok', async () => {
       if (typeof optimisticApprovalHandler.challenge !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(optimisticApprovalHandler.assert({ asserter: "alice", payload: "Transfer 1000 tokens to treasury", bond: "100.0", challengePeriodHours: "48.0" }), storage);
       const result = await interpret(optimisticApprovalHandler.challenge({ assertion: "assertion-001", challenger: "bob", bond: "100.0", evidence: "Transaction exceeds approved limit" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('OptimisticApproval functional handler', () => {
     it('fixture "finalize_unchallenged" -> ok', async () => {
       if (typeof optimisticApprovalHandler.finalize !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(optimisticApprovalHandler.assert({ asserter: "alice", payload: "Transfer 1000 tokens to treasury", bond: "100.0", challengePeriodHours: "48.0" }), storage);
       const result = await interpret(optimisticApprovalHandler.finalize({ assertion: "assertion-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('OptimisticApproval functional handler', () => {
     it('fixture "resolve_in_favor" -> ok', async () => {
       if (typeof optimisticApprovalHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(optimisticApprovalHandler.assert({ asserter: "alice", payload: "Transfer 1000 tokens to treasury", bond: "100.0", challengePeriodHours: "48.0" }), storage);
       const result = await interpret(optimisticApprovalHandler.resolve({ assertion: "assertion-001", outcome: "approved" }), storage);
       expect(result.variant).toBe('ok');
     });

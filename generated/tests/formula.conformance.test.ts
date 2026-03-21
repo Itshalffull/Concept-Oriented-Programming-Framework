@@ -155,6 +155,7 @@ describe('Formula functional handler', () => {
     it('fixture "evaluate_existing" -> ok', async () => {
       if (typeof formulaHandler.evaluate !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(formulaHandler.create({ formula: "total_price", expression: "price * quantity" }), storage);
       const result = await interpret(formulaHandler.evaluate({ formula: "total_price" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('Formula functional handler', () => {
     it('fixture "get_deps" -> ok', async () => {
       if (typeof formulaHandler.getDependencies !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(formulaHandler.create({ formula: "total_price", expression: "price * quantity" }), storage);
       const result = await interpret(formulaHandler.getDependencies({ formula: "total_price" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('Formula functional handler', () => {
     it('fixture "invalidate_existing" -> ok', async () => {
       if (typeof formulaHandler.invalidate !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(formulaHandler.create({ formula: "total_price", expression: "price * quantity" }), storage);
       const result = await interpret(formulaHandler.invalidate({ formula: "total_price" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +362,7 @@ describe('Formula functional handler', () => {
     it('fixture "set_expr" -> ok', async () => {
       if (typeof formulaHandler.setExpression !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(formulaHandler.create({ formula: "total_price", expression: "price * quantity" }), storage);
       const result = await interpret(formulaHandler.setExpression({ formula: "total_price", expression: "price * quantity * discount" }), storage);
       expect(result.variant).toBe('ok');
     });

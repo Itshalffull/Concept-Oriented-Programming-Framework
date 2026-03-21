@@ -155,6 +155,7 @@ describe('Role functional handler', () => {
     it('fixture "assign_alice_admin" -> ok', async () => {
       if (typeof roleHandler.assign !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" }), storage);
       const result = await interpret(roleHandler.assign({ role: "role-1", member: "alice", assignedBy: "system" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('Role functional handler', () => {
     it('fixture "revoke_alice" -> ok', async () => {
       if (typeof roleHandler.revoke !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" }), storage);
       const result = await interpret(roleHandler.revoke({ role: "role-1", member: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('Role functional handler', () => {
     it('fixture "check_alice_admin" -> ok', async () => {
       if (typeof roleHandler.check !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" }), storage);
       const result = await interpret(roleHandler.check({ role: "role-1", member: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +362,7 @@ describe('Role functional handler', () => {
     it('fixture "dissolve_admin" -> ok', async () => {
       if (typeof roleHandler.dissolve !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" }), storage);
       const result = await interpret(roleHandler.dissolve({ role: "role-1" }), storage);
       expect(result.variant).toBe('ok');
     });

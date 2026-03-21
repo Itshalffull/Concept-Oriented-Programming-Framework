@@ -155,6 +155,7 @@ describe('Property functional handler', () => {
     it('fixture "get_existing" -> ok', async () => {
       if (typeof propertyHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(propertyHandler.set({ entity: "page-1", key: "title", value: "Hello World" }), storage);
       const result = await interpret(propertyHandler.get({ entity: "page-1", key: "title" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('Property functional handler', () => {
     it('fixture "delete_existing" -> ok', async () => {
       if (typeof propertyHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(propertyHandler.set({ entity: "page-1", key: "title", value: "Hello World" }), storage);
       const result = await interpret(propertyHandler.delete({ entity: "page-1", key: "title" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('Property functional handler', () => {
     it('fixture "list_all_props" -> ok', async () => {
       if (typeof propertyHandler.listAll !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(propertyHandler.set({ entity: "page-1", key: "title", value: "Hello World" }), storage);
       const result = await interpret(propertyHandler.listAll({ entity: "page-1" }), storage);
       expect(result.variant).toBe('ok');
     });

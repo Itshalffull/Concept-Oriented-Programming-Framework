@@ -62,6 +62,7 @@ describe('DisplayMode imperative handler', () => {
     it('fixture "resolve_article" -> ok', async () => {
       if (typeof displayModeHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
+      await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
       const result = await displayModeHandler.resolve({ schema: "Article", mode_id: "full" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -88,6 +89,7 @@ describe('DisplayMode imperative handler', () => {
     it('fixture "set_layout_triple" -> ok', async () => {
       if (typeof displayModeHandler.set_layout !== 'function') return;
       const storage = createInMemoryStorage();
+      await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
       const result = await displayModeHandler.set_layout({ mode: "Article:full", layout: "triple-zone-default" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -114,6 +116,7 @@ describe('DisplayMode imperative handler', () => {
     it('fixture "clear_existing_layout" -> ok', async () => {
       if (typeof displayModeHandler.clear_layout !== 'function') return;
       const storage = createInMemoryStorage();
+      await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
       const result = await displayModeHandler.clear_layout({ mode: "Article:full" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -140,6 +143,7 @@ describe('DisplayMode imperative handler', () => {
     it('fixture "set_mapping_hero" -> ok', async () => {
       if (typeof displayModeHandler.set_component_mapping !== 'function') return;
       const storage = createInMemoryStorage();
+      await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
       const result = await displayModeHandler.set_component_mapping({ mode: "Article:full", mapping: "article-hero-card" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -166,6 +170,7 @@ describe('DisplayMode imperative handler', () => {
     it('fixture "clear_comp_mapping" -> ok', async () => {
       if (typeof displayModeHandler.clear_component_mapping !== 'function') return;
       const storage = createInMemoryStorage();
+      await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
       const result = await displayModeHandler.clear_component_mapping({ mode: "Article:full" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -192,6 +197,7 @@ describe('DisplayMode imperative handler', () => {
     it('fixture "set_placements" -> ok', async () => {
       if (typeof displayModeHandler.set_flat_fields !== 'function') return;
       const storage = createInMemoryStorage();
+      await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
       const result = await displayModeHandler.set_flat_fields({ mode: "Article:full", placements: "[\"fp-title\",\"fp-body\"]" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -218,6 +224,7 @@ describe('DisplayMode imperative handler', () => {
     it('fixture "get_existing_mode" -> ok', async () => {
       if (typeof displayModeHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
       const result = await displayModeHandler.get({ mode: "Article:full" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -244,6 +251,7 @@ describe('DisplayMode imperative handler', () => {
     it('fixture "delete_existing" -> ok', async () => {
       if (typeof displayModeHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
+      await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
       const result = await displayModeHandler.delete({ mode: "Article:full" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -270,6 +278,7 @@ describe('DisplayMode imperative handler', () => {
     it('fixture "list_article_modes" -> ok', async () => {
       if (typeof displayModeHandler.list_for_schema !== 'function') return;
       const storage = createInMemoryStorage();
+      await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
       const result = await displayModeHandler.list_for_schema({ schema: "Article" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -296,6 +305,7 @@ describe('DisplayMode imperative handler', () => {
     it('fixture "list_all" -> ok', async () => {
       if (typeof displayModeHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
       const result = await displayModeHandler.list({  }, storage);
       expect(result.variant).toBe('ok');
     });

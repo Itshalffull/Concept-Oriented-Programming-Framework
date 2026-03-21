@@ -162,6 +162,7 @@ describe('Pathauto functional handler', () => {
     it('fixture "bulk_two" -> ok', async () => {
       if (typeof pathautoHandler.bulkGenerate !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(pathautoHandler.generateAlias({ pattern: "blog", entity: "My Example Page" }), storage);
       const result = await interpret(pathautoHandler.bulkGenerate({ pattern: "docs", entities: "[\"Getting Started\",\"API Reference\"]" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +231,7 @@ describe('Pathauto functional handler', () => {
     it('fixture "clean_spaces" -> ok', async () => {
       if (typeof pathautoHandler.cleanString !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(pathautoHandler.generateAlias({ pattern: "blog", entity: "My Example Page" }), storage);
       const result = await interpret(pathautoHandler.cleanString({ input: "Hello World Test" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -237,6 +239,7 @@ describe('Pathauto functional handler', () => {
     it('fixture "clean_empty" -> ok', async () => {
       if (typeof pathautoHandler.cleanString !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(pathautoHandler.generateAlias({ pattern: "blog", entity: "My Example Page" }), storage);
       const result = await interpret(pathautoHandler.cleanString({ input: "" }), storage);
       expect(result.variant).toBe('ok');
     });

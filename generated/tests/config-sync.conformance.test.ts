@@ -155,6 +155,7 @@ describe('ConfigSync functional handler', () => {
     it('fixture "import_valid" -> ok', async () => {
       if (typeof configSyncHandler.import !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(configSyncHandler.export({ config: "site-settings" }), storage);
       const result = await interpret(configSyncHandler.import({ config: "site-settings", data: "{\"theme\":\"dark\",\"locale\":\"en\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +163,7 @@ describe('ConfigSync functional handler', () => {
     it('fixture "import_empty_data" -> ok', async () => {
       if (typeof configSyncHandler.import !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(configSyncHandler.export({ config: "site-settings" }), storage);
       const result = await interpret(configSyncHandler.import({ config: "site-settings", data: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +225,7 @@ describe('ConfigSync functional handler', () => {
     it('fixture "override_production" -> ok', async () => {
       if (typeof configSyncHandler.override !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(configSyncHandler.export({ config: "site-settings" }), storage);
       const result = await interpret(configSyncHandler.override({ config: "site-settings", layer: "production", values: "debug=false,cache_ttl=3600" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +233,7 @@ describe('ConfigSync functional handler', () => {
     it('fixture "override_empty_layer" -> ok', async () => {
       if (typeof configSyncHandler.override !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(configSyncHandler.export({ config: "site-settings" }), storage);
       const result = await interpret(configSyncHandler.override({ config: "site-settings", layer: "", values: "debug=true" }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -223,6 +223,7 @@ describe('DockerComposeIacProvider functional handler', () => {
     it('fixture "apply_compose" -> ok', async () => {
       if (typeof dockerComposeIacProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(dockerComposeIacProviderHandler.generate({ plan: "dp-001" }), storage);
       const result = await interpret(dockerComposeIacProviderHandler.apply({ composeFile: "compose-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +231,7 @@ describe('DockerComposeIacProvider functional handler', () => {
     it('fixture "apply_empty" -> ok', async () => {
       if (typeof dockerComposeIacProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(dockerComposeIacProviderHandler.generate({ plan: "dp-001" }), storage);
       const result = await interpret(dockerComposeIacProviderHandler.apply({ composeFile: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('DockerComposeIacProvider functional handler', () => {
     it('fixture "teardown_compose" -> ok', async () => {
       if (typeof dockerComposeIacProviderHandler.teardown !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(dockerComposeIacProviderHandler.generate({ plan: "dp-001" }), storage);
       const result = await interpret(dockerComposeIacProviderHandler.teardown({ composeFile: "compose-001" }), storage);
       expect(result.variant).toBe('ok');
     });

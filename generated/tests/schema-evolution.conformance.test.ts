@@ -155,6 +155,7 @@ describe('SchemaEvolution functional handler', () => {
     it('fixture "check_backward" -> ok', async () => {
       if (typeof schemaEvolutionHandler.check !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(schemaEvolutionHandler.register({ subject: "user-profile", schema: "[{\"name\":\"email\",\"type\":\"string\",\"required\":true}]", compatibility: "backward" }), storage);
       const result = await interpret(schemaEvolutionHandler.check({ oldSchema: "[{\"name\":\"email\",\"type\":\"string\"}]", newSchema: "[{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"age\",\"type\":\"int\"}]", mode: "backward" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('SchemaEvolution functional handler', () => {
     it('fixture "upcast_v1_to_v2" -> ok', async () => {
       if (typeof schemaEvolutionHandler.upcast !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(schemaEvolutionHandler.register({ subject: "user-profile", schema: "[{\"name\":\"email\",\"type\":\"string\",\"required\":true}]", compatibility: "backward" }), storage);
       const result = await interpret(schemaEvolutionHandler.upcast({ data: "{\"email\":\"alice@example.com\"}", fromVersion: "1", toVersion: "2", subject: "user-profile" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +232,7 @@ describe('SchemaEvolution functional handler', () => {
     it('fixture "upcast_missing_subject" -> error', async () => {
       if (typeof schemaEvolutionHandler.upcast !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(schemaEvolutionHandler.register({ subject: "user-profile", schema: "[{\"name\":\"email\",\"type\":\"string\",\"required\":true}]", compatibility: "backward" }), storage);
       const result = await interpret(schemaEvolutionHandler.upcast({ data: "{}", fromVersion: "1", toVersion: "2", subject: "" }), storage);
       expect(result.variant).not.toBe('ok');
     });
@@ -291,6 +294,7 @@ describe('SchemaEvolution functional handler', () => {
     it('fixture "resolve_schemas" -> ok', async () => {
       if (typeof schemaEvolutionHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(schemaEvolutionHandler.register({ subject: "user-profile", schema: "[{\"name\":\"email\",\"type\":\"string\",\"required\":true}]", compatibility: "backward" }), storage);
       const result = await interpret(schemaEvolutionHandler.resolve({ readerSchema: "[{\"name\":\"email\",\"type\":\"string\"}]", writerSchema: "[{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"phone\",\"type\":\"string\"}]" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +363,7 @@ describe('SchemaEvolution functional handler', () => {
     it('fixture "get_existing" -> ok', async () => {
       if (typeof schemaEvolutionHandler.getSchema !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(schemaEvolutionHandler.register({ subject: "user-profile", schema: "[{\"name\":\"email\",\"type\":\"string\",\"required\":true}]", compatibility: "backward" }), storage);
       const result = await interpret(schemaEvolutionHandler.getSchema({ subject: "user-profile", version: "1" }), storage);
       expect(result.variant).toBe('ok');
     });

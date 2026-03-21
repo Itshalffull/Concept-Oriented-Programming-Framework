@@ -155,6 +155,7 @@ describe('RuntimeFlow functional handler', () => {
     it('fixture "find_create" -> ok', async () => {
       if (typeof runtimeFlowHandler.findByAction !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(runtimeFlowHandler.correlate({ flowId: "f-123" }), storage);
       const result = await interpret(runtimeFlowHandler.findByAction({ action: "User/create", since: "2026-01-01T00:00:00Z" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('RuntimeFlow functional handler', () => {
     it('fixture "find_sync" -> ok', async () => {
       if (typeof runtimeFlowHandler.findBySync !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(runtimeFlowHandler.correlate({ flowId: "f-123" }), storage);
       const result = await interpret(runtimeFlowHandler.findBySync({ sync: "onUserCreate", since: "2026-01-01T00:00:00Z" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('RuntimeFlow functional handler', () => {
     it('fixture "find_ok" -> ok', async () => {
       if (typeof runtimeFlowHandler.findByVariant !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(runtimeFlowHandler.correlate({ flowId: "f-123" }), storage);
       const result = await interpret(runtimeFlowHandler.findByVariant({ variant: "ok", since: "2026-01-01T00:00:00Z" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +362,7 @@ describe('RuntimeFlow functional handler', () => {
     it('fixture "find_recent" -> ok', async () => {
       if (typeof runtimeFlowHandler.findFailures !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(runtimeFlowHandler.correlate({ flowId: "f-123" }), storage);
       const result = await interpret(runtimeFlowHandler.findFailures({ since: "2026-01-01T00:00:00Z" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -366,6 +370,7 @@ describe('RuntimeFlow functional handler', () => {
     it('fixture "find_all" -> ok', async () => {
       if (typeof runtimeFlowHandler.findFailures !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(runtimeFlowHandler.correlate({ flowId: "f-123" }), storage);
       const result = await interpret(runtimeFlowHandler.findFailures({ since: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -495,6 +500,7 @@ describe('RuntimeFlow functional handler', () => {
     it('fixture "locations_flow" -> ok', async () => {
       if (typeof runtimeFlowHandler.sourceLocations !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(runtimeFlowHandler.correlate({ flowId: "f-123" }), storage);
       const result = await interpret(runtimeFlowHandler.sourceLocations({ flow: "runtime-flow-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -563,6 +569,7 @@ describe('RuntimeFlow functional handler', () => {
     it('fixture "get_flow" -> ok', async () => {
       if (typeof runtimeFlowHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(runtimeFlowHandler.correlate({ flowId: "f-123" }), storage);
       const result = await interpret(runtimeFlowHandler.get({ flow: "runtime-flow-1" }), storage);
       expect(result.variant).toBe('ok');
     });

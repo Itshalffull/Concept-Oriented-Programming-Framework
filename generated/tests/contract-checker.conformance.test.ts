@@ -163,6 +163,7 @@ describe('ContractChecker functional handler', () => {
     it('fixture "valid_checkAll" -> ok', async () => {
       if (typeof contractCheckerHandler.checkAll !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(contractCheckerHandler.check({ widget: "approval-detail", concept: "Approval" }), storage);
       const result = await interpret(contractCheckerHandler.checkAll({ concept: "Approval" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -232,6 +233,7 @@ describe('ContractChecker functional handler', () => {
     it('fixture "valid_checkSuite" -> ok', async () => {
       if (typeof contractCheckerHandler.checkSuite !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(contractCheckerHandler.check({ widget: "approval-detail", concept: "Approval" }), storage);
       const result = await interpret(contractCheckerHandler.checkSuite({ suite: "governance" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -301,6 +303,7 @@ describe('ContractChecker functional handler', () => {
     it('fixture "valid_suggest" -> ok', async () => {
       if (typeof contractCheckerHandler.suggest !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(contractCheckerHandler.check({ widget: "approval-detail", concept: "Approval" }), storage);
       const result = await interpret(contractCheckerHandler.suggest({ widget: "approval-detail", concept: "Approval" }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -155,6 +155,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "tree_root" -> ok', async () => {
       if (typeof scoreApiHandler.getFileTree !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.getFileTree({ path: ".", depth: "2" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "get_handler" -> ok', async () => {
       if (typeof scoreApiHandler.getFileContent !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.getFileContent({ path: "handlers/ts/app/flag.handler.ts" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "get_defs" -> ok', async () => {
       if (typeof scoreApiHandler.getDefinitions !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.getDefinitions({ path: "handlers/ts/app/flag.handler.ts" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +362,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "match_fns" -> ok', async () => {
       if (typeof scoreApiHandler.matchPattern !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.matchPattern({ pattern: "(function_declaration) @fn", language: "typescript" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -427,6 +431,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "find_flag" -> ok', async () => {
       if (typeof scoreApiHandler.findSymbol !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.findSymbol({ name: "flagHandler" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -495,6 +500,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "refs_flag" -> ok', async () => {
       if (typeof scoreApiHandler.getReferences !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.getReferences({ symbol: "flagHandler" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -563,6 +569,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "scope_handler" -> ok', async () => {
       if (typeof scoreApiHandler.getScope !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.getScope({ file: "handlers/ts/app/flag.handler.ts", line: "10" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -631,6 +638,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "rels_flag" -> ok', async () => {
       if (typeof scoreApiHandler.getRelationships !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.getRelationships({ symbol: "flagHandler" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -699,6 +707,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof scoreApiHandler.listConcepts !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.listConcepts({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -760,6 +769,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "get_flag" -> ok', async () => {
       if (typeof scoreApiHandler.getConcept !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.getConcept({ name: "Flag" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -828,6 +838,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "get_flag_action" -> ok', async () => {
       if (typeof scoreApiHandler.getAction !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.getAction({ concept: "Flag", action: "flag" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -896,6 +907,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "valid_2" -> ok', async () => {
       if (typeof scoreApiHandler.listSyncs !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.listSyncs({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -957,6 +969,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "get_sync" -> ok', async () => {
       if (typeof scoreApiHandler.getSync !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.getSync({ name: "onUserCreate" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -1025,6 +1038,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "flow_create" -> ok', async () => {
       if (typeof scoreApiHandler.getFlow !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.getFlow({ startConcept: "User", startAction: "create" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -1093,6 +1107,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "get_handler_ts" -> ok', async () => {
       if (typeof scoreApiHandler.getHandler !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.getHandler({ concept: "Flag", language: "typescript" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -1161,6 +1176,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "get_source" -> ok', async () => {
       if (typeof scoreApiHandler.getActionSource !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.getActionSource({ concept: "Flag", action: "flag" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -1229,6 +1245,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "valid_3" -> ok', async () => {
       if (typeof scoreApiHandler.listHandlers !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.listHandlers({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -1290,6 +1307,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "valid_4" -> ok', async () => {
       if (typeof scoreApiHandler.implementationGaps !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.implementationGaps({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -1351,6 +1369,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "resolve_trace" -> ok', async () => {
       if (typeof scoreApiHandler.resolveStackTrace !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.resolveStackTrace({ stackTrace: "Error\n    at flag (handlers/ts/app/flag.handler.ts:14:5)" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -1419,6 +1438,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "get_react_dialog" -> ok', async () => {
       if (typeof scoreApiHandler.getWidgetImpl !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.getWidgetImpl({ widget: "dialog", framework: "react" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -1487,6 +1507,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "get_css_light" -> ok', async () => {
       if (typeof scoreApiHandler.getThemeImpl !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.getThemeImpl({ theme: "light", platform: "css" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -1555,6 +1576,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "get_prod" -> ok', async () => {
       if (typeof scoreApiHandler.getDeployment !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.getDeployment({ name: "conduit-prod" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -1623,6 +1645,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "get_topo" -> ok', async () => {
       if (typeof scoreApiHandler.getDeploymentTopology !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.getDeploymentTopology({ name: "conduit-prod" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -1691,6 +1714,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "get_health" -> ok', async () => {
       if (typeof scoreApiHandler.getDeploymentHealth !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.getDeploymentHealth({ name: "conduit-prod" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -1759,6 +1783,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "valid_5" -> ok', async () => {
       if (typeof scoreApiHandler.listSuites !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.listSuites({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -1820,6 +1845,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "get_suite" -> ok', async () => {
       if (typeof scoreApiHandler.getSuite !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.getSuite({ name: "identity" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -1888,6 +1914,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "valid_6" -> ok', async () => {
       if (typeof scoreApiHandler.listInterfaces !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.listInterfaces({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -1949,6 +1976,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "get_rest_endpoints" -> ok', async () => {
       if (typeof scoreApiHandler.getEndpoints !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.getEndpoints({ interface: "conduit-api", target: "rest" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -2017,6 +2045,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "trace_users" -> ok', async () => {
       if (typeof scoreApiHandler.traceEndpoint !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.traceEndpoint({ target: "rest", path: "/api/users", method: "POST" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -2085,6 +2114,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "deps_symbol" -> ok', async () => {
       if (typeof scoreApiHandler.getDependencies !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.getDependencies({ symbol: "flagHandler" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -2153,6 +2183,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "dependents" -> ok', async () => {
       if (typeof scoreApiHandler.getDependents !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.getDependents({ symbol: "flagHandler" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -2221,6 +2252,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "impact_handler" -> ok', async () => {
       if (typeof scoreApiHandler.getImpact !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.getImpact({ file: "handlers/ts/app/flag.handler.ts" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -2289,6 +2321,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "flow_path" -> ok', async () => {
       if (typeof scoreApiHandler.getDataFlow !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.getDataFlow({ from: "User/create", to: "Email/send" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -2357,6 +2390,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "search_user" -> ok', async () => {
       if (typeof scoreApiHandler.search !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.search({ query: "user authentication", limit: "10" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -2425,6 +2459,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "explain_flag" -> ok', async () => {
       if (typeof scoreApiHandler.explain !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.explain({ symbol: "Flag" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -2493,6 +2528,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "valid_7" -> ok', async () => {
       if (typeof scoreApiHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.status({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -2554,6 +2590,7 @@ describe('ScoreApi functional handler', () => {
     it('fixture "valid_8" -> ok', async () => {
       if (typeof scoreApiHandler.reindex !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
       const result = await interpret(scoreApiHandler.reindex({  }), storage);
       expect(result.variant).toBe('ok');
     });

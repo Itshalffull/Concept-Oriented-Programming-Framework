@@ -155,6 +155,7 @@ describe('Resolver functional handler', () => {
     it('fixture "update_single_target" -> ok', async () => {
       if (typeof resolverHandler.update !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(resolverHandler.resolve({ constraints: [{"module_id":"auth","version_range":"^1.0.0","edge_type":"normal","environment":"all","features":[]}], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"false","allowed_updates":"minor"}, locked_versions: null }), storage);
       const result = await interpret(resolverHandler.update({ resolution: "res-1", targets: ["auth"], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"true","allowed_updates":"minor"} }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +163,7 @@ describe('Resolver functional handler', () => {
     it('fixture "update_missing_resolution" -> error', async () => {
       if (typeof resolverHandler.update !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(resolverHandler.resolve({ constraints: [{"module_id":"auth","version_range":"^1.0.0","edge_type":"normal","environment":"all","features":[]}], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"false","allowed_updates":"minor"}, locked_versions: null }), storage);
       const result = await interpret(resolverHandler.update({ resolution: "res-nonexistent", targets: ["auth"], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"false","allowed_updates":"major"} }), storage);
       expect(result.variant).not.toBe('ok');
     });
@@ -223,6 +225,7 @@ describe('Resolver functional handler', () => {
     it('fixture "explain_existing_module" -> ok', async () => {
       if (typeof resolverHandler.explain !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(resolverHandler.resolve({ constraints: [{"module_id":"auth","version_range":"^1.0.0","edge_type":"normal","environment":"all","features":[]}], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"false","allowed_updates":"minor"}, locked_versions: null }), storage);
       const result = await interpret(resolverHandler.explain({ resolution: "res-1", module_id: "auth" }), storage);
       expect(result.variant).toBe('ok');
     });

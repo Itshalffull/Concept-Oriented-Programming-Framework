@@ -155,6 +155,7 @@ describe('ContentNode functional handler', () => {
     it('fixture "update_content" -> ok', async () => {
       if (typeof contentNodeHandler.update !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
       const result = await interpret(contentNodeHandler.update({ node: "node-1", content: "Updated wiki content" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('ContentNode functional handler', () => {
     it('fixture "delete_node" -> ok', async () => {
       if (typeof contentNodeHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
       const result = await interpret(contentNodeHandler.delete({ node: "node-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('ContentNode functional handler', () => {
     it('fixture "get_node" -> ok', async () => {
       if (typeof contentNodeHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
       const result = await interpret(contentNodeHandler.get({ node: "node-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +362,7 @@ describe('ContentNode functional handler', () => {
     it('fixture "set_metadata" -> ok', async () => {
       if (typeof contentNodeHandler.setMetadata !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
       const result = await interpret(contentNodeHandler.setMetadata({ node: "node-1", metadata: "{\"tags\":[\"important\"],\"priority\":\"high\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -366,6 +370,7 @@ describe('ContentNode functional handler', () => {
     it('fixture "set_metadata_missing" -> error', async () => {
       if (typeof contentNodeHandler.setMetadata !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
       const result = await interpret(contentNodeHandler.setMetadata({ node: "nonexistent", metadata: "{}" }), storage);
       expect(result.variant).not.toBe('ok');
     });
@@ -427,6 +432,7 @@ describe('ContentNode functional handler', () => {
     it('fixture "change_to_document" -> ok', async () => {
       if (typeof contentNodeHandler.changeType !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
       const result = await interpret(contentNodeHandler.changeType({ node: "node-1", type: "document" }), storage);
       expect(result.variant).toBe('ok');
     });

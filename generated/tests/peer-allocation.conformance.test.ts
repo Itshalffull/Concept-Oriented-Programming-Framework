@@ -155,6 +155,7 @@ describe('PeerAllocation functional handler', () => {
     it('fixture "allocate_to_peer" -> ok', async () => {
       if (typeof peerAllocationHandler.allocate !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(peerAllocationHandler.openRound({ budget: "100", deadlineDays: "7.0" }), storage);
       const result = await interpret(peerAllocationHandler.allocate({ round: "peer-alloc-001", allocator: "alice", recipient: "bob", amount: "30", note: "Great code review" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('PeerAllocation functional handler', () => {
     it('fixture "finalize_round" -> ok', async () => {
       if (typeof peerAllocationHandler.finalize !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(peerAllocationHandler.openRound({ budget: "100", deadlineDays: "7.0" }), storage);
       const result = await interpret(peerAllocationHandler.finalize({ round: "peer-alloc-001" }), storage);
       expect(result.variant).toBe('ok');
     });

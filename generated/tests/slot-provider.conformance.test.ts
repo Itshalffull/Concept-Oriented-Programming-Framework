@@ -155,6 +155,7 @@ describe('SlotProvider functional handler', () => {
     it('fixture "define_header" -> ok', async () => {
       if (typeof slotProviderHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(slotProviderHandler.initialize({ config: "{}" }), storage);
       const result = await interpret(slotProviderHandler.define({ provider: "sp-1", name: "header", host: "dialog", position: "before-title" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('SlotProvider functional handler', () => {
     it('fixture "fill_slot" -> ok', async () => {
       if (typeof slotProviderHandler.fill !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(slotProviderHandler.initialize({ config: "{}" }), storage);
       const result = await interpret(slotProviderHandler.fill({ provider: "sp-1", slot: "slot-1", content: "<h1>Title</h1>" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('SlotProvider functional handler', () => {
     it('fixture "clear_slot" -> ok', async () => {
       if (typeof slotProviderHandler.clear !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(slotProviderHandler.initialize({ config: "{}" }), storage);
       const result = await interpret(slotProviderHandler.clear({ provider: "sp-1", slot: "slot-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +362,7 @@ describe('SlotProvider functional handler', () => {
     it('fixture "get_slots_dialog" -> ok', async () => {
       if (typeof slotProviderHandler.getSlots !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(slotProviderHandler.initialize({ config: "{}" }), storage);
       const result = await interpret(slotProviderHandler.getSlots({ host: "dialog" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -366,6 +370,7 @@ describe('SlotProvider functional handler', () => {
     it('fixture "get_slots_empty" -> ok', async () => {
       if (typeof slotProviderHandler.getSlots !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(slotProviderHandler.initialize({ config: "{}" }), storage);
       const result = await interpret(slotProviderHandler.getSlots({ host: "" }), storage);
       expect(result.variant).toBe('ok');
     });

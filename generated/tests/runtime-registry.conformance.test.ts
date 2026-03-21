@@ -155,6 +155,7 @@ describe('RuntimeRegistry functional handler', () => {
     it('fixture "register_content_sync" -> ok', async () => {
       if (typeof runtimeRegistryHandler.registerSync !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(runtimeRegistryHandler.registerConcept({ uri: "urn:clef/ContentNode", has_storage: "true", storage_name: "content-node", storage_type: "standard" }), storage);
       const result = await interpret(runtimeRegistryHandler.registerSync({ sync_name: "ContentPublish", source: "content-node.ts", suite: "core" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +163,7 @@ describe('RuntimeRegistry functional handler', () => {
     it('fixture "register_empty_sync_name" -> ok', async () => {
       if (typeof runtimeRegistryHandler.registerSync !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(runtimeRegistryHandler.registerConcept({ uri: "urn:clef/ContentNode", has_storage: "true", storage_name: "content-node", storage_type: "standard" }), storage);
       const result = await interpret(runtimeRegistryHandler.registerSync({ sync_name: "", source: "unknown.ts", suite: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +225,7 @@ describe('RuntimeRegistry functional handler', () => {
     it('fixture "get_existing_concept" -> ok', async () => {
       if (typeof runtimeRegistryHandler.getConcept !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(runtimeRegistryHandler.registerConcept({ uri: "urn:clef/ContentNode", has_storage: "true", storage_name: "content-node", storage_type: "standard" }), storage);
       const result = await interpret(runtimeRegistryHandler.getConcept({ uri: "urn:clef/ContentNode" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +294,7 @@ describe('RuntimeRegistry functional handler', () => {
     it('fixture "list_all_concepts" -> ok', async () => {
       if (typeof runtimeRegistryHandler.listConcepts !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(runtimeRegistryHandler.registerConcept({ uri: "urn:clef/ContentNode", has_storage: "true", storage_name: "content-node", storage_type: "standard" }), storage);
       const result = await interpret(runtimeRegistryHandler.listConcepts({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -352,6 +356,7 @@ describe('RuntimeRegistry functional handler', () => {
     it('fixture "list_all_syncs" -> ok', async () => {
       if (typeof runtimeRegistryHandler.listSyncs !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(runtimeRegistryHandler.registerConcept({ uri: "urn:clef/ContentNode", has_storage: "true", storage_name: "content-node", storage_type: "standard" }), storage);
       const result = await interpret(runtimeRegistryHandler.listSyncs({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -413,6 +418,7 @@ describe('RuntimeRegistry functional handler', () => {
     it('fixture "is_loaded_existing" -> ok', async () => {
       if (typeof runtimeRegistryHandler.isLoaded !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(runtimeRegistryHandler.registerConcept({ uri: "urn:clef/ContentNode", has_storage: "true", storage_name: "content-node", storage_type: "standard" }), storage);
       const result = await interpret(runtimeRegistryHandler.isLoaded({ uri: "urn:clef/ContentNode" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -420,6 +426,7 @@ describe('RuntimeRegistry functional handler', () => {
     it('fixture "is_loaded_missing" -> ok', async () => {
       if (typeof runtimeRegistryHandler.isLoaded !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(runtimeRegistryHandler.registerConcept({ uri: "urn:clef/ContentNode", has_storage: "true", storage_name: "content-node", storage_type: "standard" }), storage);
       const result = await interpret(runtimeRegistryHandler.isLoaded({ uri: "" }), storage);
       expect(result.variant).toBe('ok');
     });

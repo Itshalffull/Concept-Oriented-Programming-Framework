@@ -163,6 +163,7 @@ describe('WidgetRegistry functional handler', () => {
     it('fixture "query_by_concept" -> ok', async () => {
       if (typeof widgetRegistryHandler.query !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(widgetRegistryHandler.register({ widget: "approval-detail", interactor: "entity-detail", concept: "Approval", suite: "governance", tags: "[]", specificity: "20", contractVersion: "1", contractSlots: "[]", contractActions: "[]", secondaryRoles: "[]" }), storage);
       const result = await interpret(widgetRegistryHandler.query({ concept: "Approval" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -170,6 +171,7 @@ describe('WidgetRegistry functional handler', () => {
     it('fixture "query_by_suite" -> ok', async () => {
       if (typeof widgetRegistryHandler.query !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(widgetRegistryHandler.register({ widget: "approval-detail", interactor: "entity-detail", concept: "Approval", suite: "governance", tags: "[]", specificity: "20", contractVersion: "1", contractSlots: "[]", contractActions: "[]", secondaryRoles: "[]" }), storage);
       const result = await interpret(widgetRegistryHandler.query({ suite: "governance" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -239,6 +241,7 @@ describe('WidgetRegistry functional handler', () => {
     it('fixture "valid_remove" -> ok', async () => {
       if (typeof widgetRegistryHandler.remove !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(widgetRegistryHandler.register({ widget: "approval-detail", interactor: "entity-detail", concept: "Approval", suite: "governance", tags: "[]", specificity: "20", contractVersion: "1", contractSlots: "[]", contractActions: "[]", secondaryRoles: "[]" }), storage);
       const result = await interpret(widgetRegistryHandler.remove({  }), storage);
       expect(result.variant).toBe('ok');
     });

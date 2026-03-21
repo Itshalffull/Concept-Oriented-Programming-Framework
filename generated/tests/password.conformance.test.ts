@@ -156,6 +156,7 @@ describe('Password functional handler', () => {
     it('fixture "existing_user" -> ok', async () => {
       if (typeof passwordHandler.check !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(passwordHandler.set({ user: "alice", password: "Str0ngP@ssw0rd!" }), storage);
       const result = await interpret(passwordHandler.check({ user: "alice", password: "Str0ngP@ssw0rd!" }), storage);
       expect(result.variant).toBe('ok');
     });

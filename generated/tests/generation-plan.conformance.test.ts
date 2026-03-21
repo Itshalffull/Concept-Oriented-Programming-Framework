@@ -148,6 +148,7 @@ describe('GenerationPlan functional handler', () => {
     it('fixture "record_done" -> ok', async () => {
       if (typeof generationPlanHandler.recordStep !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(generationPlanHandler.complete({  }), storage);
       const result = await interpret(generationPlanHandler.recordStep({ stepKey: "framework:TypeScriptGen:password", status: "done", filesProduced: "3", duration: "150", cached: "false" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -155,6 +156,7 @@ describe('GenerationPlan functional handler', () => {
     it('fixture "record_cached" -> ok', async () => {
       if (typeof generationPlanHandler.recordStep !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(generationPlanHandler.complete({  }), storage);
       const result = await interpret(generationPlanHandler.recordStep({ stepKey: "framework:TypeScriptGen:auth", status: "cached", cached: "true" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +164,7 @@ describe('GenerationPlan functional handler', () => {
     it('fixture "record_failed" -> ok', async () => {
       if (typeof generationPlanHandler.recordStep !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(generationPlanHandler.complete({  }), storage);
       const result = await interpret(generationPlanHandler.recordStep({ stepKey: "framework:RustGen:password", status: "failed", duration: "5000", cached: "false" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +226,7 @@ describe('GenerationPlan functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof generationPlanHandler.complete !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(generationPlanHandler.complete({  }), storage);
       const result = await interpret(generationPlanHandler.complete({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -284,6 +288,7 @@ describe('GenerationPlan functional handler', () => {
     it('fixture "status_existing" -> ok', async () => {
       if (typeof generationPlanHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(generationPlanHandler.complete({  }), storage);
       const result = await interpret(generationPlanHandler.status({ run: "run-abc123" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +296,7 @@ describe('GenerationPlan functional handler', () => {
     it('fixture "status_missing" -> ok', async () => {
       if (typeof generationPlanHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(generationPlanHandler.complete({  }), storage);
       const result = await interpret(generationPlanHandler.status({ run: "run-nonexistent" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -352,6 +358,7 @@ describe('GenerationPlan functional handler', () => {
     it('fixture "summary_existing" -> ok', async () => {
       if (typeof generationPlanHandler.summary !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(generationPlanHandler.complete({  }), storage);
       const result = await interpret(generationPlanHandler.summary({ run: "run-abc123" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +366,7 @@ describe('GenerationPlan functional handler', () => {
     it('fixture "summary_missing" -> ok', async () => {
       if (typeof generationPlanHandler.summary !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(generationPlanHandler.complete({  }), storage);
       const result = await interpret(generationPlanHandler.summary({ run: "run-nonexistent" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -420,6 +428,7 @@ describe('GenerationPlan functional handler', () => {
     it('fixture "history_default" -> ok', async () => {
       if (typeof generationPlanHandler.history !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(generationPlanHandler.complete({  }), storage);
       const result = await interpret(generationPlanHandler.history({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -427,6 +436,7 @@ describe('GenerationPlan functional handler', () => {
     it('fixture "history_limited" -> ok', async () => {
       if (typeof generationPlanHandler.history !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(generationPlanHandler.complete({  }), storage);
       const result = await interpret(generationPlanHandler.history({ limit: "5" }), storage);
       expect(result.variant).toBe('ok');
     });

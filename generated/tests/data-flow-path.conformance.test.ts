@@ -70,6 +70,7 @@ describe('DataFlowPath imperative handler', () => {
     it('fixture "valid_config" -> ok', async () => {
       if (typeof dataFlowPathHandler.traceFromConfig !== 'function') return;
       const storage = createInMemoryStorage();
+      await dataFlowPathHandler.trace({ source: "config/db-url", sink: "ts/function/connect" }, storage);
       const result = await dataFlowPathHandler.traceFromConfig({ configKey: "db-url" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -77,6 +78,7 @@ describe('DataFlowPath imperative handler', () => {
     it('fixture "prefixed_config" -> ok', async () => {
       if (typeof dataFlowPathHandler.traceFromConfig !== 'function') return;
       const storage = createInMemoryStorage();
+      await dataFlowPathHandler.trace({ source: "config/db-url", sink: "ts/function/connect" }, storage);
       const result = await dataFlowPathHandler.traceFromConfig({ configKey: "config/api-key" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -96,6 +98,7 @@ describe('DataFlowPath imperative handler', () => {
     it('fixture "valid_output" -> ok', async () => {
       if (typeof dataFlowPathHandler.traceToOutput !== 'function') return;
       const storage = createInMemoryStorage();
+      await dataFlowPathHandler.trace({ source: "config/db-url", sink: "ts/function/connect" }, storage);
       const result = await dataFlowPathHandler.traceToOutput({ output: "dist/bundle.js" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -103,6 +106,7 @@ describe('DataFlowPath imperative handler', () => {
     it('fixture "report_output" -> ok', async () => {
       if (typeof dataFlowPathHandler.traceToOutput !== 'function') return;
       const storage = createInMemoryStorage();
+      await dataFlowPathHandler.trace({ source: "config/db-url", sink: "ts/function/connect" }, storage);
       const result = await dataFlowPathHandler.traceToOutput({ output: "reports/coverage.json" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -122,6 +126,7 @@ describe('DataFlowPath imperative handler', () => {
     it('fixture "valid_get" -> ok', async () => {
       if (typeof dataFlowPathHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await dataFlowPathHandler.trace({ source: "config/db-url", sink: "ts/function/connect" }, storage);
       const result = await dataFlowPathHandler.get({  }, storage);
       expect(result.variant).toBe('ok');
     });

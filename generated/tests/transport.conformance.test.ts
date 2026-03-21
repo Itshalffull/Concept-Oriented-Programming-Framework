@@ -163,6 +163,7 @@ describe('Transport functional handler', () => {
     it('fixture "set_auth_bearer" -> ok', async () => {
       if (typeof transportHandler.setAuth !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(transportHandler.configure({ transport: "P-1", kind: "rest", baseUrl: "https://api.example.com", auth: "Bearer tok_abc123", retryPolicy: "{ \"maxRetries\": 3, \"backoff\": \"exponential\" }" }), storage);
       const result = await interpret(transportHandler.setAuth({ transport: "P-1", auth: "Bearer tok_xyz789" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -170,6 +171,7 @@ describe('Transport functional handler', () => {
     it('fixture "set_auth_new_transport" -> ok', async () => {
       if (typeof transportHandler.setAuth !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(transportHandler.configure({ transport: "P-1", kind: "rest", baseUrl: "https://api.example.com", auth: "Bearer tok_abc123", retryPolicy: "{ \"maxRetries\": 3, \"backoff\": \"exponential\" }" }), storage);
       const result = await interpret(transportHandler.setAuth({ transport: "P-new", auth: "Bearer tok_new" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -231,6 +233,7 @@ describe('Transport functional handler', () => {
     it('fixture "clear_auth_existing" -> ok', async () => {
       if (typeof transportHandler.clearAuth !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(transportHandler.configure({ transport: "P-1", kind: "rest", baseUrl: "https://api.example.com", auth: "Bearer tok_abc123", retryPolicy: "{ \"maxRetries\": 3, \"backoff\": \"exponential\" }" }), storage);
       const result = await interpret(transportHandler.clearAuth({ transport: "P-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -300,6 +303,7 @@ describe('Transport functional handler', () => {
     it('fixture "fetch_articles" -> ok', async () => {
       if (typeof transportHandler.fetch !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(transportHandler.configure({ transport: "P-1", kind: "rest", baseUrl: "https://api.example.com", auth: "Bearer tok_abc123", retryPolicy: "{ \"maxRetries\": 3, \"backoff\": \"exponential\" }" }), storage);
       const result = await interpret(transportHandler.fetch({ transport: "P-1", query: "{ \"path\": \"/articles\" }" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -307,6 +311,7 @@ describe('Transport functional handler', () => {
     it('fixture "fetch_missing_transport" -> error', async () => {
       if (typeof transportHandler.fetch !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(transportHandler.configure({ transport: "P-1", kind: "rest", baseUrl: "https://api.example.com", auth: "Bearer tok_abc123", retryPolicy: "{ \"maxRetries\": 3, \"backoff\": \"exponential\" }" }), storage);
       const result = await interpret(transportHandler.fetch({ transport: "P-nonexistent", query: "{ \"path\": \"/data\" }" }), storage);
       expect(result.variant).not.toBe('ok');
     });
@@ -368,6 +373,7 @@ describe('Transport functional handler', () => {
     it('fixture "mutate_create" -> ok', async () => {
       if (typeof transportHandler.mutate !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(transportHandler.configure({ transport: "P-1", kind: "rest", baseUrl: "https://api.example.com", auth: "Bearer tok_abc123", retryPolicy: "{ \"maxRetries\": 3, \"backoff\": \"exponential\" }" }), storage);
       const result = await interpret(transportHandler.mutate({ transport: "P-1", action: "createArticle", input: "{ \"title\": \"Hello World\" }" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -375,6 +381,7 @@ describe('Transport functional handler', () => {
     it('fixture "mutate_missing_transport" -> error', async () => {
       if (typeof transportHandler.mutate !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(transportHandler.configure({ transport: "P-1", kind: "rest", baseUrl: "https://api.example.com", auth: "Bearer tok_abc123", retryPolicy: "{ \"maxRetries\": 3, \"backoff\": \"exponential\" }" }), storage);
       const result = await interpret(transportHandler.mutate({ transport: "P-nonexistent", action: "createArticle", input: "{}" }), storage);
       expect(result.variant).not.toBe('ok');
     });
@@ -436,6 +443,7 @@ describe('Transport functional handler', () => {
     it('fixture "flush_existing" -> ok', async () => {
       if (typeof transportHandler.flushQueue !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(transportHandler.configure({ transport: "P-1", kind: "rest", baseUrl: "https://api.example.com", auth: "Bearer tok_abc123", retryPolicy: "{ \"maxRetries\": 3, \"backoff\": \"exponential\" }" }), storage);
       const result = await interpret(transportHandler.flushQueue({ transport: "P-1" }), storage);
       expect(result.variant).toBe('ok');
     });

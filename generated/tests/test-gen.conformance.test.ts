@@ -78,6 +78,7 @@ describe('TestGen imperative handler', () => {
     it('fixture "build_plan_basic" -> ok', async () => {
       if (typeof testGenHandler.buildTestPlan !== 'function') return;
       const storage = createInMemoryStorage();
+      await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }, storage);
       const result = await testGenHandler.buildTestPlan({ concept_ref: "clef/concept/User", concept_data: "{\"name\":\"User\",\"actions\":[],\"invariants\":[]}" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -85,6 +86,7 @@ describe('TestGen imperative handler', () => {
     it('fixture "build_plan_missing_ref" -> invalid', async () => {
       if (typeof testGenHandler.buildTestPlan !== 'function') return;
       const storage = createInMemoryStorage();
+      await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }, storage);
       const result = await testGenHandler.buildTestPlan({ concept_ref: "", concept_data: "{}" }, storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('invalid'));
@@ -105,6 +107,7 @@ describe('TestGen imperative handler', () => {
     it('fixture "regenerate_existing" -> ok', async () => {
       if (typeof testGenHandler.regenerate !== 'function') return;
       const storage = createInMemoryStorage();
+      await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }, storage);
       const result = await testGenHandler.regenerate({ generation: "tg-abc123" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -112,6 +115,7 @@ describe('TestGen imperative handler', () => {
     it('fixture "regenerate_missing" -> ok', async () => {
       if (typeof testGenHandler.regenerate !== 'function') return;
       const storage = createInMemoryStorage();
+      await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }, storage);
       const result = await testGenHandler.regenerate({ generation: "tg-nonexistent" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -131,6 +135,7 @@ describe('TestGen imperative handler', () => {
     it('fixture "list_all" -> ok', async () => {
       if (typeof testGenHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }, storage);
       const result = await testGenHandler.list({  }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -138,6 +143,7 @@ describe('TestGen imperative handler', () => {
     it('fixture "list_by_concept" -> ok', async () => {
       if (typeof testGenHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }, storage);
       const result = await testGenHandler.list({ concept_ref: "clef/concept/Password" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -157,6 +163,7 @@ describe('TestGen imperative handler', () => {
     it('fixture "configure_runs" -> ok', async () => {
       if (typeof testGenHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
+      await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }, storage);
       const result = await testGenHandler.configure({ generation: "tg-abc123", num_runs: "50000" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -164,6 +171,7 @@ describe('TestGen imperative handler', () => {
     it('fixture "configure_fuzz" -> ok', async () => {
       if (typeof testGenHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
+      await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }, storage);
       const result = await testGenHandler.configure({ generation: "tg-abc123", fuzz_duration_s: "120", shrink_enabled: "true" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -183,6 +191,7 @@ describe('TestGen imperative handler', () => {
     it('fixture "coverage_password" -> ok', async () => {
       if (typeof testGenHandler.coverage !== 'function') return;
       const storage = createInMemoryStorage();
+      await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }, storage);
       const result = await testGenHandler.coverage({ concept_ref: "clef/concept/Password" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -190,6 +199,7 @@ describe('TestGen imperative handler', () => {
     it('fixture "coverage_missing" -> ok', async () => {
       if (typeof testGenHandler.coverage !== 'function') return;
       const storage = createInMemoryStorage();
+      await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }, storage);
       const result = await testGenHandler.coverage({ concept_ref: "" }, storage);
       expect(result.variant).toBe('ok');
     });

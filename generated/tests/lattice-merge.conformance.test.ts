@@ -148,6 +148,7 @@ describe('LatticeMerge functional handler', () => {
     it('fixture "merge_g_counter" -> ok', async () => {
       if (typeof latticeMergeHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(latticeMergeHandler.register({  }), storage);
       const result = await interpret(latticeMergeHandler.execute({ base: "{\"type\":\"g-counter\",\"counters\":{\"a\":1}}", ours: "{\"type\":\"g-counter\",\"counters\":{\"a\":2}}", theirs: "{\"type\":\"g-counter\",\"counters\":{\"a\":1,\"b\":3}}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -155,6 +156,7 @@ describe('LatticeMerge functional handler', () => {
     it('fixture "invalid_crdt_json" -> error', async () => {
       if (typeof latticeMergeHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(latticeMergeHandler.register({  }), storage);
       const result = await interpret(latticeMergeHandler.execute({ base: "not-json", ours: "{\"type\":\"g-counter\"}", theirs: "{\"type\":\"g-counter\"}" }), storage);
       expect(result.variant).not.toBe('ok');
     });

@@ -162,6 +162,7 @@ describe('Polity functional handler', () => {
     it('fixture "valid_amend" -> ok', async () => {
       if (typeof polityHandler.amend !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(polityHandler.establish({ name: "Acme Co-op", purpose: "Democratic governance for Acme", values: ["transparency","equity"], scope: ["budgets","hiring"] }), storage);
       const result = await interpret(polityHandler.amend({ polity: "polity-1", field: "purpose", newValue: "Updated governance mission" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +231,7 @@ describe('Polity functional handler', () => {
     it('fixture "valid_dissolve" -> ok', async () => {
       if (typeof polityHandler.dissolve !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(polityHandler.establish({ name: "Acme Co-op", purpose: "Democratic governance for Acme", values: ["transparency","equity"], scope: ["budgets","hiring"] }), storage);
       const result = await interpret(polityHandler.dissolve({ polity: "polity-1", reason: "Merger with partner org" }), storage);
       expect(result.variant).toBe('ok');
     });

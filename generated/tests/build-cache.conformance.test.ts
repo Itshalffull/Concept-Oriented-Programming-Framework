@@ -164,6 +164,7 @@ describe('BuildCache functional handler', () => {
     it('fixture "record_deterministic" -> ok', async () => {
       if (typeof buildCacheHandler.record !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
       const result = await interpret(buildCacheHandler.record({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", outputHash: "xyz789", outputRef: ".clef-cache/ts/password", sourceLocator: "./specs/password.concept", deterministic: "true" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -171,6 +172,7 @@ describe('BuildCache functional handler', () => {
     it('fixture "record_nondeterministic" -> ok', async () => {
       if (typeof buildCacheHandler.record !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
       const result = await interpret(buildCacheHandler.record({ stepKey: "framework:LLMGen:summary", inputHash: "abc123", outputHash: "xyz789", deterministic: "false" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -232,6 +234,7 @@ describe('BuildCache functional handler', () => {
     it('fixture "invalidate_existing" -> ok', async () => {
       if (typeof buildCacheHandler.invalidate !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
       const result = await interpret(buildCacheHandler.invalidate({ stepKey: "framework:TypeScriptGen:password" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -301,6 +304,7 @@ describe('BuildCache functional handler', () => {
     it('fixture "invalidate_by_source" -> ok', async () => {
       if (typeof buildCacheHandler.invalidateBySource !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
       const result = await interpret(buildCacheHandler.invalidateBySource({ sourceLocator: "./specs/password.concept" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -308,6 +312,7 @@ describe('BuildCache functional handler', () => {
     it('fixture "invalidate_by_missing_source" -> ok', async () => {
       if (typeof buildCacheHandler.invalidateBySource !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
       const result = await interpret(buildCacheHandler.invalidateBySource({ sourceLocator: "./specs/nonexistent.concept" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -369,6 +374,7 @@ describe('BuildCache functional handler', () => {
     it('fixture "invalidate_by_kind" -> ok', async () => {
       if (typeof buildCacheHandler.invalidateByKind !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
       const result = await interpret(buildCacheHandler.invalidateByKind({ kindName: "ConceptManifest" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -376,6 +382,7 @@ describe('BuildCache functional handler', () => {
     it('fixture "invalidate_by_unknown_kind" -> ok', async () => {
       if (typeof buildCacheHandler.invalidateByKind !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
       const result = await interpret(buildCacheHandler.invalidateByKind({ kindName: "UnknownKind" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -437,6 +444,7 @@ describe('BuildCache functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof buildCacheHandler.invalidateAll !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
       const result = await interpret(buildCacheHandler.invalidateAll({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -498,6 +506,7 @@ describe('BuildCache functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof buildCacheHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
       const result = await interpret(buildCacheHandler.status({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -559,6 +568,7 @@ describe('BuildCache functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof buildCacheHandler.staleSteps !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
       const result = await interpret(buildCacheHandler.staleSteps({  }), storage);
       expect(result.variant).toBe('ok');
     });

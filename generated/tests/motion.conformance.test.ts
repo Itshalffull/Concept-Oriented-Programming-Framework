@@ -170,6 +170,7 @@ describe('Motion functional handler', () => {
     it('fixture "easing_ease_in_out" -> ok', async () => {
       if (typeof motionHandler.defineEasing !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(motionHandler.defineDuration({ motion: "O-1", name: "fast", ms: "100" }), storage);
       const result = await interpret(motionHandler.defineEasing({ motion: "O-5", name: "standard", value: "ease-in-out" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -177,6 +178,7 @@ describe('Motion functional handler', () => {
     it('fixture "easing_cubic_bezier" -> ok', async () => {
       if (typeof motionHandler.defineEasing !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(motionHandler.defineDuration({ motion: "O-1", name: "fast", ms: "100" }), storage);
       const result = await interpret(motionHandler.defineEasing({ motion: "O-6", name: "decelerate", value: "cubic-bezier(0.0, 0.0, 0.2, 1)" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -246,6 +248,7 @@ describe('Motion functional handler', () => {
     it('fixture "transition_fade" -> ok', async () => {
       if (typeof motionHandler.defineTransition !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(motionHandler.defineDuration({ motion: "O-1", name: "fast", ms: "100" }), storage);
       const result = await interpret(motionHandler.defineTransition({ motion: "O-8", name: "fade", config: "{ \"property\": \"opacity\", \"duration\": 200, \"easing\": \"ease-out\" }" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -253,6 +256,7 @@ describe('Motion functional handler', () => {
     it('fixture "transition_slide" -> ok', async () => {
       if (typeof motionHandler.defineTransition !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(motionHandler.defineDuration({ motion: "O-1", name: "fast", ms: "100" }), storage);
       const result = await interpret(motionHandler.defineTransition({ motion: "O-9", name: "slide", config: "{ \"property\": \"transform\", \"duration\": 300, \"easing\": \"ease-in-out\", \"delay\": 50 }" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -268,6 +272,7 @@ describe('Motion functional handler', () => {
     it('fixture "transition_missing_property" -> invalid', async () => {
       if (typeof motionHandler.defineTransition !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(motionHandler.defineDuration({ motion: "O-1", name: "fast", ms: "100" }), storage);
       const result = await interpret(motionHandler.defineTransition({ motion: "O-11", name: "incomplete", config: "{ \"duration\": 200 }" }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('invalid'));

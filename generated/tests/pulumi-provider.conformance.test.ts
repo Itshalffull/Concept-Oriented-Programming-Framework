@@ -223,6 +223,7 @@ describe('PulumiProvider functional handler', () => {
     it('fixture "apply_stack" -> ok', async () => {
       if (typeof pulumiProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(pulumiProviderHandler.generate({ plan: "dp-001-auth-suite" }), storage);
       const result = await interpret(pulumiProviderHandler.apply({ stack: "stack-abc123" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +292,7 @@ describe('PulumiProvider functional handler', () => {
     it('fixture "teardown_stack" -> ok', async () => {
       if (typeof pulumiProviderHandler.teardown !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(pulumiProviderHandler.generate({ plan: "dp-001-auth-suite" }), storage);
       const result = await interpret(pulumiProviderHandler.teardown({ stack: "stack-abc123" }), storage);
       expect(result.variant).toBe('ok');
     });

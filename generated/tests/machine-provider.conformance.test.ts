@@ -155,6 +155,7 @@ describe('MachineProvider functional handler', () => {
     it('fixture "spawn_dialog" -> ok', async () => {
       if (typeof machineProviderHandler.spawn !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(machineProviderHandler.initialize({ config: "{}" }), storage);
       const result = await interpret(machineProviderHandler.spawn({ provider: "mp-1", widget: "dialog", context: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +163,7 @@ describe('MachineProvider functional handler', () => {
     it('fixture "spawn_empty_widget" -> error', async () => {
       if (typeof machineProviderHandler.spawn !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(machineProviderHandler.initialize({ config: "{}" }), storage);
       const result = await interpret(machineProviderHandler.spawn({ provider: "mp-1", widget: "", context: "{}" }), storage);
       expect(result.variant).not.toBe('ok');
     });
@@ -223,6 +225,7 @@ describe('MachineProvider functional handler', () => {
     it('fixture "send_open" -> ok', async () => {
       if (typeof machineProviderHandler.send !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(machineProviderHandler.initialize({ config: "{}" }), storage);
       const result = await interpret(machineProviderHandler.send({ provider: "mp-1", machine: "machine-1", event: "OPEN" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +294,7 @@ describe('MachineProvider functional handler', () => {
     it('fixture "connect_valid" -> ok', async () => {
       if (typeof machineProviderHandler.connect !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(machineProviderHandler.initialize({ config: "{}" }), storage);
       const result = await interpret(machineProviderHandler.connect({ provider: "mp-1", machine: "machine-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +363,7 @@ describe('MachineProvider functional handler', () => {
     it('fixture "destroy_valid" -> ok', async () => {
       if (typeof machineProviderHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(machineProviderHandler.initialize({ config: "{}" }), storage);
       const result = await interpret(machineProviderHandler.destroy({ provider: "mp-1", machine: "machine-1" }), storage);
       expect(result.variant).toBe('ok');
     });

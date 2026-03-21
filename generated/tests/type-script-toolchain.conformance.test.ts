@@ -162,6 +162,7 @@ describe('TypeScriptToolchain functional handler', () => {
     it('fixture "register_valid" -> ok', async () => {
       if (typeof typeScriptToolchainHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(typeScriptToolchainHandler.resolve({ platform: "node", versionConstraint: ">=5.7" }), storage);
       const result = await interpret(typeScriptToolchainHandler.register({  }), storage);
       expect(result.variant).toBe('ok');
     });

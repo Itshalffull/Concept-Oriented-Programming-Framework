@@ -162,6 +162,7 @@ describe('DeadPartProvider functional handler', () => {
     it('fixture "existing_analysis" -> ok', async () => {
       if (typeof deadPartProviderHandler.getResults !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(deadPartProviderHandler.analyze({ analysis: "dpa-1", program: "card-widget", parts: ["root","label"], instructions: "[{\"tag\":\"element\",\"part\":\"root\",\"role\":\"container\"},{\"tag\":\"text\",\"part\":\"root\",\"content\":\"hello\"},{\"tag\":\"bind\",\"part\":\"label\",\"attr\":\"text\",\"expr\":\"name\"}]" }), storage);
       const result = await interpret(deadPartProviderHandler.getResults({ analysis: "dpa-1" }), storage);
       expect(result.variant).toBe('ok');
     });

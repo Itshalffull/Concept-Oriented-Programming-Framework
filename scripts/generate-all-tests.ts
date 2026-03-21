@@ -228,6 +228,7 @@ async function main() {
             name: f.name,
             input: f.input,
             expectedVariant: f.expectedVariant || 'ok',
+            ...(f.after ? { after: f.after } : {}),
           })),
         })),
         invariants: ast.invariants || [],

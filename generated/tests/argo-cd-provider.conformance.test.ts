@@ -162,6 +162,7 @@ describe('ArgoCDProvider functional handler', () => {
     it('fixture "reconcile_app" -> ok', async () => {
       if (typeof argocdProviderHandler.reconciliationStatus !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(argocdProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
       const result = await interpret(argocdProviderHandler.reconciliationStatus({ application: "app-prod-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +231,7 @@ describe('ArgoCDProvider functional handler', () => {
     it('fixture "syncwave_app" -> ok', async () => {
       if (typeof argocdProviderHandler.syncWave !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(argocdProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
       const result = await interpret(argocdProviderHandler.syncWave({ application: "app-prod-001", wave: "1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -237,6 +239,7 @@ describe('ArgoCDProvider functional handler', () => {
     it('fixture "syncwave_nonexistent" -> ok', async () => {
       if (typeof argocdProviderHandler.syncWave !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(argocdProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
       const result = await interpret(argocdProviderHandler.syncWave({ application: "", wave: "0" }), storage);
       expect(result.variant).toBe('ok');
     });

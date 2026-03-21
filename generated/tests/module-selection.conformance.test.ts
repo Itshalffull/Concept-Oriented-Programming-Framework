@@ -162,6 +162,7 @@ describe('ModuleSelection functional handler', () => {
     it('fixture "valid_add_concept" -> ok', async () => {
       if (typeof moduleSelectionHandler.addConcept !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(moduleSelectionHandler.begin({ template_name: "social", profile_name: null }), storage);
       const result = await interpret(moduleSelectionHandler.addConcept({ selection: "sel-1", module_id: "Article", features: "[]" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +231,7 @@ describe('ModuleSelection functional handler', () => {
     it('fixture "valid_remove_concept" -> ok', async () => {
       if (typeof moduleSelectionHandler.removeConcept !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(moduleSelectionHandler.begin({ template_name: "social", profile_name: null }), storage);
       const result = await interpret(moduleSelectionHandler.removeConcept({ selection: "sel-1", module_id: "Article" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -298,6 +300,7 @@ describe('ModuleSelection functional handler', () => {
     it('fixture "valid_choose_handler" -> ok', async () => {
       if (typeof moduleSelectionHandler.chooseHandler !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(moduleSelectionHandler.begin({ template_name: "social", profile_name: null }), storage);
       const result = await interpret(moduleSelectionHandler.chooseHandler({ selection: "sel-1", concept_module: "User", handler_module: "UserTsHandler" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -366,6 +369,7 @@ describe('ModuleSelection functional handler', () => {
     it('fixture "valid_add_widget" -> ok', async () => {
       if (typeof moduleSelectionHandler.addWidget !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(moduleSelectionHandler.begin({ template_name: "social", profile_name: null }), storage);
       const result = await interpret(moduleSelectionHandler.addWidget({ selection: "sel-1", module_id: "DataTableWidget" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -434,6 +438,7 @@ describe('ModuleSelection functional handler', () => {
     it('fixture "valid_select_theme" -> ok', async () => {
       if (typeof moduleSelectionHandler.selectTheme !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(moduleSelectionHandler.begin({ template_name: "social", profile_name: null }), storage);
       const result = await interpret(moduleSelectionHandler.selectTheme({ selection: "sel-1", theme_module: "MaterialTheme" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -502,6 +507,7 @@ describe('ModuleSelection functional handler', () => {
     it('fixture "valid_add_derived" -> ok', async () => {
       if (typeof moduleSelectionHandler.addDerived !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(moduleSelectionHandler.begin({ template_name: "social", profile_name: null }), storage);
       const result = await interpret(moduleSelectionHandler.addDerived({ selection: "sel-1", name: "BlogPost", composes: "[\"User\",\"Article\"]" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -570,6 +576,7 @@ describe('ModuleSelection functional handler', () => {
     it('fixture "valid_finalize" -> ok', async () => {
       if (typeof moduleSelectionHandler.finalize !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(moduleSelectionHandler.begin({ template_name: "social", profile_name: null }), storage);
       const result = await interpret(moduleSelectionHandler.finalize({ selection: "sel-1" }), storage);
       expect(result.variant).toBe('ok');
     });

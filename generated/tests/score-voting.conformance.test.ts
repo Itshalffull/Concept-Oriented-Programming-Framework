@@ -162,6 +162,7 @@ describe('ScoreVoting functional handler', () => {
     it('fixture "score_two_candidates" -> ok', async () => {
       if (typeof scoreVotingHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreVotingHandler.configure({ minScore: "0.0", maxScore: "5.0", aggregation: "Mean" }), storage);
       const result = await interpret(scoreVotingHandler.count({ config: "score-001", scoreBallots: "[{\"voter\":\"alice\",\"scores\":{\"A\":4,\"B\":2}},{\"voter\":\"bob\",\"scores\":{\"A\":3,\"B\":5}}]", weights: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -169,6 +170,7 @@ describe('ScoreVoting functional handler', () => {
     it('fixture "score_empty_ballots" -> error', async () => {
       if (typeof scoreVotingHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreVotingHandler.configure({ minScore: "0.0", maxScore: "5.0", aggregation: "Mean" }), storage);
       const result = await interpret(scoreVotingHandler.count({ config: "score-001", scoreBallots: "[]", weights: "{}" }), storage);
       expect(result.variant).not.toBe('ok');
     });

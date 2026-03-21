@@ -70,6 +70,7 @@ describe('VerificationRun imperative handler', () => {
     it('fixture "valid_complete" -> ok', async () => {
       if (typeof verificationRunHandler.complete !== 'function') return;
       const storage = createInMemoryStorage();
+      await verificationRunHandler.start({ target_symbol: "clef/concept/Password", properties: ["prop-1","prop-2"], solver: "z3", timeout_ms: "30000" }, storage);
       const result = await verificationRunHandler.complete({ results: "{\"prop-1\":\"proved\",\"prop-2\":\"refuted\"}", resource_usage: "{\"total_time_ms\":1200}" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -77,6 +78,7 @@ describe('VerificationRun imperative handler', () => {
     it('fixture "missing_run" -> notfound', async () => {
       if (typeof verificationRunHandler.complete !== 'function') return;
       const storage = createInMemoryStorage();
+      await verificationRunHandler.start({ target_symbol: "clef/concept/Password", properties: ["prop-1","prop-2"], solver: "z3", timeout_ms: "30000" }, storage);
       const result = await verificationRunHandler.complete({ id: "vr-nonexistent", results: "{}", resource_usage: "{}" }, storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('notfound'));
@@ -97,6 +99,7 @@ describe('VerificationRun imperative handler', () => {
     it('fixture "valid_timeout" -> ok', async () => {
       if (typeof verificationRunHandler.timeout !== 'function') return;
       const storage = createInMemoryStorage();
+      await verificationRunHandler.start({ target_symbol: "clef/concept/Password", properties: ["prop-1","prop-2"], solver: "z3", timeout_ms: "30000" }, storage);
       const result = await verificationRunHandler.timeout({ partial_results: "{\"prop-1\":\"proved\"}" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -104,6 +107,7 @@ describe('VerificationRun imperative handler', () => {
     it('fixture "empty_partial" -> ok', async () => {
       if (typeof verificationRunHandler.timeout !== 'function') return;
       const storage = createInMemoryStorage();
+      await verificationRunHandler.start({ target_symbol: "clef/concept/Password", properties: ["prop-1","prop-2"], solver: "z3", timeout_ms: "30000" }, storage);
       const result = await verificationRunHandler.timeout({ partial_results: "{}" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -123,6 +127,7 @@ describe('VerificationRun imperative handler', () => {
     it('fixture "valid_cancel" -> ok', async () => {
       if (typeof verificationRunHandler.cancel !== 'function') return;
       const storage = createInMemoryStorage();
+      await verificationRunHandler.start({ target_symbol: "clef/concept/Password", properties: ["prop-1","prop-2"], solver: "z3", timeout_ms: "30000" }, storage);
       const result = await verificationRunHandler.cancel({  }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -150,6 +155,7 @@ describe('VerificationRun imperative handler', () => {
     it('fixture "valid_status" -> ok', async () => {
       if (typeof verificationRunHandler.get_status !== 'function') return;
       const storage = createInMemoryStorage();
+      await verificationRunHandler.start({ target_symbol: "clef/concept/Password", properties: ["prop-1","prop-2"], solver: "z3", timeout_ms: "30000" }, storage);
       const result = await verificationRunHandler.get_status({  }, storage);
       expect(result.variant).toBe('ok');
     });

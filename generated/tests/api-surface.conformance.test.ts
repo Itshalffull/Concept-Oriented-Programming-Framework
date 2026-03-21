@@ -162,6 +162,7 @@ describe('ApiSurface functional handler', () => {
     it('fixture "valid_surface" -> ok', async () => {
       if (typeof apiSurfaceHandler.entrypoint !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(apiSurfaceHandler.compose({ suite: "commerce", target: "rest", outputs: ["order-output","product-output"] }), storage);
       const result = await interpret(apiSurfaceHandler.entrypoint({ surface: "api-surface-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -169,6 +170,7 @@ describe('ApiSurface functional handler', () => {
     it('fixture "missing_surface" -> ok', async () => {
       if (typeof apiSurfaceHandler.entrypoint !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(apiSurfaceHandler.compose({ suite: "commerce", target: "rest", outputs: ["order-output","product-output"] }), storage);
       const result = await interpret(apiSurfaceHandler.entrypoint({ surface: "" }), storage);
       expect(result.variant).toBe('ok');
     });

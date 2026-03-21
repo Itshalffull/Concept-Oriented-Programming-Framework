@@ -101,6 +101,7 @@ describe('EventBus functional handler', () => {
     it('fixture "register_duplicate_event" -> error', async () => {
       if (typeof eventBusHandler.registerEventType !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
       const result = await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{}" }), storage);
       expect(result.variant).not.toBe('ok');
     });
@@ -162,6 +163,7 @@ describe('EventBus functional handler', () => {
     it('fixture "valid_subscribe" -> ok', async () => {
       if (typeof eventBusHandler.subscribe !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
       const result = await interpret(eventBusHandler.subscribe({ event: "user.created", handler: "notifyAdmin", priority: "10" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -169,6 +171,7 @@ describe('EventBus functional handler', () => {
     it('fixture "subscribe_low_priority" -> ok', async () => {
       if (typeof eventBusHandler.subscribe !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
       const result = await interpret(eventBusHandler.subscribe({ event: "user.login", handler: "logAccess", priority: "100" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +233,8 @@ describe('EventBus functional handler', () => {
     it('fixture "valid_unsubscribe" -> ok', async () => {
       if (typeof eventBusHandler.unsubscribe !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
+      await interpret(eventBusHandler.subscribe({ event: "user.created", handler: "notifyAdmin", priority: "10" }), storage);
       const result = await interpret(eventBusHandler.unsubscribe({ subscriptionId: "user.created:notifyAdmin:1234567890" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -298,6 +303,7 @@ describe('EventBus functional handler', () => {
     it('fixture "valid_dispatch" -> ok', async () => {
       if (typeof eventBusHandler.dispatch !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
       const result = await interpret(eventBusHandler.dispatch({ event: "user.created", data: "{\"userId\":\"u-123\",\"email\":\"alice@example.com\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -305,6 +311,7 @@ describe('EventBus functional handler', () => {
     it('fixture "dispatch_empty_data" -> ok', async () => {
       if (typeof eventBusHandler.dispatch !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
       const result = await interpret(eventBusHandler.dispatch({ event: "user.login", data: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -366,6 +373,7 @@ describe('EventBus functional handler', () => {
     it('fixture "valid_dispatch_async" -> ok', async () => {
       if (typeof eventBusHandler.dispatchAsync !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
       const result = await interpret(eventBusHandler.dispatchAsync({ event: "user.created", data: "{\"userId\":\"u-456\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -373,6 +381,7 @@ describe('EventBus functional handler', () => {
     it('fixture "dispatch_async_empty" -> ok', async () => {
       if (typeof eventBusHandler.dispatchAsync !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
       const result = await interpret(eventBusHandler.dispatchAsync({ event: "user.login", data: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -434,6 +443,7 @@ describe('EventBus functional handler', () => {
     it('fixture "valid_get_history" -> ok', async () => {
       if (typeof eventBusHandler.getHistory !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
       const result = await interpret(eventBusHandler.getHistory({ event: "user.created", limit: "10" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -441,6 +451,7 @@ describe('EventBus functional handler', () => {
     it('fixture "get_history_small_limit" -> ok', async () => {
       if (typeof eventBusHandler.getHistory !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
       const result = await interpret(eventBusHandler.getHistory({ event: "user.login", limit: "1" }), storage);
       expect(result.variant).toBe('ok');
     });

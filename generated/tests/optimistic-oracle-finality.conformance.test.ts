@@ -69,6 +69,7 @@ describe('OptimisticOracleFinality imperative handler', () => {
     it('fixture "challenge_pending" -> ok', async () => {
       if (typeof optimisticOracleFinalityHandler.challenge !== 'function') return;
       const storage = createInMemoryStorage();
+      await optimisticOracleFinalityHandler.assertFinality({ operationRef: "proposal-001", asserter: "validator-alice", bond: "100.0", challengeWindowHours: "48.0" }, storage);
       const result = await optimisticOracleFinalityHandler.challenge({ assertion: "oo-001", challenger: "watchdog-carol", bond: "200.0", evidence: "Invalid state transition detected" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -96,6 +97,7 @@ describe('OptimisticOracleFinality imperative handler', () => {
     it('fixture "resolve_valid" -> ok', async () => {
       if (typeof optimisticOracleFinalityHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
+      await optimisticOracleFinalityHandler.assertFinality({ operationRef: "proposal-001", asserter: "validator-alice", bond: "100.0", challengeWindowHours: "48.0" }, storage);
       const result = await optimisticOracleFinalityHandler.resolve({ assertion: "oo-001", validAssertion: "true" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -103,6 +105,7 @@ describe('OptimisticOracleFinality imperative handler', () => {
     it('fixture "resolve_invalid" -> ok', async () => {
       if (typeof optimisticOracleFinalityHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
+      await optimisticOracleFinalityHandler.assertFinality({ operationRef: "proposal-001", asserter: "validator-alice", bond: "100.0", challengeWindowHours: "48.0" }, storage);
       const result = await optimisticOracleFinalityHandler.resolve({ assertion: "oo-001", validAssertion: "false" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -130,6 +133,7 @@ describe('OptimisticOracleFinality imperative handler', () => {
     it('fixture "check_expired" -> ok', async () => {
       if (typeof optimisticOracleFinalityHandler.checkExpiry !== 'function') return;
       const storage = createInMemoryStorage();
+      await optimisticOracleFinalityHandler.assertFinality({ operationRef: "proposal-001", asserter: "validator-alice", bond: "100.0", challengeWindowHours: "48.0" }, storage);
       const result = await optimisticOracleFinalityHandler.checkExpiry({ assertion: "oo-001" }, storage);
       expect(result.variant).toBe('ok');
     });

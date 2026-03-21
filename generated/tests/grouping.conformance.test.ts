@@ -169,6 +169,7 @@ describe('Grouping functional handler', () => {
     it('fixture "classify_create" -> ok', async () => {
       if (typeof groupingHandler.classify !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(groupingHandler.group({ items: ["Order","Product","User"], config: "per-concept" }), storage);
       const result = await interpret(groupingHandler.classify({ actionName: "createOrder" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -176,6 +177,7 @@ describe('Grouping functional handler', () => {
     it('fixture "classify_read" -> ok', async () => {
       if (typeof groupingHandler.classify !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(groupingHandler.group({ items: ["Order","Product","User"], config: "per-concept" }), storage);
       const result = await interpret(groupingHandler.classify({ actionName: "getUser" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -183,6 +185,7 @@ describe('Grouping functional handler', () => {
     it('fixture "empty_action" -> ok', async () => {
       if (typeof groupingHandler.classify !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(groupingHandler.group({ items: ["Order","Product","User"], config: "per-concept" }), storage);
       const result = await interpret(groupingHandler.classify({ actionName: "" }), storage);
       expect(result.variant).toBe('ok');
     });

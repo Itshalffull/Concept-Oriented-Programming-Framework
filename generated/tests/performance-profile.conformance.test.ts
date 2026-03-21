@@ -155,6 +155,7 @@ describe('PerformanceProfile functional handler', () => {
     it('fixture "hotspots_actions_p90" -> ok', async () => {
       if (typeof performanceProfileHandler.hotspots !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(performanceProfileHandler.aggregate({ symbol: "clef/action/Article/create", window: "{}" }), storage);
       const result = await interpret(performanceProfileHandler.hotspots({ kind: "action", metric: "p90", topN: "10" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('PerformanceProfile functional handler', () => {
     it('fixture "slow_chains_500ms" -> ok', async () => {
       if (typeof performanceProfileHandler.slowChains !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(performanceProfileHandler.aggregate({ symbol: "clef/action/Article/create", window: "{}" }), storage);
       const result = await interpret(performanceProfileHandler.slowChains({ thresholdMs: "500" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +361,7 @@ describe('PerformanceProfile functional handler', () => {
     it('fixture "get_existing_profile" -> ok', async () => {
       if (typeof performanceProfileHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(performanceProfileHandler.aggregate({ symbol: "clef/action/Article/create", window: "{}" }), storage);
       const result = await interpret(performanceProfileHandler.get({ profile: "performance-profile-1" }), storage);
       expect(result.variant).toBe('ok');
     });

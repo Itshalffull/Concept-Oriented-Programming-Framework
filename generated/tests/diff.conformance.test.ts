@@ -230,6 +230,7 @@ describe('Diff functional handler', () => {
     it('fixture "apply_patch" -> ok', async () => {
       if (typeof diffHandler.patch !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(diffHandler.registerProvider({ name: "myers", contentTypes: ["text/plain"] }), storage);
       const result = await interpret(diffHandler.patch({ content: "line1\nline2", editScript: "[{\"type\":\"equal\",\"line\":0,\"content\":\"line1\"},{\"type\":\"insert\",\"line\":1,\"content\":\"line3\"}]" }), storage);
       expect(result.variant).toBe('ok');
     });

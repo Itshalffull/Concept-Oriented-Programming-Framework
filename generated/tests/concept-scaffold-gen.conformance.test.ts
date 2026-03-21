@@ -223,6 +223,7 @@ describe('ConceptScaffoldGen functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof conceptScaffoldGenHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(conceptScaffoldGenHandler.generate({ name: "UserAccount", typeParam: "U", purpose: "Manage user accounts and authentication", stateFields: [{"name":"users","type":"set U"}], actions: [{"name":"create","params":[{"name":"email","type":"String"}],"variants":[{"name":"ok","params":[{"name":"user","type":"U"}],"description":"User created."}]}], version: "1", gate: "false", capabilities: ["persistent-storage"] }), storage);
       const result = await interpret(conceptScaffoldGenHandler.register({  }), storage);
       expect(result.variant).toBe('ok');
     });

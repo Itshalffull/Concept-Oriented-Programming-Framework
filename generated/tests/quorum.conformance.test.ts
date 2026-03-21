@@ -162,6 +162,7 @@ describe('Quorum functional handler', () => {
     it('fixture "quorum_met" -> ok', async () => {
       if (typeof quorumHandler.check !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(quorumHandler.setThreshold({ thresholdType: "Absolute", value: "10.0" }), storage);
       const result = await interpret(quorumHandler.check({ totalVotes: "15", totalEligible: "100" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +231,7 @@ describe('Quorum functional handler', () => {
     it('fixture "update_to_fractional" -> ok', async () => {
       if (typeof quorumHandler.updateThreshold !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(quorumHandler.setThreshold({ thresholdType: "Absolute", value: "10.0" }), storage);
       const result = await interpret(quorumHandler.updateThreshold({ rule: "quorum-001", newType: "Fractional", newValue: "0.25" }), storage);
       expect(result.variant).toBe('ok');
     });

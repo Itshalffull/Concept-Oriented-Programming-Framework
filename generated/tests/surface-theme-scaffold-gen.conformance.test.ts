@@ -216,6 +216,7 @@ describe('SurfaceThemeScaffoldGen functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof surfaceThemeScaffoldGenHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(surfaceThemeScaffoldGenHandler.generate({ name: "corporate", primaryColor: "220", fontFamily: "Inter", baseSize: "16", scale: "1.25", secondaryColor: "180", borderRadius: "md", mode: "both", extends: null }), storage);
       const result = await interpret(surfaceThemeScaffoldGenHandler.register({  }), storage);
       expect(result.variant).toBe('ok');
     });

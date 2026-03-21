@@ -155,6 +155,7 @@ describe('Permission functional handler', () => {
     it('fixture "revoke_existing" -> ok', async () => {
       if (typeof permissionHandler.revoke !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(permissionHandler.grant({ who: "alice", where: "articles", what: "read", condition: "", grantedBy: "admin" }), storage);
       const result = await interpret(permissionHandler.revoke({ permission: "alice:articles:read" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('Permission functional handler', () => {
     it('fixture "check_allowed" -> ok', async () => {
       if (typeof permissionHandler.check !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(permissionHandler.grant({ who: "alice", where: "articles", what: "read", condition: "", grantedBy: "admin" }), storage);
       const result = await interpret(permissionHandler.check({ who: "alice", where: "articles", what: "read" }), storage);
       expect(result.variant).toBe('ok');
     });

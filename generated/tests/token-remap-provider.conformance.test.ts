@@ -148,6 +148,7 @@ describe('TokenRemapProvider functional handler', () => {
     it('fixture "remap_token_path" -> ok', async () => {
       if (typeof tokenRemapProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(tokenRemapProviderHandler.register({  }), storage);
       const result = await interpret(tokenRemapProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"token\",\"path\":\"palette.primary\"}]}", spec: "{\"mappings\":{\"palette.primary\":\"palette.dark\"}}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -155,6 +156,7 @@ describe('TokenRemapProvider functional handler', () => {
     it('fixture "empty_mappings" -> ok', async () => {
       if (typeof tokenRemapProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(tokenRemapProviderHandler.register({  }), storage);
       const result = await interpret(tokenRemapProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"mappings\":{}}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +164,7 @@ describe('TokenRemapProvider functional handler', () => {
     it('fixture "invalid_program_json" -> error', async () => {
       if (typeof tokenRemapProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(tokenRemapProviderHandler.register({  }), storage);
       const result = await interpret(tokenRemapProviderHandler.apply({ program: "<<<not-json>>>", spec: "{}" }), storage);
       expect(result.variant).not.toBe('ok');
     });

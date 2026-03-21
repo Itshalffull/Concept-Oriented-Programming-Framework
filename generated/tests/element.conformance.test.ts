@@ -162,6 +162,7 @@ describe('Element functional handler', () => {
     it('fixture "valid_nest" -> ok', async () => {
       if (typeof elementHandler.nest !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(elementHandler.create({ element: "E-1", kind: "field", label: "Title", dataType: "String" }), storage);
       const result = await interpret(elementHandler.nest({ parent: "E-2", child: "E-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +231,7 @@ describe('Element functional handler', () => {
     it('fixture "valid_constraints" -> ok', async () => {
       if (typeof elementHandler.setConstraints !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(elementHandler.create({ element: "E-1", kind: "field", label: "Title", dataType: "String" }), storage);
       const result = await interpret(elementHandler.setConstraints({ element: "E-1", constraints: "{\"minLength\":1,\"maxLength\":255}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -237,6 +239,7 @@ describe('Element functional handler', () => {
     it('fixture "constraints_nonexistent" -> error', async () => {
       if (typeof elementHandler.setConstraints !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(elementHandler.create({ element: "E-1", kind: "field", label: "Title", dataType: "String" }), storage);
       const result = await interpret(elementHandler.setConstraints({ element: "E-999", constraints: "{}" }), storage);
       expect(result.variant).not.toBe('ok');
     });
@@ -298,6 +301,7 @@ describe('Element functional handler', () => {
     it('fixture "valid_enrich" -> ok', async () => {
       if (typeof elementHandler.enrich !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(elementHandler.create({ element: "E-1", kind: "field", label: "Title", dataType: "String" }), storage);
       const result = await interpret(elementHandler.enrich({ element: "E-1", interactorType: "text-short", interactorProps: "{\"placeholder\":\"Enter title\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -305,6 +309,7 @@ describe('Element functional handler', () => {
     it('fixture "enrich_nonexistent" -> error', async () => {
       if (typeof elementHandler.enrich !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(elementHandler.create({ element: "E-1", kind: "field", label: "Title", dataType: "String" }), storage);
       const result = await interpret(elementHandler.enrich({ element: "E-999", interactorType: "text-short", interactorProps: "{}" }), storage);
       expect(result.variant).not.toBe('ok');
     });
@@ -366,6 +371,7 @@ describe('Element functional handler', () => {
     it('fixture "valid_assign_widget" -> ok', async () => {
       if (typeof elementHandler.assignWidget !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(elementHandler.create({ element: "E-1", kind: "field", label: "Title", dataType: "String" }), storage);
       const result = await interpret(elementHandler.assignWidget({ element: "E-1", widget: "TextInput" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -434,6 +440,7 @@ describe('Element functional handler', () => {
     it('fixture "valid_remove" -> ok', async () => {
       if (typeof elementHandler.remove !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(elementHandler.create({ element: "E-1", kind: "field", label: "Title", dataType: "String" }), storage);
       const result = await interpret(elementHandler.remove({ element: "E-1" }), storage);
       expect(result.variant).toBe('ok');
     });

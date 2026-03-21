@@ -155,6 +155,7 @@ describe('SwiftGen functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof swiftGenHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(swiftGenHandler.generate({ spec: "spec-001", manifest: {"name":"Order","uri":"urn:clef/Order","typeParams":[],"relations":[],"actions":[{"name":"create","params":[{"name":"title","type":{"kind":"primitive","primitive":"String"}}],"variants":[{"tag":"ok","fields":[{"name":"id","type":{"kind":"primitive","primitive":"String"}}],"prose":"Created."}]}],"invariants":[],"graphqlSchema":"","jsonSchemas":{"invocations":{},"completions":{}},"capabilities":[],"purpose":"Manage orders."} }), storage);
       const result = await interpret(swiftGenHandler.register({  }), storage);
       expect(result.variant).toBe('ok');
     });

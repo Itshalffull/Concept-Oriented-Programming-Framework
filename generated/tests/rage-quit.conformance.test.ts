@@ -230,6 +230,7 @@ describe('RageQuit functional handler', () => {
     it('fixture "claim_calculated" -> ok', async () => {
       if (typeof rageQuitHandler.claim !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(rageQuitHandler.initiate({ member: "0xAliceDaoMember", shares: "150.0", loot: "50.0" }), storage);
       const result = await interpret(rageQuitHandler.claim({ exit: "rq-001" }), storage);
       expect(result.variant).toBe('ok');
     });

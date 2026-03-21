@@ -162,6 +162,7 @@ describe('BFTFinality functional handler', () => {
     it('fixture "propose_round" -> ok', async () => {
       if (typeof bftFinalityHandler.proposeFinality !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(bftFinalityHandler.configureCommittee({ validators: "[\"val-1\",\"val-2\",\"val-3\"]", faultTolerance: "2/3", protocol: "PBFT" }), storage);
       const result = await interpret(bftFinalityHandler.proposeFinality({ committee: "bft-001", operationRef: "gov-prop-55", proposer: "val-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +231,7 @@ describe('BFTFinality functional handler', () => {
     it('fixture "vote_approve" -> ok', async () => {
       if (typeof bftFinalityHandler.vote !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(bftFinalityHandler.configureCommittee({ validators: "[\"val-1\",\"val-2\",\"val-3\"]", faultTolerance: "2/3", protocol: "PBFT" }), storage);
       const result = await interpret(bftFinalityHandler.vote({ committee: "bft-001", roundNumber: "1", validator: "val-1", approve: "true" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -237,6 +239,7 @@ describe('BFTFinality functional handler', () => {
     it('fixture "vote_reject" -> ok', async () => {
       if (typeof bftFinalityHandler.vote !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(bftFinalityHandler.configureCommittee({ validators: "[\"val-1\",\"val-2\",\"val-3\"]", faultTolerance: "2/3", protocol: "PBFT" }), storage);
       const result = await interpret(bftFinalityHandler.vote({ committee: "bft-001", roundNumber: "1", validator: "val-2", approve: "false" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -305,6 +308,7 @@ describe('BFTFinality functional handler', () => {
     it('fixture "check_consensus_reached" -> ok', async () => {
       if (typeof bftFinalityHandler.checkConsensus !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(bftFinalityHandler.configureCommittee({ validators: "[\"val-1\",\"val-2\",\"val-3\"]", faultTolerance: "2/3", protocol: "PBFT" }), storage);
       const result = await interpret(bftFinalityHandler.checkConsensus({ committee: "bft-001", roundNumber: "1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -312,6 +316,7 @@ describe('BFTFinality functional handler', () => {
     it('fixture "check_consensus_insufficient" -> ok', async () => {
       if (typeof bftFinalityHandler.checkConsensus !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(bftFinalityHandler.configureCommittee({ validators: "[\"val-1\",\"val-2\",\"val-3\"]", faultTolerance: "2/3", protocol: "PBFT" }), storage);
       const result = await interpret(bftFinalityHandler.checkConsensus({ committee: "bft-001", roundNumber: "2" }), storage);
       expect(result.variant).toBe('ok');
     });

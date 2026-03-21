@@ -155,6 +155,7 @@ describe('PluginRegistry functional handler', () => {
     it('fixture "discover_formatters" -> ok', async () => {
       if (typeof pluginRegistryHandler.discover !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
       const result = await interpret(pluginRegistryHandler.discover({ type: "formatter" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +163,7 @@ describe('PluginRegistry functional handler', () => {
     it('fixture "discover_empty_type" -> ok', async () => {
       if (typeof pluginRegistryHandler.discover !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
       const result = await interpret(pluginRegistryHandler.discover({ type: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +225,7 @@ describe('PluginRegistry functional handler', () => {
     it('fixture "create_with_config" -> ok', async () => {
       if (typeof pluginRegistryHandler.createInstance !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
       const result = await interpret(pluginRegistryHandler.createInstance({ plugin: "formatter:markdown-fmt", config: "{\"lineWidth\":80}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +294,7 @@ describe('PluginRegistry functional handler', () => {
     it('fixture "get_formatter_defs" -> ok', async () => {
       if (typeof pluginRegistryHandler.getDefinitions !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
       const result = await interpret(pluginRegistryHandler.getDefinitions({ type: "formatter" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -298,6 +302,7 @@ describe('PluginRegistry functional handler', () => {
     it('fixture "get_unknown_defs" -> ok', async () => {
       if (typeof pluginRegistryHandler.getDefinitions !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
       const result = await interpret(pluginRegistryHandler.getDefinitions({ type: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +364,7 @@ describe('PluginRegistry functional handler', () => {
     it('fixture "alter_formatters" -> ok', async () => {
       if (typeof pluginRegistryHandler.alterDefinitions !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
       const result = await interpret(pluginRegistryHandler.alterDefinitions({ type: "formatter", alterations: "{\"deprecated\":true}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -366,6 +372,7 @@ describe('PluginRegistry functional handler', () => {
     it('fixture "alter_missing_type" -> error', async () => {
       if (typeof pluginRegistryHandler.alterDefinitions !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
       const result = await interpret(pluginRegistryHandler.alterDefinitions({ type: "", alterations: "{}" }), storage);
       expect(result.variant).not.toBe('ok');
     });
@@ -427,6 +434,7 @@ describe('PluginRegistry functional handler', () => {
     it('fixture "derive_variant" -> ok', async () => {
       if (typeof pluginRegistryHandler.derivePlugins !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
       const result = await interpret(pluginRegistryHandler.derivePlugins({ plugin: "formatter:markdown-fmt", config: "{\"strict\":true}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -434,6 +442,7 @@ describe('PluginRegistry functional handler', () => {
     it('fixture "derive_nonexistent" -> error', async () => {
       if (typeof pluginRegistryHandler.derivePlugins !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
       const result = await interpret(pluginRegistryHandler.derivePlugins({ plugin: "nonexistent:plugin", config: "{}" }), storage);
       expect(result.variant).not.toBe('ok');
     });

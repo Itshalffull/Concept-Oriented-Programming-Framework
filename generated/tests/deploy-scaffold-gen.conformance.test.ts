@@ -230,6 +230,7 @@ describe('DeployScaffoldGen functional handler', () => {
     it('fixture "valid_register" -> ok', async () => {
       if (typeof deployScaffoldGenHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(deployScaffoldGenHandler.generate({ appName: "inventory-service", runtimes: [{"name":"api","type":"node","transport":"http","storage":"sqlite"}], concepts: [{"name":"Product","runtime":"api"}] }), storage);
       const result = await interpret(deployScaffoldGenHandler.register({  }), storage);
       expect(result.variant).toBe('ok');
     });

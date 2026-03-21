@@ -94,6 +94,7 @@ describe('Favorite functional handler', () => {
     it('fixture "favorite_another" -> ok', async () => {
       if (typeof favoriteHandler.favorite !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(favoriteHandler.favorite({ user: "user-alice", article: "art-101" }), storage);
       const result = await interpret(favoriteHandler.favorite({ user: "user-bob", article: "art-202" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -155,6 +156,7 @@ describe('Favorite functional handler', () => {
     it('fixture "unfavorite_ok" -> ok', async () => {
       if (typeof favoriteHandler.unfavorite !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(favoriteHandler.favorite({ user: "user-alice", article: "art-101" }), storage);
       const result = await interpret(favoriteHandler.unfavorite({ user: "user-alice", article: "art-101" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +164,7 @@ describe('Favorite functional handler', () => {
     it('fixture "unfavorite_not_in_set" -> ok', async () => {
       if (typeof favoriteHandler.unfavorite !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(favoriteHandler.favorite({ user: "user-alice", article: "art-101" }), storage);
       const result = await interpret(favoriteHandler.unfavorite({ user: "user-carol", article: "art-999" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +226,7 @@ describe('Favorite functional handler', () => {
     it('fixture "is_favorited_ok" -> ok', async () => {
       if (typeof favoriteHandler.isFavorited !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(favoriteHandler.favorite({ user: "user-alice", article: "art-101" }), storage);
       const result = await interpret(favoriteHandler.isFavorited({ user: "user-alice", article: "art-101" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +234,7 @@ describe('Favorite functional handler', () => {
     it('fixture "is_favorited_unknown_user" -> ok', async () => {
       if (typeof favoriteHandler.isFavorited !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(favoriteHandler.favorite({ user: "user-alice", article: "art-101" }), storage);
       const result = await interpret(favoriteHandler.isFavorited({ user: "user-unknown", article: "art-101" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +296,7 @@ describe('Favorite functional handler', () => {
     it('fixture "count_ok" -> ok', async () => {
       if (typeof favoriteHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(favoriteHandler.favorite({ user: "user-alice", article: "art-101" }), storage);
       const result = await interpret(favoriteHandler.count({ article: "art-101" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -298,6 +304,7 @@ describe('Favorite functional handler', () => {
     it('fixture "count_no_favorites" -> ok', async () => {
       if (typeof favoriteHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(favoriteHandler.favorite({ user: "user-alice", article: "art-101" }), storage);
       const result = await interpret(favoriteHandler.count({ article: "art-unfavorited" }), storage);
       expect(result.variant).toBe('ok');
     });

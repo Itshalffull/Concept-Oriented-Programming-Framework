@@ -162,6 +162,7 @@ describe('GcfRuntime functional handler', () => {
     it('fixture "deploy_gcs" -> ok', async () => {
       if (typeof gcfRuntimeHandler.deploy !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(gcfRuntimeHandler.provision({ concept: "UserService", projectId: "my-gcp-project", region: "us-central1", runtime: "nodejs20", triggerType: "http" }), storage);
       const result = await interpret(gcfRuntimeHandler.deploy({ function: "gcf-abc123", sourceArchive: "gs://deploy-bucket/user-service.zip" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +231,7 @@ describe('GcfRuntime functional handler', () => {
     it('fixture "traffic_split" -> ok', async () => {
       if (typeof gcfRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(gcfRuntimeHandler.provision({ concept: "UserService", projectId: "my-gcp-project", region: "us-central1", runtime: "nodejs20", triggerType: "http" }), storage);
       const result = await interpret(gcfRuntimeHandler.setTrafficWeight({ function: "gcf-abc123", weight: "75" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -298,6 +300,7 @@ describe('GcfRuntime functional handler', () => {
     it('fixture "rollback_to_v1" -> ok', async () => {
       if (typeof gcfRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(gcfRuntimeHandler.provision({ concept: "UserService", projectId: "my-gcp-project", region: "us-central1", runtime: "nodejs20", triggerType: "http" }), storage);
       const result = await interpret(gcfRuntimeHandler.rollback({ function: "gcf-abc123", targetVersion: "1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -366,6 +369,7 @@ describe('GcfRuntime functional handler', () => {
     it('fixture "destroy_valid" -> ok', async () => {
       if (typeof gcfRuntimeHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(gcfRuntimeHandler.provision({ concept: "UserService", projectId: "my-gcp-project", region: "us-central1", runtime: "nodejs20", triggerType: "http" }), storage);
       const result = await interpret(gcfRuntimeHandler.destroy({ function: "gcf-abc123" }), storage);
       expect(result.variant).toBe('ok');
     });

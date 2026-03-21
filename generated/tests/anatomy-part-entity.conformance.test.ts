@@ -155,6 +155,7 @@ describe('AnatomyPartEntity functional handler', () => {
     it('fixture "find_containers" -> ok', async () => {
       if (typeof anatomyPartEntityHandler.findByRole !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(anatomyPartEntityHandler.register({ widget: "dialog", name: "root", role: "container", required: "true" }), storage);
       const result = await interpret(anatomyPartEntityHandler.findByRole({ role: "container" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('AnatomyPartEntity functional handler', () => {
     it('fixture "find_title_bindings" -> ok', async () => {
       if (typeof anatomyPartEntityHandler.findBoundToField !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(anatomyPartEntityHandler.register({ widget: "dialog", name: "root", role: "container", required: "true" }), storage);
       const result = await interpret(anatomyPartEntityHandler.findBoundToField({ field: "title" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('AnatomyPartEntity functional handler', () => {
     it('fixture "find_submit_bindings" -> ok', async () => {
       if (typeof anatomyPartEntityHandler.findBoundToAction !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(anatomyPartEntityHandler.register({ widget: "dialog", name: "root", role: "container", required: "true" }), storage);
       const result = await interpret(anatomyPartEntityHandler.findBoundToAction({ action: "submit" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +362,7 @@ describe('AnatomyPartEntity functional handler', () => {
     it('fixture "get_existing_part" -> ok', async () => {
       if (typeof anatomyPartEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(anatomyPartEntityHandler.register({ widget: "dialog", name: "root", role: "container", required: "true" }), storage);
       const result = await interpret(anatomyPartEntityHandler.get({ part: "anatomy-part-entity-1" }), storage);
       expect(result.variant).toBe('ok');
     });

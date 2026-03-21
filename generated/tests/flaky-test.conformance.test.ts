@@ -155,6 +155,7 @@ describe('FlakyTest functional handler', () => {
     it('fixture "quarantine_flaky" -> ok', async () => {
       if (typeof flakyTestHandler.quarantine !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(flakyTestHandler.record({ testId: "test_password_hash", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: "true", duration: "45" }), storage);
       const result = await interpret(flakyTestHandler.quarantine({ testId: "test_timing", reason: "Timing-dependent, fails on slow CI", owner: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -224,6 +225,7 @@ describe('FlakyTest functional handler', () => {
     it('fixture "release_quarantined" -> ok', async () => {
       if (typeof flakyTestHandler.release !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(flakyTestHandler.record({ testId: "test_password_hash", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: "true", duration: "45" }), storage);
       const result = await interpret(flakyTestHandler.release({ testId: "test_timing" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -293,6 +295,7 @@ describe('FlakyTest functional handler', () => {
     it('fixture "is_quarantined_check" -> ok', async () => {
       if (typeof flakyTestHandler.isQuarantined !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(flakyTestHandler.record({ testId: "test_password_hash", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: "true", duration: "45" }), storage);
       const result = await interpret(flakyTestHandler.isQuarantined({ testId: "test_timing" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -362,6 +365,7 @@ describe('FlakyTest functional handler', () => {
     it('fixture "report_all" -> ok', async () => {
       if (typeof flakyTestHandler.report !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(flakyTestHandler.record({ testId: "test_password_hash", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: "true", duration: "45" }), storage);
       const result = await interpret(flakyTestHandler.report({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -369,6 +373,7 @@ describe('FlakyTest functional handler', () => {
     it('fixture "report_unit_only" -> ok', async () => {
       if (typeof flakyTestHandler.report !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(flakyTestHandler.record({ testId: "test_password_hash", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: "true", duration: "45" }), storage);
       const result = await interpret(flakyTestHandler.report({ testType: "unit" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -430,6 +435,7 @@ describe('FlakyTest functional handler', () => {
     it('fixture "set_strict_policy" -> ok', async () => {
       if (typeof flakyTestHandler.setPolicy !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(flakyTestHandler.record({ testId: "test_password_hash", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: "true", duration: "45" }), storage);
       const result = await interpret(flakyTestHandler.setPolicy({ flipThreshold: "2", flipWindow: "3d", autoQuarantine: "true", retryCount: "2" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -437,6 +443,7 @@ describe('FlakyTest functional handler', () => {
     it('fixture "set_lenient_policy" -> ok', async () => {
       if (typeof flakyTestHandler.setPolicy !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(flakyTestHandler.record({ testId: "test_password_hash", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: "true", duration: "45" }), storage);
       const result = await interpret(flakyTestHandler.setPolicy({ flipThreshold: "10", flipWindow: "30d", autoQuarantine: "false" }), storage);
       expect(result.variant).toBe('ok');
     });

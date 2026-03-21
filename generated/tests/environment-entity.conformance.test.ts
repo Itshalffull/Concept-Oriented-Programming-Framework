@@ -162,6 +162,7 @@ describe('EnvironmentEntity functional handler', () => {
     it('fixture "get_config" -> ok', async () => {
       if (typeof environmentEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(environmentEntityHandler.register({ name: "API_PORT", environment: "production", kind: "config", value: "3000", source: "env-file" }), storage);
       const result = await interpret(environmentEntityHandler.get({ name: "API_PORT", environment: "production" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +231,7 @@ describe('EnvironmentEntity functional handler', () => {
     it('fixture "find_production" -> ok', async () => {
       if (typeof environmentEntityHandler.findByEnvironment !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(environmentEntityHandler.register({ name: "API_PORT", environment: "production", kind: "config", value: "3000", source: "env-file" }), storage);
       const result = await interpret(environmentEntityHandler.findByEnvironment({ environment: "production" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -237,6 +239,7 @@ describe('EnvironmentEntity functional handler', () => {
     it('fixture "find_empty_env" -> ok', async () => {
       if (typeof environmentEntityHandler.findByEnvironment !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(environmentEntityHandler.register({ name: "API_PORT", environment: "production", kind: "config", value: "3000", source: "env-file" }), storage);
       const result = await interpret(environmentEntityHandler.findByEnvironment({ environment: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -298,6 +301,7 @@ describe('EnvironmentEntity functional handler', () => {
     it('fixture "find_user_concept" -> ok', async () => {
       if (typeof environmentEntityHandler.findByConcept !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(environmentEntityHandler.register({ name: "API_PORT", environment: "production", kind: "config", value: "3000", source: "env-file" }), storage);
       const result = await interpret(environmentEntityHandler.findByConcept({ concept: "User" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -305,6 +309,7 @@ describe('EnvironmentEntity functional handler', () => {
     it('fixture "find_empty_concept" -> ok', async () => {
       if (typeof environmentEntityHandler.findByConcept !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(environmentEntityHandler.register({ name: "API_PORT", environment: "production", kind: "config", value: "3000", source: "env-file" }), storage);
       const result = await interpret(environmentEntityHandler.findByConcept({ concept: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -366,6 +371,7 @@ describe('EnvironmentEntity functional handler', () => {
     it('fixture "find_api_runtime" -> ok', async () => {
       if (typeof environmentEntityHandler.findByRuntime !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(environmentEntityHandler.register({ name: "API_PORT", environment: "production", kind: "config", value: "3000", source: "env-file" }), storage);
       const result = await interpret(environmentEntityHandler.findByRuntime({ runtime: "api" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -373,6 +379,7 @@ describe('EnvironmentEntity functional handler', () => {
     it('fixture "find_empty_runtime" -> ok', async () => {
       if (typeof environmentEntityHandler.findByRuntime !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(environmentEntityHandler.register({ name: "API_PORT", environment: "production", kind: "config", value: "3000", source: "env-file" }), storage);
       const result = await interpret(environmentEntityHandler.findByRuntime({ runtime: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -502,6 +509,7 @@ describe('EnvironmentEntity functional handler', () => {
     it('fixture "audit_production" -> ok', async () => {
       if (typeof environmentEntityHandler.secretsAudit !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(environmentEntityHandler.register({ name: "API_PORT", environment: "production", kind: "config", value: "3000", source: "env-file" }), storage);
       const result = await interpret(environmentEntityHandler.secretsAudit({ environment: "production" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -509,6 +517,7 @@ describe('EnvironmentEntity functional handler', () => {
     it('fixture "audit_empty" -> ok', async () => {
       if (typeof environmentEntityHandler.secretsAudit !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(environmentEntityHandler.register({ name: "API_PORT", environment: "production", kind: "config", value: "3000", source: "env-file" }), storage);
       const result = await interpret(environmentEntityHandler.secretsAudit({ environment: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -570,6 +579,7 @@ describe('EnvironmentEntity functional handler', () => {
     it('fixture "flags_staging" -> ok', async () => {
       if (typeof environmentEntityHandler.featureFlags !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(environmentEntityHandler.register({ name: "API_PORT", environment: "production", kind: "config", value: "3000", source: "env-file" }), storage);
       const result = await interpret(environmentEntityHandler.featureFlags({ environment: "staging" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -577,6 +587,7 @@ describe('EnvironmentEntity functional handler', () => {
     it('fixture "flags_empty" -> ok', async () => {
       if (typeof environmentEntityHandler.featureFlags !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(environmentEntityHandler.register({ name: "API_PORT", environment: "production", kind: "config", value: "3000", source: "env-file" }), storage);
       const result = await interpret(environmentEntityHandler.featureFlags({ environment: "" }), storage);
       expect(result.variant).toBe('ok');
     });

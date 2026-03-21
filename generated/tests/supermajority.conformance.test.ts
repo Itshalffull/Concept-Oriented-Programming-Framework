@@ -162,6 +162,7 @@ describe('Supermajority functional handler', () => {
     it('fixture "supermajority_reached" -> ok', async () => {
       if (typeof supermajorityHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(supermajorityHandler.configure({ threshold: "0.6667", roundingMode: "floor", abstentionsCount: "false" }), storage);
       const result = await interpret(supermajorityHandler.count({ config: "supermaj-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -169,6 +170,7 @@ describe('Supermajority functional handler', () => {
     it('fixture "no_ballots" -> error', async () => {
       if (typeof supermajorityHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(supermajorityHandler.configure({ threshold: "0.6667", roundingMode: "floor", abstentionsCount: "false" }), storage);
       const result = await interpret(supermajorityHandler.count({ config: "supermaj-001", ballots: "[]", weights: "{}" }), storage);
       expect(result.variant).not.toBe('ok');
     });

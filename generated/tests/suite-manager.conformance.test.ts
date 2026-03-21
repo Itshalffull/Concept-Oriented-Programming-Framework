@@ -224,6 +224,7 @@ describe('SuiteManager functional handler', () => {
     it('fixture "valid_test" -> ok', async () => {
       if (typeof suiteManagerHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(suiteManagerHandler.init({ name: "payment-suite" }), storage);
       const result = await interpret(suiteManagerHandler.test({ path: "./repertoire/payment-suite/" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -231,6 +232,7 @@ describe('SuiteManager functional handler', () => {
     it('fixture "empty_test_path" -> ok', async () => {
       if (typeof suiteManagerHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(suiteManagerHandler.init({ name: "payment-suite" }), storage);
       const result = await interpret(suiteManagerHandler.test({ path: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -292,6 +294,7 @@ describe('SuiteManager functional handler', () => {
     it('fixture "valid_list" -> ok', async () => {
       if (typeof suiteManagerHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(suiteManagerHandler.init({ name: "payment-suite" }), storage);
       const result = await interpret(suiteManagerHandler.list({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -353,6 +356,7 @@ describe('SuiteManager functional handler', () => {
     it('fixture "valid_overrides" -> ok', async () => {
       if (typeof suiteManagerHandler.checkOverrides !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(suiteManagerHandler.init({ name: "payment-suite" }), storage);
       const result = await interpret(suiteManagerHandler.checkOverrides({ path: "./repertoire/payment-suite/" }), storage);
       expect(result.variant).toBe('ok');
     });

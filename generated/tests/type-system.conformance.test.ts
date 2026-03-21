@@ -155,6 +155,7 @@ describe('TypeSystem functional handler', () => {
     it('fixture "resolve_existing" -> ok', async () => {
       if (typeof typeSystemHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(typeSystemHandler.registerType({ type: "email", schema: "{\"type\":\"string\"}", constraints: "{\"format\":\"email\"}" }), storage);
       const result = await interpret(typeSystemHandler.resolve({ type: "email" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('TypeSystem functional handler', () => {
     it('fixture "navigate_nested" -> ok', async () => {
       if (typeof typeSystemHandler.navigate !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(typeSystemHandler.registerType({ type: "email", schema: "{\"type\":\"string\"}", constraints: "{\"format\":\"email\"}" }), storage);
       const result = await interpret(typeSystemHandler.navigate({ type: "user", path: "address.city" }), storage);
       expect(result.variant).toBe('ok');
     });

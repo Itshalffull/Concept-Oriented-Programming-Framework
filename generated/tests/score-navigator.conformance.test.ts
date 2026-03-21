@@ -164,6 +164,7 @@ describe('ScoreNavigator functional handler', () => {
     it('fixture "valid_traverse" -> ok', async () => {
       if (typeof scoreNavigatorHandler.traverse !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreNavigatorHandler.show({ kind: "concept", name: "User" }), storage);
       const result = await interpret(scoreNavigatorHandler.traverse({ relation: "actions", target: "register" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -241,6 +242,7 @@ describe('ScoreNavigator functional handler', () => {
     it('fixture "valid_back" -> ok', async () => {
       if (typeof scoreNavigatorHandler.back !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreNavigatorHandler.show({ kind: "concept", name: "User" }), storage);
       const result = await interpret(scoreNavigatorHandler.back({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -310,6 +312,7 @@ describe('ScoreNavigator functional handler', () => {
     it('fixture "valid_list" -> ok', async () => {
       if (typeof scoreNavigatorHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(scoreNavigatorHandler.show({ kind: "concept", name: "User" }), storage);
       const result = await interpret(scoreNavigatorHandler.list({ kind: "concept" }), storage);
       expect(result.variant).toBe('ok');
     });

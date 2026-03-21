@@ -94,6 +94,7 @@ describe('Reference functional handler', () => {
     it('fixture "another_ref" -> ok', async () => {
       if (typeof referenceHandler.addRef !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(referenceHandler.addRef({ source: "page-1", target: "doc-1" }), storage);
       const result = await interpret(referenceHandler.addRef({ source: "page-2", target: "doc-3" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -163,6 +164,7 @@ describe('Reference functional handler', () => {
     it('fixture "valid_remove" -> ok', async () => {
       if (typeof referenceHandler.removeRef !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(referenceHandler.addRef({ source: "page-1", target: "doc-1" }), storage);
       const result = await interpret(referenceHandler.removeRef({ source: "page-1", target: "doc-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -232,6 +234,7 @@ describe('Reference functional handler', () => {
     it('fixture "valid_refs" -> ok', async () => {
       if (typeof referenceHandler.getRefs !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(referenceHandler.addRef({ source: "page-1", target: "doc-1" }), storage);
       const result = await interpret(referenceHandler.getRefs({ source: "page-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -301,6 +304,7 @@ describe('Reference functional handler', () => {
     it('fixture "valid_target" -> ok', async () => {
       if (typeof referenceHandler.resolveTarget !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(referenceHandler.addRef({ source: "page-1", target: "doc-1" }), storage);
       const result = await interpret(referenceHandler.resolveTarget({ target: "doc-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -308,6 +312,7 @@ describe('Reference functional handler', () => {
     it('fixture "broken_link" -> ok', async () => {
       if (typeof referenceHandler.resolveTarget !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(referenceHandler.addRef({ source: "page-1", target: "doc-1" }), storage);
       const result = await interpret(referenceHandler.resolveTarget({ target: "nonexistent-target" }), storage);
       expect(result.variant).toBe('ok');
     });

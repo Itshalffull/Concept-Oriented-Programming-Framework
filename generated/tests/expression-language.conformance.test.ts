@@ -155,6 +155,7 @@ describe('ExpressionLanguage functional handler', () => {
     it('fixture "register_abs" -> ok', async () => {
       if (typeof expressionLanguageHandler.registerFunction !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(expressionLanguageHandler.registerLanguage({ name: "math", grammar: "arithmetic" }), storage);
       const result = await interpret(expressionLanguageHandler.registerFunction({ name: "abs", implementation: "Math.abs" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +163,7 @@ describe('ExpressionLanguage functional handler', () => {
     it('fixture "missing_impl" -> ok', async () => {
       if (typeof expressionLanguageHandler.registerFunction !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(expressionLanguageHandler.registerLanguage({ name: "math", grammar: "arithmetic" }), storage);
       const result = await interpret(expressionLanguageHandler.registerFunction({ name: "", implementation: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +225,7 @@ describe('ExpressionLanguage functional handler', () => {
     it('fixture "register_plus" -> ok', async () => {
       if (typeof expressionLanguageHandler.registerOperator !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(expressionLanguageHandler.registerLanguage({ name: "math", grammar: "arithmetic" }), storage);
       const result = await interpret(expressionLanguageHandler.registerOperator({ name: "plus", implementation: "a + b" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +233,7 @@ describe('ExpressionLanguage functional handler', () => {
     it('fixture "missing_op_name" -> ok', async () => {
       if (typeof expressionLanguageHandler.registerOperator !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(expressionLanguageHandler.registerLanguage({ name: "math", grammar: "arithmetic" }), storage);
       const result = await interpret(expressionLanguageHandler.registerOperator({ name: "", implementation: "a + b" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +363,7 @@ describe('ExpressionLanguage functional handler', () => {
     it('fixture "eval_existing" -> ok', async () => {
       if (typeof expressionLanguageHandler.evaluate !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(expressionLanguageHandler.registerLanguage({ name: "math", grammar: "arithmetic" }), storage);
       const result = await interpret(expressionLanguageHandler.evaluate({ expression: "expr-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -427,6 +432,7 @@ describe('ExpressionLanguage functional handler', () => {
     it('fixture "typecheck_valid" -> ok', async () => {
       if (typeof expressionLanguageHandler.typeCheck !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(expressionLanguageHandler.registerLanguage({ name: "math", grammar: "arithmetic" }), storage);
       const result = await interpret(expressionLanguageHandler.typeCheck({ expression: "expr-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -495,6 +501,7 @@ describe('ExpressionLanguage functional handler', () => {
     it('fixture "completions_at_cursor" -> ok', async () => {
       if (typeof expressionLanguageHandler.getCompletions !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(expressionLanguageHandler.registerLanguage({ name: "math", grammar: "arithmetic" }), storage);
       const result = await interpret(expressionLanguageHandler.getCompletions({ expression: "expr-1", cursor: "3" }), storage);
       expect(result.variant).toBe('ok');
     });

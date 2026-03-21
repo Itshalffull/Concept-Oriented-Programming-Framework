@@ -155,6 +155,7 @@ describe('Auditor functional handler', () => {
     it('fixture "check_permissive_policy" -> ok', async () => {
       if (typeof auditorHandler.checkPolicy !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(auditorHandler.audit({ lockfile_entries: [{"module_id":"lodash","version":"4.17.21"},{"module_id":"express","version":"4.18.2"}] }), storage);
       const result = await interpret(auditorHandler.checkPolicy({ lockfile_entries: [{"module_id":"lodash","version":"4.17.21"}], policy: {"allowed_licenses":["MIT","Apache-2.0","ISC"],"denied_namespaces":[],"max_severity":"critical"} }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +163,7 @@ describe('Auditor functional handler', () => {
     it('fixture "check_restrictive_policy" -> error', async () => {
       if (typeof auditorHandler.checkPolicy !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(auditorHandler.audit({ lockfile_entries: [{"module_id":"lodash","version":"4.17.21"},{"module_id":"express","version":"4.18.2"}] }), storage);
       const result = await interpret(auditorHandler.checkPolicy({ lockfile_entries: [{"module_id":"@evil/malware","version":"0.1.0"}], policy: {"allowed_licenses":["MIT"],"denied_namespaces":["@evil"],"max_severity":"low"} }), storage);
       expect(result.variant).not.toBe('ok');
     });

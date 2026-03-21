@@ -155,6 +155,7 @@ describe('Taxonomy functional handler', () => {
     it('fixture "add_root_term" -> ok', async () => {
       if (typeof taxonomyHandler.addTerm !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" }), storage);
       const result = await interpret(taxonomyHandler.addTerm({ vocab: "vocab-topics-1", term: "science", parent: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +163,7 @@ describe('Taxonomy functional handler', () => {
     it('fixture "add_child_term" -> ok', async () => {
       if (typeof taxonomyHandler.addTerm !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" }), storage);
       const result = await interpret(taxonomyHandler.addTerm({ vocab: "vocab-topics-1", term: "physics", parent: "science" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +232,7 @@ describe('Taxonomy functional handler', () => {
     it('fixture "reassign_parent" -> ok', async () => {
       if (typeof taxonomyHandler.setParent !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" }), storage);
       const result = await interpret(taxonomyHandler.setParent({ vocab: "vocab-topics-1", term: "physics", parent: "natural-science" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -298,6 +301,7 @@ describe('Taxonomy functional handler', () => {
     it('fixture "tag_page_with_term" -> ok', async () => {
       if (typeof taxonomyHandler.tagEntity !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" }), storage);
       const result = await interpret(taxonomyHandler.tagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -366,6 +370,7 @@ describe('Taxonomy functional handler', () => {
     it('fixture "untag_page" -> ok', async () => {
       if (typeof taxonomyHandler.untagEntity !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" }), storage);
       const result = await interpret(taxonomyHandler.untagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" }), storage);
       expect(result.variant).toBe('ok');
     });

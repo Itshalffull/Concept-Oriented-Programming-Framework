@@ -162,6 +162,7 @@ describe('Builder functional handler', () => {
     it('fixture "buildall_multi" -> ok', async () => {
       if (typeof builderHandler.buildAll !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(builderHandler.build({ concept: "password", source: "./generated/swift/password", language: "swift", platform: "linux-arm64", config: {"mode":"release"} }), storage);
       const result = await interpret(builderHandler.buildAll({ concepts: ["password","session"], source: "./generated", targets: [{"language":"swift","platform":"linux-arm64"}], config: {"mode":"release"} }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -169,6 +170,7 @@ describe('Builder functional handler', () => {
     it('fixture "buildall_empty_concepts" -> error', async () => {
       if (typeof builderHandler.buildAll !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(builderHandler.build({ concept: "password", source: "./generated/swift/password", language: "swift", platform: "linux-arm64", config: {"mode":"release"} }), storage);
       const result = await interpret(builderHandler.buildAll({ concepts: [], source: "./src", targets: [{"language":"typescript","platform":"linux-x86_64"}], config: {"mode":"debug"} }), storage);
       expect(result.variant).not.toBe('ok');
     });
@@ -230,6 +232,7 @@ describe('Builder functional handler', () => {
     it('fixture "test_unit" -> ok', async () => {
       if (typeof builderHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(builderHandler.build({ concept: "password", source: "./generated/swift/password", language: "swift", platform: "linux-arm64", config: {"mode":"release"} }), storage);
       const result = await interpret(builderHandler.test({ concept: "password", language: "swift", platform: "linux-arm64", testType: "unit" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -237,6 +240,7 @@ describe('Builder functional handler', () => {
     it('fixture "test_e2e_with_tool" -> ok', async () => {
       if (typeof builderHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(builderHandler.build({ concept: "password", source: "./generated/swift/password", language: "swift", platform: "linux-arm64", config: {"mode":"release"} }), storage);
       const result = await interpret(builderHandler.test({ concept: "session", language: "typescript", platform: "linux-x86_64", testType: "e2e", toolName: "playwright" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -305,6 +309,7 @@ describe('Builder functional handler', () => {
     it('fixture "status_existing" -> ok', async () => {
       if (typeof builderHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(builderHandler.build({ concept: "password", source: "./generated/swift/password", language: "swift", platform: "linux-arm64", config: {"mode":"release"} }), storage);
       const result = await interpret(builderHandler.status({ build: "bld-abc123" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -312,6 +317,7 @@ describe('Builder functional handler', () => {
     it('fixture "status_missing" -> ok', async () => {
       if (typeof builderHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(builderHandler.build({ concept: "password", source: "./generated/swift/password", language: "swift", platform: "linux-arm64", config: {"mode":"release"} }), storage);
       const result = await interpret(builderHandler.status({ build: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -373,6 +379,7 @@ describe('Builder functional handler', () => {
     it('fixture "history_all" -> ok', async () => {
       if (typeof builderHandler.history !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(builderHandler.build({ concept: "password", source: "./generated/swift/password", language: "swift", platform: "linux-arm64", config: {"mode":"release"} }), storage);
       const result = await interpret(builderHandler.history({ concept: "password" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -380,6 +387,7 @@ describe('Builder functional handler', () => {
     it('fixture "history_by_lang" -> ok', async () => {
       if (typeof builderHandler.history !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(builderHandler.build({ concept: "password", source: "./generated/swift/password", language: "swift", platform: "linux-arm64", config: {"mode":"release"} }), storage);
       const result = await interpret(builderHandler.history({ concept: "password", language: "swift" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -387,6 +395,7 @@ describe('Builder functional handler', () => {
     it('fixture "history_empty_concept" -> ok', async () => {
       if (typeof builderHandler.history !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(builderHandler.build({ concept: "password", source: "./generated/swift/password", language: "swift", platform: "linux-arm64", config: {"mode":"release"} }), storage);
       const result = await interpret(builderHandler.history({ concept: "" }), storage);
       expect(result.variant).toBe('ok');
     });

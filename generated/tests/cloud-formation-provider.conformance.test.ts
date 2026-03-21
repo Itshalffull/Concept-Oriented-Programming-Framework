@@ -223,6 +223,7 @@ describe('CloudFormationProvider functional handler', () => {
     it('fixture "apply_stack" -> ok', async () => {
       if (typeof cloudformationProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(cloudformationProviderHandler.generate({ plan: "dp-002-payment-service" }), storage);
       const result = await interpret(cloudformationProviderHandler.apply({ stack: "stack-abc123" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +292,7 @@ describe('CloudFormationProvider functional handler', () => {
     it('fixture "teardown_stack" -> ok', async () => {
       if (typeof cloudformationProviderHandler.teardown !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(cloudformationProviderHandler.generate({ plan: "dp-002-payment-service" }), storage);
       const result = await interpret(cloudformationProviderHandler.teardown({ stack: "stack-abc123" }), storage);
       expect(result.variant).toBe('ok');
     });

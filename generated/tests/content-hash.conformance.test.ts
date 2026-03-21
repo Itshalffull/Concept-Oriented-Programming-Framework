@@ -62,6 +62,7 @@ describe('ContentHash imperative handler', () => {
     it('fixture "retrieve_existing" -> ok', async () => {
       if (typeof contentHashHandler.retrieve !== 'function') return;
       const storage = createInMemoryStorage();
+      await contentHashHandler.store({ content: "Hello, world!" }, storage);
       const result = await contentHashHandler.retrieve({ hash: "315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -88,6 +89,7 @@ describe('ContentHash imperative handler', () => {
     it('fixture "verify_matching" -> ok', async () => {
       if (typeof contentHashHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
+      await contentHashHandler.store({ content: "Hello, world!" }, storage);
       const result = await contentHashHandler.verify({ hash: "315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3", content: "Hello, world!" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -114,6 +116,7 @@ describe('ContentHash imperative handler', () => {
     it('fixture "delete_existing" -> ok', async () => {
       if (typeof contentHashHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
+      await contentHashHandler.store({ content: "Hello, world!" }, storage);
       const result = await contentHashHandler.delete({ hash: "315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3" }, storage);
       expect(result.variant).toBe('ok');
     });

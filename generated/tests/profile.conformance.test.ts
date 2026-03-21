@@ -148,6 +148,7 @@ describe('Profile functional handler', () => {
     it('fixture "existing_profile" -> ok', async () => {
       if (typeof profileHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(profileHandler.update({ user: "alice", bio: "Software engineer from Seattle", image: "https://cdn.example.com/alice.jpg" }), storage);
       const result = await interpret(profileHandler.get({ user: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });

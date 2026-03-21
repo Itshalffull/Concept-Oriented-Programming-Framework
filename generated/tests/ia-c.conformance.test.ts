@@ -223,6 +223,7 @@ describe('IaC functional handler', () => {
     it('fixture "apply_plan" -> ok', async () => {
       if (typeof iaCHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(iaCHandler.emit({ plan: "dp-001", provider: "pulumi" }), storage);
       const result = await interpret(iaCHandler.apply({ plan: "dp-001", provider: "pulumi" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -230,6 +231,7 @@ describe('IaC functional handler', () => {
     it('fixture "apply_empty_plan" -> ok', async () => {
       if (typeof iaCHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(iaCHandler.emit({ plan: "dp-001", provider: "pulumi" }), storage);
       const result = await interpret(iaCHandler.apply({ plan: "", provider: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('IaC functional handler', () => {
     it('fixture "detect_drift_pulumi" -> ok', async () => {
       if (typeof iaCHandler.detectDrift !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(iaCHandler.emit({ plan: "dp-001", provider: "pulumi" }), storage);
       const result = await interpret(iaCHandler.detectDrift({ provider: "pulumi" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +362,7 @@ describe('IaC functional handler', () => {
     it('fixture "teardown_plan" -> ok', async () => {
       if (typeof iaCHandler.teardown !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(iaCHandler.emit({ plan: "dp-001", provider: "pulumi" }), storage);
       const result = await interpret(iaCHandler.teardown({ plan: "dp-001", provider: "pulumi" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -366,6 +370,7 @@ describe('IaC functional handler', () => {
     it('fixture "teardown_empty" -> ok', async () => {
       if (typeof iaCHandler.teardown !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(iaCHandler.emit({ plan: "dp-001", provider: "pulumi" }), storage);
       const result = await interpret(iaCHandler.teardown({ plan: "", provider: "" }), storage);
       expect(result.variant).toBe('ok');
     });

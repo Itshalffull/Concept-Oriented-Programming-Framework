@@ -155,6 +155,7 @@ describe('CountingMethod functional handler', () => {
     it('fixture "aggregate_valid" -> ok', async () => {
       if (typeof countingMethodHandler.aggregate !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(countingMethodHandler.register({ name: "simple-majority", provider: "Majority", parameters: "{\"threshold\":0.5}" }), storage);
       const result = await interpret(countingMethodHandler.aggregate({ method: "counting-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"no\"}]", weights: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +163,7 @@ describe('CountingMethod functional handler', () => {
     it('fixture "aggregate_missing_method" -> error', async () => {
       if (typeof countingMethodHandler.aggregate !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(countingMethodHandler.register({ name: "simple-majority", provider: "Majority", parameters: "{\"threshold\":0.5}" }), storage);
       const result = await interpret(countingMethodHandler.aggregate({ method: "counting-nonexistent", ballots: "[]", weights: "{}" }), storage);
       expect(result.variant).not.toBe('ok');
     });
@@ -223,6 +225,7 @@ describe('CountingMethod functional handler', () => {
     it('fixture "deregister_existing" -> ok', async () => {
       if (typeof countingMethodHandler.deregister !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(countingMethodHandler.register({ name: "simple-majority", provider: "Majority", parameters: "{\"threshold\":0.5}" }), storage);
       const result = await interpret(countingMethodHandler.deregister({ method: "counting-001" }), storage);
       expect(result.variant).toBe('ok');
     });

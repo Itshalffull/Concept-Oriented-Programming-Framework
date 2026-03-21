@@ -156,6 +156,7 @@ describe('SpatialLayout functional handler', () => {
     it('fixture "valid_register" -> ok', async () => {
       if (typeof spatialLayoutHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(spatialLayoutHandler.apply({ algorithm: "force-directed" }), storage);
       const result = await interpret(spatialLayoutHandler.register({ algorithm: "force-directed", provider: "ForceDirectedLayout" }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -163,6 +163,7 @@ describe('Slot functional handler', () => {
     it('fixture "valid_fill" -> ok', async () => {
       if (typeof slotHandler.fill !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(slotHandler.define({ name: "header", host: "dialog", position: "before-title", fallback: "Default Header" }), storage);
       const result = await interpret(slotHandler.fill({ content: "<h2>Custom Header</h2>" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -232,6 +233,7 @@ describe('Slot functional handler', () => {
     it('fixture "valid_clear" -> ok', async () => {
       if (typeof slotHandler.clear !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(slotHandler.define({ name: "header", host: "dialog", position: "before-title", fallback: "Default Header" }), storage);
       const result = await interpret(slotHandler.clear({  }), storage);
       expect(result.variant).toBe('ok');
     });

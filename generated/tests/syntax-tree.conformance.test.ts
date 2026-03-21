@@ -155,6 +155,7 @@ describe('SyntaxTree functional handler', () => {
     it('fixture "reparse_edit" -> ok', async () => {
       if (typeof syntaxTreeHandler.reparse !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(syntaxTreeHandler.parse({ file: "src/app.ts", grammar: "typescript" }), storage);
       const result = await interpret(syntaxTreeHandler.reparse({ tree: "tree-1", startByte: "10", oldEndByte: "20", newEndByte: "25", newText: "const x = 1;" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,7 @@ describe('SyntaxTree functional handler', () => {
     it('fixture "query_functions" -> ok', async () => {
       if (typeof syntaxTreeHandler.query !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(syntaxTreeHandler.parse({ file: "src/app.ts", grammar: "typescript" }), storage);
       const result = await interpret(syntaxTreeHandler.query({ tree: "tree-1", pattern: "(function_declaration) @fn" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +293,7 @@ describe('SyntaxTree functional handler', () => {
     it('fixture "node_at_valid" -> ok', async () => {
       if (typeof syntaxTreeHandler.nodeAt !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(syntaxTreeHandler.parse({ file: "src/app.ts", grammar: "typescript" }), storage);
       const result = await interpret(syntaxTreeHandler.nodeAt({ tree: "tree-1", byteOffset: "42" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +362,7 @@ describe('SyntaxTree functional handler', () => {
     it('fixture "get_tree" -> ok', async () => {
       if (typeof syntaxTreeHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(syntaxTreeHandler.parse({ file: "src/app.ts", grammar: "typescript" }), storage);
       const result = await interpret(syntaxTreeHandler.get({ tree: "tree-1" }), storage);
       expect(result.variant).toBe('ok');
     });

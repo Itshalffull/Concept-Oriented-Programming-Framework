@@ -155,6 +155,7 @@ describe('InlineAnnotation functional handler', () => {
     it('fixture "accept_pending" -> ok', async () => {
       if (typeof inlineAnnotationHandler.accept !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(inlineAnnotationHandler.annotate({ contentRef: "doc-readme", changeType: "insertion", scope: "new paragraph content", author: "alice@example.com" }), storage);
       const result = await interpret(inlineAnnotationHandler.accept({ annotationId: "inline-annotation-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -223,6 +224,8 @@ describe('InlineAnnotation functional handler', () => {
     it('fixture "reject_pending" -> ok', async () => {
       if (typeof inlineAnnotationHandler.reject !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(inlineAnnotationHandler.annotate({ contentRef: "doc-readme", changeType: "insertion", scope: "new paragraph content", author: "alice@example.com" }), storage);
+      await interpret(inlineAnnotationHandler.accept({ annotationId: "inline-annotation-1" }), storage);
       const result = await interpret(inlineAnnotationHandler.reject({ annotationId: "inline-annotation-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -291,6 +294,7 @@ describe('InlineAnnotation functional handler', () => {
     it('fixture "accept_all_for_doc" -> ok', async () => {
       if (typeof inlineAnnotationHandler.acceptAll !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(inlineAnnotationHandler.annotate({ contentRef: "doc-readme", changeType: "insertion", scope: "new paragraph content", author: "alice@example.com" }), storage);
       const result = await interpret(inlineAnnotationHandler.acceptAll({ contentRef: "doc-readme" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -298,6 +302,7 @@ describe('InlineAnnotation functional handler', () => {
     it('fixture "accept_all_empty_ref" -> ok', async () => {
       if (typeof inlineAnnotationHandler.acceptAll !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(inlineAnnotationHandler.annotate({ contentRef: "doc-readme", changeType: "insertion", scope: "new paragraph content", author: "alice@example.com" }), storage);
       const result = await interpret(inlineAnnotationHandler.acceptAll({ contentRef: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -359,6 +364,8 @@ describe('InlineAnnotation functional handler', () => {
     it('fixture "reject_all_for_doc" -> ok', async () => {
       if (typeof inlineAnnotationHandler.rejectAll !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(inlineAnnotationHandler.annotate({ contentRef: "doc-readme", changeType: "insertion", scope: "new paragraph content", author: "alice@example.com" }), storage);
+      await interpret(inlineAnnotationHandler.accept({ annotationId: "inline-annotation-1" }), storage);
       const result = await interpret(inlineAnnotationHandler.rejectAll({ contentRef: "doc-readme" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -366,6 +373,8 @@ describe('InlineAnnotation functional handler', () => {
     it('fixture "reject_all_empty_ref" -> ok', async () => {
       if (typeof inlineAnnotationHandler.rejectAll !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(inlineAnnotationHandler.annotate({ contentRef: "doc-readme", changeType: "insertion", scope: "new paragraph content", author: "alice@example.com" }), storage);
+      await interpret(inlineAnnotationHandler.accept({ annotationId: "inline-annotation-1" }), storage);
       const result = await interpret(inlineAnnotationHandler.rejectAll({ contentRef: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -427,6 +436,7 @@ describe('InlineAnnotation functional handler', () => {
     it('fixture "enable_tracking" -> ok', async () => {
       if (typeof inlineAnnotationHandler.toggleTracking !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(inlineAnnotationHandler.annotate({ contentRef: "doc-readme", changeType: "insertion", scope: "new paragraph content", author: "alice@example.com" }), storage);
       const result = await interpret(inlineAnnotationHandler.toggleTracking({ contentRef: "doc-readme", enabled: "true" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -434,6 +444,7 @@ describe('InlineAnnotation functional handler', () => {
     it('fixture "disable_tracking" -> ok', async () => {
       if (typeof inlineAnnotationHandler.toggleTracking !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(inlineAnnotationHandler.annotate({ contentRef: "doc-readme", changeType: "insertion", scope: "new paragraph content", author: "alice@example.com" }), storage);
       const result = await interpret(inlineAnnotationHandler.toggleTracking({ contentRef: "doc-readme", enabled: "false" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -495,6 +506,7 @@ describe('InlineAnnotation functional handler', () => {
     it('fixture "list_pending_existing" -> ok', async () => {
       if (typeof inlineAnnotationHandler.listPending !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(inlineAnnotationHandler.annotate({ contentRef: "doc-readme", changeType: "insertion", scope: "new paragraph content", author: "alice@example.com" }), storage);
       const result = await interpret(inlineAnnotationHandler.listPending({ contentRef: "doc-readme" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -502,6 +514,7 @@ describe('InlineAnnotation functional handler', () => {
     it('fixture "list_pending_empty_ref" -> ok', async () => {
       if (typeof inlineAnnotationHandler.listPending !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(inlineAnnotationHandler.annotate({ contentRef: "doc-readme", changeType: "insertion", scope: "new paragraph content", author: "alice@example.com" }), storage);
       const result = await interpret(inlineAnnotationHandler.listPending({ contentRef: "" }), storage);
       expect(result.variant).toBe('ok');
     });

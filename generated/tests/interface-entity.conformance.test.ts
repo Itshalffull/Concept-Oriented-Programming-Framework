@@ -162,6 +162,7 @@ describe('InterfaceEntity functional handler', () => {
     it('fixture "get_conduit" -> ok', async () => {
       if (typeof interfaceEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage);
       const result = await interpret(interfaceEntityHandler.get({ name: "conduit-api" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -176,6 +177,7 @@ describe('InterfaceEntity functional handler', () => {
     it('fixture "get_api" -> ok', async () => {
       if (typeof interfaceEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage);
       const result = await interpret(interfaceEntityHandler.get({ name: "conduit-api" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -237,6 +239,7 @@ describe('InterfaceEntity functional handler', () => {
     it('fixture "endpoints_rest" -> ok', async () => {
       if (typeof interfaceEntityHandler.listEndpoints !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage);
       const result = await interpret(interfaceEntityHandler.listEndpoints({ interface: "iface-uuid-1", target: "rest" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -305,6 +308,7 @@ describe('InterfaceEntity functional handler', () => {
     it('fixture "commands_valid" -> ok', async () => {
       if (typeof interfaceEntityHandler.listCommands !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage);
       const result = await interpret(interfaceEntityHandler.listCommands({ interface: "iface-uuid-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -373,6 +377,7 @@ describe('InterfaceEntity functional handler', () => {
     it('fixture "tools_valid" -> ok', async () => {
       if (typeof interfaceEntityHandler.listTools !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage);
       const result = await interpret(interfaceEntityHandler.listTools({ interface: "iface-uuid-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -441,6 +446,7 @@ describe('InterfaceEntity functional handler', () => {
     it('fixture "skills_valid" -> ok', async () => {
       if (typeof interfaceEntityHandler.listSkills !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage);
       const result = await interpret(interfaceEntityHandler.listSkills({ interface: "iface-uuid-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -509,6 +515,7 @@ describe('InterfaceEntity functional handler', () => {
     it('fixture "find_user_concept" -> ok', async () => {
       if (typeof interfaceEntityHandler.findByConcept !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage);
       const result = await interpret(interfaceEntityHandler.findByConcept({ concept: "User" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -577,6 +584,7 @@ describe('InterfaceEntity functional handler', () => {
     it('fixture "find_user_create" -> ok', async () => {
       if (typeof interfaceEntityHandler.findByAction !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage);
       const result = await interpret(interfaceEntityHandler.findByAction({ concept: "User", action: "create" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -645,6 +653,7 @@ describe('InterfaceEntity functional handler', () => {
     it('fixture "trace_post_users" -> ok', async () => {
       if (typeof interfaceEntityHandler.traceEndpointToAction !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage);
       const result = await interpret(interfaceEntityHandler.traceEndpointToAction({ target: "rest", path: "/api/users", method: "POST" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -659,6 +668,7 @@ describe('InterfaceEntity functional handler', () => {
     it('fixture "trace_rest" -> ok', async () => {
       if (typeof interfaceEntityHandler.traceEndpointToAction !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage);
       const result = await interpret(interfaceEntityHandler.traceEndpointToAction({ target: "rest", path: "/api/users", method: "POST" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -727,6 +737,7 @@ describe('InterfaceEntity functional handler', () => {
     it('fixture "trace_tool" -> ok', async () => {
       if (typeof interfaceEntityHandler.traceToolToAction !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage);
       const result = await interpret(interfaceEntityHandler.traceToolToAction({ toolName: "user-create" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -802,6 +813,7 @@ describe('InterfaceEntity functional handler', () => {
     it('fixture "schemas_valid" -> ok', async () => {
       if (typeof interfaceEntityHandler.generatedSchemas !== 'function') return;
       const storage = createInMemoryStorage();
+      await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage);
       const result = await interpret(interfaceEntityHandler.generatedSchemas({ interface: "iface-uuid-1" }), storage);
       expect(result.variant).toBe('ok');
     });
