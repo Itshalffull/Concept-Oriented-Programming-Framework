@@ -62,8 +62,8 @@ concept GraphAnalysis [A] {
         A provider is already registered for this algorithm.
       }
 
-      fixture register_provider { algorithm: "custom-centrality", category: "centrality", provider: "MyCentralityProvider" }
-      fixture register_community { algorithm: "spectral", category: "community", provider: "SpectralProvider" }
+      fixture register_provider { algorithm: "custom-centrality", category: "centrality", provider: "MyCentralityProvider" } after pagerank_analysis
+      fixture register_community { algorithm: "spectral", category: "community", provider: "SpectralProvider" } after pagerank_analysis
     }
 
     action getResult(result: A) {
@@ -74,7 +74,7 @@ concept GraphAnalysis [A] {
         No result exists with the given identifier.
       }
 
-      fixture existing_result { result: "result-001" }
+      fixture existing_result { result: "result-001" } after pagerank_analysis
       fixture missing_result { result: "result-nonexistent" } -> notfound
     }
 
@@ -84,7 +84,7 @@ concept GraphAnalysis [A] {
         as a JSON array of result summaries.
       }
 
-      fixture for_graph { graph: "{\"nodes\":[\"a\"],\"edges\":[]}" }
+      fixture for_graph { graph: "{\"nodes\":[\"a\"],\"edges\":[]}" } after pagerank_analysis
     }
 
     action listAlgorithms(category: option String) {
@@ -93,8 +93,8 @@ concept GraphAnalysis [A] {
         category. JSON array of { algorithm, category, provider }.
       }
 
-      fixture all_algorithms { category: none }
-      fixture centrality_only { category: "centrality" }
+      fixture all_algorithms { category: none } after pagerank_analysis
+      fixture centrality_only { category: "centrality" } after pagerank_analysis
     }
 
     action clearResults(graph: String) {
@@ -102,7 +102,7 @@ concept GraphAnalysis [A] {
         Removes all stored analysis results for the given graph.
       }
 
-      fixture clear_graph { graph: "{\"nodes\":[\"a\"],\"edges\":[]}" }
+      fixture clear_graph { graph: "{\"nodes\":[\"a\"],\"edges\":[]}" } after pagerank_analysis
     }
   }
 

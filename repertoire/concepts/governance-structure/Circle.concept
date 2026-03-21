@@ -43,7 +43,7 @@ concept Circle [C] {
         The circle does not exist.
       }
 
-      fixture valid_assign { circle: "circle-1", member: "alice", role: "developer" }
+      fixture valid_assign { circle: "circle-1", member: "alice", role: "developer" } after valid_create
       fixture assign_nonexistent { circle: "circle-999", member: "bob", role: "lead" } -> error
     }
 
@@ -52,7 +52,7 @@ concept Circle [C] {
         The member is removed from the circle's member set.
       }
 
-      fixture valid_remove { circle: "circle-1", member: "alice" }
+      fixture valid_remove { circle: "circle-1", member: "alice" } after valid_create
       fixture remove_nonexistent_circle { circle: "circle-999", member: "alice" } -> error
     }
 
@@ -62,7 +62,7 @@ concept Circle [C] {
         the circle in its parent; leadLink represents the parent in this circle.
       }
 
-      fixture valid_set_links { circle: "circle-1", leadLink: "alice", repLink: "bob" }
+      fixture valid_set_links { circle: "circle-1", leadLink: "alice", repLink: "bob" } after valid_create
       fixture set_links_nonexistent { circle: "circle-999", leadLink: "alice", repLink: "bob" } -> error
     }
 
@@ -75,7 +75,7 @@ concept Circle [C] {
         The circle does not exist.
       }
 
-      fixture valid_dissolve { circle: "circle-1" }
+      fixture valid_dissolve { circle: "circle-1" } after valid_create
       fixture dissolve_nonexistent { circle: "circle-999" } -> error
     }
 
@@ -88,7 +88,7 @@ concept Circle [C] {
         escalateTo points to it.
       }
 
-      fixture valid_jurisdiction { circle: "circle-1", action: "approve-budget" }
+      fixture valid_jurisdiction { circle: "circle-1", action: "approve-budget" } after valid_create
       fixture jurisdiction_nonexistent { circle: "circle-999", action: "approve-budget" } -> error
     }
   }

@@ -44,7 +44,7 @@ concept Frame [F] {
         The frame does not exist.
       }
 
-      fixture valid_resize { frame: "frame-1", width: 500, height: 400 }
+      fixture valid_resize { frame: "frame-1", width: 500, height: 400 } after valid_create
       fixture resize_missing { frame: "nonexistent", width: 100, height: 100 } -> notFound
     }
 
@@ -59,7 +59,7 @@ concept Frame [F] {
         The item is already in the frame.
       }
 
-      fixture valid_add_item { frame: "frame-1", item_id: "item1" }
+      fixture valid_add_item { frame: "frame-1", item_id: "item1" } after valid_create
       fixture add_to_missing_frame { frame: "nonexistent", item_id: "item1" } -> notFound
     }
 
@@ -74,7 +74,7 @@ concept Frame [F] {
         The item is not in the frame.
       }
 
-      fixture valid_remove_item { frame: "frame-1", item_id: "item1" }
+      fixture valid_remove_item { frame: "frame-1", item_id: "item1" } after valid_create
       fixture remove_from_missing_frame { frame: "nonexistent", item_id: "item1" } -> notFound
     }
 
@@ -86,7 +86,7 @@ concept Frame [F] {
         The frame does not exist.
       }
 
-      fixture valid_background { frame: "frame-1", color: "#f0f0f0" }
+      fixture valid_background { frame: "frame-1", color: "#f0f0f0" } after valid_create
       fixture background_missing_frame { frame: "nonexistent", color: "red" } -> notFound
     }
   }

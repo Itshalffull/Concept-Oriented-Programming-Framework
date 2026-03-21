@@ -56,7 +56,7 @@ concept ContractChecker [C] {
       }
       -> notfound(message: String) { Concept not registered. }
 
-      fixture valid_checkAll { concept: "Approval" }
+      fixture valid_checkAll { concept: "Approval" } after valid_check
       fixture unknown_concept { concept: "" } -> notfound
     }
 
@@ -68,7 +68,7 @@ concept ContractChecker [C] {
       }
       -> notfound(message: String) { Suite not registered. }
 
-      fixture valid_checkSuite { suite: "governance" }
+      fixture valid_checkSuite { suite: "governance" } after valid_check
       fixture unknown_suite { suite: "" } -> notfound
     }
 
@@ -81,7 +81,7 @@ concept ContractChecker [C] {
       -> resolved(message: String) { All slots already resolved, no suggestions needed. }
       -> notfound(message: String) { Widget or concept not registered. }
 
-      fixture valid_suggest { widget: "approval-detail", concept: "Approval" }
+      fixture valid_suggest { widget: "approval-detail", concept: "Approval" } after valid_check
       fixture unknown_widget_suggest { widget: "nonexistent-widget", concept: "Approval" } -> notfound
     }
   }

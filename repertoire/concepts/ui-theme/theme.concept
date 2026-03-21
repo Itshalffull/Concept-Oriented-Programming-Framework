@@ -35,15 +35,15 @@ concept Theme [H] {
       -> ok(theme: H) { Create theme extending a base. }
       -> notfound(message: String) { Base does not exist. }
 
-      fixture extend_dark_compact { theme: "H-3", base: "H-1", overrides: "{ \"spacing-unit\": 4 }" }
-      fixture extend_missing_base { theme: "H-4", base: "H-nonexistent", overrides: "{ \"color-bg\": \"#222\" }" } -> notfound
+      fixture extend_dark_compact { theme: "H-3", base: "H-1", overrides: "{ \"spacing-unit\": 4 }" } after create_dark
+      fixture extend_missing_base { theme: "H-4", base: "H-nonexistent", overrides: "{ \"color-bg\": \"#222\" }" } after create_dark -> notfound
     }
 
     action activate(theme: H, priority: Int) {
       -> ok(theme: H) { Activate — overrides take effect immediately. }
       -> notfound(message: String) { Does not exist. }
 
-      fixture activate_dark { theme: "H-1", priority: 1 }
+      fixture activate_dark { theme: "H-1", priority: 1 } after create_dark
       fixture activate_unknown { theme: "H-nonexistent", priority: 0 } -> notfound
     }
 
@@ -51,7 +51,7 @@ concept Theme [H] {
       -> ok(theme: H) { Deactivate — values revert. }
       -> notfound(message: String) { Does not exist. }
 
-      fixture deactivate_dark { theme: "H-1" }
+      fixture deactivate_dark { theme: "H-1" } after activate_dark
       fixture deactivate_unknown { theme: "H-nonexistent" } -> notfound
     }
 
@@ -62,7 +62,7 @@ concept Theme [H] {
       }
       -> notfound(message: String) { Does not exist. }
 
-      fixture resolve_dark { theme: "H-1" }
+      fixture resolve_dark { theme: "H-1" } after create_dark
       fixture resolve_unknown { theme: "H-nonexistent" } -> notfound
     }
   }

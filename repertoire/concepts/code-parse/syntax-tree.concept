@@ -47,7 +47,7 @@ concept SyntaxTree [T] {
       -> notfound(message: String) {
         The tree does not exist in the cache.
       }
-      fixture reparse_edit { tree: "tree-1", startByte: 10, oldEndByte: 20, newEndByte: 25, newText: "const x = 1;" }
+      fixture reparse_edit { tree: "tree-1", startByte: 10, oldEndByte: 20, newEndByte: 25, newText: "const x = 1;" } after parse_ts_file
       fixture reparse_missing { tree: "nonexistent", startByte: 0, oldEndByte: 0, newEndByte: 0, newText: "" } -> error
     }
 
@@ -62,7 +62,7 @@ concept SyntaxTree [T] {
       -> notfound(message: String) {
         The tree does not exist.
       }
-      fixture query_functions { tree: "tree-1", pattern: "(function_declaration) @fn" }
+      fixture query_functions { tree: "tree-1", pattern: "(function_declaration) @fn" } after parse_ts_file
       fixture query_missing_tree { tree: "nonexistent", pattern: "(identifier) @id" } -> error
     }
 
@@ -76,7 +76,7 @@ concept SyntaxTree [T] {
       -> notfound(message: String) {
         The tree does not exist.
       }
-      fixture node_at_valid { tree: "tree-1", byteOffset: 42 }
+      fixture node_at_valid { tree: "tree-1", byteOffset: 42 } after parse_ts_file
       fixture node_at_missing { tree: "nonexistent", byteOffset: 0 } -> error
     }
 
@@ -87,7 +87,7 @@ concept SyntaxTree [T] {
       -> notfound(message: String) {
         The tree does not exist.
       }
-      fixture get_tree { tree: "tree-1" }
+      fixture get_tree { tree: "tree-1" } after parse_ts_file
       fixture get_missing { tree: "nonexistent" } -> error
     }
   }

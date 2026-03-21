@@ -56,8 +56,8 @@ concept SpecificationSchema [SS] {
         Parameter mismatch or type error.
       }
 
-      fixture valid_instantiate { schema_id: "ss-abc123", param_values: "{\"function\":\"transfer\"}" }
-      fixture missing_param { schema_id: "ss-abc123", param_values: "{}" } -> invalid
+      fixture valid_instantiate { schema_id: "ss-abc123", param_values: "{\"function\":\"transfer\"}" } after valid_define
+      fixture missing_param { schema_id: "ss-abc123", param_values: "{}" } after valid_define -> invalid
       fixture bad_json { schema_id: "ss-abc123", param_values: "not-json" } -> invalid
     }
 
@@ -78,8 +78,8 @@ concept SpecificationSchema [SS] {
         All schemas in category.
       }
 
-      fixture valid_list { category: "smart_contract" }
-      fixture empty_category { category: "nonexistent_category" }
+      fixture valid_list { category: "smart_contract" } after valid_define
+      fixture empty_category { category: "nonexistent_category" } after valid_define
     }
 
     action search(query: String) {
@@ -87,7 +87,7 @@ concept SpecificationSchema [SS] {
         Text search over name, template_text, parameter descriptions.
       }
 
-      fixture valid_search { query: "reentrancy" }
+      fixture valid_search { query: "reentrancy" } after valid_define
       fixture empty_query { query: "" } -> invalid
     }
   }

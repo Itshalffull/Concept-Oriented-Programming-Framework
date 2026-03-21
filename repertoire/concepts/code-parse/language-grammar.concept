@@ -42,7 +42,7 @@ concept LanguageGrammar [G] {
       -> noGrammar(extension: String) {
         No grammar is registered for this file extension.
       }
-      fixture resolve_ts { fileExtension: ".ts" }
+      fixture resolve_ts { fileExtension: ".ts" } after register_typescript
       fixture resolve_unknown { fileExtension: ".xyz" } -> error
     }
 
@@ -53,7 +53,7 @@ concept LanguageGrammar [G] {
       -> noGrammar(mimeType: String) {
         No grammar is registered for this MIME type.
       }
-      fixture resolve_mime_ts { mimeType: "text/typescript" }
+      fixture resolve_mime_ts { mimeType: "text/typescript" } after register_typescript
       fixture resolve_mime_unknown { mimeType: "text/unknown" } -> error
     }
 
@@ -64,7 +64,7 @@ concept LanguageGrammar [G] {
       -> notfound(message: String) {
         Grammar does not exist.
       }
-      fixture get_grammar { grammar: "grammar-1" }
+      fixture get_grammar { grammar: "grammar-1" } after register_typescript
       fixture get_missing { grammar: "nonexistent" } -> error
     }
 
@@ -72,7 +72,7 @@ concept LanguageGrammar [G] {
       -> ok(grammars: String) {
         List all registered grammars as serialized JSON array.
       }
-      fixture valid {}
+      fixture valid {} after register_typescript
     }
   }
 

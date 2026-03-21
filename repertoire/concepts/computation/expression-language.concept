@@ -27,16 +27,16 @@ concept ExpressionLanguage [E] {
       -> ok() { Function available for use in expressions. }
       -> exists() { Function with this name already registered. }
 
-      fixture register_abs { name: "abs", implementation: "Math.abs" }
-      fixture missing_impl { name: "", implementation: "" }
+      fixture register_abs { name: "abs", implementation: "Math.abs" } after register_math
+      fixture missing_impl { name: "", implementation: "" } after register_math
     }
 
     action registerOperator(name: String, implementation: String) {
       -> ok() { Operator available for use in expressions. }
       -> exists() { Operator with this name already registered. }
 
-      fixture register_plus { name: "plus", implementation: "a + b" }
-      fixture missing_op_name { name: "", implementation: "a + b" }
+      fixture register_plus { name: "plus", implementation: "a + b" } after register_math
+      fixture missing_op_name { name: "", implementation: "a + b" } after register_math
     }
 
     action parse(expression: E, text: String, language: String) {
@@ -51,7 +51,7 @@ concept ExpressionLanguage [E] {
       -> ok(result: String) { Expression evaluated and result returned. }
       -> notfound() { Expression has not been parsed or does not exist. }
 
-      fixture eval_existing { expression: "expr-1" }
+      fixture eval_existing { expression: "expr-1" } after register_math
       fixture eval_missing { expression: "nonexistent" } -> error
     }
 
@@ -59,7 +59,7 @@ concept ExpressionLanguage [E] {
       -> ok(valid: Bool, errors: String) { Type checking completed with validity status and any errors. }
       -> notfound() { Expression has not been parsed or does not exist. }
 
-      fixture typecheck_valid { expression: "expr-1" }
+      fixture typecheck_valid { expression: "expr-1" } after register_math
       fixture typecheck_missing { expression: "nonexistent" } -> error
     }
 
@@ -67,7 +67,7 @@ concept ExpressionLanguage [E] {
       -> ok(completions: String) { Returns available completions at the cursor position. }
       -> notfound() { Expression has not been parsed or does not exist. }
 
-      fixture completions_at_cursor { expression: "expr-1", cursor: 3 }
+      fixture completions_at_cursor { expression: "expr-1", cursor: 3 } after register_math
       fixture completions_missing { expression: "nonexistent", cursor: 0 } -> error
     }
   }

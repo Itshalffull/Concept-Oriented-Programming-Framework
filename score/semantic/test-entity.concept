@@ -54,7 +54,7 @@ concept TestEntity [T] {
         No test with this name exists.
       }
 
-      fixture get_existing_test { name: "User/create conformance" }
+      fixture get_existing_test { name: "User/create conformance" } after register_conformance_test
       fixture get_nonexistent { name: "Nonexistent/test" } -> error
     }
 
@@ -64,8 +64,8 @@ concept TestEntity [T] {
         serialized JSON array of { name, kind, sourceFile, lastResult }.
       }
 
-      fixture find_user_tests { entity: "User" }
-      fixture find_untested_entity { entity: "Nonexistent" }
+      fixture find_user_tests { entity: "User" } after register_conformance_test
+      fixture find_untested_entity { entity: "Nonexistent" } after register_conformance_test
     }
 
     action findByAction(concept: String, action: String) {
@@ -74,8 +74,8 @@ concept TestEntity [T] {
         Result as serialized JSON array.
       }
 
-      fixture find_user_create_tests { concept: "User", action: "create" }
-      fixture find_untested_action { concept: "User", action: "nonexistentAction" }
+      fixture find_user_create_tests { concept: "User", action: "create" } after register_conformance_test
+      fixture find_untested_action { concept: "User", action: "nonexistentAction" } after register_conformance_test
     }
 
     action findByKind(kind: String) {
@@ -84,8 +84,8 @@ concept TestEntity [T] {
         JSON array.
       }
 
-      fixture find_conformance_tests { kind: "conformance" }
-      fixture find_unknown_kind { kind: "nonexistent-kind" }
+      fixture find_conformance_tests { kind: "conformance" } after register_conformance_test
+      fixture find_unknown_kind { kind: "nonexistent-kind" } after register_conformance_test
     }
 
     action findFailing() {
@@ -98,7 +98,7 @@ concept TestEntity [T] {
         All tests are passing.
       }
 
-      fixture valid {}
+      fixture valid {} after register_conformance_test
       fixture failing_check_error {} -> error
     }
 
@@ -111,8 +111,8 @@ concept TestEntity [T] {
         testedInvariants, coveragePct }.
       }
 
-      fixture coverage_user { entity: "User" }
-      fixture coverage_nonexistent { entity: "Nonexistent" }
+      fixture coverage_user { entity: "User" } after register_conformance_test
+      fixture coverage_nonexistent { entity: "Nonexistent" } after register_conformance_test
     }
 
     action untestedActions() {
@@ -125,7 +125,7 @@ concept TestEntity [T] {
         All actions have test coverage.
       }
 
-      fixture valid {}
+      fixture valid {} after register_conformance_test
       fixture untested_check_error {} -> error
     }
 
@@ -138,7 +138,7 @@ concept TestEntity [T] {
         All invariants have test coverage.
       }
 
-      fixture valid {}
+      fixture valid {} after register_conformance_test
       fixture untested_invariants_error {} -> error
     }
 
@@ -148,8 +148,8 @@ concept TestEntity [T] {
         pass, fail, skip, error.
       }
 
-      fixture record_pass { test: "test-001", result: "pass", duration: 150 }
-      fixture record_empty_result { test: "test-001", result: "", duration: 0 }
+      fixture record_pass { test: "test-001", result: "pass", duration: 150 } after register_conformance_test
+      fixture record_empty_result { test: "test-001", result: "", duration: 0 } after register_conformance_test
     }
   }
 

@@ -55,7 +55,7 @@ concept PeerAllocation [PA] {
         The round is no longer accepting allocations.
       }
 
-      fixture allocate_to_peer { round: "peer-alloc-001", allocator: "alice", recipient: "bob", amount: 30, note: "Great code review" }
+      fixture allocate_to_peer { round: "peer-alloc-001", allocator: "alice", recipient: "bob", amount: 30, note: "Great code review" } after open_weekly_round
       fixture allocate_to_self { round: "peer-alloc-001", allocator: "alice", recipient: "alice", amount: 10 } -> error
     }
 
@@ -65,7 +65,7 @@ concept PeerAllocation [PA] {
         received total and number of distinct givers are calculated.
       }
 
-      fixture finalize_round { round: "peer-alloc-001" }
+      fixture finalize_round { round: "peer-alloc-001" } after open_weekly_round
       fixture finalize_nonexistent { round: "peer-alloc-nonexistent" } -> error
     }
   }

@@ -31,8 +31,8 @@ concept OrthogonalRouteProvider [C] {
         Routing failed or source/target not found.
       }
 
-      fixture simple_route { canvas: "c1", source: "node-a", target: "node-b", obstacles: [] }
-      fixture with_obstacles { canvas: "c1", source: "node-a", target: "node-c", obstacles: ["node-b"] }
+      fixture simple_route { canvas: "c1", source: "node-a", target: "node-b", obstacles: [] } after valid
+      fixture with_obstacles { canvas: "c1", source: "node-a", target: "node-c", obstacles: ["node-b"] } after valid
       fixture missing_source { canvas: "c1", source: "", target: "node-b", obstacles: [] } -> error
     }
   }

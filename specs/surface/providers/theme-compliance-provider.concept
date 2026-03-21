@@ -43,7 +43,7 @@ concept ThemeComplianceProvider [T] {
         No compliance check exists with this identifier.
       }
 
-      fixture existing_check { check: "chk-1" }
+      fixture existing_check { check: "chk-1" } after valid_tokens
       fixture unknown_check { check: "nonexistent" } -> notfound
     }
   }

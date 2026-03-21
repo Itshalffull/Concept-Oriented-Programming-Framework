@@ -40,8 +40,8 @@ concept GraphqlProvider [Q] {
         An endpoint with this name is already configured.
       }
 
-      fixture configure_github { name: "github-api", url: "https://api.github.com/graphql", headers: "{\"Authorization\":\"Bearer ghp_token\"}", schemaRef: "github-schema" }
-      fixture configure_local { name: "local-gql", url: "http://localhost:4000/graphql", headers: "{}", schemaRef: "" }
+      fixture configure_github { name: "github-api", url: "https://api.github.com/graphql", headers: "{\"Authorization\":\"Bearer ghp_token\"}", schemaRef: "github-schema" } after valid
+      fixture configure_local { name: "local-gql", url: "http://localhost:4000/graphql", headers: "{}", schemaRef: "" } after valid
     }
 
     action execute(endpoint: String, query: String, variables: String, operationType: String) {
@@ -61,9 +61,9 @@ concept GraphqlProvider [Q] {
         the GraphQL server.
       }
 
-      fixture query_viewer { endpoint: "github-api", query: "{ viewer { login } }", variables: "{}", operationType: "query" }
-      fixture mutation_create { endpoint: "github-api", query: "mutation { createIssue(input: {}) { id } }", variables: "{}", operationType: "mutation" }
-      fixture execute_unknown_endpoint { endpoint: "nonexistent", query: "{ test }", variables: "{}", operationType: "query" } -> notFound
+      fixture query_viewer { endpoint: "github-api", query: "{ viewer { login } }", variables: "{}", operationType: "query" } after valid
+      fixture mutation_create { endpoint: "github-api", query: "mutation { createIssue(input: {}) { id } }", variables: "{}", operationType: "mutation" } after valid
+      fixture execute_unknown_endpoint { endpoint: "nonexistent", query: "{ test }", variables: "{}", operationType: "query" } after valid -> notFound
     }
 
     action list() {
@@ -71,7 +71,7 @@ concept GraphqlProvider [Q] {
         Return all configured endpoints as a serialized JSON array.
       }
 
-      fixture valid {}
+      fixture valid {} after valid
     }
   }
 

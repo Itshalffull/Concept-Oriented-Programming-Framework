@@ -43,7 +43,7 @@ concept VercelKVProvider [K] {
         No provisioned store exists with this name.
       }
 
-      fixture get_session_cache { storeName: "session-cache" }
+      fixture get_session_cache { storeName: "session-cache" } after provision_session_cache
       fixture get_nonexistent { storeName: "no-such-store" } -> error
     }
 
@@ -55,7 +55,7 @@ concept VercelKVProvider [K] {
         No provisioned store exists with this name.
       }
 
-      fixture destroy_session_cache { storeName: "session-cache" }
+      fixture destroy_session_cache { storeName: "session-cache" } after provision_session_cache
       fixture destroy_nonexistent { storeName: "no-such-store" } -> error
     }
   }

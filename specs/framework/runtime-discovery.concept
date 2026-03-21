@@ -45,7 +45,7 @@ concept RuntimeDiscovery [D] {
         with their directories and runtime counts.
       }
 
-      fixture valid_list_projects {}
+      fixture valid_list_projects {} after valid_scan
     }
 
     action listRuntimes(project: D) {
@@ -58,7 +58,7 @@ concept RuntimeDiscovery [D] {
         No scanned project exists with this identifier.
       }
 
-      fixture valid_list_runtimes { project: "proj-app-clef-base" }
+      fixture valid_list_runtimes { project: "proj-app-clef-base" } after valid_scan
       fixture unknown_project_runtimes { project: "proj-nonexistent" } -> notfound
     }
 
@@ -76,7 +76,7 @@ concept RuntimeDiscovery [D] {
         that cannot be resolved from the current environment.
       }
 
-      fixture valid_resolve_endpoint { project: "proj-app-clef-base", runtime: "api" }
+      fixture valid_resolve_endpoint { project: "proj-app-clef-base", runtime: "api" } after valid_scan
       fixture unknown_runtime_endpoint { project: "proj-app-clef-base", runtime: "nonexistent" } -> notfound
       fixture unknown_project_endpoint { project: "proj-nonexistent", runtime: "api" } -> notfound
     }
@@ -96,7 +96,7 @@ concept RuntimeDiscovery [D] {
         what was resolved and which variables remain missing.
       }
 
-      fixture valid_resolve_creds { project: "proj-app-clef-base", runtime: "api" }
+      fixture valid_resolve_creds { project: "proj-app-clef-base", runtime: "api" } after valid_scan
       fixture unknown_project_creds { project: "proj-nonexistent", runtime: "api" } -> notfound
     }
 
@@ -112,7 +112,7 @@ concept RuntimeDiscovery [D] {
         The runtime's endpoint cannot be resolved.
       }
 
-      fixture valid_select { project: "proj-app-clef-base", runtime: "api" }
+      fixture valid_select { project: "proj-app-clef-base", runtime: "api" } after valid_scan
       fixture unknown_select { project: "proj-nonexistent", runtime: "api" } -> notfound
     }
   }

@@ -45,9 +45,9 @@ concept GenerationPlan [R] {
         generation proceeds normally; only status tracking is lost.
       }
 
-      fixture record_done { stepKey: "framework:TypeScriptGen:password", status: "done", filesProduced: 3, duration: 150, cached: false }
-      fixture record_cached { stepKey: "framework:TypeScriptGen:auth", status: "cached", cached: true }
-      fixture record_failed { stepKey: "framework:RustGen:password", status: "failed", duration: 5000, cached: false }
+      fixture record_done { stepKey: "framework:TypeScriptGen:password", status: "done", filesProduced: 3, duration: 150, cached: false } after valid
+      fixture record_cached { stepKey: "framework:TypeScriptGen:auth", status: "cached", cached: true } after valid
+      fixture record_failed { stepKey: "framework:RustGen:password", status: "failed", duration: 5000, cached: false } after valid
     }
 
     action complete() {
@@ -56,7 +56,7 @@ concept GenerationPlan [R] {
         syncs have quiesced. Clears activeRun.
       }
 
-      fixture valid {}
+      fixture valid {} after valid
     }
 
     action status(run: R) {
@@ -64,8 +64,8 @@ concept GenerationPlan [R] {
         Return current execution status for all steps in a run.
       }
 
-      fixture status_existing { run: "run-abc123" }
-      fixture status_missing { run: "run-nonexistent" }
+      fixture status_existing { run: "run-abc123" } after valid
+      fixture status_missing { run: "run-nonexistent" } after valid
     }
 
     action summary(run: R) {
@@ -73,8 +73,8 @@ concept GenerationPlan [R] {
         Return summary statistics for a completed run.
       }
 
-      fixture summary_existing { run: "run-abc123" }
-      fixture summary_missing { run: "run-nonexistent" }
+      fixture summary_existing { run: "run-abc123" } after valid
+      fixture summary_missing { run: "run-nonexistent" } after valid
     }
 
     action history(limit: option Int) {
@@ -82,8 +82,8 @@ concept GenerationPlan [R] {
         Return recent generation runs.
       }
 
-      fixture history_default {}
-      fixture history_limited { limit: 5 }
+      fixture history_default {} after valid
+      fixture history_limited { limit: 5 } after valid
     }
   }
 

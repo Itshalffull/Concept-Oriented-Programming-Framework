@@ -34,8 +34,8 @@ concept SemanticMerge [C] {
         Language not supported or content is not valid source code.
       }
 
-      fixture clean_semantic { base: "import os\ndef main():\n  pass", ours: "import os\ndef main():\n  pass", theirs: "import os\nimport sys\ndef main():\n  pass" }
-      fixture conflict_semantic { base: "function foo() { return 1; }", ours: "function foo() { return 2; }", theirs: "function foo() { return 3; }" }
+      fixture clean_semantic { base: "import os\ndef main():\n  pass", ours: "import os\ndef main():\n  pass", theirs: "import os\nimport sys\ndef main():\n  pass" } after valid
+      fixture conflict_semantic { base: "function foo() { return 1; }", ours: "function foo() { return 2; }", theirs: "function foo() { return 3; }" } after valid
       fixture non_string_content { base: 42, ours: "text", theirs: "text" } -> error
     }
   }

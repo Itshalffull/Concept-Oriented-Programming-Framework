@@ -39,7 +39,7 @@ concept InteractorEntity [I] {
         Return all interactors in the given category.
         Results as serialized JSON array.
       }
-      fixture find_selection { category: "selection" }
+      fixture find_selection { category: "selection" } after register_single_choice
       fixture find_empty_category { category: "" } -> error
     }
 
@@ -49,7 +49,7 @@ concept InteractorEntity [I] {
         requirements in the given context. Results as serialized
         JSON array of { widget, affordanceSpecificity, conditionsMet }.
       }
-      fixture matching_desktop { interactor: "interactor-entity-1", context: "desktop" }
+      fixture matching_desktop { interactor: "interactor-entity-1", context: "desktop" } after register_single_choice
       fixture matching_missing { interactor: "nonexistent-id", context: "mobile" } -> error
     }
 
@@ -59,7 +59,7 @@ concept InteractorEntity [I] {
         interactor type. Results as serialized JSON array of
         { concept, field, confidence }.
       }
-      fixture classified_valid { interactor: "interactor-entity-1" }
+      fixture classified_valid { interactor: "interactor-entity-1" } after register_single_choice
       fixture classified_missing { interactor: "nonexistent-id" } -> error
     }
 
@@ -70,7 +70,7 @@ concept InteractorEntity [I] {
         have gaps for certain contexts. Results as serialized
         JSON array of { interactor, widgetCount, uncoveredContexts }.
       }
-      fixture coverage_report_valid {}
+      fixture coverage_report_valid {} after register_single_choice
     }
 
     action get(interactor: I) {
@@ -80,7 +80,7 @@ concept InteractorEntity [I] {
       -> notfound() {
         Interactor does not exist.
       }
-      fixture get_interactor { interactor: "interactor-entity-1" }
+      fixture get_interactor { interactor: "interactor-entity-1" } after register_single_choice
       fixture get_missing { interactor: "nonexistent" } -> error
     }
   }

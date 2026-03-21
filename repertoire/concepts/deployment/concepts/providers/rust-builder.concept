@@ -61,7 +61,7 @@ concept RustBuilder [R] {
         Some tests failed.
       }
 
-      fixture test_crate { build: "rsb-001", toolchainPath: "/usr/local/bin/rustc", testType: "unit" }
+      fixture test_crate { build: "rsb-001", toolchainPath: "/usr/local/bin/rustc", testType: "unit" } after build_crate
       fixture test_missing_build { build: "nonexistent", toolchainPath: "/usr/local/bin/rustc", testType: "unit" } -> error
     }
 
@@ -77,7 +77,7 @@ concept RustBuilder [R] {
         Requested format not available.
       }
 
-      fixture package_binary { build: "rsb-001", format: "binary" }
+      fixture package_binary { build: "rsb-001", format: "binary" } after build_crate
       fixture package_unsupported { build: "rsb-001", format: "invalid-format" } -> error
     }
 
@@ -89,7 +89,7 @@ concept RustBuilder [R] {
         capabilities: ["crate", "binary", "wasm-pack", "docker"]
       }
 
-      fixture valid {}
+      fixture valid {} after build_crate
     }
   }
 

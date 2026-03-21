@@ -31,8 +31,8 @@ concept PolylineRouteProvider [C] {
         Routing failed or source/target not found.
       }
 
-      fixture simple_route { canvas: "canvas-1", source: "node-a", target: "node-b", obstacles: [] }
-      fixture with_obstacles { canvas: "canvas-1", source: "node-a", target: "node-b", obstacles: ["node-c", "node-d"] }
+      fixture simple_route { canvas: "canvas-1", source: "node-a", target: "node-b", obstacles: [] } after valid
+      fixture with_obstacles { canvas: "canvas-1", source: "node-a", target: "node-b", obstacles: ["node-c", "node-d"] } after valid
       fixture missing_canvas { canvas: "", source: "node-a", target: "node-b", obstacles: [] } -> error
     }
   }

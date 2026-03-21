@@ -56,7 +56,7 @@ concept UISchema [S, C] {
       -> notfound(message: String) { No schema for this concept. }
       -> invalid(message: String) { Override malformed. }
 
-      fixture valid_override { schema: "S-1", overrides: "{\"layout\":\"horizontal\"}" }
+      fixture valid_override { schema: "S-1", overrides: "{\"layout\":\"horizontal\"}" } after valid_inspect
       fixture override_bad_json { schema: "S-1", overrides: "not-json" } -> error
     }
 
@@ -64,7 +64,7 @@ concept UISchema [S, C] {
       -> ok(schema: S, uiSchema: String) { Return current schema. }
       -> notfound(message: String) { No schema exists. }
 
-      fixture valid_get_schema { schema: "S-1" }
+      fixture valid_get_schema { schema: "S-1" } after valid_inspect
       fixture get_schema_nonexistent { schema: "S-999" } -> error
     }
 
@@ -81,7 +81,7 @@ concept UISchema [S, C] {
         element extraction is skipped.
       }
 
-      fixture valid_get_elements { schema: "S-1" }
+      fixture valid_get_elements { schema: "S-1" } after valid_inspect
       fixture get_elements_nonexistent { schema: "S-999" } -> error
     }
 
@@ -93,7 +93,7 @@ concept UISchema [S, C] {
       }
       -> notfound(message: String) { No schema exists. }
 
-      fixture valid_get_entity { schema: "S-1" }
+      fixture valid_get_entity { schema: "S-1" } after valid_inspect
       fixture get_entity_nonexistent { schema: "S-999" } -> error
     }
 
@@ -106,7 +106,7 @@ concept UISchema [S, C] {
       }
       -> notfound(message: String) { No schema exists. }
 
-      fixture valid_mark_resolved { schema: "S-1" }
+      fixture valid_mark_resolved { schema: "S-1" } after valid_inspect
       fixture mark_resolved_nonexistent { schema: "S-999" } -> error
     }
   }

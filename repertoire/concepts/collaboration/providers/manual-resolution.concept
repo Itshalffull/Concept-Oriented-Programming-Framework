@@ -29,7 +29,7 @@ concept ManualResolution [V] {
         Never auto-resolves.
       }
 
-      fixture escalate_to_human { base: null, v1: "version-alice", v2: "version-bob", context: "legal-document" }
+      fixture escalate_to_human { base: null, v1: "version-alice", v2: "version-bob", context: "legal-document" } after valid
       fixture escalate_with_base { base: "original-content", v1: "edit-1", v2: "edit-2", context: "contract-clause" } -> error
     }
   }

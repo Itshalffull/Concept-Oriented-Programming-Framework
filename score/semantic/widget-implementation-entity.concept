@@ -57,7 +57,7 @@ concept WidgetImplementationEntity [I] {
       -> notfound() {
         No implementation registered for this widget and framework.
       }
-      fixture get_react_dialog { widget: "dialog", framework: "react" }
+      fixture get_react_dialog { widget: "dialog", framework: "react" } after register_react_dialog
       fixture get_missing { widget: "nonexistent", framework: "react" } -> error
     }
 
@@ -68,7 +68,7 @@ concept WidgetImplementationEntity [I] {
       -> notfound() {
         No widget implementation registered for this source file.
       }
-      fixture get_by_file { sourceFile: "generated/surface/dialog/Dialog.tsx" }
+      fixture get_by_file { sourceFile: "generated/surface/dialog/Dialog.tsx" } after register_react_dialog
       fixture get_by_file_missing { sourceFile: "nonexistent/file.tsx" } -> error
       fixture get_by_missing_file { sourceFile: "nonexistent.tsx" } -> error
     }
@@ -78,9 +78,9 @@ concept WidgetImplementationEntity [I] {
         Return all implementations for a widget across frameworks.
         Results as serialized JSON array.
       }
-      fixture find_dialog { widget: "dialog" }
+      fixture find_dialog { widget: "dialog" } after register_react_dialog
       fixture find_empty { widget: "" } -> error
-      fixture find_empty_widget { widget: "" }
+      fixture find_empty_widget { widget: "" } after register_react_dialog
     }
 
     action findByFramework(framework: String) {
@@ -88,8 +88,8 @@ concept WidgetImplementationEntity [I] {
         Return all widget implementations for a given framework.
         Results as serialized JSON array.
       }
-      fixture find_react { framework: "react" }
-      fixture find_empty_framework { framework: "" }
+      fixture find_react { framework: "react" } after register_react_dialog
+      fixture find_empty_framework { framework: "" } after register_react_dialog
     }
 
     action anatomyMapping(impl: I) {
@@ -98,8 +98,8 @@ concept WidgetImplementationEntity [I] {
         the generated component's rendered DOM/view elements.
         Result as serialized JSON array of { part, element, selector }.
       }
-      fixture mapping_valid { impl: "impl-uuid-1" }
-      fixture mapping_missing { impl: "nonexistent-id" }
+      fixture mapping_valid { impl: "impl-uuid-1" } after register_react_dialog
+      fixture mapping_missing { impl: "nonexistent-id" } after register_react_dialog
     }
 
     action diffFromSpec(impl: I) {
@@ -128,7 +128,7 @@ concept WidgetImplementationEntity [I] {
       -> notInWidgetImpl() {
         The given location is not within any registered widget implementation.
       }
-      fixture resolve_frame { file: "generated/surface/dialog/Dialog.tsx", line: 42, col: 8 }
+      fixture resolve_frame { file: "generated/surface/dialog/Dialog.tsx", line: 42, col: 8 } after register_react_dialog
       fixture resolve_frame_unknown { file: "unknown/file.ts", line: 1, col: 1 } -> error
     }
 
@@ -145,7 +145,7 @@ concept WidgetImplementationEntity [I] {
       -> outOfRange(line: Int, maxLine: Int) {
         The given position is outside the implementation's line range.
       }
-      fixture resolve_node { impl: "impl-uuid-1", line: 15, col: 4 }
+      fixture resolve_node { impl: "impl-uuid-1", line: 15, col: 4 } after register_react_dialog
       fixture resolve_node_out_of_range { impl: "impl-uuid-1", line: 99999, col: 1 } -> error
     }
   }

@@ -78,9 +78,9 @@ concept Affordance [F] {
       }
       -> none(message: String) { No affordances match. }
 
-      fixture valid_match { interactor: "single-choice", context: "{\"optionCount\":4,\"platform\":\"browser\"}" }
-      fixture entity_match { interactor: "entity-detail", context: "{\"concept\":\"Approval\"}" }
-      fixture no_match { interactor: "nonexistent-type", context: "{}" } -> none
+      fixture valid_match { interactor: "single-choice", context: "{\"optionCount\":4,\"platform\":\"browser\"}" } after valid_declare
+      fixture entity_match { interactor: "entity-detail", context: "{\"concept\":\"Approval\"}" } after valid_declare
+      fixture no_match { interactor: "nonexistent-type", context: "{}" } after valid_declare -> none
     }
 
     action explain(affordance: F) {
@@ -89,7 +89,7 @@ concept Affordance [F] {
       }
       -> notfound(message: String) { Affordance missing. }
 
-      fixture valid_explain { }
+      fixture valid_explain { } after valid_declare
       fixture missing_explain { affordance: "nonexistent-affordance" } -> notfound
     }
 
@@ -97,7 +97,7 @@ concept Affordance [F] {
       -> ok(affordance: F) { Remove declaration. }
       -> notfound(message: String) { Affordance missing. }
 
-      fixture valid_remove { }
+      fixture valid_remove { } after valid_declare
       fixture missing_remove { affordance: "nonexistent-affordance" } -> notfound
     }
   }

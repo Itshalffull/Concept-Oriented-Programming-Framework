@@ -29,8 +29,8 @@ concept MermaidExportProvider [C] {
       }
       -> error(message: String) { Export failed. }
 
-      fixture default_direction { canvas_id: "canvas-1", options: none }
-      fixture left_to_right { canvas_id: "canvas-1", options: { direction: "LR" } }
+      fixture default_direction { canvas_id: "canvas-1", options: none } after valid
+      fixture left_to_right { canvas_id: "canvas-1", options: { direction: "LR" } } after valid
       fixture empty_canvas_id { canvas_id: "", options: none } -> error
     }
 
@@ -40,7 +40,7 @@ concept MermaidExportProvider [C] {
       }
       -> error(message: String) { Parse failed. }
 
-      fixture valid_mermaid { data: "graph TD\n  A[Start] --> B[End]", target_canvas: "imported" }
+      fixture valid_mermaid { data: "graph TD\n  A[Start] --> B[End]", target_canvas: "imported" } after valid
       fixture empty_data { data: "", target_canvas: none } -> error
     }
   }

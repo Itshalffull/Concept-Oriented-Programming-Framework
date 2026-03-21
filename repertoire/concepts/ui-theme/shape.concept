@@ -24,8 +24,8 @@ concept Shape [H] {
     action resolve(shapeId: ShapeProfileId, element: String) {
       -> ok(value: String) { Shape value resolved for the element. }
 
-      fixture resolve_button { shapeId: "shape-1", element: "button" }
-      fixture resolve_card { shapeId: "shape-1", element: "card" }
+      fixture resolve_button { shapeId: "shape-1", element: "button" } after configure_rounded
+      fixture resolve_card { shapeId: "shape-1", element: "card" } after configure_rounded
     }
 
     action computeRadius(shapeId: ShapeProfileId, element: String) {

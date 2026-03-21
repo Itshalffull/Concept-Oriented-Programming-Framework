@@ -55,8 +55,8 @@ concept Auditor [A] {
         policy_violations detailing which modules broke which rules.
       }
 
-      fixture check_permissive_policy { lockfile_entries: [{"module_id": "lodash", "version": "4.17.21"}], policy: {"allowed_licenses": ["MIT", "Apache-2.0", "ISC"], "denied_namespaces": [], "max_severity": "critical"} }
-      fixture check_restrictive_policy { lockfile_entries: [{"module_id": "@evil/malware", "version": "0.1.0"}], policy: {"allowed_licenses": ["MIT"], "denied_namespaces": ["@evil"], "max_severity": "low"} } -> error
+      fixture check_permissive_policy { lockfile_entries: [{"module_id": "lodash", "version": "4.17.21"}], policy: {"allowed_licenses": ["MIT", "Apache-2.0", "ISC"], "denied_namespaces": [], "max_severity": "critical"} } after audit_clean_deps
+      fixture check_restrictive_policy { lockfile_entries: [{"module_id": "@evil/malware", "version": "0.1.0"}], policy: {"allowed_licenses": ["MIT"], "denied_namespaces": ["@evil"], "max_severity": "low"} } after audit_clean_deps -> error
     }
 
     action diff(old_audit: A, new_audit: A) {

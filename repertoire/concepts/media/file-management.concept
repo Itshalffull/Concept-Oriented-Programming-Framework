@@ -25,7 +25,7 @@ concept FileManagement [F] {
 
       fixture upload_pdf { file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" }
       fixture upload_image { file: "logo.png", data: "iVBORw0KGgo=", mimeType: "image/png" }
-      fixture upload_duplicate { file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" }
+      fixture upload_duplicate { file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" } after upload_pdf
     }
 
     action addUsage(file: F, entity: String) {
@@ -36,7 +36,7 @@ concept FileManagement [F] {
         The target file does not exist in storage.
       }
 
-      fixture add_usage_ok { file: "report.pdf", entity: "article-1" }
+      fixture add_usage_ok { file: "report.pdf", entity: "article-1" } after upload_pdf
       fixture add_usage_missing { file: "ghost.txt", entity: "article-1" } -> notfound
     }
 
@@ -49,7 +49,7 @@ concept FileManagement [F] {
         The target file does not exist in storage.
       }
 
-      fixture remove_usage_ok { file: "report.pdf", entity: "article-1" }
+      fixture remove_usage_ok { file: "report.pdf", entity: "article-1" } after upload_pdf
       fixture remove_usage_missing { file: "ghost.txt", entity: "article-1" } -> notfound
     }
 
@@ -58,7 +58,7 @@ concept FileManagement [F] {
         All files with zero usage references have been deleted from storage.
       }
 
-      fixture valid {}
+      fixture valid {} after upload_pdf
     }
 
     action getFile(file: F) {
@@ -69,7 +69,7 @@ concept FileManagement [F] {
         The target file does not exist in storage.
       }
 
-      fixture get_existing { file: "report.pdf" }
+      fixture get_existing { file: "report.pdf" } after upload_pdf
       fixture get_missing { file: "ghost.txt" } -> notfound
     }
   }

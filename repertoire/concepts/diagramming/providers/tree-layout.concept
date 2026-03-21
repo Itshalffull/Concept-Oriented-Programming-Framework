@@ -34,9 +34,9 @@ concept TreeLayoutProvider [C] {
         Layout computation failed or input is not a valid tree.
       }
 
-      fixture tree_with_children { canvas: "c1", items: ["root", "child1", "child2"], config: { direction: "top-to-bottom" } }
-      fixture left_to_right { canvas: "c1", items: ["root", "leaf"], config: { direction: "left-to-right", spacing_x: 100.0 } }
-      fixture empty_items { canvas: "c1", items: [], config: {} } -> error
+      fixture tree_with_children { canvas: "c1", items: ["root", "child1", "child2"], config: { direction: "top-to-bottom" } } after valid
+      fixture left_to_right { canvas: "c1", items: ["root", "leaf"], config: { direction: "left-to-right", spacing_x: 100.0 } } after valid
+      fixture empty_items { canvas: "c1", items: [], config: {} } after valid -> error
     }
   }
 

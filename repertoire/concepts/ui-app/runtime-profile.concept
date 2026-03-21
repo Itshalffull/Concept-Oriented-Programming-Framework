@@ -45,7 +45,7 @@ concept RuntimeProfile [R] {
       }
       -> notfound(message: String) { No runtime profile exists with this name. }
 
-      fixture resolve_web { name: "web-production" }
+      fixture resolve_web { name: "web-production" } after register_web_profile
       fixture resolve_unknown { name: "nonexistent-profile" } -> notfound
     }
 
@@ -58,7 +58,7 @@ concept RuntimeProfile [R] {
         Return all declared runtime profiles.
       }
 
-      fixture list_all { }
+      fixture list_all { } after register_web_profile
     }
   }
 

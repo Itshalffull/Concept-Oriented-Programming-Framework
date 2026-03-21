@@ -48,8 +48,8 @@ concept RuntimeCoverage [C] {
         serialized JSON: { totalEntities, exercised,
         unexercised, coveragePct }.
       }
-      fixture coverage_actions { kind: "action", since: "" }
-      fixture coverage_variants_since { kind: "variant", since: "2026-01-01T00:00:00Z" }
+      fixture coverage_actions { kind: "action", since: "" } after record_action
+      fixture coverage_variants_since { kind: "variant", since: "2026-01-01T00:00:00Z" } after record_action
       fixture coverage_empty_kind { kind: "", since: "" } -> error
     }
 
@@ -59,7 +59,7 @@ concept RuntimeCoverage [C] {
         serialized JSON array of { action, variant, exercised,
         count, lastSeen }.
       }
-      fixture variant_coverage_article { concept: "Article" }
+      fixture variant_coverage_article { concept: "Article" } after record_action
       fixture variant_coverage_empty { concept: "" } -> error
     }
 
@@ -68,8 +68,8 @@ concept RuntimeCoverage [C] {
         Sync coverage report. Results as serialized JSON array
         of { sync, tier, exercised, count, avgDurationMs }.
       }
-      fixture sync_coverage_all { since: "" }
-      fixture sync_coverage_recent { since: "2026-03-01T00:00:00Z" }
+      fixture sync_coverage_all { since: "" } after record_action
+      fixture sync_coverage_recent { since: "2026-03-01T00:00:00Z" } after record_action
     }
 
     action widgetStateCoverage(widget: String) {
@@ -78,7 +78,7 @@ concept RuntimeCoverage [C] {
         Results as serialized JSON array of { state, entered,
         count, transitionsExercised, transitionsUnexercised }.
       }
-      fixture widget_state_coverage_dialog { widget: "dialog" }
+      fixture widget_state_coverage_dialog { widget: "dialog" } after record_action
       fixture widget_state_coverage_empty { widget: "" } -> error
     }
 
@@ -89,8 +89,8 @@ concept RuntimeCoverage [C] {
         percentage, prop change sources, slot activity.
         Report as serialized JSON.
       }
-      fixture lifecycle_dialog { widget: "dialog", since: "" }
-      fixture lifecycle_since { widget: "button", since: "2026-01-15T00:00:00Z" }
+      fixture lifecycle_dialog { widget: "dialog", since: "" } after record_action
+      fixture lifecycle_since { widget: "button", since: "2026-01-15T00:00:00Z" } after record_action
       fixture lifecycle_empty_widget { widget: "", since: "" } -> error
     }
 
@@ -104,7 +104,7 @@ concept RuntimeCoverage [C] {
       -> notfound() {
         No render data for this widget instance.
       }
-      fixture render_trace_valid { widgetInstance: "dialog-inst-001" }
+      fixture render_trace_valid { widgetInstance: "dialog-inst-001" } after record_action
       fixture render_trace_empty { widgetInstance: "" } -> error
     }
 
@@ -115,8 +115,8 @@ concept RuntimeCoverage [C] {
         totalRenders, unnecessaryRenderPct, avgRenderMs,
         p90RenderMs }.
       }
-      fixture comparison_top10 { since: "", topN: 10 }
-      fixture comparison_recent { since: "2026-02-01T00:00:00Z", topN: 5 }
+      fixture comparison_top10 { since: "", topN: 10 } after record_action
+      fixture comparison_recent { since: "2026-02-01T00:00:00Z", topN: 5 } after record_action
     }
 
     action deadAtRuntime(kind: String) {
@@ -125,8 +125,8 @@ concept RuntimeCoverage [C] {
         have never been exercised at runtime.
         Results as serialized JSON array of symbol strings.
       }
-      fixture dead_variants { kind: "variant" }
-      fixture dead_syncs { kind: "sync" }
+      fixture dead_variants { kind: "variant" } after record_action
+      fixture dead_syncs { kind: "sync" } after record_action
       fixture dead_empty_kind { kind: "" } -> error
     }
   }

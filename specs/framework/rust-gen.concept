@@ -37,7 +37,7 @@ concept RustGen [S] {
         capabilities: ["types", "handler", "adapter", "conformance-tests"]
       }
 
-      fixture valid {}
+      fixture valid {} after valid_manifest
     }
   }
 

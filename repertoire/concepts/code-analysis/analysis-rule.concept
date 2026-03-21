@@ -54,7 +54,7 @@ concept AnalysisRule [U] {
         Rule evaluation failed.
       }
 
-      fixture valid_evaluate { }
+      fixture valid_evaluate { } after valid_create
       fixture missing_rule { rule: "analysis-rule-nonexistent" } -> evaluationError
     }
 
@@ -65,8 +65,8 @@ concept AnalysisRule [U] {
         findings }.
       }
 
-      fixture all_rules { category: "" }
-      fixture by_category { category: "dead-code" }
+      fixture all_rules { category: "" } after valid_create
+      fixture by_category { category: "dead-code" } after valid_create
     }
 
     action get(rule: U) {
@@ -77,7 +77,7 @@ concept AnalysisRule [U] {
         Rule does not exist.
       }
 
-      fixture valid_get { }
+      fixture valid_get { } after valid_create
       fixture missing_get { rule: "analysis-rule-nonexistent" } -> notfound
     }
   }

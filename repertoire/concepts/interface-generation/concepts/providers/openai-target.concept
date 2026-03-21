@@ -74,7 +74,7 @@ concept OpenaiTarget [F] {
         Return all generated function names for a concept.
       }
 
-      fixture list_functions_score { concept: "ScoreApi" }
+      fixture list_functions_score { concept: "ScoreApi" } after generate_strict
       fixture list_functions_empty { concept: "" } -> error
     }
   }

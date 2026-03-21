@@ -61,7 +61,7 @@ concept TerraformProvider [T] {
         Manual terraform state inspection may be needed.
       }
 
-      fixture apply_workspace { workspace: "ws-prod-001" }
+      fixture apply_workspace { workspace: "ws-prod-001" } after generate_plan
       fixture apply_nonexistent { workspace: "" } -> error
     }
 
@@ -70,8 +70,8 @@ concept TerraformProvider [T] {
         Terraform destroy completed.
       }
 
-      fixture teardown_workspace { workspace: "ws-prod-001" }
-      fixture teardown_nonexistent { workspace: "" }
+      fixture teardown_workspace { workspace: "ws-prod-001" } after generate_plan
+      fixture teardown_nonexistent { workspace: "" } after generate_plan
     }
   }
 

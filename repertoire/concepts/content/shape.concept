@@ -36,7 +36,7 @@ concept Shape [S] {
         The shape does not exist.
       }
 
-      fixture valid_update { shape: "shape-1", fill: "green", stroke: "white", text: "Updated" }
+      fixture valid_update { shape: "shape-1", fill: "green", stroke: "white", text: "Updated" } after valid_create
       fixture update_missing { shape: "nonexistent", fill: "red" } -> notFound
     }
 
@@ -48,7 +48,7 @@ concept Shape [S] {
         The shape does not exist.
       }
 
-      fixture valid_delete { shape: "shape-1" }
+      fixture valid_delete { shape: "shape-1" } after valid_create
       fixture delete_missing { shape: "nonexistent" } -> notFound
     }
   }

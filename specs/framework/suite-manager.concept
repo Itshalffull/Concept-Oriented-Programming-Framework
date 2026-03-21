@@ -62,8 +62,8 @@ concept SuiteManager [S] {
         Test execution failed.
       }
 
-      fixture valid_test { path: "./repertoire/payment-suite/" }
-      fixture empty_test_path { path: "" }
+      fixture valid_test { path: "./repertoire/payment-suite/" } after valid_init
+      fixture empty_test_path { path: "" } after valid_init
     }
 
     action list() {
@@ -75,7 +75,7 @@ concept SuiteManager [S] {
         Active suites listed.
       }
 
-      fixture valid_list {}
+      fixture valid_list {} after valid_init
     }
 
     action checkOverrides(path: String) {
@@ -90,7 +90,7 @@ concept SuiteManager [S] {
         An override references a nonexistent sync.
       }
 
-      fixture valid_overrides { path: "./repertoire/payment-suite/" }
+      fixture valid_overrides { path: "./repertoire/payment-suite/" } after valid_init
       fixture nonexistent_suite { path: "./repertoire/nonexistent-suite/" } -> invalidOverride
     }
   }

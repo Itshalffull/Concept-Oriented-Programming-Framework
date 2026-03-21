@@ -45,8 +45,8 @@ concept SemanticEmbedding [B] {
         serialized JSON array of { unit, score }.
       }
 
-      fixture search_similar_top5 { queryVector: "[0.1, 0.2, 0.3]", topK: 5, language: "typescript", kind: "function" }
-      fixture search_similar_all { queryVector: "[0.5, -0.3, 0.8]", topK: 0, language: "", kind: "" }
+      fixture search_similar_top5 { queryVector: "[0.1, 0.2, 0.3]", topK: 5, language: "typescript", kind: "function" } after compute_codebert
+      fixture search_similar_all { queryVector: "[0.5, -0.3, 0.8]", topK: 0, language: "", kind: "" } after compute_codebert
     }
 
     action searchNaturalLanguage(query: String, topK: Int) {
@@ -56,8 +56,8 @@ concept SemanticEmbedding [B] {
         Results as serialized JSON array of { unit, score }.
       }
 
-      fixture nl_search_auth { query: "authentication middleware", topK: 3 }
-      fixture nl_search_broad { query: "data validation", topK: 10 }
+      fixture nl_search_auth { query: "authentication middleware", topK: 3 } after compute_codebert
+      fixture nl_search_broad { query: "data validation", topK: 10 } after compute_codebert
     }
 
     action get(embedding: B) {
@@ -68,7 +68,7 @@ concept SemanticEmbedding [B] {
         Embedding does not exist.
       }
 
-      fixture get_existing { embedding: "semantic-embedding-1" }
+      fixture get_existing { embedding: "semantic-embedding-1" } after compute_codebert
       fixture get_unknown { embedding: "semantic-embedding-nonexistent" } -> notfound
     }
   }

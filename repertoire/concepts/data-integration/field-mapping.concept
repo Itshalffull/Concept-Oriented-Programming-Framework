@@ -42,8 +42,8 @@ concept FieldMapping [F] {
         A required field is missing or a transform within the mapping failed.
       }
 
-      fixture apply_record { record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: "map-1" }
-      fixture apply_missing { record: "{\"title\":\"Hello\"}", mappingId: "map-missing" } -> notfound
+      fixture apply_record { record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: "map-1" } after map_title
+      fixture apply_missing { record: "{\"title\":\"Hello\"}", mappingId: "map-missing" } after map_title -> notfound
       fixture apply_bad_json { record: "not-json", mappingId: "map-1" } -> error
     }
 
@@ -55,8 +55,8 @@ concept FieldMapping [F] {
         Mapping does not exist.
       }
 
-      fixture reverse_record { record: "{\"headline\":\"Hello\",\"body\":\"World\"}", mappingId: "map-1" }
-      fixture reverse_missing { record: "{}", mappingId: "map-missing" } -> notfound
+      fixture reverse_record { record: "{\"headline\":\"Hello\",\"body\":\"World\"}", mappingId: "map-1" } after map_title
+      fixture reverse_missing { record: "{}", mappingId: "map-missing" } after map_title -> notfound
     }
 
     action autoDiscover(sourceSchema: String, destSchema: String) {
@@ -64,7 +64,7 @@ concept FieldMapping [F] {
         Suggested mappings generated from name similarity and type compatibility.
       }
 
-      fixture discover_schemas { sourceSchema: "[\"title\",\"body\",\"author\"]", destSchema: "[\"title\",\"body\",\"creator\"]" }
+      fixture discover_schemas { sourceSchema: "[\"title\",\"body\",\"author\"]", destSchema: "[\"title\",\"body\",\"creator\"]" } after map_title
     }
 
     action validate(mappingId: String) {

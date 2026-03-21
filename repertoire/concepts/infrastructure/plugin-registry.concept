@@ -35,8 +35,8 @@ concept PluginRegistry [P] {
         Discover all available plugins of the specified type via attribute-based scanning.
       }
 
-      fixture discover_formatters { type: "formatter" }
-      fixture discover_empty_type { type: "" }
+      fixture discover_formatters { type: "formatter" } after register_formatter
+      fixture discover_empty_type { type: "" } after register_formatter
     }
 
     action createInstance(plugin: P, config: String) {
@@ -47,7 +47,7 @@ concept PluginRegistry [P] {
         The specified plugin definition does not exist.
       }
 
-      fixture create_with_config { plugin: "formatter:markdown-fmt", config: "{\"lineWidth\":80}" }
+      fixture create_with_config { plugin: "formatter:markdown-fmt", config: "{\"lineWidth\":80}" } after register_formatter
       fixture invalid_config { plugin: "formatter:markdown-fmt", config: "bad-json" } -> error
     }
 
@@ -56,8 +56,8 @@ concept PluginRegistry [P] {
         Return all registered plugin definitions for the specified type.
       }
 
-      fixture get_formatter_defs { type: "formatter" }
-      fixture get_unknown_defs { type: "" }
+      fixture get_formatter_defs { type: "formatter" } after register_formatter
+      fixture get_unknown_defs { type: "" } after register_formatter
     }
 
     action alterDefinitions(type: String, alterations: String) {
@@ -65,8 +65,8 @@ concept PluginRegistry [P] {
         Apply alterations to the plugin definitions of the specified type.
       }
 
-      fixture alter_formatters { type: "formatter", alterations: "{\"deprecated\":true}" }
-      fixture alter_missing_type { type: "", alterations: "{}" } -> error
+      fixture alter_formatters { type: "formatter", alterations: "{\"deprecated\":true}" } after register_formatter
+      fixture alter_missing_type { type: "", alterations: "{}" } after register_formatter -> error
     }
 
     action derivePlugins(plugin: P, config: String) {
@@ -77,8 +77,8 @@ concept PluginRegistry [P] {
         The base plugin definition does not exist.
       }
 
-      fixture derive_variant { plugin: "formatter:markdown-fmt", config: "{\"strict\":true}" }
-      fixture derive_nonexistent { plugin: "nonexistent:plugin", config: "{}" } -> error
+      fixture derive_variant { plugin: "formatter:markdown-fmt", config: "{\"strict\":true}" } after register_formatter
+      fixture derive_nonexistent { plugin: "nonexistent:plugin", config: "{}" } after register_formatter -> error
     }
   }
 

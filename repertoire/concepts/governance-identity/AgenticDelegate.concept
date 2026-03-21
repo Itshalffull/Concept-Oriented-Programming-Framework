@@ -44,7 +44,7 @@ concept AgenticDelegate [D] {
         The delegate does not exist.
       }
 
-      fixture assume_voter_role { delegate: "delegate-1", role: "voter" }
+      fixture assume_voter_role { delegate: "delegate-1", role: "voter" } after register_assistant
       fixture assume_role_missing_delegate { delegate: "nonexistent", role: "voter" } -> error
     }
 
@@ -56,7 +56,7 @@ concept AgenticDelegate [D] {
         The delegate does not exist.
       }
 
-      fixture release_current_role { delegate: "delegate-1" }
+      fixture release_current_role { delegate: "delegate-1" } after register_assistant
       fixture release_missing_delegate { delegate: "nonexistent" } -> error
     }
 
@@ -72,7 +72,7 @@ concept AgenticDelegate [D] {
         The delegate does not exist.
       }
 
-      fixture propose_vote { delegate: "delegate-1", action: "vote", rationale: "Community consensus needed" }
+      fixture propose_vote { delegate: "delegate-1", action: "vote", rationale: "Community consensus needed" } after register_assistant
       fixture propose_unauthorized { delegate: "delegate-1", action: "delete-all", rationale: "Cleanup" } -> error
     }
 
@@ -81,7 +81,7 @@ concept AgenticDelegate [D] {
         The delegate signals it cannot proceed and escalates to its principal.
       }
 
-      fixture escalate_complex_decision { delegate: "delegate-1", action: "budget-approval", reason: "Exceeds autonomy threshold" }
+      fixture escalate_complex_decision { delegate: "delegate-1", action: "budget-approval", reason: "Exceeds autonomy threshold" } after register_assistant
       fixture escalate_empty_reason { delegate: "delegate-1", action: "vote", reason: "" } -> error
     }
 
@@ -93,7 +93,7 @@ concept AgenticDelegate [D] {
         The delegate does not exist.
       }
 
-      fixture upgrade_to_autonomous { delegate: "delegate-1", autonomyLevel: "Autonomous" }
+      fixture upgrade_to_autonomous { delegate: "delegate-1", autonomyLevel: "Autonomous" } after register_assistant
       fixture update_missing_delegate { delegate: "nonexistent", autonomyLevel: "Autonomous" } -> error
     }
   }

@@ -47,7 +47,7 @@ concept Host [W] {
       }
       -> invalid(message: String) { Not in "loading" status. }
 
-      fixture ready_existing { host: "W-1" }
+      fixture ready_existing { host: "W-1" } after mount_article_list
       fixture ready_unknown { host: "W-nonexistent" } -> invalid
     }
 
@@ -58,8 +58,8 @@ concept Host [W] {
       }
       -> notfound(message: String) { Host missing. }
 
-      fixture track_binding { host: "W-1", kind: "binding", ref: "bind-1" }
-      fixture track_machine { host: "W-1", kind: "machine", ref: "machine-1" }
+      fixture track_binding { host: "W-1", kind: "binding", ref: "bind-1" } after mount_article_list
+      fixture track_machine { host: "W-1", kind: "machine", ref: "machine-1" } after mount_article_list
       fixture track_unknown_host { host: "W-nonexistent", kind: "binding", ref: "bind-1" } -> notfound
     }
 
@@ -70,7 +70,7 @@ concept Host [W] {
       }
       -> notfound(message: String) { Host missing. }
 
-      fixture unmount_existing { host: "W-1" }
+      fixture unmount_existing { host: "W-1" } after mount_article_list
       fixture unmount_unknown { host: "W-nonexistent" } -> notfound
     }
 
@@ -81,7 +81,7 @@ concept Host [W] {
       -> notfound(message: String) { Host missing. }
       -> invalid(message: String) { Host not interactive. }
 
-      fixture refresh_existing { host: "W-1" }
+      fixture refresh_existing { host: "W-1" } after mount_article_list
       fixture refresh_unknown { host: "W-nonexistent" } -> notfound
     }
 
@@ -89,7 +89,7 @@ concept Host [W] {
       -> ok(host: W) { Set status "error" with diagnostics. }
       -> notfound(message: String) { Host missing. }
 
-      fixture set_error_info { host: "W-1", errorInfo: "RenderError: component failed to mount" }
+      fixture set_error_info { host: "W-1", errorInfo: "RenderError: component failed to mount" } after mount_article_list
       fixture set_error_unknown_host { host: "W-nonexistent", errorInfo: "some error" } -> notfound
     }
   }

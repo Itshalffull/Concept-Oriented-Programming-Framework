@@ -36,7 +36,7 @@ concept UmlClassNotationProvider [C] {
         Returns UML class diagram notation definition.
       }
 
-      fixture valid {}
+      fixture valid {} after valid
     }
   }
 

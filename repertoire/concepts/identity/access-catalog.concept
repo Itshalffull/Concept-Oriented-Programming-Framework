@@ -37,15 +37,15 @@ concept AccessCatalog [C] {
                         description: String, permissions: list String) {
       -> ok(entry: C) { Store a role definition and its default permission bundle. }
 
-      fixture register_editor_role { entry: "role-001", key: "editor", label: "Editor", description: "Content editor role", permissions: "[\"content.edit\",\"content.publish\"]" }
-      fixture register_empty_role { entry: "", key: "editor", label: "Editor", description: "desc", permissions: "[]" }
+      fixture register_editor_role { entry: "role-001", key: "editor", label: "Editor", description: "Content editor role", permissions: "[\"content.edit\",\"content.publish\"]" } after register_admin_perm
+      fixture register_empty_role { entry: "", key: "editor", label: "Editor", description: "desc", permissions: "[]" } after register_admin_perm
     }
 
     action registerResourceAction(entry: C, catalog: String, key: String, label: String) {
       -> ok(entry: C) { Store a named action entry for a resource-action catalog such as schema or node. }
 
-      fixture register_view_action { entry: "action-001", catalog: "schema", key: "view", label: "View content" }
-      fixture register_empty_action { entry: "", catalog: "schema", key: "view", label: "View" }
+      fixture register_view_action { entry: "action-001", catalog: "schema", key: "view", label: "View content" } after register_admin_perm
+      fixture register_empty_action { entry: "", catalog: "schema", key: "view", label: "View" } after register_admin_perm
     }
 
     action listPermissions() {
@@ -53,7 +53,7 @@ concept AccessCatalog [C] {
         Return all registered permission definitions.
       }
 
-      fixture list_all_perms { }
+      fixture list_all_perms { } after register_admin_perm
     }
 
     action listRoles() {
@@ -61,7 +61,7 @@ concept AccessCatalog [C] {
         Return all registered role definitions.
       }
 
-      fixture list_all_roles { }
+      fixture list_all_roles { } after register_admin_perm
     }
 
     action listResourceActions(catalog: String) {
@@ -69,8 +69,8 @@ concept AccessCatalog [C] {
         Return all action definitions for the named resource catalog.
       }
 
-      fixture list_schema_actions { catalog: "schema" }
-      fixture list_empty_catalog { catalog: "" }
+      fixture list_schema_actions { catalog: "schema" } after register_admin_perm
+      fixture list_empty_catalog { catalog: "" } after register_admin_perm
     }
   }
 

@@ -67,7 +67,7 @@ concept ProjectInit [J] {
         Failed to write the manifest file.
       }
 
-      fixture valid_write_manifest { init: "init-1" }
+      fixture valid_write_manifest { init: "init-1" } after valid_create
       fixture write_manifest_nonexistent { init: "init-999" } -> error
     }
 
@@ -77,7 +77,7 @@ concept ProjectInit [J] {
         API interface and frontend framework.
       }
 
-      fixture valid_write_interfaces { init: "init-1" }
+      fixture valid_write_interfaces { init: "init-1" } after valid_create
       fixture write_interfaces_nonexistent { init: "init-999" } -> error
     }
 
@@ -86,7 +86,7 @@ concept ProjectInit [J] {
         Write deploy manifest files for each selected deploy target.
       }
 
-      fixture valid_write_deploy { init: "init-1" }
+      fixture valid_write_deploy { init: "init-1" } after valid_create
       fixture write_deploy_nonexistent { init: "init-999" } -> error
     }
 
@@ -96,7 +96,7 @@ concept ProjectInit [J] {
         pre-filling the composes references.
       }
 
-      fixture valid_write_derived { init: "init-1" }
+      fixture valid_write_derived { init: "init-1" } after valid_create
       fixture write_derived_nonexistent { init: "init-999" } -> error
     }
 
@@ -109,7 +109,7 @@ concept ProjectInit [J] {
         Dependency installation failed.
       }
 
-      fixture valid_trigger_install { init: "init-1" }
+      fixture valid_trigger_install { init: "init-1" } after valid_create
       fixture trigger_install_nonexistent { init: "init-999" } -> error
     }
 
@@ -122,7 +122,7 @@ concept ProjectInit [J] {
         Code generation failed.
       }
 
-      fixture valid_trigger_generate { init: "init-1" }
+      fixture valid_trigger_generate { init: "init-1" } after valid_create
       fixture trigger_generate_nonexistent { init: "init-999" } -> error
     }
 
@@ -139,7 +139,7 @@ concept ProjectInit [J] {
         and return a summary of everything that was created.
       }
 
-      fixture valid_complete { init: "init-1" }
+      fixture valid_complete { init: "init-1" } after valid_create
       fixture complete_nonexistent { init: "init-999" } -> error
     }
   }

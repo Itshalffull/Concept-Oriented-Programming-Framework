@@ -42,8 +42,8 @@ concept Content [C] {
         is unreachable.
       }
 
-      fixture pin_existing { cid: "abc123def456" }
-      fixture pin_empty_cid { cid: "" }
+      fixture pin_existing { cid: "abc123def456" } after store_text_file
+      fixture pin_empty_cid { cid: "" } after store_text_file
     }
 
     action unpin(cid: String) {
@@ -55,8 +55,8 @@ concept Content [C] {
         Unpin failed.
       }
 
-      fixture unpin_existing { cid: "abc123def456" }
-      fixture unpin_empty_cid { cid: "" }
+      fixture unpin_existing { cid: "abc123def456" } after pin_existing
+      fixture unpin_empty_cid { cid: "" } after pin_existing
     }
 
     action resolve(cid: String) {
@@ -73,7 +73,7 @@ concept Content [C] {
         gateway, or alert operators.
       }
 
-      fixture resolve_existing { cid: "abc123def456" }
+      fixture resolve_existing { cid: "abc123def456" } after store_text_file
       fixture resolve_nonexistent { cid: "000000000000" } -> error
     }
   }

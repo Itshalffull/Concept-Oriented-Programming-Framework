@@ -32,8 +32,8 @@ concept LatticeMerge [C] {
         Content is not a recognized CRDT lattice type.
       }
 
-      fixture merge_g_counter { base: "{\"type\":\"g-counter\",\"counters\":{\"a\":1}}", ours: "{\"type\":\"g-counter\",\"counters\":{\"a\":2}}", theirs: "{\"type\":\"g-counter\",\"counters\":{\"a\":1,\"b\":3}}" }
-      fixture invalid_crdt_json { base: "not-json", ours: "{\"type\":\"g-counter\"}", theirs: "{\"type\":\"g-counter\"}" } -> error
+      fixture merge_g_counter { base: "{\"type\":\"g-counter\",\"counters\":{\"a\":1}}", ours: "{\"type\":\"g-counter\",\"counters\":{\"a\":2}}", theirs: "{\"type\":\"g-counter\",\"counters\":{\"a\":1,\"b\":3}}" } after valid
+      fixture invalid_crdt_json { base: "not-json", ours: "{\"type\":\"g-counter\"}", theirs: "{\"type\":\"g-counter\"}" } after valid -> error
     }
   }
 

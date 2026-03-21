@@ -59,7 +59,7 @@ concept DeployScaffoldGen [D] {
         capabilities: ["deploy-yaml", "runtime-config", "infrastructure"]
       }
 
-      fixture valid_register {}
+      fixture valid_register {} after valid_generate
     }
   }
 

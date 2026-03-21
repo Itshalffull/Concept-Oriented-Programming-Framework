@@ -81,8 +81,8 @@ concept McpTarget [M] {
         grouped by MCP type, including hierarchy tools.
       }
 
-      fixture list_tools_agent { concept: "Agent" }
-      fixture list_tools_score { concept: "ScoreApi" }
+      fixture list_tools_agent { concept: "Agent" } after generate_agent
+      fixture list_tools_score { concept: "ScoreApi" } after generate_agent
       fixture list_tools_empty { concept: "" } -> error
     }
   }

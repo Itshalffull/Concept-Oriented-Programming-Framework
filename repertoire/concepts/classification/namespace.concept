@@ -21,21 +21,21 @@ concept Namespace [N] {
       -> ok(children: String) { Return the direct children of the node. }
       -> notfound(message: String) { Node does not exist. }
 
-      fixture get_existing_children { node: "ns-alpha-1" }
+      fixture get_existing_children { node: "ns-alpha-1" } after create_nested_page
       fixture get_children_missing_node { node: "ns-nonexistent" } -> error
     }
     action getHierarchy(node: N) {
       -> ok(hierarchy: String) { Return the full hierarchy rooted at the node. }
       -> notfound(message: String) { Node does not exist. }
 
-      fixture get_existing_hierarchy { node: "ns-alpha-1" }
+      fixture get_existing_hierarchy { node: "ns-alpha-1" } after create_nested_page
       fixture get_hierarchy_missing_node { node: "ns-nonexistent" } -> error
     }
     action move(node: N, newPath: String) {
       -> ok() { Move the node to a new path in the hierarchy. }
       -> notfound(message: String) { Node does not exist. }
 
-      fixture move_existing_node { node: "ns-alpha-1", newPath: "archive/alpha/docs" }
+      fixture move_existing_node { node: "ns-alpha-1", newPath: "archive/alpha/docs" } after create_nested_page
       fixture move_missing_node { node: "ns-nonexistent", newPath: "archive/gone" } -> error
     }
   }

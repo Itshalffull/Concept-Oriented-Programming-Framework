@@ -47,8 +47,8 @@ concept Navigator [N] {
       -> blocked(nav: N, reason: String) { Guard prevented transition. }
       -> notfound(message: String) { Destination not registered. }
 
-      fixture valid_go { params: "{\"id\":\"article-42\"}" }
-      fixture no_params { params: "" }
+      fixture valid_go { params: "{\"id\":\"article-42\"}" } after valid_register
+      fixture no_params { params: "" } after valid_register
       fixture missing_nav { nav: "nonexistent-nav", params: "" } -> notfound
     }
 
@@ -58,7 +58,7 @@ concept Navigator [N] {
       }
       -> empty(message: String) { History empty. }
 
-      fixture valid_back { }
+      fixture valid_back { } after valid_register
       fixture empty_history { nav: "nonexistent-nav" } -> empty
     }
 
@@ -68,7 +68,7 @@ concept Navigator [N] {
       }
       -> empty(message: String) { Forward stack empty. }
 
-      fixture valid_forward { }
+      fixture valid_forward { } after valid_register
       fixture empty_stack { nav: "nonexistent-nav" } -> empty
     }
 
@@ -78,7 +78,7 @@ concept Navigator [N] {
       }
       -> notfound(message: String) { Destination not registered. }
 
-      fixture valid_replace { params: "{\"id\":\"article-99\"}" }
+      fixture valid_replace { params: "{\"id\":\"article-99\"}" } after valid_register
       fixture missing_nav_replace { nav: "nonexistent-nav", params: "" } -> notfound
     }
 
@@ -86,7 +86,7 @@ concept Navigator [N] {
       -> ok(nav: N) { Register guard evaluated before departure. }
       -> invalid(message: String) { Guard expression invalid. }
 
-      fixture valid_guard { guard: "unsaved-changes-check" }
+      fixture valid_guard { guard: "unsaved-changes-check" } after valid_register
       fixture empty_guard { guard: "" } -> invalid
     }
 
@@ -94,7 +94,7 @@ concept Navigator [N] {
       -> ok(nav: N) { Remove guard. }
       -> notfound(message: String) { Guard not registered. }
 
-      fixture valid_remove_guard { guard: "unsaved-changes-check" }
+      fixture valid_remove_guard { guard: "unsaved-changes-check" } after valid_register
       fixture missing_guard { nav: "nonexistent-nav", guard: "no-such-guard" } -> notfound
     }
   }

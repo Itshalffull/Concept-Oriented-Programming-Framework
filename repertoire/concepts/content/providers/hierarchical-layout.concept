@@ -32,7 +32,7 @@ concept HierarchicalLayout [C] {
         Layout computation failed or input graph contains cycles.
       }
 
-      fixture valid_apply { canvas: "c1", items: ["root", "child1", "child2"] }
+      fixture valid_apply { canvas: "c1", items: ["root", "child1", "child2"] } after valid
       fixture missing_canvas { canvas: "", items: ["a"] } -> error
     }
   }

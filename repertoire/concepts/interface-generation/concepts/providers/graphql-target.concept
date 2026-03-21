@@ -58,7 +58,7 @@ concept GraphqlTarget [Q] {
       fixture with_default_config { projection: "order-projection", config: "{}" }
       fixture with_relay_and_federation { projection: "product-projection", config: "{\"relay\":true,\"federation\":true,\"subscriptions\":true}" }
       fixture empty_projection { projection: "", config: "{}" } -> error
-      fixture federation_conflict { projection: "item-projection", config: "{\"federation\":true,\"federationConflict\":true}" }
+      fixture federation_conflict { projection: "item-projection", config: "{\"federation\":true,\"federationConflict\":true}" } after with_default_config
     }
 
     action validate(type: Q) {
@@ -83,7 +83,7 @@ concept GraphqlTarget [Q] {
         by operation type, including hierarchy traversal queries.
       }
 
-      fixture list_order_operations { concept: "Order" }
+      fixture list_order_operations { concept: "Order" } after with_default_config
       fixture empty_concept { concept: "" } -> error
     }
   }

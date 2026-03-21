@@ -82,8 +82,8 @@ concept Resolver [R] {
         allowed_updates constraints.
       }
 
-      fixture update_single_target { resolution: "res-1", targets: ["auth"], policy: {"unification_strategy": "highest", "feature_unification": "union", "prefer_locked": true, "allowed_updates": "minor"} }
-      fixture update_missing_resolution { resolution: "res-nonexistent", targets: ["auth"], policy: {"unification_strategy": "highest", "feature_unification": "union", "prefer_locked": false, "allowed_updates": "major"} } -> error
+      fixture update_single_target { resolution: "res-1", targets: ["auth"], policy: {"unification_strategy": "highest", "feature_unification": "union", "prefer_locked": true, "allowed_updates": "minor"} } after resolve_simple
+      fixture update_missing_resolution { resolution: "res-nonexistent", targets: ["auth"], policy: {"unification_strategy": "highest", "feature_unification": "union", "prefer_locked": false, "allowed_updates": "major"} } after resolve_simple -> error
     }
 
     action explain(resolution: R, module_id: String) {
@@ -96,7 +96,7 @@ concept Resolver [R] {
         The specified module is not present in the resolution.
       }
 
-      fixture explain_existing_module { resolution: "res-1", module_id: "auth" }
+      fixture explain_existing_module { resolution: "res-1", module_id: "auth" } after resolve_simple
       fixture explain_missing_module { resolution: "res-1", module_id: "nonexistent-pkg" } -> error
     }
   }

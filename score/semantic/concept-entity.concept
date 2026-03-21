@@ -51,7 +51,7 @@ concept ConceptEntity [E] {
         No concept with this name exists.
       }
 
-      fixture get_article { name: "Article" }
+      fixture get_article { name: "Article" } after register_article
       fixture get_nonexistent { name: "Nonexistent" } -> error
     }
 
@@ -61,7 +61,7 @@ concept ConceptEntity [E] {
         Results as serialized JSON array.
       }
 
-      fixture find_persistent_storage { capability: "persistent-storage" }
+      fixture find_persistent_storage { capability: "persistent-storage" } after register_article
       fixture find_unknown_capability { capability: "quantum-compute" } -> error
     }
 
@@ -71,7 +71,7 @@ concept ConceptEntity [E] {
         Results as serialized JSON array.
       }
 
-      fixture find_governance_suite { suite: "governance" }
+      fixture find_governance_suite { suite: "governance" } after register_article
       fixture find_empty_suite { suite: "" } -> error
     }
 
@@ -81,7 +81,7 @@ concept ConceptEntity [E] {
         Provenance lookup. Results as serialized JSON array.
       }
 
-      fixture artifacts_for_article { entity: "concept-entity-1" }
+      fixture artifacts_for_article { entity: "concept-entity-1" } after register_article
       fixture artifacts_nonexistent { entity: "nonexistent-entity" } -> error
     }
 
@@ -92,7 +92,7 @@ concept ConceptEntity [E] {
         Results as serialized JSON array.
       }
 
-      fixture syncs_for_article { entity: "concept-entity-1" }
+      fixture syncs_for_article { entity: "concept-entity-1" } after register_article
       fixture syncs_nonexistent { entity: "nonexistent-entity" } -> error
     }
 
@@ -106,7 +106,7 @@ concept ConceptEntity [E] {
         requirements or type parameter mismatches.
       }
 
-      fixture compatible_concepts { a: "concept-entity-1", b: "concept-entity-2" }
+      fixture compatible_concepts { a: "concept-entity-1", b: "concept-entity-2" } after register_article
       fixture incompatible_missing { a: "nonexistent-a", b: "nonexistent-b" } -> error
     }
   }

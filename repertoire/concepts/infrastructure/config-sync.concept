@@ -35,8 +35,8 @@ concept ConfigSync [C] {
         The import failed due to invalid or incompatible data.
       }
 
-      fixture import_valid { config: "site-settings", data: "{\"theme\":\"dark\",\"locale\":\"en\"}" }
-      fixture import_empty_data { config: "site-settings", data: "" }
+      fixture import_valid { config: "site-settings", data: "{\"theme\":\"dark\",\"locale\":\"en\"}" } after export_site_config
+      fixture import_empty_data { config: "site-settings", data: "" } after export_site_config
     }
 
     action override(config: C, layer: String, values: String) {
@@ -47,8 +47,8 @@ concept ConfigSync [C] {
         The specified configuration does not exist.
       }
 
-      fixture override_production { config: "site-settings", layer: "production", values: "debug=false,cache_ttl=3600" }
-      fixture override_empty_layer { config: "site-settings", layer: "", values: "debug=true" }
+      fixture override_production { config: "site-settings", layer: "production", values: "debug=false,cache_ttl=3600" } after export_site_config
+      fixture override_empty_layer { config: "site-settings", layer: "", values: "debug=true" } after export_site_config
     }
 
     action diff(configA: C, configB: C) {

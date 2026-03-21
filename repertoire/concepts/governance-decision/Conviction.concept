@@ -52,7 +52,7 @@ concept Conviction [K] {
         The stake is below the minimum threshold.
       }
 
-      fixture stake_tokens { proposal: "conviction-001", staker: "alice", amount: 500.0 }
+      fixture stake_tokens { proposal: "conviction-001", staker: "alice", amount: 500.0 } after register_infra_proposal
       fixture stake_missing_proposal { proposal: "conviction-nonexistent", staker: "alice", amount: 100.0 } -> error
     }
 
@@ -61,7 +61,7 @@ concept Conviction [K] {
         The staker's tokens are released. Conviction is recalculated.
       }
 
-      fixture unstake_tokens { proposal: "conviction-001", staker: "alice" }
+      fixture unstake_tokens { proposal: "conviction-001", staker: "alice" } after stake_tokens
       fixture unstake_missing { proposal: "conviction-nonexistent", staker: "alice" } -> error
     }
 
@@ -75,7 +75,7 @@ concept Conviction [K] {
         to execution.
       }
 
-      fixture update_active { proposal: "conviction-001" }
+      fixture update_active { proposal: "conviction-001" } after register_infra_proposal
       fixture update_missing { proposal: "conviction-nonexistent" } -> error
     }
   }

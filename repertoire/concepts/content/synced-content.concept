@@ -34,7 +34,7 @@ concept SyncedContent [S] {
         The original content does not exist.
       }
 
-      fixture edit_content { original: "doc-main", content: "Updated paragraph text" }
+      fixture edit_content { original: "doc-main", content: "Updated paragraph text" } after create_ref
       fixture edit_missing { original: "doc-missing", content: "text" } -> notfound
     }
 
@@ -46,7 +46,7 @@ concept SyncedContent [S] {
         The reference does not exist.
       }
 
-      fixture delete_ref { ref: "ref-1" }
+      fixture delete_ref { ref: "ref-1" } after create_ref
       fixture delete_missing { ref: "ref-missing" } -> notfound
     }
 

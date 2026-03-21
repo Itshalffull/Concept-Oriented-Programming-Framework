@@ -43,8 +43,8 @@ concept ChangeStream [E] {
         Subscription created from the given offset, or from stream head.
       }
 
-      fixture subscribe_from_start { fromOffset: 0 }
-      fixture subscribe_from_head { fromOffset: null }
+      fixture subscribe_from_start { fromOffset: 0 } after append_insert
+      fixture subscribe_from_head { fromOffset: null } after append_insert
     }
 
     action read(subscriptionId: String, maxCount: Int) {
@@ -58,7 +58,7 @@ concept ChangeStream [E] {
         No more events available at this time.
       }
 
-      fixture read_batch { subscriptionId: "sub-1", maxCount: 10 }
+      fixture read_batch { subscriptionId: "sub-1", maxCount: 10 } after append_insert
       fixture read_missing_sub { subscriptionId: "", maxCount: 10 } -> error
     }
 
@@ -70,8 +70,8 @@ concept ChangeStream [E] {
         Consumer not found.
       }
 
-      fixture ack_offset { consumer: "analytics-worker", offset: 42 }
-      fixture ack_empty_consumer { consumer: "", offset: 1 }
+      fixture ack_offset { consumer: "analytics-worker", offset: 42 } after append_insert
+      fixture ack_empty_consumer { consumer: "", offset: 1 } after append_insert
     }
 
     action replay(from: Int, to: option Int) {
@@ -83,7 +83,7 @@ concept ChangeStream [E] {
         from offset exceeds available range.
       }
 
-      fixture replay_range { from: 1, to: 10 }
+      fixture replay_range { from: 1, to: 10 } after append_insert
       fixture replay_invalid { from: 99999, to: null } -> error
     }
   }

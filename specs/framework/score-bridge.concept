@@ -56,8 +56,8 @@ concept ScoreBridge [B] {
         status is updated to reflect the disconnection.
       }
 
-      fixture valid_query { bridge: "bridge-api-example-com", graphql: "{ concepts { conceptName } }" }
-      fixture missing_bridge { bridge: "bridge-nonexistent", graphql: "{ concepts { conceptName } }" } -> notfound
+      fixture valid_query { bridge: "bridge-api-example-com", graphql: "{ concepts { conceptName } }" } after valid_connect
+      fixture missing_bridge { bridge: "bridge-nonexistent", graphql: "{ concepts { conceptName } }" } after valid_connect -> notfound
     }
 
     action show(bridge: B, kind: String, name: String) {
@@ -76,7 +76,7 @@ concept ScoreBridge [B] {
         The remote Score endpoint returned an error.
       }
 
-      fixture valid_show { bridge: "bridge-api-example-com", kind: "concept", name: "User" }
+      fixture valid_show { bridge: "bridge-api-example-com", kind: "concept", name: "User" } after valid_connect
       fixture show_no_bridge { bridge: "bridge-nonexistent", kind: "concept", name: "User" } -> notfound
     }
 
@@ -96,7 +96,7 @@ concept ScoreBridge [B] {
         The remote Score endpoint returned an error.
       }
 
-      fixture valid_traverse { bridge: "bridge-api-example-com", relation: "actions", target: "register" }
+      fixture valid_traverse { bridge: "bridge-api-example-com", relation: "actions", target: "register" } after valid_connect
       fixture traverse_no_bridge { bridge: "bridge-nonexistent", relation: "actions", target: "register" } -> notfound
     }
 
@@ -109,7 +109,7 @@ concept ScoreBridge [B] {
         No active connection exists with this identifier.
       }
 
-      fixture valid_disconnect { bridge: "bridge-api-example-com" }
+      fixture valid_disconnect { bridge: "bridge-api-example-com" } after valid_connect
       fixture disconnect_no_bridge { bridge: "bridge-nonexistent" } -> notfound
     }
 
@@ -123,7 +123,7 @@ concept ScoreBridge [B] {
         No active connection exists with this identifier.
       }
 
-      fixture valid_status { bridge: "bridge-api-example-com" }
+      fixture valid_status { bridge: "bridge-api-example-com" } after valid_connect
       fixture status_no_bridge { bridge: "bridge-nonexistent" } -> notfound
     }
   }

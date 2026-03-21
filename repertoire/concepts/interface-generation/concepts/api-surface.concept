@@ -53,8 +53,8 @@ concept ApiSurface [S] {
         Return the composed entrypoint file content.
       }
 
-      fixture valid_surface { surface: "api-surface-1" }
-      fixture missing_surface { surface: "" }
+      fixture valid_surface { surface: "api-surface-1" } after rest_surface
+      fixture missing_surface { surface: "" } after rest_surface
     }
   }
 

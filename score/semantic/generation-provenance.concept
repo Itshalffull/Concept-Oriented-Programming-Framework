@@ -52,7 +52,7 @@ concept GenerationProvenance [G] {
         This file has no generation provenance — it is hand-written.
       }
 
-      fixture get_known_file { outputFile: "handlers/ts/article.handler.ts" }
+      fixture get_known_file { outputFile: "handlers/ts/article.handler.ts" } after record_handler
       fixture get_handwritten_file { outputFile: "src/manual-code.ts" } -> error
     }
 
@@ -62,8 +62,8 @@ concept GenerationProvenance [G] {
         serialized JSON array of { outputFile, sourceSpec, generatedAt }.
       }
 
-      fixture find_scaffold_gen_files { generator: "HandlerScaffoldGen" }
-      fixture find_unknown_gen { generator: "NonexistentGen" }
+      fixture find_scaffold_gen_files { generator: "HandlerScaffoldGen" } after record_handler
+      fixture find_unknown_gen { generator: "NonexistentGen" } after record_handler
     }
 
     action findBySource(sourceSpec: String) {
@@ -72,8 +72,8 @@ concept GenerationProvenance [G] {
         as serialized JSON array of { outputFile, generator, generatedAt }.
       }
 
-      fixture find_article_outputs { sourceSpec: "specs/app/article.concept" }
-      fixture find_no_outputs { sourceSpec: "specs/nonexistent.concept" }
+      fixture find_article_outputs { sourceSpec: "specs/app/article.concept" } after record_handler
+      fixture find_no_outputs { sourceSpec: "specs/nonexistent.concept" } after record_handler
     }
 
     action generationChain(outputFile: String) {
@@ -86,7 +86,7 @@ concept GenerationProvenance [G] {
         This file has no generation provenance.
       }
 
-      fixture chain_handler { outputFile: "handlers/ts/article.handler.ts" }
+      fixture chain_handler { outputFile: "handlers/ts/article.handler.ts" } after record_handler
       fixture chain_handwritten { outputFile: "src/manual-code.ts" } -> error
     }
 
@@ -101,7 +101,7 @@ concept GenerationProvenance [G] {
         All generated files are up to date.
       }
 
-      fixture valid {}
+      fixture valid {} after record_handler
       fixture stale_check_failure {} -> error
     }
 
@@ -112,8 +112,8 @@ concept GenerationProvenance [G] {
         sourceSpec }.
       }
 
-      fixture impact_scaffold_change { generator: "HandlerScaffoldGen" }
-      fixture impact_unknown_gen { generator: "NonexistentGen" }
+      fixture impact_scaffold_change { generator: "HandlerScaffoldGen" } after record_handler
+      fixture impact_unknown_gen { generator: "NonexistentGen" } after record_handler
     }
 
     action isGenerated(file: String) {
@@ -124,7 +124,7 @@ concept GenerationProvenance [G] {
         This file has no generation provenance.
       }
 
-      fixture check_generated_file { file: "handlers/ts/article.handler.ts" }
+      fixture check_generated_file { file: "handlers/ts/article.handler.ts" } after record_handler
       fixture check_handwritten_file { file: "src/manual-code.ts" } -> error
     }
   }

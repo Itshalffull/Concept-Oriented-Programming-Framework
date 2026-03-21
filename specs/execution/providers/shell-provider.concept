@@ -48,9 +48,9 @@ concept ShellProvider [S] {
         executable, permission error, or invalid working directory.
       }
 
-      fixture echo_hello { command: "echo", args: "hello", env: "{}", cwd: "/tmp", timeout: 5000 }
-      fixture ls_home { command: "ls", args: "-la", env: "{}", cwd: "/home", timeout: 10000 }
-      fixture missing_executable { command: "/nonexistent/binary", args: "", env: "{}", cwd: "/tmp", timeout: 5000 } -> error
+      fixture echo_hello { command: "echo", args: "hello", env: "{}", cwd: "/tmp", timeout: 5000 } after valid
+      fixture ls_home { command: "ls", args: "-la", env: "{}", cwd: "/home", timeout: 10000 } after valid
+      fixture missing_executable { command: "/nonexistent/binary", args: "", env: "{}", cwd: "/tmp", timeout: 5000 } after valid -> error
     }
 
     action list() {
@@ -59,7 +59,7 @@ concept ShellProvider [S] {
         with command, status, and exitCode.
       }
 
-      fixture valid {}
+      fixture valid {} after valid
     }
   }
 

@@ -46,7 +46,7 @@ concept SyncPair [S] {
         Conflicts detected that require resolution.
       }
 
-      fixture sync_existing { pairId: "pair-1" }
+      fixture sync_existing { pairId: "pair-1" } after link_records
       fixture sync_missing { pairId: "pair-missing" } -> notfound
     }
 
@@ -58,7 +58,7 @@ concept SyncPair [S] {
         Pair does not exist.
       }
 
-      fixture detect_existing { pairId: "pair-1" }
+      fixture detect_existing { pairId: "pair-1" } after link_records
       fixture detect_missing { pairId: "pair-missing" } -> notfound
     }
 
@@ -73,7 +73,7 @@ concept SyncPair [S] {
         The resolver could not determine a winner or the records are incompatible.
       }
 
-      fixture resolve_conflict { conflictId: "conflict-1", resolution: "keep_local" }
+      fixture resolve_conflict { conflictId: "conflict-1", resolution: "keep_local" } after link_records
       fixture resolve_missing { conflictId: "conflict-missing", resolution: "keep_local" } -> notfound
     }
 
@@ -85,7 +85,7 @@ concept SyncPair [S] {
         Pair or record not found.
       }
 
-      fixture unlink_existing { pairId: "pair-1", idA: "local-42" }
+      fixture unlink_existing { pairId: "pair-1", idA: "local-42" } after link_records
       fixture unlink_missing { pairId: "pair-missing", idA: "local-1" } -> notfound
     }
 
@@ -97,7 +97,7 @@ concept SyncPair [S] {
         Pair does not exist.
       }
 
-      fixture changelog_recent { pairId: "pair-1", since: "2026-01-01T00:00:00Z" }
+      fixture changelog_recent { pairId: "pair-1", since: "2026-01-01T00:00:00Z" } after link_records
       fixture changelog_missing { pairId: "pair-missing", since: "" } -> notfound
     }
   }

@@ -47,8 +47,8 @@ concept OnnxProvider [N] {
         A session with this name is already loaded.
       }
 
-      fixture load_codebert { name: "codebert", modelPath: "/models/codebert.onnx", device: "cpu", options: "{}" }
-      fixture load_gpu_model { name: "resnet", modelPath: "/models/resnet50.onnx", device: "cuda", options: "{\"optimization_level\":99}" }
+      fixture load_codebert { name: "codebert", modelPath: "/models/codebert.onnx", device: "cpu", options: "{}" } after valid
+      fixture load_gpu_model { name: "resnet", modelPath: "/models/resnet50.onnx", device: "cuda", options: "{\"optimization_level\":99}" } after valid
     }
 
     action infer(session: String, inputs: String, options: String) {
@@ -69,8 +69,8 @@ concept OnnxProvider [N] {
         input schema.
       }
 
-      fixture infer_codebert { session: "codebert", inputs: "[[1,2,3]]", options: "{}" }
-      fixture infer_unknown_session { session: "nonexistent", inputs: "[]", options: "{}" } -> notFound
+      fixture infer_codebert { session: "codebert", inputs: "[[1,2,3]]", options: "{}" } after valid
+      fixture infer_unknown_session { session: "nonexistent", inputs: "[]", options: "{}" } after valid -> notFound
     }
 
     action list() {
@@ -79,7 +79,7 @@ concept OnnxProvider [N] {
         with name, modelPath, device, and status.
       }
 
-      fixture valid {}
+      fixture valid {} after valid
     }
   }
 

@@ -33,7 +33,7 @@ concept CausalClock [T] {
       -> incompatible(message: String) {
         Clocks have different dimensions.
       }
-      fixture merge_same_length { localClock: "[1,2,3]", remoteClock: "[2,1,4]" }
+      fixture merge_same_length { localClock: "[1,2,3]", remoteClock: "[2,1,4]" } after tick_replica_a
       fixture merge_different_length { localClock: "[1,2]", remoteClock: "[1,2,3]" } -> error
     }
 
@@ -56,8 +56,8 @@ concept CausalClock [T] {
         Returns whether a strictly dominates b —
         a >= b component-wise and a != b.
       }
-      fixture dominates_check { a: "event-1", b: "event-2" }
-      fixture dominates_missing { a: "nonexistent", b: "event-2" }
+      fixture dominates_check { a: "event-1", b: "event-2" } after tick_replica_a
+      fixture dominates_missing { a: "nonexistent", b: "event-2" } after tick_replica_a
     }
   }
 

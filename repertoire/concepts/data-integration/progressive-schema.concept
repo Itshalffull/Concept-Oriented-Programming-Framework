@@ -35,7 +35,7 @@ concept ProgressiveSchema [P] {
         Item does not exist.
       }
 
-      fixture detect_existing { itemId: "ps-1" }
+      fixture detect_existing { itemId: "ps-1" } after capture_meeting
       fixture detect_missing { itemId: "ps-missing" } -> notfound
     }
 
@@ -47,7 +47,7 @@ concept ProgressiveSchema [P] {
         Item or suggestion does not exist.
       }
 
-      fixture accept_date { itemId: "ps-1", suggestionId: "sug-1" }
+      fixture accept_date { itemId: "ps-1", suggestionId: "sug-1" } after capture_meeting
       fixture accept_missing { itemId: "ps-missing", suggestionId: "sug-1" } -> notfound
     }
 
@@ -59,7 +59,7 @@ concept ProgressiveSchema [P] {
         Item or suggestion does not exist.
       }
 
-      fixture reject_tag { itemId: "ps-1", suggestionId: "sug-2" }
+      fixture reject_tag { itemId: "ps-1", suggestionId: "sug-2" } after capture_meeting
       fixture reject_missing { itemId: "ps-missing", suggestionId: "sug-2" } -> notfound
     }
 
@@ -74,7 +74,7 @@ concept ProgressiveSchema [P] {
         Item cannot fully conform; gaps describe missing required fields.
       }
 
-      fixture promote_to_article { itemId: "ps-1", targetSchema: "Article" }
+      fixture promote_to_article { itemId: "ps-1", targetSchema: "Article" } after capture_meeting
       fixture promote_missing { itemId: "ps-missing", targetSchema: "Article" } -> notfound
     }
 
@@ -86,7 +86,7 @@ concept ProgressiveSchema [P] {
         Not enough items or too heterogeneous to infer a schema.
       }
 
-      fixture infer_from_items { items: "[\"ps-1\",\"ps-2\",\"ps-3\"]" }
+      fixture infer_from_items { items: "[\"ps-1\",\"ps-2\",\"ps-3\"]" } after capture_meeting
       fixture infer_empty { items: "[]" } -> error
     }
   }

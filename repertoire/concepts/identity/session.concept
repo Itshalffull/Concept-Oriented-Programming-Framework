@@ -60,7 +60,7 @@ concept Session [S] {
         The user must re-authenticate.
       }
 
-      fixture refresh_valid { session: "sess-001" }
+      fixture refresh_valid { session: "sess-001" } after create_mobile
       fixture refresh_nonexistent { session: "sess-missing" } -> error
     }
 
@@ -72,7 +72,7 @@ concept Session [S] {
         No session exists with this identifier.
       }
 
-      fixture destroy_existing { session: "sess-001" }
+      fixture destroy_existing { session: "sess-001" } after create_mobile
       fixture destroy_nonexistent { session: "sess-missing" } -> error
     }
 
@@ -82,7 +82,7 @@ concept Session [S] {
         user across all devices.
       }
 
-      fixture destroy_all_alice { userId: "alice" }
+      fixture destroy_all_alice { userId: "alice" } after create_mobile
       fixture destroy_all_empty { userId: "" } -> error
     }
 
@@ -95,7 +95,7 @@ concept Session [S] {
         No session exists with this identifier.
       }
 
-      fixture context_existing { session: "sess-001" }
+      fixture context_existing { session: "sess-001" } after create_mobile
       fixture context_nonexistent { session: "sess-missing" } -> error
     }
   }

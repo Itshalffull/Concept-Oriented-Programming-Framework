@@ -48,7 +48,7 @@ concept SolverProvider [S] {
         No registered provider supports this combination.
       }
 
-      fixture valid_dispatch { property_ref: "prop-1", formal_language: "smtlib", kind: "invariant" }
+      fixture valid_dispatch { property_ref: "prop-1", formal_language: "smtlib", kind: "invariant" } after valid_register
       fixture no_matching_provider { property_ref: "prop-2", formal_language: "coq", kind: "liveness" } -> no_provider
     }
 
@@ -61,7 +61,7 @@ concept SolverProvider [S] {
         Malformed or empty property_refs.
       }
 
-      fixture valid_batch { property_refs: "[\"prop-1\",\"prop-2\"]" }
+      fixture valid_batch { property_refs: "[\"prop-1\",\"prop-2\"]" } after valid_register
       fixture empty_batch { property_refs: "[]" } -> invalid
     }
 
@@ -73,7 +73,7 @@ concept SolverProvider [S] {
         Provider not registered.
       }
 
-      fixture valid_health { provider_id: "z3" }
+      fixture valid_health { provider_id: "z3" } after valid_register
       fixture health_missing { provider_id: "nonexistent" } -> notfound
     }
 
@@ -82,7 +82,7 @@ concept SolverProvider [S] {
         All registered providers with capabilities.
       }
 
-      fixture valid {}
+      fixture valid {} after valid_register
     }
 
     action unregister(provider_id: String) {
@@ -93,7 +93,7 @@ concept SolverProvider [S] {
         Provider not registered.
       }
 
-      fixture valid_unregister { provider_id: "z3" }
+      fixture valid_unregister { provider_id: "z3" } after valid_register
       fixture unregister_missing { provider_id: "nonexistent" } -> notfound
     }
   }

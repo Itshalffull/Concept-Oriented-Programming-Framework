@@ -46,7 +46,7 @@ concept Machine [M] {
       -> invalid(message: String) { Event not handled in current state. }
       -> guarded(machine: M, guard: String) { Guard blocked transition. }
 
-      fixture valid_send { event: "start" }
+      fixture valid_send { event: "start" } after valid_spawn
       fixture missing_machine { machine: "nonexistent-machine", event: "start" } -> invalid
     }
 
@@ -60,7 +60,7 @@ concept Machine [M] {
       }
       -> notfound(message: String) { Machine missing. }
 
-      fixture valid_connect { }
+      fixture valid_connect { } after valid_spawn
       fixture missing_connect { machine: "nonexistent-machine" } -> notfound
     }
 
@@ -70,7 +70,7 @@ concept Machine [M] {
       }
       -> notfound(message: String) { Machine missing. }
 
-      fixture valid_destroy { }
+      fixture valid_destroy { } after valid_spawn
       fixture missing_destroy { machine: "nonexistent-machine" } -> notfound
     }
   }

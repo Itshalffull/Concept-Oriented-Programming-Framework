@@ -53,9 +53,9 @@ concept Grouping [G] {
         mcpType: tool | resource | resource-template.
       }
 
-      fixture classify_create { actionName: "createOrder" }
-      fixture classify_read { actionName: "getUser" }
-      fixture empty_action { actionName: "" }
+      fixture classify_create { actionName: "createOrder" } after per_concept_strategy
+      fixture classify_read { actionName: "getUser" } after per_concept_strategy
+      fixture empty_action { actionName: "" } after per_concept_strategy
     }
   }
 

@@ -37,7 +37,7 @@ concept Signal [G] {
       }
       -> notfound(message: String) { Signal does not exist. }
 
-      fixture valid_read { signal: "G-1" }
+      fixture valid_read { signal: "G-1" } after valid_create_state
       fixture read_nonexistent { signal: "G-999" } -> error
     }
 
@@ -49,7 +49,7 @@ concept Signal [G] {
       -> readonly(message: String) { Cannot write to computed signal. }
       -> notfound(message: String) { Signal does not exist. }
 
-      fixture valid_write { signal: "G-1", value: "world" }
+      fixture valid_write { signal: "G-1", value: "world" } after valid_create_state
       fixture write_nonexistent { signal: "G-999", value: "x" } -> error
     }
 
@@ -62,7 +62,7 @@ concept Signal [G] {
         Some updates failed.
       }
 
-      fixture valid_batch { signals: "[{\"signal\":\"G-1\",\"value\":\"a\"},{\"signal\":\"G-2\",\"value\":\"b\"}]" }
+      fixture valid_batch { signals: "[{\"signal\":\"G-1\",\"value\":\"a\"},{\"signal\":\"G-2\",\"value\":\"b\"}]" } after valid_create_state
       fixture invalid_batch { signals: "not-valid-json" } -> error
     }
 
@@ -70,7 +70,7 @@ concept Signal [G] {
       -> ok(signal: G) { Remove signal, unsubscribe from dependencies. }
       -> notfound(message: String) { Signal does not exist. }
 
-      fixture valid_dispose { signal: "G-1" }
+      fixture valid_dispose { signal: "G-1" } after valid_create_state
       fixture dispose_nonexistent { signal: "G-999" } -> error
     }
   }

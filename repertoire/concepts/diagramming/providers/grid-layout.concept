@@ -32,8 +32,8 @@ concept GridLayoutProvider [C] {
         Layout computation failed or provider not available.
       }
 
-      fixture four_items { canvas: "canvas-1", items: ["a", "b", "c", "d"], config: { columns: 2 } }
-      fixture single_item { canvas: "canvas-1", items: ["a"], config: none }
+      fixture four_items { canvas: "canvas-1", items: ["a", "b", "c", "d"], config: { columns: 2 } } after valid
+      fixture single_item { canvas: "canvas-1", items: ["a"], config: none } after valid
       fixture missing_canvas { canvas: "", items: ["a", "b"], config: none } -> error
     }
   }

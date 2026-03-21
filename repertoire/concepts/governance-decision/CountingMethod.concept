@@ -47,8 +47,8 @@ concept CountingMethod [C] {
         The provider implementation returned an error.
       }
 
-      fixture aggregate_valid { method: "counting-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"no\"}]", weights: "{}" }
-      fixture aggregate_missing_method { method: "counting-nonexistent", ballots: "[]", weights: "{}" } -> error
+      fixture aggregate_valid { method: "counting-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"no\"}]", weights: "{}" } after register_majority
+      fixture aggregate_missing_method { method: "counting-nonexistent", ballots: "[]", weights: "{}" } after register_majority -> error
     }
 
     action deregister(method: C) {
@@ -56,7 +56,7 @@ concept CountingMethod [C] {
         The method is removed from available methods.
       }
 
-      fixture deregister_existing { method: "counting-001" }
+      fixture deregister_existing { method: "counting-001" } after register_majority
       fixture deregister_missing { method: "counting-nonexistent" } -> error
     }
   }

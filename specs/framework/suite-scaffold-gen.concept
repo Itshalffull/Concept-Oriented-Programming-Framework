@@ -56,7 +56,7 @@ concept SuiteScaffoldGen [S] {
         capabilities: ["suite-yaml", "directory-structure"]
       }
 
-      fixture valid {}
+      fixture valid {} after valid_generate
     }
   }
 

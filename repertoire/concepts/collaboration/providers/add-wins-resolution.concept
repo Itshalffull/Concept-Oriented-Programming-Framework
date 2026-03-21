@@ -31,7 +31,7 @@ concept AddWinsResolution [V] {
         Content is not a set-like structure.
       }
 
-      fixture resolve_set_union { base: null, v1: "[\"tag-a\", \"tag-b\"]", v2: "[\"tag-b\", \"tag-c\"]", context: "tags" }
+      fixture resolve_set_union { base: null, v1: "[\"tag-a\", \"tag-b\"]", v2: "[\"tag-b\", \"tag-c\"]", context: "tags" } after valid
       fixture resolve_non_set { base: null, v1: "not-a-json-array", v2: "also-not-json", context: "binary-file" } -> error
     }
   }

@@ -45,7 +45,7 @@ concept FsProvider [F] {
         other I/O failure.
       }
 
-      fixture read_existing_file { path: "/tmp/test.txt" }
+      fixture read_existing_file { path: "/tmp/test.txt" } after valid
       fixture read_missing_file { path: "/tmp/nonexistent-file" } -> notFound
     }
 
@@ -60,7 +60,7 @@ concept FsProvider [F] {
         disk space, or other I/O failure.
       }
 
-      fixture write_file { path: "/tmp/output.txt", content: "hello world" }
+      fixture write_file { path: "/tmp/output.txt", content: "hello world" } after valid
       fixture write_readonly_path { path: "/readonly/forbidden.txt", content: "data" } -> error
     }
 
@@ -69,8 +69,8 @@ concept FsProvider [F] {
         Check whether a file exists at the given path.
       }
 
-      fixture check_existing { path: "/tmp/test.txt" }
-      fixture check_missing { path: "/tmp/nonexistent" }
+      fixture check_existing { path: "/tmp/test.txt" } after valid
+      fixture check_missing { path: "/tmp/nonexistent" } after valid
     }
 
     action delete(path: String) {
@@ -81,7 +81,7 @@ concept FsProvider [F] {
         No file exists at the given path.
       }
 
-      fixture delete_existing { path: "/tmp/test.txt" }
+      fixture delete_existing { path: "/tmp/test.txt" } after valid
       fixture delete_missing { path: "/tmp/nonexistent" } -> notFound
     }
 
@@ -90,7 +90,7 @@ concept FsProvider [F] {
         Return recent operations as a serialized JSON array.
       }
 
-      fixture valid {}
+      fixture valid {} after valid
     }
   }
 

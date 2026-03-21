@@ -36,7 +36,7 @@ concept ErdNotationProvider [C] {
         Returns ERD notation definition.
       }
 
-      fixture valid {}
+      fixture valid {} after valid
     }
   }
 

@@ -45,8 +45,8 @@ concept ConflictResolution [V] {
         Conflict detected. Detail describes the nature of the
         incompatibility — overlapping regions, type mismatch, etc.
       }
-      fixture detect_conflict { version1: "v1-abc", version2: "v2-def", context: "document-edit" }
-      fixture detect_same_versions { version1: "v1-abc", version2: "v1-abc", context: "document-edit" }
+      fixture detect_conflict { version1: "v1-abc", version2: "v2-def", context: "document-edit" } after register_lww
+      fixture detect_same_versions { version1: "v1-abc", version2: "v1-abc", context: "document-edit" } after register_lww
     }
 
     action resolve(conflictId: C, policyOverride: option String) {
@@ -60,7 +60,7 @@ concept ConflictResolution [V] {
       -> noPolicy(message: String) {
         No policy registered for this conflict type.
       }
-      fixture resolve_with_policy { conflictId: "conflict-1", policyOverride: "last-writer-wins" }
+      fixture resolve_with_policy { conflictId: "conflict-1", policyOverride: "last-writer-wins" } after register_lww
       fixture resolve_missing_conflict { conflictId: "nonexistent", policyOverride: "" } -> error
     }
 
@@ -71,7 +71,7 @@ concept ConflictResolution [V] {
       -> notPending(message: String) {
         Conflict not found or already resolved.
       }
-      fixture manual_resolve_valid { conflictId: "conflict-1", chosen: "v1-abc" }
+      fixture manual_resolve_valid { conflictId: "conflict-1", chosen: "v1-abc" } after register_lww
       fixture manual_resolve_missing { conflictId: "nonexistent", chosen: "v1-abc" } -> error
     }
   }

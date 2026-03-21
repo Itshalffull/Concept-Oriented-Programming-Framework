@@ -54,7 +54,7 @@ concept WidgetEntity [W] {
       -> notfound() {
         No widget with this name exists.
       }
-      fixture get_dialog { name: "dialog" }
+      fixture get_dialog { name: "dialog" } after register_dialog
       fixture get_missing { name: "nonexistent-widget" } -> error
     }
 
@@ -63,7 +63,7 @@ concept WidgetEntity [W] {
         Return all widgets that declare affordance for the given
         interactor type. Results as serialized JSON array.
       }
-      fixture find_single_choice { interactor: "single-choice" }
+      fixture find_single_choice { interactor: "single-choice" } after register_dialog
       fixture find_empty { interactor: "" } -> error
     }
 
@@ -72,10 +72,10 @@ concept WidgetEntity [W] {
         Return all widgets that compose this widget.
         Results as serialized JSON array.
       }
-      fixture composing_valid { widget: "widget-entity-1" }
-      fixture composing_missing { widget: "nonexistent-id" }
-      fixture find_composing { widget: "widget-entity-1" }
-      fixture find_composing_missing { widget: "nonexistent" }
+      fixture composing_valid { widget: "widget-entity-1" } after register_dialog
+      fixture composing_missing { widget: "nonexistent-id" } after register_dialog
+      fixture find_composing { widget: "widget-entity-1" } after register_dialog
+      fixture find_composing_missing { widget: "nonexistent" } after register_dialog
     }
 
     action findComposedBy(widget: W) {
@@ -83,10 +83,10 @@ concept WidgetEntity [W] {
         Return all widgets this widget composes.
         Results as serialized JSON array.
       }
-      fixture composed_valid { widget: "widget-entity-1" }
-      fixture composed_missing { widget: "nonexistent-id" }
-      fixture find_composed { widget: "widget-entity-1" }
-      fixture find_composed_missing { widget: "nonexistent" }
+      fixture composed_valid { widget: "widget-entity-1" } after register_dialog
+      fixture composed_missing { widget: "nonexistent-id" } after register_dialog
+      fixture find_composed { widget: "widget-entity-1" } after register_dialog
+      fixture find_composed_missing { widget: "nonexistent" } after register_dialog
     }
 
     action generatedComponents(widget: W) {
@@ -94,8 +94,8 @@ concept WidgetEntity [W] {
         Return all generated framework components for this widget.
         Results as serialized JSON array of { framework, file }.
       }
-      fixture generated_valid { widget: "widget-entity-1" }
-      fixture generated_missing { widget: "nonexistent-id" }
+      fixture generated_valid { widget: "widget-entity-1" } after register_dialog
+      fixture generated_missing { widget: "nonexistent-id" } after register_dialog
     }
 
     action accessibilityAudit(widget: W) {
@@ -107,9 +107,9 @@ concept WidgetEntity [W] {
         Accessibility declaration is incomplete. Missing items
         as serialized JSON array.
       }
-      fixture audit_valid { widget: "widget-entity-1" }
+      fixture audit_valid { widget: "widget-entity-1" } after register_dialog
       fixture audit_missing { widget: "nonexistent-id" } -> error
-      fixture audit_widget { widget: "widget-entity-1" }
+      fixture audit_widget { widget: "widget-entity-1" } after register_dialog
     }
 
     action traceToConcept(widget: W) {
@@ -121,7 +121,7 @@ concept WidgetEntity [W] {
       -> noConceptBinding() {
         This widget has no bindings to any concept.
       }
-      fixture trace_valid { widget: "widget-entity-1" }
+      fixture trace_valid { widget: "widget-entity-1" } after register_dialog
       fixture trace_missing { widget: "nonexistent-id" } -> error
     }
   }

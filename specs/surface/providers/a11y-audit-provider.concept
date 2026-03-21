@@ -42,7 +42,7 @@ concept A11yAuditProvider [A] {
         No audit result exists with this identifier.
       }
 
-      fixture existing_audit { audit: "aud-1" }
+      fixture existing_audit { audit: "aud-1" } after accessible_dialog
       fixture unknown_audit { audit: "nonexistent" } -> notfound
     }
   }

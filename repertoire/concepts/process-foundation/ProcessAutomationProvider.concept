@@ -46,9 +46,9 @@ concept ProcessAutomationProvider [PA] {
         required variables, or runtime error.
       }
 
-      fixture execute_valid { action_payload: "{\"input\":\"data\"}", process_spec_id: "spec-001" }
+      fixture execute_valid { action_payload: "{\"input\":\"data\"}", process_spec_id: "spec-001" } after valid
       fixture execute_no_payload { action_payload: "", process_spec_id: "spec-001" } -> error
-      fixture execute_no_spec { action_payload: "{\"input\":\"data\"}", process_spec_id: "" } -> error
+      fixture execute_no_spec { action_payload: "{\"input\":\"data\"}", process_spec_id: "" } after valid -> error
     }
   }
 

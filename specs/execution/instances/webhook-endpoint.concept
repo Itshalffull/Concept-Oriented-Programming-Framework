@@ -44,7 +44,7 @@ concept WebhookEndpoint [W] {
         No endpoint is registered with this name.
       }
 
-      fixture resolve_deploy { name: "deploy-webhook" }
+      fixture resolve_deploy { name: "deploy-webhook" } after register_deploy_hook
       fixture resolve_unknown { name: "nonexistent" } -> notFound
     }
 
@@ -54,7 +54,7 @@ concept WebhookEndpoint [W] {
         with name and url.
       }
 
-      fixture valid {}
+      fixture valid {} after register_deploy_hook
     }
   }
 

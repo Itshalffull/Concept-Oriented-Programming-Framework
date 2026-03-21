@@ -45,7 +45,7 @@ concept RenderTransform [X] {
         Returns the existing transform.
       }
 
-      fixture dark_theme_transform { name: "dark-theme", kind: "token-remap", spec: "{\"mappings\":{\"palette.primary\":\"palette.primary-dark\"}}" }
+      fixture dark_theme_transform { name: "dark-theme", kind: "token-remap", spec: "{\"mappings\":{\"palette.primary\":\"palette.primary-dark\"}}" } after token_remap_kind
       fixture invalid_spec { name: "bad-transform", kind: "custom", spec: "not-json" } -> error
     }
 
@@ -60,8 +60,8 @@ concept RenderTransform [X] {
         The program could not be parsed or the kind is unknown.
       }
 
-      fixture apply_token_remap { program: "{\"instructions\":[]}", kind: "token-remap", spec: "{\"mappings\":{}}" }
-      fixture invalid_program { program: "not-json", kind: "token-remap", spec: "{}" } -> error
+      fixture apply_token_remap { program: "{\"instructions\":[]}", kind: "token-remap", spec: "{\"mappings\":{}}" } after token_remap_kind
+      fixture invalid_program { program: "not-json", kind: "token-remap", spec: "{}" } after token_remap_kind -> error
     }
 
     action compose(transforms: String) {
@@ -76,7 +76,7 @@ concept RenderTransform [X] {
         transforms are incompatible for composition.
       }
 
-      fixture compose_two { transforms: "[{\"name\":\"t1\",\"kind\":\"token-remap\",\"spec\":\"{}\"},{\"name\":\"t2\",\"kind\":\"a11y-adapt\",\"spec\":\"{}\"}]" }
+      fixture compose_two { transforms: "[{\"name\":\"t1\",\"kind\":\"token-remap\",\"spec\":\"{}\"},{\"name\":\"t2\",\"kind\":\"a11y-adapt\",\"spec\":\"{}\"}]" } after token_remap_kind
       fixture compose_empty { transforms: "[]" } -> error
     }
 
@@ -86,7 +86,7 @@ concept RenderTransform [X] {
         array of { name, kind } objects.
       }
 
-      fixture valid {}
+      fixture valid {} after token_remap_kind
     }
 
     action get(name: String) {
@@ -97,7 +97,7 @@ concept RenderTransform [X] {
         No transform is registered with the given name.
       }
 
-      fixture existing_transform { name: "dark-theme" }
+      fixture existing_transform { name: "dark-theme" } after token_remap_kind
       fixture unknown_transform { name: "nonexistent" } -> notfound
     }
   }

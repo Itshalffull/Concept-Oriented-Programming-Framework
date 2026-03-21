@@ -44,7 +44,7 @@ concept Permission [P] {
         The permission does not exist.
       }
 
-      fixture revoke_existing { permission: "alice:articles:read" }
+      fixture revoke_existing { permission: "alice:articles:read" } after grant_read_articles
       fixture revoke_nonexistent { permission: "nonexistent:perm:key" } -> error
     }
 
@@ -56,7 +56,7 @@ concept Permission [P] {
         No matching permission exists, or the condition is not satisfied.
       }
 
-      fixture check_allowed { who: "alice", where: "articles", what: "read" }
+      fixture check_allowed { who: "alice", where: "articles", what: "read" } after grant_read_articles
       fixture check_denied { who: "unknown-user", where: "articles", what: "delete" } -> error
     }
   }

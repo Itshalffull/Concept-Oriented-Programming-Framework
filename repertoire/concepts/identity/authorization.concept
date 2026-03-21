@@ -38,7 +38,7 @@ concept Authorization [U] {
         The specified role or permission does not exist.
       }
 
-      fixture revoke_publish { role: "editor", permission: "publish" }
+      fixture revoke_publish { role: "editor", permission: "publish" } after grant_write_to_admin
       fixture revoke_missing_role { role: "nonexistent", permission: "write" } -> error
     }
 
@@ -51,7 +51,7 @@ concept Authorization [U] {
         The specified role does not exist.
       }
 
-      fixture assign_admin { user: "alice", role: "admin" }
+      fixture assign_admin { user: "alice", role: "admin" } after grant_write_to_admin
       fixture assign_missing_role { user: "alice", role: "nonexistent" } -> error
     }
 
@@ -61,7 +61,7 @@ concept Authorization [U] {
         includes the given permission, false otherwise.
       }
 
-      fixture check_granted { user: "alice", permission: "write" }
+      fixture check_granted { user: "alice", permission: "write" } after grant_write_to_admin
       fixture check_ungranted { user: "bob", permission: "admin.delete" } -> error
     }
   }

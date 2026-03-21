@@ -32,7 +32,7 @@ concept CircularLayout [C] {
         Layout computation failed.
       }
 
-      fixture valid_apply { canvas: "c1", items: ["a", "b", "c"] }
+      fixture valid_apply { canvas: "c1", items: ["a", "b", "c"] } after valid
       fixture missing_canvas { canvas: "", items: ["x"] } -> error
     }
   }

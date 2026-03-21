@@ -57,8 +57,8 @@ concept BuildCache [E] {
         enabling Resource → BuildCache invalidation chains.
       }
 
-      fixture record_deterministic { stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", outputHash: "xyz789", outputRef: ".clef-cache/ts/password", sourceLocator: "./specs/password.concept", deterministic: true }
-      fixture record_nondeterministic { stepKey: "framework:LLMGen:summary", inputHash: "abc123", outputHash: "xyz789", deterministic: false }
+      fixture record_deterministic { stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", outputHash: "xyz789", outputRef: ".clef-cache/ts/password", sourceLocator: "./specs/password.concept", deterministic: true } after check_cached
+      fixture record_nondeterministic { stepKey: "framework:LLMGen:summary", inputHash: "abc123", outputHash: "xyz789", deterministic: false } after check_cached
     }
 
     action invalidate(stepKey: String) {
@@ -69,7 +69,7 @@ concept BuildCache [E] {
         No entry exists for this step key.
       }
 
-      fixture invalidate_existing { stepKey: "framework:TypeScriptGen:password" }
+      fixture invalidate_existing { stepKey: "framework:TypeScriptGen:password" } after check_cached
       fixture invalidate_missing { stepKey: "framework:NonexistentGen:missing" } -> notFound
     }
 
@@ -81,8 +81,8 @@ concept BuildCache [E] {
         Returns list of invalidated step keys.
       }
 
-      fixture invalidate_by_source { sourceLocator: "./specs/password.concept" }
-      fixture invalidate_by_missing_source { sourceLocator: "./specs/nonexistent.concept" }
+      fixture invalidate_by_source { sourceLocator: "./specs/password.concept" } after check_cached
+      fixture invalidate_by_missing_source { sourceLocator: "./specs/nonexistent.concept" } after check_cached
     }
 
     action invalidateByKind(kindName: String) {
@@ -94,8 +94,8 @@ concept BuildCache [E] {
         Returns list of invalidated step keys.
       }
 
-      fixture invalidate_by_kind { kindName: "ConceptManifest" }
-      fixture invalidate_by_unknown_kind { kindName: "UnknownKind" }
+      fixture invalidate_by_kind { kindName: "ConceptManifest" } after check_cached
+      fixture invalidate_by_unknown_kind { kindName: "UnknownKind" } after check_cached
     }
 
     action invalidateAll() {
@@ -103,7 +103,7 @@ concept BuildCache [E] {
         Clear all cache entries. Full rebuild on next run.
       }
 
-      fixture valid {}
+      fixture valid {} after check_cached
     }
 
     action status() {
@@ -112,7 +112,7 @@ concept BuildCache [E] {
         An entry is stale if it has been invalidated since lastRun.
       }
 
-      fixture valid {}
+      fixture valid {} after check_cached
     }
 
     action staleSteps() {
@@ -122,7 +122,7 @@ concept BuildCache [E] {
         Used by GenerationPlan/plan for planning display.
       }
 
-      fixture valid {}
+      fixture valid {} after check_cached
     }
   }
 

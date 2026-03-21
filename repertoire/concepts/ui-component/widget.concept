@@ -40,7 +40,7 @@ concept Widget [P] {
       }
       -> notfound(message: String) { Not registered. }
 
-      fixture valid_get { }
+      fixture valid_get { } after valid_register
       fixture missing_widget { widget: "nonexistent-widget" } -> notfound
     }
 
@@ -49,15 +49,15 @@ concept Widget [P] {
         List registered widgets, optionally filtered.
       }
 
-      fixture list_all { }
-      fixture list_by_category { category: "overlay" }
+      fixture list_all { } after valid_register
+      fixture list_by_category { category: "overlay" } after valid_register
     }
 
     action unregister(widget: P) {
       -> ok(widget: P) { Remove from catalog. }
       -> notfound(message: String) { Not registered. }
 
-      fixture valid_unregister { }
+      fixture valid_unregister { } after valid_register
       fixture missing_unregister { widget: "nonexistent-widget" } -> notfound
     }
   }

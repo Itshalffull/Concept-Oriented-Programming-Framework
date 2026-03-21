@@ -49,8 +49,8 @@ concept Transport [P] {
       }
       -> notfound(message: String) { Transport not configured. }
 
-      fixture set_auth_bearer { transport: "P-1", auth: "Bearer tok_xyz789" }
-      fixture set_auth_new_transport { transport: "P-new", auth: "Bearer tok_new" }
+      fixture set_auth_bearer { transport: "P-1", auth: "Bearer tok_xyz789" } after configure_rest
+      fixture set_auth_new_transport { transport: "P-new", auth: "Bearer tok_new" } after configure_rest
     }
 
     action clearAuth(transport: P) {
@@ -59,7 +59,7 @@ concept Transport [P] {
       }
       -> notfound(message: String) { Transport not configured. }
 
-      fixture clear_auth_existing { transport: "P-1" }
+      fixture clear_auth_existing { transport: "P-1" } after configure_rest
       fixture clear_auth_missing { transport: "P-nonexistent" } -> notfound
     }
 
@@ -68,8 +68,8 @@ concept Transport [P] {
       -> cached(transport: P, data: String, age: Int) { Returned from cache. }
       -> error(transport: P, status: Int, message: String) { Request failed. }
 
-      fixture fetch_articles { transport: "P-1", query: "{ \"path\": \"/articles\" }" }
-      fixture fetch_missing_transport { transport: "P-nonexistent", query: "{ \"path\": \"/data\" }" } -> error
+      fixture fetch_articles { transport: "P-1", query: "{ \"path\": \"/articles\" }" } after configure_rest
+      fixture fetch_missing_transport { transport: "P-nonexistent", query: "{ \"path\": \"/data\" }" } after configure_rest -> error
     }
 
     action mutate(transport: P, action: String, input: String) {
@@ -77,15 +77,15 @@ concept Transport [P] {
       -> queued(transport: P, queuePosition: Int) { Queued for offline. }
       -> error(transport: P, status: Int, message: String) { Write failed. }
 
-      fixture mutate_create { transport: "P-1", action: "createArticle", input: "{ \"title\": \"Hello World\" }" }
-      fixture mutate_missing_transport { transport: "P-nonexistent", action: "createArticle", input: "{}" } -> error
+      fixture mutate_create { transport: "P-1", action: "createArticle", input: "{ \"title\": \"Hello World\" }" } after configure_rest
+      fixture mutate_missing_transport { transport: "P-nonexistent", action: "createArticle", input: "{}" } after configure_rest -> error
     }
 
     action flushQueue(transport: P) {
       -> ok(transport: P, flushed: Int) { Send all queued mutations. }
       -> partial(transport: P, sent: Int, failed: Int) { Some failed. }
 
-      fixture flush_existing { transport: "P-1" }
+      fixture flush_existing { transport: "P-1" } after configure_rest
       fixture flush_missing_transport { transport: "P-nonexistent" } -> error
     }
   }

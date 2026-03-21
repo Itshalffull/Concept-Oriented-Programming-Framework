@@ -74,7 +74,7 @@ concept Manifest [P] {
         No dependency with this module_id exists in the manifest.
       }
 
-      fixture remove_existing_dep { project: "my-app", module_id: "lodash" }
+      fixture remove_existing_dep { project: "my-app", module_id: "lodash" } after add_normal_dep
       fixture remove_nonexistent_dep { project: "my-app", module_id: "nonexistent-pkg" } -> error
     }
 
@@ -92,7 +92,7 @@ concept Manifest [P] {
         must be provided.
       }
 
-      fixture override_with_pin { project: "my-app", module_id: "lodash", replacement_id: null, replacement_source: null, version_pin: "4.17.21" }
+      fixture override_with_pin { project: "my-app", module_id: "lodash", replacement_id: null, replacement_source: null, version_pin: "4.17.21" } after add_normal_dep
       fixture override_no_fields { project: "my-app", module_id: "lodash", replacement_id: null, replacement_source: null, version_pin: null } -> error
     }
 
@@ -105,7 +105,7 @@ concept Manifest [P] {
         The module_id does not appear in the dependency graph.
       }
 
-      fixture disable_existing_dep { project: "my-app", module_id: "lodash" }
+      fixture disable_existing_dep { project: "my-app", module_id: "lodash" } after enable_disabled_dep
       fixture disable_missing_dep { project: "my-app", module_id: "nonexistent-pkg" } -> error
     }
 
@@ -118,7 +118,7 @@ concept Manifest [P] {
         The module_id is not in the disabled set.
       }
 
-      fixture enable_disabled_dep { project: "my-app", module_id: "lodash" }
+      fixture enable_disabled_dep { project: "my-app", module_id: "lodash" } after add_normal_dep
       fixture enable_not_disabled { project: "my-app", module_id: "not-disabled-pkg" } -> error
     }
 
@@ -133,7 +133,7 @@ concept Manifest [P] {
         overrides for the same module).
       }
 
-      fixture merge_two_manifests { base: "project-base", overlay: "project-overlay" }
+      fixture merge_two_manifests { base: "project-base", overlay: "project-overlay" } after add_normal_dep
       fixture merge_missing_manifest { base: "nonexistent", overlay: "also-nonexistent" } -> error
     }
 

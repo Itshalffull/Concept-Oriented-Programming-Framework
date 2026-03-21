@@ -52,7 +52,7 @@ concept InfrastructureEntity [I] {
         No adapter with this name and kind exists.
       }
 
-      fixture get_app_storage { name: "AppStorage", kind: "storage" }
+      fixture get_app_storage { name: "AppStorage", kind: "storage" } after register_app_storage
       fixture get_nonexistent { name: "Nonexistent", kind: "storage" } -> error
     }
 
@@ -62,8 +62,8 @@ concept InfrastructureEntity [I] {
         serialized JSON array.
       }
 
-      fixture find_postgresql_adapters { backend: "postgresql" }
-      fixture find_unknown_backend { backend: "unknown-db" }
+      fixture find_postgresql_adapters { backend: "postgresql" } after register_app_storage
+      fixture find_unknown_backend { backend: "unknown-db" } after register_app_storage
     }
 
     action findByConcept(concept: String) {
@@ -72,8 +72,8 @@ concept InfrastructureEntity [I] {
         serialized JSON array of { name, kind, backend }.
       }
 
-      fixture find_article_adapters { concept: "Article" }
-      fixture find_unbound_concept { concept: "Nonexistent" }
+      fixture find_article_adapters { concept: "Article" } after register_app_storage
+      fixture find_unbound_concept { concept: "Nonexistent" } after register_app_storage
     }
 
     action findByRuntime(runtime: String) {
@@ -82,8 +82,8 @@ concept InfrastructureEntity [I] {
         serialized JSON array.
       }
 
-      fixture find_api_runtime { runtime: "api-server" }
-      fixture find_unknown_runtime { runtime: "nonexistent-runtime" }
+      fixture find_api_runtime { runtime: "api-server" } after register_app_storage
+      fixture find_unknown_runtime { runtime: "nonexistent-runtime" } after register_app_storage
     }
 
     action sharedBackends() {
@@ -93,8 +93,8 @@ concept InfrastructureEntity [I] {
         adapter, concepts: [] }.
       }
 
-      fixture valid {}
-      fixture shared_backend_failure {}
+      fixture valid {} after register_app_storage
+      fixture shared_backend_failure {} after register_app_storage
     }
 
     action networkTopology() {
@@ -104,8 +104,8 @@ concept InfrastructureEntity [I] {
         JSON { nodes: [], edges: [{ from, to, protocol, adapter }] }.
       }
 
-      fixture valid {}
-      fixture topology_failure {}
+      fixture valid {} after register_app_storage
+      fixture topology_failure {} after register_app_storage
     }
   }
 

@@ -55,8 +55,8 @@ concept McpServer [S] {
         A tool with this name is already registered.
       }
 
-      fixture valid_register_tool { name: "user_create", concept: "User", action: "create", description: "Create a new user account", schema: "{\"type\":\"object\",\"properties\":{\"email\":{\"type\":\"string\"}},\"required\":[\"email\"]}" }
-      fixture duplicate_tool { name: "user_create", concept: "User", action: "create", description: "duplicate entry", schema: "{}" } -> duplicate
+      fixture valid_register_tool { name: "user_create", concept: "User", action: "create", description: "Create a new user account", schema: "{\"type\":\"object\",\"properties\":{\"email\":{\"type\":\"string\"}},\"required\":[\"email\"]}" } after valid_start
+      fixture duplicate_tool { name: "user_create", concept: "User", action: "create", description: "duplicate entry", schema: "{}" } after valid_start -> duplicate
     }
 
     action handleCall(toolName: String, arguments: String) {
@@ -74,8 +74,8 @@ concept McpServer [S] {
         The concept handler returned an error variant or threw.
       }
 
-      fixture valid_call { toolName: "user_create", arguments: "{\"email\":\"alice@example.com\"}" }
-      fixture unknown_tool { toolName: "nonexistent_tool", arguments: "{}" } -> notfound
+      fixture valid_call { toolName: "user_create", arguments: "{\"email\":\"alice@example.com\"}" } after valid_start
+      fixture unknown_tool { toolName: "nonexistent_tool", arguments: "{}" } after valid_start -> notfound
     }
 
     action stop() {
@@ -86,7 +86,7 @@ concept McpServer [S] {
         The server was not running or failed to shut down cleanly.
       }
 
-      fixture valid_stop {}
+      fixture valid_stop {} after valid_start
     }
 
     action listTools() {
@@ -95,7 +95,7 @@ concept McpServer [S] {
         concept, action, and description for each.
       }
 
-      fixture valid_list_tools {}
+      fixture valid_list_tools {} after valid_start
     }
   }
 

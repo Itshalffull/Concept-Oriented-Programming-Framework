@@ -45,7 +45,7 @@ concept ExternalCall [X] {
         Returns the protocol name for diagnostics.
       }
 
-      fixture register_http { protocol: "http", providerName: "HttpProvider" }
+      fixture register_http { protocol: "http", providerName: "HttpProvider" } after valid
       fixture register_duplicate { protocol: "http", providerName: "AnotherHttpProvider" } -> duplicate
     }
 
@@ -65,9 +65,9 @@ concept ExternalCall [X] {
         the error message from the provider.
       }
 
-      fixture http_get { protocol: "http", operation: "GET", endpoint: "https://api.example.com/users", payload: "{}", config: "{\"timeout\": 5000}" }
-      fixture missing_protocol { protocol: "ftp", operation: "LIST", endpoint: "ftp://files.example.com", payload: "{}", config: "{}" } -> protocolNotFound
-      fixture bad_request { protocol: "http", operation: "POST", endpoint: "https://api.example.com/invalid", payload: "{\"broken\": true}", config: "{}" } -> error
+      fixture http_get { protocol: "http", operation: "GET", endpoint: "https://api.example.com/users", payload: "{}", config: "{\"timeout\": 5000}" } after valid
+      fixture missing_protocol { protocol: "ftp", operation: "LIST", endpoint: "ftp://files.example.com", payload: "{}", config: "{}" } after valid -> protocolNotFound
+      fixture bad_request { protocol: "http", operation: "POST", endpoint: "https://api.example.com/invalid", payload: "{\"broken\": true}", config: "{}" } after valid -> error
     }
 
     action listProtocols() {
@@ -76,7 +76,7 @@ concept ExternalCall [X] {
         JSON array.
       }
 
-      fixture valid {}
+      fixture valid {} after valid
     }
   }
 

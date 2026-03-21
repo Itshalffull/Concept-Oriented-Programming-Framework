@@ -37,7 +37,7 @@ concept Provenance [P] {
         Entity has no provenance records.
       }
 
-      fixture trace_existing { entityId: "item-1" }
+      fixture trace_existing { entityId: "item-1" } after record_capture
       fixture trace_missing { entityId: "item-missing" } -> notfound
     }
 
@@ -49,7 +49,7 @@ concept Provenance [P] {
         Batch does not exist.
       }
 
-      fixture audit_batch { batchId: "batch-2026-03-01" }
+      fixture audit_batch { batchId: "batch-2026-03-01" } after record_capture
       fixture audit_missing { batchId: "batch-missing" } -> notfound
     }
 
@@ -61,7 +61,7 @@ concept Provenance [P] {
         Batch does not exist.
       }
 
-      fixture rollback_batch { batchId: "batch-2026-03-01" }
+      fixture rollback_batch { batchId: "batch-2026-03-01" } after record_capture
       fixture rollback_missing { batchId: "batch-missing" } -> notfound
     }
 
@@ -85,7 +85,7 @@ concept Provenance [P] {
         Entity has no provenance records.
       }
 
-      fixture reproduce_existing { entityId: "item-1" }
+      fixture reproduce_existing { entityId: "item-1" } after record_capture
       fixture reproduce_missing { entityId: "item-missing" } -> notfound
     }
   }

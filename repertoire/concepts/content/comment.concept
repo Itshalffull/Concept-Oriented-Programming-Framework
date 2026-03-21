@@ -32,8 +32,8 @@ concept Comment [C] {
         extending the materialized thread path.
       }
 
-      fixture valid_reply { comment: "r1", parent: "c1", content: "Thanks!", author: "bob" }
-      fixture missing_parent { comment: "r2", parent: "nonexistent", content: "Hello", author: "bob" }
+      fixture valid_reply { comment: "r1", parent: "c1", content: "Thanks!", author: "bob" } after valid_add
+      fixture missing_parent { comment: "r2", parent: "nonexistent", content: "Hello", author: "bob" } after valid_add
     }
 
     action publish(comment: C) {
@@ -44,7 +44,7 @@ concept Comment [C] {
         The comment does not exist.
       }
 
-      fixture valid_publish { comment: "c1" }
+      fixture valid_publish { comment: "c1" } after valid_add
       fixture publish_missing { comment: "nonexistent" } -> notfound
     }
 
@@ -56,7 +56,7 @@ concept Comment [C] {
         The comment does not exist.
       }
 
-      fixture valid_unpublish { comment: "c1" }
+      fixture valid_unpublish { comment: "c1" } after valid_publish
       fixture unpublish_missing { comment: "nonexistent" } -> notfound
     }
 
@@ -68,7 +68,7 @@ concept Comment [C] {
         The comment does not exist.
       }
 
-      fixture valid_delete { comment: "c1" }
+      fixture valid_delete { comment: "c1" } after valid_add
       fixture delete_missing { comment: "nonexistent" } -> notfound
     }
   }

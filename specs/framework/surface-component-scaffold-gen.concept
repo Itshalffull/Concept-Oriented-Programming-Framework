@@ -71,7 +71,7 @@ concept SurfaceComponentScaffoldGen [W] {
         capabilities: ["widget", "anatomy", "machine", "slots", "accessibility", "affordance", "props", "compose"]
       }
 
-      fixture valid {}
+      fixture valid {} after valid_component
     }
   }
 

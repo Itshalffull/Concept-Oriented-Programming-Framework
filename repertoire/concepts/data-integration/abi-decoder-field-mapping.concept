@@ -52,8 +52,8 @@ concept AbiDecoderFieldMapping [F] {
         with the ABI parameter type.
       }
 
-      fixture reverse_valid { data: "{\"owner\":\"0xAbC123\",\"amount\":100}", mapper: "abi-map-1" }
-      fixture reverse_missing_mapper { data: "{}", mapper: "nonexistent" } -> notfound
+      fixture reverse_valid { data: "{\"owner\":\"0xAbC123\",\"amount\":100}", mapper: "abi-map-1" } after apply_valid
+      fixture reverse_missing_mapper { data: "{}", mapper: "nonexistent" } after apply_valid -> notfound
       fixture reverse_bad_json { data: "not-json", mapper: "abi-map-1" } -> error
     }
 
@@ -69,9 +69,9 @@ concept AbiDecoderFieldMapping [F] {
         non-existent ABI output or entity field.
       }
 
-      fixture register_valid { contract_abi: "[{\"type\":\"function\",\"name\":\"balanceOf\"}]", entity_schema: "TokenBalance", field_rules: "{\"balance\":\"balanceOf.output[0]\"}" }
-      fixture register_no_abi { contract_abi: "", entity_schema: "TokenBalance", field_rules: "{}" } -> invalid
-      fixture register_bad_abi { contract_abi: "not-json", entity_schema: "TokenBalance", field_rules: "{}" } -> invalid
+      fixture register_valid { contract_abi: "[{\"type\":\"function\",\"name\":\"balanceOf\"}]", entity_schema: "TokenBalance", field_rules: "{\"balance\":\"balanceOf.output[0]\"}" } after apply_valid
+      fixture register_no_abi { contract_abi: "", entity_schema: "TokenBalance", field_rules: "{}" } after apply_valid -> invalid
+      fixture register_bad_abi { contract_abi: "not-json", entity_schema: "TokenBalance", field_rules: "{}" } after apply_valid -> invalid
     }
   }
 

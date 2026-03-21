@@ -50,7 +50,7 @@ concept OptimismProvider [P] {
         The polling RPC call failed or returned unexpected data.
       }
 
-      fixture poll_existing { provider: "op-provider-1" }
+      fixture poll_existing { provider: "op-provider-1" } after register_mainnet
       fixture poll_missing { provider: "" } -> error
     }
 
@@ -67,7 +67,7 @@ concept OptimismProvider [P] {
         No provider is registered with this identifier.
       }
 
-      fixture check_finalized_tx { provider: "op-provider-1", tx_hash: "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890" }
+      fixture check_finalized_tx { provider: "op-provider-1", tx_hash: "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890" } after register_mainnet
       fixture check_missing_provider { provider: "", tx_hash: "0xabc" } -> error
     }
 
@@ -84,7 +84,7 @@ concept OptimismProvider [P] {
         proof or insufficient L1 gas.
       }
 
-      fixture relay_valid_message { provider: "op-provider-1", message_hash: "0xdeadbeef1234567890abcdef1234567890abcdef1234567890abcdef12345678" }
+      fixture relay_valid_message { provider: "op-provider-1", message_hash: "0xdeadbeef1234567890abcdef1234567890abcdef1234567890abcdef12345678" } after register_mainnet
       fixture relay_missing_provider { provider: "", message_hash: "0xabc" } -> error
     }
   }

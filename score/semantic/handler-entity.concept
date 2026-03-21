@@ -58,7 +58,7 @@ concept HandlerEntity [H] {
         No handler registered for this concept and language.
       }
 
-      fixture get_article_ts { concept: "Article", language: "typescript" }
+      fixture get_article_ts { concept: "Article", language: "typescript" } after register_article_handler
       fixture get_nonexistent { concept: "Nonexistent", language: "typescript" } -> error
     }
 
@@ -70,7 +70,7 @@ concept HandlerEntity [H] {
         No handler registered for this source file.
       }
 
-      fixture get_by_article_file { sourceFile: "handlers/ts/article.handler.ts" }
+      fixture get_by_article_file { sourceFile: "handlers/ts/article.handler.ts" } after register_article_handler
       fixture get_by_unknown_file { sourceFile: "nonexistent/handler.ts" } -> error
     }
 
@@ -80,8 +80,8 @@ concept HandlerEntity [H] {
         Results as serialized JSON array.
       }
 
-      fixture find_article_handlers { concept: "Article" }
-      fixture find_nonexistent_concept { concept: "Nonexistent" }
+      fixture find_article_handlers { concept: "Article" } after register_article_handler
+      fixture find_nonexistent_concept { concept: "Nonexistent" } after register_article_handler
     }
 
     action findByLanguage(language: String) {
@@ -90,8 +90,8 @@ concept HandlerEntity [H] {
         Results as serialized JSON array.
       }
 
-      fixture find_typescript_handlers { language: "typescript" }
-      fixture find_unknown_language { language: "cobol" }
+      fixture find_typescript_handlers { language: "typescript" } after register_article_handler
+      fixture find_unknown_language { language: "cobol" } after register_article_handler
     }
 
     action getActionMethod(handler: H, actionName: String) {
@@ -104,7 +104,7 @@ concept HandlerEntity [H] {
         The handler does not implement this action.
       }
 
-      fixture get_create_method { handler: "handler-001", actionName: "create" }
+      fixture get_create_method { handler: "handler-001", actionName: "create" } after register_article_handler
       fixture get_missing_method { handler: "handler-001", actionName: "nonexistentAction" } -> error
     }
 
@@ -122,7 +122,7 @@ concept HandlerEntity [H] {
         No handler is registered for this concept.
       }
 
-      fixture gaps_article { concept: "Article" }
+      fixture gaps_article { concept: "Article" } after register_article_handler
       fixture gaps_no_handler { concept: "Nonexistent" } -> error
     }
 
@@ -133,8 +133,8 @@ concept HandlerEntity [H] {
         Each as serialized JSON array.
       }
 
-      fixture deps_article { handler: "handler-001" }
-      fixture deps_nonexistent { handler: "nonexistent-handler" }
+      fixture deps_article { handler: "handler-001" } after register_article_handler
+      fixture deps_nonexistent { handler: "nonexistent-handler" } after register_article_handler
     }
 
     action getStorageUsage(handler: H) {
@@ -144,8 +144,8 @@ concept HandlerEntity [H] {
         JSON array of { collection, operations: ["put","get",...] }.
       }
 
-      fixture storage_article { handler: "handler-001" }
-      fixture storage_nonexistent { handler: "nonexistent-handler" }
+      fixture storage_article { handler: "handler-001" } after register_article_handler
+      fixture storage_nonexistent { handler: "nonexistent-handler" } after register_article_handler
     }
 
     action resolveStackFrame(file: String, line: Int, col: Int) {
@@ -164,7 +164,7 @@ concept HandlerEntity [H] {
         The given location is not within any registered handler file.
       }
 
-      fixture resolve_handler_frame { file: "handlers/ts/article.handler.ts", line: 15, col: 4 }
+      fixture resolve_handler_frame { file: "handlers/ts/article.handler.ts", line: 15, col: 4 } after register_article_handler
       fixture resolve_external_frame { file: "node_modules/express/index.js", line: 100, col: 1 } -> error
     }
 
@@ -182,7 +182,7 @@ concept HandlerEntity [H] {
         The given position is outside the handler's line range.
       }
 
-      fixture resolve_ast_valid { handler: "handler-001", line: 10, col: 5 }
+      fixture resolve_ast_valid { handler: "handler-001", line: 10, col: 5 } after register_article_handler
       fixture resolve_ast_out_of_range { handler: "handler-001", line: 99999, col: 1 } -> error
     }
 
@@ -197,8 +197,8 @@ concept HandlerEntity [H] {
         have null handler/concept/actionMethod/astNode.
       }
 
-      fixture resolve_trace { stackTrace: "Error: fail\n    at create (handlers/ts/article.handler.ts:15:4)" }
-      fixture resolve_empty_trace { stackTrace: "" }
+      fixture resolve_trace { stackTrace: "Error: fail\n    at create (handlers/ts/article.handler.ts:15:4)" } after register_article_handler
+      fixture resolve_empty_trace { stackTrace: "" } after register_article_handler
     }
 
     action traceToVariantReturn(handler: H, actionName: String) {
@@ -215,7 +215,7 @@ concept HandlerEntity [H] {
         The handler does not implement this action.
       }
 
-      fixture trace_create_returns { handler: "handler-001", actionName: "create" }
+      fixture trace_create_returns { handler: "handler-001", actionName: "create" } after register_article_handler
       fixture trace_missing_action { handler: "handler-001", actionName: "nonexistent" } -> error
     }
 
@@ -231,7 +231,7 @@ concept HandlerEntity [H] {
         The handler does not implement this action.
       }
 
-      fixture trace_create_storage { handler: "handler-001", actionName: "create" }
+      fixture trace_create_storage { handler: "handler-001", actionName: "create" } after register_article_handler
       fixture trace_missing_storage { handler: "handler-001", actionName: "nonexistent" } -> error
     }
 
@@ -266,8 +266,8 @@ concept HandlerEntity [H] {
         Results as serialized JSON array.
       }
 
-      fixture find_article_errors { errorSymbol: "clef/concept/Article", since: "2026-01-01" }
-      fixture find_unknown_errors { errorSymbol: "nonexistent/symbol", since: "2026-01-01" }
+      fixture find_article_errors { errorSymbol: "clef/concept/Article", since: "2026-01-01" } after register_article_handler
+      fixture find_unknown_errors { errorSymbol: "nonexistent/symbol", since: "2026-01-01" } after register_article_handler
     }
 
     action sourceForAction(concept: String, actionName: String) {
@@ -283,7 +283,7 @@ concept HandlerEntity [H] {
         Handler exists but does not implement this action.
       }
 
-      fixture source_article_create { concept: "Article", actionName: "create" }
+      fixture source_article_create { concept: "Article", actionName: "create" } after register_article_handler
       fixture source_no_handler { concept: "Nonexistent", actionName: "create" } -> error
     }
   }

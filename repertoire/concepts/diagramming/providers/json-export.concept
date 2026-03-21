@@ -29,8 +29,8 @@ concept JsonExportProvider [C] {
       }
       -> error(message: String) { Export failed. }
 
-      fixture basic_export { canvas_id: "canvas-1", options: none }
-      fixture with_embed { canvas_id: "canvas-1", options: { embed_data: true } }
+      fixture basic_export { canvas_id: "canvas-1", options: none } after valid
+      fixture with_embed { canvas_id: "canvas-1", options: { embed_data: true } } after valid
       fixture empty_canvas_id { canvas_id: "", options: none } -> error
     }
 
@@ -40,7 +40,7 @@ concept JsonExportProvider [C] {
       }
       -> error(message: String) { Parse failed or invalid format. }
 
-      fixture valid_json { data: "{\"items\":[{\"id\":\"item-1\",\"kind\":\"node\",\"x\":0,\"y\":0}],\"connectors\":[]}", target_canvas: "imported" }
+      fixture valid_json { data: "{\"items\":[{\"id\":\"item-1\",\"kind\":\"node\",\"x\":0,\"y\":0}],\"connectors\":[]}", target_canvas: "imported" } after valid
       fixture invalid_json { data: "not json {{{", target_canvas: none } -> error
     }
   }

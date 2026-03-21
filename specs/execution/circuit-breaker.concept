@@ -61,7 +61,7 @@ concept CircuitBreaker [B] {
         No circuit breaker is configured for this endpoint.
       }
 
-      fixture healthy_endpoint { endpoint: "payments-api" }
+      fixture healthy_endpoint { endpoint: "payments-api" } after api_breaker
       fixture unconfigured_endpoint { endpoint: "unknown-service" } -> notFound
     }
 
@@ -76,7 +76,7 @@ concept CircuitBreaker [B] {
         No circuit breaker is configured for this endpoint.
       }
 
-      fixture success_recorded { endpoint: "payments-api" }
+      fixture success_recorded { endpoint: "payments-api" } after api_breaker
       fixture success_no_breaker { endpoint: "unknown-service" } -> notFound
     }
 
@@ -96,7 +96,7 @@ concept CircuitBreaker [B] {
         No circuit breaker is configured for this endpoint.
       }
 
-      fixture failure_recorded { endpoint: "payments-api" }
+      fixture failure_recorded { endpoint: "payments-api" } after api_breaker
       fixture failure_no_breaker { endpoint: "unknown-service" } -> notFound
     }
 
@@ -109,7 +109,7 @@ concept CircuitBreaker [B] {
         No circuit breaker is configured for this endpoint.
       }
 
-      fixture reset_breaker { endpoint: "payments-api" }
+      fixture reset_breaker { endpoint: "payments-api" } after api_breaker
       fixture reset_no_breaker { endpoint: "unknown-service" } -> notFound
     }
 
@@ -122,7 +122,7 @@ concept CircuitBreaker [B] {
         No circuit breaker is configured for this endpoint.
       }
 
-      fixture get_status { endpoint: "payments-api" }
+      fixture get_status { endpoint: "payments-api" } after api_breaker
       fixture get_no_breaker { endpoint: "unknown-service" } -> notFound
     }
   }

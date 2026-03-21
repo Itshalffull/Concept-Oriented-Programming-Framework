@@ -42,7 +42,7 @@ concept EloRating [EL] {
         newRating = oldRating + K × (actual - expected).
       }
 
-      fixture outcome_alice_wins { config: "elo-001", winner: "alice", loser: "bob" }
+      fixture outcome_alice_wins { config: "elo-001", winner: "alice", loser: "bob" } after configure_standard
       fixture outcome_same_player { config: "elo-001", winner: "alice", loser: "alice" } -> error
     }
 
@@ -51,7 +51,7 @@ concept EloRating [EL] {
         Both participants scored 0.5. Updates apply symmetrically.
       }
 
-      fixture draw_match { config: "elo-001", participantA: "alice", participantB: "bob" }
+      fixture draw_match { config: "elo-001", participantA: "alice", participantB: "bob" } after configure_standard
       fixture draw_same_player { config: "elo-001", participantA: "alice", participantB: "alice" } -> error
     }
 
@@ -63,7 +63,7 @@ concept EloRating [EL] {
         No rating exists. Would receive initialRating.
       }
 
-      fixture get_alice_rating { config: "elo-001", participant: "alice" }
+      fixture get_alice_rating { config: "elo-001", participant: "alice" } after configure_standard
       fixture get_unknown_rating { config: "elo-001", participant: "" } -> error
     }
   }

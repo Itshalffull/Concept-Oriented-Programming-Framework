@@ -59,7 +59,7 @@ concept InterfaceScaffoldGen [I] {
         capabilities: ["interface-yaml", "target-config", "sdk-config"]
       }
 
-      fixture valid_register {}
+      fixture valid_register {} after valid_generate
     }
   }
 

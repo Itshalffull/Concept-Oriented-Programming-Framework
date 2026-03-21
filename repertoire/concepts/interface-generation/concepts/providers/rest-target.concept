@@ -82,8 +82,8 @@ concept RestTarget [R] {
         HTTP methods, including hierarchical routes if present.
       }
 
-      fixture list_user_routes { concept: "User" }
-      fixture empty_concept { concept: "" }
+      fixture list_user_routes { concept: "User" } after with_default_config
+      fixture empty_concept { concept: "" } after with_default_config
     }
   }
 

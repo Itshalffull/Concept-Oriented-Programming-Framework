@@ -50,7 +50,7 @@ concept Polity [G] {
         through this action.
       }
 
-      fixture valid_amend { polity: "polity-1", field: "purpose", newValue: "Updated governance mission" }
+      fixture valid_amend { polity: "polity-1", field: "purpose", newValue: "Updated governance mission" } after valid_establish
       fixture amend_nonexistent { polity: "polity-999", field: "purpose", newValue: "No such polity" } -> error
     }
 
@@ -63,7 +63,7 @@ concept Polity [G] {
         The polity does not exist.
       }
 
-      fixture valid_dissolve { polity: "polity-1", reason: "Merger with partner org" }
+      fixture valid_dissolve { polity: "polity-1", reason: "Merger with partner org" } after valid_establish
       fixture dissolve_nonexistent { polity: "polity-999", reason: "Does not exist" } -> error
     }
   }

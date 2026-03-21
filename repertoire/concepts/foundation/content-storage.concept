@@ -40,7 +40,7 @@ concept ContentStorage [R] {
         The record does not exist.
       }
 
-      fixture load_existing { record: "user-profile-1" }
+      fixture load_existing { record: "user-profile-1" } after save_record
       fixture load_missing { record: "nonexistent" } -> error
     }
 
@@ -52,7 +52,7 @@ concept ContentStorage [R] {
         The record does not exist.
       }
 
-      fixture delete_existing { record: "user-profile-1" }
+      fixture delete_existing { record: "user-profile-1" } after save_record
       fixture delete_missing { record: "nonexistent" } -> error
     }
 
@@ -61,7 +61,7 @@ concept ContentStorage [R] {
         Return matching records as serialized JSON.
       }
 
-      fixture query_by_type { filter: "{\"type\":\"profile\"}" }
+      fixture query_by_type { filter: "{\"type\":\"profile\"}" } after save_record
       fixture query_empty { filter: "" } -> error
     }
 
@@ -73,7 +73,7 @@ concept ContentStorage [R] {
         The record does not exist.
       }
 
-      fixture gen_schema { record: "user-profile-1" }
+      fixture gen_schema { record: "user-profile-1" } after save_record
       fixture gen_schema_missing { record: "nonexistent" } -> error
     }
   }

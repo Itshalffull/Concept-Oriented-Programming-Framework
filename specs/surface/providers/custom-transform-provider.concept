@@ -41,9 +41,9 @@ concept CustomTransformProvider [V] {
         The program or spec JSON could not be parsed.
       }
 
-      fixture replace_focus_strategy { program: "{\"instructions\":[{\"tag\":\"focus\",\"strategy\":\"roving\"}]}", spec: "{\"match\":{\"tag\":\"focus\",\"strategy\":\"roving\"},\"replace\":{\"strategy\":\"trap\"}}" }
-      fixture no_matches { program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"match\":{\"tag\":\"nonexistent\"},\"replace\":{}}" }
-      fixture invalid_program_json { program: "bad-json", spec: "{}" } -> error
+      fixture replace_focus_strategy { program: "{\"instructions\":[{\"tag\":\"focus\",\"strategy\":\"roving\"}]}", spec: "{\"match\":{\"tag\":\"focus\",\"strategy\":\"roving\"},\"replace\":{\"strategy\":\"trap\"}}" } after valid
+      fixture no_matches { program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"match\":{\"tag\":\"nonexistent\"},\"replace\":{}}" } after valid
+      fixture invalid_program_json { program: "bad-json", spec: "{}" } after valid -> error
     }
   }
 

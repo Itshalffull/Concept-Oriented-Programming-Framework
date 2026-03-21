@@ -47,7 +47,7 @@ concept InlineAnnotation [A] {
         Annotation was already accepted or rejected.
       }
 
-      fixture accept_pending { annotationId: "inline-annotation-1" }
+      fixture accept_pending { annotationId: "inline-annotation-1" } after annotate_insertion
       fixture accept_nonexistent { annotationId: "inline-annotation-nonexistent" } -> error
     }
 
@@ -62,7 +62,7 @@ concept InlineAnnotation [A] {
         Annotation was already accepted or rejected.
       }
 
-      fixture reject_pending { annotationId: "inline-annotation-1" }
+      fixture reject_pending { annotationId: "inline-annotation-1" } after accept_pending
       fixture reject_nonexistent { annotationId: "inline-annotation-nonexistent" } -> error
     }
 
@@ -71,8 +71,8 @@ concept InlineAnnotation [A] {
         All pending annotations accepted. Count returned.
       }
 
-      fixture accept_all_for_doc { contentRef: "doc-readme" }
-      fixture accept_all_empty_ref { contentRef: "" }
+      fixture accept_all_for_doc { contentRef: "doc-readme" } after annotate_insertion
+      fixture accept_all_empty_ref { contentRef: "" } after annotate_insertion
     }
 
     action rejectAll(contentRef: String) {
@@ -80,8 +80,8 @@ concept InlineAnnotation [A] {
         All pending annotations rejected. Count returned.
       }
 
-      fixture reject_all_for_doc { contentRef: "doc-readme" }
-      fixture reject_all_empty_ref { contentRef: "" }
+      fixture reject_all_for_doc { contentRef: "doc-readme" } after accept_pending
+      fixture reject_all_empty_ref { contentRef: "" } after accept_pending
     }
 
     action toggleTracking(contentRef: String, enabled: Bool) {
@@ -89,8 +89,8 @@ concept InlineAnnotation [A] {
         Tracking enabled or disabled for this document.
       }
 
-      fixture enable_tracking { contentRef: "doc-readme", enabled: true }
-      fixture disable_tracking { contentRef: "doc-readme", enabled: false }
+      fixture enable_tracking { contentRef: "doc-readme", enabled: true } after annotate_insertion
+      fixture disable_tracking { contentRef: "doc-readme", enabled: false } after annotate_insertion
     }
 
     action listPending(contentRef: String) {
@@ -98,8 +98,8 @@ concept InlineAnnotation [A] {
         Returns all annotations with status "pending" for this content.
       }
 
-      fixture list_pending_existing { contentRef: "doc-readme" }
-      fixture list_pending_empty_ref { contentRef: "" }
+      fixture list_pending_existing { contentRef: "doc-readme" } after annotate_insertion
+      fixture list_pending_empty_ref { contentRef: "" } after annotate_insertion
     }
   }
 

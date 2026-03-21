@@ -41,8 +41,8 @@ concept GrpcProvider [G] {
         A channel with this name is already configured.
       }
 
-      fixture configure_user_service { name: "user-service", target: "localhost:50051", protoRef: "user.proto", options: "{}" }
-      fixture configure_with_tls { name: "auth-service", target: "auth.prod:443", protoRef: "auth.proto", options: "{\"tls\":true}" }
+      fixture configure_user_service { name: "user-service", target: "localhost:50051", protoRef: "user.proto", options: "{}" } after valid
+      fixture configure_with_tls { name: "auth-service", target: "auth.prod:443", protoRef: "auth.proto", options: "{\"tls\":true}" } after valid
     }
 
     action execute(channel: String, service: String, method: String, payload: String) {
@@ -58,8 +58,8 @@ concept GrpcProvider [G] {
         The gRPC call returned a non-OK status code.
       }
 
-      fixture get_user { channel: "user-service", service: "UserService", method: "GetUser", payload: "{\"id\":42}" }
-      fixture execute_unknown_channel { channel: "nonexistent", service: "Svc", method: "Call", payload: "{}" } -> notFound
+      fixture get_user { channel: "user-service", service: "UserService", method: "GetUser", payload: "{\"id\":42}" } after valid
+      fixture execute_unknown_channel { channel: "nonexistent", service: "Svc", method: "Call", payload: "{}" } after valid -> notFound
     }
 
     action list() {
@@ -67,7 +67,7 @@ concept GrpcProvider [G] {
         Return all configured channels as a serialized JSON array.
       }
 
-      fixture valid {}
+      fixture valid {} after valid
     }
   }
 

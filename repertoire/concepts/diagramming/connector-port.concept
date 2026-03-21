@@ -38,7 +38,7 @@ concept ConnectorPort [P] {
       -> ok(port: P) { Removes port. Attached connectors become floating. }
       -> notfound(message: String) { Port not found. }
 
-      fixture remove_existing { port: "port-1" }
+      fixture remove_existing { port: "port-1" } after add_data_output
       fixture remove_missing { port: "port-999" } -> notfound
     }
 
@@ -46,7 +46,7 @@ concept ConnectorPort [P] {
       -> ok(port: P, side: String, offset: Float) { Repositions port. }
       -> notfound(message: String) { Port not found. }
 
-      fixture move_to_left { port: "port-1", side: "left", offset: 0.3 }
+      fixture move_to_left { port: "port-1", side: "left", offset: 0.3 } after add_data_output
       fixture move_missing { port: "port-999", side: "top", offset: 0.5 } -> notfound
     }
 
@@ -67,22 +67,22 @@ concept ConnectorPort [P] {
       -> ok(port: P, count: Int) { Increments count. }
       -> exceeded(port: P, max: Int) { At max_connections. }
 
-      fixture increment_ok { port: "port-1" }
+      fixture increment_ok { port: "port-1" } after add_data_output
       fixture increment_missing { port: "port-999" } -> error
     }
 
     action decrementConnection(port: P) {
       -> ok(port: P, count: Int) { Decrements count. Min 0. }
 
-      fixture decrement_ok { port: "port-1" }
+      fixture decrement_ok { port: "port-1" } after add_data_output
       fixture decrement_missing { port: "port-999" } -> error
     }
 
     action getPortsForOwner(owner: ID) {
       -> ok(ports: list P) { All ports on the ContentNode. }
 
-      fixture get_ports_for_node { owner: "node-1" }
-      fixture get_ports_for_unknown { owner: "node-unknown" }
+      fixture get_ports_for_node { owner: "node-1" } after add_data_output
+      fixture get_ports_for_unknown { owner: "node-unknown" } after add_data_output
     }
   }
 

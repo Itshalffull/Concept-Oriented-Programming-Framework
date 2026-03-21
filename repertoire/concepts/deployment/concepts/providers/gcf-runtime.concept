@@ -50,7 +50,7 @@ concept GcfRuntime [G] {
         Cloud Build failed during function build.
       }
 
-      fixture deploy_gcs { function: "gcf-abc123", sourceArchive: "gs://deploy-bucket/user-service.zip" }
+      fixture deploy_gcs { function: "gcf-abc123", sourceArchive: "gs://deploy-bucket/user-service.zip" } after provision_http
       fixture deploy_missing_function { function: "", sourceArchive: "gs://bucket/code.zip" } -> error
     }
 
@@ -59,7 +59,7 @@ concept GcfRuntime [G] {
         Traffic split updated between function versions.
       }
 
-      fixture traffic_split { function: "gcf-abc123", weight: 75 }
+      fixture traffic_split { function: "gcf-abc123", weight: 75 } after provision_http
       fixture traffic_no_function { function: "", weight: 50 } -> error
     }
 
@@ -68,7 +68,7 @@ concept GcfRuntime [G] {
         Traffic routed to specified previous version.
       }
 
-      fixture rollback_to_v1 { function: "gcf-abc123", targetVersion: "1" }
+      fixture rollback_to_v1 { function: "gcf-abc123", targetVersion: "1" } after provision_http
       fixture rollback_empty_version { function: "gcf-abc123", targetVersion: "" } -> error
     }
 
@@ -77,7 +77,7 @@ concept GcfRuntime [G] {
         Function and triggers deleted.
       }
 
-      fixture destroy_valid { function: "gcf-abc123" }
+      fixture destroy_valid { function: "gcf-abc123" } after provision_http
       fixture destroy_missing { function: "" } -> error
     }
   }

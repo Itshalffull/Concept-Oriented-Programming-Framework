@@ -58,7 +58,7 @@ concept RegistryScaffoldGen [R] {
         capabilities: ["registry-ts", "boot-code", "import-map"]
       }
 
-      fixture valid_register {}
+      fixture valid_register {} after valid_generate
     }
   }
 

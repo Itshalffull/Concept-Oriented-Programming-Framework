@@ -52,8 +52,8 @@ concept Artifact [A] {
         Artifact with this hash already stored. Idempotent.
       }
 
-      fixture store_artifact { hash: "sha256-00000abcdef0", location: "artifacts/sha256-00000abcdef0", concept: "User", language: "typescript", platform: "linux-x86_64" }
-      fixture store_empty_hash { hash: "", location: "", concept: "", language: "", platform: "" }
+      fixture store_artifact { hash: "sha256-00000abcdef0", location: "artifacts/sha256-00000abcdef0", concept: "User", language: "typescript", platform: "linux-x86_64" } after build_user_concept
+      fixture store_empty_hash { hash: "", location: "", concept: "", language: "", platform: "" } after build_user_concept
     }
 
     action resolve(hash: String) {
@@ -66,7 +66,7 @@ concept Artifact [A] {
         No artifact with this hash.
       }
 
-      fixture resolve_existing { hash: "sha256-00000abcdef0" }
+      fixture resolve_existing { hash: "sha256-00000abcdef0" } after build_user_concept
       fixture resolve_missing { hash: "sha256-doesnotexist" } -> error
     }
 
@@ -76,8 +76,8 @@ concept Artifact [A] {
         keepVersions recent artifacts per concept for rollback.
       }
 
-      fixture gc_old_artifacts { olderThan: "2025-01-01T00:00:00Z", keepVersions: 3 }
-      fixture gc_negative_keep { olderThan: "2025-01-01T00:00:00Z", keepVersions: -1 }
+      fixture gc_old_artifacts { olderThan: "2025-01-01T00:00:00Z", keepVersions: 3 } after build_user_concept
+      fixture gc_negative_keep { olderThan: "2025-01-01T00:00:00Z", keepVersions: -1 } after build_user_concept
     }
   }
 

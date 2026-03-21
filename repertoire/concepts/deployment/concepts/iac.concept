@@ -66,8 +66,8 @@ concept IaC [R] {
         Apply failed entirely. No changes made.
       }
 
-      fixture apply_plan { plan: "dp-001", provider: "pulumi" }
-      fixture apply_empty_plan { plan: "", provider: "" }
+      fixture apply_plan { plan: "dp-001", provider: "pulumi" } after emit_pulumi
+      fixture apply_empty_plan { plan: "", provider: "" } after emit_pulumi
     }
 
     action detectDrift(provider: String) {
@@ -79,7 +79,7 @@ concept IaC [R] {
         All resources match expected state.
       }
 
-      fixture detect_drift_pulumi { provider: "pulumi" }
+      fixture detect_drift_pulumi { provider: "pulumi" } after emit_pulumi
       fixture detect_drift_empty { provider: "" } -> error
     }
 
@@ -92,8 +92,8 @@ concept IaC [R] {
         Some resources could not be destroyed.
       }
 
-      fixture teardown_plan { plan: "dp-001", provider: "pulumi" }
-      fixture teardown_empty { plan: "", provider: "" }
+      fixture teardown_plan { plan: "dp-001", provider: "pulumi" } after emit_pulumi
+      fixture teardown_empty { plan: "", provider: "" } after emit_pulumi
     }
   }
 

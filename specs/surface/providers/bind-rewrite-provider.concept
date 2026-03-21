@@ -40,9 +40,9 @@ concept BindRewriteProvider [V] {
         The program or spec JSON could not be parsed.
       }
 
-      fixture rewrite_bind_expr { program: "{\"instructions\":[{\"tag\":\"bind\",\"expr\":\"?variant\"}]}", spec: "{\"rewrites\":{\"?variant\":\"?custom\"}}" }
-      fixture empty_rewrites { program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"rewrites\":{}}" }
-      fixture invalid_program_json { program: "not-json", spec: "{}" } -> error
+      fixture rewrite_bind_expr { program: "{\"instructions\":[{\"tag\":\"bind\",\"expr\":\"?variant\"}]}", spec: "{\"rewrites\":{\"?variant\":\"?custom\"}}" } after valid
+      fixture empty_rewrites { program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"rewrites\":{}}" } after valid
+      fixture invalid_program_json { program: "not-json", spec: "{}" } after valid -> error
     }
   }
 

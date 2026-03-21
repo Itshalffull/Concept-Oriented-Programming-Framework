@@ -28,8 +28,8 @@ concept Backlink [B] {
         converted into formal links, useful for suggesting new connections.
       }
 
-      fixture valid_mentions { entity: "doc-1" }
-      fixture no_mentions { entity: "orphaned-doc" }
+      fixture valid_mentions { entity: "doc-1" } after valid_backlinks
+      fixture no_mentions { entity: "orphaned-doc" } after valid_backlinks
     }
 
     action reindex() {
@@ -38,7 +38,7 @@ concept Backlink [B] {
         from scratch. Returns the total number of backlinks indexed.
       }
 
-      fixture valid {}
+      fixture valid {} after valid_backlinks
     }
   }
 

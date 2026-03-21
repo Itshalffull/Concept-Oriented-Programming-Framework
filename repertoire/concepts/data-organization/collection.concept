@@ -28,7 +28,7 @@ concept Collection [C] {
       -> ok() { Member added to collection. }
       -> notfound() { Collection does not exist. }
 
-      fixture add_article_member { collection: "articles", member: "post-2026-01" }
+      fixture add_article_member { collection: "articles", member: "post-2026-01" } after create_articles
       fixture add_to_nonexistent { collection: "nonexistent", member: "item" } -> error
     }
 
@@ -36,7 +36,7 @@ concept Collection [C] {
       -> ok() { Member removed from collection. }
       -> notfound() { Collection does not exist. }
 
-      fixture remove_article { collection: "articles", member: "post-2026-01" }
+      fixture remove_article { collection: "articles", member: "post-2026-01" } after create_articles
       fixture remove_from_nonexistent { collection: "nonexistent", member: "item" } -> error
     }
 
@@ -44,7 +44,7 @@ concept Collection [C] {
       -> ok(members: String) { Returns all members of the collection. }
       -> notfound() { Collection does not exist. }
 
-      fixture get_article_members { collection: "articles" }
+      fixture get_article_members { collection: "articles" } after create_articles
       fixture get_nonexistent_members { collection: "nonexistent" } -> error
     }
 
@@ -52,7 +52,7 @@ concept Collection [C] {
       -> ok() { Schema updated for the collection. }
       -> notfound() { Collection does not exist. }
 
-      fixture set_article_schema { collection: "articles", schema: "article-v2" }
+      fixture set_article_schema { collection: "articles", schema: "article-v2" } after create_articles
       fixture set_schema_nonexistent { collection: "nonexistent", schema: "any" } -> error
     }
   }

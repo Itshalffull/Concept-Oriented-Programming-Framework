@@ -43,8 +43,8 @@ concept WasmProvider [M] {
         A module with this name is already loaded.
       }
 
-      fixture load_tokenizer { name: "tokenizer", wasmPath: "/modules/tokenizer.wasm", memoryLimit: 65536 }
-      fixture load_large_module { name: "parser", wasmPath: "/modules/parser.wasm", memoryLimit: 131072 }
+      fixture load_tokenizer { name: "tokenizer", wasmPath: "/modules/tokenizer.wasm", memoryLimit: 65536 } after valid
+      fixture load_large_module { name: "parser", wasmPath: "/modules/parser.wasm", memoryLimit: 131072 } after valid
     }
 
     action execute(module: String, function: String, args: String) {
@@ -64,7 +64,7 @@ concept WasmProvider [M] {
         The WASM execution exceeded the configured time limit.
       }
 
-      fixture call_tokenize { module: "tokenizer", function: "tokenize", args: "[\"hello world\"]" }
+      fixture call_tokenize { module: "tokenizer", function: "tokenize", args: "[\"hello world\"]" } after valid
       fixture execute_unknown_module { module: "nonexistent", function: "run", args: "[]" } -> notFound
     }
 
@@ -74,7 +74,7 @@ concept WasmProvider [M] {
         with name, wasmPath, and status.
       }
 
-      fixture valid {}
+      fixture valid {} after valid
     }
   }
 

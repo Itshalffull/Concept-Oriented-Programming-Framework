@@ -48,8 +48,8 @@ concept SyncEntity [Y] {
         Results as serialized JSON array.
       }
 
-      fixture find_article { concept: "Article" }
-      fixture find_nonexistent { concept: "NonexistentConcept" }
+      fixture find_article { concept: "Article" } after register_publish_sync
+      fixture find_nonexistent { concept: "NonexistentConcept" } after register_publish_sync
     }
 
     action findTriggerableBy(action: String, variant: String) {
@@ -59,8 +59,8 @@ concept SyncEntity [Y] {
         Results as serialized JSON array.
       }
 
-      fixture find_publish_ok { action: "publish", variant: "ok" }
-      fixture find_create_any { action: "create", variant: "" }
+      fixture find_publish_ok { action: "publish", variant: "ok" } after register_publish_sync
+      fixture find_create_any { action: "create", variant: "" } after register_publish_sync
     }
 
     action chainFrom(action: String, variant: String, depth: Int) {
@@ -73,7 +73,7 @@ concept SyncEntity [Y] {
         No syncs trigger on this action/variant combination.
       }
 
-      fixture chain_publish { action: "publish", variant: "ok", depth: 3 }
+      fixture chain_publish { action: "publish", variant: "ok", depth: 3 } after register_publish_sync
       fixture chain_no_match { action: "nonexistent", variant: "ok", depth: 1 } -> error
     }
 
@@ -84,7 +84,7 @@ concept SyncEntity [Y] {
         Results as serialized JSON array.
       }
 
-      fixture find_dead_ends_valid {}
+      fixture find_dead_ends_valid {} after register_publish_sync
     }
 
     action findOrphanVariants() {
@@ -93,7 +93,7 @@ concept SyncEntity [Y] {
         matches on. Results as serialized JSON array.
       }
 
-      fixture find_orphans_valid {}
+      fixture find_orphans_valid {} after register_publish_sync
     }
 
     action get(sync: Y) {
@@ -104,7 +104,7 @@ concept SyncEntity [Y] {
         Sync does not exist.
       }
 
-      fixture get_existing { sync: "sync-entity-1" }
+      fixture get_existing { sync: "sync-entity-1" } after register_publish_sync
       fixture get_nonexistent { sync: "sync-entity-missing" } -> error
     }
   }

@@ -44,7 +44,7 @@ concept FileArtifact [F] {
       -> notfound() {
         Artifact does not exist.
       }
-      fixture set_provenance { artifact: "artifact-1", spec: "user.concept", generator: "clef-gen" }
+      fixture set_provenance { artifact: "artifact-1", spec: "user.concept", generator: "clef-gen" } after register_source
       fixture set_provenance_missing { artifact: "nonexistent", spec: "x.concept", generator: "gen" } -> error
     }
 
@@ -53,8 +53,8 @@ concept FileArtifact [F] {
         Return all artifacts with the given role as
         serialized JSON array.
       }
-      fixture find_source { role: "source" }
-      fixture find_empty_role { role: "" }
+      fixture find_source { role: "source" } after register_source
+      fixture find_empty_role { role: "" } after register_source
     }
 
     action findGeneratedFrom(spec: String) {
@@ -64,7 +64,7 @@ concept FileArtifact [F] {
       -> noGeneratedFiles() {
         No files were generated from this spec.
       }
-      fixture find_generated { spec: "user.concept" }
+      fixture find_generated { spec: "user.concept" } after register_source
       fixture find_generated_empty { spec: "" } -> error
     }
 
@@ -75,7 +75,7 @@ concept FileArtifact [F] {
       -> notfound(message: String) {
         Artifact does not exist.
       }
-      fixture get_artifact { artifact: "artifact-1" }
+      fixture get_artifact { artifact: "artifact-1" } after register_source
       fixture get_missing { artifact: "nonexistent" } -> error
     }
   }

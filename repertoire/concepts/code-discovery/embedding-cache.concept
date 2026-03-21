@@ -56,7 +56,7 @@ concept EmbeddingCache [E] {
         compute a fresh embedding and store it via put.
       }
 
-      fixture known_digest { digest: "sha256:abc123def456" }
+      fixture known_digest { digest: "sha256:abc123def456" } after valid_path
       fixture empty_digest { digest: "" } -> error
     }
 
@@ -69,7 +69,7 @@ concept EmbeddingCache [E] {
         entry is returned unchanged.
       }
 
-      fixture store_embedding { digest: "sha256:abc123", vector: "[0.1,0.2,0.3]", model: "text-embedding-ada-002", dimensions: 3, sourceKind: "concept", sourceKey: "UserProfile" }
+      fixture store_embedding { digest: "sha256:abc123", vector: "[0.1,0.2,0.3]", model: "text-embedding-ada-002", dimensions: 3, sourceKind: "concept", sourceKey: "UserProfile" } after valid_path
       fixture missing_vector { digest: "sha256:abc123", vector: "", model: "text-embedding-ada-002", dimensions: 3, sourceKind: "concept", sourceKey: "UserProfile" } -> error
     }
 
@@ -84,7 +84,7 @@ concept EmbeddingCache [E] {
         or disk space issues.
       }
 
-      fixture flush_to_disk { path: "/var/cache/embeddings.json" }
+      fixture flush_to_disk { path: "/var/cache/embeddings.json" } after valid_path
       fixture empty_flush_path { path: "" } -> error
     }
 
@@ -96,7 +96,7 @@ concept EmbeddingCache [E] {
         No entry exists for this digest.
       }
 
-      fixture evict_existing { digest: "sha256:def456" }
+      fixture evict_existing { digest: "sha256:def456" } after valid_path
       fixture evict_empty { digest: "" } -> error
     }
 
@@ -106,7 +106,7 @@ concept EmbeddingCache [E] {
         are JSON arrays of distinct values present in the cache.
       }
 
-      fixture valid {}
+      fixture valid {} after valid_path
     }
 
     action lookupWithConfig(digest: String, model: String, dimensions: Int) {
@@ -122,7 +122,7 @@ concept EmbeddingCache [E] {
         via putWithConfig.
       }
 
-      fixture config_lookup { digest: "sha256:abc123", model: "text-embedding-ada-002", dimensions: 1536 }
+      fixture config_lookup { digest: "sha256:abc123", model: "text-embedding-ada-002", dimensions: 1536 } after valid_path
       fixture missing_model { digest: "sha256:abc123", model: "", dimensions: 1536 } -> error
     }
 
@@ -136,7 +136,7 @@ concept EmbeddingCache [E] {
         exists. The existing entry is returned unchanged.
       }
 
-      fixture store_with_config { digest: "sha256:abc123", model: "text-embedding-ada-002", dimensions: 1536, vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User" }
+      fixture store_with_config { digest: "sha256:abc123", model: "text-embedding-ada-002", dimensions: 1536, vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User" } after valid_path
       fixture missing_digest { digest: "", model: "text-embedding-ada-002", dimensions: 1536, vector: "[0.1]", sourceKind: "concept", sourceKey: "User" } -> error
     }
   }

@@ -60,7 +60,7 @@ concept DeployOrchestrator [D] {
         No clef-* directories with vercel.deploy.yaml found.
       }
 
-      fixture deploy_all_production { projectRoot: "./", environment: "production" }
+      fixture deploy_all_production { projectRoot: "./", environment: "production" } after production_deploy
       fixture no_apps_found { projectRoot: "/empty/directory", environment: "production" } -> noAppsFound
     }
 
@@ -72,7 +72,7 @@ concept DeployOrchestrator [D] {
         Run does not exist.
       }
 
-      fixture check_status { run: "run-1710000000-abc123" }
+      fixture check_status { run: "run-1710000000-abc123" } after production_deploy
       fixture unknown_run { run: "run-nonexistent" } -> notfound
     }
   }

@@ -54,7 +54,7 @@ concept CloudRunRuntime [C] {
         Container image not found in registry.
       }
 
-      fixture deploy_gcr { service: "svc-abc123", imageUri: "gcr.io/my-gcp-project/user-api:v3" }
+      fixture deploy_gcr { service: "svc-abc123", imageUri: "gcr.io/my-gcp-project/user-api:v3" } after provision_standard
       fixture deploy_missing_service { service: "", imageUri: "gcr.io/proj/app:latest" } -> error
     }
 
@@ -63,7 +63,7 @@ concept CloudRunRuntime [C] {
         Traffic split updated between current and previous revisions.
       }
 
-      fixture traffic_split { service: "svc-abc123", weight: 50 }
+      fixture traffic_split { service: "svc-abc123", weight: 50 } after provision_standard
       fixture traffic_no_service { service: "", weight: 100 } -> error
     }
 
@@ -72,8 +72,8 @@ concept CloudRunRuntime [C] {
         Traffic routed to specified previous revision.
       }
 
-      fixture rollback_to_rev { service: "svc-abc123", targetRevision: "rev-20250101" }
-      fixture rollback_empty_revision { service: "svc-abc123", targetRevision: "" }
+      fixture rollback_to_rev { service: "svc-abc123", targetRevision: "rev-20250101" } after provision_standard
+      fixture rollback_empty_revision { service: "svc-abc123", targetRevision: "" } after provision_standard
     }
 
     action destroy(service: C) {
@@ -81,7 +81,7 @@ concept CloudRunRuntime [C] {
         Service and all revisions deleted.
       }
 
-      fixture destroy_valid { service: "svc-abc123" }
+      fixture destroy_valid { service: "svc-abc123" } after provision_standard
       fixture destroy_missing { service: "" } -> error
     }
   }

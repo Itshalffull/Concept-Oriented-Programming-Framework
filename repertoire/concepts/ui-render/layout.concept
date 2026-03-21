@@ -45,15 +45,15 @@ concept Layout [Y] {
       }
       -> notfound(message: String) { Layout does not exist. }
 
-      fixture set_direction_and_gap { layout: "layout-1", config: "{ \"direction\": \"row\", \"gap\": \"16\" }" }
-      fixture missing_layout { layout: "layout-missing", config: "{ \"direction\": \"column\" }" } -> notfound
+      fixture set_direction_and_gap { layout: "layout-1", config: "{ \"direction\": \"row\", \"gap\": \"16\" }" } after sidebar_layout
+      fixture missing_layout { layout: "layout-missing", config: "{ \"direction\": \"column\" }" } after sidebar_layout -> notfound
     }
 
     action nest(parent: Y, child: Y) {
       -> ok(parent: Y) { Nest layout inside another. }
       -> cycle(message: String) { Would create circular reference. }
 
-      fixture nest_child { parent: "layout-1", child: "layout-2" }
+      fixture nest_child { parent: "layout-1", child: "layout-2" } after sidebar_layout
       fixture parent_not_found { parent: "layout-missing", child: "layout-2" } -> cycle
     }
 
@@ -63,15 +63,15 @@ concept Layout [Y] {
       }
       -> notfound(message: String) { Layout does not exist. }
 
-      fixture set_breakpoints { layout: "layout-1", breakpoints: "{ \"sm\": { \"direction\": \"column\" }, \"lg\": { \"direction\": \"row\" } }" }
-      fixture responsive_not_found { layout: "layout-missing", breakpoints: "{}" } -> notfound
+      fixture set_breakpoints { layout: "layout-1", breakpoints: "{ \"sm\": { \"direction\": \"column\" }, \"lg\": { \"direction\": \"row\" } }" } after sidebar_layout
+      fixture responsive_not_found { layout: "layout-missing", breakpoints: "{}" } after sidebar_layout -> notfound
     }
 
     action remove(layout: Y) {
       -> ok(layout: Y) { Remove and detach children. }
       -> notfound(message: String) { Layout does not exist. }
 
-      fixture remove_existing { layout: "layout-1" }
+      fixture remove_existing { layout: "layout-1" } after sidebar_layout
       fixture remove_missing { layout: "layout-missing" } -> notfound
     }
   }

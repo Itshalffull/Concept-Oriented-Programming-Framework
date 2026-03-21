@@ -29,8 +29,8 @@ concept BpmnXmlExportProvider [C] {
       }
       -> error(message: String) { Export failed. }
 
-      fixture basic_export { canvas_id: "canvas-1", options: none }
-      fixture with_process_id { canvas_id: "canvas-1", options: { process_id: "proc-main" } }
+      fixture basic_export { canvas_id: "canvas-1", options: none } after valid
+      fixture with_process_id { canvas_id: "canvas-1", options: { process_id: "proc-main" } } after valid
       fixture empty_canvas_id { canvas_id: "", options: none } -> error
     }
 
@@ -41,7 +41,7 @@ concept BpmnXmlExportProvider [C] {
       }
       -> error(message: String) { Parse failed or invalid BPMN. }
 
-      fixture valid_bpmn { data: "<bpmn:definitions><bpmn:process id=\"p1\"><bpmn:task id=\"t1\" name=\"Do Work\"/></bpmn:process></bpmn:definitions>", target_canvas: "imported-canvas" }
+      fixture valid_bpmn { data: "<bpmn:definitions><bpmn:process id=\"p1\"><bpmn:task id=\"t1\" name=\"Do Work\"/></bpmn:process></bpmn:definitions>", target_canvas: "imported-canvas" } after valid
       fixture invalid_xml { data: "not valid bpmn xml", target_canvas: none } -> error
     }
   }

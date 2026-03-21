@@ -41,7 +41,7 @@ concept Outline [O] {
         No previous sibling to indent under.
       }
 
-      fixture indent_node { node: "section-1" }
+      fixture indent_node { node: "section-1" } after create_root
       fixture indent_missing { node: "nonexistent" } -> error
     }
 
@@ -56,7 +56,7 @@ concept Outline [O] {
         Node is already at root level.
       }
 
-      fixture outdent_node { node: "section-1" }
+      fixture outdent_node { node: "section-1" } after create_root
       fixture outdent_missing { node: "nonexistent" } -> error
     }
 
@@ -68,7 +68,7 @@ concept Outline [O] {
         The node does not exist.
       }
 
-      fixture move_up_node { node: "section-1" }
+      fixture move_up_node { node: "section-1" } after create_root
       fixture move_up_missing { node: "nonexistent" } -> error
     }
 
@@ -80,7 +80,7 @@ concept Outline [O] {
         The node does not exist.
       }
 
-      fixture move_down_node { node: "section-1" }
+      fixture move_down_node { node: "section-1" } after create_root
       fixture move_down_missing { node: "nonexistent" } -> error
     }
 
@@ -92,7 +92,7 @@ concept Outline [O] {
         The node does not exist.
       }
 
-      fixture collapse_node { node: "chapter-1" }
+      fixture collapse_node { node: "chapter-1" } after create_root
       fixture collapse_missing { node: "nonexistent" } -> error
     }
 
@@ -104,7 +104,7 @@ concept Outline [O] {
         The node does not exist.
       }
 
-      fixture expand_node { node: "chapter-1" }
+      fixture expand_node { node: "chapter-1" } after create_root
       fixture expand_missing { node: "nonexistent" } -> error
     }
 
@@ -116,7 +116,7 @@ concept Outline [O] {
         Node or parent does not exist.
       }
 
-      fixture reparent_node { node: "section-1", newParent: "chapter-2" }
+      fixture reparent_node { node: "section-1", newParent: "chapter-2" } after create_root
       fixture reparent_missing { node: "nonexistent", newParent: "chapter-1" } -> error
     }
 
@@ -128,7 +128,7 @@ concept Outline [O] {
         The node does not exist.
       }
 
-      fixture get_children { node: "chapter-1" }
+      fixture get_children { node: "chapter-1" } after create_root
       fixture get_children_missing { node: "nonexistent" } -> error
     }
   }

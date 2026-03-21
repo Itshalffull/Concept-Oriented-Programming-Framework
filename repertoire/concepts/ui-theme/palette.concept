@@ -37,8 +37,8 @@ concept Palette [C] {
       }
       -> notfound(message: String) { Palette does not exist. }
 
-      fixture assign_primary { palette: "C-1", role: "primary" }
-      fixture assign_accent { palette: "C-2", role: "accent" }
+      fixture assign_primary { palette: "C-1", role: "primary" } after generate_blue
+      fixture assign_accent { palette: "C-2", role: "accent" } after generate_blue
       fixture assign_unknown_palette { palette: "C-nonexistent", role: "primary" } -> notfound
     }
 
@@ -48,7 +48,7 @@ concept Palette [C] {
       }
       -> notfound(message: String) { Color not found. }
 
-      fixture contrast_blue_white { foreground: "C-1", background: "C-2" }
+      fixture contrast_blue_white { foreground: "C-1", background: "C-2" } after generate_blue
       fixture contrast_unknown_fg { foreground: "C-nonexistent", background: "C-2" } -> notfound
     }
   }

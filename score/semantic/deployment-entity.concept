@@ -57,7 +57,7 @@ concept DeploymentEntity [D] {
         No deployment with this name exists.
       }
 
-      fixture get_existing { name: "conduit-prod" }
+      fixture get_existing { name: "conduit-prod" } after register_prod
       fixture get_nonexistent { name: "no-such-deployment" } -> error
     }
 
@@ -68,8 +68,8 @@ concept DeploymentEntity [D] {
         array of { name, type, transport, storage, concepts: [] }.
       }
 
-      fixture list_runtimes { deployment: "deploy-001" }
-      fixture list_runtimes_missing { deployment: "deploy-missing" }
+      fixture list_runtimes { deployment: "deploy-001" } after register_prod
+      fixture list_runtimes_missing { deployment: "deploy-missing" } after register_prod
     }
 
     action findConceptRuntime(deployment: D, concept: String) {
@@ -81,7 +81,7 @@ concept DeploymentEntity [D] {
         Concept is not assigned to any runtime in this deployment.
       }
 
-      fixture find_user_runtime { deployment: "deploy-001", concept: "User" }
+      fixture find_user_runtime { deployment: "deploy-001", concept: "User" } after register_prod
       fixture find_unassigned { deployment: "deploy-001", concept: "UnknownConcept" } -> error
     }
 
@@ -93,7 +93,7 @@ concept DeploymentEntity [D] {
         Sync is not assigned to any engine in this deployment.
       }
 
-      fixture find_article_sync { deployment: "deploy-001", sync: "ArticlePublishSync" }
+      fixture find_article_sync { deployment: "deploy-001", sync: "ArticlePublishSync" } after register_prod
       fixture find_unassigned_sync { deployment: "deploy-001", sync: "NonexistentSync" } -> error
     }
 
@@ -105,8 +105,8 @@ concept DeploymentEntity [D] {
         [{ id, kind, label }], edges: [{ from, to, transport }] }.
       }
 
-      fixture topology_existing { deployment: "deploy-001" }
-      fixture topology_missing { deployment: "deploy-missing" }
+      fixture topology_existing { deployment: "deploy-001" } after register_prod
+      fixture topology_missing { deployment: "deploy-missing" } after register_prod
     }
 
     action transportRoutes(deployment: D, fromConcept: String, toConcept: String) {
@@ -123,7 +123,7 @@ concept DeploymentEntity [D] {
         No transport route exists between these concepts.
       }
 
-      fixture route_cross_runtime { deployment: "deploy-001", fromConcept: "User", toConcept: "Notification" }
+      fixture route_cross_runtime { deployment: "deploy-001", fromConcept: "User", toConcept: "Notification" } after register_prod
       fixture route_same_runtime { deployment: "deploy-001", fromConcept: "User", toConcept: "Session" } -> error
     }
 
@@ -133,8 +133,8 @@ concept DeploymentEntity [D] {
         JSON array of { concept, runtime, storageBackend, config }.
       }
 
-      fixture storage_topology { deployment: "deploy-001" }
-      fixture storage_topology_missing { deployment: "deploy-missing" }
+      fixture storage_topology { deployment: "deploy-001" } after register_prod
+      fixture storage_topology_missing { deployment: "deploy-missing" } after register_prod
     }
 
     action environmentDiff(deploymentA: D, deploymentB: D) {
@@ -146,8 +146,8 @@ concept DeploymentEntity [D] {
         The deployments are identical.
       }
 
-      fixture diff_prod_staging { deploymentA: "deploy-prod", deploymentB: "deploy-staging" }
-      fixture diff_same { deploymentA: "deploy-prod", deploymentB: "deploy-prod" }
+      fixture diff_prod_staging { deploymentA: "deploy-prod", deploymentB: "deploy-staging" } after register_prod
+      fixture diff_same { deploymentA: "deploy-prod", deploymentB: "deploy-prod" } after register_prod
     }
 
     action validateAgainstSpecs(deployment: D) {

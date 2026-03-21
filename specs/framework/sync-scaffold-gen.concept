@@ -60,7 +60,7 @@ concept SyncScaffoldGen [S] {
         capabilities: ["sync-spec", "when-clause", "where-clause", "then-clause", "filter-condition", "guard-condition", "multi-then"]
       }
 
-      fixture valid {}
+      fixture valid {} after valid_sync
     }
   }
 

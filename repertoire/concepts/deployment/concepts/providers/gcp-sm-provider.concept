@@ -51,7 +51,7 @@ concept GcpSmProvider [G] {
         New secret version added to GCP Secret Manager.
       }
 
-      fixture rotate_db_password { secretId: "db-password" }
+      fixture rotate_db_password { secretId: "db-password" } after fetch_db_password
       fixture rotate_empty_id { secretId: "" } -> error
     }
   }

@@ -41,7 +41,7 @@ concept SchemaGen [S] {
         capabilities: ["graphql", "json-schema", "invariants"]
       }
 
-      fixture valid {}
+      fixture valid {} after valid_ast
     }
   }
 

@@ -36,7 +36,7 @@ concept Pathauto [P] {
         The specified pattern does not exist.
       }
 
-      fixture bulk_two { pattern: "docs", entities: "[\"Getting Started\",\"API Reference\"]" }
+      fixture bulk_two { pattern: "docs", entities: "[\"Getting Started\",\"API Reference\"]" } after valid_page
       fixture invalid_json { pattern: "docs", entities: "not-json" } -> error
     }
 
@@ -45,8 +45,8 @@ concept Pathauto [P] {
         Sanitize the input string into a URL-safe slug by applying clean rules.
       }
 
-      fixture clean_spaces { input: "Hello World Test" }
-      fixture clean_empty { input: "" }
+      fixture clean_spaces { input: "Hello World Test" } after valid_page
+      fixture clean_empty { input: "" } after valid_page
     }
   }
 

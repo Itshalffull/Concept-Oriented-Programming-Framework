@@ -45,7 +45,7 @@ concept OptimisticOracleFinality [OO] {
         Challenge window has closed.
       }
 
-      fixture challenge_pending { assertion: "oo-001", challenger: "watchdog-carol", bond: 200.0, evidence: "Invalid state transition detected" }
+      fixture challenge_pending { assertion: "oo-001", challenger: "watchdog-carol", bond: 200.0, evidence: "Invalid state transition detected" } after assert_standard
       fixture challenge_already_resolved { assertion: "oo-finalized", challenger: "watchdog-carol", bond: 200.0, evidence: "N/A" } -> expired
     }
 
@@ -58,8 +58,8 @@ concept OptimisticOracleFinality [OO] {
         The assertion is invalid. Asserter's bond is forfeited.
       }
 
-      fixture resolve_valid { assertion: "oo-001", validAssertion: true }
-      fixture resolve_invalid { assertion: "oo-001", validAssertion: false }
+      fixture resolve_valid { assertion: "oo-001", validAssertion: true } after assert_standard
+      fixture resolve_invalid { assertion: "oo-001", validAssertion: false } after assert_standard
       fixture resolve_rejected { assertion: "oo-002", validAssertion: false } -> rejected
     }
 
@@ -71,7 +71,7 @@ concept OptimisticOracleFinality [OO] {
         Challenge window is still open.
       }
 
-      fixture check_expired { assertion: "oo-001" }
+      fixture check_expired { assertion: "oo-001" } after assert_standard
       fixture check_still_pending { assertion: "oo-recent" } -> still_pending
     }
   }

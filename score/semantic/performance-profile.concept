@@ -50,7 +50,7 @@ concept PerformanceProfile [P] {
         serialized JSON array of { symbol, value }.
       }
 
-      fixture hotspots_actions_p90 { kind: "action", metric: "p90", topN: 10 }
+      fixture hotspots_actions_p90 { kind: "action", metric: "p90", topN: 10 } after aggregate_article_create
       fixture hotspots_invalid_metric { kind: "action", metric: "", topN: 0 } -> error
     }
 
@@ -62,7 +62,7 @@ concept PerformanceProfile [P] {
         bottleneck }.
       }
 
-      fixture slow_chains_500ms { thresholdMs: 500 }
+      fixture slow_chains_500ms { thresholdMs: 500 } after aggregate_article_create
       fixture slow_chains_zero { thresholdMs: 0 } -> error
     }
 
@@ -88,7 +88,7 @@ concept PerformanceProfile [P] {
         Profile does not exist.
       }
 
-      fixture get_existing_profile { profile: "performance-profile-1" }
+      fixture get_existing_profile { profile: "performance-profile-1" } after aggregate_article_create
       fixture get_nonexistent { profile: "nonexistent-profile" } -> error
     }
   }

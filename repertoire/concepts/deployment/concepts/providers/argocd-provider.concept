@@ -51,7 +51,7 @@ concept ArgoCDProvider [A] {
         ArgoCD sync failed.
       }
 
-      fixture reconcile_app { application: "app-prod-001" }
+      fixture reconcile_app { application: "app-prod-001" } after emit_prod
       fixture reconcile_nonexistent { application: "" } -> error
     }
 
@@ -60,8 +60,8 @@ concept ArgoCDProvider [A] {
         Sync wave ordering set for this application.
       }
 
-      fixture syncwave_app { application: "app-prod-001", wave: 1 }
-      fixture syncwave_nonexistent { application: "", wave: 0 }
+      fixture syncwave_app { application: "app-prod-001", wave: 1 } after emit_prod
+      fixture syncwave_nonexistent { application: "", wave: 0 } after emit_prod
     }
   }
 

@@ -40,9 +40,9 @@ concept Capture [C] {
         The file could not be read or its format is not recognized.
       }
 
-      fixture import_csv { file: "contacts.csv", options: "{\"delimiter\":\",\"}" }
-      fixture import_pdf { file: "whitepaper.pdf", options: "{}" }
-      fixture import_empty { file: "", options: "{}" } -> error
+      fixture import_csv { file: "contacts.csv", options: "{\"delimiter\":\",\"}" } after clip_article
+      fixture import_pdf { file: "whitepaper.pdf", options: "{}" } after clip_article
+      fixture import_empty { file: "", options: "{}" } after clip_article -> error
     }
 
     action subscribe(sourceId: String, schedule: String, mode: String) {
@@ -53,9 +53,9 @@ concept Capture [C] {
         The source is invalid or the schedule expression could not be parsed.
       }
 
-      fixture subscribe_feed { sourceId: "src-1", schedule: "*/30 * * * *", mode: "api_poll" }
-      fixture subscribe_rss { sourceId: "rss-blog", schedule: "0 */6 * * *", mode: "rss" }
-      fixture subscribe_bad_schedule { sourceId: "src-1", schedule: "invalid", mode: "api_poll" }
+      fixture subscribe_feed { sourceId: "src-1", schedule: "*/30 * * * *", mode: "api_poll" } after clip_article
+      fixture subscribe_rss { sourceId: "rss-blog", schedule: "0 */6 * * *", mode: "rss" } after clip_article
+      fixture subscribe_bad_schedule { sourceId: "src-1", schedule: "invalid", mode: "api_poll" } after clip_article
     }
 
     action detectChanges(subscriptionId: String) {
@@ -69,7 +69,7 @@ concept Capture [C] {
         No changes detected since last run.
       }
 
-      fixture detect_existing { subscriptionId: "sub-1" }
+      fixture detect_existing { subscriptionId: "sub-1" } after clip_article
       fixture detect_missing { subscriptionId: "sub-missing" } -> notfound
     }
 
@@ -81,7 +81,7 @@ concept Capture [C] {
         Item does not exist.
       }
 
-      fixture mark_existing { itemId: "cap-1" }
+      fixture mark_existing { itemId: "cap-1" } after clip_article
       fixture mark_missing { itemId: "cap-missing" } -> notfound
     }
   }

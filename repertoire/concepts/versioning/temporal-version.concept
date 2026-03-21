@@ -44,8 +44,8 @@ concept TemporalVersion [V] {
         No version active at the specified times.
       }
 
-      fixture query_system_time { systemTime: "2025-06-15T12:00:00Z", validTime: null }
-      fixture query_both_times { systemTime: "2025-06-15T12:00:00Z", validTime: "2025-01-01T00:00:00Z" }
+      fixture query_system_time { systemTime: "2025-06-15T12:00:00Z", validTime: null } after record_version
+      fixture query_both_times { systemTime: "2025-06-15T12:00:00Z", validTime: "2025-01-01T00:00:00Z" } after record_version
       fixture query_far_future { systemTime: "2099-01-01T00:00:00Z", validTime: null } -> error
     }
 
@@ -58,7 +58,7 @@ concept TemporalVersion [V] {
         Dimension must be "system" or "valid".
       }
 
-      fixture between_system { start: "2025-01-01T00:00:00Z", end: "2025-12-31T23:59:59Z", dimension: "system" }
+      fixture between_system { start: "2025-01-01T00:00:00Z", end: "2025-12-31T23:59:59Z", dimension: "system" } after record_version
       fixture between_invalid_dim { start: "2025-01-01T00:00:00Z", end: "2025-12-31T23:59:59Z", dimension: "bogus" } -> error
     }
 
@@ -70,7 +70,7 @@ concept TemporalVersion [V] {
         No versions recorded yet.
       }
 
-      fixture valid {}
+      fixture valid {} after record_version
     }
 
     action supersede(versionId: V, contentHash: String) {
@@ -81,7 +81,7 @@ concept TemporalVersion [V] {
         versionId not found.
       }
 
-      fixture supersede_existing { versionId: "temporal-version-1", contentHash: "sha256:newcontent789" }
+      fixture supersede_existing { versionId: "temporal-version-1", contentHash: "sha256:newcontent789" } after record_version
       fixture supersede_empty_hash { versionId: "temporal-version-1", contentHash: "" } -> error
     }
   }

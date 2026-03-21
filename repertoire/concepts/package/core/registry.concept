@@ -86,7 +86,7 @@ concept Registry [M] {
         The specified module does not exist in the registry.
       }
 
-      fixture yank_existing_module { module: "mod-1" }
+      fixture yank_existing_module { module: "mod-1" } after publish_concept_module
       fixture yank_nonexistent { module: "mod-nonexistent" } -> error
     }
 
@@ -99,7 +99,7 @@ concept Registry [M] {
         No modules match the given name and namespace.
       }
 
-      fixture lookup_existing { name: "auth", namespace: "clef", version_range: "^1.0.0" }
+      fixture lookup_existing { name: "auth", namespace: "clef", version_range: "^1.0.0" } after publish_concept_module
       fixture lookup_nonexistent { name: "nonexistent", namespace: "clef", version_range: "*" } -> error
     }
 
@@ -110,8 +110,8 @@ concept Registry [M] {
         Optionally filtered by module kind and/or namespace.
       }
 
-      fixture search_by_keyword { query: "authentication", kind: null, namespace: null }
-      fixture search_filtered { query: "auth", kind: concept, namespace: "clef" }
+      fixture search_by_keyword { query: "authentication", kind: null, namespace: null } after publish_concept_module
+      fixture search_filtered { query: "auth", kind: concept, namespace: "clef" } after publish_concept_module
     }
 
     action listVersions(name: String, namespace: String) {
@@ -123,7 +123,7 @@ concept Registry [M] {
         No module with this name and namespace exists.
       }
 
-      fixture list_versions_existing { name: "auth", namespace: "clef" }
+      fixture list_versions_existing { name: "auth", namespace: "clef" } after publish_concept_module
       fixture list_versions_nonexistent { name: "nonexistent", namespace: "clef" } -> error
     }
 
@@ -136,7 +136,7 @@ concept Registry [M] {
         No module provides the requested capability.
       }
 
-      fixture resolve_existing_capability { capability: "authentication" }
+      fixture resolve_existing_capability { capability: "authentication" } after publish_concept_module
       fixture resolve_missing_capability { capability: "nonexistent-capability" } -> error
     }
   }

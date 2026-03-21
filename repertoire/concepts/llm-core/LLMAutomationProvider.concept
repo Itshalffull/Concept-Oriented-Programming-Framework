@@ -46,11 +46,11 @@ concept LLMAutomationProvider [LA] {
         configuration.
       }
 
-      fixture summarize_with_gpt4 { action_payload: "{\"action\":\"summarize\",\"text\":\"Long document...\"}", model_config: "{\"model\":\"gpt-4\",\"temperature\":0.3}" }
-      fixture missing_payload { action_payload: "", model_config: "{\"model\":\"gpt-4\"}" } -> error
-      fixture missing_config { action_payload: "{\"action\":\"classify\"}", model_config: "" } -> error
-      fixture invalid_config_json { action_payload: "{\"action\":\"classify\"}", model_config: "not-json" } -> error
-      fixture config_missing_model { action_payload: "{\"action\":\"classify\"}", model_config: "{\"temperature\":0.5}" } -> error
+      fixture summarize_with_gpt4 { action_payload: "{\"action\":\"summarize\",\"text\":\"Long document...\"}", model_config: "{\"model\":\"gpt-4\",\"temperature\":0.3}" } after valid
+      fixture missing_payload { action_payload: "", model_config: "{\"model\":\"gpt-4\"}" } after valid -> error
+      fixture missing_config { action_payload: "{\"action\":\"classify\"}", model_config: "" } after valid -> error
+      fixture invalid_config_json { action_payload: "{\"action\":\"classify\"}", model_config: "not-json" } after valid -> error
+      fixture config_missing_model { action_payload: "{\"action\":\"classify\"}", model_config: "{\"temperature\":0.5}" } after valid -> error
     }
   }
 

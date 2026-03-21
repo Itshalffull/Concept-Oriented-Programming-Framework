@@ -38,7 +38,7 @@ concept AccessControl [A] {
         only if both are "neutral".
       }
 
-      fixture orIf_allowed { left: "neutral", right: "allowed" }
+      fixture orIf_allowed { left: "neutral", right: "allowed" } after check_read
       fixture orIf_forbidden { left: "forbidden", right: "allowed" } -> error
     }
 
@@ -51,7 +51,7 @@ concept AccessControl [A] {
         least one is "neutral".
       }
 
-      fixture andIf_both_allowed { left: "allowed", right: "allowed" }
+      fixture andIf_both_allowed { left: "allowed", right: "allowed" } after check_read
       fixture andIf_one_forbidden { left: "allowed", right: "forbidden" } -> error
     }
   }

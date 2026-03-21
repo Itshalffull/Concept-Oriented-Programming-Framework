@@ -52,7 +52,7 @@ concept SwiftToolchain [S] {
         "sdk-resolution"]
       }
 
-      fixture valid {}
+      fixture valid {} after resolve_macos
     }
   }
 

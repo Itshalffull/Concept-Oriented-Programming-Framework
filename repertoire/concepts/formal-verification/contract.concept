@@ -47,7 +47,7 @@ concept Contract [C] {
         Contract does not exist.
       }
 
-      fixture valid_verify { id: "ct-001" }
+      fixture valid_verify { id: "ct-001" } after valid_define
       fixture verify_missing { id: "nonexistent" } -> notfound
     }
 
@@ -64,7 +64,7 @@ concept Contract [C] {
         One or more contracts not found.
       }
 
-      fixture valid_compose { contract_ids: "[\"ct-001\",\"ct-002\"]" }
+      fixture valid_compose { contract_ids: "[\"ct-001\",\"ct-002\"]" } after valid_define
       fixture compose_single { contract_ids: "[\"ct-001\"]" } -> invalid
     }
 
@@ -80,7 +80,7 @@ concept Contract [C] {
         Assumption not found in contract.
       }
 
-      fixture valid_discharge { id: "ct-001", assumption_ref: "user-exists-before-password" }
+      fixture valid_discharge { id: "ct-001", assumption_ref: "user-exists-before-password" } after valid_define
       fixture discharge_missing { id: "nonexistent", assumption_ref: "some-assumption" } -> notfound
     }
 
@@ -89,8 +89,8 @@ concept Contract [C] {
         Filtered listing.
       }
 
-      fixture list_all { }
-      fixture list_by_source { source_concept: "clef/concept/User" }
+      fixture list_all { } after valid_define
+      fixture list_by_source { source_concept: "clef/concept/User" } after valid_define
     }
   }
 

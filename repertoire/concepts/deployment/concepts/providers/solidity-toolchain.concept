@@ -50,7 +50,7 @@ concept SolidityToolchain [L] {
         "hardhat-detection"]
       }
 
-      fixture register_valid {}
+      fixture register_valid {} after resolve_shanghai
     }
   }
 

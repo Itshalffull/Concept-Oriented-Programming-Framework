@@ -44,7 +44,7 @@ concept CloudflareRuntime [W] {
         Worker script exceeds Cloudflare size limits.
       }
 
-      fixture deploy_script { worker: "wkr-001", scriptContent: "export default { fetch() { return new Response('OK') } }" }
+      fixture deploy_script { worker: "wkr-001", scriptContent: "export default { fetch() { return new Response('OK') } }" } after provision_worker
       fixture deploy_empty_worker { worker: "", scriptContent: "" } -> error
     }
 
@@ -53,8 +53,8 @@ concept CloudflareRuntime [W] {
         Traffic split configured via worker version.
       }
 
-      fixture set_weight_50 { worker: "wkr-001", weight: 50 }
-      fixture set_weight_negative { worker: "wkr-001", weight: -1 }
+      fixture set_weight_50 { worker: "wkr-001", weight: 50 } after provision_worker
+      fixture set_weight_negative { worker: "wkr-001", weight: -1 } after provision_worker
     }
 
     action rollback(worker: W, targetVersion: String) {
@@ -62,8 +62,8 @@ concept CloudflareRuntime [W] {
         Worker reverted to previous version.
       }
 
-      fixture rollback_to_v1 { worker: "wkr-001", targetVersion: "1" }
-      fixture rollback_empty_version { worker: "wkr-001", targetVersion: "" }
+      fixture rollback_to_v1 { worker: "wkr-001", targetVersion: "1" } after provision_worker
+      fixture rollback_empty_version { worker: "wkr-001", targetVersion: "" } after provision_worker
     }
 
     action destroy(worker: W) {
@@ -71,8 +71,8 @@ concept CloudflareRuntime [W] {
         Worker script, routes, and bindings deleted.
       }
 
-      fixture destroy_worker { worker: "wkr-001" }
-      fixture destroy_empty { worker: "" }
+      fixture destroy_worker { worker: "wkr-001" } after provision_worker
+      fixture destroy_empty { worker: "" } after provision_worker
     }
   }
 

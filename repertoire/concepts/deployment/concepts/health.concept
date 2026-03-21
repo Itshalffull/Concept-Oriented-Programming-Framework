@@ -55,8 +55,8 @@ concept Health [H] {
         Sync path did not complete within timeout.
       }
 
-      fixture check_auth_sync { sync: "auth-session-sync", concepts: ["User", "Session"] }
-      fixture check_sync_empty { sync: "", concepts: [] }
+      fixture check_auth_sync { sync: "auth-session-sync", concepts: ["User", "Session"] } after check_user
+      fixture check_sync_empty { sync: "", concepts: [] } after check_user
     }
 
     action checkSuite(suite: String, environment: String) {
@@ -70,9 +70,9 @@ concept Health [H] {
         Suite non-functional. Critical components unreachable.
       }
 
-      fixture check_auth_suite { suite: "auth-suite", environment: "staging" }
-      fixture check_suite_prod { suite: "payments", environment: "production" }
-      fixture check_suite_empty { suite: "", environment: "staging" }
+      fixture check_auth_suite { suite: "auth-suite", environment: "staging" } after check_user
+      fixture check_suite_prod { suite: "payments", environment: "production" } after check_user
+      fixture check_suite_empty { suite: "", environment: "staging" } after check_user
     }
 
     action checkInvariant(concept: String, invariant: String) {
@@ -84,8 +84,8 @@ concept Health [H] {
         Invariant test failed. Deployment may be corrupted.
       }
 
-      fixture check_invariant { concept: "User", invariant: "valid-email" }
-      fixture check_invariant_empty { concept: "", invariant: "valid-email" }
+      fixture check_invariant { concept: "User", invariant: "valid-email" } after check_user
+      fixture check_invariant_empty { concept: "", invariant: "valid-email" } after check_user
     }
   }
 

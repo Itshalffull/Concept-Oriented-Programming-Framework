@@ -37,7 +37,7 @@ concept TypeSystem [T] {
         The type does not exist.
       }
 
-      fixture resolve_existing { type: "email" }
+      fixture resolve_existing { type: "email" } after register_string_type
       fixture resolve_missing { type: "nonexistent" } -> error
     }
 
@@ -49,7 +49,7 @@ concept TypeSystem [T] {
         The type or path does not exist.
       }
 
-      fixture navigate_nested { type: "user", path: "address.city" }
+      fixture navigate_nested { type: "user", path: "address.city" } after register_string_type
       fixture navigate_missing_type { type: "nonexistent", path: "field" } -> error
     }
 

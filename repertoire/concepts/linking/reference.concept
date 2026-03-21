@@ -23,7 +23,7 @@ concept Reference [R] {
       }
 
       fixture valid_add { source: "page-1", target: "doc-1" }
-      fixture another_ref { source: "page-2", target: "doc-3" }
+      fixture another_ref { source: "page-2", target: "doc-3" } after valid_add
       fixture duplicate_ref { source: "page-1", target: "doc-1" } -> exists
     }
 
@@ -36,7 +36,7 @@ concept Reference [R] {
         No reference exists between this source and target.
       }
 
-      fixture valid_remove { source: "page-1", target: "doc-1" }
+      fixture valid_remove { source: "page-1", target: "doc-1" } after valid_add
       fixture missing_ref { source: "page-999", target: "doc-999" } -> notfound
     }
 
@@ -49,7 +49,7 @@ concept Reference [R] {
         The source entity was not found.
       }
 
-      fixture valid_refs { source: "page-1" }
+      fixture valid_refs { source: "page-1" } after valid_add
       fixture missing_source { source: "page-nonexistent" } -> notfound
     }
 
@@ -59,8 +59,8 @@ concept Reference [R] {
         useful for detecting broken links.
       }
 
-      fixture valid_target { target: "doc-1" }
-      fixture broken_link { target: "nonexistent-target" }
+      fixture valid_target { target: "doc-1" } after valid_add
+      fixture broken_link { target: "nonexistent-target" } after valid_add
     }
   }
 

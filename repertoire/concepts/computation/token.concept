@@ -21,21 +21,21 @@ concept Token [T] {
 
     action getAvailableTokens(context: String) {
       -> ok(tokens: String) { Returns all tokens available in the given context. }
-      fixture get_tokens_user { context: "user" }
-      fixture get_tokens_empty { context: "" }
+      fixture get_tokens_user { context: "user" } after replace_builtin
+      fixture get_tokens_empty { context: "" } after replace_builtin
     }
 
     action scan(text: String) {
       -> ok(found: String) { Returns all token placeholders found in the text. }
-      fixture scan_text { text: "Hello [user:name], visit [site:url]" }
-      fixture scan_no_tokens { text: "no tokens here" }
+      fixture scan_text { text: "Hello [user:name], visit [site:url]" } after replace_builtin
+      fixture scan_no_tokens { text: "no tokens here" } after replace_builtin
     }
 
     action registerProvider(token: T, provider: String) {
       -> ok() { Provider registered for the token type. }
       -> exists() { Provider already registered for this token type. }
-      fixture register_mail { token: "user:mail", provider: "userMailProvider" }
-      fixture register_empty { token: "", provider: "x" }
+      fixture register_mail { token: "user:mail", provider: "userMailProvider" } after replace_builtin
+      fixture register_empty { token: "", provider: "x" } after replace_builtin
     }
   }
 

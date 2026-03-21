@@ -37,7 +37,7 @@ concept WidgetPropEntity [P] {
         Return all props for the given widget.
         Results as serialized JSON array.
       }
-      fixture find_dialog { widget: "dialog" }
+      fixture find_dialog { widget: "dialog" } after register_close_escape
       fixture find_empty { widget: "" } -> error
     }
 
@@ -49,7 +49,7 @@ concept WidgetPropEntity [P] {
       -> noBinding() {
         This prop is not bound to any concept field.
       }
-      fixture trace_prop { prop: "widget-prop-entity-1" }
+      fixture trace_prop { prop: "widget-prop-entity-1" } after register_close_escape
       fixture trace_missing { prop: "nonexistent" } -> error
     }
 
@@ -60,7 +60,7 @@ concept WidgetPropEntity [P] {
       -> notfound() {
         Prop does not exist.
       }
-      fixture get_prop { prop: "widget-prop-entity-1" }
+      fixture get_prop { prop: "widget-prop-entity-1" } after register_close_escape
       fixture get_missing { prop: "nonexistent" } -> error
     }
   }

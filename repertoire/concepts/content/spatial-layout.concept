@@ -43,7 +43,7 @@ concept SpatialLayout [L] {
         A provider is already registered for this algorithm.
       }
 
-      fixture valid_register { algorithm: "force-directed", provider: "ForceDirectedLayout" }
+      fixture valid_register { algorithm: "force-directed", provider: "ForceDirectedLayout" } after valid_apply
       fixture empty_algorithm { algorithm: "", provider: "SomeProvider" } -> unknown_algorithm
     }
   }

@@ -34,8 +34,8 @@ concept ForceDirectedLayoutProvider [C] {
         Layout computation failed or provider not available.
       }
 
-      fixture three_items { canvas: "canvas-1", items: ["node-a", "node-b", "node-c"], config: { iterations: 100 } }
-      fixture single_item { canvas: "canvas-1", items: ["node-a"], config: none }
+      fixture three_items { canvas: "canvas-1", items: ["node-a", "node-b", "node-c"], config: { iterations: 100 } } after valid
+      fixture single_item { canvas: "canvas-1", items: ["node-a"], config: none } after valid
       fixture missing_canvas { canvas: "", items: ["node-a"], config: none } -> error
     }
   }

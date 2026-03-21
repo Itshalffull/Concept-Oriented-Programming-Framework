@@ -61,9 +61,9 @@ concept Middleware [M] {
         For MCP: add tool middleware.
       }
 
-      fixture inject_single { output: "app.get('/api', handler)", middlewares: ["bearer-check"], target: "rest" }
-      fixture inject_multiple { output: "server.addService(svc)", middlewares: ["auth-interceptor", "logging"], target: "grpc" }
-      fixture inject_empty { output: "", middlewares: [], target: "rest" }
+      fixture inject_single { output: "app.get('/api', handler)", middlewares: ["bearer-check"], target: "rest" } after resolve_auth_rest
+      fixture inject_multiple { output: "server.addService(svc)", middlewares: ["auth-interceptor", "logging"], target: "grpc" } after resolve_auth_rest
+      fixture inject_empty { output: "", middlewares: [], target: "rest" } after resolve_auth_rest
     }
 
     action register(trait: String, target: String, implementation: String, position: String) {
@@ -75,9 +75,9 @@ concept Middleware [M] {
         Implementation already registered. Use replace instead.
       }
 
-      fixture register_bearer { trait: "auth", target: "rest", implementation: "bearer-check", position: "auth" }
-      fixture register_logging { trait: "logging", target: "grpc", implementation: "grpc-logger", position: "before-auth" }
-      fixture register_empty_trait { trait: "", target: "rest", implementation: "noop", position: "auth" }
+      fixture register_bearer { trait: "auth", target: "rest", implementation: "bearer-check", position: "auth" } after resolve_auth_rest
+      fixture register_logging { trait: "logging", target: "grpc", implementation: "grpc-logger", position: "before-auth" } after resolve_auth_rest
+      fixture register_empty_trait { trait: "", target: "rest", implementation: "noop", position: "auth" } after resolve_auth_rest
     }
   }
 

@@ -67,7 +67,7 @@ concept NextjsTarget [R] {
         HTTP methods.
       }
 
-      fixture list_user_routes { concept: "User" }
+      fixture list_user_routes { concept: "User" } after with_valid_projection
       fixture empty_concept { concept: "" } -> error
     }
   }

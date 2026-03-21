@@ -57,8 +57,8 @@ concept Merge [C] {
         No strategy registered for this content type.
       }
 
-      fixture clean_merge { base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3", strategy: null }
-      fixture conflicting_merge { base: "line1", ours: "lineA", theirs: "lineB", strategy: null }
+      fixture clean_merge { base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3", strategy: null } after register_three_way
+      fixture conflicting_merge { base: "line1", ours: "lineA", theirs: "lineB", strategy: null } after register_three_way
       fixture unknown_strategy { base: "a", ours: "b", theirs: "c", strategy: "nonexistent" } -> error
     }
 
@@ -73,7 +73,7 @@ concept Merge [C] {
         This conflict was already resolved.
       }
 
-      fixture resolve_first { mergeId: "merge-1", conflictIndex: 0, resolution: "resolved line" }
+      fixture resolve_first { mergeId: "merge-1", conflictIndex: 0, resolution: "resolved line" } after register_three_way
       fixture invalid_index { mergeId: "merge-1", conflictIndex: 999, resolution: "text" } -> error
     }
 
@@ -85,7 +85,7 @@ concept Merge [C] {
         Cannot finalize — conflicts remain.
       }
 
-      fixture finalize_resolved { mergeId: "merge-1" }
+      fixture finalize_resolved { mergeId: "merge-1" } after register_three_way
       fixture finalize_unresolved { mergeId: "merge-nonexistent" } -> error
     }
   }

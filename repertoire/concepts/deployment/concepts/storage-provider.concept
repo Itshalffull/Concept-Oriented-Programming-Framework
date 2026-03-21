@@ -46,8 +46,8 @@ concept StorageProvider [S] {
         No provisioned store exists with this identifier.
       }
 
-      fixture configure_ttl { store: "session-kv", settings: "{\"ttl\": 3600}" }
-      fixture configure_missing { store: "", settings: "{}" } -> error
+      fixture configure_ttl { store: "session-kv", settings: "{\"ttl\": 3600}" } after provision_kv
+      fixture configure_missing { store: "", settings: "{}" } after provision_kv -> error
     }
 
     action getCredentials(store: S) {
@@ -58,7 +58,7 @@ concept StorageProvider [S] {
         No provisioned store exists with this identifier.
       }
 
-      fixture get_creds { store: "session-kv" }
+      fixture get_creds { store: "session-kv" } after provision_kv
       fixture get_creds_missing { store: "" } -> error
     }
 
@@ -70,7 +70,7 @@ concept StorageProvider [S] {
         No provisioned store exists with this identifier.
       }
 
-      fixture destroy_valid { store: "session-kv" }
+      fixture destroy_valid { store: "session-kv" } after provision_kv
       fixture destroy_missing { store: "" } -> error
     }
   }

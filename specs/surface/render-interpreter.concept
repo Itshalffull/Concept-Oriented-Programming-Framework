@@ -45,8 +45,8 @@ concept RenderInterpreter [I] {
         this target framework.
       }
 
-      fixture execute_react { interpreter: "interp-react", program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", snapshot: "current" }
-      fixture execute_unknown { interpreter: "nonexistent", program: "{}", snapshot: "current" } -> notfound
+      fixture execute_react { interpreter: "interp-react", program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", snapshot: "current" } after react_interpreter
+      fixture execute_unknown { interpreter: "nonexistent", program: "{}", snapshot: "current" } after react_interpreter -> notfound
     }
 
     action dryRun(interpreter: I, program: String) {
@@ -59,8 +59,8 @@ concept RenderInterpreter [I] {
         No interpreter is registered with this identifier.
       }
 
-      fixture dry_run_svelte { interpreter: "interp-svelte", program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}" }
-      fixture dry_run_unknown { interpreter: "nonexistent", program: "{}" } -> notfound
+      fixture dry_run_svelte { interpreter: "interp-svelte", program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}" } after react_interpreter
+      fixture dry_run_unknown { interpreter: "nonexistent", program: "{}" } after react_interpreter -> notfound
     }
 
     action listTargets() {
@@ -68,7 +68,7 @@ concept RenderInterpreter [I] {
         Return all registered target framework identifiers.
       }
 
-      fixture valid {}
+      fixture valid {} after react_interpreter
     }
   }
 

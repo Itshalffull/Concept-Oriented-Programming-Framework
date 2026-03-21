@@ -24,28 +24,28 @@ concept Formula [F] {
     action evaluate(formula: F) {
       -> ok(result: String) { Returns the computed result of the formula. }
       -> notfound() { Formula does not exist. }
-      fixture evaluate_existing { formula: "total_price" }
+      fixture evaluate_existing { formula: "total_price" } after create_formula
       fixture evaluate_missing { formula: "nonexistent" } -> error
     }
 
     action getDependencies(formula: F) {
       -> ok(deps: String) { Returns the set of dependencies for the formula. }
       -> notfound() { Formula does not exist. }
-      fixture get_deps { formula: "total_price" }
+      fixture get_deps { formula: "total_price" } after create_formula
       fixture get_deps_missing { formula: "nonexistent" } -> error
     }
 
     action invalidate(formula: F) {
       -> ok() { Cached result cleared; formula will recompute on next evaluation. }
       -> notfound() { Formula does not exist. }
-      fixture invalidate_existing { formula: "total_price" }
+      fixture invalidate_existing { formula: "total_price" } after create_formula
       fixture invalidate_missing { formula: "nonexistent" } -> error
     }
 
     action setExpression(formula: F, expression: String) {
       -> ok() { Expression updated and cached result invalidated. }
       -> notfound() { Formula does not exist. }
-      fixture set_expr { formula: "total_price", expression: "price * quantity * discount" }
+      fixture set_expr { formula: "total_price", expression: "price * quantity * discount" } after create_formula
       fixture set_expr_missing { formula: "nonexistent", expression: "a + b" } -> error
     }
   }

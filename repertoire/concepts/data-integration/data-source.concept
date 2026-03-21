@@ -43,7 +43,7 @@ concept DataSource [D] {
         The source is unreachable or credentials were rejected.
       }
 
-      fixture connect_existing { sourceId: "src-1" }
+      fixture connect_existing { sourceId: "src-1" } after register_api
       fixture connect_missing { sourceId: "src-missing" } -> notfound
     }
 
@@ -58,7 +58,7 @@ concept DataSource [D] {
         The source does not support introspection or the query failed.
       }
 
-      fixture discover_existing { sourceId: "src-1" }
+      fixture discover_existing { sourceId: "src-1" } after register_api
       fixture discover_missing { sourceId: "src-missing" } -> notfound
     }
 
@@ -70,7 +70,7 @@ concept DataSource [D] {
         Source does not exist.
       }
 
-      fixture health_existing { sourceId: "src-1" }
+      fixture health_existing { sourceId: "src-1" } after register_api
       fixture health_missing { sourceId: "src-missing" } -> notfound
     }
 
@@ -82,7 +82,7 @@ concept DataSource [D] {
         Source does not exist.
       }
 
-      fixture deactivate_existing { sourceId: "src-1" }
+      fixture deactivate_existing { sourceId: "src-1" } after register_api
       fixture deactivate_missing { sourceId: "src-missing" } -> notfound
     }
   }

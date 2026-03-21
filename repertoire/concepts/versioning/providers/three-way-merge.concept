@@ -34,8 +34,8 @@ concept ThreeWayMerge [C] {
         Content type not supported by this provider.
       }
 
-      fixture clean_merge { base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3" }
-      fixture conflicting_merge { base: "line1", ours: "lineA", theirs: "lineB" }
+      fixture clean_merge { base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3" } after valid
+      fixture conflicting_merge { base: "line1", ours: "lineA", theirs: "lineB" } after valid
       fixture non_string_content { base: 42, ours: "text", theirs: "text" } -> error
     }
   }

@@ -26,7 +26,7 @@ concept Graph [G] {
       -> ok() { Node removed from the graph. }
       -> notfound() { Graph does not exist. }
 
-      fixture remove_existing_node { graph: "social-network", node: "alice" }
+      fixture remove_existing_node { graph: "social-network", node: "alice" } after add_node_a
       fixture remove_nonexistent_node { graph: "social-network", node: "nonexistent" } -> error
     }
 
@@ -34,7 +34,7 @@ concept Graph [G] {
       -> ok() { Edge added between source and target nodes. }
       -> notfound() { Graph or referenced node does not exist. }
 
-      fixture add_edge_ab { graph: "social-network", source: "alice", target: "bob" }
+      fixture add_edge_ab { graph: "social-network", source: "alice", target: "bob" } after add_node_a
       fixture add_edge_no_graph { graph: "nonexistent-graph", source: "a", target: "b" } -> error
     }
 
@@ -42,7 +42,7 @@ concept Graph [G] {
       -> ok() { Edge removed between source and target nodes. }
       -> notfound() { Graph or referenced edge does not exist. }
 
-      fixture remove_edge_ab { graph: "social-network", source: "alice", target: "bob" }
+      fixture remove_edge_ab { graph: "social-network", source: "alice", target: "bob" } after add_node_a
       fixture remove_nonexistent_edge { graph: "social-network", source: "x", target: "y" } -> error
     }
 
@@ -50,7 +50,7 @@ concept Graph [G] {
       -> ok(neighbors: String) { Returns neighbors within the specified depth. }
       -> notfound() { Graph or node does not exist. }
 
-      fixture neighbors_depth_1 { graph: "social-network", node: "alice", depth: 1 }
+      fixture neighbors_depth_1 { graph: "social-network", node: "alice", depth: 1 } after add_node_a
       fixture neighbors_no_graph { graph: "nonexistent", node: "alice", depth: 1 } -> error
     }
 
@@ -58,7 +58,7 @@ concept Graph [G] {
       -> ok(filtered: String) { Returns nodes matching the filter criteria. }
       -> notfound() { Graph does not exist. }
 
-      fixture filter_by_type { graph: "social-network", filter: "type=person" }
+      fixture filter_by_type { graph: "social-network", filter: "type=person" } after add_node_a
       fixture filter_no_graph { graph: "nonexistent", filter: "type=any" } -> error
     }
   }

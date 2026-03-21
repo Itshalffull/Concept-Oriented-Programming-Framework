@@ -59,8 +59,8 @@ concept VerificationRun [V] {
         Run does not exist.
       }
 
-      fixture valid_complete { results: "{\"prop-1\":\"proved\",\"prop-2\":\"refuted\"}", resource_usage: "{\"total_time_ms\":1200}" }
-      fixture missing_run { id: "vr-nonexistent", results: "{}", resource_usage: "{}" } -> notfound
+      fixture valid_complete { results: "{\"prop-1\":\"proved\",\"prop-2\":\"refuted\"}", resource_usage: "{\"total_time_ms\":1200}" } after valid_start
+      fixture missing_run { id: "vr-nonexistent", results: "{}", resource_usage: "{}" } after valid_start -> notfound
     }
 
     action timeout(run: V, partial_results: Bytes) {
@@ -68,8 +68,8 @@ concept VerificationRun [V] {
         Transitions to "timeout". Records partial results.
       }
 
-      fixture valid_timeout { partial_results: "{\"prop-1\":\"proved\"}" }
-      fixture empty_partial { partial_results: "{}" }
+      fixture valid_timeout { partial_results: "{\"prop-1\":\"proved\"}" } after valid_start
+      fixture empty_partial { partial_results: "{}" } after valid_start
     }
 
     action cancel(run: V) {
@@ -77,7 +77,7 @@ concept VerificationRun [V] {
         Transitions to "cancelled".
       }
 
-      fixture valid_cancel { }
+      fixture valid_cancel { } after valid_start
       fixture missing_cancel { id: "vr-nonexistent" } -> notfound
     }
 
@@ -86,7 +86,7 @@ concept VerificationRun [V] {
         Current status and completion percentage.
       }
 
-      fixture valid_status { }
+      fixture valid_status { } after valid_start
       fixture missing_status { id: "vr-nonexistent" } -> notfound
     }
 

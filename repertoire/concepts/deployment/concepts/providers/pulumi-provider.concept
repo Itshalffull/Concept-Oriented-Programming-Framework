@@ -62,7 +62,7 @@ concept PulumiProvider [P] {
         pending operations.
       }
 
-      fixture apply_stack { stack: "stack-abc123" }
+      fixture apply_stack { stack: "stack-abc123" } after generate_plan
       fixture apply_missing_stack { stack: "" } -> error
     }
 
@@ -74,7 +74,7 @@ concept PulumiProvider [P] {
         Resource has protect true. Must be unprotected first.
       }
 
-      fixture teardown_stack { stack: "stack-abc123" }
+      fixture teardown_stack { stack: "stack-abc123" } after generate_plan
       fixture teardown_missing { stack: "" } -> error
     }
   }

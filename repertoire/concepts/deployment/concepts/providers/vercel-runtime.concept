@@ -46,8 +46,8 @@ concept VercelRuntime [V] {
         Vercel build step failed.
       }
 
-      fixture deploy_dist { project: "prj_userservice", sourceDirectory: "./dist" }
-      fixture deploy_src { project: "prj_api", sourceDirectory: "./src" }
+      fixture deploy_dist { project: "prj_userservice", sourceDirectory: "./dist" } after provision_nextjs
+      fixture deploy_src { project: "prj_api", sourceDirectory: "./src" } after provision_nextjs
       fixture deploy_missing_project { project: "", sourceDirectory: "./dist" } -> error
     }
 
@@ -56,8 +56,8 @@ concept VercelRuntime [V] {
         Traffic split between current and previous deployments.
       }
 
-      fixture traffic_50 { project: "prj_userservice", weight: 50 }
-      fixture traffic_negative { project: "prj_userservice", weight: -1 }
+      fixture traffic_50 { project: "prj_userservice", weight: 50 } after provision_nextjs
+      fixture traffic_negative { project: "prj_userservice", weight: -1 } after provision_nextjs
     }
 
     action rollback(project: V, targetDeploymentId: String) {
@@ -65,8 +65,8 @@ concept VercelRuntime [V] {
         Production alias pointed to previous deployment.
       }
 
-      fixture rollback_valid { project: "prj_userservice", targetDeploymentId: "dpl_abc123" }
-      fixture rollback_missing_deployment { project: "prj_userservice", targetDeploymentId: "" }
+      fixture rollback_valid { project: "prj_userservice", targetDeploymentId: "dpl_abc123" } after provision_nextjs
+      fixture rollback_missing_deployment { project: "prj_userservice", targetDeploymentId: "" } after provision_nextjs
     }
 
     action configureEnv(project: V, envVars: String) {
@@ -78,8 +78,8 @@ concept VercelRuntime [V] {
         Could not set one or more environment variables on the project.
       }
 
-      fixture env_vars_valid { project: "prj_userservice", envVars: "[{\"key\":\"DATABASE_URL\",\"value\":\"postgres://localhost\"}]" }
-      fixture env_vars_empty_project { project: "", envVars: "[]" }
+      fixture env_vars_valid { project: "prj_userservice", envVars: "[{\"key\":\"DATABASE_URL\",\"value\":\"postgres://localhost\"}]" } after provision_nextjs
+      fixture env_vars_empty_project { project: "", envVars: "[]" } after provision_nextjs
     }
 
     action destroy(project: V) {
@@ -87,7 +87,7 @@ concept VercelRuntime [V] {
         Project and all deployments deleted.
       }
 
-      fixture destroy_valid { project: "prj_userservice" }
+      fixture destroy_valid { project: "prj_userservice" } after provision_nextjs
       fixture destroy_missing { project: "" } -> error
     }
   }

@@ -67,8 +67,8 @@ concept SwiftBuilder [S] {
         Some tests failed.
       }
 
-      fixture test_unit { build: "swb-abc123", toolchainPath: "/usr/bin/swiftc", testType: "unit" }
-      fixture test_with_invocation { build: "swb-abc123", toolchainPath: "/usr/bin/swiftc", invocation: { command: "swift test", args: ["--parallel"], outputFormat: "swift-test-json", configFile: "Package.swift" }, testType: "unit" }
+      fixture test_unit { build: "swb-abc123", toolchainPath: "/usr/bin/swiftc", testType: "unit" } after build_release
+      fixture test_with_invocation { build: "swb-abc123", toolchainPath: "/usr/bin/swiftc", invocation: { command: "swift test", args: ["--parallel"], outputFormat: "swift-test-json", configFile: "Package.swift" }, testType: "unit" } after build_release
       fixture test_missing_build { build: "", toolchainPath: "/usr/bin/swiftc", testType: "unit" } -> error
     }
 
@@ -84,8 +84,8 @@ concept SwiftBuilder [S] {
         Requested format not available for this target.
       }
 
-      fixture package_framework { build: "swb-abc123", format: "framework" }
-      fixture package_xcframework { build: "swb-abc123", format: "xcframework" }
+      fixture package_framework { build: "swb-abc123", format: "framework" } after build_release
+      fixture package_xcframework { build: "swb-abc123", format: "xcframework" } after build_release
       fixture package_unsupported { build: "swb-abc123", format: "deb" } -> error
     }
 
@@ -98,7 +98,7 @@ concept SwiftBuilder [S] {
         "library"]
       }
 
-      fixture register_valid {}
+      fixture register_valid {} after build_release
     }
   }
 

@@ -35,8 +35,8 @@ concept Typography [X] {
       -> duplicate(message: String) { Already exists. }
       -> invalid(message: String) { Invalid font category. }
 
-      fixture fontstack_heading { typography: "X-6", name: "heading", fonts: "[\"Inter\", \"Helvetica Neue\", \"Arial\"]", category: "sans-serif" }
-      fixture fontstack_mono { typography: "X-7", name: "code", fonts: "JetBrains Mono, Fira Code, Consolas", category: "monospace" }
+      fixture fontstack_heading { typography: "X-6", name: "heading", fonts: "[\"Inter\", \"Helvetica Neue\", \"Arial\"]", category: "sans-serif" } after scale_major_third
+      fixture fontstack_mono { typography: "X-7", name: "code", fonts: "JetBrains Mono, Fira Code, Consolas", category: "monospace" } after scale_major_third
       fixture fontstack_invalid_category { typography: "X-8", name: "fancy", fonts: "[\"Lobster\"]", category: "cursive" } -> invalid
     }
 
@@ -47,10 +47,10 @@ concept Typography [X] {
       }
       -> invalid(message: String) { Referenced scale or fontStack not found. }
 
-      fixture style_heading1 { typography: "X-9", name: "heading-1", config: "{ \"fontSize\": 32, \"fontWeight\": 700, \"lineHeight\": 1.2, \"letterSpacing\": \"-0.02em\" }" }
-      fixture style_body { typography: "X-10", name: "body", config: "{ \"fontSize\": 16, \"fontWeight\": 400, \"lineHeight\": 1.5 }" }
+      fixture style_heading1 { typography: "X-9", name: "heading-1", config: "{ \"fontSize\": 32, \"fontWeight\": 700, \"lineHeight\": 1.2, \"letterSpacing\": \"-0.02em\" }" } after scale_major_third
+      fixture style_body { typography: "X-10", name: "body", config: "{ \"fontSize\": 16, \"fontWeight\": 400, \"lineHeight\": 1.5 }" } after scale_major_third
       fixture style_invalid_json { typography: "X-11", name: "broken", config: "not-json" } -> invalid
-      fixture style_missing_fontSize { typography: "X-12", name: "incomplete", config: "{ \"fontWeight\": 400 }" } -> invalid
+      fixture style_missing_fontSize { typography: "X-12", name: "incomplete", config: "{ \"fontWeight\": 400 }" } after scale_major_third -> invalid
     }
   }
 

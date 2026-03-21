@@ -41,7 +41,7 @@ concept StakeWeight [SW] {
         The stake is below the minimum.
       }
 
-      fixture stake_hundred { config: "sw-cfg-001", staker: "alice", amount: 100.0 }
+      fixture stake_hundred { config: "sw-cfg-001", staker: "alice", amount: 100.0 } after configure_gov
       fixture stake_zero { config: "sw-cfg-001", staker: "alice", amount: 0.0 } -> error
     }
 
@@ -54,7 +54,7 @@ concept StakeWeight [SW] {
         The stake does not exist.
       }
 
-      fixture unstake_existing { stake: "stake-001" }
+      fixture unstake_existing { stake: "stake-001" } after stake_hundred
       fixture unstake_missing { stake: "stake-missing" } -> error
     }
 
@@ -66,7 +66,7 @@ concept StakeWeight [SW] {
         The participant has no active stake.
       }
 
-      fixture get_staked { config: "sw-cfg-001", participant: "alice" }
+      fixture get_staked { config: "sw-cfg-001", participant: "alice" } after configure_gov
       fixture get_no_stake { config: "sw-cfg-001", participant: "nonexistent" } -> error
     }
   }

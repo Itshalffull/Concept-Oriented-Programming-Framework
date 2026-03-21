@@ -36,7 +36,7 @@ concept C4NotationProvider [C] {
         Returns C4 model notation definition.
       }
 
-      fixture valid {}
+      fixture valid {} after valid
     }
   }
 

@@ -88,7 +88,7 @@ concept CliTarget [C] {
         a concept, including the full command tree hierarchy.
       }
 
-      fixture list_task_commands { concept: "Task" }
+      fixture list_task_commands { concept: "Task" } after with_default_config
       fixture empty_concept { concept: "" } -> error
     }
   }

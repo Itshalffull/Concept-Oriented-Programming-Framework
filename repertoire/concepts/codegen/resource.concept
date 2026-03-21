@@ -49,7 +49,7 @@ concept Resource [R] {
         No resource registered at this locator.
       }
 
-      fixture get_existing { locator: "./specs/password.concept" }
+      fixture get_existing { locator: "./specs/password.concept" } after upsert_new
       fixture get_missing { locator: "./specs/nonexistent.concept" } -> notFound
     }
 
@@ -58,8 +58,8 @@ concept Resource [R] {
         List all tracked resources, optionally filtered by kind.
       }
 
-      fixture list_all {}
-      fixture list_by_kind { kind: "concept-spec" }
+      fixture list_all {} after upsert_new
+      fixture list_by_kind { kind: "concept-spec" } after upsert_new
     }
 
     action remove(locator: String) {
@@ -72,7 +72,7 @@ concept Resource [R] {
         No resource registered at this locator.
       }
 
-      fixture remove_existing { locator: "./specs/password.concept" }
+      fixture remove_existing { locator: "./specs/password.concept" } after upsert_new
       fixture remove_missing { locator: "./specs/nonexistent.concept" } -> notFound
     }
 

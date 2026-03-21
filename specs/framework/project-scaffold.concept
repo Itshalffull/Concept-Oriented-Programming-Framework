@@ -29,7 +29,7 @@ concept ProjectScaffold [P] {
       }
 
       fixture valid_scaffold { name: "inventory-app" }
-      fixture another_project { name: "billing-service" }
+      fixture another_project { name: "billing-service" } after valid_scaffold
       fixture duplicate_scaffold { name: "inventory-app" } -> alreadyExists
     }
   }

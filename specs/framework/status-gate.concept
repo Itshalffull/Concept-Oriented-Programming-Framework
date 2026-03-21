@@ -60,7 +60,7 @@ concept StatusGate [G] {
         The gate has already been marked complete and cannot be updated.
       }
 
-      fixture valid_update { gate: "gate-1710000000-abc123", status: "passing", details: "All checks passed" }
+      fixture valid_update { gate: "gate-1710000000-abc123", status: "passing", details: "All checks passed" } after valid_report
       fixture not_found_update { gate: "gate-nonexistent-000000", status: "failing", details: "Missing" } -> not_found
     }
 
@@ -77,7 +77,7 @@ concept StatusGate [G] {
         The gate was already completed previously.
       }
 
-      fixture valid_complete { gate: "gate-1710000000-abc123", final_status: "passing", details: "All green" }
+      fixture valid_complete { gate: "gate-1710000000-abc123", final_status: "passing", details: "All green" } after valid_report
       fixture not_found_complete { gate: "gate-nonexistent-000000", final_status: "passing", details: "Done" } -> not_found
     }
 
@@ -88,8 +88,8 @@ concept StatusGate [G] {
         CLI invocations.
       }
 
-      fixture valid_configure { provider: "github", url: "https://api.github.com" }
-      fixture exit_code_configure { provider: "exit-code", url: "" }
+      fixture valid_configure { provider: "github", url: "https://api.github.com" } after valid_report
+      fixture exit_code_configure { provider: "exit-code", url: "" } after valid_report
     }
 
     action get_status(gate: G) {
@@ -100,7 +100,7 @@ concept StatusGate [G] {
         No gate exists with this identifier.
       }
 
-      fixture valid_get_status { gate: "gate-1710000000-abc123" }
+      fixture valid_get_status { gate: "gate-1710000000-abc123" } after valid_report
       fixture not_found_status { gate: "gate-nonexistent-000000" } -> not_found
     }
 
@@ -110,8 +110,8 @@ concept StatusGate [G] {
         for a specific commit SHA), serialized as a JSON array.
       }
 
-      fixture valid_list { target: "abc123def456" }
-      fixture empty_target_list { target: "" }
+      fixture valid_list { target: "abc123def456" } after valid_report
+      fixture empty_target_list { target: "" } after valid_report
     }
   }
 

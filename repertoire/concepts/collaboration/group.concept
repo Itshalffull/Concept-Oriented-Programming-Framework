@@ -27,7 +27,7 @@ concept Group [G] {
       -> ok() { User added to the group's membership with the specified role. }
       -> notfound(message: String) { Group does not exist. }
 
-      fixture add_member_as_editor { group: "team-engineering", user: "alice@example.com", role: "editor" }
+      fixture add_member_as_editor { group: "team-engineering", user: "alice@example.com", role: "editor" } after create_team_group
       fixture add_member_missing_group { group: "nonexistent-group", user: "bob@example.com", role: "viewer" } -> error
     }
 
@@ -35,7 +35,7 @@ concept Group [G] {
       -> ok() { The member's role within the group updated to the new value. }
       -> notfound(message: String) { Group or member does not exist. }
 
-      fixture assign_admin_role { group: "team-engineering", user: "alice@example.com", role: "admin" }
+      fixture assign_admin_role { group: "team-engineering", user: "alice@example.com", role: "admin" } after create_team_group
       fixture assign_to_missing_group { group: "nonexistent-group", user: "alice@example.com", role: "admin" } -> error
     }
 
@@ -43,7 +43,7 @@ concept Group [G] {
       -> ok() { Content entity placed under the group's access scope. }
       -> notfound(message: String) { Group does not exist. }
 
-      fixture add_document_content { group: "team-engineering", content: "doc-design-spec-v2" }
+      fixture add_document_content { group: "team-engineering", content: "doc-design-spec-v2" } after create_team_group
       fixture add_to_missing_group { group: "nonexistent-group", content: "doc-readme" } -> error
     }
 
@@ -51,7 +51,7 @@ concept Group [G] {
       -> ok(granted: Bool) { Returns whether the user has the permission in this group. }
       -> notfound(message: String) { Group does not exist. }
 
-      fixture check_member_read { group: "team-engineering", user: "alice@example.com", permission: "read" }
+      fixture check_member_read { group: "team-engineering", user: "alice@example.com", permission: "read" } after create_team_group
       fixture check_access_missing_group { group: "nonexistent-group", user: "alice@example.com", permission: "write" } -> error
     }
   }

@@ -40,8 +40,8 @@ concept AppInstallation [I] {
         Return all installation records, optionally filtered by status.
       }
 
-      fixture list_active { status: "active" }
-      fixture list_all { }
+      fixture list_active { status: "active" } after register_core_suite
+      fixture list_all { } after register_core_suite
     }
   }
 

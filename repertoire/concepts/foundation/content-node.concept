@@ -44,7 +44,7 @@ concept ContentNode [N] {
         The node does not exist.
       }
 
-      fixture update_content { node: "node-1", content: "Updated wiki content" }
+      fixture update_content { node: "node-1", content: "Updated wiki content" } after create_page_node
       fixture update_missing { node: "nonexistent", content: "Test" } -> error
     }
 
@@ -56,7 +56,7 @@ concept ContentNode [N] {
         The node does not exist.
       }
 
-      fixture delete_node { node: "node-1" }
+      fixture delete_node { node: "node-1" } after create_page_node
       fixture delete_missing { node: "nonexistent" } -> error
     }
 
@@ -68,7 +68,7 @@ concept ContentNode [N] {
         The node does not exist.
       }
 
-      fixture get_node { node: "node-1" }
+      fixture get_node { node: "node-1" } after create_page_node
       fixture get_missing { node: "nonexistent" } -> error
     }
 
@@ -80,8 +80,8 @@ concept ContentNode [N] {
         The node does not exist.
       }
 
-      fixture set_metadata { node: "node-1", metadata: "{\"tags\":[\"important\"],\"priority\":\"high\"}" }
-      fixture set_metadata_missing { node: "nonexistent", metadata: "{}" } -> error
+      fixture set_metadata { node: "node-1", metadata: "{\"tags\":[\"important\"],\"priority\":\"high\"}" } after create_page_node
+      fixture set_metadata_missing { node: "nonexistent", metadata: "{}" } after create_page_node -> error
     }
 
     action changeType(node: N, type: String) {
@@ -92,7 +92,7 @@ concept ContentNode [N] {
         The node does not exist.
       }
 
-      fixture change_to_document { node: "node-1", type: "document" }
+      fixture change_to_document { node: "node-1", type: "document" } after create_page_node
       fixture change_type_missing { node: "nonexistent", type: "page" } -> error
     }
   }

@@ -54,7 +54,7 @@ concept LambdaRuntime [F] {
         Requested runtime version not available.
       }
 
-      fixture deploy_s3 { function: "fn-abc123", artifactLocation: "s3://deploy-bucket/user-auth.zip" }
+      fixture deploy_s3 { function: "fn-abc123", artifactLocation: "s3://deploy-bucket/user-auth.zip" } after provision_standard
       fixture deploy_missing_function { function: "", artifactLocation: "s3://bucket/code.zip" } -> error
     }
 
@@ -63,7 +63,7 @@ concept LambdaRuntime [F] {
         Lambda alias weighted routing updated for canary.
       }
 
-      fixture traffic_canary { function: "fn-abc123", aliasWeight: 10 }
+      fixture traffic_canary { function: "fn-abc123", aliasWeight: 10 } after provision_standard
       fixture traffic_invalid_weight { function: "", aliasWeight: -5 } -> error
     }
 
@@ -72,7 +72,7 @@ concept LambdaRuntime [F] {
         Alias pointed to previous function version.
       }
 
-      fixture rollback_to_v2 { function: "fn-abc123", targetVersion: "2" }
+      fixture rollback_to_v2 { function: "fn-abc123", targetVersion: "2" } after provision_standard
       fixture rollback_empty_version { function: "fn-abc123", targetVersion: "" } -> error
     }
 
@@ -84,7 +84,7 @@ concept LambdaRuntime [F] {
         Other resources reference this function.
       }
 
-      fixture destroy_valid { function: "fn-abc123" }
+      fixture destroy_valid { function: "fn-abc123" } after provision_standard
       fixture destroy_missing { function: "" } -> error
     }
   }

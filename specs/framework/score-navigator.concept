@@ -42,7 +42,7 @@ concept ScoreNavigator [N] {
         to the named target, or no cursor is set.
       }
 
-      fixture valid_traverse { relation: "actions", target: "register" }
+      fixture valid_traverse { relation: "actions", target: "register" } after valid_show
       fixture missing_relation { relation: "", target: "register" } -> notfound
       fixture missing_target { relation: "actions", target: "" } -> notfound
     }
@@ -56,7 +56,7 @@ concept ScoreNavigator [N] {
         The history stack is empty — there is nowhere to go back to.
       }
 
-      fixture valid_back {}
+      fixture valid_back {} after valid_show
       fixture empty_history {} -> empty
     }
 
@@ -69,7 +69,7 @@ concept ScoreNavigator [N] {
         The kind is not recognized by the Score index.
       }
 
-      fixture valid_list { kind: "concept" }
+      fixture valid_list { kind: "concept" } after valid_show
       fixture invalid_kind { kind: "nonexistent" } -> error
       fixture empty_kind { kind: "" } -> error
     }

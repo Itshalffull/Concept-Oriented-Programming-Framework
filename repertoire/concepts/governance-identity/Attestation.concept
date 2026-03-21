@@ -46,7 +46,7 @@ concept Attestation [A] {
         The revoker is not the original attester.
       }
 
-      fixture revoke_by_attester { attestation: "attest-1001", revoker: "civic-authority" }
+      fixture revoke_by_attester { attestation: "attest-1001", revoker: "civic-authority" } after attest_kyc
       fixture revoke_unauthorized { attestation: "attest-1001", revoker: "mallory" } -> error
     }
 
@@ -64,7 +64,7 @@ concept Attestation [A] {
         The attestation does not exist.
       }
 
-      fixture verify_valid { attestation: "attest-1001" }
+      fixture verify_valid { attestation: "attest-1001" } after attest_kyc
       fixture verify_nonexistent { attestation: "attest-nonexistent" } -> error
     }
   }

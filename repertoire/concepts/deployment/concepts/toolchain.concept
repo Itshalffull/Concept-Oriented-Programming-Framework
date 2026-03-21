@@ -126,9 +126,9 @@ concept Toolchain [T] {
         language and/or category. Used by `clef toolchain list`.
       }
 
-      fixture list_all {}
-      fixture list_by_language { language: "typescript" }
-      fixture list_by_category { category: "unit-runner" }
+      fixture list_all {} after resolve_swift_compiler
+      fixture list_by_language { language: "typescript" } after resolve_swift_compiler
+      fixture list_by_category { category: "unit-runner" } after resolve_swift_compiler
     }
 
     action capabilities(tool: T) {
@@ -137,7 +137,7 @@ concept Toolchain [T] {
         Used by Builder to determine available build modes.
       }
 
-      fixture capabilities_existing { tool: "tc-abc123" }
+      fixture capabilities_existing { tool: "tc-abc123" } after resolve_swift_compiler
       fixture capabilities_missing { tool: "" } -> error
     }
   }

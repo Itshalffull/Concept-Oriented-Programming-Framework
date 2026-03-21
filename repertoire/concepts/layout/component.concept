@@ -51,7 +51,7 @@ concept Component [C] {
         No component exists with this identifier.
       }
 
-      fixture place_in_header { component: "hero-banner", region: "header" }
+      fixture place_in_header { component: "hero-banner", region: "header" } after register_hero
       fixture place_unknown { component: "nonexistent-widget", region: "sidebar" } -> notfound
     }
 
@@ -64,8 +64,8 @@ concept Component [C] {
         No component exists with this identifier.
       }
 
-      fixture set_visible_true { component: "hero-banner", visible: true }
-      fixture set_visible_false { component: "hero-banner", visible: false }
+      fixture set_visible_true { component: "hero-banner", visible: true } after register_hero
+      fixture set_visible_false { component: "hero-banner", visible: false } after register_hero
       fixture set_visible_unknown { component: "nonexistent-widget", visible: true } -> notfound
     }
 
@@ -78,7 +78,7 @@ concept Component [C] {
         No component exists with this identifier.
       }
 
-      fixture evaluate_homepage { component: "hero-banner", context: "homepage" }
+      fixture evaluate_homepage { component: "hero-banner", context: "homepage" } after register_hero
       fixture evaluate_unknown { component: "nonexistent-widget", context: "homepage" } -> notfound
     }
   }

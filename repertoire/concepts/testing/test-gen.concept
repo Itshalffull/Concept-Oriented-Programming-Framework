@@ -77,8 +77,8 @@ concept TestGen [T] {
         concept_ref or concept_data missing or malformed.
       }
 
-      fixture build_plan_basic { concept_ref: "clef/concept/User", concept_data: "{\"name\":\"User\",\"actions\":[],\"invariants\":[]}" }
-      fixture build_plan_missing_ref { concept_ref: "", concept_data: "{}" } -> invalid
+      fixture build_plan_basic { concept_ref: "clef/concept/User", concept_data: "{\"name\":\"User\",\"actions\":[],\"invariants\":[]}" } after generate_typescript
+      fixture build_plan_missing_ref { concept_ref: "", concept_data: "{}" } after generate_typescript -> invalid
     }
 
     action regenerate(generation: T) {
@@ -90,8 +90,8 @@ concept TestGen [T] {
         No generation record exists with this identifier.
       }
 
-      fixture regenerate_existing { generation: "tg-abc123" }
-      fixture regenerate_missing { generation: "tg-nonexistent" }
+      fixture regenerate_existing { generation: "tg-abc123" } after generate_typescript
+      fixture regenerate_missing { generation: "tg-nonexistent" } after generate_typescript
     }
 
     action list(concept_ref: option String, language: option String) {
@@ -99,8 +99,8 @@ concept TestGen [T] {
         Filtered listing of generation records. All params optional.
       }
 
-      fixture list_all {}
-      fixture list_by_concept { concept_ref: "clef/concept/Password" }
+      fixture list_all {} after generate_typescript
+      fixture list_by_concept { concept_ref: "clef/concept/Password" } after generate_typescript
     }
 
     action configure(generation: T, num_runs: option Int, fuzz_duration_s: option Int, shrink_enabled: option Bool, stateful_test_depth: option Int) {
@@ -112,8 +112,8 @@ concept TestGen [T] {
         No generation record exists with this identifier.
       }
 
-      fixture configure_runs { generation: "tg-abc123", num_runs: 50000 }
-      fixture configure_fuzz { generation: "tg-abc123", fuzz_duration_s: 120, shrink_enabled: true }
+      fixture configure_runs { generation: "tg-abc123", num_runs: 50000 } after generate_typescript
+      fixture configure_fuzz { generation: "tg-abc123", fuzz_duration_s: 120, shrink_enabled: true } after generate_typescript
     }
 
     action coverage(concept_ref: String) {
@@ -125,8 +125,8 @@ concept TestGen [T] {
         eventually, requires_ensures).
       }
 
-      fixture coverage_password { concept_ref: "clef/concept/Password" }
-      fixture coverage_missing { concept_ref: "" }
+      fixture coverage_password { concept_ref: "clef/concept/Password" } after generate_typescript
+      fixture coverage_missing { concept_ref: "" } after generate_typescript
     }
   }
 

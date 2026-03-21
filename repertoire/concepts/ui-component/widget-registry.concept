@@ -54,8 +54,8 @@ concept WidgetRegistry [W] {
       }
       -> none(message: String) { No matching entries. }
 
-      fixture query_by_concept { concept: "Approval" }
-      fixture query_by_suite { suite: "governance" }
+      fixture query_by_concept { concept: "Approval" } after valid_register
+      fixture query_by_suite { suite: "governance" } after valid_register
       fixture query_no_match { concept: "NonexistentConcept" } -> none
     }
 
@@ -63,7 +63,7 @@ concept WidgetRegistry [W] {
       -> ok(entry: W) { Remove entry. }
       -> notfound(message: String) { Entry not registered. }
 
-      fixture valid_remove { }
+      fixture valid_remove { } after valid_register
       fixture missing_entry { entry: "nonexistent-entry" } -> notfound
     }
   }

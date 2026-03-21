@@ -53,9 +53,9 @@ concept InterfaceEntity [I] {
       -> notfound() {
         No interface with this name exists.
       }
-      fixture get_conduit { name: "conduit-api" }
+      fixture get_conduit { name: "conduit-api" } after register_conduit_api
       fixture get_missing { name: "nonexistent-interface" } -> error
-      fixture get_api { name: "conduit-api" }
+      fixture get_api { name: "conduit-api" } after register_conduit_api
     }
 
     action listEndpoints(interface: I, target: String) {
@@ -64,7 +64,7 @@ concept InterfaceEntity [I] {
         grpc). Result as serialized JSON array of { method, path,
         concept, action, params, returnType }.
       }
-      fixture endpoints_rest { interface: "iface-uuid-1", target: "rest" }
+      fixture endpoints_rest { interface: "iface-uuid-1", target: "rest" } after register_conduit_api
       fixture endpoints_empty_target { interface: "iface-uuid-1", target: "" } -> error
     }
 
@@ -73,7 +73,7 @@ concept InterfaceEntity [I] {
         Return all generated CLI commands. Result as serialized JSON
         array of { command, subcommand, concept, action, flags }.
       }
-      fixture commands_valid { interface: "iface-uuid-1" }
+      fixture commands_valid { interface: "iface-uuid-1" } after register_conduit_api
       fixture commands_missing { interface: "nonexistent-id" } -> error
     }
 
@@ -82,7 +82,7 @@ concept InterfaceEntity [I] {
         Return all generated MCP tools. Result as serialized JSON
         array of { name, concept, action, inputSchema, description }.
       }
-      fixture tools_valid { interface: "iface-uuid-1" }
+      fixture tools_valid { interface: "iface-uuid-1" } after register_conduit_api
       fixture tools_missing { interface: "nonexistent-id" } -> error
     }
 
@@ -92,7 +92,7 @@ concept InterfaceEntity [I] {
         serialized JSON array of { name, concept, triggerDescription,
         targetDirs }.
       }
-      fixture skills_valid { interface: "iface-uuid-1" }
+      fixture skills_valid { interface: "iface-uuid-1" } after register_conduit_api
       fixture skills_missing { interface: "nonexistent-id" } -> error
     }
 
@@ -102,7 +102,7 @@ concept InterfaceEntity [I] {
         registered interfaces and targets. Result as serialized JSON
         array of { interface, target, endpoint, concept, action }.
       }
-      fixture find_user_concept { concept: "User" }
+      fixture find_user_concept { concept: "User" } after register_conduit_api
       fixture find_empty_concept { concept: "" } -> error
     }
 
@@ -112,7 +112,7 @@ concept InterfaceEntity [I] {
         Result as serialized JSON array of { interface, target, kind,
         path, method }.
       }
-      fixture find_user_create { concept: "User", action: "create" }
+      fixture find_user_create { concept: "User", action: "create" } after register_conduit_api
       fixture find_empty_action { concept: "User", action: "" } -> error
     }
 
@@ -125,9 +125,9 @@ concept InterfaceEntity [I] {
       -> notfound() {
         No endpoint matches the given target/path/method.
       }
-      fixture trace_post_users { target: "rest", path: "/api/users", method: "POST" }
+      fixture trace_post_users { target: "rest", path: "/api/users", method: "POST" } after register_conduit_api
       fixture trace_missing_endpoint { target: "rest", path: "/api/nonexistent", method: "GET" } -> error
-      fixture trace_rest { target: "rest", path: "/api/users", method: "POST" }
+      fixture trace_rest { target: "rest", path: "/api/users", method: "POST" } after register_conduit_api
       fixture trace_missing { target: "rest", path: "/nonexistent", method: "GET" } -> error
     }
 
@@ -139,7 +139,7 @@ concept InterfaceEntity [I] {
       -> notfound() {
         No tool matches the given name.
       }
-      fixture trace_tool { toolName: "user-create" }
+      fixture trace_tool { toolName: "user-create" } after register_conduit_api
       fixture trace_missing_tool { toolName: "nonexistent-tool" } -> error
       fixture trace_tool_missing { toolName: "nonexistent" } -> error
     }
@@ -150,7 +150,7 @@ concept InterfaceEntity [I] {
         SDL, Proto). Result as serialized JSON array of { format,
         file, conceptCount, endpointCount }.
       }
-      fixture schemas_valid { interface: "iface-uuid-1" }
+      fixture schemas_valid { interface: "iface-uuid-1" } after register_conduit_api
       fixture schemas_missing { interface: "nonexistent-id" } -> error
     }
 

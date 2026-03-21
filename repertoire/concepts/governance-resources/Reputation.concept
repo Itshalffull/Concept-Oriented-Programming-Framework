@@ -45,7 +45,7 @@ concept Reputation [RP] {
         The participant does not have enough reputation to burn.
       }
 
-      fixture burn_penalty { participant: "alice", amount: 5.0 }
+      fixture burn_penalty { participant: "alice", amount: 5.0 } after earn_contribution
       fixture burn_excessive { participant: "alice", amount: 999999.0 } -> error
     }
 
@@ -54,7 +54,7 @@ concept Reputation [RP] {
         The participant's score is reduced by the decay factor.
       }
 
-      fixture decay_alice { participant: "alice", decayFactor: 0.1 }
+      fixture decay_alice { participant: "alice", decayFactor: 0.1 } after earn_contribution
       fixture decay_invalid_factor { participant: "alice", decayFactor: -1.0 } -> error
     }
 
@@ -66,7 +66,7 @@ concept Reputation [RP] {
         No reputation record exists for this participant.
       }
 
-      fixture get_alice_score { participant: "alice" }
+      fixture get_alice_score { participant: "alice" } after earn_contribution
       fixture get_unknown_score { participant: "" } -> error
     }
 
@@ -75,7 +75,7 @@ concept Reputation [RP] {
         The score is recomputed from history using the configured algorithm.
       }
 
-      fixture recalculate_alice { participant: "alice" }
+      fixture recalculate_alice { participant: "alice" } after earn_contribution
       fixture recalculate_unknown { participant: "" } -> error
     }
   }

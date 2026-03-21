@@ -31,8 +31,8 @@ concept BezierRouteProvider [C] {
         Routing failed or source/target not found.
       }
 
-      fixture simple_curve { canvas: "c1", source: "node-a", target: "node-b", obstacles: [] }
-      fixture with_obstacles { canvas: "c1", source: "node-a", target: "node-c", obstacles: ["node-b"] }
+      fixture simple_curve { canvas: "c1", source: "node-a", target: "node-b", obstacles: [] } after valid
+      fixture with_obstacles { canvas: "c1", source: "node-a", target: "node-c", obstacles: ["node-b"] } after valid
       fixture missing_target { canvas: "c1", source: "node-a", target: "", obstacles: [] } -> error
     }
   }

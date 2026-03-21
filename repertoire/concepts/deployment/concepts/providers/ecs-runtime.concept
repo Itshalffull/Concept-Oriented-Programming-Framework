@@ -57,7 +57,7 @@ concept EcsRuntime [S] {
         to previous task definition automatically.
       }
 
-      fixture deploy_ecr { service: "svc-abc123", imageUri: "123456789.dkr.ecr.us-east-1.amazonaws.com/order-service:v2" }
+      fixture deploy_ecr { service: "svc-abc123", imageUri: "123456789.dkr.ecr.us-east-1.amazonaws.com/order-service:v2" } after provision_fargate
       fixture deploy_missing_service { service: "", imageUri: "ecr.aws/app:latest" } -> error
     }
 
@@ -66,8 +66,8 @@ concept EcsRuntime [S] {
         ALB target group weight updated for canary.
       }
 
-      fixture traffic_canary { service: "svc-abc123", weight: 20 }
-      fixture traffic_no_service { service: "", weight: 50 }
+      fixture traffic_canary { service: "svc-abc123", weight: 20 } after provision_fargate
+      fixture traffic_no_service { service: "", weight: 50 } after provision_fargate
     }
 
     action rollback(service: S, targetTaskDefinition: String) {
@@ -75,8 +75,8 @@ concept EcsRuntime [S] {
         Service updated to previous task definition.
       }
 
-      fixture rollback_previous_td { service: "svc-abc123", targetTaskDefinition: "td-prev-001" }
-      fixture rollback_empty_td { service: "svc-abc123", targetTaskDefinition: "" }
+      fixture rollback_previous_td { service: "svc-abc123", targetTaskDefinition: "td-prev-001" } after provision_fargate
+      fixture rollback_empty_td { service: "svc-abc123", targetTaskDefinition: "" } after provision_fargate
     }
 
     action destroy(service: S) {
@@ -87,7 +87,7 @@ concept EcsRuntime [S] {
         Connections still draining after timeout.
       }
 
-      fixture destroy_valid { service: "svc-abc123" }
+      fixture destroy_valid { service: "svc-abc123" } after provision_fargate
       fixture destroy_missing { service: "" } -> error
     }
   }

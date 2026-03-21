@@ -53,7 +53,7 @@ concept RateLimiter [R] {
         No rate limiter is configured for this endpoint.
       }
 
-      fixture acquire_tokens { endpoint: "openai-api", tokens: 5 }
+      fixture acquire_tokens { endpoint: "openai-api", tokens: 5 } after api_limiter
       fixture acquire_exhausted { endpoint: "openai-api", tokens: 999 } -> limited
       fixture acquire_no_limiter { endpoint: "unknown-service", tokens: 1 } -> notFound
     }
@@ -68,7 +68,7 @@ concept RateLimiter [R] {
         No rate limiter is configured for this endpoint.
       }
 
-      fixture release_tokens { endpoint: "openai-api", tokens: 3 }
+      fixture release_tokens { endpoint: "openai-api", tokens: 3 } after acquire_tokens
       fixture release_no_limiter { endpoint: "unknown-service", tokens: 1 } -> notFound
     }
 
@@ -81,7 +81,7 @@ concept RateLimiter [R] {
         No rate limiter is configured for this endpoint.
       }
 
-      fixture get_status { endpoint: "openai-api" }
+      fixture get_status { endpoint: "openai-api" } after api_limiter
       fixture get_no_limiter { endpoint: "unknown-service" } -> notFound
     }
 
@@ -94,7 +94,7 @@ concept RateLimiter [R] {
         No rate limiter is configured for this endpoint.
       }
 
-      fixture reset_limiter { endpoint: "openai-api" }
+      fixture reset_limiter { endpoint: "openai-api" } after api_limiter
       fixture reset_no_limiter { endpoint: "unknown-service" } -> notFound
     }
   }

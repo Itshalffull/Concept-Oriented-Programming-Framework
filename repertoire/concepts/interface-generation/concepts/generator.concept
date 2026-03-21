@@ -58,7 +58,7 @@ concept Generator [G] {
         Lists the specific changes for review.
       }
 
-      fixture valid_plan { plan: "plan-commerce-12345" }
+      fixture valid_plan { plan: "plan-commerce-12345" } after with_valid_manifest
       fixture missing_plan { plan: "" } -> error
     }
 
@@ -68,7 +68,7 @@ concept Generator [G] {
         projections if concept specs have not changed.
       }
 
-      fixture regenerate_rest_only { plan: "plan-commerce-12345", targets: ["rest"] }
+      fixture regenerate_rest_only { plan: "plan-commerce-12345", targets: ["rest"] } after with_valid_manifest
       fixture missing_plan_regen { plan: "", targets: ["rest"] } -> error
     }
   }

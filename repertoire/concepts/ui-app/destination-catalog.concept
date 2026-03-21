@@ -39,7 +39,7 @@ concept DestinationCatalog [D] {
       }
       -> notfound(message: String) { No destination exists with this name. }
 
-      fixture resolve_dashboard { name: "dashboard" }
+      fixture resolve_dashboard { name: "dashboard" } after register_dashboard
       fixture resolve_unknown_name { name: "nonexistent" } -> notfound
     }
 
@@ -50,8 +50,8 @@ concept DestinationCatalog [D] {
       }
       -> notfound(message: String) { No destination matches this href. }
 
-      fixture resolve_admin_href { href: "/admin" }
-      fixture resolve_nested_href { href: "/articles/42" }
+      fixture resolve_admin_href { href: "/admin" } after register_dashboard
+      fixture resolve_nested_href { href: "/articles/42" } after register_dashboard
       fixture resolve_unknown_href { href: "/nonexistent" } -> notfound
     }
 
@@ -63,7 +63,7 @@ concept DestinationCatalog [D] {
         Return all registered destinations.
       }
 
-      fixture list_all { }
+      fixture list_all { } after register_dashboard
     }
   }
 

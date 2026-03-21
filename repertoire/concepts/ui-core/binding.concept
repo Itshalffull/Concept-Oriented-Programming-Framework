@@ -43,7 +43,7 @@ concept Binding [B, C] {
       -> ok(binding: B) { Pull latest state and update signals. }
       -> error(message: String) { Backend unreachable. }
 
-      fixture valid_sync { binding: "B-1" }
+      fixture valid_sync { binding: "B-1" } after valid_bind_coupled
       fixture sync_nonexistent { binding: "B-999" } -> error
     }
 
@@ -54,15 +54,15 @@ concept Binding [B, C] {
       }
       -> error(message: String) { Invocation failed. }
 
-      fixture valid_invoke { binding: "B-1", action: "create", input: "{\"title\":\"Hello World\"}" }
-      fixture invoke_nonexistent { binding: "B-999", action: "create", input: "{}" } -> error
+      fixture valid_invoke { binding: "B-1", action: "create", input: "{\"title\":\"Hello World\"}" } after valid_bind_coupled
+      fixture invoke_nonexistent { binding: "B-999", action: "create", input: "{}" } after valid_bind_coupled -> error
     }
 
     action unbind(binding: B) {
       -> ok(binding: B) { Remove binding, unsubscribe, dispose signals. }
       -> notfound(message: String) { Binding does not exist. }
 
-      fixture valid_unbind { binding: "B-1" }
+      fixture valid_unbind { binding: "B-1" } after valid_bind_coupled
       fixture unbind_nonexistent { binding: "B-999" } -> error
     }
   }

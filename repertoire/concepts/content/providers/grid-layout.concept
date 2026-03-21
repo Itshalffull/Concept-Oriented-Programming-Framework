@@ -32,7 +32,7 @@ concept GridLayout [C] {
         Layout computation failed.
       }
 
-      fixture valid_apply { canvas: "c1", items: ["a", "b", "c", "d"] }
+      fixture valid_apply { canvas: "c1", items: ["a", "b", "c", "d"] } after valid
       fixture missing_canvas { canvas: "", items: ["a"] } -> error
     }
   }

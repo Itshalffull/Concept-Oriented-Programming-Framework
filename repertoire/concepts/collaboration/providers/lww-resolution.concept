@@ -31,8 +31,8 @@ concept LWWResolution [V] {
         with no ordering. Cannot determine winner.
       }
 
-      fixture resolve_later_wins { base: null, v1: "{\"_ts\": \"2026-01-15T10:00:00Z\", \"value\": \"alice\"}", v2: "{\"_ts\": \"2026-01-15T11:00:00Z\", \"value\": \"bob\"}", context: "document-field" }
-      fixture resolve_identical_timestamps { base: null, v1: "{\"_ts\": \"2026-01-15T10:00:00Z\"}", v2: "{\"_ts\": \"2026-01-15T10:00:00Z\"}", context: "field" } -> error
+      fixture resolve_later_wins { base: null, v1: "{\"_ts\": \"2026-01-15T10:00:00Z\", \"value\": \"alice\"}", v2: "{\"_ts\": \"2026-01-15T11:00:00Z\", \"value\": \"bob\"}", context: "document-field" } after valid
+      fixture resolve_identical_timestamps { base: null, v1: "{\"_ts\": \"2026-01-15T10:00:00Z\"}", v2: "{\"_ts\": \"2026-01-15T10:00:00Z\"}", context: "field" } after valid -> error
     }
   }
 

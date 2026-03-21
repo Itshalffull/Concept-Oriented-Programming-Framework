@@ -29,7 +29,7 @@ concept Profile [U] {
         If no profile exists for the user.
       }
 
-      fixture existing_profile { user: "alice" }
+      fixture existing_profile { user: "alice" } after complete_profile
       fixture missing_profile { user: "unknown_user_xyz" } -> notfound
     }
   }

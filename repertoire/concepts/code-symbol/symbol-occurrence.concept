@@ -47,7 +47,7 @@ concept SymbolOccurrence [O] {
         No definition occurrences found for this symbol.
       }
 
-      fixture valid_find_defs { symbol: "clef/concept/Article" }
+      fixture valid_find_defs { symbol: "clef/concept/Article" } after valid_record_def
       fixture find_defs_no_results { symbol: "clef/concept/NonExistent" } -> error
     }
 
@@ -60,8 +60,8 @@ concept SymbolOccurrence [O] {
         No references found for this symbol.
       }
 
-      fixture valid_find_refs { symbol: "clef/concept/Article", roleFilter: "" }
-      fixture find_refs_filtered { symbol: "clef/concept/Article", roleFilter: "reference" }
+      fixture valid_find_refs { symbol: "clef/concept/Article", roleFilter: "" } after valid_record_def
+      fixture find_refs_filtered { symbol: "clef/concept/Article", roleFilter: "reference" } after valid_record_def
       fixture find_refs_no_results { symbol: "clef/concept/NonExistent", roleFilter: "" } -> error
     }
 
@@ -73,7 +73,7 @@ concept SymbolOccurrence [O] {
         No symbol found at this position.
       }
 
-      fixture valid_find_at_pos { file: "specs/article.concept", row: 2, col: 10 }
+      fixture valid_find_at_pos { file: "specs/article.concept", row: 2, col: 10 } after valid_record_def
       fixture find_at_empty_pos { file: "src/empty.ts", row: 1, col: 1 } -> error
     }
 
@@ -83,8 +83,8 @@ concept SymbolOccurrence [O] {
         Results as serialized JSON array.
       }
 
-      fixture valid_find_in_file { file: "specs/article.concept" }
-      fixture find_in_empty_file { file: "src/no-symbols.ts" }
+      fixture valid_find_in_file { file: "specs/article.concept" } after valid_record_def
+      fixture find_in_empty_file { file: "src/no-symbols.ts" } after valid_record_def
     }
   }
 

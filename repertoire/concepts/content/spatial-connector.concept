@@ -45,7 +45,7 @@ concept SpatialConnector [C] {
         The connector is already semantic or surfaced.
       }
 
-      fixture valid_promote { connector: "connector-1" }
+      fixture valid_promote { connector: "connector-1" } after valid_draw
       fixture already_promoted { connector: "connector-1" } -> already_semantic
     }
 
@@ -58,7 +58,7 @@ concept SpatialConnector [C] {
         The connector is not semantic and cannot be demoted.
       }
 
-      fixture valid_demote { connector: "connector-1" }
+      fixture valid_demote { connector: "connector-1" } after valid_draw
       fixture demote_visual { connector: "connector-1" } -> not_semantic
     }
 
@@ -71,7 +71,7 @@ concept SpatialConnector [C] {
         No existing Reference found between source and target.
       }
 
-      fixture valid_surface { canvas: "c1", source: "node-a", target: "node-b" }
+      fixture valid_surface { canvas: "c1", source: "node-a", target: "node-b" } after valid_draw
       fixture surface_no_ref { canvas: "c1", source: "orphan-x", target: "orphan-y" } -> no_reference
     }
 
@@ -83,7 +83,7 @@ concept SpatialConnector [C] {
         The connector does not exist.
       }
 
-      fixture valid_hide { connector: "connector-1" }
+      fixture valid_hide { connector: "connector-1" } after valid_draw
       fixture hide_missing { connector: "nonexistent" } -> notFound
     }
   }

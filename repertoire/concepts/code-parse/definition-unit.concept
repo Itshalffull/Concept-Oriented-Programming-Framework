@@ -44,7 +44,7 @@ concept DefinitionUnit [D] {
       -> notfound() {
         No definition unit is linked to this symbol.
       }
-      fixture find_by_symbol { symbol: "src/app.ts:handleRequest" }
+      fixture find_by_symbol { symbol: "src/app.ts:handleRequest" } after extract_function
       fixture find_missing_symbol { symbol: "nonexistent" } -> error
     }
 
@@ -53,8 +53,8 @@ concept DefinitionUnit [D] {
         Find definitions matching the given kind, language,
         and name pattern as serialized JSON.
       }
-      fixture find_ts_functions { kind: "function", language: "typescript", namePattern: "handle.*" }
-      fixture find_all { kind: "", language: "", namePattern: "" }
+      fixture find_ts_functions { kind: "function", language: "typescript", namePattern: "handle.*" } after extract_function
+      fixture find_all { kind: "", language: "", namePattern: "" } after extract_function
     }
 
     action diff(a: D, b: D) {

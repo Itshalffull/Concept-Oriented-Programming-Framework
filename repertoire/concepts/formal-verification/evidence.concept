@@ -68,7 +68,7 @@ concept Evidence [E] {
         Evidence does not exist.
       }
 
-      fixture valid_retrieve { id: "ev-001" }
+      fixture valid_retrieve { id: "ev-001" } after valid_record
       fixture retrieve_missing { id: "nonexistent" } -> notfound
     }
 
@@ -97,7 +97,7 @@ concept Evidence [E] {
         Evidence does not exist.
       }
 
-      fixture valid_minimize { id: "ev-counter-001" }
+      fixture valid_minimize { id: "ev-counter-001" } after valid_record
       fixture minimize_non_counter { id: "ev-proof-001" } -> not_applicable
       fixture minimize_missing { id: "nonexistent" } -> notfound
     }
@@ -107,8 +107,8 @@ concept Evidence [E] {
         Filtered listing.
       }
 
-      fixture list_all { }
-      fixture list_by_type { artifact_type: "proof_certificate" }
+      fixture list_all { } after valid_record
+      fixture list_by_type { artifact_type: "proof_certificate" } after valid_record
     }
   }
 

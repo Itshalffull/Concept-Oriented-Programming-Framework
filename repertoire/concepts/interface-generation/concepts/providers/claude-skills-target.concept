@@ -86,7 +86,7 @@ concept ClaudeSkillsTarget [K] {
         have rich workflow-based content or flat command listings.
       }
 
-      fixture list_skills_suite { suite: "core" }
+      fixture list_skills_suite { suite: "core" } after generate_with_workflow
       fixture list_skills_empty { suite: "" } -> error
     }
   }

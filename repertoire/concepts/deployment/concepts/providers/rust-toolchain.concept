@@ -51,7 +51,7 @@ concept RustToolchain [R] {
         "wasm-pack-detection"]
       }
 
-      fixture valid {}
+      fixture valid {} after resolve_linux
     }
   }
 

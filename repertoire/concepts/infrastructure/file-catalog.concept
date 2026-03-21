@@ -48,9 +48,9 @@ concept FileCatalog [E] {
         A provider with this name already exists.
       }
 
-      fixture valid_register_provider { provider_name: "concept", kind: "concept", file_pattern: ".concept" }
-      fixture register_widget_provider { provider_name: "widget", kind: "widget", file_pattern: ".widget" }
-      fixture register_duplicate_provider { provider_name: "concept", kind: "concept", file_pattern: ".concept" }
+      fixture valid_register_provider { provider_name: "concept", kind: "concept", file_pattern: ".concept" } after valid_discover
+      fixture register_widget_provider { provider_name: "widget", kind: "widget", file_pattern: ".widget" } after valid_discover
+      fixture register_duplicate_provider { provider_name: "concept", kind: "concept", file_pattern: ".concept" } after valid_discover
     }
 
     action get(name: String, kind: String) {
@@ -61,7 +61,7 @@ concept FileCatalog [E] {
         No entry with this name and kind exists.
       }
 
-      fixture valid_get { name: "Article", kind: "concept" }
+      fixture valid_get { name: "Article", kind: "concept" } after valid_discover
       fixture get_nonexistent { name: "NonExistent", kind: "concept" } -> error
     }
 
@@ -71,8 +71,8 @@ concept FileCatalog [E] {
         Entries returned as JSON array.
       }
 
-      fixture list_concepts { kind: "concept" }
-      fixture list_all { kind: "" }
+      fixture list_concepts { kind: "concept" } after valid_discover
+      fixture list_all { kind: "" } after valid_discover
     }
 
     action listForSuite(suite: String) {
@@ -80,8 +80,8 @@ concept FileCatalog [E] {
         Return all artifacts belonging to the given suite as JSON array.
       }
 
-      fixture valid_list_suite { suite: "foundation" }
-      fixture list_unknown_suite { suite: "nonexistent-suite" }
+      fixture valid_list_suite { suite: "foundation" } after valid_discover
+      fixture list_unknown_suite { suite: "nonexistent-suite" } after valid_discover
     }
 
     action syncFilePathsForSuite(suite: String, search_paths: String) {
@@ -94,8 +94,8 @@ concept FileCatalog [E] {
         Suite manifest not found or dependency cycle detected.
       }
 
-      fixture valid_sync_paths { suite: "foundation" }
-      fixture sync_paths_unknown { suite: "nonexistent-suite" }
+      fixture valid_sync_paths { suite: "foundation" } after valid_discover
+      fixture sync_paths_unknown { suite: "nonexistent-suite" } after valid_discover
     }
   }
 

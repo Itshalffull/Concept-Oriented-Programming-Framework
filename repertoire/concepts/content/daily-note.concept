@@ -21,7 +21,7 @@ concept DailyNote [D] {
       }
 
       fixture today_new { note: "daily-2026-03-20" }
-      fixture today_existing { note: "daily-2026-03-20" }
+      fixture today_existing { note: "daily-2026-03-20" } after today_new
     }
 
     action navigateToDate(date: String) {
@@ -32,7 +32,7 @@ concept DailyNote [D] {
         No note exists for the requested date.
       }
 
-      fixture navigate_existing { date: "2026-03-20" }
+      fixture navigate_existing { date: "2026-03-20" } after today_new
       fixture navigate_missing { date: "1999-01-01" } -> notfound
     }
 
@@ -41,8 +41,8 @@ concept DailyNote [D] {
         Returns the most recent daily notes up to the specified count.
       }
 
-      fixture list_five { count: 5 }
-      fixture list_one { count: 1 }
+      fixture list_five { count: 5 } after today_new
+      fixture list_one { count: 1 } after today_new
     }
   }
 

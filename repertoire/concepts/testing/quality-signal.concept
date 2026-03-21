@@ -57,7 +57,7 @@ concept QualitySignal [Q] {
         Invalid target_symbol or dimension.
       }
 
-      fixture latest_unit { target_symbol: "clef/concept/Password", dimension: "unit" }
+      fixture latest_unit { target_symbol: "clef/concept/Password", dimension: "unit" } after record_pass
       fixture latest_invalid_dimension { target_symbol: "clef/concept/Password", dimension: "imaginary" } -> validationError
       fixture latest_missing_target { target_symbol: "", dimension: "unit" } -> validationError
     }
@@ -72,8 +72,8 @@ concept QualitySignal [Q] {
         Invalid target_symbols or dimensions.
       }
 
-      fixture rollup_single { target_symbols: ["clef/concept/Password"] }
-      fixture rollup_multiple { target_symbols: ["clef/concept/Password", "clef/concept/Auth"], dimensions: ["unit", "formal"] }
+      fixture rollup_single { target_symbols: ["clef/concept/Password"] } after record_pass
+      fixture rollup_multiple { target_symbols: ["clef/concept/Password", "clef/concept/Auth"], dimensions: ["unit", "formal"] } after record_pass
       fixture rollup_empty_targets { target_symbols: [] } -> validationError
     }
 
@@ -85,8 +85,8 @@ concept QualitySignal [Q] {
         Invalid target_symbol or dimensions.
       }
 
-      fixture explain_all_dims { target_symbol: "clef/concept/Password" }
-      fixture explain_filtered { target_symbol: "clef/concept/Auth", dimensions: ["unit", "conformance"] }
+      fixture explain_all_dims { target_symbol: "clef/concept/Password" } after record_pass
+      fixture explain_filtered { target_symbol: "clef/concept/Auth", dimensions: ["unit", "conformance"] } after record_pass
       fixture explain_missing_target { target_symbol: "" } -> validationError
     }
   }

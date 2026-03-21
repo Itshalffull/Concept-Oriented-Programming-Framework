@@ -39,7 +39,7 @@ concept WidgetStateEntity [S] {
         Return all states for the given widget.
         Results as serialized JSON array.
       }
-      fixture find_dialog { widget: "dialog" }
+      fixture find_dialog { widget: "dialog" } after register_closed
       fixture find_empty { widget: "" } -> error
     }
 
@@ -48,8 +48,8 @@ concept WidgetStateEntity [S] {
         Compute all states reachable from this state via
         transitions. Results as serialized JSON.
       }
-      fixture reachable_valid { widgetState: "widget-state-entity-1" }
-      fixture reachable_missing { widgetState: "nonexistent-id" }
+      fixture reachable_valid { widgetState: "widget-state-entity-1" } after register_closed
+      fixture reachable_missing { widgetState: "nonexistent-id" } after register_closed
     }
 
     action unreachableStates(widget: String) {
@@ -57,8 +57,8 @@ concept WidgetStateEntity [S] {
         Find states in this widget's FSM that no transition
         leads to (dead states). Results as serialized JSON array.
       }
-      fixture unreachable_dialog { widget: "dialog" }
-      fixture unreachable_empty { widget: "" }
+      fixture unreachable_dialog { widget: "dialog" } after register_closed
+      fixture unreachable_empty { widget: "" } after register_closed
     }
 
     action traceEvent(widget: String, event: String) {
@@ -71,7 +71,7 @@ concept WidgetStateEntity [S] {
         States where this event has no transition.
         Results as serialized JSON array.
       }
-      fixture trace_open_event { widget: "dialog", event: "open" }
+      fixture trace_open_event { widget: "dialog", event: "open" } after register_closed
       fixture trace_empty_widget { widget: "", event: "close" } -> error
     }
 
@@ -82,7 +82,7 @@ concept WidgetStateEntity [S] {
       -> notfound() {
         State does not exist.
       }
-      fixture get_valid { widgetState: "widget-state-entity-1" }
+      fixture get_valid { widgetState: "widget-state-entity-1" } after register_closed
       fixture get_missing { widgetState: "nonexistent-id" } -> error
     }
   }

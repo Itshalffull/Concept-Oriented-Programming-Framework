@@ -79,7 +79,7 @@ concept DerivedScaffoldGen [D] {
                         "entry-triggers", "derived-context", "block-queries"]
       }
 
-      fixture valid_register {}
+      fixture valid_register {} after valid_generate
     }
   }
 

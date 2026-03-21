@@ -103,7 +103,7 @@ concept ScoreIndex [X] {
       -> error(message: String) {
         Invalid sync data.
       }
-      fixture upsert_sync { name: "onUserCreate", annotation: "eager", file: "/specs/syncs.sync" }
+      fixture upsert_sync { name: "onUserCreate", annotation: "eager", file: "/specs/syncs.sync" } after upsert_user
       fixture upsert_sync_empty { name: "" } -> error
     }
 
@@ -114,7 +114,7 @@ concept ScoreIndex [X] {
       -> error(message: String) {
         Invalid symbol data.
       }
-      fixture upsert_fn { name: "handleCreate", kind: "function", file: "/src/handler.ts", line: 42 }
+      fixture upsert_fn { name: "handleCreate", kind: "function", file: "/src/handler.ts", line: 42 } after upsert_user
       fixture upsert_sym_empty { name: "" } -> error
     }
 
@@ -125,7 +125,7 @@ concept ScoreIndex [X] {
       -> error(message: String) {
         Invalid file data.
       }
-      fixture upsert_file { path: "/src/handler.ts", language: "typescript", role: "source" }
+      fixture upsert_file { path: "/src/handler.ts", language: "typescript", role: "source" } after upsert_user
       fixture upsert_file_empty { path: "" } -> error
     }
 
@@ -136,7 +136,7 @@ concept ScoreIndex [X] {
       -> error(message: String) {
         Invalid handler data.
       }
-      fixture upsert_handler { concept: "Flag", language: "typescript", file: "/handlers/ts/flag.handler.ts", lineCount: 80 }
+      fixture upsert_handler { concept: "Flag", language: "typescript", file: "/handlers/ts/flag.handler.ts", lineCount: 80 } after upsert_user
       fixture upsert_handler_empty { concept: "" } -> error
     }
 
@@ -147,7 +147,7 @@ concept ScoreIndex [X] {
       -> error(message: String) {
         Invalid widget implementation data.
       }
-      fixture upsert_widget { widget: "dialog", framework: "react", file: "/generated/Dialog.tsx", component: "Dialog" }
+      fixture upsert_widget { widget: "dialog", framework: "react", file: "/generated/Dialog.tsx", component: "Dialog" } after upsert_user
       fixture upsert_widget_empty { widget: "" } -> error
     }
 
@@ -158,7 +158,7 @@ concept ScoreIndex [X] {
       -> error(message: String) {
         Invalid theme implementation data.
       }
-      fixture upsert_theme { theme: "light", platform: "css", file: "/generated/light.css", tokenCount: 42 }
+      fixture upsert_theme { theme: "light", platform: "css", file: "/generated/light.css", tokenCount: 42 } after upsert_user
       fixture upsert_theme_empty { theme: "" } -> error
     }
 
@@ -169,7 +169,7 @@ concept ScoreIndex [X] {
       -> error(message: String) {
         Invalid deployment data.
       }
-      fixture upsert_deploy { name: "conduit-prod", app: "conduit", file: "/deploy/prod.yaml" }
+      fixture upsert_deploy { name: "conduit-prod", app: "conduit", file: "/deploy/prod.yaml" } after upsert_user
       fixture upsert_deploy_empty { name: "" } -> error
     }
 
@@ -180,7 +180,7 @@ concept ScoreIndex [X] {
       -> error(message: String) {
         Invalid suite manifest data.
       }
-      fixture upsert_suite { name: "identity", version: "1.0.0", file: "/suites/identity/suite.yaml" }
+      fixture upsert_suite { name: "identity", version: "1.0.0", file: "/suites/identity/suite.yaml" } after upsert_user
       fixture upsert_suite_empty { name: "" } -> error
     }
 
@@ -191,7 +191,7 @@ concept ScoreIndex [X] {
       -> error(message: String) {
         Invalid interface data.
       }
-      fixture upsert_iface { name: "conduit-api", endpointCount: 12, file: "/interfaces/api.yaml" }
+      fixture upsert_iface { name: "conduit-api", endpointCount: 12, file: "/interfaces/api.yaml" } after upsert_user
       fixture upsert_iface_empty { name: "" } -> error
     }
 
@@ -199,22 +199,22 @@ concept ScoreIndex [X] {
       -> ok(removed: Int) {
         Remove all index entries associated with a file.
       }
-      fixture remove_file { path: "/src/handler.ts" }
-      fixture remove_empty { path: "" }
+      fixture remove_file { path: "/src/handler.ts" } after upsert_user
+      fixture remove_empty { path: "" } after upsert_user
     }
 
     action clear() {
       -> ok(cleared: Int) {
         Clear all index entries. Used before a full reindex.
       }
-      fixture valid {}
+      fixture valid {} after upsert_user
     }
 
     action stats() {
       -> ok(conceptCount: Int, syncCount: Int, symbolCount: Int, fileCount: Int, handlerCount: Int, widgetImplCount: Int, themeImplCount: Int, suiteCount: Int, deploymentCount: Int, interfaceCount: Int, lastUpdated: DateTime) {
         Return current index statistics.
       }
-      fixture valid_2 {}
+      fixture valid_2 {} after upsert_user
     }
   }
 

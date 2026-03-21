@@ -41,8 +41,8 @@ concept DataFlowPath [W] {
         serialized JSON array of paths.
       }
 
-      fixture valid_config { configKey: "db-url" }
-      fixture prefixed_config { configKey: "config/api-key" }
+      fixture valid_config { configKey: "db-url" } after valid_trace
+      fixture prefixed_config { configKey: "config/api-key" } after valid_trace
     }
 
     action traceToOutput(output: String) {
@@ -51,8 +51,8 @@ concept DataFlowPath [W] {
         output file. Results as serialized JSON array of paths.
       }
 
-      fixture valid_output { output: "dist/bundle.js" }
-      fixture report_output { output: "reports/coverage.json" }
+      fixture valid_output { output: "dist/bundle.js" } after valid_trace
+      fixture report_output { output: "reports/coverage.json" } after valid_trace
     }
 
     action get(path: W) {
@@ -63,7 +63,7 @@ concept DataFlowPath [W] {
         Path does not exist.
       }
 
-      fixture valid_get { }
+      fixture valid_get { } after valid_trace
       fixture missing_path { path: "data-flow-path-nonexistent" } -> notfound
     }
   }

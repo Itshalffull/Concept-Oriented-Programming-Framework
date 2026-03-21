@@ -83,8 +83,8 @@ concept Builder [B] {
         Some builds succeeded, some failed.
       }
 
-      fixture buildall_multi { concepts: ["password", "session"], source: "./generated", targets: [{ language: "swift", platform: "linux-arm64" }], config: { mode: "release" } }
-      fixture buildall_empty_concepts { concepts: [], source: "./src", targets: [{ language: "typescript", platform: "linux-x86_64" }], config: { mode: "debug" } } -> error
+      fixture buildall_multi { concepts: ["password", "session"], source: "./generated", targets: [{ language: "swift", platform: "linux-arm64" }], config: { mode: "release" } } after build_swift_release
+      fixture buildall_empty_concepts { concepts: [], source: "./src", targets: [{ language: "typescript", platform: "linux-x86_64" }], config: { mode: "debug" } } after build_swift_release -> error
     }
 
     action test(concept: String, language: String, platform: String, testFilter: option list String, testType: option String, toolName: option String) {
@@ -131,8 +131,8 @@ concept Builder [B] {
         is available.
       }
 
-      fixture test_unit { concept: "password", language: "swift", platform: "linux-arm64", testType: "unit" }
-      fixture test_e2e_with_tool { concept: "session", language: "typescript", platform: "linux-x86_64", testType: "e2e", toolName: "playwright" }
+      fixture test_unit { concept: "password", language: "swift", platform: "linux-arm64", testType: "unit" } after build_swift_release
+      fixture test_e2e_with_tool { concept: "session", language: "typescript", platform: "linux-x86_64", testType: "e2e", toolName: "playwright" } after build_swift_release
       fixture test_not_built { concept: "nonexistent", language: "swift", platform: "linux-arm64" } -> error
     }
 
@@ -142,8 +142,8 @@ concept Builder [B] {
         "testing", "packaging", "done", "failed".
       }
 
-      fixture status_existing { build: "bld-abc123" }
-      fixture status_missing { build: "" }
+      fixture status_existing { build: "bld-abc123" } after build_swift_release
+      fixture status_missing { build: "" } after build_swift_release
     }
 
     action history(concept: String, language: option String) {
@@ -152,9 +152,9 @@ concept Builder [B] {
         language. Used by `clef build history`.
       }
 
-      fixture history_all { concept: "password" }
-      fixture history_by_lang { concept: "password", language: "swift" }
-      fixture history_empty_concept { concept: "" }
+      fixture history_all { concept: "password" } after build_swift_release
+      fixture history_by_lang { concept: "password", language: "swift" } after build_swift_release
+      fixture history_empty_concept { concept: "" } after build_swift_release
     }
   }
 

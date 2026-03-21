@@ -48,7 +48,7 @@ concept RenderProgram [R] {
         accept further instructions.
       }
 
-      fixture add_root_element { program: "card-widget", part: "root", role: "container" }
+      fixture add_root_element { program: "card-widget", part: "root", role: "container" } after new_program
       fixture element_unknown_program { program: "nonexistent", part: "root", role: "container" } -> notfound
     }
 
@@ -65,7 +65,7 @@ concept RenderProgram [R] {
         accept further instructions.
       }
 
-      fixture add_text { program: "card-widget", part: "root", content: "Hello World" }
+      fixture add_text { program: "card-widget", part: "root", content: "Hello World" } after new_program
       fixture text_unknown_program { program: "nonexistent", part: "root", content: "text" } -> notfound
     }
 
@@ -82,7 +82,7 @@ concept RenderProgram [R] {
         accept further instructions.
       }
 
-      fixture add_label_prop { program: "card-widget", name: "label", propType: "string", defaultValue: "Click" }
+      fixture add_label_prop { program: "card-widget", name: "label", propType: "string", defaultValue: "Click" } after new_program
       fixture prop_unknown_program { program: "nonexistent", name: "label", propType: "string", defaultValue: "" } -> notfound
     }
 
@@ -99,7 +99,7 @@ concept RenderProgram [R] {
         accept further instructions.
       }
 
-      fixture bind_data_value { program: "card-widget", part: "root", attr: "data-value", expr: "props.value" }
+      fixture bind_data_value { program: "card-widget", part: "root", attr: "data-value", expr: "props.value" } after new_program
       fixture bind_unknown_program { program: "nonexistent", part: "root", attr: "text", expr: "x" } -> notfound
     }
 
@@ -116,7 +116,7 @@ concept RenderProgram [R] {
         accept further instructions.
       }
 
-      fixture define_idle_state { program: "card-widget", name: "idle", initial: true }
+      fixture define_idle_state { program: "card-widget", name: "idle", initial: true } after new_program
       fixture stateDef_unknown_program { program: "nonexistent", name: "idle", initial: true } -> notfound
     }
 
@@ -133,7 +133,7 @@ concept RenderProgram [R] {
         accept further instructions.
       }
 
-      fixture add_click_transition { program: "card-widget", fromState: "idle", event: "click", toState: "active" }
+      fixture add_click_transition { program: "card-widget", fromState: "idle", event: "click", toState: "active" } after new_program
       fixture transition_unknown_program { program: "nonexistent", fromState: "idle", event: "click", toState: "active" } -> notfound
     }
 
@@ -151,7 +151,7 @@ concept RenderProgram [R] {
         accept further instructions.
       }
 
-      fixture add_aria_label { program: "card-widget", part: "root", attr: "aria-label", value: "Main card" }
+      fixture add_aria_label { program: "card-widget", part: "root", attr: "aria-label", value: "Main card" } after new_program
       fixture aria_unknown_program { program: "nonexistent", part: "root", attr: "aria-label", value: "x" } -> notfound
     }
 
@@ -168,7 +168,7 @@ concept RenderProgram [R] {
         accept further instructions.
       }
 
-      fixture map_enter_key { program: "card-widget", key: "Enter", event: "activate" }
+      fixture map_enter_key { program: "card-widget", key: "Enter", event: "activate" } after new_program
       fixture keyboard_unknown_program { program: "nonexistent", key: "Escape", event: "close" } -> notfound
     }
 
@@ -185,7 +185,7 @@ concept RenderProgram [R] {
         accept further instructions.
       }
 
-      fixture set_focus_trap { program: "card-widget", strategy: "trap", initialPart: "root" }
+      fixture set_focus_trap { program: "card-widget", strategy: "trap", initialPart: "root" } after new_program
       fixture focus_unknown_program { program: "nonexistent", strategy: "trap", initialPart: "root" } -> notfound
     }
 
@@ -202,7 +202,7 @@ concept RenderProgram [R] {
         accept further instructions.
       }
 
-      fixture compose_badge { program: "card-widget", widget: "Badge", slot: "header" }
+      fixture compose_badge { program: "card-widget", widget: "Badge", slot: "header" } after new_program
       fixture compose_unknown_program { program: "nonexistent", widget: "Badge", slot: "header" } -> notfound
     }
 
@@ -219,7 +219,7 @@ concept RenderProgram [R] {
         accept further instructions.
       }
 
-      fixture add_primary_token { program: "card-widget", path: "palette.primary", fallback: "#000" }
+      fixture add_primary_token { program: "card-widget", path: "palette.primary", fallback: "#000" } after new_program
       fixture token_unknown_program { program: "nonexistent", path: "palette.primary", fallback: "#000" } -> notfound
     }
 
@@ -235,7 +235,7 @@ concept RenderProgram [R] {
         The program was already terminated by a previous pure call.
       }
 
-      fixture seal_program { program: "card-widget", output: "CardWidget" }
+      fixture seal_program { program: "card-widget", output: "CardWidget" } after new_program
       fixture pure_unknown_program { program: "nonexistent", output: "done" } -> notfound
     }
   }

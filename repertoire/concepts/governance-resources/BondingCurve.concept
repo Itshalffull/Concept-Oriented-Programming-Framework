@@ -41,7 +41,7 @@ concept BondingCurve [BC] {
         The specified bonding curve does not exist.
       }
 
-      fixture buy_100_eth { curve: "curve-001", buyer: "alice", reserveAmount: 100.0 }
+      fixture buy_100_eth { curve: "curve-001", buyer: "alice", reserveAmount: 100.0 } after create_linear
       fixture buy_nonexistent_curve { curve: "curve-nonexistent", buyer: "alice", reserveAmount: 50.0 } -> error
     }
 
@@ -53,7 +53,7 @@ concept BondingCurve [BC] {
         The specified bonding curve does not exist.
       }
 
-      fixture sell_tokens { curve: "curve-001", seller: "alice", tokenAmount: 50.0 }
+      fixture sell_tokens { curve: "curve-001", seller: "alice", tokenAmount: 50.0 } after create_linear
       fixture sell_nonexistent_curve { curve: "curve-nonexistent", seller: "alice", tokenAmount: 10.0 } -> error
     }
 
@@ -65,7 +65,7 @@ concept BondingCurve [BC] {
         The specified bonding curve does not exist.
       }
 
-      fixture get_price_10 { curve: "curve-001", amount: 10.0 }
+      fixture get_price_10 { curve: "curve-001", amount: 10.0 } after create_linear
       fixture get_price_nonexistent { curve: "curve-nonexistent", amount: 1.0 } -> error
     }
   }

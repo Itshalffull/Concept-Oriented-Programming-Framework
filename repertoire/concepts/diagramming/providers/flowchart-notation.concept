@@ -35,7 +35,7 @@ concept FlowchartNotationProvider [C] {
         Returns flowchart notation definition with 6 node types and 1 edge type.
       }
 
-      fixture valid {}
+      fixture valid {} after valid
     }
   }
 

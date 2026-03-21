@@ -37,7 +37,7 @@ concept DiagramExport [X] {
       }
       -> error(message: String) { Format not recognized or data corrupt. }
 
-      fixture import_json { data: "{\"nodes\":[]}", format: "json", target_canvas: "canvas-5" }
+      fixture import_json { data: "{\"nodes\":[]}", format: "json", target_canvas: "canvas-5" } after export_svg
       fixture import_unsupported { data: "binary-blob", format: "xyz", target_canvas: "canvas-5" } -> error
     }
 
@@ -45,8 +45,8 @@ concept DiagramExport [X] {
       -> ok(format: String, confidence: Float) { Identifies format. }
       -> unknown(message: String) { Cannot determine. }
 
-      fixture detect_json { data: "{\"nodes\":[]}" }
-      fixture detect_svg { data: "<svg xmlns=\"http://www.w3.org/2000/svg\"></svg>" }
+      fixture detect_json { data: "{\"nodes\":[]}" } after export_svg
+      fixture detect_svg { data: "<svg xmlns=\"http://www.w3.org/2000/svg\"></svg>" } after export_svg
       fixture detect_empty { } -> unknown
     }
   }

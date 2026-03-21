@@ -33,8 +33,8 @@ concept Motion [O] {
       -> ok(motion: O) { Named easing curve (CSS cubic-bezier or keyword). }
       -> invalid(message: String) { Invalid easing value. }
 
-      fixture easing_ease_in_out { motion: "O-5", name: "standard", value: "ease-in-out" }
-      fixture easing_cubic_bezier { motion: "O-6", name: "decelerate", value: "cubic-bezier(0.0, 0.0, 0.2, 1)" }
+      fixture easing_ease_in_out { motion: "O-5", name: "standard", value: "ease-in-out" } after duration_fast
+      fixture easing_cubic_bezier { motion: "O-6", name: "decelerate", value: "cubic-bezier(0.0, 0.0, 0.2, 1)" } after duration_fast
       fixture easing_empty_value { motion: "O-7", name: "missing", value: "" } -> invalid
     }
 
@@ -45,10 +45,10 @@ concept Motion [O] {
       }
       -> invalid(message: String) { Referenced duration or easing not found. }
 
-      fixture transition_fade { motion: "O-8", name: "fade", config: "{ \"property\": \"opacity\", \"duration\": 200, \"easing\": \"ease-out\" }" }
-      fixture transition_slide { motion: "O-9", name: "slide", config: "{ \"property\": \"transform\", \"duration\": 300, \"easing\": \"ease-in-out\", \"delay\": 50 }" }
+      fixture transition_fade { motion: "O-8", name: "fade", config: "{ \"property\": \"opacity\", \"duration\": 200, \"easing\": \"ease-out\" }" } after duration_fast
+      fixture transition_slide { motion: "O-9", name: "slide", config: "{ \"property\": \"transform\", \"duration\": 300, \"easing\": \"ease-in-out\", \"delay\": 50 }" } after duration_fast
       fixture transition_invalid_json { motion: "O-10", name: "broken", config: "not-json" } -> invalid
-      fixture transition_missing_property { motion: "O-11", name: "incomplete", config: "{ \"duration\": 200 }" } -> invalid
+      fixture transition_missing_property { motion: "O-11", name: "incomplete", config: "{ \"duration\": 200 }" } after duration_fast -> invalid
     }
   }
 

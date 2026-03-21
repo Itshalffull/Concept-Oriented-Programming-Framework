@@ -68,7 +68,7 @@ concept ConceptScaffoldGen [C] {
           "list-option-wrappers", "all-primitives"]
       }
 
-      fixture valid {}
+      fixture valid {} after user_concept
     }
   }
 

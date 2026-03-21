@@ -44,7 +44,7 @@ concept Ref [R] {
         Compare-and-swap failed.
       }
 
-      fixture update_head { name: "HEAD", newHash: "sha256:newdef456", expectedOldHash: "sha256:abc123def456" }
+      fixture update_head { name: "HEAD", newHash: "sha256:newdef456", expectedOldHash: "sha256:abc123def456" } after create_head
       fixture update_empty_name { name: "", newHash: "sha256:abc", expectedOldHash: "sha256:def" } -> error
     }
 
@@ -59,7 +59,7 @@ concept Ref [R] {
         Ref is protected and cannot be deleted.
       }
 
-      fixture delete_tag { name: "tags/v1.0" }
+      fixture delete_tag { name: "tags/v1.0" } after create_head
       fixture delete_empty_name { name: "" } -> error
     }
 
@@ -71,7 +71,7 @@ concept Ref [R] {
         No ref with that name.
       }
 
-      fixture resolve_head { name: "HEAD" }
+      fixture resolve_head { name: "HEAD" } after create_head
       fixture resolve_missing { name: "nonexistent-ref" } -> error
     }
 
@@ -83,7 +83,7 @@ concept Ref [R] {
         No ref with that name.
       }
 
-      fixture log_head { name: "HEAD" }
+      fixture log_head { name: "HEAD" } after create_head
       fixture log_missing { name: "nonexistent-ref" } -> error
     }
   }

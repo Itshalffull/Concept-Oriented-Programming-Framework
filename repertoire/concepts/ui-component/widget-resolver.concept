@@ -69,8 +69,8 @@ concept WidgetResolver [R] {
       -> partial(resolver: R, resolved: String,
                  unresolved: String) { Some unresolved. }
 
-      fixture valid_resolveAll { elements: "[\"single-choice\",\"text-edit\"]", context: "{\"platform\":\"browser\"}" }
-      fixture empty_elements { elements: "[]", context: "{}" }
+      fixture valid_resolveAll { elements: "[\"single-choice\",\"text-edit\"]", context: "{\"platform\":\"browser\"}" } after valid_resolve
+      fixture empty_elements { elements: "[]", context: "{}" } after valid_resolve
     }
 
     action override(resolver: R, element: String,
@@ -82,7 +82,7 @@ concept WidgetResolver [R] {
       }
       -> invalid(message: String) { Widget not registered. }
 
-      fixture valid_override { element: "single-choice", widget: "custom-picker" }
+      fixture valid_override { element: "single-choice", widget: "custom-picker" } after valid_resolve
       fixture missing_params { element: "", widget: "" } -> invalid
     }
 
@@ -93,8 +93,8 @@ concept WidgetResolver [R] {
       }
       -> invalid(message: String) { Weight spec malformed. }
 
-      fixture valid_weights { weights: "{\"specificity\":0.4,\"conditionMatch\":0.3,\"popularity\":0.2,\"recency\":0.1}" }
-      fixture bad_sum { weights: "{\"specificity\":0.5,\"conditionMatch\":0.8}" } -> invalid
+      fixture valid_weights { weights: "{\"specificity\":0.4,\"conditionMatch\":0.3,\"popularity\":0.2,\"recency\":0.1}" } after valid_resolve
+      fixture bad_sum { weights: "{\"specificity\":0.5,\"conditionMatch\":0.8}" } after valid_resolve -> invalid
       fixture bad_json { weights: "not-json" } -> invalid
     }
 
@@ -107,8 +107,8 @@ concept WidgetResolver [R] {
       }
       -> notfound(message: String) { Element not found. }
 
-      fixture valid_explain { element: "single-choice", context: "{\"platform\":\"browser\"}" }
-      fixture missing_resolver { resolver: "nonexistent-resolver", element: "single-choice", context: "{}" } -> notfound
+      fixture valid_explain { element: "single-choice", context: "{\"platform\":\"browser\"}" } after valid_resolve
+      fixture missing_resolver { resolver: "nonexistent-resolver", element: "single-choice", context: "{}" } after valid_resolve -> notfound
     }
   }
 

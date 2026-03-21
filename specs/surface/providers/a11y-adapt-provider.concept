@@ -42,9 +42,9 @@ concept A11yAdaptProvider [V] {
         The program or spec JSON could not be parsed.
       }
 
-      fixture modify_aria_label { program: "{\"instructions\":[{\"tag\":\"aria\",\"attr\":\"aria-label\",\"value\":\"Card\"},{\"tag\":\"pure\",\"output\":\"W\"}]}", spec: "{\"modifications\":[{\"match\":{\"tag\":\"aria\",\"attr\":\"aria-label\"},\"set\":{\"value\":\"Accessible Card\"}}]}" }
-      fixture inject_aria_live { program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"additions\":[{\"tag\":\"aria\",\"attr\":\"aria-live\",\"value\":\"polite\"}]}" }
-      fixture invalid_spec_json { program: "{\"instructions\":[]}", spec: "bad-json" } -> error
+      fixture modify_aria_label { program: "{\"instructions\":[{\"tag\":\"aria\",\"attr\":\"aria-label\",\"value\":\"Card\"},{\"tag\":\"pure\",\"output\":\"W\"}]}", spec: "{\"modifications\":[{\"match\":{\"tag\":\"aria\",\"attr\":\"aria-label\"},\"set\":{\"value\":\"Accessible Card\"}}]}" } after valid
+      fixture inject_aria_live { program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"additions\":[{\"tag\":\"aria\",\"attr\":\"aria-live\",\"value\":\"polite\"}]}" } after valid
+      fixture invalid_spec_json { program: "{\"instructions\":[]}", spec: "bad-json" } after valid -> error
     }
   }
 

@@ -30,8 +30,8 @@ concept PngExportProvider [C] {
       }
       -> error(message: String) { Export failed. }
 
-      fixture default_options { canvas_id: "canvas-1", options: none }
-      fixture custom_size { canvas_id: "canvas-1", options: { width: 1920, height: 1080, background: "#ffffff", embed_data: true } }
+      fixture default_options { canvas_id: "canvas-1", options: none } after valid
+      fixture custom_size { canvas_id: "canvas-1", options: { width: 1920, height: 1080, background: "#ffffff", embed_data: true } } after valid
       fixture empty_canvas_id { canvas_id: "", options: none } -> error
     }
   }

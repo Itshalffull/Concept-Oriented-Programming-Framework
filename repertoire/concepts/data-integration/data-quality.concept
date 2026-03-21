@@ -41,7 +41,7 @@ concept DataQuality [D] {
         Item held for review with violation details.
       }
 
-      fixture quarantine_item { itemId: "item-1", violations: "[{\"rule\":\"required\",\"field\":\"title\"}]" }
+      fixture quarantine_item { itemId: "item-1", violations: "[{\"rule\":\"required\",\"field\":\"title\"}]" } after validate_ok
     }
 
     action release(itemId: String) {
@@ -52,7 +52,7 @@ concept DataQuality [D] {
         Item not in quarantine.
       }
 
-      fixture release_quarantined { itemId: "item-1" }
+      fixture release_quarantined { itemId: "item-1" } after validate_ok
       fixture release_missing { itemId: "item-missing" } -> notfound
     }
 
@@ -61,7 +61,7 @@ concept DataQuality [D] {
         Returns completeness, distribution, and anomaly statistics for the dataset.
       }
 
-      fixture profile_articles { datasetQuery: "SELECT * FROM articles" }
+      fixture profile_articles { datasetQuery: "SELECT * FROM articles" } after validate_ok
     }
 
     action reconcile(field: String, knowledgeBase: String) {
@@ -69,7 +69,7 @@ concept DataQuality [D] {
         Returns candidate matches from the knowledge base for the given field value.
       }
 
-      fixture reconcile_author { field: "author_name", knowledgeBase: "wikidata" }
+      fixture reconcile_author { field: "author_name", knowledgeBase: "wikidata" } after validate_ok
     }
 
   }

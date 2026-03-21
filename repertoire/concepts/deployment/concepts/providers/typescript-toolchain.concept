@@ -51,7 +51,7 @@ concept TypeScriptToolchain [N] {
         "node-version-check"]
       }
 
-      fixture register_valid {}
+      fixture register_valid {} after resolve_node
     }
   }
 

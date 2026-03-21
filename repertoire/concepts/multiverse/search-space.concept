@@ -48,8 +48,8 @@ concept SearchSpace [S] {
         filter out base index results for this entity.
       }
 
-      fixture tombstone_existing { scope_id: "vs-1", provider: "text", entity_id: "article-42" }
-      fixture tombstone_new { scope_id: "vs-2", provider: "text", entity_id: "article-99" }
+      fixture tombstone_existing { scope_id: "vs-1", provider: "text", entity_id: "article-42" } after index_text
+      fixture tombstone_new { scope_id: "vs-2", provider: "text", entity_id: "article-99" } after index_text
     }
 
     action query(scope_id: String, provider: String,
@@ -64,7 +64,7 @@ concept SearchSpace [S] {
         The scope does not exist. Fall through to base-only query.
       }
 
-      fixture query_text { scope_id: "vs-1", provider: "text", query_expr: "concept" }
+      fixture query_text { scope_id: "vs-1", provider: "text", query_expr: "concept" } after index_text
       fixture query_missing_scope { scope_id: "vs-nonexistent", provider: "text", query_expr: "hello" } -> no_scope
     }
 
@@ -74,8 +74,8 @@ concept SearchSpace [S] {
         space is archived, merged, or promoted.
       }
 
-      fixture clear_scope { scope_id: "vs-1" }
-      fixture clear_empty { scope_id: "vs-empty" }
+      fixture clear_scope { scope_id: "vs-1" } after index_text
+      fixture clear_empty { scope_id: "vs-empty" } after index_text
     }
 
     action materialize(scope_id: String) {
@@ -85,8 +85,8 @@ concept SearchSpace [S] {
         base-index write action.
       }
 
-      fixture materialize_scope { scope_id: "vs-1" }
-      fixture materialize_empty { scope_id: "vs-empty" }
+      fixture materialize_scope { scope_id: "vs-1" } after index_text
+      fixture materialize_empty { scope_id: "vs-empty" } after index_text
     }
   }
 

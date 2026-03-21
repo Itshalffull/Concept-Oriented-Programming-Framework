@@ -49,7 +49,7 @@ concept RuntimeFlow [F] {
         Return all flows that include the given action.
         Results as serialized JSON array.
       }
-      fixture find_create { action: "User/create", since: "2026-01-01T00:00:00Z" }
+      fixture find_create { action: "User/create", since: "2026-01-01T00:00:00Z" } after correlate_flow
       fixture find_empty { action: "", since: "" } -> error
     }
 
@@ -58,7 +58,7 @@ concept RuntimeFlow [F] {
         Return all flows that triggered the given sync.
         Results as serialized JSON array.
       }
-      fixture find_sync { sync: "onUserCreate", since: "2026-01-01T00:00:00Z" }
+      fixture find_sync { sync: "onUserCreate", since: "2026-01-01T00:00:00Z" } after correlate_flow
       fixture find_empty_sync { sync: "", since: "" } -> error
     }
 
@@ -67,7 +67,7 @@ concept RuntimeFlow [F] {
         Return all flows that produced the given variant.
         Results as serialized JSON array.
       }
-      fixture find_ok { variant: "ok", since: "2026-01-01T00:00:00Z" }
+      fixture find_ok { variant: "ok", since: "2026-01-01T00:00:00Z" } after correlate_flow
       fixture find_empty_variant { variant: "", since: "" } -> error
     }
 
@@ -76,8 +76,8 @@ concept RuntimeFlow [F] {
         Return all flows with status "failed" or "timeout".
         Results as serialized JSON array.
       }
-      fixture find_recent { since: "2026-01-01T00:00:00Z" }
-      fixture find_all { since: "" }
+      fixture find_recent { since: "2026-01-01T00:00:00Z" } after correlate_flow
+      fixture find_all { since: "" } after correlate_flow
     }
 
     action compareToStatic(flow: F) {
@@ -103,7 +103,7 @@ concept RuntimeFlow [F] {
         Results as serialized JSON array of
         { step, file, line, col, symbol }.
       }
-      fixture locations_flow { flow: "runtime-flow-1" }
+      fixture locations_flow { flow: "runtime-flow-1" } after correlate_flow
       fixture locations_missing { flow: "nonexistent" } -> error
     }
 
@@ -114,7 +114,7 @@ concept RuntimeFlow [F] {
       -> notfound() {
         Flow does not exist.
       }
-      fixture get_flow { flow: "runtime-flow-1" }
+      fixture get_flow { flow: "runtime-flow-1" } after correlate_flow
       fixture get_missing { flow: "nonexistent" } -> error
     }
   }

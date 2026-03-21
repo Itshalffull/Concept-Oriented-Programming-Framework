@@ -63,7 +63,7 @@ concept HandlerScaffoldGen [H] {
         capabilities: ["impl-ts", "conformance-test", "storage-patterns"]
       }
 
-      fixture valid_register {}
+      fixture valid_register {} after valid_generate
     }
   }
 

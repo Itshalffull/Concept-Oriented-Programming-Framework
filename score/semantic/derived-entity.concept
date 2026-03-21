@@ -50,7 +50,7 @@ concept DerivedEntity [D] {
       -> notfound() {
         No derived concept with this name exists.
       }
-      fixture get_trash { name: "Trash" }
+      fixture get_trash { name: "Trash" } after register_trash
       fixture get_missing { name: "NonexistentDerived" } -> error
     }
 
@@ -59,7 +59,7 @@ concept DerivedEntity [D] {
         Return all derived concepts that compose the given concept.
         Results as serialized JSON array.
       }
-      fixture find_by_article { concept: "Article" }
+      fixture find_by_article { concept: "Article" } after register_trash
       fixture find_by_empty { concept: "" } -> error
     }
 
@@ -68,7 +68,7 @@ concept DerivedEntity [D] {
         Return all derived concepts that claim the given sync.
         Results as serialized JSON array.
       }
-      fixture find_by_sync { syncName: "trash-on-delete" }
+      fixture find_by_sync { syncName: "trash-on-delete" } after register_trash
       fixture find_by_sync_empty { syncName: "" } -> error
     }
 
@@ -80,7 +80,7 @@ concept DerivedEntity [D] {
       -> notfound() {
         Entity not found.
       }
-      fixture tree_valid { entity: "derived-entity-1" }
+      fixture tree_valid { entity: "derived-entity-1" } after register_trash
       fixture tree_missing { entity: "nonexistent-id" } -> error
     }
 
@@ -93,7 +93,7 @@ concept DerivedEntity [D] {
       -> notfound() {
         Entity not found.
       }
-      fixture rollup_valid { entity: "derived-entity-1", flowId: "flow-abc-123" }
+      fixture rollup_valid { entity: "derived-entity-1", flowId: "flow-abc-123" } after register_trash
       fixture rollup_missing_entity { entity: "nonexistent-id", flowId: "flow-abc-123" } -> error
     }
   }

@@ -80,7 +80,7 @@ concept GrpcTarget [G] {
         their streaming modes, including hierarchy RPCs.
       }
 
-      fixture list_payment_rpcs { concept: "Payment" }
+      fixture list_payment_rpcs { concept: "Payment" } after with_default_config
       fixture empty_concept { concept: "" } -> error
     }
   }

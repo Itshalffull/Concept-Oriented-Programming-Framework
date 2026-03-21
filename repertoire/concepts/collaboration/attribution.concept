@@ -33,8 +33,8 @@ concept Attribution [A] {
         Returns full blame map — each region mapped to its most recent author.
       }
 
-      fixture blame_existing_doc { contentRef: "doc-main-ts" }
-      fixture blame_unknown_doc { contentRef: "nonexistent-doc" }
+      fixture blame_existing_doc { contentRef: "doc-main-ts" } after attribute_code_region
+      fixture blame_unknown_doc { contentRef: "nonexistent-doc" } after attribute_code_region
     }
 
     action history(contentRef: String, region: Bytes) {
@@ -45,7 +45,7 @@ concept Attribution [A] {
         No attributions found for this content and region.
       }
 
-      fixture history_known_region { contentRef: "doc-main-ts", region: "lines:10-25" }
+      fixture history_known_region { contentRef: "doc-main-ts", region: "lines:10-25" } after attribute_code_region
       fixture history_unknown_region { contentRef: "doc-main-ts", region: "lines:999-1000" } -> error
     }
 
@@ -54,8 +54,8 @@ concept Attribution [A] {
         CODEOWNERS-style ownership rule set for path pattern.
       }
 
-      fixture set_ownership_glob { pattern: "src/auth/**", owners: ["alice@example.com", "bob@example.com"] }
-      fixture set_ownership_empty_owners { pattern: "src/**", owners: [] }
+      fixture set_ownership_glob { pattern: "src/auth/**", owners: ["alice@example.com", "bob@example.com"] } after attribute_code_region
+      fixture set_ownership_empty_owners { pattern: "src/**", owners: [] } after attribute_code_region
     }
 
     action queryOwners(path: String) {
@@ -66,7 +66,7 @@ concept Attribution [A] {
         No ownership pattern matches this path.
       }
 
-      fixture query_matching_path { path: "src/auth/login.ts" }
+      fixture query_matching_path { path: "src/auth/login.ts" } after attribute_code_region
       fixture query_unmatched_path { path: "unowned/random/file.txt" } -> error
     }
   }

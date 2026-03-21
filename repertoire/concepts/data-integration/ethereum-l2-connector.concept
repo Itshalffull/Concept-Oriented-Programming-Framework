@@ -53,8 +53,8 @@ concept EthereumL2Connector [C] {
         or the signer is not configured.
       }
 
-      fixture write_transfer { connector: "eth-l2-1", data: "{\"method\":\"transfer\",\"args\":[\"0xabc\",100]}" }
-      fixture write_missing { connector: "eth-l2-missing", data: "{}" } -> notfound
+      fixture write_transfer { connector: "eth-l2-1", data: "{\"method\":\"transfer\",\"args\":[\"0xabc\",100]}" } after read_owner
+      fixture write_missing { connector: "eth-l2-missing", data: "{}" } after read_owner -> notfound
       fixture write_bad_data { connector: "eth-l2-1", data: "not-json" } -> error
     }
 
@@ -67,7 +67,7 @@ concept EthereumL2Connector [C] {
         The RPC endpoint did not respond within the timeout window.
       }
 
-      fixture test_connected { connector: "eth-l2-1" }
+      fixture test_connected { connector: "eth-l2-1" } after read_owner
       fixture test_missing { connector: "eth-l2-missing" } -> unreachable
     }
 
@@ -80,7 +80,7 @@ concept EthereumL2Connector [C] {
         No connector is registered with this identifier.
       }
 
-      fixture discover_existing { connector: "eth-l2-1" }
+      fixture discover_existing { connector: "eth-l2-1" } after read_owner
       fixture discover_missing { connector: "eth-l2-missing" } -> notfound
     }
   }

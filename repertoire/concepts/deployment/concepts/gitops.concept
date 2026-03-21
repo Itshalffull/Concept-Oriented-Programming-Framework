@@ -47,7 +47,7 @@ concept GitOps [G] {
         Controller reported reconciliation failure.
       }
 
-      fixture reconciliation_found { manifest: "go-manifest-001" }
+      fixture reconciliation_found { manifest: "go-manifest-001" } after emit_argocd
       fixture reconciliation_missing { manifest: "go-nonexistent" } -> failed
     }
   }

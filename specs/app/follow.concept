@@ -18,7 +18,7 @@ concept Follow [U] {
       }
 
       fixture follow_ok { user: "user-alice", target: "user-bob" }
-      fixture follow_another { user: "user-carol", target: "user-dave" }
+      fixture follow_another { user: "user-carol", target: "user-dave" } after follow_ok
     }
 
     action unfollow(user: U, target: String) {
@@ -27,8 +27,8 @@ concept Follow [U] {
         Return user and target references.
       }
 
-      fixture unfollow_ok { user: "user-alice", target: "user-bob" }
-      fixture unfollow_not_following { user: "user-carol", target: "user-unknown" }
+      fixture unfollow_ok { user: "user-alice", target: "user-bob" } after follow_ok
+      fixture unfollow_not_following { user: "user-carol", target: "user-unknown" } after follow_ok
     }
 
     action isFollowing(user: U, target: String) {
@@ -36,8 +36,8 @@ concept Follow [U] {
         Return whether the user follows the target.
       }
 
-      fixture is_following_ok { user: "user-alice", target: "user-bob" }
-      fixture is_following_unknown_user { user: "user-unknown", target: "user-bob" }
+      fixture is_following_ok { user: "user-alice", target: "user-bob" } after follow_ok
+      fixture is_following_unknown_user { user: "user-unknown", target: "user-bob" } after follow_ok
     }
   }
 

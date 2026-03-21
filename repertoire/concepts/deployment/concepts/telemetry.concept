@@ -45,8 +45,8 @@ concept Telemetry [T] {
         deployment continues and marker is queued for retry.
       }
 
-      fixture marker_staging { suite: "auth-suite", version: "2.1.0", environment: "staging", status: "started" }
-      fixture marker_production { suite: "payments", version: "1.0.0", environment: "production", status: "completed" }
+      fixture marker_staging { suite: "auth-suite", version: "2.1.0", environment: "staging", status: "started" } after configure_otel
+      fixture marker_production { suite: "payments", version: "1.0.0", environment: "production", status: "completed" } after configure_otel
       fixture marker_empty_suite { suite: "", version: "1.0.0", environment: "staging", status: "started" } -> error
     }
 
@@ -64,8 +64,8 @@ concept Telemetry [T] {
         Cannot query metrics. Conservative action is pause rollout.
       }
 
-      fixture analyze_5min { concept: "UserService", window: 300, criteria: "error_rate < 0.05" }
-      fixture analyze_1hr { concept: "PaymentService", window: 3600, criteria: "latency_p99 < 500" }
+      fixture analyze_5min { concept: "UserService", window: 300, criteria: "error_rate < 0.05" } after configure_otel
+      fixture analyze_1hr { concept: "PaymentService", window: 3600, criteria: "latency_p99 < 500" } after configure_otel
       fixture analyze_empty_concept { concept: "", window: 60, criteria: "error_rate < 0.1" } -> error
     }
   }

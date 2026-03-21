@@ -45,8 +45,8 @@ concept DependenceGraph [N] {
         call, import, type-dep). Results as serialized JSON array.
       }
 
-      fixture all_kinds { symbol: "clef/state-field/Article/title", edgeKinds: "" }
-      fixture data_deps_only { symbol: "clef/state-field/Article/title", edgeKinds: "data-dep" }
+      fixture all_kinds { symbol: "clef/state-field/Article/title", edgeKinds: "" } after file_scope
+      fixture data_deps_only { symbol: "clef/state-field/Article/title", edgeKinds: "data-dep" } after file_scope
     }
 
     action queryDependencies(symbol: String, edgeKinds: String) {
@@ -55,8 +55,8 @@ concept DependenceGraph [N] {
         Results as serialized JSON array.
       }
 
-      fixture all_kinds { symbol: "clef/state-field/Article/title", edgeKinds: "" }
-      fixture call_only { symbol: "clef/action/Article/publish", edgeKinds: "call" }
+      fixture all_kinds { symbol: "clef/state-field/Article/title", edgeKinds: "" } after file_scope
+      fixture call_only { symbol: "clef/action/Article/publish", edgeKinds: "call" } after file_scope
     }
 
     action sliceForward(criterion: String) {
@@ -66,8 +66,8 @@ concept DependenceGraph [N] {
         serialized JSON.
       }
 
-      fixture valid_forward { criterion: "clef/state-field/Article/title" }
-      fixture action_criterion { criterion: "clef/action/Article/publish" }
+      fixture valid_forward { criterion: "clef/state-field/Article/title" } after file_scope
+      fixture action_criterion { criterion: "clef/action/Article/publish" } after file_scope
     }
 
     action sliceBackward(criterion: String) {
@@ -77,8 +77,8 @@ concept DependenceGraph [N] {
         serialized JSON.
       }
 
-      fixture valid_backward { criterion: "clef/state-field/Article/title" }
-      fixture output_criterion { criterion: "clef/output/report.json" }
+      fixture valid_backward { criterion: "clef/state-field/Article/title" } after file_scope
+      fixture output_criterion { criterion: "clef/output/report.json" } after file_scope
     }
 
     action impactAnalysis(changed: String) {
@@ -88,8 +88,8 @@ concept DependenceGraph [N] {
         Results as serialized JSON.
       }
 
-      fixture single_change { changed: "[\"clef/state-field/Article/title\"]" }
-      fixture multi_change { changed: "[\"clef/action/Article/publish\",\"clef/state-field/Article/status\"]" }
+      fixture single_change { changed: "[\"clef/state-field/Article/title\"]" } after file_scope
+      fixture multi_change { changed: "[\"clef/action/Article/publish\",\"clef/state-field/Article/status\"]" } after file_scope
     }
 
     action get(graph: N) {
@@ -100,7 +100,7 @@ concept DependenceGraph [N] {
         Graph does not exist.
       }
 
-      fixture valid_get { }
+      fixture valid_get { } after file_scope
       fixture missing_graph { graph: "dependence-graph-nonexistent" } -> notfound
     }
   }

@@ -61,7 +61,7 @@ concept Annotation [N] {
         No annotations exist for the specified concept.
       }
 
-      fixture resolve_existing { concept: "ScoreApi" }
+      fixture resolve_existing { concept: "ScoreApi" } after annotate_concept_level
       fixture resolve_unknown { concept: "NonExistentConcept" } -> error
     }
   }

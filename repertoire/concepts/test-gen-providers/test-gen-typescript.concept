@@ -53,7 +53,7 @@ concept TestGenTypeScript [R] {
       -> ok(results: String) {
         List all rendered test files for a given concept reference.
       }
-      fixture list_valid { concept_ref: "clef/concept/Counter" }
+      fixture list_valid { concept_ref: "clef/concept/Counter" } after render_valid
       fixture list_empty { concept_ref: "" } -> error
     }
   }

@@ -39,7 +39,7 @@ concept Authentication [U] {
         Credentials do not match the stored value for this user.
       }
 
-      fixture login_valid { user: "alice", credentials: "secret123" }
+      fixture login_valid { user: "alice", credentials: "secret123" } after register_local
       fixture login_wrong_pass { user: "alice", credentials: "wrong-password" } -> error
     }
 
@@ -52,7 +52,7 @@ concept Authentication [U] {
         No active session exists for this user.
       }
 
-      fixture logout_existing { user: "alice" }
+      fixture logout_existing { user: "alice" } after register_local
       fixture logout_unknown { user: "nonexistent-user" } -> error
     }
 
@@ -65,7 +65,7 @@ concept Authentication [U] {
         Token is expired, malformed, or has been revoked.
       }
 
-      fixture auth_valid_token { token: "tok-abc-123" }
+      fixture auth_valid_token { token: "tok-abc-123" } after register_local
       fixture auth_invalid_token { token: "expired-or-revoked" } -> error
     }
 
@@ -78,7 +78,7 @@ concept Authentication [U] {
         No account exists for this user.
       }
 
-      fixture reset_existing { user: "alice", newCredentials: "newpass456" }
+      fixture reset_existing { user: "alice", newCredentials: "newpass456" } after register_local
       fixture reset_unknown { user: "nonexistent-user", newCredentials: "pass" } -> error
     }
   }

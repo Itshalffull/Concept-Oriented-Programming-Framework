@@ -76,7 +76,7 @@ concept ModuleSelection [S] {
         This concept module is already in the selection.
       }
 
-      fixture valid_add_concept { selection: "sel-1", module_id: "Article", features: "[]" }
+      fixture valid_add_concept { selection: "sel-1", module_id: "Article", features: "[]" } after begin_with_template
       fixture add_concept_nonexistent_selection { selection: "sel-999", module_id: "Article", features: "[]" } -> error
     }
 
@@ -91,7 +91,7 @@ concept ModuleSelection [S] {
         Other selected modules depend on this concept.
       }
 
-      fixture valid_remove_concept { selection: "sel-1", module_id: "Article" }
+      fixture valid_remove_concept { selection: "sel-1", module_id: "Article" } after begin_with_template
       fixture remove_concept_nonexistent { selection: "sel-999", module_id: "Article" } -> error
     }
 
@@ -107,7 +107,7 @@ concept ModuleSelection [S] {
         The handler language does not match the target profile.
       }
 
-      fixture valid_choose_handler { selection: "sel-1", concept_module: "User", handler_module: "UserTsHandler" }
+      fixture valid_choose_handler { selection: "sel-1", concept_module: "User", handler_module: "UserTsHandler" } after begin_with_template
       fixture choose_handler_nonexistent { selection: "sel-999", concept_module: "User", handler_module: "UserTsHandler" } -> error
     }
 
@@ -116,7 +116,7 @@ concept ModuleSelection [S] {
         Add a widget module to the selection.
       }
 
-      fixture valid_add_widget { selection: "sel-1", module_id: "DataTableWidget" }
+      fixture valid_add_widget { selection: "sel-1", module_id: "DataTableWidget" } after begin_with_template
       fixture add_widget_nonexistent { selection: "sel-999", module_id: "DataTableWidget" } -> error
     }
 
@@ -125,7 +125,7 @@ concept ModuleSelection [S] {
         Set the theme module for the selection.
       }
 
-      fixture valid_select_theme { selection: "sel-1", theme_module: "MaterialTheme" }
+      fixture valid_select_theme { selection: "sel-1", theme_module: "MaterialTheme" } after begin_with_template
       fixture select_theme_nonexistent { selection: "sel-999", theme_module: "MaterialTheme" } -> error
     }
 
@@ -137,7 +137,7 @@ concept ModuleSelection [S] {
         One or more composed concepts are not in the selection.
       }
 
-      fixture valid_add_derived { selection: "sel-1", name: "BlogPost", composes: "[\"User\",\"Article\"]" }
+      fixture valid_add_derived { selection: "sel-1", name: "BlogPost", composes: "[\"User\",\"Article\"]" } after begin_with_template
       fixture add_derived_missing { selection: "sel-1", name: "BadDerived", composes: "[\"NonExistent\"]" } -> error
     }
 
@@ -155,7 +155,7 @@ concept ModuleSelection [S] {
         The selection cannot be finalized due to unresolved issues.
       }
 
-      fixture valid_finalize { selection: "sel-1" }
+      fixture valid_finalize { selection: "sel-1" } after begin_with_template
       fixture finalize_nonexistent { selection: "sel-999" } -> error
     }
 

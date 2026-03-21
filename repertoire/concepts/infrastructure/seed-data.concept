@@ -50,9 +50,9 @@ concept SeedData [S] {
         A seed with this source_path is already registered.
       }
 
-      fixture valid_register { source_path: "/project/seeds/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: ["{\"schema\":\"Shape\"}"] }
-      fixture register_interactor { source_path: "/project/seeds/interactor.seeds.yaml", concept_uri: "urn:clef/Interactor", action_name: "define", entries: ["{\"name\":\"spatial-canvas\"}"] }
-      fixture register_duplicate { source_path: "/project/seeds/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: ["{\"schema\":\"Shape\"}"] } -> error
+      fixture valid_register { source_path: "/project/seeds/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: ["{\"schema\":\"Shape\"}"] } after valid_discover
+      fixture register_interactor { source_path: "/project/seeds/interactor.seeds.yaml", concept_uri: "urn:clef/Interactor", action_name: "define", entries: ["{\"name\":\"spatial-canvas\"}"] } after valid_discover
+      fixture register_duplicate { source_path: "/project/seeds/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: ["{\"schema\":\"Shape\"}"] } after valid_discover -> error
     }
 
     action apply(seed: S) {
@@ -68,7 +68,7 @@ concept SeedData [S] {
         No seed record exists with this identifier.
       }
 
-      fixture valid_apply { seed: "seed-1" }
+      fixture valid_apply { seed: "seed-1" } after valid_discover
       fixture apply_nonexistent { seed: "seed-999" } -> error
     }
 
@@ -79,7 +79,7 @@ concept SeedData [S] {
         errored seed sets.
       }
 
-      fixture valid_apply_all { }
+      fixture valid_apply_all { } after valid_discover
     }
 
     action status() {
@@ -91,7 +91,7 @@ concept SeedData [S] {
         Return the current state of all registered seed sets.
       }
 
-      fixture valid_status { }
+      fixture valid_status { } after valid_discover
     }
 
     action reset(seed: S) {
@@ -103,7 +103,7 @@ concept SeedData [S] {
         No seed record exists with this identifier.
       }
 
-      fixture valid_reset { seed: "seed-1" }
+      fixture valid_reset { seed: "seed-1" } after valid_discover
       fixture reset_nonexistent { seed: "seed-999" } -> error
     }
   }

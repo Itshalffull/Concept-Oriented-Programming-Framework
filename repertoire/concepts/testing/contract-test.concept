@@ -66,7 +66,7 @@ concept ContractTest [P] {
         Consumer artifact couldn't be loaded or started.
       }
 
-      fixture verify_rust_ts { contract: "ctr-pwd-001", producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" }
+      fixture verify_rust_ts { contract: "ctr-pwd-001", producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" } after generate_password
       fixture verify_no_producer { contract: "ctr-pwd-001", producerArtifact: "", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" } -> producerUnavailable
       fixture verify_no_consumer { contract: "ctr-pwd-001", producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: "", consumerLanguage: "typescript" } -> consumerUnavailable
     }
@@ -81,8 +81,8 @@ concept ContractTest [P] {
         for which concepts.
       }
 
-      fixture matrix_all {}
-      fixture matrix_filtered { concepts: ["password", "auth"] }
+      fixture matrix_all {} after generate_password
+      fixture matrix_filtered { concepts: ["password", "auth"] } after generate_password
     }
 
     action canDeploy(concept: String, language: String) {
@@ -96,8 +96,8 @@ concept ContractTest [P] {
         Deployment may be unsafe.
       }
 
-      fixture can_deploy_ts { concept: "password", language: "typescript" }
-      fixture can_deploy_rust { concept: "password", language: "rust" }
+      fixture can_deploy_ts { concept: "password", language: "typescript" } after generate_password
+      fixture can_deploy_rust { concept: "password", language: "rust" } after generate_password
     }
   }
 

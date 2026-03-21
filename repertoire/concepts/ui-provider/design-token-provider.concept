@@ -44,7 +44,7 @@ concept DesignTokenProvider [P] {
         Uses cached resolution when available.
       }
       -> notfound(name: String) { Token not defined in active theme. }
-      fixture resolve_color { provider: "dtp-1", tokenName: "color.primary" }
+      fixture resolve_color { provider: "dtp-1", tokenName: "color.primary" } after init_with_theme
       fixture resolve_empty_token { provider: "dtp-1", tokenName: "" } -> error
     }
 
@@ -54,7 +54,7 @@ concept DesignTokenProvider [P] {
         all cached tokens against the new theme.
       }
       -> notfound(theme: String) { Theme not registered. }
-      fixture switch_to_dark { provider: "dtp-1", theme: "dark" }
+      fixture switch_to_dark { provider: "dtp-1", theme: "dark" } after init_with_theme
       fixture switch_empty_theme { provider: "dtp-1", theme: "" } -> error
     }
 
@@ -64,8 +64,8 @@ concept DesignTokenProvider [P] {
         serialized JSON. Used by framework adapters to populate
         CSS variables or platform equivalents.
       }
-      fixture get_tokens_valid { provider: "dtp-1" }
-      fixture get_tokens_missing { provider: "nonexistent" }
+      fixture get_tokens_valid { provider: "dtp-1" } after init_with_theme
+      fixture get_tokens_missing { provider: "nonexistent" } after init_with_theme
     }
 
     action export(provider: P, format: String) {
@@ -74,7 +74,7 @@ concept DesignTokenProvider [P] {
         scss, json, tailwind, swift, kotlin.
       }
       -> unsupported(message: String) { Format not recognized. }
-      fixture export_css { provider: "dtp-1", format: "css" }
+      fixture export_css { provider: "dtp-1", format: "css" } after init_with_theme
       fixture export_unsupported { provider: "dtp-1", format: "xml" } -> error
     }
   }

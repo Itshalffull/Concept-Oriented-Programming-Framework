@@ -49,8 +49,8 @@ concept ChainFinality [CF] {
         the canonical chain.
       }
 
-      fixture check_finalized { entry: "chain-001", currentBlock: 19500020 }
-      fixture check_pending { entry: "chain-001", currentBlock: 19500005 }
+      fixture check_finalized { entry: "chain-001", currentBlock: 19500020 } after track_eth_tx
+      fixture check_pending { entry: "chain-001", currentBlock: 19500005 } after track_eth_tx
       fixture check_not_found { entry: "chain-nonexistent", currentBlock: 19500020 } -> error
     }
   }

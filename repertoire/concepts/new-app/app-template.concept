@@ -56,7 +56,7 @@ concept AppTemplate [T] {
         No template exists with the given name.
       }
 
-      fixture valid_detail { name: "social" }
+      fixture valid_detail { name: "social" } after list_all
       fixture detail_nonexistent { name: "nonexistent-template" } -> error
     }
 
@@ -70,8 +70,8 @@ concept AppTemplate [T] {
         The customization is not valid. Errors explain each issue.
       }
 
-      fixture valid_customize { template: "social", add: "[\"Graph\"]", remove: "[\"Favorite\"]", features: "{}" }
-      fixture customize_remove_required { template: "social", add: "[]", remove: "[\"User\"]", features: "{}" } -> error
+      fixture valid_customize { template: "social", add: "[\"Graph\"]", remove: "[\"Favorite\"]", features: "{}" } after list_all
+      fixture customize_remove_required { template: "social", add: "[]", remove: "[\"User\"]", features: "{}" } after list_all -> error
     }
 
     action register(name: String, description: String, category: String,
@@ -83,7 +83,7 @@ concept AppTemplate [T] {
         A template with this name already exists.
       }
 
-      fixture valid_register { name: "my-custom", description: "Custom app template", category: "tool", modules: "[\"User\",\"ContentNode\"]", syncs: "[]" }
+      fixture valid_register { name: "my-custom", description: "Custom app template", category: "tool", modules: "[\"User\",\"ContentNode\"]", syncs: "[]" } after list_all
       fixture register_duplicate { name: "social", description: "Duplicate", category: "content", modules: "[\"User\"]", syncs: "[]" } -> error
     }
   }

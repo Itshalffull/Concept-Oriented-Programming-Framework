@@ -34,7 +34,7 @@ concept Property [P] {
         The property does not exist on this entity.
       }
 
-      fixture get_existing { entity: "page-1", key: "title" }
+      fixture get_existing { entity: "page-1", key: "title" } after set_title
       fixture get_missing { entity: "nonexistent", key: "title" } -> error
     }
 
@@ -46,7 +46,7 @@ concept Property [P] {
         The property does not exist on this entity.
       }
 
-      fixture delete_existing { entity: "page-1", key: "title" }
+      fixture delete_existing { entity: "page-1", key: "title" } after set_title
       fixture delete_missing { entity: "nonexistent", key: "title" } -> error
     }
 
@@ -55,7 +55,7 @@ concept Property [P] {
         Return all properties on the entity as JSON.
       }
 
-      fixture list_all_props { entity: "page-1" }
+      fixture list_all_props { entity: "page-1" } after set_title
       fixture list_empty_entity { entity: "" } -> error
     }
   }

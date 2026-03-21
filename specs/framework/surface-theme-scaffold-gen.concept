@@ -71,7 +71,7 @@ concept SurfaceThemeScaffoldGen [X] {
         capabilities: ["palette", "typography", "spacing", "motion", "elevation", "radius", "extends", "wcag"]
       }
 
-      fixture valid {}
+      fixture valid {} after valid_theme
     }
   }
 

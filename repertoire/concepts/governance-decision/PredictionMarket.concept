@@ -59,7 +59,7 @@ concept PredictionMarket [PM] {
         The outcome is not a valid option for this market.
       }
 
-      fixture buy_shares { market: "market-001", trader: "alice", outcome: "Yes", amount: 50.0 }
+      fixture buy_shares { market: "market-001", trader: "alice", outcome: "Yes", amount: 50.0 } after valid_market
       fixture missing_market { market: "market-nonexistent", trader: "bob", outcome: "No", amount: 10.0 } -> error
     }
 
@@ -72,7 +72,7 @@ concept PredictionMarket [PM] {
         The market has already been resolved.
       }
 
-      fixture resolve_market { market: "market-001", outcome: "Yes" }
+      fixture resolve_market { market: "market-001", outcome: "Yes" } after valid_market
       fixture resolve_missing { market: "market-nonexistent", outcome: "No" } -> error
     }
 
@@ -87,7 +87,7 @@ concept PredictionMarket [PM] {
         The market has not been resolved yet.
       }
 
-      fixture claim_valid { market: "market-001", trader: "alice" }
+      fixture claim_valid { market: "market-001", trader: "alice" } after valid_market
       fixture claim_no_winnings { market: "market-001", trader: "bob" } -> error
     }
   }

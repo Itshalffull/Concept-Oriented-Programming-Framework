@@ -42,8 +42,8 @@ concept LocalRuntime [L] {
         Process restarted with new command.
       }
 
-      fixture deploy_restart { process: "proc-abc123", command: "node server.js --production" }
-      fixture deploy_missing_process { process: "", command: "node app.js" }
+      fixture deploy_restart { process: "proc-abc123", command: "node server.js --production" } after provision_node
+      fixture deploy_missing_process { process: "", command: "node app.js" } after provision_node
     }
 
     action setTrafficWeight(process: L, weight: Int) {
@@ -51,8 +51,8 @@ concept LocalRuntime [L] {
         Traffic weight has no effect locally. Always 100.
       }
 
-      fixture traffic_local { process: "proc-abc123", weight: 100 }
-      fixture traffic_no_process { process: "", weight: 50 }
+      fixture traffic_local { process: "proc-abc123", weight: 100 } after provision_node
+      fixture traffic_no_process { process: "", weight: 50 } after provision_node
     }
 
     action rollback(process: L, previousCommand: String) {
@@ -60,8 +60,8 @@ concept LocalRuntime [L] {
         Process restarted with previous command.
       }
 
-      fixture rollback_previous { process: "proc-abc123", previousCommand: "node server.js" }
-      fixture rollback_missing_process { process: "", previousCommand: "node old.js" }
+      fixture rollback_previous { process: "proc-abc123", previousCommand: "node server.js" } after provision_node
+      fixture rollback_missing_process { process: "", previousCommand: "node old.js" } after provision_node
     }
 
     action destroy(process: L) {
@@ -69,7 +69,7 @@ concept LocalRuntime [L] {
         Process killed and port released.
       }
 
-      fixture destroy_valid { process: "proc-abc123" }
+      fixture destroy_valid { process: "proc-abc123" } after provision_node
       fixture destroy_missing { process: "" } -> error
     }
   }

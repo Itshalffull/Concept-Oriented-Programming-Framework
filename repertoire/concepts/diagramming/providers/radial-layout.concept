@@ -34,9 +34,9 @@ concept RadialLayoutProvider [C] {
         Layout computation failed or no root node found.
       }
 
-      fixture radial_three { canvas: "c1", items: ["center", "a", "b"], config: { spacing_x: 120.0 } }
-      fixture single_root { canvas: "c1", items: ["root"], config: {} }
-      fixture empty_items { canvas: "c1", items: [], config: {} } -> error
+      fixture radial_three { canvas: "c1", items: ["center", "a", "b"], config: { spacing_x: 120.0 } } after valid
+      fixture single_root { canvas: "c1", items: ["root"], config: {} } after valid
+      fixture empty_items { canvas: "c1", items: [], config: {} } after valid -> error
     }
   }
 

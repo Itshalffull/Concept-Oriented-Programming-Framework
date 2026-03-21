@@ -22,7 +22,7 @@ concept Version [H] {
       }
 
       fixture valid_snapshot { version: "v1", entity: "doc-1", data: "initial content", author: "alice" }
-      fixture another_snapshot { version: "v2", entity: "doc-1", data: "updated content", author: "bob" }
+      fixture another_snapshot { version: "v2", entity: "doc-1", data: "updated content", author: "bob" } after valid_snapshot
     }
 
     action listVersions(entity: String) {
@@ -30,8 +30,8 @@ concept Version [H] {
         Returns all recorded snapshots for the given entity in chronological order.
       }
 
-      fixture valid_list { entity: "doc-1" }
-      fixture list_unknown_entity { entity: "nonexistent" }
+      fixture valid_list { entity: "doc-1" } after valid_snapshot
+      fixture list_unknown_entity { entity: "nonexistent" } after valid_snapshot
     }
 
     action rollback(version: H) {
@@ -42,7 +42,7 @@ concept Version [H] {
         The version does not exist.
       }
 
-      fixture valid_rollback { version: "v1" }
+      fixture valid_rollback { version: "v1" } after valid_snapshot
       fixture rollback_missing { version: "nonexistent" } -> notfound
     }
 

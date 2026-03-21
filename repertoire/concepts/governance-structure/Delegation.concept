@@ -49,7 +49,7 @@ concept Delegation [E] {
         The delegation does not exist.
       }
 
-      fixture valid_undelegate { from: "alice", to: "bob" }
+      fixture valid_undelegate { from: "alice", to: "bob" } after valid_delegate
       fixture undelegate_nonexistent { from: "unknown", to: "nobody" } -> error
     }
 
@@ -59,8 +59,8 @@ concept Delegation [E] {
         if transitive), filtered by domain if specified.
       }
 
-      fixture weight_lookup { participant: "bob" }
-      fixture weight_scoped { participant: "alice" }
+      fixture weight_lookup { participant: "bob" } after valid_delegate
+      fixture weight_scoped { participant: "alice" } after valid_delegate
     }
   }
 

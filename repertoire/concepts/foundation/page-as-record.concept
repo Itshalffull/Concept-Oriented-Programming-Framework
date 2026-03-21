@@ -44,7 +44,7 @@ concept PageAsRecord [P] {
         The key is not defined in the page's schema.
       }
 
-      fixture set_title { page: "meeting-notes", key: "title", value: "Weekly Standup" }
+      fixture set_title { page: "meeting-notes", key: "title", value: "Weekly Standup" } after create_page
       fixture set_on_missing { page: "nonexistent", key: "title", value: "Test" } -> error
     }
 
@@ -56,7 +56,7 @@ concept PageAsRecord [P] {
         The page or property does not exist.
       }
 
-      fixture get_title { page: "meeting-notes", key: "title" }
+      fixture get_title { page: "meeting-notes", key: "title" } after create_page
       fixture get_from_missing { page: "nonexistent", key: "title" } -> error
     }
 
@@ -68,7 +68,7 @@ concept PageAsRecord [P] {
         The page does not exist.
       }
 
-      fixture append_text { page: "meeting-notes", content: "Action items from today" }
+      fixture append_text { page: "meeting-notes", content: "Action items from today" } after create_page
       fixture append_to_missing { page: "nonexistent", content: "Some text" } -> error
     }
 
@@ -80,8 +80,8 @@ concept PageAsRecord [P] {
         The page does not exist.
       }
 
-      fixture attach_schema { page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\",\"attendees\"]}" }
-      fixture attach_to_missing { page: "nonexistent", schema: "{}" } -> error
+      fixture attach_schema { page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\",\"attendees\"]}" } after create_page
+      fixture attach_to_missing { page: "nonexistent", schema: "{}" } after create_page -> error
     }
 
     action convertFromFreeform(page: P, schema: String) {

@@ -44,7 +44,7 @@ concept Treasury [TR] {
         The vault does not hold enough of the token.
       }
 
-      fixture withdraw_eth { vault: "dao-treasury", token: "ETH", amount: 50.0 }
+      fixture withdraw_eth { vault: "dao-treasury", token: "ETH", amount: 50.0 } after deposit_eth
       fixture withdraw_too_much { vault: "dao-treasury", token: "ETH", amount: 999999.0 } -> error
     }
 
@@ -53,7 +53,7 @@ concept Treasury [TR] {
         The amount is earmarked for a purpose but not yet withdrawn.
       }
 
-      fixture allocate_grant { vault: "dao-treasury", token: "ETH", amount: 25.0, purpose: "developer-grant-q1" }
+      fixture allocate_grant { vault: "dao-treasury", token: "ETH", amount: 25.0, purpose: "developer-grant-q1" } after deposit_eth
       fixture allocate_empty_purpose { vault: "dao-treasury", token: "ETH", amount: 10.0, purpose: "" } -> error
     }
 
@@ -65,7 +65,7 @@ concept Treasury [TR] {
         No allocation found with this identifier.
       }
 
-      fixture release_existing { allocation: "alloc-001" }
+      fixture release_existing { allocation: "alloc-001" } after deposit_eth
       fixture release_nonexistent { allocation: "alloc-nonexistent" } -> error
     }
   }

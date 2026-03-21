@@ -29,8 +29,8 @@ concept DotExportProvider [C] {
       }
       -> error(message: String) { Export failed. }
 
-      fixture default_export { canvas_id: "canvas-1" }
-      fixture with_engine { canvas_id: "canvas-2", options: { engine: "neato" } }
+      fixture default_export { canvas_id: "canvas-1" } after valid
+      fixture with_engine { canvas_id: "canvas-2", options: { engine: "neato" } } after valid
       fixture empty_canvas { canvas_id: "" } -> error
     }
 
@@ -40,8 +40,8 @@ concept DotExportProvider [C] {
       }
       -> error(message: String) { Parse failed. }
 
-      fixture simple_graph { data: "digraph G { A -> B; }", target_canvas: "imported-canvas" }
-      fixture with_labels { data: "digraph G { A [label=\"Start\"]; B [label=\"End\"]; A -> B; }" }
+      fixture simple_graph { data: "digraph G { A -> B; }", target_canvas: "imported-canvas" } after valid
+      fixture with_labels { data: "digraph G { A [label=\"Start\"]; B [label=\"End\"]; A -> B; }" } after valid
       fixture empty_data { data: "" } -> error
     }
   }

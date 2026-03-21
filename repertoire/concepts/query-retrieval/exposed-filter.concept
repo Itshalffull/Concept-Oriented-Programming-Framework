@@ -37,7 +37,7 @@ concept ExposedFilter [F] {
         No exposed filter registered with this identifier.
       }
 
-      fixture valid_input { filter: "status-filter", value: "archived" }
+      fixture valid_input { filter: "status-filter", value: "archived" } after valid_expose
       fixture empty_value { filter: "status-filter", value: "" } -> error
     }
 
@@ -51,7 +51,7 @@ concept ExposedFilter [F] {
         No exposed filter registered with this identifier.
       }
 
-      fixture apply_existing { filter: "status-filter" }
+      fixture apply_existing { filter: "status-filter" } after valid_expose
       fixture apply_nonexistent { filter: "no-such-filter" } -> error
     }
 
@@ -64,7 +64,7 @@ concept ExposedFilter [F] {
         No exposed filter registered with this identifier.
       }
 
-      fixture reset_existing { filter: "status-filter" }
+      fixture reset_existing { filter: "status-filter" } after valid_expose
       fixture reset_nonexistent { filter: "ghost-filter" } -> error
     }
   }

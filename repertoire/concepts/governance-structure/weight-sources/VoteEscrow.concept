@@ -44,7 +44,7 @@ concept VoteEscrow [VE] {
         Lock duration exceeds the configured maximum.
       }
 
-      fixture lock_full_term { config: "ve-cfg-001", locker: "alice", amount: 1000.0, lockYears: 4.0 }
+      fixture lock_full_term { config: "ve-cfg-001", locker: "alice", amount: 1000.0, lockYears: 4.0 } after configure_default
       fixture lock_zero_amount { config: "ve-cfg-001", locker: "alice", amount: 0.0, lockYears: 4.0 } -> error
     }
 
@@ -56,7 +56,7 @@ concept VoteEscrow [VE] {
         The lock does not exist.
       }
 
-      fixture extend_by_one { lock: "lock-001", additionalYears: 1.0 }
+      fixture extend_by_one { lock: "lock-001", additionalYears: 1.0 } after configure_default
       fixture extend_missing_lock { lock: "lock-missing", additionalYears: 1.0 } -> error
     }
 
@@ -69,7 +69,7 @@ concept VoteEscrow [VE] {
         Lock has expired. Weight is zero. Tokens can be withdrawn.
       }
 
-      fixture get_weight_alice { config: "ve-cfg-001", participant: "alice" }
+      fixture get_weight_alice { config: "ve-cfg-001", participant: "alice" } after configure_default
       fixture get_weight_unknown { config: "ve-cfg-001", participant: "nonexistent" } -> error
     }
 
@@ -81,7 +81,7 @@ concept VoteEscrow [VE] {
         Lock has not expired.
       }
 
-      fixture withdraw_expired { lock: "lock-expired" }
+      fixture withdraw_expired { lock: "lock-expired" } after configure_default
       fixture withdraw_still_locked { lock: "lock-active" } -> error
     }
   }

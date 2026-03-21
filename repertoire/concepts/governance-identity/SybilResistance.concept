@@ -47,7 +47,7 @@ concept SybilResistance [S] {
         The target is not in the verified set.
       }
 
-      fixture challenge_verified_user { targetId: "alice", challenger: "bob", evidence: "duplicate-account-evidence" }
+      fixture challenge_verified_user { targetId: "alice", challenger: "bob", evidence: "duplicate-account-evidence" } after verify_alice
       fixture challenge_invalid_target { targetId: "nonexistent", challenger: "bob", evidence: "some-evidence" } -> error
     }
 
@@ -62,7 +62,7 @@ concept SybilResistance [S] {
         The challenge does not exist.
       }
 
-      fixture resolve_upheld { challengeId: "challenge-1001", outcome: "upheld" }
+      fixture resolve_upheld { challengeId: "challenge-1001", outcome: "upheld" } after verify_alice
       fixture resolve_nonexistent { challengeId: "challenge-nonexistent", outcome: "upheld" } -> error
     }
   }

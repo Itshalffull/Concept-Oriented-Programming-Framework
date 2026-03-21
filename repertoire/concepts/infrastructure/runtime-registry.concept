@@ -45,8 +45,8 @@ concept RuntimeRegistry [C] {
         This sync name is already registered.
       }
 
-      fixture register_content_sync { sync_name: "ContentPublish", source: "content-node.ts", suite: "core" }
-      fixture register_empty_sync_name { sync_name: "", source: "unknown.ts", suite: "" }
+      fixture register_content_sync { sync_name: "ContentPublish", source: "content-node.ts", suite: "core" } after register_content_node
+      fixture register_empty_sync_name { sync_name: "", source: "unknown.ts", suite: "" } after register_content_node
     }
 
     action getConcept(uri: String) {
@@ -57,7 +57,7 @@ concept RuntimeRegistry [C] {
         No concept registered with this URI.
       }
 
-      fixture get_existing_concept { uri: "urn:clef/ContentNode" }
+      fixture get_existing_concept { uri: "urn:clef/ContentNode" } after register_content_node
       fixture get_missing_concept { uri: "urn:clef/NonExistent" } -> error
     }
 
@@ -66,7 +66,7 @@ concept RuntimeRegistry [C] {
         Return all registered concepts as JSON array.
       }
 
-      fixture list_all_concepts { }
+      fixture list_all_concepts { } after register_content_node
     }
 
     action listSyncs() {
@@ -74,7 +74,7 @@ concept RuntimeRegistry [C] {
         Return all loaded syncs as JSON array.
       }
 
-      fixture list_all_syncs { }
+      fixture list_all_syncs { } after register_content_node
     }
 
     action isLoaded(uri: String) {
@@ -82,8 +82,8 @@ concept RuntimeRegistry [C] {
         Check whether a concept URI is loaded in the kernel.
       }
 
-      fixture is_loaded_existing { uri: "urn:clef/ContentNode" }
-      fixture is_loaded_missing { uri: "" }
+      fixture is_loaded_existing { uri: "urn:clef/ContentNode" } after register_content_node
+      fixture is_loaded_missing { uri: "" } after register_content_node
     }
   }
 

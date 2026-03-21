@@ -36,7 +36,7 @@ concept CausalLoopNotationProvider [C] {
         Returns causal loop notation with polarity edge types.
       }
 
-      fixture valid {}
+      fixture valid {} after valid
     }
   }
 

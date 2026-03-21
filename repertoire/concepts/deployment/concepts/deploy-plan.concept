@@ -94,7 +94,7 @@ concept DeployPlan [D] {
         Lists the nodes that could not be rolled back.
       }
 
-      fixture execute_plan { plan: "dp-abc123" }
+      fixture execute_plan { plan: "dp-abc123" } after plan_valid
       fixture execute_missing { plan: "" } -> error
     }
 
@@ -106,7 +106,7 @@ concept DeployPlan [D] {
         Some rollbacks succeeded, some failed.
       }
 
-      fixture rollback_plan { plan: "dp-abc123" }
+      fixture rollback_plan { plan: "dp-abc123" } after plan_valid
       fixture rollback_missing { plan: "" } -> error
     }
 
@@ -118,7 +118,7 @@ concept DeployPlan [D] {
         Plan does not exist.
       }
 
-      fixture status_plan { plan: "dp-abc123" }
+      fixture status_plan { plan: "dp-abc123" } after plan_valid
       fixture status_missing { plan: "" } -> error
     }
   }

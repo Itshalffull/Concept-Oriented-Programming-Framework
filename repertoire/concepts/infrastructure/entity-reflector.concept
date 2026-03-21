@@ -39,7 +39,7 @@ concept EntityReflector [P] {
         No provider registered with this name.
       }
 
-      fixture valid_reflect_provider { provider_name: "concept" }
+      fixture valid_reflect_provider { provider_name: "concept" } after valid_reflect
       fixture reflect_unknown_provider { provider_name: "nonexistent-provider" } -> error
     }
 
@@ -52,7 +52,7 @@ concept EntityReflector [P] {
         A provider with this name already exists.
       }
 
-      fixture valid_register { provider_name: "widget" }
+      fixture valid_register { provider_name: "widget" } after valid_reflect
       fixture register_duplicate { provider_name: "concept" } -> error
     }
 
@@ -61,7 +61,7 @@ concept EntityReflector [P] {
         Return all providers with last_run and reflected_count as JSON.
       }
 
-      fixture valid_status { }
+      fixture valid_status { } after valid_reflect
     }
   }
 

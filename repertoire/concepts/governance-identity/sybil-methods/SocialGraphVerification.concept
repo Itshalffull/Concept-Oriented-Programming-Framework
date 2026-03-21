@@ -45,7 +45,7 @@ concept SocialGraphVerification [SG] {
         This vouch already exists.
       }
 
-      fixture vouch_alice_for_bob { config: "sg-cfg-1", voucher: "alice", candidate: "bob" }
+      fixture vouch_alice_for_bob { config: "sg-cfg-1", voucher: "alice", candidate: "bob" } after configure_default
       fixture vouch_self { config: "sg-cfg-1", voucher: "alice", candidate: "alice" } -> error
     }
 
@@ -57,7 +57,7 @@ concept SocialGraphVerification [SG] {
         The vouch does not exist.
       }
 
-      fixture revoke_existing_vouch { config: "sg-cfg-1", voucher: "alice", candidate: "bob" }
+      fixture revoke_existing_vouch { config: "sg-cfg-1", voucher: "alice", candidate: "bob" } after configure_default
       fixture revoke_nonexistent { config: "sg-cfg-1", voucher: "alice", candidate: "unknown" } -> error
     }
 
@@ -69,7 +69,7 @@ concept SocialGraphVerification [SG] {
         The candidate has too few vouches.
       }
 
-      fixture verify_well_connected { config: "sg-cfg-1", candidate: "bob" }
+      fixture verify_well_connected { config: "sg-cfg-1", candidate: "bob" } after configure_default
       fixture verify_no_vouches { config: "sg-cfg-1", candidate: "unknown-candidate" } -> error
     }
   }

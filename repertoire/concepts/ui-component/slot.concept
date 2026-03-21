@@ -32,7 +32,7 @@ concept Slot [L] {
       -> ok(slot: L) { Inject content into slot. }
       -> notfound(message: String) { Slot missing. }
 
-      fixture valid_fill { content: "<h2>Custom Header</h2>" }
+      fixture valid_fill { content: "<h2>Custom Header</h2>" } after valid_define
       fixture missing_slot { slot: "nonexistent-slot", content: "some content" } -> notfound
     }
 
@@ -40,7 +40,7 @@ concept Slot [L] {
       -> ok(slot: L) { Remove content, revert to fallback. }
       -> notfound(message: String) { Slot missing. }
 
-      fixture valid_clear { }
+      fixture valid_clear { } after valid_define
       fixture missing_clear { slot: "nonexistent-slot" } -> notfound
     }
   }

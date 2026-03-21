@@ -63,7 +63,7 @@ concept KindSystem [K] {
         or from/to kinds don't exist.
       }
 
-      fixture connect_parse { from: "ConceptDSL", to: "ConceptAST", relation: "parses_to", transformName: "ConceptParser" }
+      fixture connect_parse { from: "ConceptDSL", to: "ConceptAST", relation: "parses_to", transformName: "ConceptParser" } after define_source
       fixture connect_self_loop { from: "ConceptAST", to: "ConceptAST", relation: "normalizes_to" } -> invalid
       fixture connect_missing_kind { from: "NonexistentKind", to: "ConceptAST", relation: "parses_to" } -> invalid
     }
@@ -78,8 +78,8 @@ concept KindSystem [K] {
         No valid path exists between these kinds.
       }
 
-      fixture route_connected { from: "ConceptDSL", to: "TypeScriptFiles" }
-      fixture route_same { from: "ConceptAST", to: "ConceptAST" }
+      fixture route_connected { from: "ConceptDSL", to: "TypeScriptFiles" } after define_source
+      fixture route_same { from: "ConceptAST", to: "ConceptAST" } after define_source
     }
 
     action validate(from: K, to: K) {
@@ -104,8 +104,8 @@ concept KindSystem [K] {
         ConceptManifest changed, what other kinds are affected?"
       }
 
-      fixture dependents_ast { kind: "ConceptAST" }
-      fixture dependents_leaf { kind: "TypeScriptFiles" }
+      fixture dependents_ast { kind: "ConceptAST" } after define_source
+      fixture dependents_leaf { kind: "TypeScriptFiles" } after define_source
     }
 
     action producers(kind: K) {
@@ -114,8 +114,8 @@ concept KindSystem [K] {
         Used for discoverability and reverse dependency analysis.
       }
 
-      fixture producers_ast { kind: "ConceptAST" }
-      fixture producers_source { kind: "ConceptDSL" }
+      fixture producers_ast { kind: "ConceptAST" } after define_source
+      fixture producers_source { kind: "ConceptDSL" } after define_source
     }
 
     action consumers(kind: K) {
@@ -124,8 +124,8 @@ concept KindSystem [K] {
         Used for forward impact analysis.
       }
 
-      fixture consumers_ast { kind: "ConceptAST" }
-      fixture consumers_artifact { kind: "TypeScriptFiles" }
+      fixture consumers_ast { kind: "ConceptAST" } after define_source
+      fixture consumers_artifact { kind: "TypeScriptFiles" } after define_source
     }
 
     action graph() {
@@ -134,7 +134,7 @@ concept KindSystem [K] {
         `clef generate --plan` for dependency visualization.
       }
 
-      fixture valid {}
+      fixture valid {} after define_source
     }
   }
 

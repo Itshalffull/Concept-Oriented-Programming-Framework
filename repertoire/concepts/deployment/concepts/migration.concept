@@ -54,7 +54,7 @@ concept Migration [M] {
         Storage backend rejected schema expansion.
       }
 
-      fixture expand_valid { migration: "mig-abc123" }
+      fixture expand_valid { migration: "mig-abc123" } after plan_upgrade
       fixture expand_missing { migration: "" } -> error
     }
 
@@ -67,7 +67,7 @@ concept Migration [M] {
         Some records failed migration. Manual review needed.
       }
 
-      fixture migrate_valid { migration: "mig-abc123" }
+      fixture migrate_valid { migration: "mig-abc123" } after plan_upgrade
       fixture migrate_missing { migration: "" } -> error
     }
 
@@ -81,7 +81,7 @@ concept Migration [M] {
         Both schemas still present.
       }
 
-      fixture contract_valid { migration: "mig-abc123" }
+      fixture contract_valid { migration: "mig-abc123" } after plan_upgrade
       fixture contract_missing { migration: "" } -> error
     }
 
@@ -90,7 +90,7 @@ concept Migration [M] {
         Current migration state.
       }
 
-      fixture status_valid { migration: "mig-abc123" }
+      fixture status_valid { migration: "mig-abc123" } after plan_upgrade
       fixture status_missing { migration: "" } -> error
     }
   }

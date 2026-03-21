@@ -61,7 +61,7 @@ concept SolidityBuilder [L] {
         Some tests failed. Includes gas usage in test output.
       }
 
-      fixture test_contract { build: "solb-001", toolchainPath: "/usr/local/bin/solc", testType: "unit" }
+      fixture test_contract { build: "solb-001", toolchainPath: "/usr/local/bin/solc", testType: "unit" } after build_contract
       fixture test_missing_build { build: "nonexistent", toolchainPath: "/usr/local/bin/solc", testType: "unit" } -> error
     }
 
@@ -76,7 +76,7 @@ concept SolidityBuilder [L] {
         Requested format not available.
       }
 
-      fixture package_abi { build: "solb-001", format: "abi-bundle" }
+      fixture package_abi { build: "solb-001", format: "abi-bundle" } after build_contract
       fixture package_unsupported { build: "solb-001", format: "invalid-format" } -> error
     }
 
@@ -89,7 +89,7 @@ concept SolidityBuilder [L] {
         "foundry-out"]
       }
 
-      fixture valid {}
+      fixture valid {} after build_contract
     }
   }
 

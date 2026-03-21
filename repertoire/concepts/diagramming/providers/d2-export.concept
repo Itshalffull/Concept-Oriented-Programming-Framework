@@ -29,8 +29,8 @@ concept D2ExportProvider [C] {
       }
       -> error(message: String) { Export failed. }
 
-      fixture basic_export { canvas_id: "canvas-1", options: none }
-      fixture with_direction { canvas_id: "canvas-1", options: { direction: "right" } }
+      fixture basic_export { canvas_id: "canvas-1", options: none } after valid
+      fixture with_direction { canvas_id: "canvas-1", options: { direction: "right" } } after valid
       fixture empty_canvas_id { canvas_id: "", options: none } -> error
     }
   }

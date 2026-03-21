@@ -47,8 +47,8 @@ concept RetentionPolicy [R] {
         Legal hold applied. All records matching scope pattern are held.
       }
 
-      fixture apply_litigation_hold { name: "litigation-2024", scope: "matter:123/*", reason: "pending lawsuit", issuer: "legal-dept" }
-      fixture empty_hold_name { name: "", scope: "matter:*", reason: "test", issuer: "admin" }
+      fixture apply_litigation_hold { name: "litigation-2024", scope: "matter:123/*", reason: "pending lawsuit", issuer: "legal-dept" } after set_audit_retention
+      fixture empty_hold_name { name: "", scope: "matter:*", reason: "test", issuer: "admin" } after set_audit_retention
     }
 
     action releaseHold(holdId: H, releasedBy: String, reason: String) {
@@ -62,7 +62,7 @@ concept RetentionPolicy [R] {
         Hold was already released.
       }
 
-      fixture release_existing { holdId: "hold-1", releasedBy: "legal-dept", reason: "case settled" }
+      fixture release_existing { holdId: "hold-1", releasedBy: "legal-dept", reason: "case settled" } after set_audit_retention
       fixture release_empty_by { holdId: "hold-1", releasedBy: "", reason: "test" } -> error
     }
 
@@ -77,7 +77,7 @@ concept RetentionPolicy [R] {
         Record matches one or more active legal holds.
       }
 
-      fixture check_record { record: "audit:2023-invoice-001" }
+      fixture check_record { record: "audit:2023-invoice-001" } after set_audit_retention
       fixture check_empty_record { record: "" } -> error
     }
 
@@ -92,8 +92,8 @@ concept RetentionPolicy [R] {
         Active holds prevent disposition.
       }
 
-      fixture dispose_record { record: "audit:2020-old-doc", disposedBy: "system" }
-      fixture dispose_empty_record { record: "", disposedBy: "system" }
+      fixture dispose_record { record: "audit:2020-old-doc", disposedBy: "system" } after set_audit_retention
+      fixture dispose_empty_record { record: "", disposedBy: "system" } after set_audit_retention
     }
 
     action auditLog(record: option String) {
@@ -101,8 +101,8 @@ concept RetentionPolicy [R] {
         Returns disposition log, filtered to specific record if provided.
       }
 
-      fixture audit_all { record: null }
-      fixture audit_specific { record: "audit:2023-invoice-001" }
+      fixture audit_all { record: null } after set_audit_retention
+      fixture audit_specific { record: "audit:2023-invoice-001" } after set_audit_retention
     }
   }
 

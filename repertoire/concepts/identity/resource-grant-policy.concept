@@ -34,7 +34,7 @@ concept ResourceGrantPolicy [G] {
       -> ok(grant: G, roles: list String) { Return the exact grant for this scope, resource pattern, and action. }
       -> notfound(message: String) { No exact grant exists for this scope, resource pattern, and action. }
 
-      fixture get_existing_grant { scope: "schema", resourcePattern: "*", actionName: "view" }
+      fixture get_existing_grant { scope: "schema", resourcePattern: "*", actionName: "view" } after set_wildcard_view
       fixture get_missing_grant { scope: "schema", resourcePattern: "NonExistent", actionName: "delete" } -> error
     }
 
@@ -44,7 +44,7 @@ concept ResourceGrantPolicy [G] {
       }
       -> notfound(message: String) { No grant matches this scope, resource, and action. }
 
-      fixture resolve_article_view { scope: "schema", resource: "Article", actionName: "view" }
+      fixture resolve_article_view { scope: "schema", resource: "Article", actionName: "view" } after set_wildcard_view
       fixture resolve_no_match { scope: "schema", resource: "Secret", actionName: "destroy" } -> error
     }
 
@@ -56,8 +56,8 @@ concept ResourceGrantPolicy [G] {
         Return all grants, optionally filtered by scope.
       }
 
-      fixture list_by_scope { scope: "schema" }
-      fixture list_all { }
+      fixture list_by_scope { scope: "schema" } after set_wildcard_view
+      fixture list_all { } after set_wildcard_view
     }
   }
 

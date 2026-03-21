@@ -42,7 +42,7 @@ concept CircularLayout [L] {
         or the item set is malformed.
       }
 
-      fixture valid_apply { canvas: "c1", items: "a,b,c" }
+      fixture valid_apply { canvas: "c1", items: "a,b,c" } after valid
       fixture missing_canvas { canvas: "", items: "a" } -> error
     }
   }

@@ -36,7 +36,7 @@ concept Validator [V] {
         The specified validator does not exist.
       }
 
-      fixture add_email_rule { validator: "user-form", field: "email", rule: "required|email" }
+      fixture add_email_rule { validator: "user-form", field: "email", rule: "required|email" } after register_required
       fixture add_rule_missing_validator { validator: "", field: "email", rule: "required" } -> error
     }
 
@@ -66,8 +66,8 @@ concept Validator [V] {
         A custom validator with this name is already registered.
       }
 
-      fixture add_custom_phone { validator: "user-form", name: "phone", implementation: "return /^\\d{10}$/.test(value)" }
-      fixture add_custom_empty_name { validator: "user-form", name: "", implementation: "return true" }
+      fixture add_custom_phone { validator: "user-form", name: "phone", implementation: "return /^\\d{10}$/.test(value)" } after register_required
+      fixture add_custom_empty_name { validator: "user-form", name: "", implementation: "return true" } after register_required
     }
   }
 

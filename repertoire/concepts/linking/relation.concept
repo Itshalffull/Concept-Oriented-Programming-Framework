@@ -25,7 +25,7 @@ concept Relation [R] {
       }
 
       fixture valid_define { relation: "parent-child", schema: "{\"forward_label\":\"parent of\",\"reverse_label\":\"child of\",\"cardinality\":\"one-to-many\"}" }
-      fixture duplicate_define { relation: "parent-child", schema: "{}" } -> exists
+      fixture duplicate_define { relation: "parent-child", schema: "{}" } after valid_define -> exists
     }
 
     action link(relation: R, source: String, target: String) {
@@ -37,7 +37,7 @@ concept Relation [R] {
         The link violates the relation schema or cardinality constraints.
       }
 
-      fixture valid_link { relation: "parent-child", source: "alice", target: "bob" }
+      fixture valid_link { relation: "parent-child", source: "alice", target: "bob" } after valid_define
       fixture missing_relation { relation: "nonexistent-rel", source: "alice", target: "bob" } -> invalid
     }
 
@@ -49,7 +49,7 @@ concept Relation [R] {
         No such link exists in the relation.
       }
 
-      fixture valid_unlink { relation: "parent-child", source: "alice", target: "bob" }
+      fixture valid_unlink { relation: "parent-child", source: "alice", target: "bob" } after valid_define
       fixture missing_link { relation: "nonexistent-rel", source: "alice", target: "bob" } -> notfound
     }
 
@@ -62,7 +62,7 @@ concept Relation [R] {
         The relation or entity was not found.
       }
 
-      fixture valid_related { relation: "parent-child", entity: "alice" }
+      fixture valid_related { relation: "parent-child", entity: "alice" } after valid_define
       fixture missing_relation_get { relation: "nonexistent-rel", entity: "alice" } -> notfound
     }
   }

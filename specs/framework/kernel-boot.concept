@@ -52,7 +52,7 @@ concept KernelBoot [K] {
         No kernel instance exists with this identifier.
       }
 
-      fixture valid_status { kernel: "kernel-20260301-abc123" }
+      fixture valid_status { kernel: "kernel-20260301-abc123" } after valid_boot
       fixture nonexistent_status { kernel: "kernel-nonexistent" } -> notfound
     }
 
@@ -64,7 +64,7 @@ concept KernelBoot [K] {
         No kernel instance exists with this identifier.
       }
 
-      fixture valid_shutdown { kernel: "kernel-20260301-abc123" }
+      fixture valid_shutdown { kernel: "kernel-20260301-abc123" } after valid_boot
       fixture nonexistent_shutdown { kernel: "kernel-nonexistent" } -> notfound
     }
   }

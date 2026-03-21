@@ -36,7 +36,7 @@ concept BpmnNotationProvider [C] {
         Returns BPMN notation definition.
       }
 
-      fixture valid {}
+      fixture valid {} after valid
     }
   }
 

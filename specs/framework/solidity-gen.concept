@@ -38,7 +38,7 @@ concept SolidityGen [S] {
         capabilities: ["contract", "events", "foundry-tests"]
       }
 
-      fixture valid {}
+      fixture valid {} after valid_manifest
     }
   }
 

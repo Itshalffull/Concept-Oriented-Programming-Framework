@@ -39,9 +39,9 @@ concept TokenRemapProvider [V] {
         The program or spec JSON could not be parsed.
       }
 
-      fixture remap_token_path { program: "{\"instructions\":[{\"tag\":\"token\",\"path\":\"palette.primary\"}]}", spec: "{\"mappings\":{\"palette.primary\":\"palette.dark\"}}" }
-      fixture empty_mappings { program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"mappings\":{}}" }
-      fixture invalid_program_json { program: "<<<not-json>>>", spec: "{}" } -> error
+      fixture remap_token_path { program: "{\"instructions\":[{\"tag\":\"token\",\"path\":\"palette.primary\"}]}", spec: "{\"mappings\":{\"palette.primary\":\"palette.dark\"}}" } after valid
+      fixture empty_mappings { program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"mappings\":{}}" } after valid
+      fixture invalid_program_json { program: "<<<not-json>>>", spec: "{}" } after valid -> error
     }
   }
 

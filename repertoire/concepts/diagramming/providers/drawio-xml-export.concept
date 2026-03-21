@@ -29,8 +29,8 @@ concept DrawioXmlExportProvider [C] {
       }
       -> error(message: String) { Export failed. }
 
-      fixture default_export { canvas_id: "canvas-1" }
-      fixture with_compress { canvas_id: "canvas-2", options: { compress: true } }
+      fixture default_export { canvas_id: "canvas-1" } after valid
+      fixture with_compress { canvas_id: "canvas-2", options: { compress: true } } after valid
       fixture empty_canvas { canvas_id: "" } -> error
     }
 
@@ -40,7 +40,7 @@ concept DrawioXmlExportProvider [C] {
       }
       -> error(message: String) { Parse failed or invalid draw.io format. }
 
-      fixture simple_xml { data: "<mxfile><diagram><mxGraphModel><root><mxCell id=\"0\"/><mxCell id=\"1\" parent=\"0\"/></root></mxGraphModel></diagram></mxfile>", target_canvas: "imported" }
+      fixture simple_xml { data: "<mxfile><diagram><mxGraphModel><root><mxCell id=\"0\"/><mxCell id=\"1\" parent=\"0\"/></root></mxGraphModel></diagram></mxfile>", target_canvas: "imported" } after valid
       fixture empty_data { data: "" } -> error
     }
   }

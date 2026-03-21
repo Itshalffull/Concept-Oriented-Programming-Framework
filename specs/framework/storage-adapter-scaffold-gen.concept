@@ -60,7 +60,7 @@ concept StorageAdapterScaffoldGen [A] {
         capabilities: ["sqlite", "postgresql", "redis", "dynamodb", "memory"]
       }
 
-      fixture valid {}
+      fixture valid {} after valid_sqlite
     }
   }
 

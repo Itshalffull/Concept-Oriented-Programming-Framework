@@ -41,7 +41,7 @@ concept StateField [L] {
         Return all state fields for a given concept.
         Results as serialized JSON array.
       }
-      fixture find_article { concept: "Article" }
+      fixture find_article { concept: "Article" } after register_title
       fixture find_empty { concept: "" } -> error
     }
 
@@ -51,8 +51,8 @@ concept StateField [L] {
         across target languages. Results as serialized JSON array
         of { language, symbol, file }.
       }
-      fixture trace_generated_valid { field: "state-field-1" }
-      fixture trace_generated_missing { field: "nonexistent-id" }
+      fixture trace_generated_valid { field: "state-field-1" } after register_title
+      fixture trace_generated_missing { field: "nonexistent-id" } after register_title
     }
 
     action traceToStorage(field: L) {
@@ -61,8 +61,8 @@ concept StateField [L] {
         database columns, document keys, etc. Results as
         serialized JSON array of { adapter, columnOrKey }.
       }
-      fixture trace_storage_valid { field: "state-field-1" }
-      fixture trace_storage_missing { field: "nonexistent-id" }
+      fixture trace_storage_valid { field: "state-field-1" } after register_title
+      fixture trace_storage_missing { field: "nonexistent-id" } after register_title
     }
 
     action get(field: L) {
@@ -72,9 +72,9 @@ concept StateField [L] {
       -> notfound() {
         Field does not exist.
       }
-      fixture get_valid { field: "state-field-1" }
+      fixture get_valid { field: "state-field-1" } after register_title
       fixture get_missing { field: "nonexistent-id" } -> error
-      fixture get_field { field: "state-field-1" }
+      fixture get_field { field: "state-field-1" } after register_title
     }
   }
 

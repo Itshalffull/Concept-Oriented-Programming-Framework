@@ -23,8 +23,8 @@ concept Registry [C] {
       }
 
       fixture valid_register { uri: "urn:clef/User", transport: {"type": "http", "host": "localhost", "port": 3000} }
-      fixture another_concept { uri: "urn:clef/Order", transport: {"type": "in-process"} }
-      fixture duplicate_register { uri: "urn:clef/User", transport: {"type": "http"} } -> error
+      fixture another_concept { uri: "urn:clef/Order", transport: {"type": "in-process"} } after valid_register
+      fixture duplicate_register { uri: "urn:clef/User", transport: {"type": "http"} } after valid_register -> error
     }
 
     action deregister(uri: String) {
@@ -32,8 +32,8 @@ concept Registry [C] {
         Remove the concept registration for the given URI.
       }
 
-      fixture valid_deregister { uri: "urn:clef/User" }
-      fixture nonexistent_deregister { uri: "urn:clef/NonExistent" }
+      fixture valid_deregister { uri: "urn:clef/User" } after valid_register
+      fixture nonexistent_deregister { uri: "urn:clef/NonExistent" } after valid_register
     }
 
     action heartbeat(uri: String) {
@@ -42,8 +42,8 @@ concept Registry [C] {
         and return its availability status.
       }
 
-      fixture registered_heartbeat { uri: "urn:clef/User" }
-      fixture unregistered_heartbeat { uri: "urn:clef/NonExistent" }
+      fixture registered_heartbeat { uri: "urn:clef/User" } after valid_register
+      fixture unregistered_heartbeat { uri: "urn:clef/NonExistent" } after valid_register
     }
   }
 

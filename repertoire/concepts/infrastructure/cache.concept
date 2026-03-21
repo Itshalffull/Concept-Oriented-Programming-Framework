@@ -33,7 +33,7 @@ concept Cache [C] {
         No valid cache entry exists for the given key.
       }
 
-      fixture get_existing { bin: "render", key: "home-page" }
+      fixture get_existing { bin: "render", key: "home-page" } after set_page_cache
       fixture get_nonexistent { bin: "render", key: "does-not-exist" } -> error
     }
 
@@ -45,7 +45,7 @@ concept Cache [C] {
         No cache entry exists for the given key.
       }
 
-      fixture invalidate_existing { bin: "render", key: "home-page" }
+      fixture invalidate_existing { bin: "render", key: "home-page" } after set_page_cache
       fixture invalidate_missing { bin: "render", key: "nonexistent" } -> error
     }
 
@@ -54,8 +54,8 @@ concept Cache [C] {
         Invalidate all cache entries matching the specified tags and return the count removed.
       }
 
-      fixture invalidate_page_tags { tags: "page,frontpage" }
-      fixture invalidate_empty_tags { tags: "" }
+      fixture invalidate_page_tags { tags: "page,frontpage" } after set_page_cache
+      fixture invalidate_empty_tags { tags: "" } after set_page_cache
     }
   }
 

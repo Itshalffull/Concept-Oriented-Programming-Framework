@@ -47,10 +47,10 @@ concept GovernanceAutomationProvider [GA] {
         condition failed).
       }
 
-      fixture execute_approved { action_payload: "{\"action\":\"transfer\",\"to\":\"0x123\"}", gate_config: "{\"gate\":\"none\"}" }
-      fixture execute_quorum_pass { action_payload: "{\"action\":\"upgrade\"}", gate_config: "{\"gate\":\"quorum\",\"required\":3,\"current\":4}" }
-      fixture execute_guard_deny { action_payload: "{\"action\":\"transfer\"}", gate_config: "{\"gate\":\"guard\",\"condition\":\"deny\"}" } -> error
-      fixture execute_missing_payload { action_payload: "", gate_config: "{\"gate\":\"none\"}" } -> error
+      fixture execute_approved { action_payload: "{\"action\":\"transfer\",\"to\":\"0x123\"}", gate_config: "{\"gate\":\"none\"}" } after register_valid
+      fixture execute_quorum_pass { action_payload: "{\"action\":\"upgrade\"}", gate_config: "{\"gate\":\"quorum\",\"required\":3,\"current\":4}" } after register_valid
+      fixture execute_guard_deny { action_payload: "{\"action\":\"transfer\"}", gate_config: "{\"gate\":\"guard\",\"condition\":\"deny\"}" } after register_valid -> error
+      fixture execute_missing_payload { action_payload: "", gate_config: "{\"gate\":\"none\"}" } after register_valid -> error
     }
   }
 

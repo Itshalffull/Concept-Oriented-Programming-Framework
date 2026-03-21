@@ -43,8 +43,8 @@ concept Supermajority [SM] {
         The leading choice falls short of the threshold.
       }
 
-      fixture supermajority_reached { config: "supermaj-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" }
-      fixture no_ballots { config: "supermaj-001", ballots: "[]", weights: "{}" } -> error
+      fixture supermajority_reached { config: "supermaj-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" } after two_thirds
+      fixture no_ballots { config: "supermaj-001", ballots: "[]", weights: "{}" } after two_thirds -> error
     }
   }
 

@@ -60,7 +60,7 @@ concept RageQuit [RQ] {
         The claim has not been calculated yet.
       }
 
-      fixture claim_calculated { exit: "rq-001" }
+      fixture claim_calculated { exit: "rq-001" } after initiate_exit
       fixture claim_not_found { exit: "rq-nonexistent" } -> error
     }
   }

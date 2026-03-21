@@ -37,7 +37,7 @@ concept SyncEngine [F] {
           [local]    — execute on same runtime only
       }
 
-      fixture valid_completion { completion: { id: "c-001", concept: "urn:clef/User", action: "create", input: {}, variant: "ok", output: {}, flow: "flow-001", timestamp: "2025-01-15T10:30:00Z" } }
+      fixture valid_completion { completion: { id: "c-001", concept: "urn:clef/User", action: "create", input: {}, variant: "ok", output: {}, flow: "flow-001", timestamp: "2025-01-15T10:30:00Z" } } after valid_register
     }
 
     action evaluateWhere(bindings: Bindings, queries: list QueryPlan) {
@@ -50,7 +50,7 @@ concept SyncEngine [F] {
         fails, return an error description.
       }
 
-      fixture valid_evaluate { bindings: {}, queries: [] }
+      fixture valid_evaluate { bindings: {}, queries: [] } after valid_register
       fixture missing_bindings { bindings: none, queries: [] } -> error
     }
 
@@ -61,7 +61,7 @@ concept SyncEngine [F] {
         flow context.
       }
 
-      fixture valid_queue { sync: { name: "EventualSync", annotations: ["eventual"], when: [{ concept: "urn:clef/A", action: "act", inputFields: [], outputFields: [] }], where: [], then: [{ concept: "urn:clef/B", action: "do", fields: [] }] }, bindings: {}, flow: "flow-001" }
+      fixture valid_queue { sync: { name: "EventualSync", annotations: ["eventual"], when: [{ concept: "urn:clef/A", action: "act", inputFields: [], outputFields: [] }], where: [], then: [{ concept: "urn:clef/B", action: "do", fields: [] }] }, bindings: {}, flow: "flow-001" } after valid_register
     }
 
     action onAvailabilityChange(conceptUri: String, available: Bool) {
@@ -71,8 +71,8 @@ concept SyncEngine [F] {
         for dispatch.
       }
 
-      fixture concept_online { conceptUri: "urn:clef/Notification", available: true }
-      fixture concept_offline { conceptUri: "urn:clef/Notification", available: false }
+      fixture concept_online { conceptUri: "urn:clef/Notification", available: true } after valid_register
+      fixture concept_offline { conceptUri: "urn:clef/Notification", available: false } after valid_register
     }
 
     action drainConflicts() {
@@ -82,7 +82,7 @@ concept SyncEngine [F] {
         conflict resolution syncs.
       }
 
-      fixture valid_drain {}
+      fixture valid_drain {} after valid_register
     }
   }
 

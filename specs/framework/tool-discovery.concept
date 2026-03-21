@@ -37,7 +37,7 @@ concept ToolDiscovery [T] {
       }
 
       fixture valid_register { name: "score_query", briefDescription: "Run GraphQL queries against Score index", fullDescription: "Execute a GraphQL query against the materialized Score index and return structured results", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{\"type\": \"object\", \"properties\": {\"graphql\": {\"type\": \"string\"}}}", alwaysLoaded: true }
-      fixture duplicate_register { name: "score_query", briefDescription: "Duplicate tool", fullDescription: "This is a duplicate", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{}", alwaysLoaded: false } -> duplicate
+      fixture duplicate_register { name: "score_query", briefDescription: "Duplicate tool", fullDescription: "This is a duplicate", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{}", alwaysLoaded: false } after valid_register -> duplicate
     }
 
     action searchTools(query: String, limit: Int) {
@@ -51,7 +51,7 @@ concept ToolDiscovery [T] {
         No tools matched the search query.
       }
 
-      fixture valid_search { query: "graphql query", limit: 5 }
+      fixture valid_search { query: "graphql query", limit: 5 } after valid_register
       fixture no_match { query: "zzzznonexistentzzz", limit: 10 } -> empty
       fixture empty_query { query: "", limit: 10 } -> empty
     }
@@ -64,8 +64,8 @@ concept ToolDiscovery [T] {
         full schema to make a call.
       }
 
-      fixture valid_describe { tools: ["score_query", "score_navigate"] }
-      fixture empty_tools { tools: [] }
+      fixture valid_describe { tools: ["score_query", "score_navigate"] } after valid_register
+      fixture empty_tools { tools: [] } after valid_register
     }
 
     action listCategories() {
@@ -75,7 +75,7 @@ concept ToolDiscovery [T] {
         becomes a category.
       }
 
-      fixture valid_list_categories {}
+      fixture valid_list_categories {} after valid_register
     }
 
     action getCategory(category: String) {
@@ -87,7 +87,7 @@ concept ToolDiscovery [T] {
         No category exists with this name.
       }
 
-      fixture valid_category { category: "score" }
+      fixture valid_category { category: "score" } after valid_register
       fixture missing_category { category: "nonexistent_category" } -> notfound
       fixture empty_category { category: "" } -> notfound
     }
@@ -99,7 +99,7 @@ concept ToolDiscovery [T] {
         in the upfront tool list sent to the LLM at session start.
       }
 
-      fixture valid_always_loaded {}
+      fixture valid_always_loaded {} after valid_register
     }
   }
 

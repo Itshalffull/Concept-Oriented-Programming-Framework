@@ -55,7 +55,7 @@ concept VaultProvider [V] {
         Lease already expired. Must re-fetch.
       }
 
-      fixture renew_active_lease { leaseId: "lease-abc-123" }
+      fixture renew_active_lease { leaseId: "lease-abc-123" } after fetch_db_password
       fixture renew_empty_lease { leaseId: "" } -> error
     }
 
@@ -64,8 +64,8 @@ concept VaultProvider [V] {
         New secret version written to Vault.
       }
 
-      fixture rotate_db_secret { path: "secret/data/db-password" }
-      fixture rotate_empty_path { path: "" }
+      fixture rotate_db_secret { path: "secret/data/db-password" } after fetch_db_password
+      fixture rotate_empty_path { path: "" } after fetch_db_password
     }
   }
 

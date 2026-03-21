@@ -60,7 +60,7 @@ concept CloudFormationProvider [C] {
         Stack requires IAM capabilities not specified in the request.
       }
 
-      fixture apply_stack { stack: "stack-abc123" }
+      fixture apply_stack { stack: "stack-abc123" } after generate_plan
       fixture apply_missing_stack { stack: "" } -> error
     }
 
@@ -72,7 +72,7 @@ concept CloudFormationProvider [C] {
         Stack deletion failed on a specific resource.
       }
 
-      fixture teardown_stack { stack: "stack-abc123" }
+      fixture teardown_stack { stack: "stack-abc123" } after generate_plan
       fixture teardown_missing { stack: "" } -> error
     }
   }

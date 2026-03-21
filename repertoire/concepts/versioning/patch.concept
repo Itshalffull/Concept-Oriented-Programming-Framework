@@ -46,7 +46,7 @@ concept Patch [P] {
         patchId not found.
       }
 
-      fixture apply_existing { patchId: "patch-1", content: "hello\nworld" }
+      fixture apply_existing { patchId: "patch-1", content: "hello\nworld" } after create_patch
       fixture apply_missing { patchId: "patch-nonexistent", content: "hello" } -> error
     }
 
@@ -59,7 +59,7 @@ concept Patch [P] {
         patchId not found.
       }
 
-      fixture invert_existing { patchId: "patch-1" }
+      fixture invert_existing { patchId: "patch-1" } after create_patch
       fixture invert_missing { patchId: "patch-nonexistent" } -> error
     }
 
@@ -75,7 +75,7 @@ concept Patch [P] {
         first or second not found.
       }
 
-      fixture compose_sequential { first: "patch-1", second: "patch-2" }
+      fixture compose_sequential { first: "patch-1", second: "patch-2" } after create_patch
       fixture compose_missing { first: "patch-nonexistent", second: "patch-2" } -> error
     }
 
@@ -91,7 +91,7 @@ concept Patch [P] {
         p1 or p2 not found.
       }
 
-      fixture commute_independent { p1: "patch-1", p2: "patch-2" }
+      fixture commute_independent { p1: "patch-1", p2: "patch-2" } after create_patch
       fixture commute_missing { p1: "patch-nonexistent", p2: "patch-2" } -> error
     }
   }

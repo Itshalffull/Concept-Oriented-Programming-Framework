@@ -36,7 +36,7 @@ concept PlatformBindingCatalog [B] {
       }
       -> notfound(message: String) { No matching binding exists. }
 
-      fixture resolve_exact { platform: "browser", destination: "/articles/42", bindingKind: "navigation" }
+      fixture resolve_exact { platform: "browser", destination: "/articles/42", bindingKind: "navigation" } after register_browser_nav
       fixture resolve_missing { platform: "watch", destination: "/settings", bindingKind: "navigation" } -> notfound
     }
 
@@ -48,8 +48,8 @@ concept PlatformBindingCatalog [B] {
         Return all bindings, optionally filtered by platform.
       }
 
-      fixture list_all { }
-      fixture list_by_platform { platform: "browser" }
+      fixture list_all { } after register_browser_nav
+      fixture list_by_platform { platform: "browser" } after register_browser_nav
     }
   }
 

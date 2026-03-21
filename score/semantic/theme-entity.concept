@@ -50,7 +50,7 @@ concept ThemeEntity [T] {
       -> notfound() {
         No theme with this name exists.
       }
-      fixture get_light { name: "light" }
+      fixture get_light { name: "light" } after register_light
       fixture get_missing { name: "nonexistent" } -> error
     }
 
@@ -66,7 +66,7 @@ concept ThemeEntity [T] {
       -> brokenChain(brokenAt: String) {
         Token reference chain is broken at this point.
       }
-      fixture resolve_primary { theme: "theme-entity-1", tokenPath: "palette.primary" }
+      fixture resolve_primary { theme: "theme-entity-1", tokenPath: "palette.primary" } after register_light
       fixture resolve_missing { theme: "nonexistent", tokenPath: "palette.x" } -> error
     }
 
@@ -76,7 +76,7 @@ concept ThemeEntity [T] {
         Results as serialized JSON array of { rolePair, ratio,
         passes }.
       }
-      fixture audit_theme { theme: "theme-entity-1" }
+      fixture audit_theme { theme: "theme-entity-1" } after register_light
       fixture audit_missing { theme: "nonexistent" } -> error
     }
 
@@ -97,8 +97,8 @@ concept ThemeEntity [T] {
         Find all widgets whose connect sections reference the
         changed token. Results as serialized JSON array.
       }
-      fixture affected_primary { theme: "theme-entity-1", changedToken: "color.primary" }
-      fixture affected_missing { theme: "nonexistent", changedToken: "x" }
+      fixture affected_primary { theme: "theme-entity-1", changedToken: "color.primary" } after register_light
+      fixture affected_missing { theme: "nonexistent", changedToken: "x" } after register_light
     }
 
     action generatedOutputs(theme: T) {
@@ -107,8 +107,8 @@ concept ThemeEntity [T] {
         platforms (CSS, RN, DTCG JSON, etc.). Results as
         serialized JSON array of { platform, file }.
       }
-      fixture outputs_theme { theme: "theme-entity-1" }
-      fixture outputs_missing { theme: "nonexistent" }
+      fixture outputs_theme { theme: "theme-entity-1" } after register_light
+      fixture outputs_missing { theme: "nonexistent" } after register_light
     }
   }
 

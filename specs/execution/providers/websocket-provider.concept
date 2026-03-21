@@ -41,8 +41,8 @@ concept WebSocketProvider [W] {
         A connection with this name is already configured.
       }
 
-      fixture configure_events { name: "events", url: "wss://events.example.com", protocols: "[]" }
-      fixture configure_with_protocol { name: "chat", url: "wss://chat.example.com/ws", protocols: "[\"graphql-ws\"]" }
+      fixture configure_events { name: "events", url: "wss://events.example.com", protocols: "[]" } after valid
+      fixture configure_with_protocol { name: "chat", url: "wss://chat.example.com/ws", protocols: "[\"graphql-ws\"]" } after valid
     }
 
     action send(connection: String, message: String) {
@@ -59,7 +59,7 @@ concept WebSocketProvider [W] {
         serialization error.
       }
 
-      fixture send_json_message { connection: "events", message: "{\"type\":\"subscribe\",\"channel\":\"deploys\"}" }
+      fixture send_json_message { connection: "events", message: "{\"type\":\"subscribe\",\"channel\":\"deploys\"}" } after valid
       fixture send_to_unknown { connection: "nonexistent", message: "hello" } -> notConnected
     }
 
@@ -75,7 +75,7 @@ concept WebSocketProvider [W] {
         The remote end closed the connection gracefully.
       }
 
-      fixture receive_from_events { connection: "events" }
+      fixture receive_from_events { connection: "events" } after valid
       fixture receive_from_unknown { connection: "nonexistent" } -> notConnected
     }
 
@@ -87,7 +87,7 @@ concept WebSocketProvider [W] {
         No connection is configured with this name.
       }
 
-      fixture close_events { connection: "events" }
+      fixture close_events { connection: "events" } after valid
       fixture close_unknown { connection: "nonexistent" } -> notFound
     }
 
@@ -97,7 +97,7 @@ concept WebSocketProvider [W] {
         array with name, url, and status.
       }
 
-      fixture valid {}
+      fixture valid {} after valid
     }
   }
 

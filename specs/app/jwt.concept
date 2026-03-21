@@ -16,7 +16,7 @@ concept JWT [U] {
       }
 
       fixture generate_ok { user: "user-alice" }
-      fixture generate_another { user: "user-bob" }
+      fixture generate_another { user: "user-bob" } after generate_ok
     }
 
     action verify(token: String) {
@@ -27,7 +27,7 @@ concept JWT [U] {
         If the token is invalid or expired, return error.
       }
 
-      fixture verify_ok { token: "valid.token.placeholder" }
+      fixture verify_ok { token: "valid.token.placeholder" } after generate_ok
       fixture verify_invalid { token: "not-a-valid-jwt" } -> error
       fixture verify_empty { token: "" } -> error
     }

@@ -35,7 +35,7 @@ concept Elevation [W] {
       -> ok(elevation: W, shadow: String) { Return shadow definition. }
       -> notfound(message: String) { Not defined for this level. }
 
-      fixture get_existing { elevation: "W-1" }
+      fixture get_existing { elevation: "W-1" } after define_raised
       fixture get_unknown { elevation: "W-nonexistent" } -> notfound
     }
 
@@ -45,7 +45,7 @@ concept Elevation [W] {
       }
       -> invalid(message: String) { Invalid color. }
 
-      fixture scale_from_black { baseColor: "0,0,0" }
+      fixture scale_from_black { baseColor: "0,0,0" } after define_raised
       fixture scale_empty_color { baseColor: "" } -> invalid
     }
   }

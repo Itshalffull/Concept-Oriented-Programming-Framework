@@ -61,7 +61,7 @@ concept Diff [C] {
         Edit script does not apply cleanly to this content.
       }
 
-      fixture apply_patch { content: "line1\nline2", editScript: "[{\"type\":\"equal\",\"line\":0,\"content\":\"line1\"},{\"type\":\"insert\",\"line\":1,\"content\":\"line3\"}]" }
+      fixture apply_patch { content: "line1\nline2", editScript: "[{\"type\":\"equal\",\"line\":0,\"content\":\"line1\"},{\"type\":\"insert\",\"line\":1,\"content\":\"line3\"}]" } after register_myers
       fixture invalid_script { content: "hello", editScript: "not-valid-json" } -> error
     }
   }

@@ -53,7 +53,7 @@ concept Symbol [S] {
         returned as serialized JSON array of symbol strings.
       }
 
-      fixture valid_resolve { symbolString: "clef/concept/Order" }
+      fixture valid_resolve { symbolString: "clef/concept/Order" } after valid_register
       fixture resolve_nonexistent { symbolString: "clef/concept/NonExistent" } -> error
     }
 
@@ -63,8 +63,8 @@ concept Symbol [S] {
         by namespace. Results as serialized JSON array.
       }
 
-      fixture find_functions { kind: "function", namespace: "ts/function/src/handlers" }
-      fixture find_all_concepts { kind: "concept", namespace: "" }
+      fixture find_functions { kind: "function", namespace: "ts/function/src/handlers" } after valid_register
+      fixture find_all_concepts { kind: "concept", namespace: "" } after valid_register
     }
 
     action findByFile(file: String) {
@@ -73,8 +73,8 @@ concept Symbol [S] {
         Results as serialized JSON array.
       }
 
-      fixture find_in_file { file: "src/handlers/user.ts" }
-      fixture find_in_empty_file { file: "src/empty.ts" }
+      fixture find_in_file { file: "src/handlers/user.ts" } after valid_register
+      fixture find_in_empty_file { file: "src/empty.ts" } after valid_register
     }
 
     action rename(symbol: S, newName: String) {
@@ -88,7 +88,7 @@ concept Symbol [S] {
         Symbol does not exist.
       }
 
-      fixture valid_rename { symbol: "symbol-1", newName: "updateUser" }
+      fixture valid_rename { symbol: "symbol-1", newName: "updateUser" } after valid_register
       fixture rename_nonexistent { symbol: "symbol-999", newName: "foo" } -> error
     }
 
@@ -100,7 +100,7 @@ concept Symbol [S] {
         Symbol does not exist.
       }
 
-      fixture valid_get { symbol: "symbol-1" }
+      fixture valid_get { symbol: "symbol-1" } after valid_register
       fixture get_nonexistent { symbol: "symbol-999" } -> error
     }
   }

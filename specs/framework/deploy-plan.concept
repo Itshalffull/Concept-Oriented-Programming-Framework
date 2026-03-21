@@ -96,7 +96,7 @@ concept DeployPlan [D] {
         Lists the nodes that could not be rolled back.
       }
 
-      fixture valid_execute { plan: "dp-20260101-abc123" }
+      fixture valid_execute { plan: "dp-20260101-abc123" } after valid_staging
       fixture nonexistent_execute { plan: "dp-nonexistent-xyz" } -> rollbackFailed
     }
 
@@ -108,7 +108,7 @@ concept DeployPlan [D] {
         Some rollbacks succeeded, some failed.
       }
 
-      fixture valid_rollback { plan: "dp-20260101-abc123" }
+      fixture valid_rollback { plan: "dp-20260101-abc123" } after valid_staging
       fixture nonexistent_rollback { plan: "dp-nonexistent-xyz" } -> partial
     }
 
@@ -120,7 +120,7 @@ concept DeployPlan [D] {
         Plan does not exist.
       }
 
-      fixture valid_status { plan: "dp-20260101-abc123" }
+      fixture valid_status { plan: "dp-20260101-abc123" } after valid_staging
       fixture nonexistent_status { plan: "dp-nonexistent-xyz" } -> notfound
     }
   }
