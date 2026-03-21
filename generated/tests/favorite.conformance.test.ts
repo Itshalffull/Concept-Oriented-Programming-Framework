@@ -322,7 +322,8 @@ describe('Favorite functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Favorite');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Favorite');
     });
   });
 
@@ -331,8 +332,8 @@ describe('Favorite functional handler', () => {
       const storage = createInMemoryStorage();
       const favoriteResult0 = await interpret(favoriteHandler.favorite({ user: {"type":"variable","name":"u"}, article: {"type":"literal","value":"a1"} }), storage);
       expect(favoriteResult0.variant).toBe("ok");
-      const user = favoriteResult0.output["user"];
-      const article = favoriteResult0.output["article"];
+      let user = favoriteResult0.output["user"];
+      let article = favoriteResult0.output["article"];
       const thenResult0 = await interpret(favoriteHandler.isFavorited({ user: {"type":"variable","name":"u"}, article: {"type":"literal","value":"a1"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(favoriteHandler.unfavorite({ user: {"type":"variable","name":"u"}, article: {"type":"literal","value":"a1"} }), storage);
@@ -343,8 +344,8 @@ describe('Favorite functional handler', () => {
       const storage = createInMemoryStorage();
       const favoriteResult0 = await interpret(favoriteHandler.favorite({ user: {"type":"variable","name":"u"}, article: {"type":"literal","value":"a2"} }), storage);
       expect(favoriteResult0.variant).toBe("ok");
-      const user = favoriteResult0.output["user"];
-      const article = favoriteResult0.output["article"];
+      let user = favoriteResult0.output["user"];
+      let article = favoriteResult0.output["article"];
       const thenResult0 = await interpret(favoriteHandler.unfavorite({ user: {"type":"variable","name":"u"}, article: {"type":"literal","value":"a2"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(favoriteHandler.isFavorited({ user: {"type":"variable","name":"u"}, article: {"type":"literal","value":"a2"} }), storage);
@@ -355,8 +356,8 @@ describe('Favorite functional handler', () => {
       const storage = createInMemoryStorage();
       const favoriteResult0 = await interpret(favoriteHandler.favorite({ user: {"type":"variable","name":"u"}, article: {"type":"literal","value":"a3"} }), storage);
       expect(favoriteResult0.variant).toBe("ok");
-      const user = favoriteResult0.output["user"];
-      const article = favoriteResult0.output["article"];
+      let user = favoriteResult0.output["user"];
+      let article = favoriteResult0.output["article"];
       const thenResult0 = await interpret(favoriteHandler.count({ article: {"type":"literal","value":"a3"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

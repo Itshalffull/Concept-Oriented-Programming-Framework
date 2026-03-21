@@ -388,27 +388,13 @@ describe('DataSource functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof dataSourceHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = dataSourceHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('DataSource');
-    });
-  });
 
   describe('invariant examples', () => {
     it("register-then-discover", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(dataSourceHandler.register({ name: {"type":"literal","value":"blog_api"}, uri: {"type":"literal","value":"https://blog.example.com/api"}, credentials: {"type":"literal","value":"token:abc"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const sourceId = registerResult0.output["sourceId"];
+      let sourceId = registerResult0.output["sourceId"];
       const thenResult0 = await interpret(dataSourceHandler.connect({ sourceId: {"type":"literal","value":"src-1"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(dataSourceHandler.discover({ sourceId: {"type":"literal","value":"src-1"} }), storage);

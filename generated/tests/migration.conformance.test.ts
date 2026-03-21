@@ -401,7 +401,8 @@ describe('Migration functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Migration');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Migration');
     });
   });
 
@@ -410,9 +411,9 @@ describe('Migration functional handler', () => {
       const storage = createInMemoryStorage();
       const planResult0 = await interpret(migrationHandler.plan({ concept: {"type":"literal","value":"Entity"}, fromVersion: {"type":"literal","value":1}, toVersion: {"type":"literal","value":2} }), storage);
       expect(planResult0.variant).toBe("ok");
-      const migration = planResult0.output["migration"];
-      const steps = planResult0.output["steps"];
-      const estimatedRecords = planResult0.output["estimatedRecords"];
+      let migration = planResult0.output["migration"];
+      let steps = planResult0.output["steps"];
+      let estimatedRecords = planResult0.output["estimatedRecords"];
       const thenResult0 = await interpret(migrationHandler.expand({ migration: {"type":"variable","name":"m"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(migrationHandler.migrate({ migration: {"type":"variable","name":"m"} }), storage);

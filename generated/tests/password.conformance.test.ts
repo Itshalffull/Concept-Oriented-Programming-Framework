@@ -250,7 +250,8 @@ describe('Password functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Password');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Password');
     });
   });
 
@@ -259,7 +260,7 @@ describe('Password functional handler', () => {
       const storage = createInMemoryStorage();
       const setResult0 = await interpret(passwordHandler.set({ user: {"type":"variable","name":"x"}, password: {"type":"literal","value":"secret123"} }), storage);
       expect(setResult0.variant).toBe("ok");
-      const user = setResult0.output["user"];
+      let user = setResult0.output["user"];
       const thenResult0 = await interpret(passwordHandler.check({ user: {"type":"variable","name":"x"}, password: {"type":"literal","value":"secret123"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(passwordHandler.check({ user: {"type":"variable","name":"x"}, password: {"type":"literal","value":"wrongpass"} }), storage);
@@ -270,14 +271,14 @@ describe('Password functional handler', () => {
       const storage = createInMemoryStorage();
       const checkResult0 = await interpret(passwordHandler.check({ user: {"type":"variable","name":"z"}, password: {"type":"literal","value":"any"} }), storage);
       expect(checkResult0.variant).toBe("notfound");
-      const message = checkResult0.output["message"];
+      let message = checkResult0.output["message"];
     });
 
     it("weak password rejected", async () => {
       const storage = createInMemoryStorage();
       const setResult0 = await interpret(passwordHandler.set({ user: {"type":"variable","name":"x"}, password: {"type":"literal","value":""} }), storage);
       expect(setResult0.variant).toBe("invalid");
-      const message = setResult0.output["message"];
+      let message = setResult0.output["message"];
     });
 
   });

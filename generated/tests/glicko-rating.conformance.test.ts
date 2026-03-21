@@ -318,7 +318,8 @@ describe('GlickoRating functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('GlickoRating');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('GlickoRating');
     });
   });
 
@@ -327,7 +328,7 @@ describe('GlickoRating functional handler', () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(glickoRatingHandler.configure({ initialRating: {"type":"literal","value":1500}, initialDeviation: {"type":"literal","value":350}, initialVolatility: {"type":"literal","value":0.06}, inactivityGrowthRate: {"type":"variable","name":"_"} }), storage);
       expect(configureResult0.variant).toBe("configured");
-      const config = configureResult0.output["config"];
+      let config = configureResult0.output["config"];
       const thenResult0 = await interpret(glickoRatingHandler.recordOutcome({ config: {"type":"variable","name":"gl"}, participant: {"type":"variable","name":"p"}, opponent: {"type":"variable","name":"_"}, outcome: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("updated");
     });

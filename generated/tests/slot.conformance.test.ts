@@ -259,7 +259,8 @@ describe('Slot functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Slot');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Slot');
     });
   });
 
@@ -268,7 +269,7 @@ describe('Slot functional handler', () => {
       const storage = createInMemoryStorage();
       const defineResult0 = await interpret(slotHandler.define({ slot: {"type":"variable","name":"l"}, name: {"type":"literal","value":"header"}, host: {"type":"literal","value":"dialog"}, position: {"type":"literal","value":"before-title"}, fallback: {"type":"variable","name":"_"} }), storage);
       expect(defineResult0.variant).toBe("ok");
-      const slot = defineResult0.output["slot"];
+      let slot = defineResult0.output["slot"];
       const thenResult0 = await interpret(slotHandler.fill({ slot: {"type":"variable","name":"l"}, content: {"type":"literal","value":"Custom Header"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

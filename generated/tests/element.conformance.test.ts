@@ -465,7 +465,8 @@ describe('Element functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Element');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Element');
     });
   });
 
@@ -474,7 +475,7 @@ describe('Element functional handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(elementHandler.create({ element: {"type":"variable","name":"e"}, kind: {"type":"literal","value":"input-text"}, label: {"type":"literal","value":"Title"}, dataType: {"type":"literal","value":"String"} }), storage);
       expect(createResult0.variant).toBe("ok");
-      const element = createResult0.output["element"];
+      let element = createResult0.output["element"];
       const thenResult0 = await interpret(elementHandler.enrich({ element: {"type":"variable","name":"e"}, interactorType: {"type":"literal","value":"text-short"}, interactorProps: {"type":"literal","value":"{}"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

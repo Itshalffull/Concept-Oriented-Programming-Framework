@@ -318,7 +318,8 @@ describe('Weight functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Weight');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Weight');
     });
   });
 
@@ -327,8 +328,8 @@ describe('Weight functional handler', () => {
       const storage = createInMemoryStorage();
       const updateWeightResult0 = await interpret(weightHandler.updateWeight({ participant: {"type":"variable","name":"p"}, source: {"type":"variable","name":"_"}, value: {"type":"variable","name":"v"} }), storage);
       expect(updateWeightResult0.variant).toBe("updated");
-      const weight = updateWeightResult0.output["weight"];
-      const newTotal = updateWeightResult0.output["newTotal"];
+      let weight = updateWeightResult0.output["weight"];
+      let newTotal = updateWeightResult0.output["newTotal"];
       const thenResult0 = await interpret(weightHandler.getWeight({ participant: {"type":"variable","name":"p"} }), storage);
       expect(thenResult0.variant).toBe("weight");
     });

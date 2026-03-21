@@ -108,23 +108,13 @@ describe('AlloySolverEndpoint imperative handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof alloySolverEndpointHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await alloySolverEndpointHandler.register({}, storage);
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('AlloySolverEndpoint');
-    });
-  });
 
   describe('invariant examples', () => {
     it("check after register", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await alloySolverEndpointHandler.register({ name: {"type":"literal","value":"alloy-local"}, jarPath: {"type":"literal","value":"/opt/alloy/alloy.jar"}, scope: {"type":"literal","value":5}, timeout: {"type":"literal","value":60000}, options: {"type":"literal","value":""} }, storage);
       expect(registerResult0.variant).toBe("ok");
-      const endpoint = registerResult0.output["endpoint"];
+      let endpoint = registerResult0.output["endpoint"];
       const thenResult0 = await alloySolverEndpointHandler.resolve({ name: {"type":"literal","value":"alloy-local"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

@@ -255,7 +255,8 @@ describe('Env functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Env');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Env');
     });
   });
 
@@ -264,8 +265,8 @@ describe('Env functional handler', () => {
       const storage = createInMemoryStorage();
       const resolveResult0 = await interpret(envHandler.resolve({ environment: {"type":"variable","name":"e"} }), storage);
       expect(resolveResult0.variant).toBe("ok");
-      const environment = resolveResult0.output["environment"];
-      const resolved = resolveResult0.output["resolved"];
+      let environment = resolveResult0.output["environment"];
+      let resolved = resolveResult0.output["resolved"];
       const thenResult0 = await interpret(envHandler.promote({ fromEnv: {"type":"variable","name":"e"}, toEnv: {"type":"variable","name":"e2"}, suiteName: {"type":"literal","value":"auth"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

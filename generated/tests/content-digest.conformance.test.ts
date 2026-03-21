@@ -249,7 +249,8 @@ describe('ContentDigest functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ContentDigest');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ContentDigest');
     });
   });
 
@@ -258,7 +259,7 @@ describe('ContentDigest functional handler', () => {
       const storage = createInMemoryStorage();
       const computeResult0 = await interpret(contentDigestHandler.compute({ unit: {"type":"literal","value":"u1"}, algorithm: {"type":"literal","value":"structural-normalized"} }), storage);
       expect(computeResult0.variant).toBe("ok");
-      const digest = computeResult0.output["digest"];
+      let digest = computeResult0.output["digest"];
       const thenResult0 = await interpret(contentDigestHandler.lookup({ hash: {"type":"literal","value":"h"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

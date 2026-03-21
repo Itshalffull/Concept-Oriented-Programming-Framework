@@ -165,7 +165,8 @@ describe('TemporalVersion imperative handler', () => {
       const result = await temporalVersionHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('TemporalVersion');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('TemporalVersion');
     });
   });
 
@@ -174,7 +175,7 @@ describe('TemporalVersion imperative handler', () => {
       const storage = createInMemoryStorage();
       const recordResult0 = await temporalVersionHandler.record({ contentHash: {"type":"variable","name":"h"}, validFrom: {"type":"variable","name":"vf"}, validTo: {"type":"variable","name":"_"}, metadata: {"type":"variable","name":"_"} }, storage);
       expect(recordResult0.variant).toBe("ok");
-      const versionId = recordResult0.output["versionId"];
+      let versionId = recordResult0.output["versionId"];
       const thenResult0 = await temporalVersionHandler.asOf({ systemTime: {"type":"variable","name":"_"}, validTime: {"type":"variable","name":"vf"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -183,7 +184,7 @@ describe('TemporalVersion imperative handler', () => {
       const storage = createInMemoryStorage();
       const recordResult0 = await temporalVersionHandler.record({ contentHash: {"type":"variable","name":"h"}, validFrom: {"type":"variable","name":"_"}, validTo: {"type":"variable","name":"_"}, metadata: {"type":"variable","name":"_"} }, storage);
       expect(recordResult0.variant).toBe("ok");
-      const versionId = recordResult0.output["versionId"];
+      let versionId = recordResult0.output["versionId"];
       const thenResult0 = await temporalVersionHandler.current({  }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

@@ -238,27 +238,13 @@ describe('CustomEvaluator functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof customEvaluatorHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = customEvaluatorHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('CustomEvaluator');
-    });
-  });
 
   describe('invariant examples', () => {
     it("register-then-evaluate", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(customEvaluatorHandler.register({ name: {"type":"variable","name":"_"}, source: {"type":"variable","name":"_"}, language: {"type":"variable","name":"_"}, sandbox: {"type":"literal","value":true} }), storage);
       expect(registerResult0.variant).toBe("registered");
-      const evaluator = registerResult0.output["evaluator"];
+      let evaluator = registerResult0.output["evaluator"];
       const thenResult0 = await interpret(customEvaluatorHandler.evaluate({ evaluator: {"type":"variable","name":"cu"}, context: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("result");
     });

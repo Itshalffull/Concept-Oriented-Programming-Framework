@@ -9,7 +9,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.js';
 import {
-  createProgram, get, find, put, branch, complete, pureFrom, mapBindings,
+  createProgram, get, find, put, branch, complete, completeFrom, pureFrom, mapBindings,
 } from '../../../runtime/storage-program.js';
 
 export const runtimeFlowHandler: FunctionalConceptHandler = {
@@ -25,8 +25,7 @@ export const runtimeFlowHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => b.existing != null,
-      pureFrom(createProgram(), (b) => ({
-        variant: 'ok',
+      completeFrom(createProgram(), 'ok', (b) => ({
         flow: (b.existing as Record<string, unknown>).id,
       })),
       // Create new correlated flow — actual correlation with ActionLog
@@ -61,7 +60,7 @@ export const runtimeFlowHandler: FunctionalConceptHandler = {
       return JSON.stringify(matching.map(f => ({ id: f.id, flowId: f.flowId, status: f.status })));
     }, 'result');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', flows: b.result }));
+    return completeFrom(p, 'ok', (b) => ({ flows: b.result }));
   },
 
   findBySync(input) {
@@ -78,7 +77,7 @@ export const runtimeFlowHandler: FunctionalConceptHandler = {
       return JSON.stringify(matching.map(f => ({ id: f.id, flowId: f.flowId, status: f.status })));
     }, 'result');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', flows: b.result }));
+    return completeFrom(p, 'ok', (b) => ({ flows: b.result }));
   },
 
   findByVariant(input) {
@@ -95,7 +94,7 @@ export const runtimeFlowHandler: FunctionalConceptHandler = {
       return JSON.stringify(matching.map(f => ({ id: f.id, flowId: f.flowId, status: f.status })));
     }, 'result');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', flows: b.result }));
+    return completeFrom(p, 'ok', (b) => ({ flows: b.result }));
   },
 
   findFailures(input) {
@@ -107,7 +106,7 @@ export const runtimeFlowHandler: FunctionalConceptHandler = {
       return JSON.stringify(failures.map(f => ({ id: f.id, flowId: f.flowId, status: f.status })));
     }, 'result');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', flows: b.result }));
+    return completeFrom(p, 'ok', (b) => ({ flows: b.result }));
   },
 
   compareToStatic(input) {
@@ -164,7 +163,7 @@ export const runtimeFlowHandler: FunctionalConceptHandler = {
       })));
     }, 'locations');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', locations: b.locations }));
+    return completeFrom(p, 'ok', (b) => ({ locations: b.locations }));
   },
 
   get(input) {
@@ -179,12 +178,12 @@ export const runtimeFlowHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => b.entry != null,
-      pureFrom(createProgram(), (b) => {
+      completeFrom(createProgram(), 'ok', (b) => {
         const e = b.entry as Record<string, unknown>;
         const steps: unknown[] = JSON.parse(e.steps as string || '[]');
         const deviations: unknown[] = JSON.parse(e.deviations as string || '[]');
         return {
-          variant: 'ok', flow: e.id, flowId: e.flowId,
+          flow: e.id, flowId: e.flowId,
           status: e.status, stepCount: steps.length, deviationCount: deviations.length,
         };
       }),

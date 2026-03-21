@@ -316,7 +316,8 @@ describe('StorageProgram imperative handler', () => {
       const result = await storageProgramHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('StorageProgram');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('StorageProgram');
     });
   });
 
@@ -327,13 +328,13 @@ describe('StorageProgram imperative handler', () => {
       expect(createResult0.variant).toBe("ok");
       const getResult1 = await storageProgramHandler.get({ program: {"type":"variable","name":"p"}, relation: {"type":"literal","value":"users"}, key: {"type":"literal","value":"u1"}, bindAs: {"type":"literal","value":"user"} }, storage);
       expect(getResult1.variant).toBe("ok");
-      const program = getResult1.output["program"];
+      let program = getResult1.output["program"];
       const putResult2 = await storageProgramHandler.put({ program: {"type":"variable","name":"p"}, relation: {"type":"literal","value":"users"}, key: {"type":"literal","value":"u1"}, value: {"type":"literal","value":"updated"} }, storage);
       expect(putResult2.variant).toBe("ok");
-      const program = putResult2.output["program"];
+      program = putResult2.output["program"];
       const pureResult3 = await storageProgramHandler.pure({ program: {"type":"variable","name":"p"}, variant: {"type":"literal","value":"ok"}, output: {"type":"literal","value":"done"} }, storage);
       expect(pureResult3.variant).toBe("ok");
-      const program = pureResult3.output["program"];
+      program = pureResult3.output["program"];
       expect(pResult.output["terminated"]).toBe({"type":"literal","value":true});
     });
 
@@ -343,7 +344,7 @@ describe('StorageProgram imperative handler', () => {
       expect(createResult0.variant).toBe("ok");
       const pureResult1 = await storageProgramHandler.pure({ program: {"type":"variable","name":"p"}, variant: {"type":"literal","value":"ok"}, output: {"type":"literal","value":"done"} }, storage);
       expect(pureResult1.variant).toBe("ok");
-      const program = pureResult1.output["program"];
+      let program = pureResult1.output["program"];
       const thenResult0 = await storageProgramHandler.get({ program: {"type":"variable","name":"p"}, relation: {"type":"literal","value":"users"}, key: {"type":"literal","value":"u1"}, bindAs: {"type":"literal","value":"x"} }, storage);
       expect(thenResult0.variant).toBe("sealed");
     });

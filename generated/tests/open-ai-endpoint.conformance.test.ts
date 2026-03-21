@@ -101,23 +101,13 @@ describe('OpenAiEndpoint imperative handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof openAiEndpointHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await openAiEndpointHandler.register({}, storage);
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('OpenAiEndpoint');
-    });
-  });
 
   describe('invariant examples', () => {
     it("resolve after register", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await openAiEndpointHandler.register({ name: {"type":"literal","value":"embeddings"}, apiKey: {"type":"literal","value":"sk-test"}, model: {"type":"literal","value":"text-embedding-3-small"}, baseUrl: {"type":"literal","value":"https://api.openai.com/v1"}, dimensions: {"type":"literal","value":1536} }, storage);
       expect(registerResult0.variant).toBe("ok");
-      const endpoint = registerResult0.output["endpoint"];
+      let endpoint = registerResult0.output["endpoint"];
       const thenResult0 = await openAiEndpointHandler.resolve({ name: {"type":"literal","value":"embeddings"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -126,7 +116,7 @@ describe('OpenAiEndpoint imperative handler', () => {
       const storage = createInMemoryStorage();
       const resolveResult0 = await openAiEndpointHandler.resolve({ name: {"type":"literal","value":"nonexistent"} }, storage);
       expect(resolveResult0.variant).toBe("notFound");
-      const name = resolveResult0.output["name"];
+      let name = resolveResult0.output["name"];
       const thenResult0 = await openAiEndpointHandler.register({ name: {"type":"literal","value":"test"}, apiKey: {"type":"literal","value":"sk-x"}, model: {"type":"literal","value":"gpt-4"}, baseUrl: {"type":"literal","value":"https://api.openai.com/v1"}, dimensions: {"type":"literal","value":0} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

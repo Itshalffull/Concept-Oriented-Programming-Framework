@@ -134,7 +134,8 @@ describe('GraphqlProvider imperative handler', () => {
       const result = await graphqlProviderHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('GraphqlProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('GraphqlProvider');
     });
   });
 
@@ -143,7 +144,7 @@ describe('GraphqlProvider imperative handler', () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await graphqlProviderHandler.configure({ name: {"type":"literal","value":"github-api"}, url: {"type":"literal","value":"https://api.github.com/graphql"}, headers: {"type":"literal","value":"{}"}, schemaRef: {"type":"literal","value":""} }, storage);
       expect(configureResult0.variant).toBe("ok");
-      const endpoint = configureResult0.output["endpoint"];
+      let endpoint = configureResult0.output["endpoint"];
       const thenResult0 = await graphqlProviderHandler.execute({ endpoint: {"type":"literal","value":"unknown-api"}, query: {"type":"literal","value":"{ viewer { login } }"}, variables: {"type":"literal","value":"{}"}, operationType: {"type":"literal","value":"query"} }, storage);
       expect(thenResult0.variant).toBe("notFound");
     });

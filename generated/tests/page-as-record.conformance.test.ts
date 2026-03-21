@@ -456,7 +456,8 @@ describe('PageAsRecord functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('PageAsRecord');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('PageAsRecord');
     });
   });
 
@@ -465,10 +466,10 @@ describe('PageAsRecord functional handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(pageAsRecordHandler.create({ page: {"type":"variable","name":"p"}, schema: {"type":"literal","value":"{\"fields\":[\"title\"]}"} }), storage);
       expect(createResult0.variant).toBe("ok");
-      const page = createResult0.output["page"];
+      let page = createResult0.output["page"];
       const setPropertyResult1 = await interpret(pageAsRecordHandler.setProperty({ page: {"type":"variable","name":"p"}, key: {"type":"literal","value":"title"}, value: {"type":"literal","value":"My Page"} }), storage);
       expect(setPropertyResult1.variant).toBe("ok");
-      const page = setPropertyResult1.output["page"];
+      page = setPropertyResult1.output["page"];
       const thenResult0 = await interpret(pageAsRecordHandler.getProperty({ page: {"type":"variable","name":"p"}, key: {"type":"literal","value":"title"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

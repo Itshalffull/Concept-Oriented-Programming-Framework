@@ -252,7 +252,8 @@ describe('DailyNote functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('DailyNote');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('DailyNote');
     });
   });
 
@@ -261,8 +262,8 @@ describe('DailyNote functional handler', () => {
       const storage = createInMemoryStorage();
       const getOrCreateTodayResult0 = await interpret(dailyNoteHandler.getOrCreateToday({ note: {"type":"variable","name":"n"} }), storage);
       expect(getOrCreateTodayResult0.variant).toBe("ok");
-      const note = getOrCreateTodayResult0.output["note"];
-      const created = getOrCreateTodayResult0.output["created"];
+      let note = getOrCreateTodayResult0.output["note"];
+      let created = getOrCreateTodayResult0.output["created"];
       const thenResult0 = await interpret(dailyNoteHandler.getOrCreateToday({ note: {"type":"variable","name":"n"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

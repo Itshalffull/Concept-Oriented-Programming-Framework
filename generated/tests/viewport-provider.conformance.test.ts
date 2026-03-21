@@ -319,7 +319,8 @@ describe('ViewportProvider functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ViewportProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ViewportProvider');
     });
   });
 
@@ -328,8 +329,8 @@ describe('ViewportProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const initializeResult0 = await interpret(viewportProviderHandler.initialize({ provider: {"type":"variable","name":"p"}, config: {"type":"literal","value":"{}"} }), storage);
       expect(initializeResult0.variant).toBe("ok");
-      const provider = initializeResult0.output["provider"];
-      const pluginRef = initializeResult0.output["pluginRef"];
+      let provider = initializeResult0.output["provider"];
+      let pluginRef = initializeResult0.output["pluginRef"];
       const thenResult0 = await interpret(viewportProviderHandler.observe({ provider: {"type":"variable","name":"p"}, width: {"type":"literal","value":1024}, height: {"type":"literal","value":768} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

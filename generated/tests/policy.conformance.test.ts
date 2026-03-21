@@ -385,7 +385,8 @@ describe('Policy functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Policy');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Policy');
     });
   });
 
@@ -394,7 +395,7 @@ describe('Policy functional handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(policyHandler.create({ attributes: {"type":"variable","name":"_"}, deontic: {"type":"literal","value":"Must"}, aim: {"type":"variable","name":"_"}, conditions: {"type":"variable","name":"_"}, orElse: {"type":"variable","name":"_"}, domain: {"type":"variable","name":"_"} }), storage);
       expect(createResult0.variant).toBe("created");
-      const policy = createResult0.output["policy"];
+      let policy = createResult0.output["policy"];
       const thenResult0 = await interpret(policyHandler.evaluate({ policy: {"type":"variable","name":"pl"}, context: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("required");
     });

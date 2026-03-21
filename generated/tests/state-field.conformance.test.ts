@@ -393,27 +393,13 @@ describe('StateField functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof stateFieldHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = stateFieldHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('StateField');
-    });
-  });
 
   describe('invariant examples', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(stateFieldHandler.register({ concept: {"type":"literal","value":"Article"}, name: {"type":"literal","value":"title"}, typeExpr: {"type":"literal","value":"T -> String"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const field = registerResult0.output["field"];
+      let field = registerResult0.output["field"];
       const thenResult0 = await interpret(stateFieldHandler.get({ field: {"type":"variable","name":"l"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

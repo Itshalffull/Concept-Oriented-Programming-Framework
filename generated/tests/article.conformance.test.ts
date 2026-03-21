@@ -383,7 +383,8 @@ describe('Article functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Article');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Article');
     });
   });
 
@@ -392,7 +393,7 @@ describe('Article functional handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(articleHandler.create({ article: {"type":"variable","name":"a"}, title: {"type":"literal","value":"Test Article"}, description: {"type":"literal","value":"A test"}, body: {"type":"literal","value":"Body text"}, author: {"type":"literal","value":"u1"} }), storage);
       expect(createResult0.variant).toBe("ok");
-      const article = createResult0.output["article"];
+      let article = createResult0.output["article"];
       const thenResult0 = await interpret(articleHandler.get({ article: {"type":"variable","name":"a"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -401,7 +402,7 @@ describe('Article functional handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(articleHandler.create({ article: {"type":"variable","name":"a"}, title: {"type":"literal","value":"To Delete"}, description: {"type":"literal","value":"Desc"}, body: {"type":"literal","value":"Body"}, author: {"type":"literal","value":"u1"} }), storage);
       expect(createResult0.variant).toBe("ok");
-      const article = createResult0.output["article"];
+      let article = createResult0.output["article"];
       const thenResult0 = await interpret(articleHandler.delete({ article: {"type":"variable","name":"a"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -410,14 +411,14 @@ describe('Article functional handler', () => {
       const storage = createInMemoryStorage();
       const getResult0 = await interpret(articleHandler.get({ article: {"type":"variable","name":"z"} }), storage);
       expect(getResult0.variant).toBe("notfound");
-      const message = getResult0.output["message"];
+      let message = getResult0.output["message"];
     });
 
     it("delete nonexistent returns notfound", async () => {
       const storage = createInMemoryStorage();
       const deleteResult0 = await interpret(articleHandler.delete({ article: {"type":"variable","name":"z"} }), storage);
       expect(deleteResult0.variant).toBe("notfound");
-      const message = deleteResult0.output["message"];
+      let message = deleteResult0.output["message"];
     });
 
   });

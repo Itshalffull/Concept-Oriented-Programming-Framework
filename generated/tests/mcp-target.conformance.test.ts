@@ -263,7 +263,8 @@ describe('McpTarget functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('McpTarget');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('McpTarget');
     });
   });
 
@@ -272,8 +273,8 @@ describe('McpTarget functional handler', () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(mcpTargetHandler.generate({ projection: {"type":"literal","value":"agent-projection"}, config: {"type":"literal","value":"{}"} }), storage);
       expect(generateResult0.variant).toBe("ok");
-      const tools = generateResult0.output["tools"];
-      const files = generateResult0.output["files"];
+      let tools = generateResult0.output["tools"];
+      let files = generateResult0.output["files"];
       const thenResult0 = await interpret(mcpTargetHandler.listTools({ concept: {"type":"literal","value":"Agent"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

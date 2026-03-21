@@ -255,7 +255,8 @@ describe('Diff functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Diff');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Diff');
     });
   });
 
@@ -264,8 +265,8 @@ describe('Diff functional handler', () => {
       const storage = createInMemoryStorage();
       const diffResult0 = await interpret(diffHandler.diff({ contentA: {"type":"variable","name":"a"}, contentB: {"type":"variable","name":"b"}, algorithm: {"type":"variable","name":"_"} }), storage);
       expect(diffResult0.variant).toBe("diffed");
-      const editScript = diffResult0.output["editScript"];
-      const distance = diffResult0.output["distance"];
+      let editScript = diffResult0.output["editScript"];
+      let distance = diffResult0.output["distance"];
       const thenResult0 = await interpret(diffHandler.patch({ content: {"type":"variable","name":"a"}, editScript: {"type":"variable","name":"es"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

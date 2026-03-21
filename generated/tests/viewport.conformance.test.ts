@@ -264,7 +264,8 @@ describe('Viewport functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Viewport');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Viewport');
     });
   });
 
@@ -273,9 +274,9 @@ describe('Viewport functional handler', () => {
       const storage = createInMemoryStorage();
       const observeResult0 = await interpret(viewportHandler.observe({ viewport: {"type":"variable","name":"v"}, width: {"type":"literal","value":1024}, height: {"type":"literal","value":768} }), storage);
       expect(observeResult0.variant).toBe("ok");
-      const viewport = observeResult0.output["viewport"];
-      const breakpoint = observeResult0.output["breakpoint"];
-      const orientation = observeResult0.output["orientation"];
+      let viewport = observeResult0.output["viewport"];
+      let breakpoint = observeResult0.output["breakpoint"];
+      let orientation = observeResult0.output["orientation"];
       const thenResult0 = await interpret(viewportHandler.getBreakpoint({ viewport: {"type":"variable","name":"v"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -348,9 +349,6 @@ describe('Viewport functional handler', () => {
       );
     });
 
-  });
-
-  describe('action contracts (PBT)', () => {
   });
 
 });

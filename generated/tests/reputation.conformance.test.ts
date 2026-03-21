@@ -164,7 +164,8 @@ describe('Reputation imperative handler', () => {
       const result = await reputationHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Reputation');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Reputation');
     });
   });
 
@@ -173,7 +174,7 @@ describe('Reputation imperative handler', () => {
       const storage = createInMemoryStorage();
       const earnResult0 = await reputationHandler.earn({ participant: {"type":"variable","name":"p"}, amount: {"type":"literal","value":10}, reason: {"type":"variable","name":"_"} }, storage);
       expect(earnResult0.variant).toBe("earned");
-      const entry = earnResult0.output["entry"];
+      let entry = earnResult0.output["entry"];
       const thenResult0 = await reputationHandler.getScore({ participant: {"type":"variable","name":"p"} }, storage);
       expect(thenResult0.variant).toBe("score");
     });

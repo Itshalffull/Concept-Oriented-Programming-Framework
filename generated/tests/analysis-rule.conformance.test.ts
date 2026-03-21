@@ -337,7 +337,8 @@ describe('AnalysisRule functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('AnalysisRule');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('AnalysisRule');
     });
   });
 
@@ -346,7 +347,7 @@ describe('AnalysisRule functional handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(analysisRuleHandler.create({ name: {"type":"literal","value":"dead-variants"}, engine: {"type":"literal","value":"graph-traversal"}, source: {"type":"literal","value":"..."}, severity: {"type":"literal","value":"warning"}, category: {"type":"literal","value":"dead-code"} }), storage);
       expect(createResult0.variant).toBe("ok");
-      const rule = createResult0.output["rule"];
+      let rule = createResult0.output["rule"];
       const thenResult0 = await interpret(analysisRuleHandler.get({ rule: {"type":"variable","name":"u"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

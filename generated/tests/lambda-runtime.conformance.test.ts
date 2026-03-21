@@ -394,7 +394,8 @@ describe('LambdaRuntime functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('LambdaRuntime');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('LambdaRuntime');
     });
   });
 
@@ -403,9 +404,9 @@ describe('LambdaRuntime functional handler', () => {
       const storage = createInMemoryStorage();
       const provisionResult0 = await interpret(lambdaRuntimeHandler.provision({ concept: {"type":"literal","value":"User"}, memory: {"type":"literal","value":256}, timeout: {"type":"literal","value":30}, region: {"type":"literal","value":"us-east-1"} }), storage);
       expect(provisionResult0.variant).toBe("ok");
-      const function = provisionResult0.output["function"];
-      const functionArn = provisionResult0.output["functionArn"];
-      const endpoint = provisionResult0.output["endpoint"];
+      let function = provisionResult0.output["function"];
+      let functionArn = provisionResult0.output["functionArn"];
+      let endpoint = provisionResult0.output["endpoint"];
       const thenResult0 = await interpret(lambdaRuntimeHandler.deploy({ function: {"type":"variable","name":"f"}, artifactLocation: {"type":"literal","value":"s3://bucket/user.zip"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

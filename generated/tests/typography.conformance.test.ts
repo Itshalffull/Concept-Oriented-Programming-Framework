@@ -300,7 +300,8 @@ describe('Typography functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Typography');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Typography');
     });
   });
 
@@ -309,8 +310,8 @@ describe('Typography functional handler', () => {
       const storage = createInMemoryStorage();
       const defineScaleResult0 = await interpret(typographyHandler.defineScale({ typography: {"type":"variable","name":"x"}, baseSize: {"type":"literal","value":16}, ratio: {"type":"literal","value":1.25}, steps: {"type":"literal","value":6} }), storage);
       expect(defineScaleResult0.variant).toBe("ok");
-      const typography = defineScaleResult0.output["typography"];
-      const scale = defineScaleResult0.output["scale"];
+      let typography = defineScaleResult0.output["typography"];
+      let scale = defineScaleResult0.output["scale"];
       const thenResult0 = await interpret(typographyHandler.defineStyle({ typography: {"type":"variable","name":"x"}, name: {"type":"literal","value":"heading-1"}, config: {"type":"literal","value":"{ \"scale\": \"3xl\", \"weight\": 700 }"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

@@ -319,7 +319,8 @@ describe('DisplayMode imperative handler', () => {
       const result = await displayModeHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('DisplayMode');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('DisplayMode');
     });
   });
 
@@ -328,7 +329,7 @@ describe('DisplayMode imperative handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await displayModeHandler.create({ schema: {"type":"literal","value":"Article"}, mode_id: {"type":"literal","value":"full"}, name: {"type":"literal","value":"Full Page"} }, storage);
       expect(createResult0.variant).toBe("ok");
-      const mode = createResult0.output["mode"];
+      let mode = createResult0.output["mode"];
       const thenResult0 = await displayModeHandler.resolve({ schema: {"type":"literal","value":"Article"}, mode_id: {"type":"literal","value":"full"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -341,10 +342,10 @@ describe('DisplayMode imperative handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await displayModeHandler.create({ schema: {"type":"literal","value":"Article"}, mode_id: {"type":"literal","value":"full"}, name: {"type":"literal","value":"Full Page"} }, storage);
       expect(createResult0.variant).toBe("ok");
-      const mode = createResult0.output["mode"];
+      let mode = createResult0.output["mode"];
       const set_layoutResult1 = await displayModeHandler.set_layout({ mode: {"type":"variable","name":"m"}, layout: {"type":"literal","value":"triple-zone-default"} }, storage);
       expect(set_layoutResult1.variant).toBe("ok");
-      const mode = set_layoutResult1.output["mode"];
+      mode = set_layoutResult1.output["mode"];
       const thenResult0 = await displayModeHandler.get({ mode: {"type":"variable","name":"m"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -353,10 +354,10 @@ describe('DisplayMode imperative handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await displayModeHandler.create({ schema: {"type":"literal","value":"Article"}, mode_id: {"type":"literal","value":"full"}, name: {"type":"literal","value":"Full Page"} }, storage);
       expect(createResult0.variant).toBe("ok");
-      const mode = createResult0.output["mode"];
+      let mode = createResult0.output["mode"];
       const set_component_mappingResult1 = await displayModeHandler.set_component_mapping({ mode: {"type":"variable","name":"m"}, mapping: {"type":"literal","value":"article-hero-card"} }, storage);
       expect(set_component_mappingResult1.variant).toBe("ok");
-      const mode = set_component_mappingResult1.output["mode"];
+      mode = set_component_mappingResult1.output["mode"];
       const thenResult0 = await displayModeHandler.get({ mode: {"type":"variable","name":"m"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

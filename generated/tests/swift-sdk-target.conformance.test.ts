@@ -118,7 +118,8 @@ describe('SwiftSdkTarget functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('SwiftSdkTarget');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('SwiftSdkTarget');
     });
   });
 
@@ -127,8 +128,8 @@ describe('SwiftSdkTarget functional handler', () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(swiftSdkTargetHandler.generate({ projection: {"type":"literal","value":"test-projection"}, config: {"type":"literal","value":"{}"} }), storage);
       expect(generateResult0.variant).toBe("ok");
-      const package = generateResult0.output["package"];
-      const files = generateResult0.output["files"];
+      let package = generateResult0.output["package"];
+      let files = generateResult0.output["files"];
       const thenResult0 = await interpret(swiftSdkTargetHandler.generate({ projection: {"type":"literal","value":"test-projection-2"}, config: {"type":"literal","value":"{}"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

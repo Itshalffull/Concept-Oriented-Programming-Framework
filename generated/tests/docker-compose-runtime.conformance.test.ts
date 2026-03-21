@@ -389,7 +389,8 @@ describe('DockerComposeRuntime functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('DockerComposeRuntime');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('DockerComposeRuntime');
     });
   });
 
@@ -398,9 +399,9 @@ describe('DockerComposeRuntime functional handler', () => {
       const storage = createInMemoryStorage();
       const provisionResult0 = await interpret(dockerComposeRuntimeHandler.provision({ concept: {"type":"literal","value":"User"}, composePath: {"type":"literal","value":"./docker-compose.yml"}, ports: {"type":"variable","name":"p"} }), storage);
       expect(provisionResult0.variant).toBe("ok");
-      const service = provisionResult0.output["service"];
-      const serviceName = provisionResult0.output["serviceName"];
-      const endpoint = provisionResult0.output["endpoint"];
+      let service = provisionResult0.output["service"];
+      let serviceName = provisionResult0.output["serviceName"];
+      let endpoint = provisionResult0.output["endpoint"];
       const thenResult0 = await interpret(dockerComposeRuntimeHandler.deploy({ service: {"type":"variable","name":"s"}, imageUri: {"type":"literal","value":"user:latest"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

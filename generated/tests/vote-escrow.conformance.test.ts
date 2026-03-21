@@ -164,7 +164,8 @@ describe('VoteEscrow imperative handler', () => {
       const result = await voteEscrowHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('VoteEscrow');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('VoteEscrow');
     });
   });
 
@@ -173,7 +174,7 @@ describe('VoteEscrow imperative handler', () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await voteEscrowHandler.configure({ token: {"type":"literal","value":"GOV"}, maxLockYears: {"type":"literal","value":4} }, storage);
       expect(configureResult0.variant).toBe("configured");
-      const config = configureResult0.output["config"];
+      let config = configureResult0.output["config"];
       const thenResult0 = await voteEscrowHandler.lock({ config: {"type":"variable","name":"cfg"}, locker: {"type":"variable","name":"p"}, amount: {"type":"literal","value":100}, lockYears: {"type":"literal","value":4} }, storage);
       expect(thenResult0.variant).toBe("locked");
       const thenResult1 = await voteEscrowHandler.getWeight({ config: {"type":"variable","name":"cfg"}, participant: {"type":"variable","name":"p"} }, storage);

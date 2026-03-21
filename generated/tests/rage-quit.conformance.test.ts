@@ -255,7 +255,8 @@ describe('RageQuit functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('RageQuit');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('RageQuit');
     });
   });
 
@@ -264,7 +265,7 @@ describe('RageQuit functional handler', () => {
       const storage = createInMemoryStorage();
       const initiateResult0 = await interpret(rageQuitHandler.initiate({ member: {"type":"variable","name":"_"}, sharesToBurn: {"type":"variable","name":"_"} }), storage);
       expect(initiateResult0.variant).toBe("initiated");
-      const exit = initiateResult0.output["exit"];
+      let exit = initiateResult0.output["exit"];
       const thenResult0 = await interpret(rageQuitHandler.calculateClaim({ exit: {"type":"variable","name":"rq"}, treasuryBalances: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("calculated");
       const thenResult1 = await interpret(rageQuitHandler.claim({ exit: {"type":"variable","name":"rq"} }), storage);

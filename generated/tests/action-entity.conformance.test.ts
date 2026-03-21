@@ -522,27 +522,13 @@ describe('ActionEntity functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof actionEntityHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = actionEntityHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ActionEntity');
-    });
-  });
 
   describe('invariant examples', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(actionEntityHandler.register({ concept: {"type":"literal","value":"Article"}, name: {"type":"literal","value":"create"}, params: {"type":"literal","value":"[]"}, variantRefs: {"type":"literal","value":"[]"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const action = registerResult0.output["action"];
+      let action = registerResult0.output["action"];
       const thenResult0 = await interpret(actionEntityHandler.get({ action: {"type":"variable","name":"a"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

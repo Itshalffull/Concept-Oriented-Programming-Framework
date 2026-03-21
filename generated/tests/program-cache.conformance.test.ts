@@ -376,7 +376,8 @@ describe('ProgramCache functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ProgramCache');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ProgramCache');
     });
   });
 
@@ -385,7 +386,7 @@ describe('ProgramCache functional handler', () => {
       const storage = createInMemoryStorage();
       const storeResult0 = await interpret(programCacheHandler.store({ programHash: {"type":"literal","value":"abc"}, stateHash: {"type":"literal","value":"def"}, result: {"type":"literal","value":"ok"} }), storage);
       expect(storeResult0.variant).toBe("ok");
-      const entry = storeResult0.output["entry"];
+      let entry = storeResult0.output["entry"];
       const thenResult0 = await interpret(programCacheHandler.lookup({ programHash: {"type":"literal","value":"abc"}, stateHash: {"type":"literal","value":"def"} }), storage);
       expect(thenResult0.variant).toBe("hit");
     });
@@ -394,10 +395,10 @@ describe('ProgramCache functional handler', () => {
       const storage = createInMemoryStorage();
       const storeResult0 = await interpret(programCacheHandler.store({ programHash: {"type":"literal","value":"abc"}, stateHash: {"type":"literal","value":"def"}, result: {"type":"literal","value":"ok"} }), storage);
       expect(storeResult0.variant).toBe("ok");
-      const entry = storeResult0.output["entry"];
+      let entry = storeResult0.output["entry"];
       const invalidateByStateResult1 = await interpret(programCacheHandler.invalidateByState({ stateHash: {"type":"literal","value":"def"} }), storage);
       expect(invalidateByStateResult1.variant).toBe("ok");
-      const evicted = invalidateByStateResult1.output["evicted"];
+      let evicted = invalidateByStateResult1.output["evicted"];
       const thenResult0 = await interpret(programCacheHandler.lookup({ programHash: {"type":"literal","value":"abc"}, stateHash: {"type":"literal","value":"def"} }), storage);
       expect(thenResult0.variant).toBe("miss");
     });
@@ -406,10 +407,10 @@ describe('ProgramCache functional handler', () => {
       const storage = createInMemoryStorage();
       const storeResult0 = await interpret(programCacheHandler.store({ programHash: {"type":"literal","value":"abc"}, stateHash: {"type":"literal","value":"def"}, result: {"type":"literal","value":"ok"} }), storage);
       expect(storeResult0.variant).toBe("ok");
-      const entry = storeResult0.output["entry"];
+      let entry = storeResult0.output["entry"];
       const invalidateByProgramResult1 = await interpret(programCacheHandler.invalidateByProgram({ programHash: {"type":"literal","value":"abc"} }), storage);
       expect(invalidateByProgramResult1.variant).toBe("ok");
-      const evicted = invalidateByProgramResult1.output["evicted"];
+      let evicted = invalidateByProgramResult1.output["evicted"];
       const thenResult0 = await interpret(programCacheHandler.lookup({ programHash: {"type":"literal","value":"abc"}, stateHash: {"type":"literal","value":"def"} }), storage);
       expect(thenResult0.variant).toBe("miss");
     });
@@ -418,7 +419,7 @@ describe('ProgramCache functional handler', () => {
       const storage = createInMemoryStorage();
       const storeResult0 = await interpret(programCacheHandler.store({ programHash: {"type":"literal","value":"abc"}, stateHash: {"type":"literal","value":"def"}, result: {"type":"literal","value":"ok"} }), storage);
       expect(storeResult0.variant).toBe("ok");
-      const entry = storeResult0.output["entry"];
+      let entry = storeResult0.output["entry"];
       const thenResult0 = await interpret(programCacheHandler.store({ programHash: {"type":"literal","value":"abc"}, stateHash: {"type":"literal","value":"def"}, result: {"type":"literal","value":"ok"} }), storage);
       expect(thenResult0.variant).toBe("exists");
     });

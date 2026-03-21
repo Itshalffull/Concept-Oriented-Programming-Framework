@@ -318,7 +318,8 @@ describe('ProofOfPersonhood functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ProofOfPersonhood');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ProofOfPersonhood');
     });
   });
 
@@ -327,7 +328,7 @@ describe('ProofOfPersonhood functional handler', () => {
       const storage = createInMemoryStorage();
       const verifyResult0 = await interpret(proofOfPersonhoodHandler.verify({ participant: {"type":"variable","name":"p"}, method: {"type":"variable","name":"_"}, proofHash: {"type":"variable","name":"_"}, verifier: {"type":"variable","name":"_"}, expiryDays: {"type":"variable","name":"_"} }), storage);
       expect(verifyResult0.variant).toBe("verified");
-      const verification = verifyResult0.output["verification"];
+      let verification = verifyResult0.output["verification"];
       const thenResult0 = await interpret(proofOfPersonhoodHandler.checkStatus({ participant: {"type":"variable","name":"p"} }), storage);
       expect(thenResult0.variant).toBe("valid");
     });

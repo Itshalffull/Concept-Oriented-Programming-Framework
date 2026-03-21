@@ -398,7 +398,8 @@ describe('SymbolRelationship functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('SymbolRelationship');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('SymbolRelationship');
     });
   });
 
@@ -407,7 +408,7 @@ describe('SymbolRelationship functional handler', () => {
       const storage = createInMemoryStorage();
       const addResult0 = await interpret(symbolRelationshipHandler.add({ source: {"type":"literal","value":"ts/class/Handler"}, target: {"type":"literal","value":"ts/interface/IHandler"}, kind: {"type":"literal","value":"implements"} }), storage);
       expect(addResult0.variant).toBe("ok");
-      const relationship = addResult0.output["relationship"];
+      let relationship = addResult0.output["relationship"];
       const thenResult0 = await interpret(symbolRelationshipHandler.findFrom({ source: {"type":"literal","value":"ts/class/Handler"}, kind: {"type":"literal","value":"implements"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -416,7 +417,7 @@ describe('SymbolRelationship functional handler', () => {
       const storage = createInMemoryStorage();
       const addResult0 = await interpret(symbolRelationshipHandler.add({ source: {"type":"literal","value":"ts/class/Handler"}, target: {"type":"literal","value":"ts/interface/IHandler"}, kind: {"type":"literal","value":"implements"} }), storage);
       expect(addResult0.variant).toBe("ok");
-      const relationship = addResult0.output["relationship"];
+      let relationship = addResult0.output["relationship"];
       const thenResult0 = await interpret(symbolRelationshipHandler.add({ source: {"type":"literal","value":"ts/class/Handler"}, target: {"type":"literal","value":"ts/interface/IHandler"}, kind: {"type":"literal","value":"implements"} }), storage);
       expect(thenResult0.variant).toBe("alreadyExists");
     });

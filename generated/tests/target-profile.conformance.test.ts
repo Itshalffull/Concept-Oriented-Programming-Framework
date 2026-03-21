@@ -318,7 +318,8 @@ describe('TargetProfile imperative handler', () => {
       const result = await targetProfileHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('TargetProfile');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('TargetProfile');
     });
   });
 
@@ -327,7 +328,7 @@ describe('TargetProfile imperative handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await targetProfileHandler.create({ name: {"type":"literal","value":"myProfile"} }, storage);
       expect(createResult0.variant).toBe("ok");
-      const profile = createResult0.output["profile"];
+      let profile = createResult0.output["profile"];
       const thenResult0 = await targetProfileHandler.validate({ profile: {"type":"variable","name":"p"} }, storage);
       expect(thenResult0.variant).toBe("incomplete");
     });

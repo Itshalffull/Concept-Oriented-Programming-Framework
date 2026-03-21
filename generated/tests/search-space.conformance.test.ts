@@ -168,7 +168,8 @@ describe('SearchSpace imperative handler', () => {
       const result = await searchSpaceHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('SearchSpace');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('SearchSpace');
     });
   });
 
@@ -177,7 +178,7 @@ describe('SearchSpace imperative handler', () => {
       const storage = createInMemoryStorage();
       const indexResult0 = await searchSpaceHandler.index({ scope_id: {"type":"literal","value":"vs-1"}, provider: {"type":"literal","value":"text"}, entity_id: {"type":"literal","value":"e1"}, data: {"type":"literal","value":"hello world"} }, storage);
       expect(indexResult0.variant).toBe("ok");
-      const entry = indexResult0.output["entry"];
+      let entry = indexResult0.output["entry"];
       const thenResult0 = await searchSpaceHandler.query({ scope_id: {"type":"literal","value":"vs-1"}, provider: {"type":"literal","value":"text"}, query_expr: {"type":"literal","value":"hello"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -186,10 +187,10 @@ describe('SearchSpace imperative handler', () => {
       const storage = createInMemoryStorage();
       const indexResult0 = await searchSpaceHandler.index({ scope_id: {"type":"literal","value":"vs-2"}, provider: {"type":"literal","value":"text"}, entity_id: {"type":"literal","value":"e2"}, data: {"type":"literal","value":"test data"} }, storage);
       expect(indexResult0.variant).toBe("ok");
-      const entry = indexResult0.output["entry"];
+      let entry = indexResult0.output["entry"];
       const tombstoneResult1 = await searchSpaceHandler.tombstone({ scope_id: {"type":"literal","value":"vs-2"}, provider: {"type":"literal","value":"text"}, entity_id: {"type":"literal","value":"e2"} }, storage);
       expect(tombstoneResult1.variant).toBe("ok");
-      const entry = tombstoneResult1.output["entry"];
+      entry = tombstoneResult1.output["entry"];
       const thenResult0 = await searchSpaceHandler.query({ scope_id: {"type":"literal","value":"vs-2"}, provider: {"type":"literal","value":"text"}, query_expr: {"type":"literal","value":"test"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -198,7 +199,7 @@ describe('SearchSpace imperative handler', () => {
       const storage = createInMemoryStorage();
       const indexResult0 = await searchSpaceHandler.index({ scope_id: {"type":"literal","value":"vs-3"}, provider: {"type":"literal","value":"text"}, entity_id: {"type":"literal","value":"e3"}, data: {"type":"literal","value":"content"} }, storage);
       expect(indexResult0.variant).toBe("ok");
-      const entry = indexResult0.output["entry"];
+      let entry = indexResult0.output["entry"];
       const clearResult1 = await searchSpaceHandler.clear({ scope_id: {"type":"literal","value":"vs-3"} }, storage);
       expect(clearResult1.variant).toBe("ok");
       const thenResult0 = await searchSpaceHandler.query({ scope_id: {"type":"literal","value":"vs-3"}, provider: {"type":"literal","value":"text"}, query_expr: {"type":"literal","value":"content"} }, storage);

@@ -816,7 +816,8 @@ describe('DeploymentHealth functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('DeploymentHealth');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('DeploymentHealth');
     });
   });
 
@@ -825,7 +826,7 @@ describe('DeploymentHealth functional handler', () => {
       const storage = createInMemoryStorage();
       const recordResult0 = await interpret(deploymentHealthHandler.record({ deployment: {"type":"literal","value":"conduit-prod"}, snapshot: {"type":"literal","value":"{}"} }), storage);
       expect(recordResult0.variant).toBe("ok");
-      const check = recordResult0.output["check"];
+      let check = recordResult0.output["check"];
       const thenResult0 = await interpret(deploymentHealthHandler.runtimeHealth({ deployment: {"type":"literal","value":"conduit-prod"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

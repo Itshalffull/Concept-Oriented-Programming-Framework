@@ -586,7 +586,8 @@ describe('BuildCache functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('BuildCache');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('BuildCache');
     });
   });
 
@@ -595,7 +596,7 @@ describe('BuildCache functional handler', () => {
       const storage = createInMemoryStorage();
       const recordResult0 = await interpret(buildCacheHandler.record({ stepKey: {"type":"literal","value":"framework:TypeScriptGen:password"}, inputHash: {"type":"literal","value":"abc"}, outputHash: {"type":"literal","value":"xyz"}, outputRef: {"type":"literal","value":".clef-cache/ts/password"}, sourceLocator: {"type":"literal","value":"./specs/password.concept"}, deterministic: {"type":"literal","value":true} }), storage);
       expect(recordResult0.variant).toBe("ok");
-      const entry = recordResult0.output["entry"];
+      let entry = recordResult0.output["entry"];
       const thenResult0 = await interpret(buildCacheHandler.check({ stepKey: {"type":"literal","value":"framework:TypeScriptGen:password"}, inputHash: {"type":"literal","value":"abc"}, deterministic: {"type":"literal","value":true} }), storage);
       expect(thenResult0.variant).toBe("unchanged");
       const thenResult1 = await interpret(buildCacheHandler.check({ stepKey: {"type":"literal","value":"framework:TypeScriptGen:password"}, inputHash: {"type":"literal","value":"def"}, deterministic: {"type":"literal","value":true} }), storage);

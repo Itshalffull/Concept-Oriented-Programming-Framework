@@ -257,7 +257,8 @@ describe('Pathauto functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Pathauto');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Pathauto');
     });
   });
 
@@ -266,7 +267,7 @@ describe('Pathauto functional handler', () => {
       const storage = createInMemoryStorage();
       const generateAliasResult0 = await interpret(pathautoHandler.generateAlias({ pattern: {"type":"variable","name":"p"}, entity: {"type":"literal","value":"My Example Page"} }), storage);
       expect(generateAliasResult0.variant).toBe("ok");
-      const alias = generateAliasResult0.output["alias"];
+      let alias = generateAliasResult0.output["alias"];
       const thenResult0 = await interpret(pathautoHandler.cleanString({ input: {"type":"literal","value":"My Example Page"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

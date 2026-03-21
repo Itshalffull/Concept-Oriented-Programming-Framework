@@ -387,7 +387,8 @@ describe('Patch functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Patch');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Patch');
     });
   });
 
@@ -396,7 +397,7 @@ describe('Patch functional handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(patchHandler.create({ base: {"type":"variable","name":"b"}, target: {"type":"variable","name":"t"}, effect: {"type":"variable","name":"e"} }), storage);
       expect(createResult0.variant).toBe("ok");
-      const patchId = createResult0.output["patchId"];
+      let patchId = createResult0.output["patchId"];
       const thenResult0 = await interpret(patchHandler.apply({ patchId: {"type":"variable","name":"p"}, content: {"type":"variable","name":"b"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -405,7 +406,7 @@ describe('Patch functional handler', () => {
       const storage = createInMemoryStorage();
       const invertResult0 = await interpret(patchHandler.invert({ patchId: {"type":"variable","name":"p"} }), storage);
       expect(invertResult0.variant).toBe("ok");
-      const inversePatchId = invertResult0.output["inversePatchId"];
+      let inversePatchId = invertResult0.output["inversePatchId"];
       const thenResult0 = await interpret(patchHandler.apply({ patchId: {"type":"variable","name":"p"}, content: {"type":"variable","name":"b"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(patchHandler.apply({ patchId: {"type":"variable","name":"inv"}, content: {"type":"variable","name":"t"} }), storage);

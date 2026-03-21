@@ -525,7 +525,8 @@ describe('Branch functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Branch');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Branch');
     });
   });
 
@@ -534,7 +535,7 @@ describe('Branch functional handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(branchHandler.create({ name: {"type":"variable","name":"n"}, fromNode: {"type":"variable","name":"f"} }), storage);
       expect(createResult0.variant).toBe("ok");
-      const branch = createResult0.output["branch"];
+      let branch = createResult0.output["branch"];
       const thenResult0 = await interpret(branchHandler.advance({ branch: {"type":"variable","name":"b"}, newNode: {"type":"variable","name":"n2"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

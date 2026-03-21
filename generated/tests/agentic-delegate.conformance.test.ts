@@ -445,27 +445,13 @@ describe('AgenticDelegate functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof agenticDelegateHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = agenticDelegateHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('AgenticDelegate');
-    });
-  });
 
   describe('invariant examples', () => {
     it("register-then-proposeAction", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(agenticDelegateHandler.register({ agentType: {"type":"variable","name":"_"}, principal: {"type":"variable","name":"p"}, systemPrompt: {"type":"variable","name":"_"}, boundaries: {"type":"variable","name":"_"} }), storage);
       expect(registerResult0.variant).toBe("registered");
-      const delegate = registerResult0.output["delegate"];
+      let delegate = registerResult0.output["delegate"];
       const thenResult0 = await interpret(agenticDelegateHandler.assumeRole({ delegate: {"type":"variable","name":"d"}, roleId: {"type":"variable","name":"r"} }), storage);
       expect(thenResult0.variant).toBe("role_assumed");
       const thenResult1 = await interpret(agenticDelegateHandler.proposeAction({ delegate: {"type":"variable","name":"d"}, action: {"type":"variable","name":"a"}, justification: {"type":"variable","name":"_"} }), storage);

@@ -187,7 +187,8 @@ describe('SolidityToolchain functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('SolidityToolchain');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('SolidityToolchain');
     });
   });
 
@@ -196,10 +197,10 @@ describe('SolidityToolchain functional handler', () => {
       const storage = createInMemoryStorage();
       const resolveResult0 = await interpret(solidityToolchainHandler.resolve({ platform: {"type":"literal","value":"evm-shanghai"}, versionConstraint: {"type":"literal","value":">=0.8.20"} }), storage);
       expect(resolveResult0.variant).toBe("ok");
-      const toolchain = resolveResult0.output["toolchain"];
-      const solcPath = resolveResult0.output["solcPath"];
-      const version = resolveResult0.output["version"];
-      const capabilities = resolveResult0.output["capabilities"];
+      let toolchain = resolveResult0.output["toolchain"];
+      let solcPath = resolveResult0.output["solcPath"];
+      let version = resolveResult0.output["version"];
+      let capabilities = resolveResult0.output["capabilities"];
       const thenResult0 = await interpret(solidityToolchainHandler.register({  }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

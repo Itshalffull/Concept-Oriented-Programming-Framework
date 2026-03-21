@@ -109,27 +109,13 @@ describe('User functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof userHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = userHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('User');
-    });
-  });
 
   describe('invariant examples', () => {
     it("duplicate name rejected", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(userHandler.register({ user: {"type":"variable","name":"x"}, name: {"type":"literal","value":"alice"}, email: {"type":"literal","value":"a@b.com"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const user = registerResult0.output["user"];
+      let user = registerResult0.output["user"];
       const thenResult0 = await interpret(userHandler.register({ user: {"type":"variable","name":"y"}, name: {"type":"literal","value":"alice"}, email: {"type":"literal","value":"c@d.com"} }), storage);
       expect(thenResult0.variant).toBe("error");
     });
@@ -138,7 +124,7 @@ describe('User functional handler', () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(userHandler.register({ user: {"type":"variable","name":"x"}, name: {"type":"literal","value":"bob"}, email: {"type":"literal","value":"bob@test.com"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const user = registerResult0.output["user"];
+      let user = registerResult0.output["user"];
       expect(xResult.output["name"]).toBe({"type":"literal","value":"bob"});
       expect(xResult.output["email"]).toBe({"type":"literal","value":"bob@test.com"});
     });

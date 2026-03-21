@@ -387,7 +387,8 @@ describe('Ref functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Ref');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Ref');
     });
   });
 
@@ -396,7 +397,7 @@ describe('Ref functional handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(refHandler.create({ name: {"type":"variable","name":"n"}, hash: {"type":"variable","name":"h"} }), storage);
       expect(createResult0.variant).toBe("ok");
-      const ref = createResult0.output["ref"];
+      let ref = createResult0.output["ref"];
       const thenResult0 = await interpret(refHandler.resolve({ name: {"type":"variable","name":"n"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

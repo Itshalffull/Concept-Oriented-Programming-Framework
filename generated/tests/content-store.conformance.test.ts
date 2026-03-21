@@ -158,7 +158,8 @@ describe('ContentStore imperative handler', () => {
       const result = await contentStoreHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ContentStore');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ContentStore');
     });
   });
 
@@ -167,7 +168,7 @@ describe('ContentStore imperative handler', () => {
       const storage = createInMemoryStorage();
       const storeResult0 = await contentStoreHandler.store({ data: {"type":"variable","name":"d"}, media_type: {"type":"literal","value":"application/tar+gzip"} }, storage);
       expect(storeResult0.variant).toBe("ok");
-      const blob = storeResult0.output["blob"];
+      let blob = storeResult0.output["blob"];
       const thenResult0 = await contentStoreHandler.retrieve({ hash: {"type":"dot_access","variable":"b","field":"hash"} }, storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await contentStoreHandler.verify({ hash: {"type":"dot_access","variable":"b","field":"hash"} }, storage);
@@ -178,7 +179,7 @@ describe('ContentStore imperative handler', () => {
       const storage = createInMemoryStorage();
       const storeResult0 = await contentStoreHandler.store({ data: {"type":"variable","name":"d"}, media_type: {"type":"literal","value":"application/tar+gzip"} }, storage);
       expect(storeResult0.variant).toBe("ok");
-      const blob = storeResult0.output["blob"];
+      let blob = storeResult0.output["blob"];
       const thenResult0 = await contentStoreHandler.gc({ lockfile_hashes: {"type":"list","items":[{"type":"dot_access","variable":"b","field":"hash"}]} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

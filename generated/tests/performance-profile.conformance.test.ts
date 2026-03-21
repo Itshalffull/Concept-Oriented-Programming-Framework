@@ -386,7 +386,8 @@ describe('PerformanceProfile functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('PerformanceProfile');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('PerformanceProfile');
     });
   });
 
@@ -395,7 +396,7 @@ describe('PerformanceProfile functional handler', () => {
       const storage = createInMemoryStorage();
       const aggregateResult0 = await interpret(performanceProfileHandler.aggregate({ symbol: {"type":"literal","value":"clef/action/Article/create"}, window: {"type":"literal","value":"{}"} }), storage);
       expect(aggregateResult0.variant).toBe("ok");
-      const profile = aggregateResult0.output["profile"];
+      let profile = aggregateResult0.output["profile"];
       const thenResult0 = await interpret(performanceProfileHandler.get({ profile: {"type":"variable","name":"p"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

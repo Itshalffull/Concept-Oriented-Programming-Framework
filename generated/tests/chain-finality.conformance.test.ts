@@ -195,7 +195,8 @@ describe('ChainFinality functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ChainFinality');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ChainFinality');
     });
   });
 
@@ -204,7 +205,7 @@ describe('ChainFinality functional handler', () => {
       const storage = createInMemoryStorage();
       const trackResult0 = await interpret(chainFinalityHandler.track({ operationRef: {"type":"variable","name":"_"}, txHash: {"type":"variable","name":"_"}, chainId: {"type":"variable","name":"_"}, requiredConfirmations: {"type":"literal","value":12} }), storage);
       expect(trackResult0.variant).toBe("tracking");
-      const entry = trackResult0.output["entry"];
+      let entry = trackResult0.output["entry"];
       const thenResult0 = await interpret(chainFinalityHandler.checkFinality({ entry: {"type":"variable","name":"cf"} }), storage);
       expect(thenResult0.variant).toBe("finalized");
     });

@@ -193,7 +193,8 @@ describe('Target functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Target');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Target');
     });
   });
 
@@ -202,8 +203,8 @@ describe('Target functional handler', () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(targetHandler.generate({ projection: {"type":"literal","value":"test-projection"}, targetType: {"type":"literal","value":"rest"}, config: {"type":"literal","value":"{}"} }), storage);
       expect(generateResult0.variant).toBe("ok");
-      const output = generateResult0.output["output"];
-      const files = generateResult0.output["files"];
+      let output = generateResult0.output["output"];
+      let files = generateResult0.output["files"];
       const thenResult0 = await interpret(targetHandler.diff({ output: {"type":"variable","name":"t"} }), storage);
       expect(thenResult0.variant).toBe("noPrevious");
     });

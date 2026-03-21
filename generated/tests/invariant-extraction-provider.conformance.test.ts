@@ -63,7 +63,8 @@ describe('InvariantExtractionProvider imperative handler', () => {
       const result = await invariantExtractionProviderHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('InvariantExtractionProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('InvariantExtractionProvider');
     });
   });
 
@@ -72,8 +73,8 @@ describe('InvariantExtractionProvider imperative handler', () => {
       const storage = createInMemoryStorage();
       const extractResult0 = await invariantExtractionProviderHandler.extract({ program: {"type":"literal","value":"get(users, u1); put(users, u1, data)"}, conceptSpec: {"type":"literal","value":"User { state { users: set U } }"} }, storage);
       expect(extractResult0.variant).toBe("ok");
-      const result = extractResult0.output["result"];
-      const properties = extractResult0.output["properties"];
+      let result = extractResult0.output["result"];
+      let properties = extractResult0.output["properties"];
     });
 
   });

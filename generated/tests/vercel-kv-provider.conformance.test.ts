@@ -256,7 +256,8 @@ describe('VercelKVProvider functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('VercelKVProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('VercelKVProvider');
     });
   });
 
@@ -265,9 +266,9 @@ describe('VercelKVProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const provisionResult0 = await interpret(vercelKVProviderHandler.provision({ storeName: {"type":"literal","value":"test-kv"}, config: {"type":"literal","value":"{}"} }), storage);
       expect(provisionResult0.variant).toBe("ok");
-      const storeName = provisionResult0.output["storeName"];
-      const storeId = provisionResult0.output["storeId"];
-      const credentials = provisionResult0.output["credentials"];
+      let storeName = provisionResult0.output["storeName"];
+      let storeId = provisionResult0.output["storeId"];
+      let credentials = provisionResult0.output["credentials"];
       const thenResult0 = await interpret(vercelKVProviderHandler.getCredentials({ storeName: {"type":"literal","value":"test-kv"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -276,9 +277,9 @@ describe('VercelKVProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const provisionResult0 = await interpret(vercelKVProviderHandler.provision({ storeName: {"type":"literal","value":"test-kv"}, config: {"type":"literal","value":"{}"} }), storage);
       expect(provisionResult0.variant).toBe("ok");
-      const storeName = provisionResult0.output["storeName"];
-      const storeId = provisionResult0.output["storeId"];
-      const credentials = provisionResult0.output["credentials"];
+      let storeName = provisionResult0.output["storeName"];
+      let storeId = provisionResult0.output["storeId"];
+      let credentials = provisionResult0.output["credentials"];
       const thenResult0 = await interpret(vercelKVProviderHandler.destroy({ storeName: {"type":"literal","value":"test-kv"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(vercelKVProviderHandler.getCredentials({ storeName: {"type":"literal","value":"test-kv"} }), storage);

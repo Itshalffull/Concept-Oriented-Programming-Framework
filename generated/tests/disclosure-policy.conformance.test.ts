@@ -248,7 +248,8 @@ describe('DisclosurePolicy functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('DisclosurePolicy');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('DisclosurePolicy');
     });
   });
 
@@ -257,7 +258,7 @@ describe('DisclosurePolicy functional handler', () => {
       const storage = createInMemoryStorage();
       const defineResult0 = await interpret(disclosurePolicyHandler.define({ subject: {"type":"variable","name":"_"}, audience: {"type":"literal","value":"public"}, timing: {"type":"literal","value":"Immediate"}, scope: {"type":"variable","name":"_"} }), storage);
       expect(defineResult0.variant).toBe("defined");
-      const policy = defineResult0.output["policy"];
+      let policy = defineResult0.output["policy"];
       const thenResult0 = await interpret(disclosurePolicyHandler.evaluate({ subject: {"type":"variable","name":"_"}, requester: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("disclose");
     });

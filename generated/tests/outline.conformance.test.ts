@@ -670,7 +670,8 @@ describe('Outline functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Outline');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Outline');
     });
   });
 
@@ -679,10 +680,10 @@ describe('Outline functional handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(outlineHandler.create({ node: {"type":"variable","name":"x"} }), storage);
       expect(createResult0.variant).toBe("ok");
-      const node = createResult0.output["node"];
+      let node = createResult0.output["node"];
       const collapseResult1 = await interpret(outlineHandler.collapse({ node: {"type":"variable","name":"x"} }), storage);
       expect(collapseResult1.variant).toBe("ok");
-      const node = collapseResult1.output["node"];
+      node = collapseResult1.output["node"];
       const thenResult0 = await interpret(outlineHandler.expand({ node: {"type":"variable","name":"x"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

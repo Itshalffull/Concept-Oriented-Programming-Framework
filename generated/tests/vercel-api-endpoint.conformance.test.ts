@@ -101,23 +101,13 @@ describe('VercelApiEndpoint imperative handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof vercelApiEndpointHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await vercelApiEndpointHandler.register({}, storage);
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('VercelApiEndpoint');
-    });
-  });
 
   describe('invariant examples', () => {
     it("resolve after register", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await vercelApiEndpointHandler.register({ name: {"type":"literal","value":"vercel-api"}, apiToken: {"type":"literal","value":"vt-test"}, teamId: {"type":"literal","value":"team-123"} }, storage);
       expect(registerResult0.variant).toBe("ok");
-      const endpoint = registerResult0.output["endpoint"];
+      let endpoint = registerResult0.output["endpoint"];
       const thenResult0 = await vercelApiEndpointHandler.resolve({ name: {"type":"literal","value":"vercel-api"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

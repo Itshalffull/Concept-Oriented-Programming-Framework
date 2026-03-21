@@ -173,7 +173,8 @@ describe('RustToolchain functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('RustToolchain');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('RustToolchain');
     });
   });
 
@@ -182,10 +183,10 @@ describe('RustToolchain functional handler', () => {
       const storage = createInMemoryStorage();
       const resolveResult0 = await interpret(rustToolchainHandler.resolve({ platform: {"type":"literal","value":"linux-x86_64"}, versionConstraint: {"type":"literal","value":">=1.75"} }), storage);
       expect(resolveResult0.variant).toBe("ok");
-      const toolchain = resolveResult0.output["toolchain"];
-      const rustcPath = resolveResult0.output["rustcPath"];
-      const version = resolveResult0.output["version"];
-      const capabilities = resolveResult0.output["capabilities"];
+      let toolchain = resolveResult0.output["toolchain"];
+      let rustcPath = resolveResult0.output["rustcPath"];
+      let version = resolveResult0.output["version"];
+      let capabilities = resolveResult0.output["capabilities"];
       const thenResult0 = await interpret(rustToolchainHandler.register({  }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

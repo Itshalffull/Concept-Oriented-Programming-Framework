@@ -515,27 +515,13 @@ describe('ThemeEntity functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof themeEntityHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = themeEntityHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ThemeEntity');
-    });
-  });
 
   describe('invariant examples', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(themeEntityHandler.register({ name: {"type":"literal","value":"light"}, source: {"type":"literal","value":"themes/light.theme"}, ast: {"type":"literal","value":"{}"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const entity = registerResult0.output["entity"];
+      let entity = registerResult0.output["entity"];
       const thenResult0 = await interpret(themeEntityHandler.get({ name: {"type":"literal","value":"light"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -544,7 +530,7 @@ describe('ThemeEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(themeEntityHandler.register({ name: {"type":"literal","value":"light"}, source: {"type":"literal","value":"themes/light.theme"}, ast: {"type":"literal","value":"{}"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const entity = registerResult0.output["entity"];
+      let entity = registerResult0.output["entity"];
       const thenResult0 = await interpret(themeEntityHandler.register({ name: {"type":"literal","value":"light"}, source: {"type":"literal","value":"themes/light.theme"}, ast: {"type":"literal","value":"{}"} }), storage);
       expect(thenResult0.variant).toBe("alreadyRegistered");
     });

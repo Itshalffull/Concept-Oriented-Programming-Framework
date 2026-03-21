@@ -326,7 +326,8 @@ describe('Binding functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Binding');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Binding');
     });
   });
 
@@ -335,7 +336,7 @@ describe('Binding functional handler', () => {
       const storage = createInMemoryStorage();
       const bindResult0 = await interpret(bindingHandler.bind({ binding: {"type":"variable","name":"b"}, concept: {"type":"variable","name":"c"}, mode: {"type":"literal","value":"static"} }), storage);
       expect(bindResult0.variant).toBe("ok");
-      const binding = bindResult0.output["binding"];
+      let binding = bindResult0.output["binding"];
       const thenResult0 = await interpret(bindingHandler.sync({ binding: {"type":"variable","name":"b"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(bindingHandler.bind({ binding: {"type":"variable","name":"b2"}, concept: {"type":"variable","name":"c2"}, mode: {"type":"literal","value":"invalid-mode"} }), storage);

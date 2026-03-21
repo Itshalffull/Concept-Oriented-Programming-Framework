@@ -185,7 +185,8 @@ describe('SpecificationSchema imperative handler', () => {
       const result = await specificationSchemaHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('SpecificationSchema');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('SpecificationSchema');
     });
   });
 
@@ -194,7 +195,7 @@ describe('SpecificationSchema imperative handler', () => {
       const storage = createInMemoryStorage();
       const defineResult0 = await specificationSchemaHandler.define({ name: {"type":"literal","value":"reentrancy-guard"}, category: {"type":"literal","value":"smart_contract"}, pattern_type: {"type":"literal","value":"absence"}, template_text: {"type":"literal","value":"always (call_depth(${function}) <= 1)"}, formal_language: {"type":"literal","value":"smtlib"}, parameters: {"type":"list","items":[{"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"function"}},{"name":"type","value":{"type":"literal","value":"String"}},{"name":"description","value":{"type":"literal","value":"Function to guard"}}]}]} }, storage);
       expect(defineResult0.variant).toBe("ok");
-      const schema = defineResult0.output["schema"];
+      let schema = defineResult0.output["schema"];
       const thenResult0 = await specificationSchemaHandler.instantiate({ schema: {"type":"variable","name":"s"}, parameter_values: {"type":"record","fields":[{"name":"function","value":{"type":"literal","value":"transfer"}}]}, target_symbol: {"type":"literal","value":"clef/concept/Token"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

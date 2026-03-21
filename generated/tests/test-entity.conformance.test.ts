@@ -726,27 +726,13 @@ describe('TestEntity functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof testEntityHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = testEntityHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('TestEntity');
-    });
-  });
 
   describe('invariant examples', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(testEntityHandler.register({ name: {"type":"literal","value":"User/create conformance"}, sourceFile: {"type":"literal","value":"tests/user.conformance.test.ts"}, kind: {"type":"literal","value":"conformance"}, targetEntity: {"type":"literal","value":"User"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const test = registerResult0.output["test"];
+      let test = registerResult0.output["test"];
       const thenResult0 = await interpret(testEntityHandler.get({ name: {"type":"literal","value":"User/create conformance"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

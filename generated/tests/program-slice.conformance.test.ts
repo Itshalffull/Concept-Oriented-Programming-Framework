@@ -336,7 +336,8 @@ describe('ProgramSlice functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ProgramSlice');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ProgramSlice');
     });
   });
 
@@ -345,7 +346,7 @@ describe('ProgramSlice functional handler', () => {
       const storage = createInMemoryStorage();
       const computeResult0 = await interpret(programSliceHandler.compute({ criterion: {"type":"literal","value":"clef/state-field/Article/title"}, direction: {"type":"literal","value":"forward"} }), storage);
       expect(computeResult0.variant).toBe("ok");
-      const slice = computeResult0.output["slice"];
+      let slice = computeResult0.output["slice"];
       const thenResult0 = await interpret(programSliceHandler.get({ slice: {"type":"variable","name":"z"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

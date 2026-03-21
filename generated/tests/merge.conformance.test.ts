@@ -326,7 +326,8 @@ describe('Merge functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Merge');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Merge');
     });
   });
 
@@ -335,7 +336,7 @@ describe('Merge functional handler', () => {
       const storage = createInMemoryStorage();
       const mergeResult0 = await interpret(mergeHandler.merge({ base: {"type":"variable","name":"b"}, ours: {"type":"variable","name":"o"}, theirs: {"type":"variable","name":"t"}, strategy: {"type":"variable","name":"_"} }), storage);
       expect(mergeResult0.variant).toBe("clean");
-      const result = mergeResult0.output["result"];
+      let result = mergeResult0.output["result"];
       const thenResult0 = await interpret(mergeHandler.finalize({ mergeId: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

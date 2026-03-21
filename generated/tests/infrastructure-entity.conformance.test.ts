@@ -519,27 +519,13 @@ describe('InfrastructureEntity functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof infrastructureEntityHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = infrastructureEntityHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('InfrastructureEntity');
-    });
-  });
 
   describe('invariant examples', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(infrastructureEntityHandler.register({ name: {"type":"literal","value":"AppStorage"}, kind: {"type":"literal","value":"storage"}, sourceFile: {"type":"literal","value":"adapters/app-storage.ts"}, backend: {"type":"literal","value":"postgresql"}, config: {"type":"literal","value":"{}"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const adapter = registerResult0.output["adapter"];
+      let adapter = registerResult0.output["adapter"];
       const thenResult0 = await interpret(infrastructureEntityHandler.get({ name: {"type":"literal","value":"AppStorage"}, kind: {"type":"literal","value":"storage"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

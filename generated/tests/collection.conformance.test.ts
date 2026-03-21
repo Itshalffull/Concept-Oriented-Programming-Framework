@@ -387,7 +387,8 @@ describe('Collection functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Collection');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Collection');
     });
   });
 

@@ -283,7 +283,8 @@ describe('DeployOrchestrator functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('DeployOrchestrator');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('DeployOrchestrator');
     });
   });
 
@@ -292,10 +293,10 @@ describe('DeployOrchestrator functional handler', () => {
       const storage = createInMemoryStorage();
       const deployResult0 = await interpret(deployOrchestratorHandler.deploy({ manifestPath: {"type":"literal","value":"./clef-web/deploy/vercel.deploy.yaml"}, environment: {"type":"literal","value":"production"} }), storage);
       expect(deployResult0.variant).toBe("ok");
-      const run = deployResult0.output["run"];
-      const appName = deployResult0.output["appName"];
-      const deploymentUrl = deployResult0.output["deploymentUrl"];
-      const duration = deployResult0.output["duration"];
+      let run = deployResult0.output["run"];
+      let appName = deployResult0.output["appName"];
+      let deploymentUrl = deployResult0.output["deploymentUrl"];
+      let duration = deployResult0.output["duration"];
       const thenResult0 = await interpret(deployOrchestratorHandler.status({ run: {"type":"variable","name":"r"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -304,7 +305,7 @@ describe('DeployOrchestrator functional handler', () => {
       const storage = createInMemoryStorage();
       const deployResult0 = await interpret(deployOrchestratorHandler.deploy({ manifestPath: {"type":"literal","value":"/nonexistent/deploy.yaml"}, environment: {"type":"literal","value":"production"} }), storage);
       expect(deployResult0.variant).toBe("manifestNotFound");
-      const path = deployResult0.output["path"];
+      let path = deployResult0.output["path"];
     });
 
   });

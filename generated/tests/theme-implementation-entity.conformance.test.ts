@@ -515,27 +515,13 @@ describe('ThemeImplementationEntity functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof themeImplementationEntityHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = themeImplementationEntityHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ThemeImplementationEntity');
-    });
-  });
 
   describe('invariant examples', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(themeImplementationEntityHandler.register({ theme: {"type":"literal","value":"ocean"}, platform: {"type":"literal","value":"css"}, sourceFile: {"type":"literal","value":"generated/surface/themes/ocean.css"}, ast: {"type":"literal","value":"{}"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const impl = registerResult0.output["impl"];
+      let impl = registerResult0.output["impl"];
       const thenResult0 = await interpret(themeImplementationEntityHandler.get({ theme: {"type":"literal","value":"ocean"}, platform: {"type":"literal","value":"css"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -544,7 +530,7 @@ describe('ThemeImplementationEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(themeImplementationEntityHandler.register({ theme: {"type":"literal","value":"ocean"}, platform: {"type":"literal","value":"css"}, sourceFile: {"type":"literal","value":"generated/surface/themes/ocean.css"}, ast: {"type":"literal","value":"{}"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const impl = registerResult0.output["impl"];
+      let impl = registerResult0.output["impl"];
       const thenResult0 = await interpret(themeImplementationEntityHandler.register({ theme: {"type":"literal","value":"ocean"}, platform: {"type":"literal","value":"css"}, sourceFile: {"type":"literal","value":"generated/surface/themes/ocean.css"}, ast: {"type":"literal","value":"{}"} }), storage);
       expect(thenResult0.variant).toBe("alreadyRegistered");
     });

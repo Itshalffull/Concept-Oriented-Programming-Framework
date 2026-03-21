@@ -460,7 +460,8 @@ describe('Provenance functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Provenance');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Provenance');
     });
   });
 
@@ -469,7 +470,7 @@ describe('Provenance functional handler', () => {
       const storage = createInMemoryStorage();
       const recordResult0 = await interpret(provenanceHandler.record({ entity: {"type":"literal","value":"item-1"}, activity: {"type":"literal","value":"capture"}, agent: {"type":"literal","value":"system"}, inputs: {"type":"literal","value":""} }), storage);
       expect(recordResult0.variant).toBe("ok");
-      const recordId = recordResult0.output["recordId"];
+      let recordId = recordResult0.output["recordId"];
       const thenResult0 = await interpret(provenanceHandler.trace({ entityId: {"type":"literal","value":"item-1"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -478,7 +479,7 @@ describe('Provenance functional handler', () => {
       const storage = createInMemoryStorage();
       const recordResult0 = await interpret(provenanceHandler.record({ entity: {"type":"literal","value":"item-1"}, activity: {"type":"literal","value":"import"}, agent: {"type":"literal","value":"system"}, inputs: {"type":"literal","value":""} }), storage);
       expect(recordResult0.variant).toBe("ok");
-      const recordId = recordResult0.output["recordId"];
+      let recordId = recordResult0.output["recordId"];
       const thenResult0 = await interpret(provenanceHandler.rollback({ batchId: {"type":"literal","value":"batch-1"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

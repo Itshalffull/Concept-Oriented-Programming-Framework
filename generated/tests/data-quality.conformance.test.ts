@@ -376,7 +376,8 @@ describe('DataQuality functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('DataQuality');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('DataQuality');
     });
   });
 
@@ -385,8 +386,8 @@ describe('DataQuality functional handler', () => {
       const storage = createInMemoryStorage();
       const validateResult0 = await interpret(dataQualityHandler.validate({ item: {"type":"literal","value":"{\"title\":\"Test\",\"body\":\"content\"}"}, rulesetId: {"type":"literal","value":"article_rules"} }), storage);
       expect(validateResult0.variant).toBe("ok");
-      const valid = validateResult0.output["valid"];
-      const score = validateResult0.output["score"];
+      let valid = validateResult0.output["valid"];
+      let score = validateResult0.output["score"];
       const thenResult0 = await interpret(dataQualityHandler.inspect({ itemId: {"type":"literal","value":"item-1"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -395,7 +396,7 @@ describe('DataQuality functional handler', () => {
       const storage = createInMemoryStorage();
       const validateResult0 = await interpret(dataQualityHandler.validate({ item: {"type":"literal","value":"{\"title\":\"\"}"}, rulesetId: {"type":"literal","value":"article_rules"} }), storage);
       expect(validateResult0.variant).toBe("invalid");
-      const violations = validateResult0.output["violations"];
+      let violations = validateResult0.output["violations"];
       const thenResult0 = await interpret(dataQualityHandler.quarantine({ itemId: {"type":"literal","value":"item-1"}, violations: {"type":"literal","value":"[{\"rule\":\"required\",\"field\":\"title\"}]"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(dataQualityHandler.release({ itemId: {"type":"literal","value":"item-1"} }), storage);

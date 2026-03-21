@@ -317,7 +317,8 @@ describe('Lockfile functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Lockfile');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Lockfile');
     });
   });
 
@@ -326,7 +327,7 @@ describe('Lockfile functional handler', () => {
       const storage = createInMemoryStorage();
       const writeResult0 = await interpret(lockfileHandler.write({ project_hash: {"type":"literal","value":"hash1"}, entries: {"type":"variable","name":"es"}, metadata: {"type":"variable","name":"m"} }), storage);
       expect(writeResult0.variant).toBe("ok");
-      const lockfile = writeResult0.output["lockfile"];
+      let lockfile = writeResult0.output["lockfile"];
       const thenResult0 = await interpret(lockfileHandler.read({ lockfile: {"type":"variable","name":"lf"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -335,7 +336,7 @@ describe('Lockfile functional handler', () => {
       const storage = createInMemoryStorage();
       const writeResult0 = await interpret(lockfileHandler.write({ project_hash: {"type":"literal","value":"hash1"}, entries: {"type":"variable","name":"es"}, metadata: {"type":"variable","name":"m"} }), storage);
       expect(writeResult0.variant).toBe("ok");
-      const lockfile = writeResult0.output["lockfile"];
+      let lockfile = writeResult0.output["lockfile"];
       const thenResult0 = await interpret(lockfileHandler.verify({ lockfile: {"type":"variable","name":"lf"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

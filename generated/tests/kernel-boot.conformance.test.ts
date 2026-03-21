@@ -120,7 +120,8 @@ describe('KernelBoot imperative handler', () => {
       const result = await kernelBootHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('KernelBoot');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('KernelBoot');
     });
   });
 
@@ -129,9 +130,9 @@ describe('KernelBoot imperative handler', () => {
       const storage = createInMemoryStorage();
       const bootResult0 = await kernelBootHandler.boot({ projectRoot: {"type":"literal","value":"./"}, manifestPath: {"type":"literal","value":"examples/devtools/devtools.interface.yaml"} }, storage);
       expect(bootResult0.variant).toBe("ok");
-      const kernel = bootResult0.output["kernel"];
-      const concepts = bootResult0.output["concepts"];
-      const syncs = bootResult0.output["syncs"];
+      let kernel = bootResult0.output["kernel"];
+      let concepts = bootResult0.output["concepts"];
+      let syncs = bootResult0.output["syncs"];
       const thenResult0 = await kernelBootHandler.status({ kernel: {"type":"variable","name":"k"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -140,9 +141,9 @@ describe('KernelBoot imperative handler', () => {
       const storage = createInMemoryStorage();
       const bootResult0 = await kernelBootHandler.boot({ projectRoot: {"type":"literal","value":"./"}, manifestPath: {"type":"literal","value":"examples/devtools/devtools.interface.yaml"} }, storage);
       expect(bootResult0.variant).toBe("ok");
-      const kernel = bootResult0.output["kernel"];
-      const concepts = bootResult0.output["concepts"];
-      const syncs = bootResult0.output["syncs"];
+      let kernel = bootResult0.output["kernel"];
+      let concepts = bootResult0.output["concepts"];
+      let syncs = bootResult0.output["syncs"];
       const thenResult0 = await kernelBootHandler.shutdown({ kernel: {"type":"variable","name":"k"} }, storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await kernelBootHandler.status({ kernel: {"type":"variable","name":"k"} }, storage);

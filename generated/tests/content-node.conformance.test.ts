@@ -457,7 +457,8 @@ describe('ContentNode functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ContentNode');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ContentNode');
     });
   });
 
@@ -466,7 +467,7 @@ describe('ContentNode functional handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(contentNodeHandler.create({ node: {"type":"variable","name":"x"}, type: {"type":"literal","value":"page"}, content: {"type":"literal","value":"Hello"}, createdBy: {"type":"literal","value":"user1"} }), storage);
       expect(createResult0.variant).toBe("ok");
-      const node = createResult0.output["node"];
+      let node = createResult0.output["node"];
       const thenResult0 = await interpret(contentNodeHandler.get({ node: {"type":"variable","name":"x"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -475,7 +476,7 @@ describe('ContentNode functional handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(contentNodeHandler.create({ node: {"type":"variable","name":"x"}, type: {"type":"literal","value":"page"}, content: {"type":"literal","value":"Hello"}, createdBy: {"type":"literal","value":"user1"} }), storage);
       expect(createResult0.variant).toBe("ok");
-      const node = createResult0.output["node"];
+      let node = createResult0.output["node"];
       const thenResult0 = await interpret(contentNodeHandler.create({ node: {"type":"variable","name":"x"}, type: {"type":"literal","value":"page"}, content: {"type":"literal","value":"Again"}, createdBy: {"type":"literal","value":"user2"} }), storage);
       expect(thenResult0.variant).toBe("exists");
     });

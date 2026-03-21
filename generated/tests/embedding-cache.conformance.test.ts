@@ -587,7 +587,8 @@ describe('EmbeddingCache functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('EmbeddingCache');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('EmbeddingCache');
     });
   });
 
@@ -596,7 +597,7 @@ describe('EmbeddingCache functional handler', () => {
       const storage = createInMemoryStorage();
       const putResult0 = await interpret(embeddingCacheHandler.put({ digest: {"type":"literal","value":"abc123"}, vector: {"type":"literal","value":"[0.1,0.2,0.3]"}, model: {"type":"literal","value":"openai-code"}, dimensions: {"type":"literal","value":3}, sourceKind: {"type":"literal","value":"concept"}, sourceKey: {"type":"literal","value":"User"} }), storage);
       expect(putResult0.variant).toBe("stored");
-      const entry = putResult0.output["entry"];
+      let entry = putResult0.output["entry"];
       const thenResult0 = await interpret(embeddingCacheHandler.lookup({ digest: {"type":"literal","value":"abc123"} }), storage);
       expect(thenResult0.variant).toBe("hit");
     });
@@ -605,7 +606,7 @@ describe('EmbeddingCache functional handler', () => {
       const storage = createInMemoryStorage();
       const putResult0 = await interpret(embeddingCacheHandler.put({ digest: {"type":"literal","value":"abc123"}, vector: {"type":"literal","value":"[0.1,0.2]"}, model: {"type":"literal","value":"codeBERT"}, dimensions: {"type":"literal","value":2}, sourceKind: {"type":"literal","value":"sync"}, sourceKey: {"type":"literal","value":"AuthSync"} }), storage);
       expect(putResult0.variant).toBe("stored");
-      const entry = putResult0.output["entry"];
+      let entry = putResult0.output["entry"];
       const thenResult0 = await interpret(embeddingCacheHandler.put({ digest: {"type":"literal","value":"abc123"}, vector: {"type":"literal","value":"[0.9,0.8]"}, model: {"type":"literal","value":"codeBERT"}, dimensions: {"type":"literal","value":2}, sourceKind: {"type":"literal","value":"sync"}, sourceKey: {"type":"literal","value":"AuthSync"} }), storage);
       expect(thenResult0.variant).toBe("alreadyExists");
     });
@@ -614,7 +615,7 @@ describe('EmbeddingCache functional handler', () => {
       const storage = createInMemoryStorage();
       const putResult0 = await interpret(embeddingCacheHandler.put({ digest: {"type":"literal","value":"def456"}, vector: {"type":"literal","value":"[0.5]"}, model: {"type":"literal","value":"codeBERT"}, dimensions: {"type":"literal","value":1}, sourceKind: {"type":"literal","value":"widget"}, sourceKey: {"type":"literal","value":"TaskCard"} }), storage);
       expect(putResult0.variant).toBe("stored");
-      const entry = putResult0.output["entry"];
+      let entry = putResult0.output["entry"];
       const evictResult1 = await interpret(embeddingCacheHandler.evict({ digest: {"type":"literal","value":"def456"} }), storage);
       expect(evictResult1.variant).toBe("ok");
       const thenResult0 = await interpret(embeddingCacheHandler.lookup({ digest: {"type":"literal","value":"def456"} }), storage);
@@ -625,7 +626,7 @@ describe('EmbeddingCache functional handler', () => {
       const storage = createInMemoryStorage();
       const putWithConfigResult0 = await interpret(embeddingCacheHandler.putWithConfig({ digest: {"type":"literal","value":"abc123"}, model: {"type":"literal","value":"openai-code"}, dimensions: {"type":"literal","value":1536}, vector: {"type":"literal","value":"[0.1,0.2]"}, sourceKind: {"type":"literal","value":"concept"}, sourceKey: {"type":"literal","value":"User"} }), storage);
       expect(putWithConfigResult0.variant).toBe("stored");
-      const entry = putWithConfigResult0.output["entry"];
+      let entry = putWithConfigResult0.output["entry"];
       const thenResult0 = await interpret(embeddingCacheHandler.lookupWithConfig({ digest: {"type":"literal","value":"abc123"}, model: {"type":"literal","value":"openai-code"}, dimensions: {"type":"literal","value":1536} }), storage);
       expect(thenResult0.variant).toBe("hit");
     });
@@ -634,7 +635,7 @@ describe('EmbeddingCache functional handler', () => {
       const storage = createInMemoryStorage();
       const putWithConfigResult0 = await interpret(embeddingCacheHandler.putWithConfig({ digest: {"type":"literal","value":"abc123"}, model: {"type":"literal","value":"openai-code"}, dimensions: {"type":"literal","value":1536}, vector: {"type":"literal","value":"[0.1,0.2]"}, sourceKind: {"type":"literal","value":"concept"}, sourceKey: {"type":"literal","value":"User"} }), storage);
       expect(putWithConfigResult0.variant).toBe("stored");
-      const entry = putWithConfigResult0.output["entry"];
+      let entry = putWithConfigResult0.output["entry"];
       const thenResult0 = await interpret(embeddingCacheHandler.lookupWithConfig({ digest: {"type":"literal","value":"abc123"}, model: {"type":"literal","value":"codeBERT"}, dimensions: {"type":"literal","value":768} }), storage);
       expect(thenResult0.variant).toBe("miss");
     });

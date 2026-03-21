@@ -9,7 +9,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.js';
 import {
-  createProgram, find, put, branch, complete, pureFrom, mapBindings,
+  createProgram, find, put, branch, complete, completeFrom, pureFrom, mapBindings,
 } from '../../../runtime/storage-program.js';
 
 export const interactorEntityHandler: FunctionalConceptHandler = {
@@ -48,7 +48,7 @@ export const interactorEntityHandler: FunctionalConceptHandler = {
       return JSON.stringify(matches.map(i => ({ id: i.id, name: i.name })));
     }, 'result');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', interactors: b.result }));
+    return completeFrom(p, 'ok', (b) => ({ interactors: b.result }));
   },
 
   matchingWidgets(input) {
@@ -62,7 +62,7 @@ export const interactorEntityHandler: FunctionalConceptHandler = {
       return entry ? (entry.matchingWidgetsCache as string || '[]') : '[]';
     }, 'widgets');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', widgets: b.widgets }));
+    return completeFrom(p, 'ok', (b) => ({ widgets: b.widgets }));
   },
 
   classifiedFields(input) {
@@ -76,7 +76,7 @@ export const interactorEntityHandler: FunctionalConceptHandler = {
       return entry ? (entry.classifiedFieldsCache as string || '[]') : '[]';
     }, 'fields');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', fields: b.fields }));
+    return completeFrom(p, 'ok', (b) => ({ fields: b.fields }));
   },
 
   coverageReport(input) {
@@ -95,7 +95,7 @@ export const interactorEntityHandler: FunctionalConceptHandler = {
       return JSON.stringify(report);
     }, 'report');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', report: b.report }));
+    return completeFrom(p, 'ok', (b) => ({ report: b.report }));
   },
 
   get(input) {
@@ -110,10 +110,10 @@ export const interactorEntityHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => b.entry != null,
-      pureFrom(createProgram(), (b) => {
+      completeFrom(createProgram(), 'ok', (b) => {
         const e = b.entry as Record<string, unknown>;
         return {
-          variant: 'ok', interactor: e.id, name: e.name,
+          interactor: e.id, name: e.name,
           category: e.category, properties: e.properties,
         };
       }),

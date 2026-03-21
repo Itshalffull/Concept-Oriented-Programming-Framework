@@ -249,7 +249,8 @@ describe('AccessControl functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('AccessControl');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('AccessControl');
     });
   });
 
@@ -258,14 +259,14 @@ describe('AccessControl functional handler', () => {
       const storage = createInMemoryStorage();
       const checkResult0 = await interpret(accessControlHandler.check({ resource: {"type":"literal","value":"document:123"}, action: {"type":"literal","value":"read"}, context: {"type":"literal","value":"user:alice"} }), storage);
       expect(checkResult0.variant).toBe("ok");
-      const result = checkResult0.output["result"];
-      const tags = checkResult0.output["tags"];
-      const maxAge = checkResult0.output["maxAge"];
+      let result = checkResult0.output["result"];
+      let tags = checkResult0.output["tags"];
+      let maxAge = checkResult0.output["maxAge"];
       const checkResult1 = await interpret(accessControlHandler.check({ resource: {"type":"literal","value":"document:123"}, action: {"type":"literal","value":"delete"}, context: {"type":"literal","value":"user:alice"} }), storage);
       expect(checkResult1.variant).toBe("ok");
-      const result = checkResult1.output["result"];
-      const tags = checkResult1.output["tags"];
-      const maxAge = checkResult1.output["maxAge"];
+      result = checkResult1.output["result"];
+      tags = checkResult1.output["tags"];
+      maxAge = checkResult1.output["maxAge"];
       const thenResult0 = await interpret(accessControlHandler.andIf({ left: {"type":"literal","value":"allowed"}, right: {"type":"literal","value":"forbidden"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -274,7 +275,7 @@ describe('AccessControl functional handler', () => {
       const storage = createInMemoryStorage();
       const orIfResult0 = await interpret(accessControlHandler.orIf({ left: {"type":"literal","value":"neutral"}, right: {"type":"literal","value":"allowed"} }), storage);
       expect(orIfResult0.variant).toBe("ok");
-      const result = orIfResult0.output["result"];
+      let result = orIfResult0.output["result"];
       const thenResult0 = await interpret(accessControlHandler.andIf({ left: {"type":"literal","value":"allowed"}, right: {"type":"literal","value":"allowed"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -283,7 +284,7 @@ describe('AccessControl functional handler', () => {
       const storage = createInMemoryStorage();
       const orIfResult0 = await interpret(accessControlHandler.orIf({ left: {"type":"literal","value":"neutral"}, right: {"type":"literal","value":"neutral"} }), storage);
       expect(orIfResult0.variant).toBe("ok");
-      const result = orIfResult0.output["result"];
+      let result = orIfResult0.output["result"];
       const thenResult0 = await interpret(accessControlHandler.andIf({ left: {"type":"literal","value":"neutral"}, right: {"type":"literal","value":"neutral"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

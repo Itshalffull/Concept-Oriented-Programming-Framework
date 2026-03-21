@@ -155,7 +155,8 @@ describe('OptimisticOracleFinality imperative handler', () => {
       const result = await optimisticOracleFinalityHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('OptimisticOracleFinality');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('OptimisticOracleFinality');
     });
   });
 
@@ -164,7 +165,7 @@ describe('OptimisticOracleFinality imperative handler', () => {
       const storage = createInMemoryStorage();
       const assertFinalityResult0 = await optimisticOracleFinalityHandler.assertFinality({ operationRef: {"type":"variable","name":"_"}, asserter: {"type":"variable","name":"_"}, bond: {"type":"variable","name":"_"}, challengeWindowHours: {"type":"literal","value":48} }, storage);
       expect(assertFinalityResult0.variant).toBe("asserted");
-      const assertion = assertFinalityResult0.output["assertion"];
+      let assertion = assertFinalityResult0.output["assertion"];
       const thenResult0 = await optimisticOracleFinalityHandler.checkExpiry({ assertion: {"type":"variable","name":"oo"} }, storage);
       expect(thenResult0.variant).toBe("finalized");
     });

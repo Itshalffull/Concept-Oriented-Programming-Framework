@@ -392,7 +392,8 @@ describe('Enricher functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Enricher');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Enricher');
     });
   });
 
@@ -401,9 +402,9 @@ describe('Enricher functional handler', () => {
       const storage = createInMemoryStorage();
       const enrichResult0 = await interpret(enricherHandler.enrich({ itemId: {"type":"literal","value":"item-1"}, enricherId: {"type":"literal","value":"auto_tag"} }), storage);
       expect(enrichResult0.variant).toBe("ok");
-      const enrichmentId = enrichResult0.output["enrichmentId"];
-      const result = enrichResult0.output["result"];
-      const confidence = enrichResult0.output["confidence"];
+      let enrichmentId = enrichResult0.output["enrichmentId"];
+      let result = enrichResult0.output["result"];
+      let confidence = enrichResult0.output["confidence"];
       const thenResult0 = await interpret(enricherHandler.accept({ itemId: {"type":"literal","value":"item-1"}, enrichmentId: {"type":"literal","value":"enr-1"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

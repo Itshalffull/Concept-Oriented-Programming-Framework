@@ -449,27 +449,13 @@ describe('PluginRegistry functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof pluginRegistryHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = pluginRegistryHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('PluginRegistry');
-    });
-  });
 
   describe('invariant examples', () => {
     it("discover-then-getDefinitions", async () => {
       const storage = createInMemoryStorage();
       const discoverResult0 = await interpret(pluginRegistryHandler.discover({ type: {"type":"literal","value":"formatter"} }), storage);
       expect(discoverResult0.variant).toBe("ok");
-      const plugins = discoverResult0.output["plugins"];
+      let plugins = discoverResult0.output["plugins"];
       const thenResult0 = await interpret(pluginRegistryHandler.createInstance({ plugin: {"type":"variable","name":"p"}, config: {"type":"literal","value":"{}"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(pluginRegistryHandler.getDefinitions({ type: {"type":"literal","value":"formatter"} }), storage);

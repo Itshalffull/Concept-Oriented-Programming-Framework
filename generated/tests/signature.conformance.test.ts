@@ -327,7 +327,8 @@ describe('Signature functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Signature');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Signature');
     });
   });
 
@@ -336,7 +337,7 @@ describe('Signature functional handler', () => {
       const storage = createInMemoryStorage();
       const defineResult0 = await interpret(signatureHandler.define({ name: {"type":"literal","value":"QA"}, input_fields: {"type":"list","items":[{"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"context"}},{"name":"type","value":{"type":"literal","value":"String"}},{"name":"description","value":{"type":"variable","name":"_"}}]},{"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"question"}},{"name":"type","value":{"type":"literal","value":"String"}},{"name":"description","value":{"type":"variable","name":"_"}}]}]}, output_fields: {"type":"list","items":[{"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"answer"}},{"name":"type","value":{"type":"literal","value":"String"}},{"name":"description","value":{"type":"variable","name":"_"}}]}]}, instruction: {"type":"variable","name":"_"}, module_type: {"type":"literal","value":"chain_of_thought"} }), storage);
       expect(defineResult0.variant).toBe("ok");
-      const signature = defineResult0.output["signature"];
+      let signature = defineResult0.output["signature"];
       const thenResult0 = await interpret(signatureHandler.compile({ signature: {"type":"variable","name":"g"}, model_id: {"type":"literal","value":"gpt-4o"}, examples: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

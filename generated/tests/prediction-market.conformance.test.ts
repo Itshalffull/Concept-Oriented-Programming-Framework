@@ -325,7 +325,8 @@ describe('PredictionMarket functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('PredictionMarket');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('PredictionMarket');
     });
   });
 
@@ -334,7 +335,7 @@ describe('PredictionMarket functional handler', () => {
       const storage = createInMemoryStorage();
       const createMarketResult0 = await interpret(predictionMarketHandler.createMarket({ question: {"type":"variable","name":"_"}, outcomes: {"type":"variable","name":"_"}, deadline: {"type":"variable","name":"_"} }), storage);
       expect(createMarketResult0.variant).toBe("created");
-      const market = createMarketResult0.output["market"];
+      let market = createMarketResult0.output["market"];
       const thenResult0 = await interpret(predictionMarketHandler.trade({ market: {"type":"variable","name":"pm"}, trader: {"type":"variable","name":"_"}, outcome: {"type":"variable","name":"_"}, amount: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("traded");
       const thenResult1 = await interpret(predictionMarketHandler.resolve({ market: {"type":"variable","name":"pm"}, outcome: {"type":"variable","name":"o"} }), storage);

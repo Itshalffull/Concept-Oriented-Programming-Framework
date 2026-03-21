@@ -105,7 +105,8 @@ describe('ShellProvider imperative handler', () => {
       const result = await shellProviderHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ShellProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ShellProvider');
     });
   });
 
@@ -114,10 +115,10 @@ describe('ShellProvider imperative handler', () => {
       const storage = createInMemoryStorage();
       const executeResult0 = await shellProviderHandler.execute({ command: {"type":"literal","value":"echo"}, args: {"type":"literal","value":"hello"}, env: {"type":"literal","value":"{}"}, cwd: {"type":"literal","value":"/tmp"}, timeout: {"type":"literal","value":5000} }, storage);
       expect(executeResult0.variant).toBe("ok");
-      const execution = executeResult0.output["execution"];
-      const stdout = executeResult0.output["stdout"];
-      const stderr = executeResult0.output["stderr"];
-      const exitCode = executeResult0.output["exitCode"];
+      let execution = executeResult0.output["execution"];
+      let stdout = executeResult0.output["stdout"];
+      let stderr = executeResult0.output["stderr"];
+      let exitCode = executeResult0.output["exitCode"];
     });
 
   });

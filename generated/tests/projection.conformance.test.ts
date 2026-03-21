@@ -334,7 +334,8 @@ describe('Projection functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Projection');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Projection');
     });
   });
 
@@ -343,10 +344,10 @@ describe('Projection functional handler', () => {
       const storage = createInMemoryStorage();
       const projectResult0 = await interpret(projectionHandler.project({ manifest: {"type":"literal","value":"valid-manifest"}, annotations: {"type":"literal","value":"valid-annotations"} }), storage);
       expect(projectResult0.variant).toBe("ok");
-      const projection = projectResult0.output["projection"];
-      const shapes = projectResult0.output["shapes"];
-      const actions = projectResult0.output["actions"];
-      const traits = projectResult0.output["traits"];
+      let projection = projectResult0.output["projection"];
+      let shapes = projectResult0.output["shapes"];
+      let actions = projectResult0.output["actions"];
+      let traits = projectResult0.output["traits"];
       const thenResult0 = await interpret(projectionHandler.validate({ projection: {"type":"variable","name":"p"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(projectionHandler.inferResources({ projection: {"type":"variable","name":"p"} }), storage);

@@ -134,16 +134,6 @@ describe('FunctionalHandler imperative handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof functionalHandlerHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await functionalHandlerHandler.register({}, storage);
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('FunctionalHandler');
-    });
-  });
 
   describe('invariant examples', () => {
     it("register then build produces program", async () => {
@@ -152,7 +142,7 @@ describe('FunctionalHandler imperative handler', () => {
       expect(registerResult0.variant).toBe("ok");
       const buildResult1 = await functionalHandlerHandler.build({ handler: {"type":"variable","name":"h"}, input: {"type":"literal","value":"{ name: 'Alice' }"} }, storage);
       expect(buildResult1.variant).toBe("ok");
-      const program = buildResult1.output["program"];
+      let program = buildResult1.output["program"];
     });
 
     it("duplicate registration returns exists", async () => {

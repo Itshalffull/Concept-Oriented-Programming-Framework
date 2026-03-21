@@ -169,7 +169,8 @@ describe('Contract imperative handler', () => {
       const result = await contractHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Contract');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Contract');
     });
   });
 
@@ -178,7 +179,7 @@ describe('Contract imperative handler', () => {
       const storage = createInMemoryStorage();
       const defineResult0 = await contractHandler.define({ name: {"type":"literal","value":"user-password-contract"}, source_concept: {"type":"literal","value":"clef/concept/User"}, target_concept: {"type":"literal","value":"clef/concept/Password"}, assumptions: {"type":"list","items":[{"type":"literal","value":"user-exists-before-password"}]}, guarantees: {"type":"list","items":[{"type":"literal","value":"password-hash-nonzero"}]} }, storage);
       expect(defineResult0.variant).toBe("ok");
-      const contract = defineResult0.output["contract"];
+      let contract = defineResult0.output["contract"];
       const thenResult0 = await contractHandler.verify({ contract: {"type":"variable","name":"c"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

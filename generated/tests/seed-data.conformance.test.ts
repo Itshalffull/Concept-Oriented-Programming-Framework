@@ -440,20 +440,6 @@ describe('SeedData functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof seedDataHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = seedDataHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('SeedData');
-    });
-  });
 
   describe('invariant examples', () => {
     it("register-then-status", async () => {
@@ -464,7 +450,7 @@ describe('SeedData functional handler', () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(seedDataHandler.register({ source_path: {"type":"literal","value":"/test/schema.seeds.yaml"}, concept_uri: {"type":"literal","value":"urn:clef/Schema"}, action_name: {"type":"literal","value":"defineSchema"}, entries: {"type":"list","items":[{"type":"literal","value":"{ \"schema\": \"Shape\" }"}]} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const seed = registerResult0.output["seed"];
+      let seed = registerResult0.output["seed"];
       const thenResult0 = await interpret(seedDataHandler.apply({ seed: {"type":"variable","name":"s"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(seedDataHandler.apply({ seed: {"type":"variable","name":"s"} }), storage);

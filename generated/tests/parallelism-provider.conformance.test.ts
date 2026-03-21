@@ -63,7 +63,8 @@ describe('ParallelismProvider imperative handler', () => {
       const result = await parallelismProviderHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ParallelismProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ParallelismProvider');
     });
   });
 
@@ -72,24 +73,24 @@ describe('ParallelismProvider imperative handler', () => {
       const storage = createInMemoryStorage();
       const analyzeResult0 = await parallelismProviderHandler.analyze({ program: {"type":"literal","value":"get(users, u1, userResult); get(orders, o1, orderResult)"} }, storage);
       expect(analyzeResult0.variant).toBe("ok");
-      const result = analyzeResult0.output["result"];
-      const layers = analyzeResult0.output["layers"];
-      const dependencyEdges = analyzeResult0.output["dependencyEdges"];
-      const criticalPathLength = analyzeResult0.output["criticalPathLength"];
-      const maxParallelism = analyzeResult0.output["maxParallelism"];
-      const speedupRatio = analyzeResult0.output["speedupRatio"];
+      let result = analyzeResult0.output["result"];
+      let layers = analyzeResult0.output["layers"];
+      let dependencyEdges = analyzeResult0.output["dependencyEdges"];
+      let criticalPathLength = analyzeResult0.output["criticalPathLength"];
+      let maxParallelism = analyzeResult0.output["maxParallelism"];
+      let speedupRatio = analyzeResult0.output["speedupRatio"];
     });
 
     it("dependent chain has critical path length 2", async () => {
       const storage = createInMemoryStorage();
       const analyzeResult0 = await parallelismProviderHandler.analyze({ program: {"type":"literal","value":"get(users, u1, userResult); pureFrom(fn)"} }, storage);
       expect(analyzeResult0.variant).toBe("ok");
-      const result = analyzeResult0.output["result"];
-      const layers = analyzeResult0.output["layers"];
-      const dependencyEdges = analyzeResult0.output["dependencyEdges"];
-      const criticalPathLength = analyzeResult0.output["criticalPathLength"];
-      const maxParallelism = analyzeResult0.output["maxParallelism"];
-      const speedupRatio = analyzeResult0.output["speedupRatio"];
+      let result = analyzeResult0.output["result"];
+      let layers = analyzeResult0.output["layers"];
+      let dependencyEdges = analyzeResult0.output["dependencyEdges"];
+      let criticalPathLength = analyzeResult0.output["criticalPathLength"];
+      let maxParallelism = analyzeResult0.output["maxParallelism"];
+      let speedupRatio = analyzeResult0.output["speedupRatio"];
     });
 
   });

@@ -542,7 +542,8 @@ describe('ConnectorPort functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ConnectorPort');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ConnectorPort');
     });
   });
 
@@ -551,7 +552,7 @@ describe('ConnectorPort functional handler', () => {
       const storage = createInMemoryStorage();
       const addPortResult0 = await interpret(connectorPortHandler.addPort({ owner: {"type":"variable","name":"o"}, side: {"type":"literal","value":"right"}, offset: {"type":"literal","value":0.5}, direction: {"type":"literal","value":"out"}, port_type: {"type":"literal","value":"data"}, label: {"type":"literal","value":"Output"}, max_connections: {"type":"literal","value":1} }), storage);
       expect(addPortResult0.variant).toBe("ok");
-      const port = addPortResult0.output["port"];
+      let port = addPortResult0.output["port"];
       const thenResult0 = await interpret(connectorPortHandler.validateConnection({ source_port: {"type":"variable","name":"p"}, target_port: {"type":"variable","name":"p"} }), storage);
       expect(thenResult0.variant).toBe("incompatible");
     });

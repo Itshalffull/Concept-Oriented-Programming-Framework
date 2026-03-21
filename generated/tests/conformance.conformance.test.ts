@@ -408,7 +408,8 @@ describe('Conformance functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Conformance');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Conformance');
     });
   });
 
@@ -417,13 +418,13 @@ describe('Conformance functional handler', () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(conformanceHandler.generate({ concept: {"type":"literal","value":"password"}, specPath: {"type":"literal","value":"./specs/password.concept"} }), storage);
       expect(generateResult0.variant).toBe("ok");
-      const suite = generateResult0.output["suite"];
-      const testVectors = generateResult0.output["testVectors"];
+      let suite = generateResult0.output["suite"];
+      let testVectors = generateResult0.output["testVectors"];
       const verifyResult1 = await interpret(conformanceHandler.verify({ suite: {"type":"variable","name":"c"}, language: {"type":"literal","value":"typescript"}, artifactLocation: {"type":"literal","value":".clef-artifacts/ts/password"} }), storage);
       expect(verifyResult1.variant).toBe("ok");
-      const passed = verifyResult1.output["passed"];
-      const total = verifyResult1.output["total"];
-      const coveredRequirements = verifyResult1.output["coveredRequirements"];
+      let passed = verifyResult1.output["passed"];
+      let total = verifyResult1.output["total"];
+      let coveredRequirements = verifyResult1.output["coveredRequirements"];
       const thenResult0 = await interpret(conformanceHandler.matrix({ concepts: {"type":"list","items":[{"type":"literal","value":"password"}]} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

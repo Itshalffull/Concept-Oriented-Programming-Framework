@@ -188,7 +188,8 @@ describe('A11yAuditProvider functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('A11yAuditProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('A11yAuditProvider');
     });
   });
 
@@ -197,9 +198,9 @@ describe('A11yAuditProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const auditResult0 = await interpret(a11yAuditProviderHandler.audit({ audit: {"type":"variable","name":"a"}, program: {"type":"literal","value":"p1"}, instructions: {"type":"list","items":[{"type":"literal","value":"element:root:container"},{"type":"literal","value":"aria:root:role:dialog"},{"type":"literal","value":"keyboard:Escape:close"},{"type":"literal","value":"focus:trap:root"}]}, parts: {"type":"list","items":[{"type":"literal","value":"root"}]} }), storage);
       expect(auditResult0.variant).toBe("ok");
-      const audit = auditResult0.output["audit"];
-      const findings = auditResult0.output["findings"];
-      const passed = auditResult0.output["passed"];
+      let audit = auditResult0.output["audit"];
+      let findings = auditResult0.output["findings"];
+      let passed = auditResult0.output["passed"];
       const thenResult0 = await interpret(a11yAuditProviderHandler.getFindings({ audit: {"type":"variable","name":"a"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -270,9 +271,6 @@ describe('A11yAuditProvider functional handler', () => {
       );
     });
 
-  });
-
-  describe('action contracts (PBT)', () => {
   });
 
 });

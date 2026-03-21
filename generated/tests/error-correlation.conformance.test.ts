@@ -482,7 +482,8 @@ describe('ErrorCorrelation functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ErrorCorrelation');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ErrorCorrelation');
     });
   });
 
@@ -491,7 +492,7 @@ describe('ErrorCorrelation functional handler', () => {
       const storage = createInMemoryStorage();
       const recordResult0 = await interpret(errorCorrelationHandler.record({ flowId: {"type":"literal","value":"f-123"}, errorKind: {"type":"literal","value":"action-error"}, message: {"type":"literal","value":"Token signing key not configured"}, rawEvent: {"type":"literal","value":"{}"} }), storage);
       expect(recordResult0.variant).toBe("ok");
-      const error = recordResult0.output["error"];
+      let error = recordResult0.output["error"];
       const thenResult0 = await interpret(errorCorrelationHandler.get({ error: {"type":"variable","name":"e"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

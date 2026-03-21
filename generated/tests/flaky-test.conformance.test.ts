@@ -461,7 +461,8 @@ describe('FlakyTest functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('FlakyTest');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('FlakyTest');
     });
   });
 
@@ -470,13 +471,13 @@ describe('FlakyTest functional handler', () => {
       const storage = createInMemoryStorage();
       const recordResult0 = await interpret(flakyTestHandler.record({ testId: {"type":"literal","value":"test_timing"}, language: {"type":"literal","value":"typescript"}, builder: {"type":"literal","value":"TypeScriptBuilder"}, testType: {"type":"literal","value":"unit"}, passed: {"type":"literal","value":true}, duration: {"type":"literal","value":50} }), storage);
       expect(recordResult0.variant).toBe("ok");
-      const test = recordResult0.output["test"];
+      let test = recordResult0.output["test"];
       const recordResult1 = await interpret(flakyTestHandler.record({ testId: {"type":"literal","value":"test_timing"}, language: {"type":"literal","value":"typescript"}, builder: {"type":"literal","value":"TypeScriptBuilder"}, testType: {"type":"literal","value":"unit"}, passed: {"type":"literal","value":false}, duration: {"type":"literal","value":5001} }), storage);
       expect(recordResult1.variant).toBe("ok");
-      const test = recordResult1.output["test"];
+      test = recordResult1.output["test"];
       const recordResult2 = await interpret(flakyTestHandler.record({ testId: {"type":"literal","value":"test_timing"}, language: {"type":"literal","value":"typescript"}, builder: {"type":"literal","value":"TypeScriptBuilder"}, testType: {"type":"literal","value":"unit"}, passed: {"type":"literal","value":true}, duration: {"type":"literal","value":48} }), storage);
       expect(recordResult2.variant).toBe("ok");
-      const test = recordResult2.output["test"];
+      test = recordResult2.output["test"];
       const thenResult0 = await interpret(flakyTestHandler.isQuarantined({ testId: {"type":"literal","value":"test_timing"} }), storage);
       expect(thenResult0.variant).toBe("yes");
     });

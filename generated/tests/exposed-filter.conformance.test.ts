@@ -318,7 +318,8 @@ describe('ExposedFilter functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ExposedFilter');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ExposedFilter');
     });
   });
 
@@ -327,7 +328,7 @@ describe('ExposedFilter functional handler', () => {
       const storage = createInMemoryStorage();
       const exposeResult0 = await interpret(exposedFilterHandler.expose({ filter: {"type":"variable","name":"f"}, fieldName: {"type":"literal","value":"status"}, operator: {"type":"literal","value":"eq"}, defaultValue: {"type":"literal","value":"active"} }), storage);
       expect(exposeResult0.variant).toBe("ok");
-      const filter = exposeResult0.output["filter"];
+      let filter = exposeResult0.output["filter"];
       const thenResult0 = await interpret(exposedFilterHandler.collectInput({ filter: {"type":"variable","name":"f"}, value: {"type":"literal","value":"archived"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(exposedFilterHandler.applyToQuery({ filter: {"type":"variable","name":"f"} }), storage);

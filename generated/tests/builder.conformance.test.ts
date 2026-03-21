@@ -413,7 +413,8 @@ describe('Builder functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Builder');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Builder');
     });
   });
 
@@ -422,10 +423,10 @@ describe('Builder functional handler', () => {
       const storage = createInMemoryStorage();
       const buildResult0 = await interpret(builderHandler.build({ concept: {"type":"literal","value":"password"}, source: {"type":"literal","value":"./generated/swift/password"}, language: {"type":"literal","value":"swift"}, platform: {"type":"literal","value":"linux-arm64"}, config: {"type":"record","fields":[{"name":"mode","value":{"type":"literal","value":"release"}}]} }), storage);
       expect(buildResult0.variant).toBe("ok");
-      const build = buildResult0.output["build"];
-      const artifactHash = buildResult0.output["artifactHash"];
-      const artifactLocation = buildResult0.output["artifactLocation"];
-      const duration = buildResult0.output["duration"];
+      let build = buildResult0.output["build"];
+      let artifactHash = buildResult0.output["artifactHash"];
+      let artifactLocation = buildResult0.output["artifactLocation"];
+      let duration = buildResult0.output["duration"];
       const thenResult0 = await interpret(builderHandler.status({ build: {"type":"variable","name":"b"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(builderHandler.history({ concept: {"type":"literal","value":"password"}, language: {"type":"literal","value":"swift"} }), storage);

@@ -322,27 +322,13 @@ describe('EnrichmentRenderer functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof enrichmentRendererHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = enrichmentRendererHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('EnrichmentRenderer');
-    });
-  });
 
   describe('invariant examples', () => {
     it("register handler then render succeeds", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(enrichmentRendererHandler.register({ key: {"type":"literal","value":"migration-guide"}, format: {"type":"literal","value":"skill-md"}, order: {"type":"literal","value":75}, pattern: {"type":"literal","value":"heading-body"}, template: {"type":"literal","value":"{\"heading\":\"Migration Guide\"}"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const handler = registerResult0.output["handler"];
+      let handler = registerResult0.output["handler"];
       const thenResult0 = await interpret(enrichmentRendererHandler.render({ content: {"type":"literal","value":"{\"migration-guide\":{\"heading\":\"Migration Guide\",\"body\":\"Follow these steps...\"}}"}, format: {"type":"literal","value":"skill-md"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

@@ -338,7 +338,8 @@ describe('Affordance functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Affordance');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Affordance');
     });
   });
 
@@ -347,10 +348,10 @@ describe('Affordance functional handler', () => {
       const storage = createInMemoryStorage();
       const declareResult0 = await interpret(affordanceHandler.declare({ affordance: {"type":"variable","name":"f1"}, widget: {"type":"literal","value":"radio-group"}, interactor: {"type":"literal","value":"single-choice"}, specificity: {"type":"literal","value":10}, conditions: {"type":"literal","value":"{ \"maxOptions\": 8 }"}, bind: {"type":"variable","name":"_"}, contractVersion: {"type":"variable","name":"_"}, densityExempt: {"type":"variable","name":"_"}, motifOptimized: {"type":"variable","name":"_"} }), storage);
       expect(declareResult0.variant).toBe("ok");
-      const affordance = declareResult0.output["affordance"];
+      let affordance = declareResult0.output["affordance"];
       const declareResult1 = await interpret(affordanceHandler.declare({ affordance: {"type":"variable","name":"f2"}, widget: {"type":"literal","value":"select"}, interactor: {"type":"literal","value":"single-choice"}, specificity: {"type":"literal","value":5}, conditions: {"type":"variable","name":"_"}, bind: {"type":"variable","name":"_"}, contractVersion: {"type":"variable","name":"_"}, densityExempt: {"type":"variable","name":"_"}, motifOptimized: {"type":"variable","name":"_"} }), storage);
       expect(declareResult1.variant).toBe("ok");
-      const affordance = declareResult1.output["affordance"];
+      affordance = declareResult1.output["affordance"];
       const thenResult0 = await interpret(affordanceHandler.match({ affordance: {"type":"variable","name":"_"}, interactor: {"type":"literal","value":"single-choice"}, context: {"type":"literal","value":"{ \"optionCount\": 4 }"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -359,7 +360,7 @@ describe('Affordance functional handler', () => {
       const storage = createInMemoryStorage();
       const declareResult0 = await interpret(affordanceHandler.declare({ affordance: {"type":"variable","name":"f1"}, widget: {"type":"literal","value":"approval-detail"}, interactor: {"type":"literal","value":"entity-detail"}, specificity: {"type":"literal","value":20}, conditions: {"type":"literal","value":"{ \"concept\": \"Approval\" }"}, bind: {"type":"literal","value":"{ \"actor\": \"approver\", \"body\": \"reasoning\" }"}, contractVersion: {"type":"literal","value":1}, densityExempt: {"type":"variable","name":"_"}, motifOptimized: {"type":"variable","name":"_"} }), storage);
       expect(declareResult0.variant).toBe("ok");
-      const affordance = declareResult0.output["affordance"];
+      let affordance = declareResult0.output["affordance"];
       const thenResult0 = await interpret(affordanceHandler.match({ affordance: {"type":"variable","name":"_"}, interactor: {"type":"literal","value":"entity-detail"}, context: {"type":"literal","value":"{ \"concept\": \"Approval\" }"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

@@ -118,7 +118,8 @@ describe('GoSdkTarget functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('GoSdkTarget');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('GoSdkTarget');
     });
   });
 
@@ -127,8 +128,8 @@ describe('GoSdkTarget functional handler', () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(goSdkTargetHandler.generate({ projection: {"type":"literal","value":"test-projection"}, config: {"type":"literal","value":"{}"} }), storage);
       expect(generateResult0.variant).toBe("ok");
-      const module = generateResult0.output["module"];
-      const files = generateResult0.output["files"];
+      let module = generateResult0.output["module"];
+      let files = generateResult0.output["files"];
       const thenResult0 = await interpret(goSdkTargetHandler.generate({ projection: {"type":"literal","value":"test-projection-2"}, config: {"type":"literal","value":"{}"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

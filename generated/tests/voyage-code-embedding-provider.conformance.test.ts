@@ -151,7 +151,8 @@ describe('VoyageCodeEmbeddingProvider functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('VoyageCodeEmbeddingProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('VoyageCodeEmbeddingProvider');
     });
   });
 
@@ -160,7 +161,7 @@ describe('VoyageCodeEmbeddingProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const initializeResult0 = await interpret(voyageCodeEmbeddingProviderHandler.initialize({ apiKey: {"type":"literal","value":"pa-test"}, apiModel: {"type":"literal","value":"voyage-code-3"}, dimensions: {"type":"literal","value":1024} }), storage);
       expect(initializeResult0.variant).toBe("ok");
-      const instance = initializeResult0.output["instance"];
+      let instance = initializeResult0.output["instance"];
       const thenResult0 = await interpret(voyageCodeEmbeddingProviderHandler.embed({ text: {"type":"literal","value":"function add(a, b) { return a + b; }"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

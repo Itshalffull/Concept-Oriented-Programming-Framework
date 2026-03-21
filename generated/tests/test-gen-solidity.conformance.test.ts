@@ -109,7 +109,8 @@ describe('TestGenSolidity imperative handler', () => {
       const result = await testGenSolidityHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('TestGenSolidity');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('TestGenSolidity');
     });
   });
 
@@ -118,17 +119,17 @@ describe('TestGenSolidity imperative handler', () => {
       const storage = createInMemoryStorage();
       const renderResult0 = await testGenSolidityHandler.render({ test_plan: {"type":"literal","value":"{\"conceptName\":\"Vault\",\"conceptRef\":\"clef/concept/Vault\",\"handlerPath\":\"codegen/solidity/src/Vault.sol\",\"actions\":[{\"name\":\"deposit\",\"params\":[{\"name\":\"amount\",\"type\":\"Int\"}],\"variants\":[\"ok\",\"error\"]}],\"examples\":[],\"properties\":[],\"stateInvariants\":[],\"liveness\":[],\"contracts\":[]}"}, output_path: {"type":"literal","value":"generated/tests/Vault.conformance.t.sol"} }, storage);
       expect(renderResult0.variant).toBe("ok");
-      const result = renderResult0.output["result"];
-      const rendered_code = renderResult0.output["rendered_code"];
-      const file_path = renderResult0.output["file_path"];
-      const test_count = renderResult0.output["test_count"];
+      let result = renderResult0.output["result"];
+      let rendered_code = renderResult0.output["rendered_code"];
+      let file_path = renderResult0.output["file_path"];
+      let test_count = renderResult0.output["test_count"];
     });
 
     it("invalid JSON rejected", async () => {
       const storage = createInMemoryStorage();
       const renderResult0 = await testGenSolidityHandler.render({ test_plan: {"type":"literal","value":"[]"}, output_path: {"type":"literal","value":"test.sol"} }, storage);
       expect(renderResult0.variant).toBe("invalid");
-      const message = renderResult0.output["message"];
+      let message = renderResult0.output["message"];
     });
 
   });

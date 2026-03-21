@@ -463,7 +463,8 @@ describe('Circle functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Circle');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Circle');
     });
   });
 
@@ -472,7 +473,7 @@ describe('Circle functional handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(circleHandler.create({ name: {"type":"variable","name":"_"}, domain: {"type":"variable","name":"_"}, parent: {"type":"variable","name":"_"} }), storage);
       expect(createResult0.variant).toBe("created");
-      const circle = createResult0.output["circle"];
+      let circle = createResult0.output["circle"];
       const thenResult0 = await interpret(circleHandler.assignMember({ circle: {"type":"variable","name":"c"}, member: {"type":"variable","name":"m"} }), storage);
       expect(thenResult0.variant).toBe("assigned");
       const thenResult1 = await interpret(circleHandler.checkJurisdiction({ circle: {"type":"variable","name":"c"}, action: {"type":"variable","name":"_"} }), storage);

@@ -248,7 +248,8 @@ describe('GenerationProvenance imperative handler', () => {
       const result = await generationProvenanceHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('GenerationProvenance');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('GenerationProvenance');
     });
   });
 
@@ -257,7 +258,7 @@ describe('GenerationProvenance imperative handler', () => {
       const storage = createInMemoryStorage();
       const recordResult0 = await generationProvenanceHandler.record({ outputFile: {"type":"literal","value":"handlers/ts/article.handler.ts"}, generator: {"type":"literal","value":"HandlerScaffoldGen"}, sourceSpec: {"type":"literal","value":"specs/app/article.concept"}, sourceSpecKind: {"type":"literal","value":"concept"}, config: {"type":"literal","value":"{}"} }, storage);
       expect(recordResult0.variant).toBe("ok");
-      const provenance = recordResult0.output["provenance"];
+      let provenance = recordResult0.output["provenance"];
       const thenResult0 = await generationProvenanceHandler.getByFile({ outputFile: {"type":"literal","value":"handlers/ts/article.handler.ts"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

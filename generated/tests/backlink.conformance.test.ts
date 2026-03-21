@@ -243,7 +243,8 @@ describe('Backlink functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Backlink');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Backlink');
     });
   });
 
@@ -252,7 +253,7 @@ describe('Backlink functional handler', () => {
       const storage = createInMemoryStorage();
       const reindexResult0 = await interpret(backlinkHandler.reindex({  }), storage);
       expect(reindexResult0.variant).toBe("ok");
-      const count = reindexResult0.output["count"];
+      let count = reindexResult0.output["count"];
       const thenResult0 = await interpret(backlinkHandler.getBacklinks({ entity: {"type":"variable","name":"x"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

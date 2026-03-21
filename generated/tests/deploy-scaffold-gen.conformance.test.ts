@@ -248,7 +248,8 @@ describe('DeployScaffoldGen functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('DeployScaffoldGen');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('DeployScaffoldGen');
     });
   });
 
@@ -257,15 +258,15 @@ describe('DeployScaffoldGen functional handler', () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(deployScaffoldGenHandler.generate({ appName: {"type":"literal","value":"my-app"}, runtimes: {"type":"list","items":[]}, concepts: {"type":"list","items":[]} }), storage);
       expect(generateResult0.variant).toBe("ok");
-      const files = generateResult0.output["files"];
-      const filesGenerated = generateResult0.output["filesGenerated"];
+      let files = generateResult0.output["files"];
+      let filesGenerated = generateResult0.output["filesGenerated"];
     });
 
     it("generate with empty appName fails", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(deployScaffoldGenHandler.generate({ appName: {"type":"literal","value":""}, runtimes: {"type":"list","items":[]}, concepts: {"type":"list","items":[]} }), storage);
       expect(generateResult0.variant).toBe("error");
-      const message = generateResult0.output["message"];
+      let message = generateResult0.output["message"];
     });
 
   });

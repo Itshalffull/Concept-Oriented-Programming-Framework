@@ -304,27 +304,13 @@ describe('EffectHandler functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof effectHandlerHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = effectHandlerHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('EffectHandler');
-    });
-  });
 
   describe('invariant examples', () => {
     it("register then resolve returns handler", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(effectHandlerHandler.register({ protocol: {"type":"literal","value":"http"}, operation: {"type":"literal","value":"GET"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const handler = registerResult0.output["handler"];
+      let handler = registerResult0.output["handler"];
       const thenResult0 = await interpret(effectHandlerHandler.resolve({ protocol: {"type":"literal","value":"http"}, operation: {"type":"literal","value":"GET"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -333,18 +319,18 @@ describe('EffectHandler functional handler', () => {
       const storage = createInMemoryStorage();
       const resolveResult0 = await interpret(effectHandlerHandler.resolve({ protocol: {"type":"literal","value":"grpc"}, operation: {"type":"literal","value":"invoke"} }), storage);
       expect(resolveResult0.variant).toBe("unresolved");
-      const protocol = resolveResult0.output["protocol"];
-      const operation = resolveResult0.output["operation"];
+      let protocol = resolveResult0.output["protocol"];
+      let operation = resolveResult0.output["operation"];
     });
 
     it("deregister removes handler", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(effectHandlerHandler.register({ protocol: {"type":"literal","value":"http"}, operation: {"type":"literal","value":"GET"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const handler = registerResult0.output["handler"];
+      let handler = registerResult0.output["handler"];
       const deregisterResult1 = await interpret(effectHandlerHandler.deregister({ protocol: {"type":"literal","value":"http"}, operation: {"type":"literal","value":"GET"} }), storage);
       expect(deregisterResult1.variant).toBe("ok");
-      const handler = deregisterResult1.output["handler"];
+      handler = deregisterResult1.output["handler"];
       const thenResult0 = await interpret(effectHandlerHandler.resolve({ protocol: {"type":"literal","value":"http"}, operation: {"type":"literal","value":"GET"} }), storage);
       expect(thenResult0.variant).toBe("unresolved");
     });
@@ -353,7 +339,7 @@ describe('EffectHandler functional handler', () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(effectHandlerHandler.register({ protocol: {"type":"literal","value":"http"}, operation: {"type":"literal","value":"GET"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const handler = registerResult0.output["handler"];
+      let handler = registerResult0.output["handler"];
       const thenResult0 = await interpret(effectHandlerHandler.register({ protocol: {"type":"literal","value":"http"}, operation: {"type":"literal","value":"GET"} }), storage);
       expect(thenResult0.variant).toBe("duplicate");
     });

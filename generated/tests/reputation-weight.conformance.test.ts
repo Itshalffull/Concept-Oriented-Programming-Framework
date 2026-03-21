@@ -179,7 +179,8 @@ describe('ReputationWeight functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ReputationWeight');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ReputationWeight');
     });
   });
 
@@ -188,7 +189,7 @@ describe('ReputationWeight functional handler', () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(reputationWeightHandler.configure({ scalingFunction: {"type":"literal","value":"linear"}, cap: {"type":"literal","value":100} }), storage);
       expect(configureResult0.variant).toBe("configured");
-      const config = configureResult0.output["config"];
+      let config = configureResult0.output["config"];
       const thenResult0 = await interpret(reputationWeightHandler.compute({ config: {"type":"variable","name":"rw"}, participant: {"type":"variable","name":"p"}, reputationScore: {"type":"literal","value":50} }), storage);
       expect(thenResult0.variant).toBe("weight");
     });

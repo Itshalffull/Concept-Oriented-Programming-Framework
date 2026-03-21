@@ -213,7 +213,8 @@ describe('TestGen imperative handler', () => {
       const result = await testGenHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('TestGen');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('TestGen');
     });
   });
 
@@ -222,10 +223,10 @@ describe('TestGen imperative handler', () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await testGenHandler.generate({ concept_ref: {"type":"literal","value":"clef/concept/Password"}, language: {"type":"literal","value":"typescript"}, invariant_version: {"type":"literal","value":"v1"} }, storage);
       expect(generateResult0.variant).toBe("ok");
-      const generation = generateResult0.output["generation"];
-      const generated_files = generateResult0.output["generated_files"];
-      const provider_used = generateResult0.output["provider_used"];
-      const strategies = generateResult0.output["strategies"];
+      let generation = generateResult0.output["generation"];
+      let generated_files = generateResult0.output["generated_files"];
+      let provider_used = generateResult0.output["provider_used"];
+      let strategies = generateResult0.output["strategies"];
       const thenResult0 = await testGenHandler.list({ concept_ref: {"type":"literal","value":"clef/concept/Password"}, language: {"type":"literal","value":"typescript"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -234,9 +235,9 @@ describe('TestGen imperative handler', () => {
       const storage = createInMemoryStorage();
       const buildTestPlanResult0 = await testGenHandler.buildTestPlan({ concept_ref: {"type":"literal","value":"clef/concept/User"}, concept_data: {"type":"literal","value":"{}"} }, storage);
       expect(buildTestPlanResult0.variant).toBe("ok");
-      const test_plan = buildTestPlanResult0.output["test_plan"];
-      const provider = buildTestPlanResult0.output["provider"];
-      const language = buildTestPlanResult0.output["language"];
+      let test_plan = buildTestPlanResult0.output["test_plan"];
+      let provider = buildTestPlanResult0.output["provider"];
+      let language = buildTestPlanResult0.output["language"];
     });
 
   });

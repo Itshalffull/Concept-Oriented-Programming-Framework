@@ -134,16 +134,6 @@ describe('ProgramInterpreter imperative handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof programInterpreterHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await programInterpreterHandler.register({}, storage);
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ProgramInterpreter');
-    });
-  });
 
   describe('invariant examples', () => {
     it("execute then rollback succeeds", async () => {
@@ -152,10 +142,10 @@ describe('ProgramInterpreter imperative handler', () => {
       expect(registerResult0.variant).toBe("ok");
       const executeResult1 = await programInterpreterHandler.execute({ interpreter: {"type":"variable","name":"i"}, program: {"type":"literal","value":"get(users, u1)"}, snapshot: {"type":"literal","value":"current"} }, storage);
       expect(executeResult1.variant).toBe("ok");
-      const executionId = executeResult1.output["executionId"];
-      const variant = executeResult1.output["variant"];
-      const output = executeResult1.output["output"];
-      const trace = executeResult1.output["trace"];
+      let executionId = executeResult1.output["executionId"];
+      let variant = executeResult1.output["variant"];
+      let output = executeResult1.output["output"];
+      let trace = executeResult1.output["trace"];
       const thenResult0 = await programInterpreterHandler.rollback({ interpreter: {"type":"variable","name":"i"}, executionId: {"type":"variable","name":"eid"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

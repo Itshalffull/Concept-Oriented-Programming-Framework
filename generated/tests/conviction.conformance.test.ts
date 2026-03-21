@@ -319,7 +319,8 @@ describe('Conviction functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Conviction');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Conviction');
     });
   });
 
@@ -328,7 +329,7 @@ describe('Conviction functional handler', () => {
       const storage = createInMemoryStorage();
       const registerProposalResult0 = await interpret(convictionHandler.registerProposal({ proposalRef: {"type":"variable","name":"_"}, requestedFunds: {"type":"variable","name":"_"}, totalFunds: {"type":"variable","name":"_"} }), storage);
       expect(registerProposalResult0.variant).toBe("registered");
-      const proposal = registerProposalResult0.output["proposal"];
+      let proposal = registerProposalResult0.output["proposal"];
       const thenResult0 = await interpret(convictionHandler.stake({ proposal: {"type":"variable","name":"k"}, staker: {"type":"variable","name":"_"}, amount: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("staked");
     });

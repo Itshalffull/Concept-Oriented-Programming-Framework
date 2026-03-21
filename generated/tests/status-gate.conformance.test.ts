@@ -469,7 +469,8 @@ describe('StatusGate functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('StatusGate');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('StatusGate');
     });
   });
 
@@ -478,9 +479,9 @@ describe('StatusGate functional handler', () => {
       const storage = createInMemoryStorage();
       const reportResult0 = await interpret(statusGateHandler.report({ target: {"type":"literal","value":"abc123"}, context: {"type":"literal","value":"clef/verify"}, status: {"type":"literal","value":"passing"}, details: {"type":"literal","value":"3 proved"}, provider: {"type":"literal","value":"exit-code"}, url: {"type":"literal","value":""} }), storage);
       expect(reportResult0.variant).toBe("ok");
-      const gate = reportResult0.output["gate"];
-      const target = reportResult0.output["target"];
-      const provider = reportResult0.output["provider"];
+      let gate = reportResult0.output["gate"];
+      let target = reportResult0.output["target"];
+      let provider = reportResult0.output["provider"];
       const thenResult0 = await interpret(statusGateHandler.get_status({ gate: {"type":"variable","name":"g"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -489,9 +490,9 @@ describe('StatusGate functional handler', () => {
       const storage = createInMemoryStorage();
       const reportResult0 = await interpret(statusGateHandler.report({ target: {"type":"literal","value":"abc123"}, context: {"type":"literal","value":"clef/verify"}, status: {"type":"literal","value":"passing"}, details: {"type":"literal","value":"all green"}, provider: {"type":"literal","value":"exit-code"}, url: {"type":"literal","value":""} }), storage);
       expect(reportResult0.variant).toBe("ok");
-      const gate = reportResult0.output["gate"];
-      const target = reportResult0.output["target"];
-      const provider = reportResult0.output["provider"];
+      let gate = reportResult0.output["gate"];
+      let target = reportResult0.output["target"];
+      let provider = reportResult0.output["provider"];
       const thenResult0 = await interpret(statusGateHandler.complete({ gate: {"type":"variable","name":"g"}, final_status: {"type":"literal","value":"passing"}, details: {"type":"literal","value":"done"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -500,8 +501,8 @@ describe('StatusGate functional handler', () => {
       const storage = createInMemoryStorage();
       const completeResult0 = await interpret(statusGateHandler.complete({ gate: {"type":"variable","name":"g"}, final_status: {"type":"literal","value":"passing"}, details: {"type":"literal","value":"done"} }), storage);
       expect(completeResult0.variant).toBe("ok");
-      const gate = completeResult0.output["gate"];
-      const accepted = completeResult0.output["accepted"];
+      let gate = completeResult0.output["gate"];
+      let accepted = completeResult0.output["accepted"];
       const thenResult0 = await interpret(statusGateHandler.update({ gate: {"type":"variable","name":"g"}, status: {"type":"literal","value":"failing"}, details: {"type":"literal","value":"late failure"} }), storage);
       expect(thenResult0.variant).toBe("already_completed");
     });

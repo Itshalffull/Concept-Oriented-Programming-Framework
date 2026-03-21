@@ -388,7 +388,8 @@ describe('DesignTokenProvider functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('DesignTokenProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('DesignTokenProvider');
     });
   });
 
@@ -397,8 +398,8 @@ describe('DesignTokenProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const initializeResult0 = await interpret(designTokenProviderHandler.initialize({ provider: {"type":"variable","name":"p"}, config: {"type":"literal","value":"{ \"theme\": \"light\" }"} }), storage);
       expect(initializeResult0.variant).toBe("ok");
-      const provider = initializeResult0.output["provider"];
-      const pluginRef = initializeResult0.output["pluginRef"];
+      let provider = initializeResult0.output["provider"];
+      let pluginRef = initializeResult0.output["pluginRef"];
       const thenResult0 = await interpret(designTokenProviderHandler.getTokens({ provider: {"type":"variable","name":"p"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

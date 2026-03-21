@@ -395,7 +395,8 @@ describe('CloudRunRuntime functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('CloudRunRuntime');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('CloudRunRuntime');
     });
   });
 
@@ -404,9 +405,9 @@ describe('CloudRunRuntime functional handler', () => {
       const storage = createInMemoryStorage();
       const provisionResult0 = await interpret(cloudRunRuntimeHandler.provision({ concept: {"type":"literal","value":"User"}, projectId: {"type":"literal","value":"my-project"}, region: {"type":"literal","value":"us-central1"}, cpu: {"type":"literal","value":1}, memory: {"type":"literal","value":512} }), storage);
       expect(provisionResult0.variant).toBe("ok");
-      const service = provisionResult0.output["service"];
-      const serviceUrl = provisionResult0.output["serviceUrl"];
-      const endpoint = provisionResult0.output["endpoint"];
+      let service = provisionResult0.output["service"];
+      let serviceUrl = provisionResult0.output["serviceUrl"];
+      let endpoint = provisionResult0.output["endpoint"];
       const thenResult0 = await interpret(cloudRunRuntimeHandler.deploy({ service: {"type":"variable","name":"s"}, imageUri: {"type":"literal","value":"gcr.io/my-project/user:latest"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

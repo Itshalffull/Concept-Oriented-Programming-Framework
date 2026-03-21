@@ -315,7 +315,8 @@ describe('ExternalCall functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ExternalCall');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ExternalCall');
     });
   });
 
@@ -324,7 +325,7 @@ describe('ExternalCall functional handler', () => {
       const storage = createInMemoryStorage();
       const dispatchResult0 = await interpret(externalCallHandler.dispatch({ protocol: {"type":"literal","value":"http"}, operation: {"type":"literal","value":"GET"}, endpoint: {"type":"literal","value":"test"}, payload: {"type":"literal","value":"{}"}, config: {"type":"literal","value":"{}"} }), storage);
       expect(dispatchResult0.variant).toBe("protocolNotFound");
-      const protocol = dispatchResult0.output["protocol"];
+      let protocol = dispatchResult0.output["protocol"];
       const thenResult0 = await interpret(externalCallHandler.registerProtocol({ protocol: {"type":"literal","value":"http"}, providerName: {"type":"literal","value":"HttpProvider"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

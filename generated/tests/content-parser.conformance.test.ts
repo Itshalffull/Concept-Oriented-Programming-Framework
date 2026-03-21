@@ -524,7 +524,8 @@ describe('ContentParser functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ContentParser');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ContentParser');
     });
   });
 
@@ -533,10 +534,10 @@ describe('ContentParser functional handler', () => {
       const storage = createInMemoryStorage();
       const registerFormatResult0 = await interpret(contentParserHandler.registerFormat({ name: {"type":"literal","value":"markdown"}, grammar: {"type":"literal","value":"{}"} }), storage);
       expect(registerFormatResult0.variant).toBe("ok");
-      const name = registerFormatResult0.output["name"];
+      let name = registerFormatResult0.output["name"];
       const parseResult1 = await interpret(contentParserHandler.parse({ content: {"type":"variable","name":"c"}, text: {"type":"literal","value":"Hello #tag [[ref]]"}, format: {"type":"literal","value":"markdown"} }), storage);
       expect(parseResult1.variant).toBe("ok");
-      const ast = parseResult1.output["ast"];
+      let ast = parseResult1.output["ast"];
       const thenResult0 = await interpret(contentParserHandler.extractTags({ content: {"type":"variable","name":"c"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

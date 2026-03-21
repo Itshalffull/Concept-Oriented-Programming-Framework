@@ -318,7 +318,8 @@ describe('QuadraticVoting functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('QuadraticVoting');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('QuadraticVoting');
     });
   });
 
@@ -327,7 +328,7 @@ describe('QuadraticVoting functional handler', () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(quadraticVotingHandler.configure({ creditBudget: {"type":"literal","value":100} }), storage);
       expect(configureResult0.variant).toBe("configured");
-      const config = configureResult0.output["config"];
+      let config = configureResult0.output["config"];
       const thenResult0 = await interpret(quadraticVotingHandler.allocateCredits({ config: {"type":"variable","name":"qv"}, voter: {"type":"variable","name":"v"} }), storage);
       expect(thenResult0.variant).toBe("allocated");
       const thenResult1 = await interpret(quadraticVotingHandler.castVotes({ config: {"type":"variable","name":"qv"}, voter: {"type":"variable","name":"v"}, issue: {"type":"variable","name":"_"}, numberOfVotes: {"type":"literal","value":5} }), storage);

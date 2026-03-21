@@ -320,7 +320,8 @@ describe('Artifact functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Artifact');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Artifact');
     });
   });
 
@@ -329,9 +330,9 @@ describe('Artifact functional handler', () => {
       const storage = createInMemoryStorage();
       const buildResult0 = await interpret(artifactHandler.build({ concept: {"type":"literal","value":"User"}, spec: {"type":"literal","value":"user.concept"}, implementation: {"type":"literal","value":"user.impl.ts"}, deps: {"type":"variable","name":"d"} }), storage);
       expect(buildResult0.variant).toBe("ok");
-      const artifact = buildResult0.output["artifact"];
-      const hash = buildResult0.output["hash"];
-      const sizeBytes = buildResult0.output["sizeBytes"];
+      let artifact = buildResult0.output["artifact"];
+      let hash = buildResult0.output["hash"];
+      let sizeBytes = buildResult0.output["sizeBytes"];
       const thenResult0 = await interpret(artifactHandler.resolve({ hash: {"type":"variable","name":"h"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

@@ -457,7 +457,8 @@ describe('SearchIndex functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('SearchIndex');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('SearchIndex');
     });
   });
 
@@ -466,7 +467,7 @@ describe('SearchIndex functional handler', () => {
       const storage = createInMemoryStorage();
       const createIndexResult0 = await interpret(searchIndexHandler.createIndex({ index: {"type":"variable","name":"i"}, config: {"type":"literal","value":"{}"} }), storage);
       expect(createIndexResult0.variant).toBe("ok");
-      const index = createIndexResult0.output["index"];
+      let index = createIndexResult0.output["index"];
       const thenResult0 = await interpret(searchIndexHandler.indexItem({ index: {"type":"variable","name":"i"}, item: {"type":"literal","value":"doc-1"}, data: {"type":"literal","value":"hello world"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(searchIndexHandler.search({ index: {"type":"variable","name":"i"}, query: {"type":"literal","value":"hello"} }), storage);

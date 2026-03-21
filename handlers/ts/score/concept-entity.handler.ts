@@ -10,7 +10,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.js';
 import {
-  createProgram, get, find, put, branch, complete, pureFrom, mapBindings,
+  createProgram, get, find, put, branch, complete, completeFrom, pureFrom, mapBindings,
 } from '../../../runtime/storage-program.js';
 
 export const conceptEntityHandler: FunctionalConceptHandler = {
@@ -62,8 +62,7 @@ export const conceptEntityHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => b.existing != null,
-      pureFrom(createProgram(), (b) => ({
-        variant: 'ok',
+      completeFrom(createProgram(), 'ok', (b) => ({
         entity: (b.existing as Record<string, unknown>).id,
       })),
       complete(createProgram(), 'notfound', {}),
@@ -87,7 +86,7 @@ export const conceptEntityHandler: FunctionalConceptHandler = {
       );
     }, 'result');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', entities: b.result }));
+    return completeFrom(p, 'ok', (b) => ({ entities: b.result }));
   },
 
   findBySuite(input) {
@@ -100,7 +99,7 @@ export const conceptEntityHandler: FunctionalConceptHandler = {
       return JSON.stringify(matches.map(e => e.name));
     }, 'result');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', entities: b.result }));
+    return completeFrom(p, 'ok', (b) => ({ entities: b.result }));
   },
 
   generatedArtifacts(input) {
@@ -115,7 +114,7 @@ export const conceptEntityHandler: FunctionalConceptHandler = {
       return entry ? (entry.generatedArtifactsCache as string || '[]') : '[]';
     }, 'artifacts');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', artifacts: b.artifacts }));
+    return completeFrom(p, 'ok', (b) => ({ artifacts: b.artifacts }));
   },
 
   participatingSyncs(input) {
@@ -130,7 +129,7 @@ export const conceptEntityHandler: FunctionalConceptHandler = {
       return entry ? (entry.participatingSyncsCache as string || '[]') : '[]';
     }, 'syncs');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', syncs: b.syncs }));
+    return completeFrom(p, 'ok', (b) => ({ syncs: b.syncs }));
   },
 
   checkCompatibility(input) {

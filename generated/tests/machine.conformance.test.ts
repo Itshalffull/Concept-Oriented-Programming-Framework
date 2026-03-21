@@ -337,7 +337,8 @@ describe('Machine functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Machine');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Machine');
     });
   });
 
@@ -346,7 +347,7 @@ describe('Machine functional handler', () => {
       const storage = createInMemoryStorage();
       const spawnResult0 = await interpret(machineHandler.spawn({ machine: {"type":"variable","name":"m"}, widget: {"type":"literal","value":"dialog"}, context: {"type":"literal","value":"{}"} }), storage);
       expect(spawnResult0.variant).toBe("ok");
-      const machine = spawnResult0.output["machine"];
+      let machine = spawnResult0.output["machine"];
       const thenResult0 = await interpret(machineHandler.send({ machine: {"type":"variable","name":"m"}, event: {"type":"literal","value":"{ \"type\": \"OPEN\" }"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

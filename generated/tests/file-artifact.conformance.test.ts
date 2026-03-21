@@ -377,27 +377,13 @@ describe('FileArtifact functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof fileArtifactHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = fileArtifactHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('FileArtifact');
-    });
-  });
 
   describe('invariant examples', () => {
     it("register-then-get", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(fileArtifactHandler.register({ node: {"type":"literal","value":"src/handler.ts"}, role: {"type":"literal","value":"source"}, language: {"type":"literal","value":"typescript"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const artifact = registerResult0.output["artifact"];
+      let artifact = registerResult0.output["artifact"];
       const thenResult0 = await interpret(fileArtifactHandler.get({ artifact: {"type":"variable","name":"a"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -406,7 +392,7 @@ describe('FileArtifact functional handler', () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(fileArtifactHandler.register({ node: {"type":"literal","value":"specs/app/user.concept"}, role: {"type":"literal","value":"spec"}, language: {"type":"literal","value":"concept-spec"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const artifact = registerResult0.output["artifact"];
+      let artifact = registerResult0.output["artifact"];
       const thenResult0 = await interpret(fileArtifactHandler.register({ node: {"type":"literal","value":"specs/app/user.concept"}, role: {"type":"literal","value":"spec"}, language: {"type":"literal","value":"concept-spec"} }), storage);
       expect(thenResult0.variant).toBe("alreadyRegistered");
     });

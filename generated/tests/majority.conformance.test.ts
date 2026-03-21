@@ -188,7 +188,8 @@ describe('Majority functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Majority');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Majority');
     });
   });
 
@@ -197,7 +198,7 @@ describe('Majority functional handler', () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(majorityCountHandler.configure({ threshold: {"type":"literal","value":0.5}, binaryOnly: {"type":"literal","value":true}, tieBreaker: {"type":"variable","name":"_"} }), storage);
       expect(configureResult0.variant).toBe("configured");
-      const config = configureResult0.output["config"];
+      let config = configureResult0.output["config"];
       const thenResult0 = await interpret(majorityCountHandler.count({ config: {"type":"variable","name":"mj"}, ballots: {"type":"variable","name":"_"}, weights: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("winner");
     });

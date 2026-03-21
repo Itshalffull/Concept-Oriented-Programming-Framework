@@ -201,7 +201,8 @@ describe('WidgetParser functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('WidgetParser');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('WidgetParser');
     });
   });
 
@@ -210,8 +211,8 @@ describe('WidgetParser functional handler', () => {
       const storage = createInMemoryStorage();
       const parseResult0 = await interpret(widgetParserHandler.parse({ widget: {"type":"variable","name":"w"}, source: {"type":"literal","value":"widget button { ... }"} }), storage);
       expect(parseResult0.variant).toBe("ok");
-      const widget = parseResult0.output["widget"];
-      const ast = parseResult0.output["ast"];
+      let widget = parseResult0.output["widget"];
+      let ast = parseResult0.output["ast"];
       const thenResult0 = await interpret(widgetParserHandler.validate({ widget: {"type":"variable","name":"w"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -282,9 +283,6 @@ describe('WidgetParser functional handler', () => {
       );
     });
 
-  });
-
-  describe('action contracts (PBT)', () => {
   });
 
 });

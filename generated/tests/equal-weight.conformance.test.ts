@@ -180,7 +180,8 @@ describe('EqualWeight functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('EqualWeight');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('EqualWeight');
     });
   });
 
@@ -189,7 +190,7 @@ describe('EqualWeight functional handler', () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(equalWeightHandler.configure({ weightPerPerson: {"type":"literal","value":1} }), storage);
       expect(configureResult0.variant).toBe("configured");
-      const config = configureResult0.output["config"];
+      let config = configureResult0.output["config"];
       const thenResult0 = await interpret(equalWeightHandler.getWeight({ config: {"type":"variable","name":"ew"}, participant: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("weight");
     });

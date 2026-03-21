@@ -329,7 +329,8 @@ describe('TestSelection functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('TestSelection');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('TestSelection');
     });
   });
 
@@ -338,7 +339,7 @@ describe('TestSelection functional handler', () => {
       const storage = createInMemoryStorage();
       const recordResult0 = await interpret(testSelectionHandler.record({ testId: {"type":"literal","value":"test_password_hash"}, language: {"type":"literal","value":"typescript"}, testType: {"type":"literal","value":"unit"}, coveredSources: {"type":"list","items":[{"type":"literal","value":"./specs/password.concept"},{"type":"literal","value":"generated/ts/password.ts"}]}, duration: {"type":"literal","value":45}, passed: {"type":"literal","value":true} }), storage);
       expect(recordResult0.variant).toBe("ok");
-      const mapping = recordResult0.output["mapping"];
+      let mapping = recordResult0.output["mapping"];
       const thenResult0 = await interpret(testSelectionHandler.analyze({ changedSources: {"type":"list","items":[{"type":"literal","value":"./specs/password.concept"}]} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

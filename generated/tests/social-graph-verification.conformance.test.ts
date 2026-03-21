@@ -318,7 +318,8 @@ describe('SocialGraphVerification functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('SocialGraphVerification');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('SocialGraphVerification');
     });
   });
 
@@ -327,7 +328,7 @@ describe('SocialGraphVerification functional handler', () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(socialGraphVerificationHandler.configure({ minVouches: {"type":"literal","value":3}, trustAnchors: {"type":"variable","name":"_"}, clusterThreshold: {"type":"variable","name":"_"} }), storage);
       expect(configureResult0.variant).toBe("configured");
-      const config = configureResult0.output["config"];
+      let config = configureResult0.output["config"];
       const thenResult0 = await interpret(socialGraphVerificationHandler.vouch({ voucher: {"type":"variable","name":"_"}, vouchee: {"type":"variable","name":"p"} }), storage);
       expect(thenResult0.variant).toBe("vouched");
       const thenResult1 = await interpret(socialGraphVerificationHandler.analyze({ participant: {"type":"variable","name":"p"} }), storage);

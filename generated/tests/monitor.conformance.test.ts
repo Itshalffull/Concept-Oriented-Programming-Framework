@@ -248,7 +248,8 @@ describe('Monitor functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Monitor');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Monitor');
     });
   });
 
@@ -257,7 +258,7 @@ describe('Monitor functional handler', () => {
       const storage = createInMemoryStorage();
       const watchResult0 = await interpret(monitorHandler.watch({ subject: {"type":"variable","name":"_"}, policyRef: {"type":"variable","name":"_"} }), storage);
       expect(watchResult0.variant).toBe("watching");
-      const observer = watchResult0.output["observer"];
+      let observer = watchResult0.output["observer"];
       const thenResult0 = await interpret(monitorHandler.observe({ observer: {"type":"variable","name":"mn"}, behavior: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("compliant");
     });

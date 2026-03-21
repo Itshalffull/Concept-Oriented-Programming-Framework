@@ -263,7 +263,8 @@ describe('Generator functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Generator');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Generator');
     });
   });
 
@@ -272,10 +273,10 @@ describe('Generator functional handler', () => {
       const storage = createInMemoryStorage();
       const planResult0 = await interpret(generatorHandler.plan({ suite: {"type":"literal","value":"test-suite"}, interfaceManifest: {"type":"literal","value":"valid-manifest"} }), storage);
       expect(planResult0.variant).toBe("ok");
-      const plan = planResult0.output["plan"];
-      const targets = planResult0.output["targets"];
-      const concepts = planResult0.output["concepts"];
-      const estimatedFiles = planResult0.output["estimatedFiles"];
+      let plan = planResult0.output["plan"];
+      let targets = planResult0.output["targets"];
+      let concepts = planResult0.output["concepts"];
+      let estimatedFiles = planResult0.output["estimatedFiles"];
       const thenResult0 = await interpret(generatorHandler.generate({ plan: {"type":"variable","name":"g"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

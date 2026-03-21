@@ -188,7 +188,8 @@ describe('JWT functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('JWT');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('JWT');
     });
   });
 
@@ -197,7 +198,7 @@ describe('JWT functional handler', () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(jwtHandler.generate({ user: {"type":"variable","name":"x"} }), storage);
       expect(generateResult0.variant).toBe("ok");
-      const token = generateResult0.output["token"];
+      let token = generateResult0.output["token"];
       const thenResult0 = await interpret(jwtHandler.verify({ token: {"type":"variable","name":"t"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -206,7 +207,7 @@ describe('JWT functional handler', () => {
       const storage = createInMemoryStorage();
       const verifyResult0 = await interpret(jwtHandler.verify({ token: {"type":"literal","value":"invalid.token.here"} }), storage);
       expect(verifyResult0.variant).toBe("error");
-      const message = verifyResult0.output["message"];
+      let message = verifyResult0.output["message"];
     });
 
   });

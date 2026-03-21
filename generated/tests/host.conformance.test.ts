@@ -485,7 +485,8 @@ describe('Host functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Host');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Host');
     });
   });
 
@@ -494,7 +495,7 @@ describe('Host functional handler', () => {
       const storage = createInMemoryStorage();
       const mountResult0 = await interpret(hostHandler.mount({ host: {"type":"variable","name":"w"}, concept: {"type":"literal","value":"urn:app/Article"}, view: {"type":"literal","value":"list"}, level: {"type":"literal","value":"page"}, zone: {"type":"literal","value":"primary"} }), storage);
       expect(mountResult0.variant).toBe("ok");
-      const host = mountResult0.output["host"];
+      let host = mountResult0.output["host"];
       const thenResult0 = await interpret(hostHandler.unmount({ host: {"type":"variable","name":"w"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

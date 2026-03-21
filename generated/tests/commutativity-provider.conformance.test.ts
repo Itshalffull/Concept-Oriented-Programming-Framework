@@ -63,7 +63,8 @@ describe('CommutativityProvider imperative handler', () => {
       const result = await commutativityProviderHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('CommutativityProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('CommutativityProvider');
     });
   });
 
@@ -72,18 +73,18 @@ describe('CommutativityProvider imperative handler', () => {
       const storage = createInMemoryStorage();
       const checkResult0 = await commutativityProviderHandler.check({ programA: {"type":"literal","value":"put(users, u1, data)"}, programB: {"type":"literal","value":"put(orders, o1, data)"}, readWriteSetsA: {"type":"literal","value":"{r: [], w: [users]}"}, readWriteSetsB: {"type":"literal","value":"{r: [], w: [orders]}"} }, storage);
       expect(checkResult0.variant).toBe("ok");
-      const result = checkResult0.output["result"];
-      const commutes = checkResult0.output["commutes"];
-      const reason = checkResult0.output["reason"];
+      let result = checkResult0.output["result"];
+      let commutes = checkResult0.output["commutes"];
+      let reason = checkResult0.output["reason"];
     });
 
     it("overlapping read-write sets do not commute", async () => {
       const storage = createInMemoryStorage();
       const checkResult0 = await commutativityProviderHandler.check({ programA: {"type":"literal","value":"put(users, u1, data)"}, programB: {"type":"literal","value":"get(users, u1)"}, readWriteSetsA: {"type":"literal","value":"{r: [], w: [users]}"}, readWriteSetsB: {"type":"literal","value":"{r: [users], w: []}"} }, storage);
       expect(checkResult0.variant).toBe("ok");
-      const result = checkResult0.output["result"];
-      const commutes = checkResult0.output["commutes"];
-      const reason = checkResult0.output["reason"];
+      let result = checkResult0.output["result"];
+      let commutes = checkResult0.output["commutes"];
+      let reason = checkResult0.output["reason"];
     });
 
   });

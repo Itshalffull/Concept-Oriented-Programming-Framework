@@ -193,7 +193,8 @@ describe('DeploymentValidator functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('DeploymentValidator');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('DeploymentValidator');
     });
   });
 
@@ -202,7 +203,7 @@ describe('DeploymentValidator functional handler', () => {
       const storage = createInMemoryStorage();
       const parseResult0 = await interpret(deploymentValidatorHandler.parse({ raw: {"type":"literal","value":"{\"app\":{\"name\":\"myapp\",\"version\":\"1.0\",\"uri\":\"urn:app/myapp\"},\"runtimes\":{},\"concepts\":{},\"syncs\":[]}"} }), storage);
       expect(parseResult0.variant).toBe("ok");
-      const manifest = parseResult0.output["manifest"];
+      let manifest = parseResult0.output["manifest"];
       const thenResult0 = await interpret(deploymentValidatorHandler.validate({ manifest: {"type":"variable","name":"m"} }), storage);
       expect(thenResult0.variant).toBe("error");
     });
@@ -211,7 +212,7 @@ describe('DeploymentValidator functional handler', () => {
       const storage = createInMemoryStorage();
       const parseResult0 = await interpret(deploymentValidatorHandler.parse({ raw: {"type":"literal","value":"{\"app\":{\"name\":\"t\",\"version\":\"1\",\"uri\":\"u\"},\"runtimes\":{},\"concepts\":{},\"syncs\":[]}"} }), storage);
       expect(parseResult0.variant).toBe("ok");
-      const manifest = parseResult0.output["manifest"];
+      let manifest = parseResult0.output["manifest"];
       const thenResult0 = await interpret(deploymentValidatorHandler.parse({ raw: {"type":"literal","value":"not json"} }), storage);
       expect(thenResult0.variant).toBe("error");
     });

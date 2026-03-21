@@ -389,7 +389,8 @@ describe('Attribution functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Attribution');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Attribution');
     });
   });
 
@@ -398,7 +399,7 @@ describe('Attribution functional handler', () => {
       const storage = createInMemoryStorage();
       const attributeResult0 = await interpret(attributionHandler.attribute({ contentRef: {"type":"variable","name":"c"}, region: {"type":"variable","name":"r"}, agent: {"type":"variable","name":"a"}, changeRef: {"type":"variable","name":"ch"} }), storage);
       expect(attributeResult0.variant).toBe("ok");
-      const attributionId = attributeResult0.output["attributionId"];
+      let attributionId = attributeResult0.output["attributionId"];
       const thenResult0 = await interpret(attributionHandler.blame({ contentRef: {"type":"variable","name":"c"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

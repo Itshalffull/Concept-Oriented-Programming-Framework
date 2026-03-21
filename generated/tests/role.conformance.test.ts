@@ -387,7 +387,8 @@ describe('Role functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Role');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Role');
     });
   });
 
@@ -396,7 +397,7 @@ describe('Role functional handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(roleHandler.create({ role: {"type":"variable","name":"r"}, name: {"type":"variable","name":"_"}, purpose: {"type":"variable","name":"_"}, permissions: {"type":"variable","name":"_"} }), storage);
       expect(createResult0.variant).toBe("created");
-      const role = createResult0.output["role"];
+      let role = createResult0.output["role"];
       const thenResult0 = await interpret(roleHandler.assign({ role: {"type":"variable","name":"r"}, holder: {"type":"variable","name":"h"} }), storage);
       expect(thenResult0.variant).toBe("assigned");
       const thenResult1 = await interpret(roleHandler.check({ holder: {"type":"variable","name":"h"}, permission: {"type":"variable","name":"p"} }), storage);

@@ -10,7 +10,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.js';
 import {
-  createProgram, get, find, put, branch, complete, pureFrom, mapBindings,
+  createProgram, get, find, put, branch, complete, completeFrom, pureFrom, mapBindings,
 } from '../../../runtime/storage-program.js';
 
 export const themeEntityHandler: FunctionalConceptHandler = {
@@ -59,8 +59,7 @@ export const themeEntityHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => b.existing != null,
-      pureFrom(createProgram(), (b) => ({
-        variant: 'ok',
+      completeFrom(createProgram(), 'ok', (b) => ({
         entity: (b.existing as Record<string, unknown>).id,
       })),
       complete(createProgram(), 'notfound', {}),
@@ -102,9 +101,9 @@ export const themeEntityHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => (b.resolution as Record<string, unknown>).resolved != null,
-      pureFrom(createProgram(), (b) => {
+      completeFrom(createProgram(), 'ok', (b) => {
         const r = b.resolution as Record<string, unknown>;
-        return { variant: 'ok', resolvedValue: r.resolved, resolutionChain: JSON.stringify(r.chain) };
+        return { resolvedValue: r.resolved, resolutionChain: JSON.stringify(r.chain) };
       }),
       pureFrom(createProgram(), (b) => ({
         variant: 'notfound',
@@ -133,10 +132,9 @@ export const themeEntityHandler: FunctionalConceptHandler = {
       return { allPassing: results.every(r => r.passes), results };
     }, 'audit');
 
-    return pureFrom(p, (b) => {
+    return completeFrom(p, 'ok', (b) => {
       const a = b.audit as Record<string, unknown>;
       return {
-        variant: 'ok',
         allPassing: String(a.allPassing),
         results: JSON.stringify(a.results),
       };
@@ -169,15 +167,15 @@ export const themeEntityHandler: FunctionalConceptHandler = {
     return branch(p,
       (b) => (b.differences as unknown[]).length === 0,
       complete(createProgram(), 'same', {}),
-      pureFrom(createProgram(), (b) => ({
-        variant: 'ok', differences: JSON.stringify(b.differences),
+      completeFrom(createProgram(), 'ok', (b) => ({
+        differences: JSON.stringify(b.differences),
       })),
     );
   },
 
   affectedWidgets(input) {
     // Cross-concept query — populated by syncs, returns own cache
-    return pureFrom(createProgram(), () => ({ variant: 'ok', widgets: '[]' }));
+    return completeFrom(createProgram(), 'ok', () => ({ widgets: '[]' }));
   },
 
   generatedOutputs(input) {
@@ -191,6 +189,6 @@ export const themeEntityHandler: FunctionalConceptHandler = {
       return entry ? (entry.generatedOutputsCache as string || '[]') : '[]';
     }, 'outputs');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', outputs: b.outputs }));
+    return completeFrom(p, 'ok', (b) => ({ outputs: b.outputs }));
   },
 };

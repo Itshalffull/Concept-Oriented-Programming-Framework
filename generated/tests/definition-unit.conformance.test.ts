@@ -318,7 +318,8 @@ describe('DefinitionUnit functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('DefinitionUnit');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('DefinitionUnit');
     });
   });
 
@@ -327,7 +328,7 @@ describe('DefinitionUnit functional handler', () => {
       const storage = createInMemoryStorage();
       const extractResult0 = await interpret(definitionUnitHandler.extract({ tree: {"type":"literal","value":"t1"}, startByte: {"type":"literal","value":0}, endByte: {"type":"literal","value":100} }), storage);
       expect(extractResult0.variant).toBe("ok");
-      const unit = extractResult0.output["unit"];
+      let unit = extractResult0.output["unit"];
       const thenResult0 = await interpret(definitionUnitHandler.findBySymbol({ symbol: {"type":"literal","value":"sym-u"} }), storage);
       expect(thenResult0.variant).toBe("notfound");
     });

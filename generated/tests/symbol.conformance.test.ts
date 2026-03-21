@@ -193,23 +193,13 @@ describe('Symbol imperative handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof symbolHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await symbolHandler.register({}, storage);
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Symbol');
-    });
-  });
 
   describe('invariant examples', () => {
     it("register-then-get", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await symbolHandler.register({ symbolString: {"type":"literal","value":"clef/concept/Article"}, kind: {"type":"literal","value":"concept"}, displayName: {"type":"literal","value":"Article"}, definingFile: {"type":"literal","value":"specs/article.concept"} }, storage);
       expect(registerResult0.variant).toBe("ok");
-      const symbol = registerResult0.output["symbol"];
+      let symbol = registerResult0.output["symbol"];
       const thenResult0 = await symbolHandler.get({ symbol: {"type":"variable","name":"s"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -218,7 +208,7 @@ describe('Symbol imperative handler', () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await symbolHandler.register({ symbolString: {"type":"literal","value":"clef/concept/Article"}, kind: {"type":"literal","value":"concept"}, displayName: {"type":"literal","value":"Article"}, definingFile: {"type":"literal","value":"specs/article.concept"} }, storage);
       expect(registerResult0.variant).toBe("ok");
-      const symbol = registerResult0.output["symbol"];
+      let symbol = registerResult0.output["symbol"];
       const thenResult0 = await symbolHandler.resolve({ symbolString: {"type":"literal","value":"clef/concept/Article"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -227,7 +217,7 @@ describe('Symbol imperative handler', () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await symbolHandler.register({ symbolString: {"type":"literal","value":"clef/concept/Article"}, kind: {"type":"literal","value":"concept"}, displayName: {"type":"literal","value":"Article"}, definingFile: {"type":"literal","value":"specs/article.concept"} }, storage);
       expect(registerResult0.variant).toBe("ok");
-      const symbol = registerResult0.output["symbol"];
+      let symbol = registerResult0.output["symbol"];
       const thenResult0 = await symbolHandler.register({ symbolString: {"type":"literal","value":"clef/concept/Article"}, kind: {"type":"literal","value":"concept"}, displayName: {"type":"literal","value":"Article"}, definingFile: {"type":"literal","value":"specs/article.concept"} }, storage);
       expect(thenResult0.variant).toBe("alreadyExists");
     });

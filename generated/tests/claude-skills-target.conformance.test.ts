@@ -255,7 +255,8 @@ describe('ClaudeSkillsTarget functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ClaudeSkillsTarget');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ClaudeSkillsTarget');
     });
   });
 
@@ -264,8 +265,8 @@ describe('ClaudeSkillsTarget functional handler', () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(claudeSkillsTargetHandler.generate({ projection: {"type":"literal","value":"spec-parser-projection"}, config: {"type":"literal","value":"{\"progressive\":true}"} }), storage);
       expect(generateResult0.variant).toBe("ok");
-      const skills = generateResult0.output["skills"];
-      const files = generateResult0.output["files"];
+      let skills = generateResult0.output["skills"];
+      let files = generateResult0.output["files"];
       const thenResult0 = await interpret(claudeSkillsTargetHandler.listSkills({ suite: {"type":"literal","value":"test-suite"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

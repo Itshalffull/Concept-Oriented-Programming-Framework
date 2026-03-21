@@ -101,23 +101,13 @@ describe('LocalModelInstance imperative handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof localModelInstanceHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await localModelInstanceHandler.register({}, storage);
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('LocalModelInstance');
-    });
-  });
 
   describe('invariant examples', () => {
     it("resolve after register", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await localModelInstanceHandler.register({ name: {"type":"literal","value":"codebert-base"}, runtime: {"type":"literal","value":"onnx"}, modelPath: {"type":"literal","value":"/models/codebert.onnx"}, tokenizerPath: {"type":"literal","value":"/models/codebert-tokenizer.json"}, device: {"type":"literal","value":"cpu"}, maxSequenceLength: {"type":"literal","value":512}, dimensions: {"type":"literal","value":768} }, storage);
       expect(registerResult0.variant).toBe("ok");
-      const instance = registerResult0.output["instance"];
+      let instance = registerResult0.output["instance"];
       const thenResult0 = await localModelInstanceHandler.resolve({ name: {"type":"literal","value":"codebert-base"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

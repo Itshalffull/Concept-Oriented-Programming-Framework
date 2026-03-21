@@ -318,7 +318,8 @@ describe('Property functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Property');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Property');
     });
   });
 
@@ -327,7 +328,7 @@ describe('Property functional handler', () => {
       const storage = createInMemoryStorage();
       const setResult0 = await interpret(propertyHandler.set({ entity: {"type":"variable","name":"e"}, key: {"type":"literal","value":"title"}, value: {"type":"literal","value":"Hello World"} }), storage);
       expect(setResult0.variant).toBe("ok");
-      const entity = setResult0.output["entity"];
+      let entity = setResult0.output["entity"];
       const thenResult0 = await interpret(propertyHandler.get({ entity: {"type":"variable","name":"e"}, key: {"type":"literal","value":"title"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -336,10 +337,10 @@ describe('Property functional handler', () => {
       const storage = createInMemoryStorage();
       const setResult0 = await interpret(propertyHandler.set({ entity: {"type":"variable","name":"e"}, key: {"type":"literal","value":"title"}, value: {"type":"literal","value":"Hello"} }), storage);
       expect(setResult0.variant).toBe("ok");
-      const entity = setResult0.output["entity"];
+      let entity = setResult0.output["entity"];
       const deleteResult1 = await interpret(propertyHandler.delete({ entity: {"type":"variable","name":"e"}, key: {"type":"literal","value":"title"} }), storage);
       expect(deleteResult1.variant).toBe("ok");
-      const entity = deleteResult1.output["entity"];
+      entity = deleteResult1.output["entity"];
       const thenResult0 = await interpret(propertyHandler.get({ entity: {"type":"variable","name":"e"}, key: {"type":"literal","value":"title"} }), storage);
       expect(thenResult0.variant).toBe("notfound");
     });

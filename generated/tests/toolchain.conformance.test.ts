@@ -347,7 +347,8 @@ describe('Toolchain functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Toolchain');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Toolchain');
     });
   });
 
@@ -356,11 +357,11 @@ describe('Toolchain functional handler', () => {
       const storage = createInMemoryStorage();
       const resolveResult0 = await interpret(toolchainHandler.resolve({ language: {"type":"literal","value":"swift"}, platform: {"type":"literal","value":"linux-arm64"}, versionConstraint: {"type":"literal","value":">=5.10"} }), storage);
       expect(resolveResult0.variant).toBe("ok");
-      const tool = resolveResult0.output["tool"];
-      const version = resolveResult0.output["version"];
-      const path = resolveResult0.output["path"];
-      const capabilities = resolveResult0.output["capabilities"];
-      const invocation = resolveResult0.output["invocation"];
+      let tool = resolveResult0.output["tool"];
+      let version = resolveResult0.output["version"];
+      let path = resolveResult0.output["path"];
+      let capabilities = resolveResult0.output["capabilities"];
+      let invocation = resolveResult0.output["invocation"];
       const thenResult0 = await interpret(toolchainHandler.validate({ tool: {"type":"variable","name":"t"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(toolchainHandler.list({ language: {"type":"literal","value":"swift"} }), storage);

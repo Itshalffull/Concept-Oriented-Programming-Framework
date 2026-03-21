@@ -137,7 +137,8 @@ describe('ScoreKernel imperative handler', () => {
       const result = await scoreKernelHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ScoreKernel');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ScoreKernel');
     });
   });
 
@@ -146,9 +147,9 @@ describe('ScoreKernel imperative handler', () => {
       const storage = createInMemoryStorage();
       const bootResult0 = await scoreKernelHandler.boot({ projectRoot: {"type":"literal","value":"/tmp/test-project"} }, storage);
       expect(bootResult0.variant).toBe("ok");
-      const kernel = bootResult0.output["kernel"];
-      const conceptCount = bootResult0.output["conceptCount"];
-      const syncCount = bootResult0.output["syncCount"];
+      let kernel = bootResult0.output["kernel"];
+      let conceptCount = bootResult0.output["conceptCount"];
+      let syncCount = bootResult0.output["syncCount"];
       const thenResult0 = await scoreKernelHandler.status({ kernel: {"type":"variable","name":"k"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -157,9 +158,9 @@ describe('ScoreKernel imperative handler', () => {
       const storage = createInMemoryStorage();
       const bootResult0 = await scoreKernelHandler.boot({ projectRoot: {"type":"literal","value":"/tmp/test-project"} }, storage);
       expect(bootResult0.variant).toBe("ok");
-      const kernel = bootResult0.output["kernel"];
-      const conceptCount = bootResult0.output["conceptCount"];
-      const syncCount = bootResult0.output["syncCount"];
+      let kernel = bootResult0.output["kernel"];
+      let conceptCount = bootResult0.output["conceptCount"];
+      let syncCount = bootResult0.output["syncCount"];
       const thenResult0 = await scoreKernelHandler.boot({ projectRoot: {"type":"literal","value":"/tmp/test-project"} }, storage);
       expect(thenResult0.variant).toBe("alreadyBooted");
     });

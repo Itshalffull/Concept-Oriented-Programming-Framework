@@ -459,7 +459,8 @@ describe('RetentionPolicy functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('RetentionPolicy');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('RetentionPolicy');
     });
   });
 
@@ -468,7 +469,7 @@ describe('RetentionPolicy functional handler', () => {
       const storage = createInMemoryStorage();
       const applyHoldResult0 = await interpret(retentionPolicyHandler.applyHold({ name: {"type":"literal","value":"litigation-2024"}, scope: {"type":"literal","value":"matter:123/*"}, reason: {"type":"literal","value":"pending case"}, issuer: {"type":"literal","value":"legal"} }), storage);
       expect(applyHoldResult0.variant).toBe("ok");
-      const holdId = applyHoldResult0.output["holdId"];
+      let holdId = applyHoldResult0.output["holdId"];
       const thenResult0 = await interpret(retentionPolicyHandler.dispose({ record: {"type":"literal","value":"matter:123/doc-1"}, disposedBy: {"type":"literal","value":"system"} }), storage);
       expect(thenResult0.variant).toBe("held");
     });
@@ -477,7 +478,7 @@ describe('RetentionPolicy functional handler', () => {
       const storage = createInMemoryStorage();
       const setRetentionResult0 = await interpret(retentionPolicyHandler.setRetention({ recordType: {"type":"literal","value":"audit"}, period: {"type":"literal","value":7}, unit: {"type":"literal","value":"years"}, dispositionAction: {"type":"literal","value":"archive"} }), storage);
       expect(setRetentionResult0.variant).toBe("ok");
-      const policyId = setRetentionResult0.output["policyId"];
+      let policyId = setRetentionResult0.output["policyId"];
       const thenResult0 = await interpret(retentionPolicyHandler.checkDisposition({ record: {"type":"literal","value":"audit:recent"} }), storage);
       expect(thenResult0.variant).toBe("retained");
     });

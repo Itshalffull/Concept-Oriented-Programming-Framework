@@ -926,7 +926,8 @@ describe('ScoreIndex functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ScoreIndex');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ScoreIndex');
     });
   });
 
@@ -935,7 +936,7 @@ describe('ScoreIndex functional handler', () => {
       const storage = createInMemoryStorage();
       const upsertConceptResult0 = await interpret(scoreIndexHandler.upsertConcept({ name: {"type":"literal","value":"Test"}, purpose: {"type":"literal","value":"A test concept"}, actions: {"type":"variable","name":"a"}, stateFields: {"type":"variable","name":"f"}, file: {"type":"literal","value":"/test.concept"} }), storage);
       expect(upsertConceptResult0.variant).toBe("ok");
-      const index = upsertConceptResult0.output["index"];
+      let index = upsertConceptResult0.output["index"];
       const thenResult0 = await interpret(scoreIndexHandler.stats({  }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

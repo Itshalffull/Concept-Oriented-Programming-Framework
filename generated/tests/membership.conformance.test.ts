@@ -456,7 +456,8 @@ describe('Membership functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Membership');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Membership');
     });
   });
 
@@ -465,7 +466,7 @@ describe('Membership functional handler', () => {
       const storage = createInMemoryStorage();
       const joinResult0 = await interpret(membershipHandler.join({ candidate: {"type":"variable","name":"x"}, evidence: {"type":"variable","name":"e"} }), storage);
       expect(joinResult0.variant).toBe("accepted");
-      const member = joinResult0.output["member"];
+      let member = joinResult0.output["member"];
       const thenResult0 = await interpret(membershipHandler.leave({ member: {"type":"variable","name":"x"} }), storage);
       expect(thenResult0.variant).toBe("left");
     });
@@ -474,7 +475,7 @@ describe('Membership functional handler', () => {
       const storage = createInMemoryStorage();
       const leaveResult0 = await interpret(membershipHandler.leave({ member: {"type":"variable","name":"x"} }), storage);
       expect(leaveResult0.variant).toBe("left");
-      const member = leaveResult0.output["member"];
+      let member = leaveResult0.output["member"];
       const thenResult0 = await interpret(membershipHandler.join({ candidate: {"type":"variable","name":"x"}, evidence: {"type":"variable","name":"e"} }), storage);
       expect(thenResult0.variant).toBe("rejected");
     });

@@ -387,7 +387,8 @@ describe('ContentStorage functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ContentStorage');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ContentStorage');
     });
   });
 
@@ -396,7 +397,7 @@ describe('ContentStorage functional handler', () => {
       const storage = createInMemoryStorage();
       const saveResult0 = await interpret(contentStorageHandler.save({ record: {"type":"variable","name":"r"}, data: {"type":"literal","value":"{\"title\":\"Test\"}"} }), storage);
       expect(saveResult0.variant).toBe("ok");
-      const record = saveResult0.output["record"];
+      let record = saveResult0.output["record"];
       const thenResult0 = await interpret(contentStorageHandler.load({ record: {"type":"variable","name":"r"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -405,10 +406,10 @@ describe('ContentStorage functional handler', () => {
       const storage = createInMemoryStorage();
       const saveResult0 = await interpret(contentStorageHandler.save({ record: {"type":"variable","name":"r"}, data: {"type":"literal","value":"{\"title\":\"Test\"}"} }), storage);
       expect(saveResult0.variant).toBe("ok");
-      const record = saveResult0.output["record"];
+      let record = saveResult0.output["record"];
       const deleteResult1 = await interpret(contentStorageHandler.delete({ record: {"type":"variable","name":"r"} }), storage);
       expect(deleteResult1.variant).toBe("ok");
-      const record = deleteResult1.output["record"];
+      record = deleteResult1.output["record"];
       const thenResult0 = await interpret(contentStorageHandler.load({ record: {"type":"variable","name":"r"} }), storage);
       expect(thenResult0.variant).toBe("notfound");
     });

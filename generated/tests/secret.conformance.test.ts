@@ -328,7 +328,8 @@ describe('Secret functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Secret');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Secret');
     });
   });
 
@@ -337,8 +338,8 @@ describe('Secret functional handler', () => {
       const storage = createInMemoryStorage();
       const resolveResult0 = await interpret(secretHandler.resolve({ name: {"type":"literal","value":"DB_PASSWORD"}, provider: {"type":"literal","value":"vault"} }), storage);
       expect(resolveResult0.variant).toBe("ok");
-      const secret = resolveResult0.output["secret"];
-      const version = resolveResult0.output["version"];
+      let secret = resolveResult0.output["secret"];
+      let version = resolveResult0.output["version"];
       const thenResult0 = await interpret(secretHandler.exists({ name: {"type":"literal","value":"DB_PASSWORD"}, provider: {"type":"literal","value":"vault"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

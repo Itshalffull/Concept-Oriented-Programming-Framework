@@ -390,7 +390,8 @@ describe('K8sRuntime functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('K8sRuntime');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('K8sRuntime');
     });
   });
 
@@ -399,9 +400,9 @@ describe('K8sRuntime functional handler', () => {
       const storage = createInMemoryStorage();
       const provisionResult0 = await interpret(k8sRuntimeHandler.provision({ concept: {"type":"literal","value":"User"}, namespace: {"type":"literal","value":"default"}, cluster: {"type":"literal","value":"prod"}, replicas: {"type":"literal","value":2} }), storage);
       expect(provisionResult0.variant).toBe("ok");
-      const deployment = provisionResult0.output["deployment"];
-      const serviceName = provisionResult0.output["serviceName"];
-      const endpoint = provisionResult0.output["endpoint"];
+      let deployment = provisionResult0.output["deployment"];
+      let serviceName = provisionResult0.output["serviceName"];
+      let endpoint = provisionResult0.output["endpoint"];
       const thenResult0 = await interpret(k8sRuntimeHandler.deploy({ deployment: {"type":"variable","name":"d"}, imageUri: {"type":"literal","value":"myregistry/user:latest"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

@@ -311,27 +311,13 @@ describe('Widget functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof widgetHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = widgetHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Widget');
-    });
-  });
 
   describe('invariant examples', () => {
     it("register then get", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(widgetHandler.register({ widget: {"type":"variable","name":"p"}, name: {"type":"literal","value":"dialog"}, ast: {"type":"variable","name":"_"}, category: {"type":"literal","value":"overlay"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const widget = registerResult0.output["widget"];
+      let widget = registerResult0.output["widget"];
       const thenResult0 = await interpret(widgetHandler.get({ widget: {"type":"variable","name":"p"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

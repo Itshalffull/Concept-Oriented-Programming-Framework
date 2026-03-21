@@ -519,7 +519,8 @@ describe('Lens functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Lens');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Lens');
     });
   });
 
@@ -528,7 +529,7 @@ describe('Lens functional handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(lensHandler.create({ lens: {"type":"variable","name":"l"}, relation: {"type":"literal","value":"users"}, key: {"type":"literal","value":"u1"}, field: {"type":"literal","value":"email"} }), storage);
       expect(createResult0.variant).toBe("ok");
-      const lens = createResult0.output["lens"];
+      let lens = createResult0.output["lens"];
       const thenResult0 = await interpret(lensHandler.get({ lens: {"type":"variable","name":"l"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -537,7 +538,7 @@ describe('Lens functional handler', () => {
       const storage = createInMemoryStorage();
       const fromRelationResult0 = await interpret(lensHandler.fromRelation({ lens: {"type":"variable","name":"r"}, relation: {"type":"literal","value":"users"} }), storage);
       expect(fromRelationResult0.variant).toBe("ok");
-      const lens = fromRelationResult0.output["lens"];
+      let lens = fromRelationResult0.output["lens"];
       const thenResult0 = await interpret(lensHandler.decompose({ lens: {"type":"variable","name":"r"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -546,10 +547,10 @@ describe('Lens functional handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(lensHandler.create({ lens: {"type":"variable","name":"a"}, relation: {"type":"literal","value":"users"}, key: {"type":"literal","value":""}, field: {"type":"literal","value":""} }), storage);
       expect(createResult0.variant).toBe("ok");
-      const lens = createResult0.output["lens"];
+      let lens = createResult0.output["lens"];
       const createResult1 = await interpret(lensHandler.create({ lens: {"type":"variable","name":"b"}, relation: {"type":"literal","value":"users"}, key: {"type":"literal","value":"u1"}, field: {"type":"literal","value":"email"} }), storage);
       expect(createResult1.variant).toBe("ok");
-      const lens = createResult1.output["lens"];
+      lens = createResult1.output["lens"];
       const thenResult0 = await interpret(lensHandler.get({ lens: {"type":"variable","name":"a"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(lensHandler.get({ lens: {"type":"variable","name":"b"} }), storage);
@@ -560,10 +561,10 @@ describe('Lens functional handler', () => {
       const storage = createInMemoryStorage();
       const fromRelationResult0 = await interpret(lensHandler.fromRelation({ lens: {"type":"variable","name":"outer"}, relation: {"type":"literal","value":"users"} }), storage);
       expect(fromRelationResult0.variant).toBe("ok");
-      const lens = fromRelationResult0.output["lens"];
+      let lens = fromRelationResult0.output["lens"];
       const createResult1 = await interpret(lensHandler.create({ lens: {"type":"variable","name":"inner"}, relation: {"type":"literal","value":"users"}, key: {"type":"literal","value":"u1"}, field: {"type":"literal","value":"email"} }), storage);
       expect(createResult1.variant).toBe("ok");
-      const lens = createResult1.output["lens"];
+      lens = createResult1.output["lens"];
       const thenResult0 = await interpret(lensHandler.compose({ outer: {"type":"variable","name":"outer"}, inner: {"type":"variable","name":"inner"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -572,7 +573,7 @@ describe('Lens functional handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(lensHandler.create({ lens: {"type":"variable","name":"l"}, relation: {"type":"literal","value":"users"}, key: {"type":"literal","value":"u1"}, field: {"type":"literal","value":"email"} }), storage);
       expect(createResult0.variant).toBe("ok");
-      const lens = createResult0.output["lens"];
+      let lens = createResult0.output["lens"];
       const thenResult0 = await interpret(lensHandler.validate({ lens: {"type":"variable","name":"l"}, conceptSpec: {"type":"literal","value":"User { state { users: set U; email: U -> String } }"} }), storage);
       expect(thenResult0.variant).toBe("valid");
     });

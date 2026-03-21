@@ -608,7 +608,8 @@ describe('ProjectInit functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ProjectInit');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ProjectInit');
     });
   });
 
@@ -617,7 +618,7 @@ describe('ProjectInit functional handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(projectInitHandler.create({ project_name: {"type":"literal","value":"my-app"}, project_path: {"type":"literal","value":"/tmp/my-app"}, module_list: {"type":"variable","name":"mods"}, profile: {"type":"variable","name":"prof"}, derived_concepts: {"type":"variable","name":"derived"} }), storage);
       expect(createResult0.variant).toBe("ok");
-      const init = createResult0.output["init"];
+      let init = createResult0.output["init"];
       const thenResult0 = await interpret(projectInitHandler.writeManifest({ init: {"type":"variable","name":"j"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

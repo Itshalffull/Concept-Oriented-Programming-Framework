@@ -250,7 +250,8 @@ describe('CedarEvaluator functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('CedarEvaluator');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('CedarEvaluator');
     });
   });
 
@@ -259,7 +260,7 @@ describe('CedarEvaluator functional handler', () => {
       const storage = createInMemoryStorage();
       const loadPoliciesResult0 = await interpret(cedarEvaluatorHandler.loadPolicies({ policies: {"type":"variable","name":"_"}, schema: {"type":"variable","name":"_"} }), storage);
       expect(loadPoliciesResult0.variant).toBe("loaded");
-      const store = loadPoliciesResult0.output["store"];
+      let store = loadPoliciesResult0.output["store"];
       const thenResult0 = await interpret(cedarEvaluatorHandler.authorize({ store: {"type":"variable","name":"ce"}, principal: {"type":"variable","name":"_"}, action: {"type":"variable","name":"_"}, resource: {"type":"variable","name":"_"}, context: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("allow");
     });

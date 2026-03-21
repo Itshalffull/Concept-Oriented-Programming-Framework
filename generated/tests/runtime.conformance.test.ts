@@ -672,7 +672,8 @@ describe('Runtime functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Runtime');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Runtime');
     });
   });
 
@@ -681,8 +682,8 @@ describe('Runtime functional handler', () => {
       const storage = createInMemoryStorage();
       const provisionResult0 = await interpret(runtimeHandler.provision({ concept: {"type":"literal","value":"User"}, runtimeType: {"type":"literal","value":"ecs-fargate"}, config: {"type":"literal","value":"{}"} }), storage);
       expect(provisionResult0.variant).toBe("ok");
-      const instance = provisionResult0.output["instance"];
-      const endpoint = provisionResult0.output["endpoint"];
+      let instance = provisionResult0.output["instance"];
+      let endpoint = provisionResult0.output["endpoint"];
       const thenResult0 = await interpret(runtimeHandler.deploy({ instance: {"type":"variable","name":"i"}, artifact: {"type":"literal","value":"s3://artifacts/user-v1"}, version: {"type":"literal","value":"1.0.0"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

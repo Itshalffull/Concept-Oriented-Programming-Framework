@@ -250,7 +250,8 @@ describe('Resolver functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Resolver');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Resolver');
     });
   });
 
@@ -259,7 +260,7 @@ describe('Resolver functional handler', () => {
       const storage = createInMemoryStorage();
       const resolveResult0 = await interpret(resolverHandler.resolve({ constraints: {"type":"variable","name":"cs"}, policy: {"type":"variable","name":"p"}, locked_versions: {"type":"literal","value":false} }), storage);
       expect(resolveResult0.variant).toBe("ok");
-      const resolution = resolveResult0.output["resolution"];
+      let resolution = resolveResult0.output["resolution"];
       const thenResult0 = await interpret(resolverHandler.explain({ resolution: {"type":"variable","name":"r"}, module_id: {"type":"variable","name":"mid"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -268,7 +269,7 @@ describe('Resolver functional handler', () => {
       const storage = createInMemoryStorage();
       const resolveResult0 = await interpret(resolverHandler.resolve({ constraints: {"type":"variable","name":"cs"}, policy: {"type":"variable","name":"p"}, locked_versions: {"type":"literal","value":false} }), storage);
       expect(resolveResult0.variant).toBe("ok");
-      const resolution = resolveResult0.output["resolution"];
+      let resolution = resolveResult0.output["resolution"];
       const thenResult0 = await interpret(resolverHandler.update({ resolution: {"type":"variable","name":"r"}, targets: {"type":"variable","name":"ts"}, policy: {"type":"variable","name":"p2"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(resolverHandler.explain({ resolution: {"type":"variable","name":"r2"}, module_id: {"type":"variable","name":"mid"} }), storage);

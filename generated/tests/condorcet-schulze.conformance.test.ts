@@ -243,7 +243,8 @@ describe('CondorcetSchulze functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('CondorcetSchulze');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('CondorcetSchulze');
     });
   });
 
@@ -252,7 +253,7 @@ describe('CondorcetSchulze functional handler', () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(condorcetSchulzeHandler.configure({  }), storage);
       expect(configureResult0.variant).toBe("configured");
-      const config = configureResult0.output["config"];
+      let config = configureResult0.output["config"];
       const thenResult0 = await interpret(condorcetSchulzeHandler.count({ config: {"type":"variable","name":"cs"}, rankedBallots: {"type":"variable","name":"_"}, weights: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("condorcet_winner");
     });

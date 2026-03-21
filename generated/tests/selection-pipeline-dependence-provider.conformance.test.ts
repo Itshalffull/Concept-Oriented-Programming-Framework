@@ -42,7 +42,8 @@ describe('SelectionPipelineDependenceProvider imperative handler', () => {
       const result = await selectionPipelineDependenceProviderHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('SelectionPipelineDependenceProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('SelectionPipelineDependenceProvider');
     });
   });
 

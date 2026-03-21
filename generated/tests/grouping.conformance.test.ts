@@ -203,7 +203,8 @@ describe('Grouping functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Grouping');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Grouping');
     });
   });
 
@@ -212,9 +213,9 @@ describe('Grouping functional handler', () => {
       const storage = createInMemoryStorage();
       const groupResult0 = await interpret(groupingHandler.group({ items: {"type":"list","items":[{"type":"literal","value":"A"},{"type":"literal","value":"B"},{"type":"literal","value":"C"}]}, config: {"type":"literal","value":"per-concept"} }), storage);
       expect(groupResult0.variant).toBe("ok");
-      const grouping = groupResult0.output["grouping"];
-      const groups = groupResult0.output["groups"];
-      const groupCount = groupResult0.output["groupCount"];
+      let grouping = groupResult0.output["grouping"];
+      let groups = groupResult0.output["groups"];
+      let groupCount = groupResult0.output["groupCount"];
       const thenResult0 = await interpret(groupingHandler.classify({ actionName: {"type":"literal","value":"create"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

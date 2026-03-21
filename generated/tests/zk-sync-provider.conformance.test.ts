@@ -307,27 +307,13 @@ describe('ZkSyncProvider functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof zkSyncProviderHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = zkSyncProviderHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ZkSyncProvider');
-    });
-  });
 
   describe('invariant examples', () => {
     it("register then poll", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(zkSyncProviderHandler.register({ rpc_url: {"type":"literal","value":"https://mainnet.era.zksync.io"}, diamond_proxy: {"type":"literal","value":"0x5678"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const provider = registerResult0.output["provider"];
+      let provider = registerResult0.output["provider"];
       const thenResult0 = await interpret(zkSyncProviderHandler.poll({ provider: {"type":"variable","name":"p"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -336,7 +322,7 @@ describe('ZkSyncProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const pollResult0 = await interpret(zkSyncProviderHandler.poll({ provider: {"type":"variable","name":"p"} }), storage);
       expect(pollResult0.variant).toBe("notfound");
-      const provider = pollResult0.output["provider"];
+      let provider = pollResult0.output["provider"];
       const thenResult0 = await interpret(zkSyncProviderHandler.checkFinality({ provider: {"type":"variable","name":"p"}, tx_hash: {"type":"literal","value":"0xdef"} }), storage);
       expect(thenResult0.variant).toBe("notfound");
     });

@@ -188,7 +188,8 @@ describe('BordaCount functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('BordaCount');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('BordaCount');
     });
   });
 
@@ -197,7 +198,7 @@ describe('BordaCount functional handler', () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(bordaCountHandler.configure({ pointScheme: {"type":"literal","value":"Standard"} }), storage);
       expect(configureResult0.variant).toBe("configured");
-      const config = configureResult0.output["config"];
+      let config = configureResult0.output["config"];
       const thenResult0 = await interpret(bordaCountHandler.count({ config: {"type":"variable","name":"bd"}, rankedBallots: {"type":"variable","name":"_"}, weights: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("winner");
     });

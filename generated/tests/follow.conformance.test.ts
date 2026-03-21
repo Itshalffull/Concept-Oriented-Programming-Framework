@@ -252,7 +252,8 @@ describe('Follow functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Follow');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Follow');
     });
   });
 
@@ -261,8 +262,8 @@ describe('Follow functional handler', () => {
       const storage = createInMemoryStorage();
       const followResult0 = await interpret(followHandler.follow({ user: {"type":"variable","name":"u"}, target: {"type":"literal","value":"u2"} }), storage);
       expect(followResult0.variant).toBe("ok");
-      const user = followResult0.output["user"];
-      const target = followResult0.output["target"];
+      let user = followResult0.output["user"];
+      let target = followResult0.output["target"];
       const thenResult0 = await interpret(followHandler.isFollowing({ user: {"type":"variable","name":"u"}, target: {"type":"literal","value":"u2"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(followHandler.unfollow({ user: {"type":"variable","name":"u"}, target: {"type":"literal","value":"u2"} }), storage);
@@ -273,8 +274,8 @@ describe('Follow functional handler', () => {
       const storage = createInMemoryStorage();
       const followResult0 = await interpret(followHandler.follow({ user: {"type":"variable","name":"u"}, target: {"type":"literal","value":"u3"} }), storage);
       expect(followResult0.variant).toBe("ok");
-      const user = followResult0.output["user"];
-      const target = followResult0.output["target"];
+      let user = followResult0.output["user"];
+      let target = followResult0.output["target"];
       const thenResult0 = await interpret(followHandler.unfollow({ user: {"type":"variable","name":"u"}, target: {"type":"literal","value":"u3"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(followHandler.isFollowing({ user: {"type":"variable","name":"u"}, target: {"type":"literal","value":"u3"} }), storage);

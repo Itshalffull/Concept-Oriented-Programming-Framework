@@ -338,7 +338,8 @@ describe('Interactor functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Interactor');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Interactor');
     });
   });
 
@@ -347,7 +348,7 @@ describe('Interactor functional handler', () => {
       const storage = createInMemoryStorage();
       const defineResult0 = await interpret(interactorHandler.define({ interactor: {"type":"variable","name":"i"}, name: {"type":"literal","value":"single-choice"}, category: {"type":"literal","value":"selection"}, properties: {"type":"literal","value":"{ \"cardinality\": \"one\", \"comparison\": true }"} }), storage);
       expect(defineResult0.variant).toBe("ok");
-      const interactor = defineResult0.output["interactor"];
+      let interactor = defineResult0.output["interactor"];
       const thenResult0 = await interpret(interactorHandler.classify({ interactor: {"type":"variable","name":"_"}, fieldType: {"type":"literal","value":"T -> T"}, constraints: {"type":"literal","value":"{ \"enum\": [\"A\",\"B\",\"C\"] }"}, intent: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -356,7 +357,7 @@ describe('Interactor functional handler', () => {
       const storage = createInMemoryStorage();
       const defineResult0 = await interpret(interactorHandler.define({ interactor: {"type":"variable","name":"i"}, name: {"type":"literal","value":"entity-detail"}, category: {"type":"literal","value":"entity"}, properties: {"type":"literal","value":"{ \"dataType\": \"entity\" }"} }), storage);
       expect(defineResult0.variant).toBe("ok");
-      const interactor = defineResult0.output["interactor"];
+      let interactor = defineResult0.output["interactor"];
       const thenResult0 = await interpret(interactorHandler.classify({ interactor: {"type":"variable","name":"_"}, fieldType: {"type":"literal","value":"entity"}, constraints: {"type":"literal","value":"{ \"concept\": \"Approval\", \"view\": \"detail\" }"}, intent: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

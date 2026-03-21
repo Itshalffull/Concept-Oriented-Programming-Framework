@@ -338,7 +338,8 @@ describe('ContractTest functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ContractTest');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ContractTest');
     });
   });
 
@@ -347,13 +348,13 @@ describe('ContractTest functional handler', () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(contractTestHandler.generate({ concept: {"type":"literal","value":"password"}, specPath: {"type":"literal","value":"./specs/password.concept"} }), storage);
       expect(generateResult0.variant).toBe("ok");
-      const contract = generateResult0.output["contract"];
-      const definition = generateResult0.output["definition"];
+      let contract = generateResult0.output["contract"];
+      let definition = generateResult0.output["definition"];
       const verifyResult1 = await interpret(contractTestHandler.verify({ contract: {"type":"variable","name":"p"}, producerArtifact: {"type":"literal","value":".clef-artifacts/rust/password"}, producerLanguage: {"type":"literal","value":"rust"}, consumerArtifact: {"type":"literal","value":".clef-artifacts/ts/password"}, consumerLanguage: {"type":"literal","value":"typescript"} }), storage);
       expect(verifyResult1.variant).toBe("ok");
-      const contract = verifyResult1.output["contract"];
-      const passed = verifyResult1.output["passed"];
-      const total = verifyResult1.output["total"];
+      contract = verifyResult1.output["contract"];
+      let passed = verifyResult1.output["passed"];
+      let total = verifyResult1.output["total"];
       const thenResult0 = await interpret(contractTestHandler.canDeploy({ concept: {"type":"literal","value":"password"}, language: {"type":"literal","value":"typescript"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

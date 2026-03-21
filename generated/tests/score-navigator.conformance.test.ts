@@ -344,7 +344,8 @@ describe('ScoreNavigator functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ScoreNavigator');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ScoreNavigator');
     });
   });
 
@@ -353,9 +354,9 @@ describe('ScoreNavigator functional handler', () => {
       const storage = createInMemoryStorage();
       const showResult0 = await interpret(scoreNavigatorHandler.show({ kind: {"type":"literal","value":"concept"}, name: {"type":"literal","value":"User"} }), storage);
       expect(showResult0.variant).toBe("ok");
-      const item = showResult0.output["item"];
-      const related = showResult0.output["related"];
-      const cursor = showResult0.output["cursor"];
+      let item = showResult0.output["item"];
+      let related = showResult0.output["related"];
+      let cursor = showResult0.output["cursor"];
       const thenResult0 = await interpret(scoreNavigatorHandler.back({  }), storage);
       expect(thenResult0.variant).toBe("empty");
     });
@@ -364,14 +365,14 @@ describe('ScoreNavigator functional handler', () => {
       const storage = createInMemoryStorage();
       const showResult0 = await interpret(scoreNavigatorHandler.show({ kind: {"type":"literal","value":"concept"}, name: {"type":"literal","value":"User"} }), storage);
       expect(showResult0.variant).toBe("ok");
-      const item = showResult0.output["item"];
-      const related = showResult0.output["related"];
-      const cursor = showResult0.output["cursor"];
+      let item = showResult0.output["item"];
+      let related = showResult0.output["related"];
+      let cursor = showResult0.output["cursor"];
       const traverseResult1 = await interpret(scoreNavigatorHandler.traverse({ relation: {"type":"literal","value":"actions"}, target: {"type":"literal","value":"register"} }), storage);
       expect(traverseResult1.variant).toBe("ok");
-      const item = traverseResult1.output["item"];
-      const related = traverseResult1.output["related"];
-      const cursor = traverseResult1.output["cursor"];
+      item = traverseResult1.output["item"];
+      related = traverseResult1.output["related"];
+      cursor = traverseResult1.output["cursor"];
       const thenResult0 = await interpret(scoreNavigatorHandler.back({  }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -380,7 +381,7 @@ describe('ScoreNavigator functional handler', () => {
       const storage = createInMemoryStorage();
       const listResult0 = await interpret(scoreNavigatorHandler.list({ kind: {"type":"literal","value":"concept"} }), storage);
       expect(listResult0.variant).toBe("ok");
-      const items = listResult0.output["items"];
+      let items = listResult0.output["items"];
     });
 
   });

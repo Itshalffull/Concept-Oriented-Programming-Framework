@@ -256,7 +256,8 @@ describe('Timelock functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Timelock');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Timelock');
     });
   });
 
@@ -265,7 +266,7 @@ describe('Timelock functional handler', () => {
       const storage = createInMemoryStorage();
       const scheduleResult0 = await interpret(timelockHandler.schedule({ operationHash: {"type":"variable","name":"_"}, payload: {"type":"variable","name":"_"}, delayHours: {"type":"variable","name":"_"}, gracePeriodHours: {"type":"variable","name":"_"} }), storage);
       expect(scheduleResult0.variant).toBe("queued");
-      const lock = scheduleResult0.output["lock"];
+      let lock = scheduleResult0.output["lock"];
       const thenResult0 = await interpret(timelockHandler.execute({ lock: {"type":"variable","name":"tl"} }), storage);
       expect(thenResult0.variant).toBe("executed");
     });

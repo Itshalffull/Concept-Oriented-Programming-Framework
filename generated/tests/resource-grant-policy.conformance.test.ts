@@ -319,7 +319,8 @@ describe('ResourceGrantPolicy functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ResourceGrantPolicy');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ResourceGrantPolicy');
     });
   });
 
@@ -328,7 +329,7 @@ describe('ResourceGrantPolicy functional handler', () => {
       const storage = createInMemoryStorage();
       const setGrantResult0 = await interpret(resourceGrantPolicyHandler.setGrant({ grant: {"type":"variable","name":"g"}, scope: {"type":"literal","value":"schema"}, resourcePattern: {"type":"literal","value":"*"}, actionName: {"type":"literal","value":"view"}, roles: {"type":"list","items":[{"type":"literal","value":"admin"},{"type":"literal","value":"editor"},{"type":"literal","value":"viewer"}]} }), storage);
       expect(setGrantResult0.variant).toBe("ok");
-      const grant = setGrantResult0.output["grant"];
+      let grant = setGrantResult0.output["grant"];
       const thenResult0 = await interpret(resourceGrantPolicyHandler.resolve({ scope: {"type":"literal","value":"schema"}, resource: {"type":"literal","value":"Article"}, actionName: {"type":"literal","value":"view"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

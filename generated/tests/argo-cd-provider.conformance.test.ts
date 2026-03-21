@@ -257,7 +257,8 @@ describe('ArgoCDProvider functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ArgoCDProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ArgoCDProvider');
     });
   });
 
@@ -266,8 +267,8 @@ describe('ArgoCDProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const emitResult0 = await interpret(argocdProviderHandler.emit({ plan: {"type":"literal","value":"dp-001"}, repo: {"type":"literal","value":"git@github.com:org/deploy.git"}, path: {"type":"literal","value":"envs/prod"} }), storage);
       expect(emitResult0.variant).toBe("ok");
-      const application = emitResult0.output["application"];
-      const files = emitResult0.output["files"];
+      let application = emitResult0.output["application"];
+      let files = emitResult0.output["files"];
       const thenResult0 = await interpret(argocdProviderHandler.reconciliationStatus({ application: {"type":"variable","name":"a"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

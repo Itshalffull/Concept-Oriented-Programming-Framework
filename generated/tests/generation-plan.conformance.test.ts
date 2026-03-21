@@ -454,7 +454,8 @@ describe('GenerationPlan functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('GenerationPlan');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('GenerationPlan');
     });
   });
 
@@ -463,7 +464,7 @@ describe('GenerationPlan functional handler', () => {
       const storage = createInMemoryStorage();
       const beginResult0 = await interpret(generationPlanHandler.begin({  }), storage);
       expect(beginResult0.variant).toBe("ok");
-      const run = beginResult0.output["run"];
+      let run = beginResult0.output["run"];
       const recordStepResult1 = await interpret(generationPlanHandler.recordStep({ stepKey: {"type":"literal","value":"step1"}, status: {"type":"literal","value":"done"}, filesProduced: {"type":"literal","value":3}, duration: {"type":"literal","value":100}, cached: {"type":"literal","value":false} }), storage);
       expect(recordStepResult1.variant).toBe("ok");
       const thenResult0 = await interpret(generationPlanHandler.status({ run: {"type":"variable","name":"r"} }), storage);

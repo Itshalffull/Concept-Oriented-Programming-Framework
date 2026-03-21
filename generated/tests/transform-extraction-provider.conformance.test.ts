@@ -118,7 +118,8 @@ describe('TransformExtractionProvider functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('TransformExtractionProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('TransformExtractionProvider');
     });
   });
 
@@ -127,18 +128,18 @@ describe('TransformExtractionProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const analyzeResult0 = await interpret(transformExtractionProviderHandler.analyze({ program: {"type":"literal","value":"{\"instructions\":[],\"appliedTransforms\":[\"dark-theme\",\"high-contrast\"]}"} }), storage);
       expect(analyzeResult0.variant).toBe("ok");
-      const result = analyzeResult0.output["result"];
-      const appliedTransforms = analyzeResult0.output["appliedTransforms"];
-      const transformCount = analyzeResult0.output["transformCount"];
+      let result = analyzeResult0.output["result"];
+      let appliedTransforms = analyzeResult0.output["appliedTransforms"];
+      let transformCount = analyzeResult0.output["transformCount"];
     });
 
     it("analyze returns zero for no transforms", async () => {
       const storage = createInMemoryStorage();
       const analyzeResult0 = await interpret(transformExtractionProviderHandler.analyze({ program: {"type":"literal","value":"{\"instructions\":[]}"} }), storage);
       expect(analyzeResult0.variant).toBe("ok");
-      const result = analyzeResult0.output["result"];
-      const appliedTransforms = analyzeResult0.output["appliedTransforms"];
-      const transformCount = analyzeResult0.output["transformCount"];
+      let result = analyzeResult0.output["result"];
+      let appliedTransforms = analyzeResult0.output["appliedTransforms"];
+      let transformCount = analyzeResult0.output["transformCount"];
     });
 
   });
@@ -205,9 +206,6 @@ describe('TransformExtractionProvider functional handler', () => {
       );
     });
 
-  });
-
-  describe('action contracts (PBT)', () => {
   });
 
 });

@@ -329,7 +329,8 @@ describe('ContractChecker functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ContractChecker');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ContractChecker');
     });
   });
 
@@ -338,10 +339,10 @@ describe('ContractChecker functional handler', () => {
       const storage = createInMemoryStorage();
       const checkResult0 = await interpret(contractCheckerHandler.check({ checker: {"type":"variable","name":"c"}, widget: {"type":"literal","value":"approval-detail"}, concept: {"type":"literal","value":"Approval"}, contractVersion: {"type":"variable","name":"_"} }), storage);
       expect(checkResult0.variant).toBe("ok");
-      const checker = checkResult0.output["checker"];
-      const resolved = checkResult0.output["resolved"];
-      const unresolved = checkResult0.output["unresolved"];
-      const mismatches = checkResult0.output["mismatches"];
+      let checker = checkResult0.output["checker"];
+      let resolved = checkResult0.output["resolved"];
+      let unresolved = checkResult0.output["unresolved"];
+      let mismatches = checkResult0.output["mismatches"];
     });
 
   });

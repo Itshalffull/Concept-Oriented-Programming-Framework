@@ -388,27 +388,13 @@ describe('FrameworkAdapter functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof frameworkAdapterHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = frameworkAdapterHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('FrameworkAdapter');
-    });
-  });
 
   describe('invariant examples', () => {
     it("registered adapter can normalize props", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(frameworkAdapterHandler.register({ renderer: {"type":"variable","name":"r"}, framework: {"type":"literal","value":"react"}, version: {"type":"literal","value":"19"}, normalizer: {"type":"literal","value":"reactNormalizer"}, mountFn: {"type":"literal","value":"reactMount"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const renderer = registerResult0.output["renderer"];
+      let renderer = registerResult0.output["renderer"];
       const thenResult0 = await interpret(frameworkAdapterHandler.normalize({ renderer: {"type":"variable","name":"r"}, props: {"type":"literal","value":"{ \"onClick\": \"handler_1\" }"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -485,9 +471,6 @@ describe('FrameworkAdapter functional handler', () => {
       );
     });
 
-  });
-
-  describe('action contracts (PBT)', () => {
   });
 
 });

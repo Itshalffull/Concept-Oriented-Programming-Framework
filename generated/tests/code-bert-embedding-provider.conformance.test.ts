@@ -151,7 +151,8 @@ describe('CodeBERTEmbeddingProvider functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('CodeBERTEmbeddingProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('CodeBERTEmbeddingProvider');
     });
   });
 
@@ -160,7 +161,7 @@ describe('CodeBERTEmbeddingProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const initializeResult0 = await interpret(codeBERTEmbeddingProviderHandler.initialize({ dimensions: {"type":"literal","value":128} }), storage);
       expect(initializeResult0.variant).toBe("ok");
-      const instance = initializeResult0.output["instance"];
+      let instance = initializeResult0.output["instance"];
       const thenResult0 = await interpret(codeBERTEmbeddingProviderHandler.embed({ text: {"type":"literal","value":"function add(a, b) { return a + b; }"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

@@ -463,7 +463,8 @@ describe('UISchema functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('UISchema');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('UISchema');
     });
   });
 
@@ -472,7 +473,7 @@ describe('UISchema functional handler', () => {
       const storage = createInMemoryStorage();
       const inspectResult0 = await interpret(uiSchemaHandler.inspect({ schema: {"type":"variable","name":"s"}, conceptSpec: {"type":"literal","value":"concept Test [T] { state { name: T -> String } }"} }), storage);
       expect(inspectResult0.variant).toBe("ok");
-      const schema = inspectResult0.output["schema"];
+      let schema = inspectResult0.output["schema"];
       const thenResult0 = await interpret(uiSchemaHandler.getElements({ schema: {"type":"variable","name":"s"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -481,7 +482,7 @@ describe('UISchema functional handler', () => {
       const storage = createInMemoryStorage();
       const inspectResult0 = await interpret(uiSchemaHandler.inspect({ schema: {"type":"variable","name":"s"}, conceptSpec: {"type":"literal","value":"concept Approval [A] { state { status: A -> String } }"} }), storage);
       expect(inspectResult0.variant).toBe("ok");
-      const schema = inspectResult0.output["schema"];
+      let schema = inspectResult0.output["schema"];
       const thenResult0 = await interpret(uiSchemaHandler.getEntityElement({ schema: {"type":"variable","name":"s"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -490,10 +491,10 @@ describe('UISchema functional handler', () => {
       const storage = createInMemoryStorage();
       const inspectResult0 = await interpret(uiSchemaHandler.inspect({ schema: {"type":"variable","name":"s"}, conceptSpec: {"type":"variable","name":"_"} }), storage);
       expect(inspectResult0.variant).toBe("ok");
-      const schema = inspectResult0.output["schema"];
+      let schema = inspectResult0.output["schema"];
       const markResolvedResult1 = await interpret(uiSchemaHandler.markResolved({ schema: {"type":"variable","name":"s"} }), storage);
       expect(markResolvedResult1.variant).toBe("ok");
-      const schema = markResolvedResult1.output["schema"];
+      schema = markResolvedResult1.output["schema"];
       const thenResult0 = await interpret(uiSchemaHandler.getElements({ schema: {"type":"variable","name":"s"} }), storage);
       expect(thenResult0.variant).toBe("resolved");
     });

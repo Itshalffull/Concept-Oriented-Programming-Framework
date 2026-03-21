@@ -318,7 +318,8 @@ describe('CausalClock functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('CausalClock');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('CausalClock');
     });
   });
 
@@ -327,8 +328,8 @@ describe('CausalClock functional handler', () => {
       const storage = createInMemoryStorage();
       const tickResult0 = await interpret(causalClockHandler.tick({ replicaId: {"type":"variable","name":"r"} }), storage);
       expect(tickResult0.variant).toBe("ok");
-      const timestamp = tickResult0.output["timestamp"];
-      const clock = tickResult0.output["clock"];
+      let timestamp = tickResult0.output["timestamp"];
+      let clock = tickResult0.output["clock"];
       const thenResult0 = await interpret(causalClockHandler.tick({ replicaId: {"type":"variable","name":"r"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(causalClockHandler.compare({ a: {"type":"variable","name":"t1"}, b: {"type":"variable","name":"t2"} }), storage);

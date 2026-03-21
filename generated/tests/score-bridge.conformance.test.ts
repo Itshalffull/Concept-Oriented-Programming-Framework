@@ -471,7 +471,8 @@ describe('ScoreBridge functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ScoreBridge');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ScoreBridge');
     });
   });
 
@@ -480,9 +481,9 @@ describe('ScoreBridge functional handler', () => {
       const storage = createInMemoryStorage();
       const connectResult0 = await interpret(scoreBridgeHandler.connect({ endpoint: {"type":"literal","value":"https://app.example.com/score"}, protocol: {"type":"literal","value":"http"}, authToken: {"type":"literal","value":"tok_test"} }), storage);
       expect(connectResult0.variant).toBe("ok");
-      const bridge = connectResult0.output["bridge"];
-      const endpoint = connectResult0.output["endpoint"];
-      const protocol = connectResult0.output["protocol"];
+      let bridge = connectResult0.output["bridge"];
+      let endpoint = connectResult0.output["endpoint"];
+      let protocol = connectResult0.output["protocol"];
       const thenResult0 = await interpret(scoreBridgeHandler.status({ bridge: {"type":"variable","name":"b"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -491,9 +492,9 @@ describe('ScoreBridge functional handler', () => {
       const storage = createInMemoryStorage();
       const connectResult0 = await interpret(scoreBridgeHandler.connect({ endpoint: {"type":"literal","value":"https://app.example.com/score"}, protocol: {"type":"literal","value":"http"}, authToken: {"type":"literal","value":"tok_test"} }), storage);
       expect(connectResult0.variant).toBe("ok");
-      const bridge = connectResult0.output["bridge"];
-      const endpoint = connectResult0.output["endpoint"];
-      const protocol = connectResult0.output["protocol"];
+      let bridge = connectResult0.output["bridge"];
+      let endpoint = connectResult0.output["endpoint"];
+      let protocol = connectResult0.output["protocol"];
       const thenResult0 = await interpret(scoreBridgeHandler.query({ bridge: {"type":"variable","name":"b"}, graphql: {"type":"literal","value":"{ concepts { conceptName } }"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -502,12 +503,12 @@ describe('ScoreBridge functional handler', () => {
       const storage = createInMemoryStorage();
       const connectResult0 = await interpret(scoreBridgeHandler.connect({ endpoint: {"type":"literal","value":"https://app.example.com/score"}, protocol: {"type":"literal","value":"http"}, authToken: {"type":"literal","value":"tok_test"} }), storage);
       expect(connectResult0.variant).toBe("ok");
-      const bridge = connectResult0.output["bridge"];
-      const endpoint = connectResult0.output["endpoint"];
-      const protocol = connectResult0.output["protocol"];
+      let bridge = connectResult0.output["bridge"];
+      let endpoint = connectResult0.output["endpoint"];
+      let protocol = connectResult0.output["protocol"];
       const disconnectResult1 = await interpret(scoreBridgeHandler.disconnect({ bridge: {"type":"variable","name":"b"} }), storage);
       expect(disconnectResult1.variant).toBe("ok");
-      const bridge = disconnectResult1.output["bridge"];
+      bridge = disconnectResult1.output["bridge"];
       const thenResult0 = await interpret(scoreBridgeHandler.status({ bridge: {"type":"variable","name":"b"} }), storage);
       expect(thenResult0.variant).toBe("notfound");
     });

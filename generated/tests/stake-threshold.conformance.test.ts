@@ -137,7 +137,8 @@ describe('StakeThreshold imperative handler', () => {
       const result = await stakeThresholdHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('StakeThreshold');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('StakeThreshold');
     });
   });
 
@@ -146,7 +147,7 @@ describe('StakeThreshold imperative handler', () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await stakeThresholdHandler.configure({ minimumStake: {"type":"literal","value":100}, slashOnViolation: {"type":"literal","value":true} }, storage);
       expect(configureResult0.variant).toBe("configured");
-      const config = configureResult0.output["config"];
+      let config = configureResult0.output["config"];
       const thenResult0 = await stakeThresholdHandler.deposit({ config: {"type":"variable","name":"st"}, participant: {"type":"variable","name":"p"}, amount: {"type":"literal","value":100} }, storage);
       expect(thenResult0.variant).toBe("deposited");
       const thenResult1 = await stakeThresholdHandler.checkEligibility({ config: {"type":"variable","name":"st"}, participant: {"type":"variable","name":"p"} }, storage);

@@ -118,7 +118,8 @@ describe('RustSdkTarget functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('RustSdkTarget');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('RustSdkTarget');
     });
   });
 
@@ -127,8 +128,8 @@ describe('RustSdkTarget functional handler', () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(rustSdkTargetHandler.generate({ projection: {"type":"literal","value":"test-projection"}, config: {"type":"literal","value":"{}"} }), storage);
       expect(generateResult0.variant).toBe("ok");
-      const crate = generateResult0.output["crate"];
-      const files = generateResult0.output["files"];
+      let crate = generateResult0.output["crate"];
+      let files = generateResult0.output["files"];
       const thenResult0 = await interpret(rustSdkTargetHandler.generate({ projection: {"type":"literal","value":"test-projection-2"}, config: {"type":"literal","value":"{}"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

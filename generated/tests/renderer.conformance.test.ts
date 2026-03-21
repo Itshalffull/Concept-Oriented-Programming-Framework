@@ -318,7 +318,8 @@ describe('Renderer functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Renderer');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Renderer');
     });
   });
 
@@ -327,7 +328,7 @@ describe('Renderer functional handler', () => {
       const storage = createInMemoryStorage();
       const renderResult0 = await interpret(rendererHandler.render({ renderer: {"type":"variable","name":"r"}, tree: {"type":"literal","value":"<page><header/><body/></page>"} }), storage);
       expect(renderResult0.variant).toBe("ok");
-      const output = renderResult0.output["output"];
+      let output = renderResult0.output["output"];
       const thenResult0 = await interpret(rendererHandler.render({ renderer: {"type":"variable","name":"r"}, tree: {"type":"literal","value":"<page><header/><body/></page>"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -336,7 +337,7 @@ describe('Renderer functional handler', () => {
       const storage = createInMemoryStorage();
       const autoPlaceholderResult0 = await interpret(rendererHandler.autoPlaceholder({ renderer: {"type":"variable","name":"r"}, name: {"type":"literal","value":"sidebar"} }), storage);
       expect(autoPlaceholderResult0.variant).toBe("ok");
-      const placeholder = autoPlaceholderResult0.output["placeholder"];
+      let placeholder = autoPlaceholderResult0.output["placeholder"];
       const thenResult0 = await interpret(rendererHandler.render({ renderer: {"type":"variable","name":"r"}, tree: {"type":"variable","name":"p"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

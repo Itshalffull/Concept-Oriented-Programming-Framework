@@ -194,7 +194,8 @@ describe('ThemeParser functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ThemeParser');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ThemeParser');
     });
   });
 
@@ -203,8 +204,8 @@ describe('ThemeParser functional handler', () => {
       const storage = createInMemoryStorage();
       const parseResult0 = await interpret(themeParserHandler.parse({ theme: {"type":"variable","name":"h"}, source: {"type":"literal","value":"theme light { ... }"} }), storage);
       expect(parseResult0.variant).toBe("ok");
-      const theme = parseResult0.output["theme"];
-      const ast = parseResult0.output["ast"];
+      let theme = parseResult0.output["theme"];
+      let ast = parseResult0.output["ast"];
       const thenResult0 = await interpret(themeParserHandler.checkContrast({ theme: {"type":"variable","name":"h"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -275,9 +276,6 @@ describe('ThemeParser functional handler', () => {
       );
     });
 
-  });
-
-  describe('action contracts (PBT)', () => {
   });
 
 });

@@ -189,7 +189,8 @@ describe('ProcessAutomationProvider functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ProcessAutomationProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ProcessAutomationProvider');
     });
   });
 
@@ -198,7 +199,7 @@ describe('ProcessAutomationProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(processAutomationProviderHandler.register({  }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const provider_name = registerResult0.output["provider_name"];
+      let provider_name = registerResult0.output["provider_name"];
       const thenResult0 = await interpret(processAutomationProviderHandler.execute({ action_payload: {"type":"literal","value":"{\"input\":\"data\"}"}, process_spec_id: {"type":"literal","value":"spec-001"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

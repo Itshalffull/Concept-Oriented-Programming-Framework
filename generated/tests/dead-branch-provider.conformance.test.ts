@@ -63,7 +63,8 @@ describe('DeadBranchProvider imperative handler', () => {
       const result = await deadBranchProviderHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('DeadBranchProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('DeadBranchProvider');
     });
   });
 
@@ -72,10 +73,10 @@ describe('DeadBranchProvider imperative handler', () => {
       const storage = createInMemoryStorage();
       const analyzeResult0 = await deadBranchProviderHandler.analyze({ program: {"type":"literal","value":"branch(false, thenP, elseP)"}, constraints: {"type":"literal","value":"{}"} }, storage);
       expect(analyzeResult0.variant).toBe("ok");
-      const result = analyzeResult0.output["result"];
-      const deadBranches = analyzeResult0.output["deadBranches"];
-      const reachableCount = analyzeResult0.output["reachableCount"];
-      const totalCount = analyzeResult0.output["totalCount"];
+      let result = analyzeResult0.output["result"];
+      let deadBranches = analyzeResult0.output["deadBranches"];
+      let reachableCount = analyzeResult0.output["reachableCount"];
+      let totalCount = analyzeResult0.output["totalCount"];
     });
 
   });

@@ -187,7 +187,8 @@ describe('Sdk functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Sdk');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Sdk');
     });
   });
 
@@ -196,9 +197,9 @@ describe('Sdk functional handler', () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(sdkHandler.generate({ projection: {"type":"literal","value":"test-projection"}, language: {"type":"literal","value":"typescript"}, config: {"type":"literal","value":"{}"} }), storage);
       expect(generateResult0.variant).toBe("ok");
-      const package = generateResult0.output["package"];
-      const files = generateResult0.output["files"];
-      const packageJson = generateResult0.output["packageJson"];
+      let package = generateResult0.output["package"];
+      let files = generateResult0.output["files"];
+      let packageJson = generateResult0.output["packageJson"];
       const thenResult0 = await interpret(sdkHandler.publish({ package: {"type":"variable","name":"s"}, registry: {"type":"literal","value":"npm"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

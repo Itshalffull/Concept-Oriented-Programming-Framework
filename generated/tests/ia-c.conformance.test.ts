@@ -388,7 +388,8 @@ describe('IaC functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('IaC');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('IaC');
     });
   });
 
@@ -397,8 +398,8 @@ describe('IaC functional handler', () => {
       const storage = createInMemoryStorage();
       const emitResult0 = await interpret(iaCHandler.emit({ plan: {"type":"literal","value":"dp-001"}, provider: {"type":"literal","value":"pulumi"} }), storage);
       expect(emitResult0.variant).toBe("ok");
-      const output = emitResult0.output["output"];
-      const fileCount = emitResult0.output["fileCount"];
+      let output = emitResult0.output["output"];
+      let fileCount = emitResult0.output["fileCount"];
       const thenResult0 = await interpret(iaCHandler.apply({ plan: {"type":"literal","value":"dp-001"}, provider: {"type":"literal","value":"pulumi"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

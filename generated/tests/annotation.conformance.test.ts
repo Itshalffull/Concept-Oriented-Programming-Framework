@@ -194,7 +194,8 @@ describe('Annotation functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Annotation');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Annotation');
     });
   });
 
@@ -203,8 +204,8 @@ describe('Annotation functional handler', () => {
       const storage = createInMemoryStorage();
       const annotateResult0 = await interpret(annotationHandler.annotate({ concept: {"type":"literal","value":"SpecParser"}, scope: {"type":"literal","value":"concept"}, content: {"type":"literal","value":"{\"tool-permissions\":[\"Read\",\"Bash\"],\"custom-field\":\"anything\"}"} }), storage);
       expect(annotateResult0.variant).toBe("ok");
-      const annotation = annotateResult0.output["annotation"];
-      const keyCount = annotateResult0.output["keyCount"];
+      let annotation = annotateResult0.output["annotation"];
+      let keyCount = annotateResult0.output["keyCount"];
       const thenResult0 = await interpret(annotationHandler.resolve({ concept: {"type":"literal","value":"SpecParser"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

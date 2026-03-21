@@ -395,7 +395,8 @@ describe('ScopeGraph functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ScopeGraph');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ScopeGraph');
     });
   });
 
@@ -404,7 +405,7 @@ describe('ScopeGraph functional handler', () => {
       const storage = createInMemoryStorage();
       const buildResult0 = await interpret(scopeGraphHandler.build({ file: {"type":"literal","value":"src/handler.ts"}, tree: {"type":"literal","value":"tree-123"} }), storage);
       expect(buildResult0.variant).toBe("ok");
-      const graph = buildResult0.output["graph"];
+      let graph = buildResult0.output["graph"];
       const thenResult0 = await interpret(scopeGraphHandler.get({ graph: {"type":"variable","name":"g"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

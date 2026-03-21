@@ -440,27 +440,13 @@ describe('RenderTransform functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof renderTransformHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = renderTransformHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('RenderTransform');
-    });
-  });
 
   describe('invariant examples', () => {
     it("register then get returns transform", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(renderTransformHandler.register({ name: {"type":"literal","value":"dark-theme"}, kind: {"type":"literal","value":"token-remap"}, spec: {"type":"literal","value":"{\"mappings\":{\"palette.primary\":\"palette.primary-dark\"}}"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const transform = registerResult0.output["transform"];
+      let transform = registerResult0.output["transform"];
       const thenResult0 = await interpret(renderTransformHandler.get({ name: {"type":"literal","value":"dark-theme"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -469,7 +455,7 @@ describe('RenderTransform functional handler', () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(renderTransformHandler.register({ name: {"type":"literal","value":"dark-theme"}, kind: {"type":"literal","value":"token-remap"}, spec: {"type":"literal","value":"{}"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const transform = registerResult0.output["transform"];
+      let transform = registerResult0.output["transform"];
       const thenResult0 = await interpret(renderTransformHandler.register({ name: {"type":"literal","value":"dark-theme"}, kind: {"type":"literal","value":"token-remap"}, spec: {"type":"literal","value":"{}"} }), storage);
       expect(thenResult0.variant).toBe("duplicate");
     });
@@ -478,7 +464,7 @@ describe('RenderTransform functional handler', () => {
       const storage = createInMemoryStorage();
       const registerKindResult0 = await interpret(renderTransformHandler.registerKind({ kind: {"type":"literal","value":"token-remap"} }), storage);
       expect(registerKindResult0.variant).toBe("ok");
-      const kind = registerKindResult0.output["kind"];
+      let kind = registerKindResult0.output["kind"];
       const thenResult0 = await interpret(renderTransformHandler.registerKind({ kind: {"type":"literal","value":"token-remap"} }), storage);
       expect(thenResult0.variant).toBe("duplicate");
     });
@@ -487,7 +473,7 @@ describe('RenderTransform functional handler', () => {
       const storage = createInMemoryStorage();
       const registerKindResult0 = await interpret(renderTransformHandler.registerKind({ kind: {"type":"literal","value":"token-remap"} }), storage);
       expect(registerKindResult0.variant).toBe("ok");
-      const kind = registerKindResult0.output["kind"];
+      let kind = registerKindResult0.output["kind"];
       const thenResult0 = await interpret(renderTransformHandler.apply({ program: {"type":"literal","value":"p1"}, kind: {"type":"literal","value":"token-remap"}, spec: {"type":"literal","value":"{}"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -496,10 +482,10 @@ describe('RenderTransform functional handler', () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(renderTransformHandler.register({ name: {"type":"literal","value":"t1"}, kind: {"type":"literal","value":"token-remap"}, spec: {"type":"literal","value":"{}"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const transform = registerResult0.output["transform"];
+      let transform = registerResult0.output["transform"];
       const registerResult1 = await interpret(renderTransformHandler.register({ name: {"type":"literal","value":"t2"}, kind: {"type":"literal","value":"a11y-adapt"}, spec: {"type":"literal","value":"{}"} }), storage);
       expect(registerResult1.variant).toBe("ok");
-      const transform = registerResult1.output["transform"];
+      transform = registerResult1.output["transform"];
       const thenResult0 = await interpret(renderTransformHandler.compose({ transforms: {"type":"literal","value":"[\"t1\",\"t2\"]"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -508,7 +494,7 @@ describe('RenderTransform functional handler', () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(renderTransformHandler.register({ name: {"type":"literal","value":"dark-theme"}, kind: {"type":"literal","value":"token-remap"}, spec: {"type":"literal","value":"{}"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const transform = registerResult0.output["transform"];
+      let transform = registerResult0.output["transform"];
       const thenResult0 = await interpret(renderTransformHandler.list({  }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -625,9 +611,6 @@ describe('RenderTransform functional handler', () => {
       );
     });
 
-  });
-
-  describe('action contracts (PBT)', () => {
   });
 
 });

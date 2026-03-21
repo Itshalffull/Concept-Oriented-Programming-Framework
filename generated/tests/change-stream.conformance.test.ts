@@ -173,7 +173,8 @@ describe('ChangeStream imperative handler', () => {
       const result = await changeStreamHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ChangeStream');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ChangeStream');
     });
   });
 
@@ -182,8 +183,8 @@ describe('ChangeStream imperative handler', () => {
       const storage = createInMemoryStorage();
       const appendResult0 = await changeStreamHandler.append({ type: {"type":"literal","value":"insert"}, before: {"type":"variable","name":"_"}, after: {"type":"variable","name":"_"}, source: {"type":"literal","value":"db"} }, storage);
       expect(appendResult0.variant).toBe("ok");
-      const offset = appendResult0.output["offset"];
-      const eventId = appendResult0.output["eventId"];
+      let offset = appendResult0.output["offset"];
+      let eventId = appendResult0.output["eventId"];
       const thenResult0 = await changeStreamHandler.append({ type: {"type":"literal","value":"update"}, before: {"type":"variable","name":"_"}, after: {"type":"variable","name":"_"}, source: {"type":"literal","value":"db"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -192,8 +193,8 @@ describe('ChangeStream imperative handler', () => {
       const storage = createInMemoryStorage();
       const appendResult0 = await changeStreamHandler.append({ type: {"type":"variable","name":"t"}, before: {"type":"variable","name":"b"}, after: {"type":"variable","name":"a"}, source: {"type":"variable","name":"s"} }, storage);
       expect(appendResult0.variant).toBe("ok");
-      const offset = appendResult0.output["offset"];
-      const eventId = appendResult0.output["eventId"];
+      let offset = appendResult0.output["offset"];
+      let eventId = appendResult0.output["eventId"];
       const thenResult0 = await changeStreamHandler.replay({ from: {"type":"variable","name":"n"}, to: {"type":"variable","name":"n"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

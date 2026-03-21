@@ -397,7 +397,8 @@ describe('LocalRuntime functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('LocalRuntime');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('LocalRuntime');
     });
   });
 
@@ -406,9 +407,9 @@ describe('LocalRuntime functional handler', () => {
       const storage = createInMemoryStorage();
       const provisionResult0 = await interpret(localRuntimeHandler.provision({ concept: {"type":"literal","value":"User"}, command: {"type":"literal","value":"node server.js"}, port: {"type":"literal","value":3000} }), storage);
       expect(provisionResult0.variant).toBe("ok");
-      const process = provisionResult0.output["process"];
-      const pid = provisionResult0.output["pid"];
-      const endpoint = provisionResult0.output["endpoint"];
+      let process = provisionResult0.output["process"];
+      let pid = provisionResult0.output["pid"];
+      let endpoint = provisionResult0.output["endpoint"];
       const thenResult0 = await interpret(localRuntimeHandler.deploy({ process: {"type":"variable","name":"p"}, command: {"type":"literal","value":"node server.js"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

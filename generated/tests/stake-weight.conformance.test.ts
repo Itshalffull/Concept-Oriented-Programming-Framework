@@ -319,7 +319,8 @@ describe('StakeWeight functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('StakeWeight');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('StakeWeight');
     });
   });
 
@@ -328,7 +329,7 @@ describe('StakeWeight functional handler', () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(stakeWeightHandler.configure({ token: {"type":"literal","value":"GOV"}, cooldownDays: {"type":"literal","value":7} }), storage);
       expect(configureResult0.variant).toBe("configured");
-      const config = configureResult0.output["config"];
+      let config = configureResult0.output["config"];
       const thenResult0 = await interpret(stakeWeightHandler.stake({ config: {"type":"variable","name":"sw"}, staker: {"type":"variable","name":"p"}, amount: {"type":"literal","value":100} }), storage);
       expect(thenResult0.variant).toBe("staked");
       const thenResult1 = await interpret(stakeWeightHandler.getWeight({ config: {"type":"variable","name":"sw"}, participant: {"type":"variable","name":"p"} }), storage);

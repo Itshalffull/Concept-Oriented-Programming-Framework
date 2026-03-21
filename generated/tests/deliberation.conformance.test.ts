@@ -326,7 +326,8 @@ describe('Deliberation functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Deliberation');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Deliberation');
     });
   });
 
@@ -335,7 +336,7 @@ describe('Deliberation functional handler', () => {
       const storage = createInMemoryStorage();
       const openResult0 = await interpret(deliberationHandler.open({ proposalRef: {"type":"variable","name":"_"} }), storage);
       expect(openResult0.variant).toBe("opened");
-      const thread = openResult0.output["thread"];
+      let thread = openResult0.output["thread"];
       const thenResult0 = await interpret(deliberationHandler.addEntry({ thread: {"type":"variable","name":"dl"}, author: {"type":"variable","name":"_"}, content: {"type":"variable","name":"_"}, entryType: {"type":"variable","name":"_"}, parentEntry: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("added");
       const thenResult1 = await interpret(deliberationHandler.close({ thread: {"type":"variable","name":"dl"} }), storage);

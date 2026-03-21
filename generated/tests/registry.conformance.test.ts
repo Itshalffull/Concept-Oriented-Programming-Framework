@@ -457,7 +457,8 @@ describe('Registry functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Registry');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Registry');
     });
   });
 
@@ -466,7 +467,7 @@ describe('Registry functional handler', () => {
       const storage = createInMemoryStorage();
       const publishResult0 = await interpret(registryHandler.publish({ name: {"type":"literal","value":"auth"}, namespace: {"type":"literal","value":"clef"}, version: {"type":"literal","value":"1.0.0"}, kind: {"type":"variable","name":"concept"}, artifact_hash: {"type":"literal","value":"sha256:abc"}, dependencies: {"type":"list","items":[]}, metadata: {"type":"variable","name":"m"} }), storage);
       expect(publishResult0.variant).toBe("ok");
-      const module = publishResult0.output["module"];
+      let module = publishResult0.output["module"];
       const thenResult0 = await interpret(registryHandler.lookup({ name: {"type":"literal","value":"auth"}, namespace: {"type":"literal","value":"clef"}, version_range: {"type":"literal","value":"^1.0.0"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -475,7 +476,7 @@ describe('Registry functional handler', () => {
       const storage = createInMemoryStorage();
       const publishResult0 = await interpret(registryHandler.publish({ name: {"type":"literal","value":"auth"}, namespace: {"type":"literal","value":"clef"}, version: {"type":"literal","value":"1.0.0"}, kind: {"type":"variable","name":"concept"}, artifact_hash: {"type":"literal","value":"sha256:abc"}, dependencies: {"type":"list","items":[]}, metadata: {"type":"variable","name":"m"} }), storage);
       expect(publishResult0.variant).toBe("ok");
-      const module = publishResult0.output["module"];
+      let module = publishResult0.output["module"];
       const thenResult0 = await interpret(registryHandler.yank({ module: {"type":"variable","name":"mod"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(registryHandler.lookup({ name: {"type":"literal","value":"auth"}, namespace: {"type":"literal","value":"clef"}, version_range: {"type":"literal","value":"^1.0.0"} }), storage);

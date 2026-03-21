@@ -474,7 +474,8 @@ describe('VercelRuntime functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('VercelRuntime');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('VercelRuntime');
     });
   });
 
@@ -483,9 +484,9 @@ describe('VercelRuntime functional handler', () => {
       const storage = createInMemoryStorage();
       const provisionResult0 = await interpret(vercelRuntimeHandler.provision({ concept: {"type":"literal","value":"User"}, teamId: {"type":"literal","value":"team-1"}, framework: {"type":"literal","value":"nextjs"} }), storage);
       expect(provisionResult0.variant).toBe("ok");
-      const project = provisionResult0.output["project"];
-      const projectId = provisionResult0.output["projectId"];
-      const endpoint = provisionResult0.output["endpoint"];
+      let project = provisionResult0.output["project"];
+      let projectId = provisionResult0.output["projectId"];
+      let endpoint = provisionResult0.output["endpoint"];
       const thenResult0 = await interpret(vercelRuntimeHandler.deploy({ project: {"type":"variable","name":"p"}, sourceDirectory: {"type":"literal","value":"./dist"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

@@ -396,7 +396,8 @@ describe('SymbolOccurrence functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('SymbolOccurrence');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('SymbolOccurrence');
     });
   });
 
@@ -405,7 +406,7 @@ describe('SymbolOccurrence functional handler', () => {
       const storage = createInMemoryStorage();
       const recordResult0 = await interpret(symbolOccurrenceHandler.record({ symbol: {"type":"literal","value":"clef/concept/Article"}, file: {"type":"literal","value":"specs/article.concept"}, startRow: {"type":"literal","value":2}, startCol: {"type":"literal","value":8}, endRow: {"type":"literal","value":2}, endCol: {"type":"literal","value":15}, startByte: {"type":"literal","value":30}, endByte: {"type":"literal","value":37}, role: {"type":"literal","value":"definition"} }), storage);
       expect(recordResult0.variant).toBe("ok");
-      const occurrence = recordResult0.output["occurrence"];
+      let occurrence = recordResult0.output["occurrence"];
       const thenResult0 = await interpret(symbolOccurrenceHandler.findDefinitions({ symbol: {"type":"literal","value":"clef/concept/Article"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -414,7 +415,7 @@ describe('SymbolOccurrence functional handler', () => {
       const storage = createInMemoryStorage();
       const recordResult0 = await interpret(symbolOccurrenceHandler.record({ symbol: {"type":"literal","value":"clef/concept/Article"}, file: {"type":"literal","value":"specs/article.concept"}, startRow: {"type":"literal","value":2}, startCol: {"type":"literal","value":8}, endRow: {"type":"literal","value":2}, endCol: {"type":"literal","value":15}, startByte: {"type":"literal","value":30}, endByte: {"type":"literal","value":37}, role: {"type":"literal","value":"definition"} }), storage);
       expect(recordResult0.variant).toBe("ok");
-      const occurrence = recordResult0.output["occurrence"];
+      let occurrence = recordResult0.output["occurrence"];
       const thenResult0 = await interpret(symbolOccurrenceHandler.findAtPosition({ file: {"type":"literal","value":"specs/article.concept"}, row: {"type":"literal","value":2}, col: {"type":"literal","value":10} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

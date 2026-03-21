@@ -802,27 +802,13 @@ describe('SuiteManifestEntity functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof suiteManifestEntityHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = suiteManifestEntityHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('SuiteManifestEntity');
-    });
-  });
 
   describe('invariant examples', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(suiteManifestEntityHandler.register({ name: {"type":"literal","value":"identity"}, source: {"type":"literal","value":"repertoire/concepts/identity/suite.yaml"}, manifest: {"type":"literal","value":"{}"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const suite = registerResult0.output["suite"];
+      let suite = registerResult0.output["suite"];
       const thenResult0 = await interpret(suiteManifestEntityHandler.get({ name: {"type":"literal","value":"identity"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

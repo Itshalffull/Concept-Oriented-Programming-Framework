@@ -669,7 +669,8 @@ describe('ModuleSelection functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ModuleSelection');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ModuleSelection');
     });
   });
 
@@ -678,10 +679,10 @@ describe('ModuleSelection functional handler', () => {
       const storage = createInMemoryStorage();
       const beginResult0 = await interpret(moduleSelectionHandler.begin({ template_name: {"type":"literal","value":"social"}, profile_name: {"type":"literal","value":false} }), storage);
       expect(beginResult0.variant).toBe("ok");
-      const selection = beginResult0.output["selection"];
+      let selection = beginResult0.output["selection"];
       const addDerivedResult1 = await interpret(moduleSelectionHandler.addDerived({ selection: {"type":"variable","name":"s"}, name: {"type":"literal","value":"d"}, composes: {"type":"list","items":[{"type":"literal","value":"missing-concept"}]} }), storage);
       expect(addDerivedResult1.variant).toBe("missing_concepts");
-      const missing = addDerivedResult1.output["missing"];
+      let missing = addDerivedResult1.output["missing"];
     });
 
   });

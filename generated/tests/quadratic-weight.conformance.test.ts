@@ -179,7 +179,8 @@ describe('QuadraticWeight functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('QuadraticWeight');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('QuadraticWeight');
     });
   });
 
@@ -188,7 +189,7 @@ describe('QuadraticWeight functional handler', () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(quadraticWeightHandler.configure({ baseSource: {"type":"literal","value":"token-balance"} }), storage);
       expect(configureResult0.variant).toBe("configured");
-      const config = configureResult0.output["config"];
+      let config = configureResult0.output["config"];
       const thenResult0 = await interpret(quadraticWeightHandler.compute({ participant: {"type":"variable","name":"p"}, balance: {"type":"literal","value":100} }), storage);
       expect(thenResult0.variant).toBe("weight");
     });

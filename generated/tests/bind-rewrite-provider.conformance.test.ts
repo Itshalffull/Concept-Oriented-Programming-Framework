@@ -182,7 +182,8 @@ describe('BindRewriteProvider functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('BindRewriteProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('BindRewriteProvider');
     });
   });
 
@@ -191,9 +192,9 @@ describe('BindRewriteProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const applyResult0 = await interpret(bindRewriteProviderHandler.apply({ program: {"type":"literal","value":"{\"instructions\":[{\"tag\":\"bind\",\"expr\":\"?variant\"}]}"}, spec: {"type":"literal","value":"{\"rewrites\":{\"?variant\":\"?custom\"}}"} }), storage);
       expect(applyResult0.variant).toBe("ok");
-      const result = applyResult0.output["result"];
-      const transformed = applyResult0.output["transformed"];
-      const appliedTransforms = applyResult0.output["appliedTransforms"];
+      let result = applyResult0.output["result"];
+      let transformed = applyResult0.output["transformed"];
+      let appliedTransforms = applyResult0.output["appliedTransforms"];
       const thenResult0 = await interpret(bindRewriteProviderHandler.apply({ program: {"type":"literal","value":"{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}"}, spec: {"type":"literal","value":"{\"rewrites\":{}}"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -264,9 +265,6 @@ describe('BindRewriteProvider functional handler', () => {
       );
     });
 
-  });
-
-  describe('action contracts (PBT)', () => {
   });
 
 });

@@ -138,7 +138,8 @@ describe('TokenBalance imperative handler', () => {
       const result = await tokenBalanceHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('TokenBalance');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('TokenBalance');
     });
   });
 
@@ -147,11 +148,11 @@ describe('TokenBalance imperative handler', () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await tokenBalanceHandler.configure({ tokenContract: {"type":"literal","value":"0xGOV"} }, storage);
       expect(configureResult0.variant).toBe("configured");
-      const config = configureResult0.output["config"];
+      let config = configureResult0.output["config"];
       const setBalanceResult1 = await tokenBalanceHandler.setBalance({ config: {"type":"variable","name":"tb"}, participant: {"type":"variable","name":"p"}, balance: {"type":"literal","value":500} }, storage);
       expect(setBalanceResult1.variant).toBe("updated");
-      const participant = setBalanceResult1.output["participant"];
-      const balance = setBalanceResult1.output["balance"];
+      let participant = setBalanceResult1.output["participant"];
+      let balance = setBalanceResult1.output["balance"];
       const thenResult0 = await tokenBalanceHandler.getBalance({ config: {"type":"variable","name":"tb"}, participant: {"type":"variable","name":"p"} }, storage);
       expect(thenResult0.variant).toBe("balance");
     });

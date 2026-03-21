@@ -247,7 +247,8 @@ describe('TransportAdapterScaffoldGen functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('TransportAdapterScaffoldGen');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('TransportAdapterScaffoldGen');
     });
   });
 
@@ -256,8 +257,8 @@ describe('TransportAdapterScaffoldGen functional handler', () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(transportAdapterScaffoldGenHandler.generate({ name: {"type":"literal","value":"ApiTransport"}, protocol: {"type":"literal","value":"http"} }), storage);
       expect(generateResult0.variant).toBe("ok");
-      const files = generateResult0.output["files"];
-      const filesGenerated = generateResult0.output["filesGenerated"];
+      let files = generateResult0.output["files"];
+      let filesGenerated = generateResult0.output["filesGenerated"];
     });
 
   });

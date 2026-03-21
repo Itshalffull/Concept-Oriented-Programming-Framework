@@ -251,7 +251,8 @@ describe('ActionLog functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ActionLog');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ActionLog');
     });
   });
 
@@ -260,7 +261,7 @@ describe('ActionLog functional handler', () => {
       const storage = createInMemoryStorage();
       const appendResult0 = await interpret(actionLogHandler.append({ record: {"type":"record","fields":[{"name":"flow","value":{"type":"literal","value":"f1"}},{"name":"concept","value":{"type":"literal","value":"Echo"}},{"name":"action","value":{"type":"literal","value":"send"}},{"name":"type","value":{"type":"literal","value":"completion"}},{"name":"variant","value":{"type":"literal","value":"ok"}}]} }), storage);
       expect(appendResult0.variant).toBe("ok");
-      const id = appendResult0.output["id"];
+      let id = appendResult0.output["id"];
       const thenResult0 = await interpret(actionLogHandler.query({ flow: {"type":"literal","value":"f1"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -269,10 +270,10 @@ describe('ActionLog functional handler', () => {
       const storage = createInMemoryStorage();
       const appendResult0 = await interpret(actionLogHandler.append({ record: {"type":"record","fields":[{"name":"flow","value":{"type":"literal","value":"f1"}},{"name":"concept","value":{"type":"literal","value":"A"}},{"name":"action","value":{"type":"literal","value":"x"}},{"name":"type","value":{"type":"literal","value":"completion"}},{"name":"variant","value":{"type":"literal","value":"ok"}}]} }), storage);
       expect(appendResult0.variant).toBe("ok");
-      const id = appendResult0.output["id"];
+      let id = appendResult0.output["id"];
       const appendResult1 = await interpret(actionLogHandler.append({ record: {"type":"record","fields":[{"name":"flow","value":{"type":"literal","value":"f1"}},{"name":"concept","value":{"type":"literal","value":"B"}},{"name":"action","value":{"type":"literal","value":"y"}},{"name":"type","value":{"type":"literal","value":"completion"}},{"name":"variant","value":{"type":"literal","value":"ok"}}]} }), storage);
       expect(appendResult1.variant).toBe("ok");
-      const id = appendResult1.output["id"];
+      id = appendResult1.output["id"];
       const thenResult0 = await interpret(actionLogHandler.addEdge({ from: {"type":"variable","name":"r1"}, to: {"type":"variable","name":"r2"}, sync: {"type":"literal","value":"AtoB"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

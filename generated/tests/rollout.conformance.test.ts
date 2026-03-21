@@ -469,7 +469,8 @@ describe('Rollout functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Rollout');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Rollout');
     });
   });
 
@@ -478,7 +479,7 @@ describe('Rollout functional handler', () => {
       const storage = createInMemoryStorage();
       const beginResult0 = await interpret(rolloutHandler.begin({ plan: {"type":"literal","value":"dp-001"}, strategy: {"type":"literal","value":"canary"}, steps: {"type":"variable","name":"s"} }), storage);
       expect(beginResult0.variant).toBe("ok");
-      const rollout = beginResult0.output["rollout"];
+      let rollout = beginResult0.output["rollout"];
       const thenResult0 = await interpret(rolloutHandler.advance({ rollout: {"type":"variable","name":"r"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

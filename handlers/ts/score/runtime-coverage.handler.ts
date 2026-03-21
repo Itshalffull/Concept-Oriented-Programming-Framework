@@ -9,7 +9,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.js';
 import {
-  createProgram, get, find, put, merge, branch, complete, pureFrom, mapBindings,
+  createProgram, get, find, put, merge, branch, complete, completeFrom, pureFrom, mapBindings,
 } from '../../../runtime/storage-program.js';
 
 export const runtimeCoverageHandler: FunctionalConceptHandler = {
@@ -36,9 +36,9 @@ export const runtimeCoverageHandler: FunctionalConceptHandler = {
           return { lastExercised: now, executionCount: ((e.executionCount as number) || 0) + 1, flowIds: JSON.stringify(flowIds) };
         }, 'updates');
         q = mergeFrom(q, 'coverage', key, (b) => b.updates as Record<string, unknown>);
-        return pureFrom(q, (b) => {
+        return completeFrom(q, 'ok', (b) => {
           const e = b.existing as Record<string, unknown>;
-          return { variant: 'ok', entry: e.id };
+          return { entry: e.id };
         });
       })(),
       // Create new entry — first time exercised
@@ -74,7 +74,7 @@ export const runtimeCoverageHandler: FunctionalConceptHandler = {
       });
     }, 'report');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', report: b.report }));
+    return completeFrom(p, 'ok', (b) => ({ report: b.report }));
   },
 
   variantCoverage(input) {
@@ -97,7 +97,7 @@ export const runtimeCoverageHandler: FunctionalConceptHandler = {
       })));
     }, 'report');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', report: b.report }));
+    return completeFrom(p, 'ok', (b) => ({ report: b.report }));
   },
 
   syncCoverage(input) {
@@ -115,7 +115,7 @@ export const runtimeCoverageHandler: FunctionalConceptHandler = {
       })));
     }, 'report');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', report: b.report }));
+    return completeFrom(p, 'ok', (b) => ({ report: b.report }));
   },
 
   widgetStateCoverage(input) {
@@ -138,7 +138,7 @@ export const runtimeCoverageHandler: FunctionalConceptHandler = {
       })));
     }, 'report');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', report: b.report }));
+    return completeFrom(p, 'ok', (b) => ({ report: b.report }));
   },
 
   widgetLifecycleReport(input) {
@@ -168,7 +168,7 @@ export const runtimeCoverageHandler: FunctionalConceptHandler = {
       });
     }, 'report');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', report: b.report }));
+    return completeFrom(p, 'ok', (b) => ({ report: b.report }));
   },
 
   widgetRenderTrace(input) {
@@ -180,8 +180,7 @@ export const runtimeCoverageHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => b.entry != null,
-      pureFrom(createProgram(), (b) => ({
-        variant: 'ok',
+      completeFrom(createProgram(), 'ok', (b) => ({
         renders: (b.entry as Record<string, unknown>).flowIds as string || '[]',
       })),
       complete(createProgram(), 'notfound', {}),
@@ -207,7 +206,7 @@ export const runtimeCoverageHandler: FunctionalConceptHandler = {
       })));
     }, 'ranking');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', ranking: b.ranking }));
+    return completeFrom(p, 'ok', (b) => ({ ranking: b.ranking }));
   },
 
   deadAtRuntime(input) {
@@ -223,6 +222,6 @@ export const runtimeCoverageHandler: FunctionalConceptHandler = {
       return JSON.stringify(dead);
     }, 'neverExercised');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', neverExercised: b.neverExercised }));
+    return completeFrom(p, 'ok', (b) => ({ neverExercised: b.neverExercised }));
   },
 };

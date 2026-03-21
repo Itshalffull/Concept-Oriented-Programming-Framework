@@ -696,7 +696,8 @@ describe('RuntimeCoverage functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('RuntimeCoverage');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('RuntimeCoverage');
     });
   });
 
@@ -705,7 +706,7 @@ describe('RuntimeCoverage functional handler', () => {
       const storage = createInMemoryStorage();
       const recordResult0 = await interpret(runtimeCoverageHandler.record({ symbol: {"type":"literal","value":"clef/action/Article/create"}, kind: {"type":"literal","value":"action"}, flowId: {"type":"literal","value":"f-123"} }), storage);
       expect(recordResult0.variant).toBe("ok");
-      const entry = recordResult0.output["entry"];
+      let entry = recordResult0.output["entry"];
       const thenResult0 = await interpret(runtimeCoverageHandler.coverageReport({ kind: {"type":"literal","value":"action"}, since: {"type":"literal","value":""} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

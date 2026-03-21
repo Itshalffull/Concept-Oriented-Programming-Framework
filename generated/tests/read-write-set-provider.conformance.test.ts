@@ -70,7 +70,8 @@ describe('ReadWriteSetProvider imperative handler', () => {
       const result = await readWriteSetProviderHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ReadWriteSetProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ReadWriteSetProvider');
     });
   });
 
@@ -79,20 +80,20 @@ describe('ReadWriteSetProvider imperative handler', () => {
       const storage = createInMemoryStorage();
       const analyzeResult0 = await readWriteSetProviderHandler.analyze({ program: {"type":"literal","value":"get(users, u1); put(users, u1, data)"} }, storage);
       expect(analyzeResult0.variant).toBe("ok");
-      const result = analyzeResult0.output["result"];
-      const readSet = analyzeResult0.output["readSet"];
-      const writeSet = analyzeResult0.output["writeSet"];
-      const purity = analyzeResult0.output["purity"];
+      let result = analyzeResult0.output["result"];
+      let readSet = analyzeResult0.output["readSet"];
+      let writeSet = analyzeResult0.output["writeSet"];
+      let purity = analyzeResult0.output["purity"];
     });
 
     it("get-only yields read-only purity", async () => {
       const storage = createInMemoryStorage();
       const analyzeResult0 = await readWriteSetProviderHandler.analyze({ program: {"type":"literal","value":"get(users, u1)"} }, storage);
       expect(analyzeResult0.variant).toBe("ok");
-      const result = analyzeResult0.output["result"];
-      const readSet = analyzeResult0.output["readSet"];
-      const writeSet = analyzeResult0.output["writeSet"];
-      const purity = analyzeResult0.output["purity"];
+      let result = analyzeResult0.output["result"];
+      let readSet = analyzeResult0.output["readSet"];
+      let writeSet = analyzeResult0.output["writeSet"];
+      let purity = analyzeResult0.output["purity"];
     });
 
   });

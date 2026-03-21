@@ -187,7 +187,8 @@ describe('GcpSmProvider functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('GcpSmProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('GcpSmProvider');
     });
   });
 
@@ -196,9 +197,9 @@ describe('GcpSmProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const fetchResult0 = await interpret(gcpSmProviderHandler.fetch({ secretId: {"type":"literal","value":"db-password"}, version: {"type":"literal","value":"latest"} }), storage);
       expect(fetchResult0.variant).toBe("ok");
-      const value = fetchResult0.output["value"];
-      const versionId = fetchResult0.output["versionId"];
-      const projectId = fetchResult0.output["projectId"];
+      let value = fetchResult0.output["value"];
+      let versionId = fetchResult0.output["versionId"];
+      let projectId = fetchResult0.output["projectId"];
       const thenResult0 = await interpret(gcpSmProviderHandler.rotate({ secretId: {"type":"literal","value":"db-password"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

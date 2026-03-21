@@ -323,7 +323,8 @@ describe('Relation functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Relation');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Relation');
     });
   });
 
@@ -332,7 +333,7 @@ describe('Relation functional handler', () => {
       const storage = createInMemoryStorage();
       const defineRelationResult0 = await interpret(relationHandler.defineRelation({ relation: {"type":"variable","name":"r"}, schema: {"type":"literal","value":"parent-child"} }), storage);
       expect(defineRelationResult0.variant).toBe("ok");
-      const relation = defineRelationResult0.output["relation"];
+      let relation = defineRelationResult0.output["relation"];
       const thenResult0 = await interpret(relationHandler.link({ relation: {"type":"variable","name":"r"}, source: {"type":"literal","value":"alice"}, target: {"type":"literal","value":"bob"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(relationHandler.getRelated({ relation: {"type":"variable","name":"r"}, entity: {"type":"literal","value":"alice"} }), storage);

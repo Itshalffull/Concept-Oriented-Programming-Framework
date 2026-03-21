@@ -394,7 +394,8 @@ describe('GcfRuntime functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('GcfRuntime');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('GcfRuntime');
     });
   });
 
@@ -403,8 +404,8 @@ describe('GcfRuntime functional handler', () => {
       const storage = createInMemoryStorage();
       const provisionResult0 = await interpret(gcfRuntimeHandler.provision({ concept: {"type":"literal","value":"User"}, projectId: {"type":"literal","value":"my-project"}, region: {"type":"literal","value":"us-central1"}, runtime: {"type":"literal","value":"nodejs20"}, triggerType: {"type":"literal","value":"http"} }), storage);
       expect(provisionResult0.variant).toBe("ok");
-      const function = provisionResult0.output["function"];
-      const endpoint = provisionResult0.output["endpoint"];
+      let function = provisionResult0.output["function"];
+      let endpoint = provisionResult0.output["endpoint"];
       const thenResult0 = await interpret(gcfRuntimeHandler.deploy({ function: {"type":"variable","name":"f"}, sourceArchive: {"type":"literal","value":"gs://bucket/user.zip"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

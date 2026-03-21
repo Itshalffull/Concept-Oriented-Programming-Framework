@@ -391,7 +391,8 @@ describe('FileManagement functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('FileManagement');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('FileManagement');
     });
   });
 
@@ -400,7 +401,7 @@ describe('FileManagement functional handler', () => {
       const storage = createInMemoryStorage();
       const uploadResult0 = await interpret(fileManagementHandler.upload({ file: {"type":"variable","name":"f"}, data: {"type":"variable","name":"d"}, mimeType: {"type":"variable","name":"m"} }), storage);
       expect(uploadResult0.variant).toBe("ok");
-      const file = uploadResult0.output["file"];
+      let file = uploadResult0.output["file"];
       const thenResult0 = await interpret(fileManagementHandler.addUsage({ file: {"type":"variable","name":"f"}, entity: {"type":"variable","name":"e"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(fileManagementHandler.removeUsage({ file: {"type":"variable","name":"f"}, entity: {"type":"variable","name":"e"} }), storage);

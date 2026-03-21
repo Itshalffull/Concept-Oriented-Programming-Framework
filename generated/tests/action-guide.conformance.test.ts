@@ -195,7 +195,8 @@ describe('ActionGuide functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ActionGuide');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ActionGuide');
     });
   });
 
@@ -204,8 +205,8 @@ describe('ActionGuide functional handler', () => {
       const storage = createInMemoryStorage();
       const defineResult0 = await interpret(actionGuideHandler.define({ concept: {"type":"literal","value":"SpecParser"}, steps: {"type":"list","items":[{"type":"literal","value":"parse"}]}, content: {"type":"literal","value":"{\"design-principles\":[{\"title\":\"Independence\",\"rule\":\"Parse without external state\"}]}"} }), storage);
       expect(defineResult0.variant).toBe("ok");
-      const workflow = defineResult0.output["workflow"];
-      const stepCount = defineResult0.output["stepCount"];
+      let workflow = defineResult0.output["workflow"];
+      let stepCount = defineResult0.output["stepCount"];
       const thenResult0 = await interpret(actionGuideHandler.render({ workflow: {"type":"variable","name":"w"}, format: {"type":"literal","value":"skill-md"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

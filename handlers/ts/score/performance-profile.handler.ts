@@ -9,7 +9,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.js';
 import {
-  createProgram, get, find, put, branch, complete, pureFrom, mapBindings,
+  createProgram, get, find, put, branch, complete, completeFrom, pureFrom, mapBindings,
 } from '../../../runtime/storage-program.js';
 
 export const performanceProfileHandler: FunctionalConceptHandler = {
@@ -26,8 +26,7 @@ export const performanceProfileHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => b.existing != null,
-      pureFrom(createProgram(), (b) => ({
-        variant: 'ok',
+      completeFrom(createProgram(), 'ok', (b) => ({
         profile: (b.existing as Record<string, unknown>).id,
       })),
       // Create new profile — actual timing data ingested via syncs
@@ -74,7 +73,7 @@ export const performanceProfileHandler: FunctionalConceptHandler = {
       return JSON.stringify(sorted);
     }, 'hotspots');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', hotspots: b.hotspots }));
+    return completeFrom(p, 'ok', (b) => ({ hotspots: b.hotspots }));
   },
 
   slowChains(input) {
@@ -100,7 +99,7 @@ export const performanceProfileHandler: FunctionalConceptHandler = {
       return JSON.stringify(chains);
     }, 'chains');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', chains: b.chains }));
+    return completeFrom(p, 'ok', (b) => ({ chains: b.chains }));
   },
 
   compareWindows(input) {
@@ -113,11 +112,10 @@ export const performanceProfileHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => b.profile != null,
-      pureFrom(createProgram(), (b) => {
+      completeFrom(createProgram(), 'ok', (b) => {
         const pr = b.profile as Record<string, unknown>;
         const timing = JSON.parse(pr.timing as string || '{}');
         return {
-          variant: 'ok',
           comparison: JSON.stringify({
             aP50: timing.p50 || 0, bP50: timing.p50 || 0,
             aP99: timing.p99 || 0, bP99: timing.p99 || 0,
@@ -141,10 +139,10 @@ export const performanceProfileHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => b.entry != null,
-      pureFrom(createProgram(), (b) => {
+      completeFrom(createProgram(), 'ok', (b) => {
         const e = b.entry as Record<string, unknown>;
         return {
-          variant: 'ok', profile: e.id, entitySymbol: e.entitySymbol,
+          profile: e.id, entitySymbol: e.entitySymbol,
           entityKind: e.entityKind, invocationCount: e.invocationCount,
           errorRate: e.errorRate,
         };

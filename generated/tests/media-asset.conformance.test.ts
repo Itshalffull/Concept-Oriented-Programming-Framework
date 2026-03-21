@@ -328,7 +328,8 @@ describe('MediaAsset functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('MediaAsset');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('MediaAsset');
     });
   });
 
@@ -337,7 +338,7 @@ describe('MediaAsset functional handler', () => {
       const storage = createInMemoryStorage();
       const createMediaResult0 = await interpret(mediaAssetHandler.createMedia({ asset: {"type":"variable","name":"a"}, source: {"type":"variable","name":"s"}, file: {"type":"variable","name":"f"} }), storage);
       expect(createMediaResult0.variant).toBe("ok");
-      const asset = createMediaResult0.output["asset"];
+      let asset = createMediaResult0.output["asset"];
       const thenResult0 = await interpret(mediaAssetHandler.extractMetadata({ asset: {"type":"variable","name":"a"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(mediaAssetHandler.getMedia({ asset: {"type":"variable","name":"a"} }), storage);

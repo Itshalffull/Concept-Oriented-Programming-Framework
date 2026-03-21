@@ -187,7 +187,8 @@ describe('WebhookAutomationProvider functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('WebhookAutomationProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('WebhookAutomationProvider');
     });
   });
 
@@ -196,7 +197,7 @@ describe('WebhookAutomationProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(webhookAutomationProviderHandler.register({  }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const provider_name = registerResult0.output["provider_name"];
+      let provider_name = registerResult0.output["provider_name"];
       const thenResult0 = await interpret(webhookAutomationProviderHandler.execute({ action_payload: {"type":"literal","value":"{\"event\":\"deploy\"}"}, webhook_url: {"type":"literal","value":"https://hooks.example.com/deploy"}, method: {"type":"literal","value":"POST"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

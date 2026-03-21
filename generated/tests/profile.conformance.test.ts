@@ -174,7 +174,8 @@ describe('Profile functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Profile');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Profile');
     });
   });
 
@@ -183,9 +184,9 @@ describe('Profile functional handler', () => {
       const storage = createInMemoryStorage();
       const updateResult0 = await interpret(profileHandler.update({ user: {"type":"variable","name":"u"}, bio: {"type":"literal","value":"Hello world"}, image: {"type":"literal","value":"http://img.png"} }), storage);
       expect(updateResult0.variant).toBe("ok");
-      const user = updateResult0.output["user"];
-      const bio = updateResult0.output["bio"];
-      const image = updateResult0.output["image"];
+      let user = updateResult0.output["user"];
+      let bio = updateResult0.output["bio"];
+      let image = updateResult0.output["image"];
       const thenResult0 = await interpret(profileHandler.get({ user: {"type":"variable","name":"u"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -194,7 +195,7 @@ describe('Profile functional handler', () => {
       const storage = createInMemoryStorage();
       const getResult0 = await interpret(profileHandler.get({ user: {"type":"variable","name":"z"} }), storage);
       expect(getResult0.variant).toBe("notfound");
-      const message = getResult0.output["message"];
+      let message = getResult0.output["message"];
     });
 
   });

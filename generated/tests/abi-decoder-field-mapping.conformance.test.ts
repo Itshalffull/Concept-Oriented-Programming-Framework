@@ -266,27 +266,13 @@ describe('AbiDecoderFieldMapping functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof abiDecoderFieldMappingHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = abiDecoderFieldMappingHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('AbiDecoderFieldMapping');
-    });
-  });
 
   describe('invariant examples', () => {
     it("register-then-apply", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(abiDecoderFieldMappingHandler.register({ contract_abi: {"type":"literal","value":"{}"}, entity_schema: {"type":"literal","value":"Article"}, field_rules: {"type":"literal","value":"{}"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const mapper = registerResult0.output["mapper"];
+      let mapper = registerResult0.output["mapper"];
       const thenResult0 = await interpret(abiDecoderFieldMappingHandler.apply({ data: {"type":"literal","value":"0x00"}, mapper: {"type":"variable","name":"m"}, contract: {"type":"literal","value":"0xabc"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -295,7 +281,7 @@ describe('AbiDecoderFieldMapping functional handler', () => {
       const storage = createInMemoryStorage();
       const applyResult0 = await interpret(abiDecoderFieldMappingHandler.apply({ data: {"type":"literal","value":"0x00"}, mapper: {"type":"literal","value":"nonexistent"}, contract: {"type":"literal","value":"0xabc"} }), storage);
       expect(applyResult0.variant).toBe("notfound");
-      const mapper = applyResult0.output["mapper"];
+      let mapper = applyResult0.output["mapper"];
       const thenResult0 = await interpret(abiDecoderFieldMappingHandler.reverse({ data: {"type":"literal","value":"{}"}, mapper: {"type":"literal","value":"nonexistent"} }), storage);
       expect(thenResult0.variant).toBe("notfound");
     });

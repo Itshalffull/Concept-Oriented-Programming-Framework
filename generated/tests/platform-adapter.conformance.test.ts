@@ -360,27 +360,13 @@ describe('PlatformAdapter functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof platformAdapterHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = platformAdapterHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('PlatformAdapter');
-    });
-  });
 
   describe('invariant examples', () => {
     it("register then mapNavigation", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(platformAdapterHandler.register({ adapter: {"type":"variable","name":"d"}, platform: {"type":"literal","value":"browser"}, config: {"type":"literal","value":"{}"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const adapter = registerResult0.output["adapter"];
+      let adapter = registerResult0.output["adapter"];
       const thenResult0 = await interpret(platformAdapterHandler.mapNavigation({ adapter: {"type":"variable","name":"d"}, transition: {"type":"literal","value":"{ \"type\": \"push\" }"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

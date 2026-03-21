@@ -318,7 +318,8 @@ describe('SimpleAccumulator functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('SimpleAccumulator');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('SimpleAccumulator');
     });
   });
 
@@ -327,7 +328,7 @@ describe('SimpleAccumulator functional handler', () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(simpleAccumulatorHandler.configure({ decayRate: {"type":"variable","name":"_"}, cap: {"type":"variable","name":"_"} }), storage);
       expect(configureResult0.variant).toBe("configured");
-      const config = configureResult0.output["config"];
+      let config = configureResult0.output["config"];
       const thenResult0 = await interpret(simpleAccumulatorHandler.add({ config: {"type":"variable","name":"sa"}, participant: {"type":"literal","value":"alice"}, amount: {"type":"literal","value":10} }), storage);
       expect(thenResult0.variant).toBe("added");
     });

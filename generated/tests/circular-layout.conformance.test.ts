@@ -173,7 +173,8 @@ describe('CircularLayout functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('CircularLayout');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('CircularLayout');
     });
   });
 
@@ -182,7 +183,7 @@ describe('CircularLayout functional handler', () => {
       const storage = createInMemoryStorage();
       const applyResult0 = await interpret(circularLayoutHandler.apply({ canvas: {"type":"literal","value":"c1"}, items: {"type":"list","items":[{"type":"literal","value":"a"},{"type":"literal","value":"b"},{"type":"literal","value":"c"}]} }), storage);
       expect(applyResult0.variant).toBe("ok");
-      const positions = applyResult0.output["positions"];
+      let positions = applyResult0.output["positions"];
       const thenResult0 = await interpret(circularLayoutHandler.apply({ canvas: {"type":"literal","value":"c1"}, items: {"type":"list","items":[{"type":"literal","value":"a"},{"type":"literal","value":"b"},{"type":"literal","value":"c"},{"type":"literal","value":"d"}]} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

@@ -275,7 +275,8 @@ describe('Palette functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Palette');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Palette');
     });
   });
 
@@ -284,8 +285,8 @@ describe('Palette functional handler', () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(paletteHandler.generate({ palette: {"type":"variable","name":"c"}, name: {"type":"literal","value":"blue"}, seed: {"type":"literal","value":"#3b82f6"} }), storage);
       expect(generateResult0.variant).toBe("ok");
-      const palette = generateResult0.output["palette"];
-      const scale = generateResult0.output["scale"];
+      let palette = generateResult0.output["palette"];
+      let scale = generateResult0.output["scale"];
       const thenResult0 = await interpret(paletteHandler.assignRole({ palette: {"type":"variable","name":"c"}, role: {"type":"literal","value":"primary"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

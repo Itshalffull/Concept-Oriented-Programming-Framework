@@ -399,7 +399,8 @@ describe('FieldMapping functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('FieldMapping');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('FieldMapping');
     });
   });
 
@@ -408,8 +409,8 @@ describe('FieldMapping functional handler', () => {
       const storage = createInMemoryStorage();
       const autoDiscoverResult0 = await interpret(fieldMappingHandler.autoDiscover({ sourceSchema: {"type":"literal","value":"external_post"}, destSchema: {"type":"literal","value":"Article"} }), storage);
       expect(autoDiscoverResult0.variant).toBe("ok");
-      const mappingId = autoDiscoverResult0.output["mappingId"];
-      const suggestions = autoDiscoverResult0.output["suggestions"];
+      let mappingId = autoDiscoverResult0.output["mappingId"];
+      let suggestions = autoDiscoverResult0.output["suggestions"];
       const thenResult0 = await interpret(fieldMappingHandler.map({ mappingId: {"type":"literal","value":"map-1"}, sourceField: {"type":"literal","value":"body_html"}, destField: {"type":"literal","value":"body"}, transform: {"type":"literal","value":"html_to_markdown"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(fieldMappingHandler.apply({ record: {"type":"literal","value":"{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}"}, mappingId: {"type":"literal","value":"map-1"} }), storage);

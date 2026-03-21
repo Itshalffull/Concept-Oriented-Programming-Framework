@@ -486,7 +486,8 @@ describe('Shell functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Shell');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Shell');
     });
   });
 
@@ -495,7 +496,7 @@ describe('Shell functional handler', () => {
       const storage = createInMemoryStorage();
       const initializeResult0 = await interpret(shellHandler.initialize({ shell: {"type":"variable","name":"s"}, zones: {"type":"literal","value":"{ \"zones\": [{ \"name\": \"primary\", \"role\": \"navigated\" }] }"} }), storage);
       expect(initializeResult0.variant).toBe("ok");
-      const shell = initializeResult0.output["shell"];
+      let shell = initializeResult0.output["shell"];
       const thenResult0 = await interpret(shellHandler.assignToZone({ shell: {"type":"variable","name":"s"}, zone: {"type":"literal","value":"primary"}, ref: {"type":"literal","value":"host-1"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

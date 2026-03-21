@@ -249,7 +249,8 @@ describe('SybilResistance functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('SybilResistance');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('SybilResistance');
     });
   });
 
@@ -258,7 +259,7 @@ describe('SybilResistance functional handler', () => {
       const storage = createInMemoryStorage();
       const verifyResult0 = await interpret(sybilResistanceHandler.verify({ candidate: {"type":"variable","name":"c"}, method: {"type":"variable","name":"_"}, evidence: {"type":"variable","name":"_"} }), storage);
       expect(verifyResult0.variant).toBe("verified");
-      const id = verifyResult0.output["id"];
+      let id = verifyResult0.output["id"];
       const thenResult0 = await interpret(sybilResistanceHandler.challenge({ targetId: {"type":"variable","name":"s"}, challenger: {"type":"variable","name":"_"}, evidence: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("challenge_opened");
       const thenResult1 = await interpret(sybilResistanceHandler.resolveChallenge({ challengeId: {"type":"variable","name":"ch"}, outcome: {"type":"literal","value":"upheld"} }), storage);

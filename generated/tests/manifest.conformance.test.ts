@@ -525,7 +525,8 @@ describe('Manifest functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Manifest');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Manifest');
     });
   });
 

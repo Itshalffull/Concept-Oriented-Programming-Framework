@@ -291,7 +291,8 @@ describe('Motion functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Motion');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Motion');
     });
   });
 
@@ -300,7 +301,7 @@ describe('Motion functional handler', () => {
       const storage = createInMemoryStorage();
       const defineDurationResult0 = await interpret(motionHandler.defineDuration({ motion: {"type":"variable","name":"o"}, name: {"type":"literal","value":"normal"}, ms: {"type":"literal","value":200} }), storage);
       expect(defineDurationResult0.variant).toBe("ok");
-      const motion = defineDurationResult0.output["motion"];
+      let motion = defineDurationResult0.output["motion"];
       const thenResult0 = await interpret(motionHandler.defineTransition({ motion: {"type":"variable","name":"o2"}, name: {"type":"literal","value":"fade"}, config: {"type":"literal","value":"{ \"property\": \"opacity\", \"duration\": \"normal\", \"easing\": \"ease-out\" }"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(motionHandler.defineDuration({ motion: {"type":"variable","name":"o3"}, name: {"type":"literal","value":"bad"}, ms: {"type":"literal","value":-1} }), storage);

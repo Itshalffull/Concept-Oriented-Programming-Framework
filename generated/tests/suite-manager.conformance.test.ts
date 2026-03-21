@@ -382,7 +382,8 @@ describe('SuiteManager functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('SuiteManager');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('SuiteManager');
     });
   });
 
@@ -391,8 +392,8 @@ describe('SuiteManager functional handler', () => {
       const storage = createInMemoryStorage();
       const initResult0 = await interpret(suiteManagerHandler.init({ name: {"type":"literal","value":"my-suite"} }), storage);
       expect(initResult0.variant).toBe("ok");
-      const suite = initResult0.output["suite"];
-      const path = initResult0.output["path"];
+      let suite = initResult0.output["suite"];
+      let path = initResult0.output["path"];
       const thenResult0 = await interpret(suiteManagerHandler.validate({ path: {"type":"literal","value":"./suites/my-suite/"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -401,8 +402,8 @@ describe('SuiteManager functional handler', () => {
       const storage = createInMemoryStorage();
       const initResult0 = await interpret(suiteManagerHandler.init({ name: {"type":"literal","value":"my-suite"} }), storage);
       expect(initResult0.variant).toBe("ok");
-      const suite = initResult0.output["suite"];
-      const path = initResult0.output["path"];
+      let suite = initResult0.output["suite"];
+      let path = initResult0.output["path"];
       const thenResult0 = await interpret(suiteManagerHandler.init({ name: {"type":"literal","value":"my-suite"} }), storage);
       expect(thenResult0.variant).toBe("alreadyExists");
     });

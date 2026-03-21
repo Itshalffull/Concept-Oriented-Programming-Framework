@@ -262,7 +262,8 @@ describe('GrpcTarget functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('GrpcTarget');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('GrpcTarget');
     });
   });
 
@@ -271,8 +272,8 @@ describe('GrpcTarget functional handler', () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(grpcTargetHandler.generate({ projection: {"type":"literal","value":"payment-projection"}, config: {"type":"literal","value":"{}"} }), storage);
       expect(generateResult0.variant).toBe("ok");
-      const services = generateResult0.output["services"];
-      const files = generateResult0.output["files"];
+      let services = generateResult0.output["services"];
+      let files = generateResult0.output["files"];
       const thenResult0 = await interpret(grpcTargetHandler.listRpcs({ concept: {"type":"literal","value":"Payment"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

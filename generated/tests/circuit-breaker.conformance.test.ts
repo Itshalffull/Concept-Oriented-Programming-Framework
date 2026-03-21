@@ -462,7 +462,8 @@ describe('CircuitBreaker functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('CircuitBreaker');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('CircuitBreaker');
     });
   });
 
@@ -471,7 +472,7 @@ describe('CircuitBreaker functional handler', () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(circuitBreakerHandler.configure({ endpoint: {"type":"literal","value":"openai-api"}, failureThreshold: {"type":"literal","value":5}, successThreshold: {"type":"literal","value":2}, resetTimeoutMs: {"type":"literal","value":30000} }), storage);
       expect(configureResult0.variant).toBe("ok");
-      const breaker = configureResult0.output["breaker"];
+      let breaker = configureResult0.output["breaker"];
       const thenResult0 = await interpret(circuitBreakerHandler.check({ endpoint: {"type":"literal","value":"openai-api"} }), storage);
       expect(thenResult0.variant).toBe("closed");
     });
@@ -480,15 +481,15 @@ describe('CircuitBreaker functional handler', () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(circuitBreakerHandler.configure({ endpoint: {"type":"literal","value":"test-api"}, failureThreshold: {"type":"literal","value":2}, successThreshold: {"type":"literal","value":1}, resetTimeoutMs: {"type":"literal","value":1000} }), storage);
       expect(configureResult0.variant).toBe("ok");
-      const breaker = configureResult0.output["breaker"];
+      let breaker = configureResult0.output["breaker"];
       const recordFailureResult1 = await interpret(circuitBreakerHandler.recordFailure({ endpoint: {"type":"literal","value":"test-api"} }), storage);
       expect(recordFailureResult1.variant).toBe("ok");
-      const breaker = recordFailureResult1.output["breaker"];
-      const status = recordFailureResult1.output["status"];
+      breaker = recordFailureResult1.output["breaker"];
+      let status = recordFailureResult1.output["status"];
       const recordFailureResult2 = await interpret(circuitBreakerHandler.recordFailure({ endpoint: {"type":"literal","value":"test-api"} }), storage);
       expect(recordFailureResult2.variant).toBe("tripped");
-      const breaker = recordFailureResult2.output["breaker"];
-      const failureCount = recordFailureResult2.output["failureCount"];
+      breaker = recordFailureResult2.output["breaker"];
+      let failureCount = recordFailureResult2.output["failureCount"];
       const thenResult0 = await interpret(circuitBreakerHandler.get({ endpoint: {"type":"literal","value":"test-api"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

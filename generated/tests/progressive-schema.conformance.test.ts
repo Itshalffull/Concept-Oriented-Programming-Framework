@@ -460,7 +460,8 @@ describe('ProgressiveSchema functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ProgressiveSchema');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ProgressiveSchema');
     });
   });
 
@@ -469,7 +470,7 @@ describe('ProgressiveSchema functional handler', () => {
       const storage = createInMemoryStorage();
       const captureFreeformResult0 = await interpret(progressiveSchemaHandler.captureFreeform({ content: {"type":"literal","value":"Meeting with John on 2026-03-01 about #project-x"} }), storage);
       expect(captureFreeformResult0.variant).toBe("ok");
-      const itemId = captureFreeformResult0.output["itemId"];
+      let itemId = captureFreeformResult0.output["itemId"];
       const thenResult0 = await interpret(progressiveSchemaHandler.detectStructure({ itemId: {"type":"literal","value":"ps-1"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(progressiveSchemaHandler.acceptSuggestion({ itemId: {"type":"literal","value":"ps-1"}, suggestionId: {"type":"literal","value":"sug-1"} }), storage);

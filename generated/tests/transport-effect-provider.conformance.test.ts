@@ -63,7 +63,8 @@ describe('TransportEffectProvider imperative handler', () => {
       const result = await transportEffectProviderHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('TransportEffectProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('TransportEffectProvider');
     });
   });
 
@@ -72,16 +73,16 @@ describe('TransportEffectProvider imperative handler', () => {
       const storage = createInMemoryStorage();
       const analyzeResult0 = await transportEffectProviderHandler.analyze({ program: {"type":"literal","value":"{\"instructions\":[{\"tag\":\"perform\",\"protocol\":\"http\",\"operation\":\"GET\",\"payload\":{},\"bindAs\":\"resp\"}],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[\"http:GET\"]}}"} }, storage);
       expect(analyzeResult0.variant).toBe("ok");
-      const result = analyzeResult0.output["result"];
-      const performs = analyzeResult0.output["performs"];
-      const performCount = analyzeResult0.output["performCount"];
+      let result = analyzeResult0.output["result"];
+      let performs = analyzeResult0.output["performs"];
+      let performCount = analyzeResult0.output["performCount"];
     });
 
     it("invalid program returns error with message", async () => {
       const storage = createInMemoryStorage();
       const analyzeResult0 = await transportEffectProviderHandler.analyze({ program: {"type":"literal","value":"not valid json{{{"} }, storage);
       expect(analyzeResult0.variant).toBe("error");
-      const message = analyzeResult0.output["message"];
+      let message = analyzeResult0.output["message"];
     });
 
   });

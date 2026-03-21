@@ -63,7 +63,8 @@ describe('SyncCompiler imperative handler', () => {
       const result = await syncCompilerHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('SyncCompiler');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('SyncCompiler');
     });
   });
 
@@ -72,7 +73,7 @@ describe('SyncCompiler imperative handler', () => {
       const storage = createInMemoryStorage();
       const compileResult0 = await syncCompilerHandler.compile({ sync: {"type":"literal","value":"s1"}, ast: {"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"TestSync"}},{"name":"annotations","value":{"type":"list","items":[]}},{"name":"when","value":{"type":"list","items":[{"type":"record","fields":[{"name":"concept","value":{"type":"literal","value":"urn:clef/A"}},{"name":"action","value":{"type":"literal","value":"act"}},{"name":"inputFields","value":{"type":"list","items":[]}},{"name":"outputFields","value":{"type":"list","items":[]}}]}]}},{"name":"where","value":{"type":"list","items":[]}},{"name":"then","value":{"type":"list","items":[{"type":"record","fields":[{"name":"concept","value":{"type":"literal","value":"urn:clef/B"}},{"name":"action","value":{"type":"literal","value":"do"}},{"name":"fields","value":{"type":"list","items":[]}}]}]}}]} }, storage);
       expect(compileResult0.variant).toBe("ok");
-      const compiled = compileResult0.output["compiled"];
+      let compiled = compileResult0.output["compiled"];
       const thenResult0 = await syncCompilerHandler.compile({ sync: {"type":"literal","value":"s2"}, ast: {"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"Bad"}},{"name":"annotations","value":{"type":"list","items":[]}},{"name":"when","value":{"type":"list","items":[{"type":"record","fields":[{"name":"concept","value":{"type":"literal","value":"urn:clef/A"}},{"name":"action","value":{"type":"literal","value":"act"}},{"name":"inputFields","value":{"type":"list","items":[]}},{"name":"outputFields","value":{"type":"list","items":[]}}]}]}},{"name":"where","value":{"type":"list","items":[]}},{"name":"then","value":{"type":"list","items":[]}}]} }, storage);
       expect(thenResult0.variant).toBe("error");
     });

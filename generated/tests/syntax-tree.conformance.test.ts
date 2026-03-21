@@ -387,7 +387,8 @@ describe('SyntaxTree functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('SyntaxTree');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('SyntaxTree');
     });
   });
 
@@ -396,7 +397,7 @@ describe('SyntaxTree functional handler', () => {
       const storage = createInMemoryStorage();
       const parseResult0 = await interpret(syntaxTreeHandler.parse({ file: {"type":"literal","value":"test.ts"}, grammar: {"type":"literal","value":"typescript"} }), storage);
       expect(parseResult0.variant).toBe("ok");
-      const tree = parseResult0.output["tree"];
+      let tree = parseResult0.output["tree"];
       const thenResult0 = await interpret(syntaxTreeHandler.get({ tree: {"type":"variable","name":"t"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

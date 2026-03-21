@@ -318,7 +318,8 @@ describe('Metric functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Metric');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Metric');
     });
   });
 
@@ -327,7 +328,7 @@ describe('Metric functional handler', () => {
       const storage = createInMemoryStorage();
       const defineResult0 = await interpret(metricHandler.define({ name: {"type":"variable","name":"_"}, unit: {"type":"variable","name":"_"}, aggregation: {"type":"variable","name":"_"} }), storage);
       expect(defineResult0.variant).toBe("defined");
-      const metric = defineResult0.output["metric"];
+      let metric = defineResult0.output["metric"];
       const thenResult0 = await interpret(metricHandler.update({ metric: {"type":"variable","name":"me"}, value: {"type":"literal","value":50}, source: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("updated");
     });

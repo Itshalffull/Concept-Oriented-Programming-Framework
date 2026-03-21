@@ -389,7 +389,8 @@ describe('Intent functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Intent');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Intent');
     });
   });
 
@@ -398,7 +399,7 @@ describe('Intent functional handler', () => {
       const storage = createInMemoryStorage();
       const defineResult0 = await interpret(intentHandler.define({ intent: {"type":"variable","name":"i"}, target: {"type":"literal","value":"UserAuth"}, purpose: {"type":"literal","value":"Authenticate users"}, operationalPrinciple: {"type":"literal","value":"After login, session is valid"} }), storage);
       expect(defineResult0.variant).toBe("ok");
-      const intent = defineResult0.output["intent"];
+      let intent = defineResult0.output["intent"];
       const thenResult0 = await interpret(intentHandler.verify({ intent: {"type":"variable","name":"i"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

@@ -63,7 +63,8 @@ describe('LensExtractionProvider imperative handler', () => {
       const result = await lensExtractionProviderHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('LensExtractionProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('LensExtractionProvider');
     });
   });
 
@@ -72,9 +73,9 @@ describe('LensExtractionProvider imperative handler', () => {
       const storage = createInMemoryStorage();
       const analyzeResult0 = await lensExtractionProviderHandler.analyze({ program: {"type":"literal","value":"{\"instructions\":[{\"tag\":\"get\",\"relation\":\"users\",\"key\":\"u1\",\"bindAs\":\"user\"}],\"terminated\":false,\"effects\":{\"reads\":[\"users\"],\"writes\":[]}}"} }, storage);
       expect(analyzeResult0.variant).toBe("ok");
-      const result = analyzeResult0.output["result"];
-      const lenses = analyzeResult0.output["lenses"];
-      const accessPattern = analyzeResult0.output["accessPattern"];
+      let result = analyzeResult0.output["result"];
+      let lenses = analyzeResult0.output["lenses"];
+      let accessPattern = analyzeResult0.output["accessPattern"];
     });
 
   });

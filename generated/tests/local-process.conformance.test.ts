@@ -315,7 +315,8 @@ describe('LocalProcess functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('LocalProcess');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('LocalProcess');
     });
   });
 
@@ -324,7 +325,7 @@ describe('LocalProcess functional handler', () => {
       const storage = createInMemoryStorage();
       const dispatchResult0 = await interpret(localProcessHandler.dispatch({ runtime: {"type":"literal","value":"onnx"}, operation: {"type":"literal","value":"infer"}, moduleRef: {"type":"literal","value":"model"}, input: {"type":"literal","value":"{}"}, config: {"type":"literal","value":"{}"} }), storage);
       expect(dispatchResult0.variant).toBe("runtimeNotFound");
-      const runtime = dispatchResult0.output["runtime"];
+      let runtime = dispatchResult0.output["runtime"];
       const thenResult0 = await interpret(localProcessHandler.registerRuntime({ runtime: {"type":"literal","value":"onnx"}, providerName: {"type":"literal","value":"OnnxProvider"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

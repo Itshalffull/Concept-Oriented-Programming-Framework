@@ -204,7 +204,8 @@ describe('VerificationRun imperative handler', () => {
       const result = await verificationRunHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('VerificationRun');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('VerificationRun');
     });
   });
 
@@ -213,7 +214,7 @@ describe('VerificationRun imperative handler', () => {
       const storage = createInMemoryStorage();
       const startResult0 = await verificationRunHandler.start({ target_symbol: {"type":"literal","value":"clef/concept/Password"}, properties: {"type":"list","items":[{"type":"literal","value":"p1"},{"type":"literal","value":"p2"}]}, solver: {"type":"literal","value":"z3"}, timeout_ms: {"type":"literal","value":10000} }, storage);
       expect(startResult0.variant).toBe("ok");
-      const run = startResult0.output["run"];
+      let run = startResult0.output["run"];
       const thenResult0 = await verificationRunHandler.complete({ run: {"type":"variable","name":"r"}, results: {"type":"variable","name":"res"}, resource_usage: {"type":"variable","name":"usage"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

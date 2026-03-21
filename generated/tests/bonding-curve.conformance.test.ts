@@ -318,7 +318,8 @@ describe('BondingCurve functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('BondingCurve');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('BondingCurve');
     });
   });
 
@@ -327,7 +328,7 @@ describe('BondingCurve functional handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(bondingCurveHandler.create({ curveType: {"type":"variable","name":"_"}, params: {"type":"variable","name":"_"}, reserveToken: {"type":"variable","name":"_"}, bondedToken: {"type":"variable","name":"_"} }), storage);
       expect(createResult0.variant).toBe("created");
-      const curve = createResult0.output["curve"];
+      let curve = createResult0.output["curve"];
       const thenResult0 = await interpret(bondingCurveHandler.buy({ curve: {"type":"variable","name":"bc"}, buyer: {"type":"variable","name":"_"}, reserveAmount: {"type":"literal","value":100} }), storage);
       expect(thenResult0.variant).toBe("bought");
       const thenResult1 = await interpret(bondingCurveHandler.sell({ curve: {"type":"variable","name":"bc"}, seller: {"type":"variable","name":"_"}, tokenAmount: {"type":"variable","name":"_"} }), storage);

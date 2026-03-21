@@ -211,7 +211,8 @@ describe('Evidence imperative handler', () => {
       const result = await evidenceHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Evidence');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Evidence');
     });
   });
 
@@ -220,8 +221,8 @@ describe('Evidence imperative handler', () => {
       const storage = createInMemoryStorage();
       const recordResult0 = await evidenceHandler.record({ artifact_type: {"type":"literal","value":"proof_certificate"}, content: {"type":"variable","name":"c"}, solver_metadata: {"type":"variable","name":"m"}, property_ref: {"type":"literal","value":"prop-1"}, confidence_score: {"type":"literal","value":1} }, storage);
       expect(recordResult0.variant).toBe("ok");
-      const evidence = recordResult0.output["evidence"];
-      const content_hash = recordResult0.output["content_hash"];
+      let evidence = recordResult0.output["evidence"];
+      let content_hash = recordResult0.output["content_hash"];
       const thenResult0 = await evidenceHandler.validate({ evidence: {"type":"variable","name":"e"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

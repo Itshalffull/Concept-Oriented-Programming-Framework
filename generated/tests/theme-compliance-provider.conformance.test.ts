@@ -195,7 +195,8 @@ describe('ThemeComplianceProvider functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ThemeComplianceProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ThemeComplianceProvider');
     });
   });
 
@@ -204,10 +205,10 @@ describe('ThemeComplianceProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const verifyResult0 = await interpret(themeComplianceProviderHandler.verify({ check: {"type":"variable","name":"c"}, program: {"type":"literal","value":"p1"}, tokens: {"type":"list","items":[{"type":"literal","value":"color.primary"},{"type":"literal","value":"spacing.md"}]}, manifest: {"type":"literal","value":"default-theme"} }), storage);
       expect(verifyResult0.variant).toBe("ok");
-      const check = verifyResult0.output["check"];
-      const missingTokens = verifyResult0.output["missingTokens"];
-      const deprecatedTokens = verifyResult0.output["deprecatedTokens"];
-      const passed = verifyResult0.output["passed"];
+      let check = verifyResult0.output["check"];
+      let missingTokens = verifyResult0.output["missingTokens"];
+      let deprecatedTokens = verifyResult0.output["deprecatedTokens"];
+      let passed = verifyResult0.output["passed"];
       const thenResult0 = await interpret(themeComplianceProviderHandler.getResults({ check: {"type":"variable","name":"c"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -278,9 +279,6 @@ describe('ThemeComplianceProvider functional handler', () => {
       );
     });
 
-  });
-
-  describe('action contracts (PBT)', () => {
   });
 
 });

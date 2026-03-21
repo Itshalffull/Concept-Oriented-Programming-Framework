@@ -249,7 +249,8 @@ describe('ChainMonitor functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ChainMonitor');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ChainMonitor');
     });
   });
 
@@ -258,9 +259,9 @@ describe('ChainMonitor functional handler', () => {
       const storage = createInMemoryStorage();
       const awaitFinalityResult0 = await interpret(chainMonitorHandler.awaitFinality({ txHash: {"type":"variable","name":"tx"}, level: {"type":"literal","value":"confirmations"} }), storage);
       expect(awaitFinalityResult0.variant).toBe("ok");
-      const chain = awaitFinalityResult0.output["chain"];
-      const block = awaitFinalityResult0.output["block"];
-      const confirmations = awaitFinalityResult0.output["confirmations"];
+      let chain = awaitFinalityResult0.output["chain"];
+      let block = awaitFinalityResult0.output["block"];
+      let confirmations = awaitFinalityResult0.output["confirmations"];
       const thenResult0 = await interpret(chainMonitorHandler.status({ txHash: {"type":"variable","name":"tx"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -269,8 +270,8 @@ describe('ChainMonitor functional handler', () => {
       const storage = createInMemoryStorage();
       const awaitFinalityResult0 = await interpret(chainMonitorHandler.awaitFinality({ txHash: {"type":"variable","name":"tx"}, level: {"type":"literal","value":"confirmations"} }), storage);
       expect(awaitFinalityResult0.variant).toBe("reorged");
-      const txHash = awaitFinalityResult0.output["txHash"];
-      const depth = awaitFinalityResult0.output["depth"];
+      let txHash = awaitFinalityResult0.output["txHash"];
+      let depth = awaitFinalityResult0.output["depth"];
       const thenResult0 = await interpret(chainMonitorHandler.status({ txHash: {"type":"variable","name":"tx"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

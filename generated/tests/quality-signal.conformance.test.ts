@@ -369,7 +369,8 @@ describe('QualitySignal functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('QualitySignal');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('QualitySignal');
     });
   });
 
@@ -378,7 +379,7 @@ describe('QualitySignal functional handler', () => {
       const storage = createInMemoryStorage();
       const recordResult0 = await interpret(qualitySignalHandler.record({ target_symbol: {"type":"literal","value":"clef/concept/Password"}, dimension: {"type":"literal","value":"formal"}, status: {"type":"literal","value":"pass"}, severity: {"type":"literal","value":"gate"}, summary: {"type":"literal","value":"Proved 3 properties"}, artifact_path: {"type":"variable","name":"null"}, artifact_hash: {"type":"variable","name":"null"}, run_ref: {"type":"literal","value":"run-1"} }), storage);
       expect(recordResult0.variant).toBe("ok");
-      const signal = recordResult0.output["signal"];
+      let signal = recordResult0.output["signal"];
       const thenResult0 = await interpret(qualitySignalHandler.latest({ target_symbol: {"type":"literal","value":"clef/concept/Password"}, dimension: {"type":"literal","value":"formal"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

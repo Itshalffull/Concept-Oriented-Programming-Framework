@@ -387,7 +387,8 @@ describe('Publisher functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Publisher');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Publisher');
     });
   });
 
@@ -396,7 +397,7 @@ describe('Publisher functional handler', () => {
       const storage = createInMemoryStorage();
       const packageResult0 = await interpret(publisherHandler.package({ source_path: {"type":"variable","name":"src"}, kind: {"type":"literal","value":"library"}, manifest: {"type":"variable","name":"m"} }), storage);
       expect(packageResult0.variant).toBe("ok");
-      const publication = packageResult0.output["publication"];
+      let publication = packageResult0.output["publication"];
       const thenResult0 = await interpret(publisherHandler.sign({ publication: {"type":"variable","name":"u"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(publisherHandler.upload({ publication: {"type":"variable","name":"u"}, registry_url: {"type":"variable","name":"reg"} }), storage);
@@ -408,7 +409,7 @@ describe('Publisher functional handler', () => {
       const storage = createInMemoryStorage();
       const packageResult0 = await interpret(publisherHandler.package({ source_path: {"type":"variable","name":"src"}, kind: {"type":"literal","value":"library"}, manifest: {"type":"variable","name":"m"} }), storage);
       expect(packageResult0.variant).toBe("ok");
-      const publication = packageResult0.output["publication"];
+      let publication = packageResult0.output["publication"];
       const thenResult0 = await interpret(publisherHandler.attest({ publication: {"type":"variable","name":"u"}, builder: {"type":"literal","value":"ci"}, source_repo: {"type":"literal","value":"repo"}, source_commit: {"type":"literal","value":"abc123"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       expect(uResult.output["provenance"]).not.toBe({"type":"literal","value":null});

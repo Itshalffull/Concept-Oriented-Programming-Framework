@@ -318,7 +318,8 @@ describe('EloRating functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('EloRating');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('EloRating');
     });
   });
 
@@ -327,7 +328,7 @@ describe('EloRating functional handler', () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(eloRatingHandler.configure({ kFactor: {"type":"literal","value":32}, initialRating: {"type":"literal","value":1500}, kFactorDecay: {"type":"variable","name":"_"} }), storage);
       expect(configureResult0.variant).toBe("configured");
-      const config = configureResult0.output["config"];
+      let config = configureResult0.output["config"];
       const thenResult0 = await interpret(eloRatingHandler.recordOutcome({ config: {"type":"variable","name":"el"}, winner: {"type":"variable","name":"w"}, loser: {"type":"variable","name":"l"} }), storage);
       expect(thenResult0.variant).toBe("updated");
     });

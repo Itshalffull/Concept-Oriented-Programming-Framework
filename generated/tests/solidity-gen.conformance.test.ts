@@ -173,7 +173,8 @@ describe('SolidityGen functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('SolidityGen');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('SolidityGen');
     });
   });
 
@@ -182,7 +183,7 @@ describe('SolidityGen functional handler', () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(solidityGenHandler.generate({ spec: {"type":"literal","value":"s1"}, manifest: {"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"Ping"}},{"name":"uri","value":{"type":"literal","value":"urn:clef/Ping"}},{"name":"typeParams","value":{"type":"list","items":[]}},{"name":"relations","value":{"type":"list","items":[]}},{"name":"actions","value":{"type":"list","items":[{"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"ping"}},{"name":"params","value":{"type":"list","items":[]}},{"name":"variants","value":{"type":"list","items":[{"type":"record","fields":[{"name":"tag","value":{"type":"literal","value":"ok"}},{"name":"fields","value":{"type":"list","items":[]}},{"name":"prose","value":{"type":"literal","value":"Pong."}}]}]}}]}]}},{"name":"invariants","value":{"type":"list","items":[]}},{"name":"graphqlSchema","value":{"type":"literal","value":""}},{"name":"jsonSchemas","value":{"type":"record","fields":[{"name":"invocations","value":{"type":"record","fields":[]}},{"name":"completions","value":{"type":"record","fields":[]}}]}},{"name":"capabilities","value":{"type":"list","items":[]}},{"name":"purpose","value":{"type":"literal","value":"A test."}}]} }), storage);
       expect(generateResult0.variant).toBe("ok");
-      const files = generateResult0.output["files"];
+      let files = generateResult0.output["files"];
       const thenResult0 = await interpret(solidityGenHandler.generate({ spec: {"type":"literal","value":"s2"}, manifest: {"type":"record","fields":[{"name":"name","value":{"type":"literal","value":""}}]} }), storage);
       expect(thenResult0.variant).toBe("error");
     });

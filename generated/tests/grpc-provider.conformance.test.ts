@@ -126,7 +126,8 @@ describe('GrpcProvider imperative handler', () => {
       const result = await grpcProviderHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('GrpcProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('GrpcProvider');
     });
   });
 
@@ -135,7 +136,7 @@ describe('GrpcProvider imperative handler', () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await grpcProviderHandler.configure({ name: {"type":"literal","value":"user-service"}, target: {"type":"literal","value":"localhost:50051"}, protoRef: {"type":"literal","value":"user.proto"}, options: {"type":"literal","value":"{}"} }, storage);
       expect(configureResult0.variant).toBe("ok");
-      const channel = configureResult0.output["channel"];
+      let channel = configureResult0.output["channel"];
       const thenResult0 = await grpcProviderHandler.execute({ channel: {"type":"literal","value":"unknown-service"}, service: {"type":"literal","value":"UserService"}, method: {"type":"literal","value":"GetUser"}, payload: {"type":"literal","value":"{}"} }, storage);
       expect(thenResult0.variant).toBe("notFound");
     });

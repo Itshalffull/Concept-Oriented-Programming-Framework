@@ -606,7 +606,8 @@ describe('Emitter functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Emitter');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Emitter');
     });
   });
 
@@ -615,9 +616,9 @@ describe('Emitter functional handler', () => {
       const storage = createInMemoryStorage();
       const writeResult0 = await interpret(emitterHandler.write({ path: {"type":"literal","value":"src/password.ts"}, content: {"type":"literal","value":"export const x = 1;"}, formatHint: {"type":"literal","value":"typescript"}, sources: {"type":"list","items":[]} }), storage);
       expect(writeResult0.variant).toBe("ok");
-      const written = writeResult0.output["written"];
-      const path = writeResult0.output["path"];
-      const contentHash = writeResult0.output["contentHash"];
+      let written = writeResult0.output["written"];
+      let path = writeResult0.output["path"];
+      let contentHash = writeResult0.output["contentHash"];
       const thenResult0 = await interpret(emitterHandler.write({ path: {"type":"literal","value":"src/password.ts"}, content: {"type":"literal","value":"export const x = 1;"}, formatHint: {"type":"literal","value":"typescript"}, sources: {"type":"list","items":[]} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -626,9 +627,9 @@ describe('Emitter functional handler', () => {
       const storage = createInMemoryStorage();
       const writeResult0 = await interpret(emitterHandler.write({ path: {"type":"literal","value":"src/password.ts"}, content: {"type":"literal","value":"export const x = 1;"}, formatHint: {"type":"literal","value":"typescript"}, sources: {"type":"list","items":[{"type":"record","fields":[{"name":"sourcePath","value":{"type":"literal","value":"./specs/password.concept"}}]}]} }), storage);
       expect(writeResult0.variant).toBe("ok");
-      const written = writeResult0.output["written"];
-      const path = writeResult0.output["path"];
-      const contentHash = writeResult0.output["contentHash"];
+      let written = writeResult0.output["written"];
+      let path = writeResult0.output["path"];
+      let contentHash = writeResult0.output["contentHash"];
       const thenResult0 = await interpret(emitterHandler.trace({ outputPath: {"type":"literal","value":"src/password.ts"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(emitterHandler.affected({ sourcePath: {"type":"literal","value":"./specs/password.concept"} }), storage);

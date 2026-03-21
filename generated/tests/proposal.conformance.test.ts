@@ -387,7 +387,8 @@ describe('Proposal functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Proposal');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Proposal');
     });
   });
 
@@ -396,7 +397,7 @@ describe('Proposal functional handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(proposalHandler.create({ proposer: {"type":"variable","name":"_"}, title: {"type":"variable","name":"_"}, description: {"type":"variable","name":"_"}, actions: {"type":"variable","name":"_"} }), storage);
       expect(createResult0.variant).toBe("created");
-      const proposal = createResult0.output["proposal"];
+      let proposal = createResult0.output["proposal"];
       const thenResult0 = await interpret(proposalHandler.sponsor({ proposal: {"type":"variable","name":"p"}, sponsorId: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("sponsored");
       const thenResult1 = await interpret(proposalHandler.activate({ proposal: {"type":"variable","name":"p"} }), storage);

@@ -336,7 +336,8 @@ describe('Health functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Health');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Health');
     });
   });
 
@@ -345,8 +346,8 @@ describe('Health functional handler', () => {
       const storage = createInMemoryStorage();
       const checkConceptResult0 = await interpret(healthHandler.checkConcept({ concept: {"type":"literal","value":"User"}, runtime: {"type":"literal","value":"server"} }), storage);
       expect(checkConceptResult0.variant).toBe("ok");
-      const check = checkConceptResult0.output["check"];
-      const latencyMs = checkConceptResult0.output["latencyMs"];
+      let check = checkConceptResult0.output["check"];
+      let latencyMs = checkConceptResult0.output["latencyMs"];
       const thenResult0 = await interpret(healthHandler.checkSuite({ suite: {"type":"literal","value":"auth"}, environment: {"type":"literal","value":"staging"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

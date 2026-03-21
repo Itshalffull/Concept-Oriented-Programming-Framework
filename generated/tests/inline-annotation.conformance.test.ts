@@ -532,7 +532,8 @@ describe('InlineAnnotation functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('InlineAnnotation');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('InlineAnnotation');
     });
   });
 
@@ -541,7 +542,7 @@ describe('InlineAnnotation functional handler', () => {
       const storage = createInMemoryStorage();
       const annotateResult0 = await interpret(inlineAnnotationHandler.annotate({ contentRef: {"type":"variable","name":"c"}, changeType: {"type":"literal","value":"insertion"}, scope: {"type":"variable","name":"s"}, author: {"type":"variable","name":"a"} }), storage);
       expect(annotateResult0.variant).toBe("ok");
-      const annotationId = annotateResult0.output["annotationId"];
+      let annotationId = annotateResult0.output["annotationId"];
       const thenResult0 = await interpret(inlineAnnotationHandler.accept({ annotationId: {"type":"variable","name":"id"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

@@ -452,27 +452,13 @@ describe('DerivedEntity functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof derivedEntityHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = derivedEntityHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('DerivedEntity');
-    });
-  });
 
   describe('invariant examples', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(derivedEntityHandler.register({ name: {"type":"literal","value":"Trash"}, source: {"type":"literal","value":"specs/trash.derived"}, ast: {"type":"literal","value":"{}"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const entity = registerResult0.output["entity"];
+      let entity = registerResult0.output["entity"];
       const thenResult0 = await interpret(derivedEntityHandler.get({ name: {"type":"literal","value":"Trash"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -481,7 +467,7 @@ describe('DerivedEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(derivedEntityHandler.register({ name: {"type":"literal","value":"Trash"}, source: {"type":"literal","value":"specs/trash.derived"}, ast: {"type":"literal","value":"{}"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const entity = registerResult0.output["entity"];
+      let entity = registerResult0.output["entity"];
       const thenResult0 = await interpret(derivedEntityHandler.register({ name: {"type":"literal","value":"Trash"}, source: {"type":"literal","value":"specs/trash.derived"}, ast: {"type":"literal","value":"{}"} }), storage);
       expect(thenResult0.variant).toBe("alreadyRegistered");
     });

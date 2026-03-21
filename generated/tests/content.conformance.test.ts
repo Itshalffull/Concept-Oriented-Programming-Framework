@@ -322,7 +322,8 @@ describe('Content functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Content');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Content');
     });
   });
 
@@ -331,8 +332,8 @@ describe('Content functional handler', () => {
       const storage = createInMemoryStorage();
       const storeResult0 = await interpret(contentHandler.store({ data: {"type":"variable","name":"d"}, name: {"type":"literal","value":"test.txt"}, contentType: {"type":"literal","value":"text/plain"} }), storage);
       expect(storeResult0.variant).toBe("ok");
-      const cid = storeResult0.output["cid"];
-      const size = storeResult0.output["size"];
+      let cid = storeResult0.output["cid"];
+      let size = storeResult0.output["size"];
       const thenResult0 = await interpret(contentHandler.resolve({ cid: {"type":"variable","name":"c"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

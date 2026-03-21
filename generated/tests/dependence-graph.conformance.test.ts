@@ -546,7 +546,8 @@ describe('DependenceGraph functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('DependenceGraph');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('DependenceGraph');
     });
   });
 
@@ -555,7 +556,7 @@ describe('DependenceGraph functional handler', () => {
       const storage = createInMemoryStorage();
       const computeResult0 = await interpret(dependenceGraphHandler.compute({ scopeRef: {"type":"literal","value":"src/handler.ts"} }), storage);
       expect(computeResult0.variant).toBe("ok");
-      const graph = computeResult0.output["graph"];
+      let graph = computeResult0.output["graph"];
       const thenResult0 = await interpret(dependenceGraphHandler.get({ graph: {"type":"variable","name":"n"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

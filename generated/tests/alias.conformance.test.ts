@@ -260,7 +260,8 @@ describe('Alias functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Alias');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Alias');
     });
   });
 
@@ -269,8 +270,8 @@ describe('Alias functional handler', () => {
       const storage = createInMemoryStorage();
       const addAliasResult0 = await interpret(aliasHandler.addAlias({ entity: {"type":"variable","name":"x"}, name: {"type":"literal","value":"homepage"} }), storage);
       expect(addAliasResult0.variant).toBe("ok");
-      const entity = addAliasResult0.output["entity"];
-      const name = addAliasResult0.output["name"];
+      let entity = addAliasResult0.output["entity"];
+      let name = addAliasResult0.output["name"];
       const thenResult0 = await interpret(aliasHandler.resolve({ name: {"type":"literal","value":"homepage"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

@@ -120,7 +120,8 @@ describe('ProjectScaffold functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ProjectScaffold');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ProjectScaffold');
     });
   });
 
@@ -129,8 +130,8 @@ describe('ProjectScaffold functional handler', () => {
       const storage = createInMemoryStorage();
       const scaffoldResult0 = await interpret(projectScaffoldHandler.scaffold({ name: {"type":"literal","value":"my-app"} }), storage);
       expect(scaffoldResult0.variant).toBe("ok");
-      const project = scaffoldResult0.output["project"];
-      const path = scaffoldResult0.output["path"];
+      let project = scaffoldResult0.output["project"];
+      let path = scaffoldResult0.output["path"];
       const thenResult0 = await interpret(projectScaffoldHandler.scaffold({ name: {"type":"literal","value":"my-app"} }), storage);
       expect(thenResult0.variant).toBe("alreadyExists");
     });

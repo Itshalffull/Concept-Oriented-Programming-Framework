@@ -111,7 +111,8 @@ describe('FormBuilder functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('FormBuilder');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('FormBuilder');
     });
   });
 
@@ -120,7 +121,7 @@ describe('FormBuilder functional handler', () => {
       const storage = createInMemoryStorage();
       const buildFormResult0 = await interpret(formBuilderHandler.buildForm({ form: {"type":"variable","name":"f"}, schema: {"type":"literal","value":"user-profile"} }), storage);
       expect(buildFormResult0.variant).toBe("ok");
-      const definition = buildFormResult0.output["definition"];
+      let definition = buildFormResult0.output["definition"];
       const thenResult0 = await interpret(formBuilderHandler.buildForm({ form: {"type":"variable","name":"f"}, schema: {"type":"literal","value":"user-profile"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

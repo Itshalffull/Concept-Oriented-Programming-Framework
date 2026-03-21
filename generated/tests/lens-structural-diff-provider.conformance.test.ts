@@ -70,7 +70,8 @@ describe('LensStructuralDiffProvider imperative handler', () => {
       const result = await lensStructuralDiffProviderHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('LensStructuralDiffProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('LensStructuralDiffProvider');
     });
   });
 
@@ -79,9 +80,9 @@ describe('LensStructuralDiffProvider imperative handler', () => {
       const storage = createInMemoryStorage();
       const analyzeResult0 = await lensStructuralDiffProviderHandler.analyze({ oldSchema: {"type":"literal","value":"[{\"name\":\"email\",\"type\":\"String\"}]"}, newSchema: {"type":"literal","value":"[{\"name\":\"emailAddress\",\"type\":\"String\"}]"} }, storage);
       expect(analyzeResult0.variant).toBe("ok");
-      const result = analyzeResult0.output["result"];
-      const operations = analyzeResult0.output["operations"];
-      const editScript = analyzeResult0.output["editScript"];
+      let result = analyzeResult0.output["result"];
+      let operations = analyzeResult0.output["operations"];
+      let editScript = analyzeResult0.output["editScript"];
     });
 
     it("identical schemas return identical", async () => {

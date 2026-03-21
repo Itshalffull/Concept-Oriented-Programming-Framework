@@ -423,7 +423,8 @@ describe('AnalysisOverlay functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('AnalysisOverlay');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('AnalysisOverlay');
     });
   });
 
@@ -432,8 +433,8 @@ describe('AnalysisOverlay functional handler', () => {
       const storage = createInMemoryStorage();
       const applyResult0 = await interpret(analysisOverlayHandler.apply({ canvas: {"type":"literal","value":"c1"}, result: {"type":"literal","value":"r1"}, kind: {"type":"literal","value":"node-color"}, config: {"type":"record","fields":[]} }), storage);
       expect(applyResult0.variant).toBe("ok");
-      const overlay = applyResult0.output["overlay"];
-      const attributes = applyResult0.output["attributes"];
+      let overlay = applyResult0.output["overlay"];
+      let attributes = applyResult0.output["attributes"];
       const thenResult0 = await interpret(analysisOverlayHandler.toggle({ overlay: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(analysisOverlayHandler.toggle({ overlay: {"type":"variable","name":"_"} }), storage);

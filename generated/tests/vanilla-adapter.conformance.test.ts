@@ -125,7 +125,8 @@ describe('VanillaAdapter functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('VanillaAdapter');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('VanillaAdapter');
     });
   });
 
@@ -134,8 +135,8 @@ describe('VanillaAdapter functional handler', () => {
       const storage = createInMemoryStorage();
       const normalizeResult0 = await interpret(vanillaAdapterHandler.normalize({ adapter: {"type":"variable","name":"a"}, props: {"type":"literal","value":"{ \"onclick\": \"handler_1\", \"class\": \"btn\" }"} }), storage);
       expect(normalizeResult0.variant).toBe("ok");
-      const adapter = normalizeResult0.output["adapter"];
-      const normalized = normalizeResult0.output["normalized"];
+      let adapter = normalizeResult0.output["adapter"];
+      let normalized = normalizeResult0.output["normalized"];
       const thenResult0 = await interpret(vanillaAdapterHandler.normalize({ adapter: {"type":"variable","name":"a"}, props: {"type":"literal","value":""} }), storage);
       expect(thenResult0.variant).toBe("error");
     });
@@ -204,9 +205,6 @@ describe('VanillaAdapter functional handler', () => {
       );
     });
 
-  });
-
-  describe('action contracts (PBT)', () => {
   });
 
 });

@@ -387,7 +387,8 @@ describe('ConsentProcess functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ConsentProcess');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ConsentProcess');
     });
   });
 
@@ -396,7 +397,7 @@ describe('ConsentProcess functional handler', () => {
       const storage = createInMemoryStorage();
       const initiateResult0 = await interpret(consentProcessHandler.initiate({ proposalRef: {"type":"variable","name":"_"} }), storage);
       expect(initiateResult0.variant).toBe("initiated");
-      const process = initiateResult0.output["process"];
+      let process = initiateResult0.output["process"];
       const thenResult0 = await interpret(consentProcessHandler.advancePhase({ process: {"type":"variable","name":"cp"} }), storage);
       expect(thenResult0.variant).toBe("advanced");
       const thenResult1 = await interpret(consentProcessHandler.resolve({ process: {"type":"variable","name":"cp"} }), storage);

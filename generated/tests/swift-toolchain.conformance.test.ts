@@ -173,7 +173,8 @@ describe('SwiftToolchain functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('SwiftToolchain');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('SwiftToolchain');
     });
   });
 
@@ -182,10 +183,10 @@ describe('SwiftToolchain functional handler', () => {
       const storage = createInMemoryStorage();
       const resolveResult0 = await interpret(swiftToolchainHandler.resolve({ platform: {"type":"literal","value":"linux-arm64"}, versionConstraint: {"type":"literal","value":">=5.10"} }), storage);
       expect(resolveResult0.variant).toBe("ok");
-      const toolchain = resolveResult0.output["toolchain"];
-      const swiftcPath = resolveResult0.output["swiftcPath"];
-      const version = resolveResult0.output["version"];
-      const capabilities = resolveResult0.output["capabilities"];
+      let toolchain = resolveResult0.output["toolchain"];
+      let swiftcPath = resolveResult0.output["swiftcPath"];
+      let version = resolveResult0.output["version"];
+      let capabilities = resolveResult0.output["capabilities"];
       const thenResult0 = await interpret(swiftToolchainHandler.register({  }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

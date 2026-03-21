@@ -101,23 +101,13 @@ describe('VoyageEndpoint imperative handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof voyageEndpointHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await voyageEndpointHandler.register({}, storage);
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('VoyageEndpoint');
-    });
-  });
 
   describe('invariant examples', () => {
     it("resolve after register", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await voyageEndpointHandler.register({ name: {"type":"literal","value":"code-search"}, apiKey: {"type":"literal","value":"vk-test"}, model: {"type":"literal","value":"voyage-code-3"}, inputType: {"type":"literal","value":"document"} }, storage);
       expect(registerResult0.variant).toBe("ok");
-      const endpoint = registerResult0.output["endpoint"];
+      let endpoint = registerResult0.output["endpoint"];
       const thenResult0 = await voyageEndpointHandler.resolve({ name: {"type":"literal","value":"code-search"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

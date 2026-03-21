@@ -63,7 +63,8 @@ describe('SpecParser imperative handler', () => {
       const result = await specParserHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('SpecParser');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('SpecParser');
     });
   });
 
@@ -72,8 +73,8 @@ describe('SpecParser imperative handler', () => {
       const storage = createInMemoryStorage();
       const parseResult0 = await specParserHandler.parse({ source: {"type":"literal","value":"concept Tiny [X] { purpose { A test. } state { items: set X } actions { action get(x: X) { -> ok(item: X) { Return. } } } }"} }, storage);
       expect(parseResult0.variant).toBe("ok");
-      const spec = parseResult0.output["spec"];
-      const ast = parseResult0.output["ast"];
+      let spec = parseResult0.output["spec"];
+      let ast = parseResult0.output["ast"];
       const thenResult0 = await specParserHandler.parse({ source: {"type":"literal","value":""} }, storage);
       expect(thenResult0.variant).toBe("error");
     });

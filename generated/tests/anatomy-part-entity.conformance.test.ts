@@ -376,27 +376,13 @@ describe('AnatomyPartEntity functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof anatomyPartEntityHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = anatomyPartEntityHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('AnatomyPartEntity');
-    });
-  });
 
   describe('invariant examples', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(anatomyPartEntityHandler.register({ widget: {"type":"literal","value":"dialog"}, name: {"type":"literal","value":"root"}, role: {"type":"literal","value":"container"}, required: {"type":"literal","value":"true"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const part = registerResult0.output["part"];
+      let part = registerResult0.output["part"];
       const thenResult0 = await interpret(anatomyPartEntityHandler.get({ part: {"type":"variable","name":"a"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

@@ -445,7 +445,8 @@ describe('AccessCatalog functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('AccessCatalog');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('AccessCatalog');
     });
   });
 
@@ -454,7 +455,7 @@ describe('AccessCatalog functional handler', () => {
       const storage = createInMemoryStorage();
       const registerPermissionResult0 = await interpret(accessCatalogHandler.registerPermission({ entry: {"type":"variable","name":"p"}, key: {"type":"literal","value":"admin.access"}, label: {"type":"literal","value":"Access administration"}, group: {"type":"literal","value":"Administration"}, description: {"type":"literal","value":"Open the admin shell"} }), storage);
       expect(registerPermissionResult0.variant).toBe("ok");
-      const entry = registerPermissionResult0.output["entry"];
+      let entry = registerPermissionResult0.output["entry"];
       const thenResult0 = await interpret(accessCatalogHandler.listPermissions({  }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

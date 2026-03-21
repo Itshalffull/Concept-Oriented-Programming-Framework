@@ -388,7 +388,8 @@ describe('Queue functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Queue');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Queue');
     });
   });
 
@@ -397,7 +398,7 @@ describe('Queue functional handler', () => {
       const storage = createInMemoryStorage();
       const enqueueResult0 = await interpret(queueHandler.enqueue({ queue: {"type":"variable","name":"q"}, item: {"type":"literal","value":"send_email"}, priority: {"type":"literal","value":1} }), storage);
       expect(enqueueResult0.variant).toBe("ok");
-      const itemId = enqueueResult0.output["itemId"];
+      let itemId = enqueueResult0.output["itemId"];
       const thenResult0 = await interpret(queueHandler.claim({ queue: {"type":"variable","name":"q"}, worker: {"type":"literal","value":"worker-a"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(queueHandler.process({ queue: {"type":"variable","name":"q"}, itemId: {"type":"literal","value":"item-1"}, result: {"type":"literal","value":"sent"} }), storage);

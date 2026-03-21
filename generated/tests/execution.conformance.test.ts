@@ -258,7 +258,8 @@ describe('Execution functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Execution');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Execution');
     });
   });
 
@@ -267,7 +268,7 @@ describe('Execution functional handler', () => {
       const storage = createInMemoryStorage();
       const scheduleResult0 = await interpret(executionHandler.schedule({ sourceRef: {"type":"variable","name":"_"}, actions: {"type":"variable","name":"_"}, executor: {"type":"variable","name":"_"} }), storage);
       expect(scheduleResult0.variant).toBe("scheduled");
-      const execution = scheduleResult0.output["execution"];
+      let execution = scheduleResult0.output["execution"];
       const thenResult0 = await interpret(executionHandler.execute({ execution: {"type":"variable","name":"ex"} }), storage);
       expect(thenResult0.variant).toBe("completed");
     });

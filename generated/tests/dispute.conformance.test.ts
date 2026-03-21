@@ -317,7 +317,8 @@ describe('Dispute functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Dispute');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Dispute');
     });
   });
 
@@ -326,7 +327,7 @@ describe('Dispute functional handler', () => {
       const storage = createInMemoryStorage();
       const openResult0 = await interpret(disputeHandler.open({ challenger: {"type":"variable","name":"_"}, respondent: {"type":"variable","name":"_"}, subject: {"type":"variable","name":"_"}, evidence: {"type":"variable","name":"_"}, bond: {"type":"variable","name":"_"} }), storage);
       expect(openResult0.variant).toBe("opened");
-      const dispute = openResult0.output["dispute"];
+      let dispute = openResult0.output["dispute"];
       const thenResult0 = await interpret(disputeHandler.submitEvidence({ dispute: {"type":"variable","name":"ds"}, party: {"type":"variable","name":"_"}, evidence: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("submitted");
       const thenResult1 = await interpret(disputeHandler.arbitrate({ dispute: {"type":"variable","name":"ds"}, arbitrator: {"type":"variable","name":"_"}, decision: {"type":"variable","name":"_"}, reasoning: {"type":"variable","name":"_"} }), storage);

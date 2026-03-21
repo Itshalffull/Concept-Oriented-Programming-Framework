@@ -63,7 +63,8 @@ describe('VariantExtractionProvider imperative handler', () => {
       const result = await variantExtractionProviderHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('VariantExtractionProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('VariantExtractionProvider');
     });
   });
 
@@ -72,16 +73,16 @@ describe('VariantExtractionProvider imperative handler', () => {
       const storage = createInMemoryStorage();
       const analyzeResult0 = await variantExtractionProviderHandler.analyze({ program: {"type":"literal","value":"{\"instructions\":[{\"tag\":\"pure\",\"value\":{\"variant\":\"ok\"}}],\"terminated\":true,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[\"ok\"]}}"} }, storage);
       expect(analyzeResult0.variant).toBe("ok");
-      const result = analyzeResult0.output["result"];
-      const variants = analyzeResult0.output["variants"];
-      const branchCount = analyzeResult0.output["branchCount"];
+      let result = analyzeResult0.output["result"];
+      let variants = analyzeResult0.output["variants"];
+      let branchCount = analyzeResult0.output["branchCount"];
     });
 
     it("invalid program returns error with message", async () => {
       const storage = createInMemoryStorage();
       const analyzeResult0 = await variantExtractionProviderHandler.analyze({ program: {"type":"literal","value":"not valid json{{{"} }, storage);
       expect(analyzeResult0.variant).toBe("error");
-      const message = analyzeResult0.output["message"];
+      let message = analyzeResult0.output["message"];
     });
 
   });

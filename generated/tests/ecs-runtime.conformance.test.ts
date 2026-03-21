@@ -396,7 +396,8 @@ describe('EcsRuntime functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('EcsRuntime');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('EcsRuntime');
     });
   });
 
@@ -405,9 +406,9 @@ describe('EcsRuntime functional handler', () => {
       const storage = createInMemoryStorage();
       const provisionResult0 = await interpret(ecsRuntimeHandler.provision({ concept: {"type":"literal","value":"User"}, cpu: {"type":"literal","value":256}, memory: {"type":"literal","value":512}, cluster: {"type":"literal","value":"prod-cluster"} }), storage);
       expect(provisionResult0.variant).toBe("ok");
-      const service = provisionResult0.output["service"];
-      const serviceArn = provisionResult0.output["serviceArn"];
-      const endpoint = provisionResult0.output["endpoint"];
+      let service = provisionResult0.output["service"];
+      let serviceArn = provisionResult0.output["serviceArn"];
+      let endpoint = provisionResult0.output["endpoint"];
       const thenResult0 = await interpret(ecsRuntimeHandler.deploy({ service: {"type":"variable","name":"s"}, imageUri: {"type":"literal","value":"ecr.aws/user:latest"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

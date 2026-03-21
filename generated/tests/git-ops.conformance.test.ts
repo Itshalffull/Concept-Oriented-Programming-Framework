@@ -189,7 +189,8 @@ describe('GitOps functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('GitOps');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('GitOps');
     });
   });
 
@@ -198,8 +199,8 @@ describe('GitOps functional handler', () => {
       const storage = createInMemoryStorage();
       const emitResult0 = await interpret(gitOpsHandler.emit({ plan: {"type":"literal","value":"dp-001"}, controller: {"type":"literal","value":"argocd"}, repo: {"type":"literal","value":"git@github.com:org/deploy.git"}, path: {"type":"literal","value":"envs/prod"} }), storage);
       expect(emitResult0.variant).toBe("ok");
-      const manifest = emitResult0.output["manifest"];
-      const files = emitResult0.output["files"];
+      let manifest = emitResult0.output["manifest"];
+      let files = emitResult0.output["files"];
       const thenResult0 = await interpret(gitOpsHandler.reconciliationStatus({ manifest: {"type":"variable","name":"g"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

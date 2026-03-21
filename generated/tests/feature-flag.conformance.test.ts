@@ -111,7 +111,8 @@ describe('FeatureFlag imperative handler', () => {
       const result = await featureFlagHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('FeatureFlag');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('FeatureFlag');
     });
   });
 

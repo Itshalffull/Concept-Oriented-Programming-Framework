@@ -173,7 +173,8 @@ describe('ManualResolution functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ManualResolution');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ManualResolution');
     });
   });
 
@@ -182,7 +183,7 @@ describe('ManualResolution functional handler', () => {
       const storage = createInMemoryStorage();
       const attemptResolveResult0 = await interpret(manualResolutionHandler.attemptResolve({ base: {"type":"variable","name":"_"}, v1: {"type":"variable","name":"_"}, v2: {"type":"variable","name":"_"}, context: {"type":"variable","name":"_"} }), storage);
       expect(attemptResolveResult0.variant).toBe("cannotResolve");
-      const reason = attemptResolveResult0.output["reason"];
+      let reason = attemptResolveResult0.output["reason"];
       const thenResult0 = await interpret(manualResolutionHandler.register({  }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

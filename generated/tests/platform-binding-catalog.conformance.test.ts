@@ -240,20 +240,6 @@ describe('PlatformBindingCatalog functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof platformBindingCatalogHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = platformBindingCatalogHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('PlatformBindingCatalog');
-    });
-  });
 
   describe('state invariants (stateful PBT)', () => {
     it('always: bindings have required fields', async () => {

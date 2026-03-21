@@ -463,7 +463,8 @@ describe('DAGHistory functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('DAGHistory');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('DAGHistory');
     });
   });
 
@@ -472,7 +473,7 @@ describe('DAGHistory functional handler', () => {
       const storage = createInMemoryStorage();
       const appendResult0 = await interpret(dagHistoryHandler.append({ parents: {"type":"literal","value":"[]"}, contentRef: {"type":"literal","value":"abc123"}, metadata: {"type":"literal","value":""} }), storage);
       expect(appendResult0.variant).toBe("ok");
-      const nodeId = appendResult0.output["nodeId"];
+      let nodeId = appendResult0.output["nodeId"];
       const thenResult0 = await interpret(dagHistoryHandler.getNode({ nodeId: {"type":"variable","name":"n"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -481,7 +482,7 @@ describe('DAGHistory functional handler', () => {
       const storage = createInMemoryStorage();
       const appendResult0 = await interpret(dagHistoryHandler.append({ parents: {"type":"literal","value":"[p1]"}, contentRef: {"type":"literal","value":"def456"}, metadata: {"type":"literal","value":""} }), storage);
       expect(appendResult0.variant).toBe("ok");
-      const nodeId = appendResult0.output["nodeId"];
+      let nodeId = appendResult0.output["nodeId"];
       const thenResult0 = await interpret(dagHistoryHandler.ancestors({ nodeId: {"type":"variable","name":"n"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

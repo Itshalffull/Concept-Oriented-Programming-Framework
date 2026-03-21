@@ -9,7 +9,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.js';
 import {
-  createProgram, get, find, put, branch, complete, pureFrom, mapBindings,
+  createProgram, get, find, put, branch, complete, completeFrom, pureFrom, mapBindings,
 } from '../../../runtime/storage-program.js';
 
 export const derivedEntityHandler: FunctionalConceptHandler = {
@@ -56,8 +56,7 @@ export const derivedEntityHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => b.existing != null,
-      pureFrom(createProgram(), (b) => ({
-        variant: 'ok',
+      completeFrom(createProgram(), 'ok', (b) => ({
         entity: (b.existing as Record<string, unknown>).id,
       })),
       complete(createProgram(), 'notfound', {}),
@@ -78,7 +77,7 @@ export const derivedEntityHandler: FunctionalConceptHandler = {
       return JSON.stringify(matching.map(d => ({ id: d.id, name: d.name })));
     }, 'result');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', entities: b.result }));
+    return completeFrom(p, 'ok', (b) => ({ entities: b.result }));
   },
 
   findBySync(input) {
@@ -95,7 +94,7 @@ export const derivedEntityHandler: FunctionalConceptHandler = {
       return JSON.stringify(matching.map(d => ({ id: d.id, name: d.name })));
     }, 'result');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', entities: b.result }));
+    return completeFrom(p, 'ok', (b) => ({ entities: b.result }));
   },
 
   compositionTree(input) {
@@ -133,7 +132,7 @@ export const derivedEntityHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => b.tree != null,
-      pureFrom(createProgram(), (b) => ({ variant: 'ok', tree: JSON.stringify(b.tree) })),
+      completeFrom(createProgram(), 'ok', (b) => ({ tree: JSON.stringify(b.tree) })),
       complete(createProgram(), 'notfound', {}),
     );
   },
@@ -155,7 +154,7 @@ export const derivedEntityHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => b.rollup != null,
-      pureFrom(createProgram(), (b) => ({ variant: 'ok', rollup: JSON.stringify(b.rollup) })),
+      completeFrom(createProgram(), 'ok', (b) => ({ rollup: JSON.stringify(b.rollup) })),
       complete(createProgram(), 'notfound', {}),
     );
   },

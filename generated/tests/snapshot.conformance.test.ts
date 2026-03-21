@@ -530,7 +530,8 @@ describe('Snapshot functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Snapshot');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Snapshot');
     });
   });
 
@@ -539,13 +540,13 @@ describe('Snapshot functional handler', () => {
       const storage = createInMemoryStorage();
       const compareResult0 = await interpret(snapshotHandler.compare({ outputPath: {"type":"literal","value":"generated/ts/password.ts"}, currentContent: {"type":"literal","value":"..."} }), storage);
       expect(compareResult0.variant).toBe("changed");
-      const snapshot = compareResult0.output["snapshot"];
-      const diff = compareResult0.output["diff"];
-      const linesAdded = compareResult0.output["linesAdded"];
-      const linesRemoved = compareResult0.output["linesRemoved"];
+      let snapshot = compareResult0.output["snapshot"];
+      let diff = compareResult0.output["diff"];
+      let linesAdded = compareResult0.output["linesAdded"];
+      let linesRemoved = compareResult0.output["linesRemoved"];
       const approveResult1 = await interpret(snapshotHandler.approve({ path: {"type":"literal","value":"generated/ts/password.ts"} }), storage);
       expect(approveResult1.variant).toBe("ok");
-      const snapshot = approveResult1.output["snapshot"];
+      snapshot = approveResult1.output["snapshot"];
       const thenResult0 = await interpret(snapshotHandler.compare({ outputPath: {"type":"literal","value":"generated/ts/password.ts"}, currentContent: {"type":"literal","value":"..."} }), storage);
       expect(thenResult0.variant).toBe("unchanged");
     });

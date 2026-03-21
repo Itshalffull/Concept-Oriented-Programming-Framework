@@ -249,7 +249,8 @@ describe('AuditTrail functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('AuditTrail');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('AuditTrail');
     });
   });
 
@@ -258,7 +259,7 @@ describe('AuditTrail functional handler', () => {
       const storage = createInMemoryStorage();
       const recordResult0 = await interpret(auditTrailHandler.record({ eventType: {"type":"variable","name":"_"}, actor: {"type":"variable","name":"_"}, action: {"type":"variable","name":"_"}, details: {"type":"variable","name":"_"}, sourceRef: {"type":"variable","name":"_"} }), storage);
       expect(recordResult0.variant).toBe("recorded");
-      const entry = recordResult0.output["entry"];
+      let entry = recordResult0.output["entry"];
       const thenResult0 = await interpret(auditTrailHandler.verifyIntegrity({ entry: {"type":"variable","name":"at"} }), storage);
       expect(thenResult0.variant).toBe("valid");
     });

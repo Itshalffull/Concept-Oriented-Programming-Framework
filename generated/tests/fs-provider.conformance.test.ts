@@ -180,7 +180,8 @@ describe('FsProvider imperative handler', () => {
       const result = await fsProviderHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('FsProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('FsProvider');
     });
   });
 
@@ -189,7 +190,7 @@ describe('FsProvider imperative handler', () => {
       const storage = createInMemoryStorage();
       const writeResult0 = await fsProviderHandler.write({ path: {"type":"literal","value":"/tmp/test.txt"}, content: {"type":"literal","value":"hello"} }, storage);
       expect(writeResult0.variant).toBe("ok");
-      const bytesWritten = writeResult0.output["bytesWritten"];
+      let bytesWritten = writeResult0.output["bytesWritten"];
       const thenResult0 = await fsProviderHandler.read({ path: {"type":"literal","value":"/tmp/test.txt"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -198,7 +199,7 @@ describe('FsProvider imperative handler', () => {
       const storage = createInMemoryStorage();
       const readResult0 = await fsProviderHandler.read({ path: {"type":"literal","value":"/tmp/nonexistent-file"} }, storage);
       expect(readResult0.variant).toBe("notFound");
-      const path = readResult0.output["path"];
+      let path = readResult0.output["path"];
       const thenResult0 = await fsProviderHandler.exists({ path: {"type":"literal","value":"/tmp/nonexistent-file"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

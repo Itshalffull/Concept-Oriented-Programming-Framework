@@ -126,7 +126,8 @@ describe('OnnxProvider imperative handler', () => {
       const result = await onnxProviderHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('OnnxProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('OnnxProvider');
     });
   });
 
@@ -135,7 +136,7 @@ describe('OnnxProvider imperative handler', () => {
       const storage = createInMemoryStorage();
       const loadResult0 = await onnxProviderHandler.load({ name: {"type":"literal","value":"codebert"}, modelPath: {"type":"literal","value":"/models/codebert.onnx"}, device: {"type":"literal","value":"cpu"}, options: {"type":"literal","value":"{}"} }, storage);
       expect(loadResult0.variant).toBe("ok");
-      const session = loadResult0.output["session"];
+      let session = loadResult0.output["session"];
       const thenResult0 = await onnxProviderHandler.infer({ session: {"type":"literal","value":"unknown"}, inputs: {"type":"literal","value":"[]"}, options: {"type":"literal","value":"{}"} }, storage);
       expect(thenResult0.variant).toBe("notFound");
     });

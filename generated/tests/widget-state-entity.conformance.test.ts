@@ -454,27 +454,13 @@ describe('WidgetStateEntity functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof widgetStateEntityHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = widgetStateEntityHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('WidgetStateEntity');
-    });
-  });
 
   describe('invariant examples', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(widgetStateEntityHandler.register({ widget: {"type":"literal","value":"dialog"}, name: {"type":"literal","value":"closed"}, initial: {"type":"literal","value":"true"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const widgetState = registerResult0.output["widgetState"];
+      let widgetState = registerResult0.output["widgetState"];
       const thenResult0 = await interpret(widgetStateEntityHandler.get({ widgetState: {"type":"variable","name":"s"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

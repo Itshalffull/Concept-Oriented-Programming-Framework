@@ -255,7 +255,8 @@ describe('OpenaiTarget functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('OpenaiTarget');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('OpenaiTarget');
     });
   });
 
@@ -264,8 +265,8 @@ describe('OpenaiTarget functional handler', () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(openaiTargetHandler.generate({ projection: {"type":"literal","value":"score-projection"}, config: {"type":"literal","value":"{}"} }), storage);
       expect(generateResult0.variant).toBe("ok");
-      const functions = generateResult0.output["functions"];
-      const files = generateResult0.output["files"];
+      let functions = generateResult0.output["functions"];
+      let files = generateResult0.output["files"];
       const thenResult0 = await interpret(openaiTargetHandler.listFunctions({ concept: {"type":"literal","value":"ScoreApi"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

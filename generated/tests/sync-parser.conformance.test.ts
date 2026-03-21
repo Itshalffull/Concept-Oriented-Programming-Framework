@@ -63,7 +63,8 @@ describe('SyncParser imperative handler', () => {
       const result = await syncParserHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('SyncParser');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('SyncParser');
     });
   });
 
@@ -72,8 +73,8 @@ describe('SyncParser imperative handler', () => {
       const storage = createInMemoryStorage();
       const parseResult0 = await syncParserHandler.parse({ source: {"type":"literal","value":"sync T [eager]\nwhen {\n  A/act: [ x: ?v ] => []\n}\nthen {\n  B/do: [ x: ?v ]\n}"}, manifests: {"type":"list","items":[]} }, storage);
       expect(parseResult0.variant).toBe("ok");
-      const sync = parseResult0.output["sync"];
-      const ast = parseResult0.output["ast"];
+      let sync = parseResult0.output["sync"];
+      let ast = parseResult0.output["ast"];
       const thenResult0 = await syncParserHandler.parse({ source: {"type":"literal","value":"invalid"}, manifests: {"type":"list","items":[]} }, storage);
       expect(thenResult0.variant).toBe("error");
     });

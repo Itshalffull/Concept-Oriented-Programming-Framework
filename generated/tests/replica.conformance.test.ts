@@ -178,7 +178,8 @@ describe('Replica imperative handler', () => {
       const result = await replicaHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Replica');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Replica');
     });
   });
 
@@ -187,7 +188,7 @@ describe('Replica imperative handler', () => {
       const storage = createInMemoryStorage();
       const localUpdateResult0 = await replicaHandler.localUpdate({ op: {"type":"variable","name":"o"} }, storage);
       expect(localUpdateResult0.variant).toBe("ok");
-      const newState = localUpdateResult0.output["newState"];
+      let newState = localUpdateResult0.output["newState"];
       const thenResult0 = await replicaHandler.getState({  }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

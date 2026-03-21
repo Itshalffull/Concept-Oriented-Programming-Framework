@@ -257,7 +257,8 @@ describe('Delegation functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Delegation');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Delegation');
     });
   });
 
@@ -266,7 +267,7 @@ describe('Delegation functional handler', () => {
       const storage = createInMemoryStorage();
       const delegateResult0 = await interpret(delegationHandler.delegate({ from: {"type":"variable","name":"a"}, to: {"type":"variable","name":"b"}, domain: {"type":"variable","name":"_"}, transitive: {"type":"variable","name":"_"} }), storage);
       expect(delegateResult0.variant).toBe("delegated");
-      const delegation = delegateResult0.output["delegation"];
+      let delegation = delegateResult0.output["delegation"];
       const thenResult0 = await interpret(delegationHandler.getEffectiveWeight({ participant: {"type":"variable","name":"b"}, domain: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("weight");
       const thenResult1 = await interpret(delegationHandler.undelegate({ delegation: {"type":"variable","name":"e"} }), storage);

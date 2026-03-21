@@ -256,27 +256,13 @@ describe('WidgetRegistry functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof widgetRegistryHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = widgetRegistryHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('WidgetRegistry');
-    });
-  });
 
   describe('invariant examples', () => {
     it("register then query", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(widgetRegistryHandler.register({ entry: {"type":"variable","name":"w"}, widget: {"type":"literal","value":"approval-detail"}, interactor: {"type":"literal","value":"entity-detail"}, concept: {"type":"literal","value":"Approval"}, suite: {"type":"literal","value":"governance"}, tags: {"type":"variable","name":"_"}, specificity: {"type":"literal","value":20}, contractVersion: {"type":"literal","value":1}, contractSlots: {"type":"variable","name":"_"}, contractActions: {"type":"variable","name":"_"}, secondaryRoles: {"type":"variable","name":"_"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const entry = registerResult0.output["entry"];
+      let entry = registerResult0.output["entry"];
       const thenResult0 = await interpret(widgetRegistryHandler.query({ concept: {"type":"literal","value":"Approval"}, suite: {"type":"variable","name":"_"}, interactor: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

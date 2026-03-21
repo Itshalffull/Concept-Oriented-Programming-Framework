@@ -256,7 +256,8 @@ describe('Polity functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Polity');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Polity');
     });
   });
 
@@ -265,7 +266,7 @@ describe('Polity functional handler', () => {
       const storage = createInMemoryStorage();
       const establishResult0 = await interpret(polityHandler.establish({ name: {"type":"variable","name":"_"}, purpose: {"type":"variable","name":"_"}, values: {"type":"variable","name":"_"}, scope: {"type":"variable","name":"_"} }), storage);
       expect(establishResult0.variant).toBe("established");
-      const polity = establishResult0.output["polity"];
+      let polity = establishResult0.output["polity"];
       const thenResult0 = await interpret(polityHandler.amend({ polity: {"type":"variable","name":"g"}, field: {"type":"literal","value":"purpose"}, newValue: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("amended");
     });

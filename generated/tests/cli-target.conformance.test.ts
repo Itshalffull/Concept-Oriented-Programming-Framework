@@ -262,7 +262,8 @@ describe('CliTarget functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('CliTarget');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('CliTarget');
     });
   });
 
@@ -271,8 +272,8 @@ describe('CliTarget functional handler', () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(cliTargetHandler.generate({ projection: {"type":"literal","value":"task-projection"}, config: {"type":"literal","value":"{}"} }), storage);
       expect(generateResult0.variant).toBe("ok");
-      const commands = generateResult0.output["commands"];
-      const files = generateResult0.output["files"];
+      let commands = generateResult0.output["commands"];
+      let files = generateResult0.output["files"];
       const thenResult0 = await interpret(cliTargetHandler.listCommands({ concept: {"type":"literal","value":"Task"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

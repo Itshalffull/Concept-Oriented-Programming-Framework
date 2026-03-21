@@ -400,7 +400,8 @@ describe('Connector functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Connector');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Connector');
     });
   });
 
@@ -409,7 +410,7 @@ describe('Connector functional handler', () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(connectorHandler.configure({ sourceId: {"type":"literal","value":"src-1"}, protocolId: {"type":"literal","value":"rest"}, config: {"type":"literal","value":"{\"baseUrl\":\"https://api.example.com\"}"} }), storage);
       expect(configureResult0.variant).toBe("ok");
-      const connectorId = configureResult0.output["connectorId"];
+      let connectorId = configureResult0.output["connectorId"];
       const thenResult0 = await interpret(connectorHandler.test({ connectorId: {"type":"literal","value":"conn-1"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(connectorHandler.read({ connectorId: {"type":"literal","value":"conn-1"}, query: {"type":"literal","value":"{\"path\":\"/posts\"}"}, options: {"type":"literal","value":"{}"} }), storage);

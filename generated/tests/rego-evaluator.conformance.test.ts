@@ -249,7 +249,8 @@ describe('RegoEvaluator functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('RegoEvaluator');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('RegoEvaluator');
     });
   });
 
@@ -258,7 +259,7 @@ describe('RegoEvaluator functional handler', () => {
       const storage = createInMemoryStorage();
       const loadBundleResult0 = await interpret(regoEvaluatorHandler.loadBundle({ policySource: {"type":"variable","name":"_"}, dataSource: {"type":"variable","name":"_"}, packageName: {"type":"variable","name":"_"} }), storage);
       expect(loadBundleResult0.variant).toBe("loaded");
-      const bundle = loadBundleResult0.output["bundle"];
+      let bundle = loadBundleResult0.output["bundle"];
       const thenResult0 = await interpret(regoEvaluatorHandler.evaluate({ bundle: {"type":"variable","name":"re"}, input: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("result");
     });

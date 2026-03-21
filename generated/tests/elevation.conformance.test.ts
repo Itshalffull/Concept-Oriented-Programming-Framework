@@ -274,7 +274,8 @@ describe('Elevation functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Elevation');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Elevation');
     });
   });
 
@@ -283,7 +284,7 @@ describe('Elevation functional handler', () => {
       const storage = createInMemoryStorage();
       const defineResult0 = await interpret(elevationHandler.define({ elevation: {"type":"variable","name":"w"}, level: {"type":"literal","value":2}, shadow: {"type":"literal","value":"[{ \"y\": 4, \"blur\": 8, \"color\": \"rgba(0,0,0,0.12)\" }]"} }), storage);
       expect(defineResult0.variant).toBe("ok");
-      const elevation = defineResult0.output["elevation"];
+      let elevation = defineResult0.output["elevation"];
       const thenResult0 = await interpret(elevationHandler.get({ elevation: {"type":"variable","name":"w"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(elevationHandler.define({ elevation: {"type":"variable","name":"w2"}, level: {"type":"literal","value":7}, shadow: {"type":"literal","value":"[]"} }), storage);

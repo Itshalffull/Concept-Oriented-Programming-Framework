@@ -125,7 +125,8 @@ describe('WasmProvider imperative handler', () => {
       const result = await wasmProviderHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('WasmProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('WasmProvider');
     });
   });
 
@@ -134,7 +135,7 @@ describe('WasmProvider imperative handler', () => {
       const storage = createInMemoryStorage();
       const loadResult0 = await wasmProviderHandler.load({ name: {"type":"literal","value":"tokenizer"}, wasmPath: {"type":"literal","value":"/models/tokenizer.wasm"}, memoryLimit: {"type":"literal","value":65536} }, storage);
       expect(loadResult0.variant).toBe("ok");
-      const module = loadResult0.output["module"];
+      let module = loadResult0.output["module"];
       const thenResult0 = await wasmProviderHandler.execute({ module: {"type":"literal","value":"unknown"}, function: {"type":"literal","value":"tokenize"}, args: {"type":"literal","value":"[]"} }, storage);
       expect(thenResult0.variant).toBe("notFound");
     });

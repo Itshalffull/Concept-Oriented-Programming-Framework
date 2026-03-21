@@ -525,7 +525,8 @@ describe('Meeting functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Meeting');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Meeting');
     });
   });
 
@@ -534,7 +535,7 @@ describe('Meeting functional handler', () => {
       const storage = createInMemoryStorage();
       const scheduleResult0 = await interpret(meetingHandler.schedule({ title: {"type":"variable","name":"_"}, agenda: {"type":"variable","name":"_"} }), storage);
       expect(scheduleResult0.variant).toBe("scheduled");
-      const meeting = scheduleResult0.output["meeting"];
+      let meeting = scheduleResult0.output["meeting"];
       const thenResult0 = await interpret(meetingHandler.callToOrder({ meeting: {"type":"variable","name":"mt"}, chair: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("called");
       const thenResult1 = await interpret(meetingHandler.makeMotion({ meeting: {"type":"variable","name":"mt"}, mover: {"type":"variable","name":"_"}, motionType: {"type":"variable","name":"_"}, text: {"type":"variable","name":"_"} }), storage);

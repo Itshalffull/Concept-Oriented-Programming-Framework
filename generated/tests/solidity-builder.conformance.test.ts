@@ -311,7 +311,8 @@ describe('SolidityBuilder functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('SolidityBuilder');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('SolidityBuilder');
     });
   });
 
@@ -320,9 +321,9 @@ describe('SolidityBuilder functional handler', () => {
       const storage = createInMemoryStorage();
       const buildResult0 = await interpret(solidityBuilderHandler.build({ source: {"type":"literal","value":"./generated/solidity/password"}, toolchainPath: {"type":"literal","value":"/usr/local/bin/solc"}, platform: {"type":"literal","value":"evm-shanghai"}, config: {"type":"record","fields":[{"name":"mode","value":{"type":"literal","value":"release"}}]} }), storage);
       expect(buildResult0.variant).toBe("ok");
-      const build = buildResult0.output["build"];
-      const artifactPath = buildResult0.output["artifactPath"];
-      const artifactHash = buildResult0.output["artifactHash"];
+      let build = buildResult0.output["build"];
+      let artifactPath = buildResult0.output["artifactPath"];
+      let artifactHash = buildResult0.output["artifactHash"];
       const thenResult0 = await interpret(solidityBuilderHandler.test({ build: {"type":"variable","name":"l"}, toolchainPath: {"type":"literal","value":"/usr/local/bin/solc"}, invocation: {"type":"record","fields":[{"name":"command","value":{"type":"literal","value":"forge test"}},{"name":"args","value":{"type":"list","items":[{"type":"literal","value":"--json"},{"type":"literal","value":"--gas-report"}]}},{"name":"outputFormat","value":{"type":"literal","value":"forge-test-json"}},{"name":"configFile","value":{"type":"literal","value":"foundry.toml"}},{"name":"env","value":{"type":"variable","name":"null"}}]}, testType: {"type":"literal","value":"unit"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

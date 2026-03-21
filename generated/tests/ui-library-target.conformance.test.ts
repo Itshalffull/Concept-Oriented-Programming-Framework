@@ -186,7 +186,8 @@ describe('UILibraryTarget functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('UILibraryTarget');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('UILibraryTarget');
     });
   });
 
@@ -195,8 +196,8 @@ describe('UILibraryTarget functional handler', () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(uiLibraryTargetHandler.generate({ config: {"type":"literal","value":"{\"outputPath\":\"docs/reference/ui-library.md\"}"} }), storage);
       expect(generateResult0.variant).toBe("ok");
-      const document = generateResult0.output["document"];
-      const files = generateResult0.output["files"];
+      let document = generateResult0.output["document"];
+      let files = generateResult0.output["files"];
       const thenResult0 = await interpret(uiLibraryTargetHandler.validate({ document: {"type":"variable","name":"d"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

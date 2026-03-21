@@ -188,7 +188,8 @@ describe('Supermajority functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Supermajority');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Supermajority');
     });
   });
 
@@ -197,7 +198,7 @@ describe('Supermajority functional handler', () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(supermajorityHandler.configure({ threshold: {"type":"literal","value":0.6667}, roundingMode: {"type":"literal","value":"Ceil"}, abstentionsCount: {"type":"literal","value":false} }), storage);
       expect(configureResult0.variant).toBe("configured");
-      const config = configureResult0.output["config"];
+      let config = configureResult0.output["config"];
       const thenResult0 = await interpret(supermajorityHandler.count({ config: {"type":"variable","name":"sm"}, ballots: {"type":"variable","name":"_"}, weights: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("winner");
     });

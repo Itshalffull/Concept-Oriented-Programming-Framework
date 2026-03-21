@@ -470,7 +470,8 @@ describe('RuntimeDiscovery functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('RuntimeDiscovery');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('RuntimeDiscovery');
     });
   });
 
@@ -479,9 +480,9 @@ describe('RuntimeDiscovery functional handler', () => {
       const storage = createInMemoryStorage();
       const scanResult0 = await interpret(runtimeDiscoveryHandler.scan({ directory: {"type":"literal","value":"/app/clef-base"} }), storage);
       expect(scanResult0.variant).toBe("ok");
-      const project = scanResult0.output["project"];
-      const manifests = scanResult0.output["manifests"];
-      const runtimes = scanResult0.output["runtimes"];
+      let project = scanResult0.output["project"];
+      let manifests = scanResult0.output["manifests"];
+      let runtimes = scanResult0.output["runtimes"];
       const thenResult0 = await interpret(runtimeDiscoveryHandler.listRuntimes({ project: {"type":"variable","name":"p"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -490,9 +491,9 @@ describe('RuntimeDiscovery functional handler', () => {
       const storage = createInMemoryStorage();
       const scanResult0 = await interpret(runtimeDiscoveryHandler.scan({ directory: {"type":"literal","value":"/app/clef-base"} }), storage);
       expect(scanResult0.variant).toBe("ok");
-      const project = scanResult0.output["project"];
-      const manifests = scanResult0.output["manifests"];
-      const runtimes = scanResult0.output["runtimes"];
+      let project = scanResult0.output["project"];
+      let manifests = scanResult0.output["manifests"];
+      let runtimes = scanResult0.output["runtimes"];
       const thenResult0 = await interpret(runtimeDiscoveryHandler.resolveEndpoint({ project: {"type":"variable","name":"p"}, runtime: {"type":"literal","value":"vercel"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -501,8 +502,8 @@ describe('RuntimeDiscovery functional handler', () => {
       const storage = createInMemoryStorage();
       const scanResult0 = await interpret(runtimeDiscoveryHandler.scan({ directory: {"type":"literal","value":"/nonexistent"} }), storage);
       expect(scanResult0.variant).toBe("io_error");
-      const directory = scanResult0.output["directory"];
-      const message = scanResult0.output["message"];
+      let directory = scanResult0.output["directory"];
+      let message = scanResult0.output["message"];
       const thenResult0 = await interpret(runtimeDiscoveryHandler.listProjects({  }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

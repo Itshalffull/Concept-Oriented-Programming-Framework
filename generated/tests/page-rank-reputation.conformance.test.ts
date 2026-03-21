@@ -313,7 +313,8 @@ describe('PageRankReputation functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('PageRankReputation');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('PageRankReputation');
     });
   });
 
@@ -322,7 +323,7 @@ describe('PageRankReputation functional handler', () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(pageRankReputationHandler.configure({ dampingFactor: {"type":"literal","value":0.85}, maxIterations: {"type":"literal","value":100}, convergenceThreshold: {"type":"literal","value":0.0001}, preTrusted: {"type":"variable","name":"_"} }), storage);
       expect(configureResult0.variant).toBe("configured");
-      const graph = configureResult0.output["graph"];
+      let graph = configureResult0.output["graph"];
       const thenResult0 = await interpret(pageRankReputationHandler.addEdge({ graph: {"type":"variable","name":"pr"}, source: {"type":"variable","name":"_"}, target: {"type":"variable","name":"_"}, weight: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("added");
       const thenResult1 = await interpret(pageRankReputationHandler.compute({ graph: {"type":"variable","name":"pr"} }), storage);

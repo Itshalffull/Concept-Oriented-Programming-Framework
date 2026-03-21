@@ -151,7 +151,8 @@ describe('OpenAIEmbeddingProvider functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('OpenAIEmbeddingProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('OpenAIEmbeddingProvider');
     });
   });
 
@@ -160,7 +161,7 @@ describe('OpenAIEmbeddingProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const initializeResult0 = await interpret(openAIEmbeddingProviderHandler.initialize({ apiKey: {"type":"literal","value":"sk-test"}, apiModel: {"type":"literal","value":"text-embedding-3-small"}, dimensions: {"type":"literal","value":1536} }), storage);
       expect(initializeResult0.variant).toBe("ok");
-      const instance = initializeResult0.output["instance"];
+      let instance = initializeResult0.output["instance"];
       const thenResult0 = await interpret(openAIEmbeddingProviderHandler.embed({ text: {"type":"literal","value":"function add(a, b) { return a + b; }"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

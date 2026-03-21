@@ -249,7 +249,8 @@ describe('Attestation functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Attestation');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Attestation');
     });
   });
 
@@ -258,7 +259,7 @@ describe('Attestation functional handler', () => {
       const storage = createInMemoryStorage();
       const attestResult0 = await interpret(attestationHandler.attest({ schema: {"type":"variable","name":"_"}, attester: {"type":"variable","name":"_"}, recipient: {"type":"variable","name":"_"}, data: {"type":"variable","name":"_"}, expiry: {"type":"variable","name":"_"} }), storage);
       expect(attestResult0.variant).toBe("created");
-      const attestation = attestResult0.output["attestation"];
+      let attestation = attestResult0.output["attestation"];
       const thenResult0 = await interpret(attestationHandler.verify({ attestation: {"type":"variable","name":"a"} }), storage);
       expect(thenResult0.variant).toBe("valid");
       const thenResult1 = await interpret(attestationHandler.revoke({ attestation: {"type":"variable","name":"a"}, revoker: {"type":"variable","name":"_"} }), storage);

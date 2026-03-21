@@ -125,7 +125,8 @@ describe('WidgetGen functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('WidgetGen');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('WidgetGen');
     });
   });
 
@@ -134,8 +135,8 @@ describe('WidgetGen functional handler', () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(widgetGenHandler.generate({ gen: {"type":"variable","name":"g"}, target: {"type":"literal","value":"react"}, widgetAst: {"type":"variable","name":"_"} }), storage);
       expect(generateResult0.variant).toBe("ok");
-      const gen = generateResult0.output["gen"];
-      const output = generateResult0.output["output"];
+      let gen = generateResult0.output["gen"];
+      let output = generateResult0.output["output"];
       const thenResult0 = await interpret(widgetGenHandler.generate({ gen: {"type":"variable","name":"g"}, target: {"type":"literal","value":"react"}, widgetAst: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -204,9 +205,6 @@ describe('WidgetGen functional handler', () => {
       );
     });
 
-  });
-
-  describe('action contracts (PBT)', () => {
   });
 
 });

@@ -390,7 +390,8 @@ describe('CloudflareRuntime functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('CloudflareRuntime');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('CloudflareRuntime');
     });
   });
 
@@ -399,9 +400,9 @@ describe('CloudflareRuntime functional handler', () => {
       const storage = createInMemoryStorage();
       const provisionResult0 = await interpret(cloudflareRuntimeHandler.provision({ concept: {"type":"literal","value":"User"}, accountId: {"type":"literal","value":"abc123"}, routes: {"type":"variable","name":"r"} }), storage);
       expect(provisionResult0.variant).toBe("ok");
-      const worker = provisionResult0.output["worker"];
-      const scriptName = provisionResult0.output["scriptName"];
-      const endpoint = provisionResult0.output["endpoint"];
+      let worker = provisionResult0.output["worker"];
+      let scriptName = provisionResult0.output["scriptName"];
+      let endpoint = provisionResult0.output["endpoint"];
       const thenResult0 = await interpret(cloudflareRuntimeHandler.deploy({ worker: {"type":"variable","name":"w"}, scriptContent: {"type":"literal","value":"export default { fetch() {} }"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

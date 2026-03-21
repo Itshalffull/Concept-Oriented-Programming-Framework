@@ -248,7 +248,8 @@ describe('InterfaceScaffoldGen functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('InterfaceScaffoldGen');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('InterfaceScaffoldGen');
     });
   });
 
@@ -257,8 +258,8 @@ describe('InterfaceScaffoldGen functional handler', () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(interfaceScaffoldGenHandler.generate({ name: {"type":"literal","value":"my-api"}, targets: {"type":"list","items":[{"type":"literal","value":"rest"},{"type":"literal","value":"graphql"}]}, sdks: {"type":"list","items":[{"type":"literal","value":"typescript"}]} }), storage);
       expect(generateResult0.variant).toBe("ok");
-      const files = generateResult0.output["files"];
-      const filesGenerated = generateResult0.output["filesGenerated"];
+      let files = generateResult0.output["files"];
+      let filesGenerated = generateResult0.output["filesGenerated"];
     });
 
   });

@@ -249,7 +249,8 @@ describe('Auditor functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Auditor');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Auditor');
     });
   });
 
@@ -258,7 +259,7 @@ describe('Auditor functional handler', () => {
       const storage = createInMemoryStorage();
       const auditResult0 = await interpret(auditorHandler.audit({ lockfile_entries: {"type":"variable","name":"entries"} }), storage);
       expect(auditResult0.variant).toBe("ok");
-      const audit = auditResult0.output["audit"];
+      let audit = auditResult0.output["audit"];
       const thenResult0 = await interpret(auditorHandler.diff({ old_audit: {"type":"variable","name":"a"}, new_audit: {"type":"variable","name":"a"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -267,7 +268,7 @@ describe('Auditor functional handler', () => {
       const storage = createInMemoryStorage();
       const checkPolicyResult0 = await interpret(auditorHandler.checkPolicy({ lockfile_entries: {"type":"variable","name":"entries"}, policy: {"type":"record","fields":[{"name":"allowed_licenses","value":{"type":"list","items":[{"type":"literal","value":"MIT"},{"type":"literal","value":"Apache-2.0"}]}},{"name":"denied_namespaces","value":{"type":"list","items":[]}},{"name":"max_severity","value":{"type":"literal","value":"critical"}}]} }), storage);
       expect(checkPolicyResult0.variant).toBe("ok");
-      const audit = checkPolicyResult0.output["audit"];
+      let audit = checkPolicyResult0.output["audit"];
       expect(aResult.output["policy_violations"]).toBe({"type":"list","items":[]});
     });
 

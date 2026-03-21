@@ -10,7 +10,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.js';
 import {
-  createProgram, get, find, put, branch, complete, pureFrom, mapBindings,
+  createProgram, get, find, put, branch, complete, completeFrom, pureFrom, mapBindings,
 } from '../../../runtime/storage-program.js';
 
 export const widgetEntityHandler: FunctionalConceptHandler = {
@@ -62,8 +62,7 @@ export const widgetEntityHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => b.existing != null,
-      pureFrom(createProgram(), (b) => ({
-        variant: 'ok',
+      completeFrom(createProgram(), 'ok', (b) => ({
         entity: (b.existing as Record<string, unknown>).id,
       })),
       complete(createProgram(), 'notfound', {}),
@@ -85,7 +84,7 @@ export const widgetEntityHandler: FunctionalConceptHandler = {
       return JSON.stringify(matching.map(w => w.name));
     }, 'result');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', widgets: b.result }));
+    return completeFrom(p, 'ok', (b) => ({ widgets: b.result }));
   },
 
   findComposing(input) {
@@ -108,7 +107,7 @@ export const widgetEntityHandler: FunctionalConceptHandler = {
       return JSON.stringify(parents.map(w => w.name));
     }, 'parents');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', parents: b.parents }));
+    return completeFrom(p, 'ok', (b) => ({ parents: b.parents }));
   },
 
   findComposedBy(input) {
@@ -122,7 +121,7 @@ export const widgetEntityHandler: FunctionalConceptHandler = {
       return entry ? (entry.composedWidgets as string || '[]') : '[]';
     }, 'children');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', children: b.children }));
+    return completeFrom(p, 'ok', (b) => ({ children: b.children }));
   },
 
   generatedComponents(input) {
@@ -136,7 +135,7 @@ export const widgetEntityHandler: FunctionalConceptHandler = {
       return entry ? (entry.generatedComponentsCache as string || '[]') : '[]';
     }, 'components');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', components: b.components }));
+    return completeFrom(p, 'ok', (b) => ({ components: b.components }));
   },
 
   accessibilityAudit(input) {
@@ -163,9 +162,9 @@ export const widgetEntityHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => (b.audit as Record<string, unknown>).complete === true,
-      pureFrom(createProgram(), (b) => {
+      completeFrom(createProgram(), 'ok', (b) => {
         const a = b.audit as Record<string, unknown>;
-        return { variant: 'ok', allPassing: 'true', report: JSON.stringify(a.report) };
+        return { allPassing: 'true', report: JSON.stringify(a.report) };
       }),
       pureFrom(createProgram(), (b) => {
         const a = b.audit as Record<string, unknown>;
@@ -193,8 +192,8 @@ export const widgetEntityHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => b.concepts != null,
-      pureFrom(createProgram(), (b) => ({
-        variant: 'ok', concepts: JSON.stringify(b.concepts),
+      completeFrom(createProgram(), 'ok', (b) => ({
+        concepts: JSON.stringify(b.concepts),
       })),
       complete(createProgram(), 'noConceptBinding', {}),
     );

@@ -257,7 +257,8 @@ describe('VaultProvider functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('VaultProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('VaultProvider');
     });
   });
 
@@ -266,9 +267,9 @@ describe('VaultProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const fetchResult0 = await interpret(vaultProviderHandler.fetch({ path: {"type":"literal","value":"secret/data/db-password"} }), storage);
       expect(fetchResult0.variant).toBe("ok");
-      const value = fetchResult0.output["value"];
-      const leaseId = fetchResult0.output["leaseId"];
-      const leaseDuration = fetchResult0.output["leaseDuration"];
+      let value = fetchResult0.output["value"];
+      let leaseId = fetchResult0.output["leaseId"];
+      let leaseDuration = fetchResult0.output["leaseDuration"];
       const thenResult0 = await interpret(vaultProviderHandler.renewLease({ leaseId: {"type":"variable","name":"lid"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

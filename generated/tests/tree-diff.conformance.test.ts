@@ -172,7 +172,8 @@ describe('TreeDiff functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('TreeDiff');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('TreeDiff');
     });
   });
 
@@ -181,8 +182,8 @@ describe('TreeDiff functional handler', () => {
       const storage = createInMemoryStorage();
       const computeResult0 = await interpret(treeDiffHandler.compute({ contentA: {"type":"variable","name":"a"}, contentB: {"type":"variable","name":"a"} }), storage);
       expect(computeResult0.variant).toBe("ok");
-      const editScript = computeResult0.output["editScript"];
-      const distance = computeResult0.output["distance"];
+      let editScript = computeResult0.output["editScript"];
+      let distance = computeResult0.output["distance"];
       const thenResult0 = await interpret(treeDiffHandler.compute({ contentA: {"type":"variable","name":"a"}, contentB: {"type":"variable","name":"b"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

@@ -391,7 +391,8 @@ describe('Frame functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Frame');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Frame');
     });
   });
 
@@ -400,7 +401,7 @@ describe('Frame functional handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(frameHandler.create({ canvas: {"type":"literal","value":"c1"}, name: {"type":"literal","value":"Group A"}, x: {"type":"literal","value":0}, y: {"type":"literal","value":0}, width: {"type":"literal","value":400}, height: {"type":"literal","value":300} }), storage);
       expect(createResult0.variant).toBe("ok");
-      const frame = createResult0.output["frame"];
+      let frame = createResult0.output["frame"];
       const thenResult0 = await interpret(frameHandler.addItem({ frame: {"type":"variable","name":"f"}, item_id: {"type":"literal","value":"item1"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

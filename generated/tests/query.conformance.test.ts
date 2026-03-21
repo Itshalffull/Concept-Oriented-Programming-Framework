@@ -463,7 +463,8 @@ describe('Query functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Query');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Query');
     });
   });
 
@@ -472,7 +473,7 @@ describe('Query functional handler', () => {
       const storage = createInMemoryStorage();
       const parseResult0 = await interpret(queryHandler.parse({ query: {"type":"variable","name":"q"}, expression: {"type":"literal","value":"status = 'active'"} }), storage);
       expect(parseResult0.variant).toBe("ok");
-      const query = parseResult0.output["query"];
+      let query = parseResult0.output["query"];
       const thenResult0 = await interpret(queryHandler.execute({ query: {"type":"variable","name":"q"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

@@ -2608,7 +2608,8 @@ describe('ScoreApi functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ScoreApi');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ScoreApi');
     });
   });
 
@@ -2617,14 +2618,14 @@ describe('ScoreApi functional handler', () => {
       const storage = createInMemoryStorage();
       const reindexResult0 = await interpret(scoreApiHandler.reindex({  }), storage);
       expect(reindexResult0.variant).toBe("ok");
-      const conceptCount = reindexResult0.output["conceptCount"];
-      const symbolCount = reindexResult0.output["symbolCount"];
-      const fileCount = reindexResult0.output["fileCount"];
-      const syncCount = reindexResult0.output["syncCount"];
-      const handlerCount = reindexResult0.output["handlerCount"];
-      const widgetImplCount = reindexResult0.output["widgetImplCount"];
-      const themeImplCount = reindexResult0.output["themeImplCount"];
-      const duration = reindexResult0.output["duration"];
+      let conceptCount = reindexResult0.output["conceptCount"];
+      let symbolCount = reindexResult0.output["symbolCount"];
+      let fileCount = reindexResult0.output["fileCount"];
+      let syncCount = reindexResult0.output["syncCount"];
+      let handlerCount = reindexResult0.output["handlerCount"];
+      let widgetImplCount = reindexResult0.output["widgetImplCount"];
+      let themeImplCount = reindexResult0.output["themeImplCount"];
+      let duration = reindexResult0.output["duration"];
       const thenResult0 = await interpret(scoreApiHandler.status({  }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(scoreApiHandler.listConcepts({  }), storage);

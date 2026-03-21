@@ -9,7 +9,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.js';
 import {
-  createProgram, find, put, branch, complete, pureFrom, mapBindings,
+  createProgram, find, put, branch, complete, completeFrom, pureFrom, mapBindings,
 } from '../../../runtime/storage-program.js';
 
 export const anatomyPartEntityHandler: FunctionalConceptHandler = {
@@ -53,7 +53,7 @@ export const anatomyPartEntityHandler: FunctionalConceptHandler = {
       })));
     }, 'result');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', parts: b.result }));
+    return completeFrom(p, 'ok', (b) => ({ parts: b.result }));
   },
 
   findBoundToField(input) {
@@ -69,7 +69,7 @@ export const anatomyPartEntityHandler: FunctionalConceptHandler = {
       })));
     }, 'result');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', parts: b.result }));
+    return completeFrom(p, 'ok', (b) => ({ parts: b.result }));
   },
 
   findBoundToAction(input) {
@@ -85,7 +85,7 @@ export const anatomyPartEntityHandler: FunctionalConceptHandler = {
       })));
     }, 'result');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', parts: b.result }));
+    return completeFrom(p, 'ok', (b) => ({ parts: b.result }));
   },
 
   get(input) {
@@ -100,10 +100,10 @@ export const anatomyPartEntityHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => b.entry != null,
-      pureFrom(createProgram(), (b) => {
+      completeFrom(createProgram(), 'ok', (b) => {
         const e = b.entry as Record<string, unknown>;
         return {
-          variant: 'ok', part: e.id, widget: e.widget,
+          part: e.id, widget: e.widget,
           name: e.name, semanticRole: e.semanticRole, required: e.required,
         };
       }),

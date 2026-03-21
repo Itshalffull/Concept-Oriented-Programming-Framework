@@ -138,7 +138,8 @@ describe('Installer imperative handler', () => {
       const result = await installerHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Installer');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Installer');
     });
   });
 
@@ -147,7 +148,7 @@ describe('Installer imperative handler', () => {
       const storage = createInMemoryStorage();
       const stageResult0 = await installerHandler.stage({ lockfile_entries: {"type":"variable","name":"entries"}, project_root: {"type":"variable","name":"root"} }, storage);
       expect(stageResult0.variant).toBe("ok");
-      const installation = stageResult0.output["installation"];
+      let installation = stageResult0.output["installation"];
       expect(iResult.output["active"]).toBe({"type":"literal","value":false});
       expect(iResult.output["generation"]).toBeGreaterThan({"type":"literal","value":0});
     });
@@ -156,7 +157,7 @@ describe('Installer imperative handler', () => {
       const storage = createInMemoryStorage();
       const stageResult0 = await installerHandler.stage({ lockfile_entries: {"type":"variable","name":"entries"}, project_root: {"type":"variable","name":"root"} }, storage);
       expect(stageResult0.variant).toBe("ok");
-      const installation = stageResult0.output["installation"];
+      let installation = stageResult0.output["installation"];
       const thenResult0 = await installerHandler.activate({ installation: {"type":"variable","name":"i"} }, storage);
       expect(thenResult0.variant).toBe("ok");
       expect(iResult.output["active"]).toBe({"type":"literal","value":true});

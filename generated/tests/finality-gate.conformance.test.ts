@@ -187,7 +187,8 @@ describe('FinalityGate functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('FinalityGate');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('FinalityGate');
     });
   });
 
@@ -196,7 +197,7 @@ describe('FinalityGate functional handler', () => {
       const storage = createInMemoryStorage();
       const submitResult0 = await interpret(finalityGateHandler.submit({ operationRef: {"type":"variable","name":"_"}, provider: {"type":"variable","name":"_"} }), storage);
       expect(submitResult0.variant).toBe("submitted");
-      const gate = submitResult0.output["gate"];
+      let gate = submitResult0.output["gate"];
       const thenResult0 = await interpret(finalityGateHandler.confirm({ gate: {"type":"variable","name":"fg"} }), storage);
       expect(thenResult0.variant).toBe("finalized");
     });

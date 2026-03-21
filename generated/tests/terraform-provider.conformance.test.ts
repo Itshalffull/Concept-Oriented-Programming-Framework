@@ -325,7 +325,8 @@ describe('TerraformProvider functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('TerraformProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('TerraformProvider');
     });
   });
 
@@ -334,8 +335,8 @@ describe('TerraformProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(terraformProviderHandler.generate({ plan: {"type":"literal","value":"dp-001"} }), storage);
       expect(generateResult0.variant).toBe("ok");
-      const workspace = generateResult0.output["workspace"];
-      const files = generateResult0.output["files"];
+      let workspace = generateResult0.output["workspace"];
+      let files = generateResult0.output["files"];
       const thenResult0 = await interpret(terraformProviderHandler.apply({ workspace: {"type":"variable","name":"w"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

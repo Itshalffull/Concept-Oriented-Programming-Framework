@@ -392,7 +392,8 @@ describe('Comment functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Comment');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Comment');
     });
   });
 
@@ -401,7 +402,7 @@ describe('Comment functional handler', () => {
       const storage = createInMemoryStorage();
       const addCommentResult0 = await interpret(commentHandler.addComment({ comment: {"type":"variable","name":"c"}, entity: {"type":"variable","name":"e"}, content: {"type":"literal","value":"Hello"}, author: {"type":"literal","value":"alice"} }), storage);
       expect(addCommentResult0.variant).toBe("ok");
-      const comment = addCommentResult0.output["comment"];
+      let comment = addCommentResult0.output["comment"];
       const thenResult0 = await interpret(commentHandler.reply({ comment: {"type":"variable","name":"r"}, parent: {"type":"variable","name":"c"}, content: {"type":"literal","value":"Reply"}, author: {"type":"literal","value":"bob"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

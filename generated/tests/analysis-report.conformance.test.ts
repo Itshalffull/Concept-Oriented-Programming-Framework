@@ -429,7 +429,8 @@ describe('AnalysisReport functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('AnalysisReport');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('AnalysisReport');
     });
   });
 
@@ -438,8 +439,8 @@ describe('AnalysisReport functional handler', () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(analysisReportHandler.generate({ result: {"type":"literal","value":"r1"}, format: {"type":"literal","value":"table"}, title: {"type":"literal","value":"Centrality Scores"} }), storage);
       expect(generateResult0.variant).toBe("ok");
-      const report = generateResult0.output["report"];
-      const content = generateResult0.output["content"];
+      let report = generateResult0.output["report"];
+      let content = generateResult0.output["content"];
       const thenResult0 = await interpret(analysisReportHandler.getReport({ report: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

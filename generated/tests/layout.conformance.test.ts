@@ -395,7 +395,8 @@ describe('Layout functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Layout');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Layout');
     });
   });
 
@@ -404,7 +405,7 @@ describe('Layout functional handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(layoutHandler.create({ layout: {"type":"variable","name":"y"}, name: {"type":"literal","value":"main"}, kind: {"type":"literal","value":"sidebar"} }), storage);
       expect(createResult0.variant).toBe("ok");
-      const layout = createResult0.output["layout"];
+      let layout = createResult0.output["layout"];
       const thenResult0 = await interpret(layoutHandler.configure({ layout: {"type":"variable","name":"y"}, config: {"type":"literal","value":"{ \"direction\": \"row\", \"gap\": \"space-4\" }"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(layoutHandler.create({ layout: {"type":"variable","name":"y2"}, name: {"type":"literal","value":"bad"}, kind: {"type":"literal","value":"nonexistent"} }), storage);
@@ -483,9 +484,6 @@ describe('Layout functional handler', () => {
       );
     });
 
-  });
-
-  describe('action contracts (PBT)', () => {
   });
 
 });

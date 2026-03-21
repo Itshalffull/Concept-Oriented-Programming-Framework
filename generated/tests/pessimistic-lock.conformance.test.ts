@@ -458,7 +458,8 @@ describe('PessimisticLock functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('PessimisticLock');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('PessimisticLock');
     });
   });
 
@@ -467,7 +468,7 @@ describe('PessimisticLock functional handler', () => {
       const storage = createInMemoryStorage();
       const checkOutResult0 = await interpret(pessimisticLockHandler.checkOut({ resource: {"type":"variable","name":"r"}, holder: {"type":"variable","name":"h"}, duration: {"type":"variable","name":"_"}, reason: {"type":"variable","name":"_"} }), storage);
       expect(checkOutResult0.variant).toBe("ok");
-      const lockId = checkOutResult0.output["lockId"];
+      let lockId = checkOutResult0.output["lockId"];
       const thenResult0 = await interpret(pessimisticLockHandler.checkOut({ resource: {"type":"variable","name":"r"}, holder: {"type":"literal","value":"other-user"}, duration: {"type":"variable","name":"_"}, reason: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("alreadyLocked");
     });
@@ -476,7 +477,7 @@ describe('PessimisticLock functional handler', () => {
       const storage = createInMemoryStorage();
       const checkOutResult0 = await interpret(pessimisticLockHandler.checkOut({ resource: {"type":"variable","name":"r"}, holder: {"type":"variable","name":"h"}, duration: {"type":"variable","name":"_"}, reason: {"type":"variable","name":"_"} }), storage);
       expect(checkOutResult0.variant).toBe("ok");
-      const lockId = checkOutResult0.output["lockId"];
+      let lockId = checkOutResult0.output["lockId"];
       const thenResult0 = await interpret(pessimisticLockHandler.checkIn({ lockId: {"type":"variable","name":"l"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(pessimisticLockHandler.checkOut({ resource: {"type":"variable","name":"r"}, holder: {"type":"literal","value":"other-user"}, duration: {"type":"variable","name":"_"}, reason: {"type":"variable","name":"_"} }), storage);

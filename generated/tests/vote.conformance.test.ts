@@ -333,7 +333,8 @@ describe('Vote functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Vote');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Vote');
     });
   });
 
@@ -342,7 +343,7 @@ describe('Vote functional handler', () => {
       const storage = createInMemoryStorage();
       const openSessionResult0 = await interpret(voteHandler.openSession({ proposalRef: {"type":"variable","name":"_"}, deadline: {"type":"variable","name":"_"}, snapshotRef: {"type":"variable","name":"_"} }), storage);
       expect(openSessionResult0.variant).toBe("opened");
-      const session = openSessionResult0.output["session"];
+      let session = openSessionResult0.output["session"];
       const thenResult0 = await interpret(voteHandler.castVote({ session: {"type":"variable","name":"s"}, voter: {"type":"variable","name":"v"}, choice: {"type":"variable","name":"_"}, weight: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("recorded");
       const thenResult1 = await interpret(voteHandler.close({ session: {"type":"variable","name":"s"} }), storage);

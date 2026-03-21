@@ -249,7 +249,8 @@ describe('Permission functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Permission');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Permission');
     });
   });
 
@@ -258,7 +259,7 @@ describe('Permission functional handler', () => {
       const storage = createInMemoryStorage();
       const grantResult0 = await interpret(permissionHandler.grant({ who: {"type":"variable","name":"w"}, where: {"type":"variable","name":"t"}, what: {"type":"variable","name":"a"}, condition: {"type":"variable","name":"_"}, grantedBy: {"type":"variable","name":"_"} }), storage);
       expect(grantResult0.variant).toBe("granted");
-      const permission = grantResult0.output["permission"];
+      let permission = grantResult0.output["permission"];
       const thenResult0 = await interpret(permissionHandler.check({ who: {"type":"variable","name":"w"}, where: {"type":"variable","name":"t"}, what: {"type":"variable","name":"a"} }), storage);
       expect(thenResult0.variant).toBe("allowed");
       const thenResult1 = await interpret(permissionHandler.revoke({ permission: {"type":"variable","name":"p"} }), storage);

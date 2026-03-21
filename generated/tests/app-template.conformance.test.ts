@@ -308,27 +308,13 @@ describe('AppTemplate functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof appTemplateHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = appTemplateHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('AppTemplate');
-    });
-  });
 
   describe('invariant examples', () => {
     it("customize lifecycle", async () => {
       const storage = createInMemoryStorage();
       const customizeResult0 = await interpret(appTemplateHandler.customize({ template: {"type":"variable","name":"t"}, add: {"type":"list","items":[]}, remove: {"type":"list","items":[{"type":"literal","value":"required-module"}]}, features: {"type":"list","items":[]} }), storage);
       expect(customizeResult0.variant).toBe("invalid");
-      const errors = customizeResult0.output["errors"];
+      let errors = customizeResult0.output["errors"];
     });
 
   });

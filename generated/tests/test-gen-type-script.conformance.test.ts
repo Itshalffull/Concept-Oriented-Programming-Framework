@@ -109,7 +109,8 @@ describe('TestGenTypeScript imperative handler', () => {
       const result = await testGenTypeScriptHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('TestGenTypeScript');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('TestGenTypeScript');
     });
   });
 
@@ -118,17 +119,17 @@ describe('TestGenTypeScript imperative handler', () => {
       const storage = createInMemoryStorage();
       const renderResult0 = await testGenTypeScriptHandler.render({ test_plan: {"type":"literal","value":"{\"conceptName\":\"Password\",\"conceptRef\":\"clef/concept/Password\",\"handlerPath\":\"handlers/ts/password.handler.js\",\"actions\":[{\"name\":\"set\",\"params\":[{\"name\":\"user\",\"type\":\"String\"},{\"name\":\"password\",\"type\":\"String\"}],\"variants\":[\"ok\",\"error\"]}],\"examples\":[],\"properties\":[],\"stateInvariants\":[],\"liveness\":[],\"contracts\":[]}"}, output_path: {"type":"literal","value":"generated/tests/password.conformance.test.ts"} }, storage);
       expect(renderResult0.variant).toBe("ok");
-      const result = renderResult0.output["result"];
-      const rendered_code = renderResult0.output["rendered_code"];
-      const file_path = renderResult0.output["file_path"];
-      const test_count = renderResult0.output["test_count"];
+      let result = renderResult0.output["result"];
+      let rendered_code = renderResult0.output["rendered_code"];
+      let file_path = renderResult0.output["file_path"];
+      let test_count = renderResult0.output["test_count"];
     });
 
     it("invalid JSON rejected", async () => {
       const storage = createInMemoryStorage();
       const renderResult0 = await testGenTypeScriptHandler.render({ test_plan: {"type":"literal","value":"not valid json"}, output_path: {"type":"literal","value":"test.ts"} }, storage);
       expect(renderResult0.variant).toBe("invalid");
-      const message = renderResult0.output["message"];
+      let message = renderResult0.output["message"];
     });
 
   });

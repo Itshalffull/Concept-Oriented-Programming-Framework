@@ -337,7 +337,8 @@ describe('EthereumL2Connector functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('EthereumL2Connector');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('EthereumL2Connector');
     });
   });
 
@@ -346,8 +347,8 @@ describe('EthereumL2Connector functional handler', () => {
       const storage = createInMemoryStorage();
       const testResult0 = await interpret(ethereumL2ConnectorHandler.test({ connector: {"type":"variable","name":"c"} }), storage);
       expect(testResult0.variant).toBe("ok");
-      const block_number = testResult0.output["block_number"];
-      const latency_ms = testResult0.output["latency_ms"];
+      let block_number = testResult0.output["block_number"];
+      let latency_ms = testResult0.output["latency_ms"];
       const thenResult0 = await interpret(ethereumL2ConnectorHandler.read({ connector: {"type":"variable","name":"c"}, query: {"type":"literal","value":"{method: \"getOwner\"}"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -356,7 +357,7 @@ describe('EthereumL2Connector functional handler', () => {
       const storage = createInMemoryStorage();
       const readResult0 = await interpret(ethereumL2ConnectorHandler.read({ connector: {"type":"variable","name":"c"}, query: {"type":"literal","value":"{}"} }), storage);
       expect(readResult0.variant).toBe("notfound");
-      const connector = readResult0.output["connector"];
+      let connector = readResult0.output["connector"];
       const thenResult0 = await interpret(ethereumL2ConnectorHandler.write({ connector: {"type":"variable","name":"c"}, data: {"type":"literal","value":"{}"} }), storage);
       expect(thenResult0.variant).toBe("notfound");
     });

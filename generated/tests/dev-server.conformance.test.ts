@@ -259,7 +259,8 @@ describe('DevServer functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('DevServer');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('DevServer');
     });
   });
 
@@ -268,9 +269,9 @@ describe('DevServer functional handler', () => {
       const storage = createInMemoryStorage();
       const startResult0 = await interpret(devServerHandler.start({ port: {"type":"literal","value":3000}, watchDirs: {"type":"list","items":[{"type":"literal","value":"./specs"},{"type":"literal","value":"./syncs"}]} }), storage);
       expect(startResult0.variant).toBe("ok");
-      const session = startResult0.output["session"];
-      const port = startResult0.output["port"];
-      const url = startResult0.output["url"];
+      let session = startResult0.output["session"];
+      let port = startResult0.output["port"];
+      let url = startResult0.output["url"];
       const thenResult0 = await interpret(devServerHandler.stop({ session: {"type":"variable","name":"d"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -279,9 +280,9 @@ describe('DevServer functional handler', () => {
       const storage = createInMemoryStorage();
       const startResult0 = await interpret(devServerHandler.start({ port: {"type":"literal","value":3000}, watchDirs: {"type":"list","items":[{"type":"literal","value":"./specs"},{"type":"literal","value":"./syncs"}]} }), storage);
       expect(startResult0.variant).toBe("ok");
-      const session = startResult0.output["session"];
-      const port = startResult0.output["port"];
-      const url = startResult0.output["url"];
+      let session = startResult0.output["session"];
+      let port = startResult0.output["port"];
+      let url = startResult0.output["url"];
       const thenResult0 = await interpret(devServerHandler.status({ session: {"type":"variable","name":"d"} }), storage);
       expect(thenResult0.variant).toBe("running");
     });

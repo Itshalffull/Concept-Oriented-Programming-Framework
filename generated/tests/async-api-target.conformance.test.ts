@@ -118,7 +118,8 @@ describe('AsyncApiTarget functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('AsyncApiTarget');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('AsyncApiTarget');
     });
   });
 
@@ -127,8 +128,8 @@ describe('AsyncApiTarget functional handler', () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(asyncApiTargetHandler.generate({ projections: {"type":"list","items":[{"type":"literal","value":"proj-1"}]}, syncSpecs: {"type":"list","items":[{"type":"literal","value":"sync-1"}]}, config: {"type":"literal","value":"{}"} }), storage);
       expect(generateResult0.variant).toBe("ok");
-      const spec = generateResult0.output["spec"];
-      const content = generateResult0.output["content"];
+      let spec = generateResult0.output["spec"];
+      let content = generateResult0.output["content"];
       const thenResult0 = await interpret(asyncApiTargetHandler.generate({ projections: {"type":"list","items":[{"type":"literal","value":"proj-2"}]}, syncSpecs: {"type":"list","items":[{"type":"literal","value":"sync-2"}]}, config: {"type":"literal","value":"{}"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

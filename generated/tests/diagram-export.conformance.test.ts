@@ -265,7 +265,8 @@ describe('DiagramExport functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('DiagramExport');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('DiagramExport');
     });
   });
 
@@ -274,9 +275,9 @@ describe('DiagramExport functional handler', () => {
       const storage = createInMemoryStorage();
       const exportResult0 = await interpret(diagramExportHandler.export({ canvas_id: {"type":"variable","name":"c"}, format: {"type":"literal","value":"json"}, options: {"type":"record","fields":[{"name":"embed_data","value":{"type":"literal","value":true}}]} }), storage);
       expect(exportResult0.variant).toBe("ok");
-      const export = exportResult0.output["export"];
-      const data = exportResult0.output["data"];
-      const mime_type = exportResult0.output["mime_type"];
+      let export = exportResult0.output["export"];
+      let data = exportResult0.output["data"];
+      let mime_type = exportResult0.output["mime_type"];
       const thenResult0 = await interpret(diagramExportHandler.importDiagram({ data: {"type":"variable","name":"d"}, format: {"type":"literal","value":"json"}, target_canvas: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

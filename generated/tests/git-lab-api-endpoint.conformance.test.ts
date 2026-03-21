@@ -101,23 +101,13 @@ describe('GitLabApiEndpoint imperative handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof gitlabApiEndpointHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await gitlabApiEndpointHandler.register({}, storage);
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('GitLabApiEndpoint');
-    });
-  });
 
   describe('invariant examples', () => {
     it("resolve after register", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await gitlabApiEndpointHandler.register({ name: {"type":"literal","value":"gitlab-api"}, token: {"type":"literal","value":"glpat-test"}, projectId: {"type":"literal","value":"12345"}, baseUrl: {"type":"literal","value":"https://gitlab.com/api/v4"} }, storage);
       expect(registerResult0.variant).toBe("ok");
-      const endpoint = registerResult0.output["endpoint"];
+      let endpoint = registerResult0.output["endpoint"];
       const thenResult0 = await gitlabApiEndpointHandler.resolve({ name: {"type":"literal","value":"gitlab-api"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

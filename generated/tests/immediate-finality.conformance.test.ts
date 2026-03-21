@@ -118,7 +118,8 @@ describe('ImmediateFinality functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ImmediateFinality');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ImmediateFinality');
     });
   });
 
@@ -127,7 +128,7 @@ describe('ImmediateFinality functional handler', () => {
       const storage = createInMemoryStorage();
       const confirmResult0 = await interpret(immediateFinalityHandler.confirm({ operationRef: {"type":"variable","name":"_"} }), storage);
       expect(confirmResult0.variant).toBe("finalized");
-      const confirmation = confirmResult0.output["confirmation"];
+      let confirmation = confirmResult0.output["confirmation"];
     });
 
   });

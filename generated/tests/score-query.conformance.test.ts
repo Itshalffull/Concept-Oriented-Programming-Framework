@@ -118,7 +118,8 @@ describe('ScoreQuery functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ScoreQuery');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ScoreQuery');
     });
   });
 
@@ -127,8 +128,8 @@ describe('ScoreQuery functional handler', () => {
       const storage = createInMemoryStorage();
       const queryResult0 = await interpret(scoreQueryHandler.query({ graphql: {"type":"literal","value":"{ concepts { name } }"} }), storage);
       expect(queryResult0.variant).toBe("ok");
-      const id = queryResult0.output["id"];
-      const data = queryResult0.output["data"];
+      let id = queryResult0.output["id"];
+      let data = queryResult0.output["data"];
       const thenResult0 = await interpret(scoreQueryHandler.query({ graphql: {"type":"literal","value":"invalid {{{}}}"} }), storage);
       expect(thenResult0.variant).toBe("error");
     });

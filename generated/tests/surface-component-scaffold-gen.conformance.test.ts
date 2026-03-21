@@ -234,7 +234,8 @@ describe('SurfaceComponentScaffoldGen functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('SurfaceComponentScaffoldGen');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('SurfaceComponentScaffoldGen');
     });
   });
 
@@ -243,8 +244,8 @@ describe('SurfaceComponentScaffoldGen functional handler', () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(surfaceComponentScaffoldGenHandler.generate({ name: {"type":"literal","value":"Button"}, parts: {"type":"list","items":[{"type":"literal","value":"root"},{"type":"literal","value":"label"}]}, states: {"type":"list","items":[{"type":"literal","value":"idle"},{"type":"literal","value":"pressed"}]}, events: {"type":"list","items":[{"type":"literal","value":"click"}]}, role: {"type":"literal","value":"button"}, requires: {"type":"literal","value":false}, affordance: {"type":"literal","value":false}, props: {"type":"list","items":[]}, compose: {"type":"list","items":[]} }), storage);
       expect(generateResult0.variant).toBe("ok");
-      const files = generateResult0.output["files"];
-      const filesGenerated = generateResult0.output["filesGenerated"];
+      let files = generateResult0.output["files"];
+      let filesGenerated = generateResult0.output["filesGenerated"];
     });
 
   });

@@ -317,7 +317,8 @@ describe('TypeSystem functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('TypeSystem');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('TypeSystem');
     });
   });
 
@@ -326,7 +327,7 @@ describe('TypeSystem functional handler', () => {
       const storage = createInMemoryStorage();
       const registerTypeResult0 = await interpret(typeSystemHandler.registerType({ type: {"type":"variable","name":"t"}, schema: {"type":"literal","value":"{\"type\":\"string\"}"}, constraints: {"type":"literal","value":"{}"} }), storage);
       expect(registerTypeResult0.variant).toBe("ok");
-      const type = registerTypeResult0.output["type"];
+      let type = registerTypeResult0.output["type"];
       const thenResult0 = await interpret(typeSystemHandler.resolve({ type: {"type":"variable","name":"t"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -335,7 +336,7 @@ describe('TypeSystem functional handler', () => {
       const storage = createInMemoryStorage();
       const registerTypeResult0 = await interpret(typeSystemHandler.registerType({ type: {"type":"variable","name":"t"}, schema: {"type":"literal","value":"{\"type\":\"string\"}"}, constraints: {"type":"literal","value":"{}"} }), storage);
       expect(registerTypeResult0.variant).toBe("ok");
-      const type = registerTypeResult0.output["type"];
+      let type = registerTypeResult0.output["type"];
       const thenResult0 = await interpret(typeSystemHandler.registerType({ type: {"type":"variable","name":"t"}, schema: {"type":"literal","value":"{\"type\":\"number\"}"}, constraints: {"type":"literal","value":"{}"} }), storage);
       expect(thenResult0.variant).toBe("exists");
     });

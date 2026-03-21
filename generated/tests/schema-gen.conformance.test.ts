@@ -173,7 +173,8 @@ describe('SchemaGen functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('SchemaGen');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('SchemaGen');
     });
   });
 
@@ -182,7 +183,7 @@ describe('SchemaGen functional handler', () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(schemaGenHandler.generate({ spec: {"type":"literal","value":"s1"}, ast: {"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"Ping"}},{"name":"typeParams","value":{"type":"list","items":[{"type":"literal","value":"T"}]}},{"name":"purpose","value":{"type":"literal","value":"A test."}},{"name":"state","value":{"type":"list","items":[]}},{"name":"actions","value":{"type":"list","items":[{"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"ping"}},{"name":"params","value":{"type":"list","items":[]}},{"name":"variants","value":{"type":"list","items":[{"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"ok"}},{"name":"params","value":{"type":"list","items":[]}},{"name":"description","value":{"type":"literal","value":"Pong."}}]}]}}]}]}},{"name":"invariants","value":{"type":"list","items":[]}},{"name":"capabilities","value":{"type":"list","items":[]}}]} }), storage);
       expect(generateResult0.variant).toBe("ok");
-      const manifest = generateResult0.output["manifest"];
+      let manifest = generateResult0.output["manifest"];
       const thenResult0 = await interpret(schemaGenHandler.generate({ spec: {"type":"literal","value":"s2"}, ast: {"type":"record","fields":[{"name":"name","value":{"type":"literal","value":""}}]} }), storage);
       expect(thenResult0.variant).toBe("error");
     });

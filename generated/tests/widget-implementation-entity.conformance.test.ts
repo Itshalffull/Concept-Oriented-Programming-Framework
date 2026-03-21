@@ -675,27 +675,13 @@ describe('WidgetImplementationEntity functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof widgetImplementationEntityHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = widgetImplementationEntityHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('WidgetImplementationEntity');
-    });
-  });
 
   describe('invariant examples', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(widgetImplementationEntityHandler.register({ widget: {"type":"literal","value":"dialog"}, framework: {"type":"literal","value":"react"}, sourceFile: {"type":"literal","value":"generated/surface/dialog/Dialog.tsx"}, ast: {"type":"literal","value":"{}"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const impl = registerResult0.output["impl"];
+      let impl = registerResult0.output["impl"];
       const thenResult0 = await interpret(widgetImplementationEntityHandler.get({ widget: {"type":"literal","value":"dialog"}, framework: {"type":"literal","value":"react"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -704,7 +690,7 @@ describe('WidgetImplementationEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(widgetImplementationEntityHandler.register({ widget: {"type":"literal","value":"dialog"}, framework: {"type":"literal","value":"react"}, sourceFile: {"type":"literal","value":"generated/surface/dialog/Dialog.tsx"}, ast: {"type":"literal","value":"{}"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const impl = registerResult0.output["impl"];
+      let impl = registerResult0.output["impl"];
       const thenResult0 = await interpret(widgetImplementationEntityHandler.register({ widget: {"type":"literal","value":"dialog"}, framework: {"type":"literal","value":"react"}, sourceFile: {"type":"literal","value":"generated/surface/dialog/Dialog.tsx"}, ast: {"type":"literal","value":"{}"} }), storage);
       expect(thenResult0.variant).toBe("alreadyRegistered");
     });

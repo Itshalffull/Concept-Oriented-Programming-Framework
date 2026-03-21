@@ -256,7 +256,8 @@ describe('Quorum functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Quorum');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Quorum');
     });
   });
 
@@ -265,7 +266,7 @@ describe('Quorum functional handler', () => {
       const storage = createInMemoryStorage();
       const setThresholdResult0 = await interpret(quorumHandler.setThreshold({ thresholdType: {"type":"literal","value":"Absolute"}, value: {"type":"literal","value":10} }), storage);
       expect(setThresholdResult0.variant).toBe("set");
-      const rule = setThresholdResult0.output["rule"];
+      let rule = setThresholdResult0.output["rule"];
       const thenResult0 = await interpret(quorumHandler.check({ totalVotes: {"type":"literal","value":15}, totalEligible: {"type":"literal","value":100} }), storage);
       expect(thenResult0.variant).toBe("met");
       const thenResult1 = await interpret(quorumHandler.check({ totalVotes: {"type":"literal","value":5}, totalEligible: {"type":"literal","value":100} }), storage);

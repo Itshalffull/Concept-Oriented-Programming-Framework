@@ -318,7 +318,8 @@ describe('DockerComposeIacProvider functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('DockerComposeIacProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('DockerComposeIacProvider');
     });
   });
 
@@ -327,8 +328,8 @@ describe('DockerComposeIacProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(dockerComposeIacProviderHandler.generate({ plan: {"type":"literal","value":"dp-001"} }), storage);
       expect(generateResult0.variant).toBe("ok");
-      const composeFile = generateResult0.output["composeFile"];
-      const files = generateResult0.output["files"];
+      let composeFile = generateResult0.output["composeFile"];
+      let files = generateResult0.output["files"];
       const thenResult0 = await interpret(dockerComposeIacProviderHandler.apply({ composeFile: {"type":"variable","name":"cf"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

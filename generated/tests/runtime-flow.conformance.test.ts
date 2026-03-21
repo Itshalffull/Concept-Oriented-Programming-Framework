@@ -594,7 +594,8 @@ describe('RuntimeFlow functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('RuntimeFlow');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('RuntimeFlow');
     });
   });
 
@@ -603,7 +604,7 @@ describe('RuntimeFlow functional handler', () => {
       const storage = createInMemoryStorage();
       const correlateResult0 = await interpret(runtimeFlowHandler.correlate({ flowId: {"type":"literal","value":"f-123"} }), storage);
       expect(correlateResult0.variant).toBe("ok");
-      const flow = correlateResult0.output["flow"];
+      let flow = correlateResult0.output["flow"];
       const thenResult0 = await interpret(runtimeFlowHandler.get({ flow: {"type":"variable","name":"f"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

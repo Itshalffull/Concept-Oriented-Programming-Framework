@@ -140,7 +140,8 @@ describe('VersionContext imperative handler', () => {
       const result = await versionContextHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('VersionContext');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('VersionContext');
     });
   });
 
@@ -149,7 +150,7 @@ describe('VersionContext imperative handler', () => {
       const storage = createInMemoryStorage();
       const pushResult0 = await versionContextHandler.push({ user: {"type":"literal","value":"alice"}, space_id: {"type":"literal","value":"space-1"} }, storage);
       expect(pushResult0.variant).toBe("ok");
-      const context = pushResult0.output["context"];
+      let context = pushResult0.output["context"];
       const thenResult0 = await versionContextHandler.get({ user: {"type":"literal","value":"alice"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -158,10 +159,10 @@ describe('VersionContext imperative handler', () => {
       const storage = createInMemoryStorage();
       const pushResult0 = await versionContextHandler.push({ user: {"type":"literal","value":"bob"}, space_id: {"type":"literal","value":"space-1"} }, storage);
       expect(pushResult0.variant).toBe("ok");
-      const context = pushResult0.output["context"];
+      let context = pushResult0.output["context"];
       const popResult1 = await versionContextHandler.pop({ user: {"type":"literal","value":"bob"}, space_id: {"type":"literal","value":"space-1"} }, storage);
       expect(popResult1.variant).toBe("ok");
-      const context = popResult1.output["context"];
+      context = popResult1.output["context"];
       const thenResult0 = await versionContextHandler.get({ user: {"type":"literal","value":"bob"} }, storage);
       expect(thenResult0.variant).toBe("no_context");
     });

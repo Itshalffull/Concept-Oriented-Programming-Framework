@@ -249,7 +249,8 @@ describe('StructuralPattern functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('StructuralPattern');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('StructuralPattern');
     });
   });
 
@@ -258,7 +259,7 @@ describe('StructuralPattern functional handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(structuralPatternHandler.create({ syntax: {"type":"literal","value":"tree-sitter-query"}, source: {"type":"literal","value":"(function_declaration) @fn"}, language: {"type":"literal","value":"typescript"} }), storage);
       expect(createResult0.variant).toBe("ok");
-      const pattern = createResult0.output["pattern"];
+      let pattern = createResult0.output["pattern"];
       const thenResult0 = await interpret(structuralPatternHandler.match({ pattern: {"type":"variable","name":"p"}, tree: {"type":"literal","value":"some-tree"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

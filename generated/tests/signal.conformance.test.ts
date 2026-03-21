@@ -394,7 +394,8 @@ describe('Signal functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Signal');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Signal');
     });
   });
 
@@ -403,7 +404,7 @@ describe('Signal functional handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(signalHandler.create({ signal: {"type":"variable","name":"g"}, kind: {"type":"literal","value":"state"}, initialValue: {"type":"literal","value":"hello"} }), storage);
       expect(createResult0.variant).toBe("ok");
-      const signal = createResult0.output["signal"];
+      let signal = createResult0.output["signal"];
       const thenResult0 = await interpret(signalHandler.read({ signal: {"type":"variable","name":"g"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

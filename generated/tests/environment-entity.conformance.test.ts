@@ -594,27 +594,13 @@ describe('EnvironmentEntity functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof environmentEntityHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = environmentEntityHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('EnvironmentEntity');
-    });
-  });
 
   describe('invariant examples', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(environmentEntityHandler.register({ name: {"type":"literal","value":"DATABASE_URL"}, environment: {"type":"literal","value":"production"}, kind: {"type":"literal","value":"secret"}, value: {"type":"literal","value":"***"}, source: {"type":"literal","value":"vault"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const entry = registerResult0.output["entry"];
+      let entry = registerResult0.output["entry"];
       const thenResult0 = await interpret(environmentEntityHandler.get({ name: {"type":"literal","value":"DATABASE_URL"}, environment: {"type":"literal","value":"production"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

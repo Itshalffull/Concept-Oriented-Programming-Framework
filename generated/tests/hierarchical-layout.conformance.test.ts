@@ -173,7 +173,8 @@ describe('HierarchicalLayout functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('HierarchicalLayout');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('HierarchicalLayout');
     });
   });
 
@@ -182,7 +183,7 @@ describe('HierarchicalLayout functional handler', () => {
       const storage = createInMemoryStorage();
       const applyResult0 = await interpret(hierarchicalLayoutHandler.apply({ canvas: {"type":"literal","value":"c1"}, items: {"type":"list","items":[{"type":"literal","value":"root"},{"type":"literal","value":"child1"},{"type":"literal","value":"child2"}]} }), storage);
       expect(applyResult0.variant).toBe("ok");
-      const positions = applyResult0.output["positions"];
+      let positions = applyResult0.output["positions"];
       const thenResult0 = await interpret(hierarchicalLayoutHandler.apply({ canvas: {"type":"literal","value":"c1"}, items: {"type":"list","items":[{"type":"literal","value":"root"}]} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

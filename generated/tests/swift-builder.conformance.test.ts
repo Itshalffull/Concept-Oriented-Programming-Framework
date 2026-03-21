@@ -334,7 +334,8 @@ describe('SwiftBuilder functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('SwiftBuilder');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('SwiftBuilder');
     });
   });
 
@@ -343,9 +344,9 @@ describe('SwiftBuilder functional handler', () => {
       const storage = createInMemoryStorage();
       const buildResult0 = await interpret(swiftBuilderHandler.build({ source: {"type":"literal","value":"./generated/swift/password"}, toolchainPath: {"type":"literal","value":"/usr/bin/swiftc"}, platform: {"type":"literal","value":"linux-arm64"}, config: {"type":"record","fields":[{"name":"mode","value":{"type":"literal","value":"release"}}]} }), storage);
       expect(buildResult0.variant).toBe("ok");
-      const build = buildResult0.output["build"];
-      const artifactPath = buildResult0.output["artifactPath"];
-      const artifactHash = buildResult0.output["artifactHash"];
+      let build = buildResult0.output["build"];
+      let artifactPath = buildResult0.output["artifactPath"];
+      let artifactHash = buildResult0.output["artifactHash"];
       const thenResult0 = await interpret(swiftBuilderHandler.test({ build: {"type":"variable","name":"s"}, toolchainPath: {"type":"literal","value":"/usr/bin/swiftc"}, invocation: {"type":"record","fields":[{"name":"command","value":{"type":"literal","value":"swift test"}},{"name":"args","value":{"type":"list","items":[{"type":"literal","value":"--parallel"}]}},{"name":"outputFormat","value":{"type":"literal","value":"swift-test-json"}},{"name":"configFile","value":{"type":"literal","value":"Package.swift"}},{"name":"env","value":{"type":"variable","name":"null"}}]}, testType: {"type":"literal","value":"unit"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

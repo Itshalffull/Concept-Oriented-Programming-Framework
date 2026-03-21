@@ -188,7 +188,8 @@ describe('DeadPartProvider functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('DeadPartProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('DeadPartProvider');
     });
   });
 
@@ -197,9 +198,9 @@ describe('DeadPartProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const analyzeResult0 = await interpret(deadPartProviderHandler.analyze({ analysis: {"type":"variable","name":"d"}, program: {"type":"literal","value":"p1"}, parts: {"type":"list","items":[{"type":"literal","value":"root"},{"type":"literal","value":"unused"}]}, instructions: {"type":"list","items":[{"type":"literal","value":"element:root:container"},{"type":"literal","value":"text:root:hello"}]} }), storage);
       expect(analyzeResult0.variant).toBe("ok");
-      const analysis = analyzeResult0.output["analysis"];
-      const deadParts = analyzeResult0.output["deadParts"];
-      const unreachableStates = analyzeResult0.output["unreachableStates"];
+      let analysis = analyzeResult0.output["analysis"];
+      let deadParts = analyzeResult0.output["deadParts"];
+      let unreachableStates = analyzeResult0.output["unreachableStates"];
       const thenResult0 = await interpret(deadPartProviderHandler.getResults({ analysis: {"type":"variable","name":"d"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -270,9 +271,6 @@ describe('DeadPartProvider functional handler', () => {
       );
     });
 
-  });
-
-  describe('action contracts (PBT)', () => {
   });
 
 });

@@ -174,7 +174,8 @@ describe('LWWResolution functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('LWWResolution');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('LWWResolution');
     });
   });
 
@@ -183,7 +184,7 @@ describe('LWWResolution functional handler', () => {
       const storage = createInMemoryStorage();
       const attemptResolveResult0 = await interpret(lWWResolutionHandler.attemptResolve({ base: {"type":"variable","name":"_"}, v1: {"type":"variable","name":"a"}, v2: {"type":"variable","name":"b"}, context: {"type":"variable","name":"_"} }), storage);
       expect(attemptResolveResult0.variant).toBe("resolved");
-      const result = attemptResolveResult0.output["result"];
+      let result = attemptResolveResult0.output["result"];
       const thenResult0 = await interpret(lWWResolutionHandler.attemptResolve({ base: {"type":"variable","name":"_"}, v1: {"type":"variable","name":"b"}, v2: {"type":"variable","name":"a"}, context: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("resolved");
     });

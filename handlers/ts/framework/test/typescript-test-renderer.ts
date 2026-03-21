@@ -244,6 +244,7 @@ function renderExampleTests(handlerVar: string, examples: TestPlanExample[], sty
     lines.push(`    it(${JSON.stringify(example.name)}, async () => {`);
     lines.push(`      const storage = createInMemoryStorage();`);
 
+    const declaredVars = new Set<string>();
     for (let si = 0; si < example.steps.length; si++) {
       const step = example.steps[si];
       const stepInput = Object.entries(step.input)
@@ -255,7 +256,12 @@ function renderExampleTests(handlerVar: string, examples: TestPlanExample[], sty
         lines.push(`      expect(${resultVar}.variant).toBe(${JSON.stringify(step.expectedVariant)});`);
       }
       for (const [name, _val] of Object.entries(step.outputBindings)) {
-        lines.push(`      const ${name} = ${resultVar}.output[${JSON.stringify(name)}];`);
+        if (declaredVars.has(name)) {
+          lines.push(`      ${name} = ${resultVar}.output[${JSON.stringify(name)}];`);
+        } else {
+          lines.push(`      let ${name} = ${resultVar}.output[${JSON.stringify(name)}];`);
+          declaredVars.add(name);
+        }
       }
     }
 
@@ -487,12 +493,14 @@ function renderContractTests(
   actions: TestPlanAction[],
   style: HandlerStyle,
 ): string[] {
-  if (contracts.length === 0) return [];
+  // Only emit contracts that have actual preconditions or postconditions
+  const nonEmpty = contracts.filter(c => c.preconditions.length > 0 || c.postconditions.length > 0);
+  if (nonEmpty.length === 0) return [];
 
   const lines: string[] = [];
   lines.push(`  describe('action contracts (PBT)', () => {`);
 
-  for (const contract of contracts) {
+  for (const contract of nonEmpty) {
     const action = actions.find(a => a.name === contract.targetAction);
 
     // Precondition: empty input should not crash (may return error or ok with defaults)
@@ -632,25 +640,32 @@ export function renderTypeScriptTests(plan: TestPlan): string {
     lines.push(...renderStructuralTests(handlerVar, action, style, plan.actions));
   }
 
-  // Register conformance test — verifies handler declares its concept name
-  lines.push(`  describe('register()', () => {`);
-  lines.push(`    it('declares concept name', async () => {`);
-  lines.push(`      if (typeof ${handlerVar}.register !== 'function') return;`);
-  lines.push(`      const storage = createInMemoryStorage();`);
-  if (style === 'functional') {
-    lines.push(`      const program = ${handlerVar}.register({});`);
-    lines.push(`      // If it's a StorageProgram, interpret it`);
-    lines.push(`      const result = (program?.instructions && !program.variant)`);
-    lines.push(`        ? await interpret(program, storage)`);
-    lines.push(`        : program;`);
-  } else {
-    lines.push(`      const result = await ${handlerVar}.register({}, storage);`);
+  // Register conformance test — verifies handler declares its concept name.
+  // Only emitted when the concept has no 'register' action with required params,
+  // since domain-level register(concept, name, ...) actions aren't self-identification.
+  const registerAction = plan.actions.find(a => a.name === 'register');
+  const registerHasParams = registerAction && registerAction.params.length > 0;
+  if (!registerHasParams) {
+    lines.push(`  describe('register()', () => {`);
+    lines.push(`    it('declares concept name', async () => {`);
+    lines.push(`      if (typeof ${handlerVar}.register !== 'function') return;`);
+    lines.push(`      const storage = createInMemoryStorage();`);
+    if (style === 'functional') {
+      lines.push(`      const program = ${handlerVar}.register({});`);
+      lines.push(`      // If it's a StorageProgram, interpret it`);
+      lines.push(`      const result = (program?.instructions && !program.variant)`);
+      lines.push(`        ? await interpret(program, storage)`);
+      lines.push(`        : program;`);
+    } else {
+      lines.push(`      const result = await ${handlerVar}.register({}, storage);`);
+    }
+    lines.push(`      if (!result?.variant) return; // handler does not support register introspection`);
+    lines.push(`      expect(result.variant).toBe('ok');`);
+    lines.push(`      const name = result.output?.name ?? result.name;`);
+    lines.push(`      expect(name).toBe('${plan.conceptName}');`);
+    lines.push(`    });`);
+    lines.push(`  });`);
   }
-  lines.push(`      if (!result?.variant) return; // handler does not support register introspection`);
-  lines.push(`      expect(result.variant).toBe('ok');`);
-  lines.push(`      expect(result.name).toBe('${plan.conceptName}');`);
-  lines.push(`    });`);
-  lines.push(`  });`);
   lines.push('');
 
   // Invariant-derived tests

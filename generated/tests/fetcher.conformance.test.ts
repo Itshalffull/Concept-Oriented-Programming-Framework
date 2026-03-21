@@ -250,7 +250,8 @@ describe('Fetcher functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Fetcher');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Fetcher');
     });
   });
 
@@ -259,7 +260,7 @@ describe('Fetcher functional handler', () => {
       const storage = createInMemoryStorage();
       const fetchResult0 = await interpret(fetcherHandler.fetch({ module_id: {"type":"literal","value":"pkg-a"}, version: {"type":"literal","value":"1.0.0"}, source_url: {"type":"variable","name":"url"}, expected_hash: {"type":"variable","name":"h"} }), storage);
       expect(fetchResult0.variant).toBe("ok");
-      const download = fetchResult0.output["download"];
+      let download = fetchResult0.output["download"];
       expect(dResult.output["status"]).toBe({"type":"literal","value":"complete"});
       expect(dResult.output["bytes_downloaded"]).toBe({"type":"dot_access","variable":"d","field":"bytes_total"});
     });

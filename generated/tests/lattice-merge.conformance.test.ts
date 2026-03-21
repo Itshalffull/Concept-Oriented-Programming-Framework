@@ -174,7 +174,8 @@ describe('LatticeMerge functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('LatticeMerge');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('LatticeMerge');
     });
   });
 
@@ -183,7 +184,7 @@ describe('LatticeMerge functional handler', () => {
       const storage = createInMemoryStorage();
       const executeResult0 = await interpret(latticeMergeHandler.execute({ base: {"type":"variable","name":"b"}, ours: {"type":"variable","name":"o"}, theirs: {"type":"variable","name":"t"} }), storage);
       expect(executeResult0.variant).toBe("clean");
-      const result = executeResult0.output["result"];
+      let result = executeResult0.output["result"];
       const thenResult0 = await interpret(latticeMergeHandler.execute({ base: {"type":"variable","name":"b"}, ours: {"type":"variable","name":"t"}, theirs: {"type":"variable","name":"o"} }), storage);
       expect(thenResult0.variant).toBe("clean");
     });

@@ -127,23 +127,13 @@ describe('RenderInterpreter imperative handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof renderInterpreterHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await renderInterpreterHandler.register({}, storage);
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('RenderInterpreter');
-    });
-  });
 
   describe('invariant examples', () => {
     it("register then execute succeeds", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await renderInterpreterHandler.register({ interpreter: {"type":"variable","name":"i"}, target: {"type":"literal","value":"react"}, template: {"type":"literal","value":"jsx"} }, storage);
       expect(registerResult0.variant).toBe("ok");
-      const interpreter = registerResult0.output["interpreter"];
+      let interpreter = registerResult0.output["interpreter"];
       const thenResult0 = await renderInterpreterHandler.execute({ interpreter: {"type":"variable","name":"i"}, program: {"type":"literal","value":"p1"}, snapshot: {"type":"literal","value":"current"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -152,7 +142,7 @@ describe('RenderInterpreter imperative handler', () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await renderInterpreterHandler.register({ interpreter: {"type":"variable","name":"i"}, target: {"type":"literal","value":"react"}, template: {"type":"literal","value":"jsx"} }, storage);
       expect(registerResult0.variant).toBe("ok");
-      const interpreter = registerResult0.output["interpreter"];
+      let interpreter = registerResult0.output["interpreter"];
       const thenResult0 = await renderInterpreterHandler.register({ interpreter: {"type":"variable","name":"i"}, target: {"type":"literal","value":"svelte"}, template: {"type":"literal","value":"tmpl"} }, storage);
       expect(thenResult0.variant).toBe("exists");
     });
@@ -161,7 +151,7 @@ describe('RenderInterpreter imperative handler', () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await renderInterpreterHandler.register({ interpreter: {"type":"variable","name":"i"}, target: {"type":"literal","value":"svelte"}, template: {"type":"literal","value":"tmpl"} }, storage);
       expect(registerResult0.variant).toBe("ok");
-      const interpreter = registerResult0.output["interpreter"];
+      let interpreter = registerResult0.output["interpreter"];
       const thenResult0 = await renderInterpreterHandler.dryRun({ interpreter: {"type":"variable","name":"i"}, program: {"type":"literal","value":"p1"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -170,7 +160,7 @@ describe('RenderInterpreter imperative handler', () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await renderInterpreterHandler.register({ interpreter: {"type":"variable","name":"i"}, target: {"type":"literal","value":"react"}, template: {"type":"literal","value":"jsx"} }, storage);
       expect(registerResult0.variant).toBe("ok");
-      const interpreter = registerResult0.output["interpreter"];
+      let interpreter = registerResult0.output["interpreter"];
       const thenResult0 = await renderInterpreterHandler.listTargets({  }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -242,9 +232,6 @@ describe('RenderInterpreter imperative handler', () => {
       );
     });
 
-  });
-
-  describe('action contracts (PBT)', () => {
   });
 
 });

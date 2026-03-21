@@ -393,7 +393,8 @@ describe('Theme functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Theme');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Theme');
     });
   });
 
@@ -402,7 +403,7 @@ describe('Theme functional handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(themeHandler.create({ theme: {"type":"variable","name":"h"}, name: {"type":"literal","value":"dark"}, overrides: {"type":"literal","value":"{ \"color-bg\": \"#1a1a1a\" }"} }), storage);
       expect(createResult0.variant).toBe("ok");
-      const theme = createResult0.output["theme"];
+      let theme = createResult0.output["theme"];
       const thenResult0 = await interpret(themeHandler.activate({ theme: {"type":"variable","name":"h"}, priority: {"type":"literal","value":1} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(themeHandler.resolve({ theme: {"type":"variable","name":"h"} }), storage);

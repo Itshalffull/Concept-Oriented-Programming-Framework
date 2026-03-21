@@ -468,7 +468,8 @@ describe('Transport functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Transport');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Transport');
     });
   });
 
@@ -477,7 +478,7 @@ describe('Transport functional handler', () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(transportHandler.configure({ transport: {"type":"variable","name":"p"}, kind: {"type":"literal","value":"rest"}, baseUrl: {"type":"literal","value":"https://api.example.com"}, auth: {"type":"variable","name":"_"}, retryPolicy: {"type":"variable","name":"_"} }), storage);
       expect(configureResult0.variant).toBe("ok");
-      const transport = configureResult0.output["transport"];
+      let transport = configureResult0.output["transport"];
       const thenResult0 = await interpret(transportHandler.fetch({ transport: {"type":"variable","name":"p"}, query: {"type":"literal","value":"{ \"path\": \"/articles\" }"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

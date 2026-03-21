@@ -319,7 +319,8 @@ describe('ConfigSync functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ConfigSync');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ConfigSync');
     });
   });
 
@@ -328,7 +329,7 @@ describe('ConfigSync functional handler', () => {
       const storage = createInMemoryStorage();
       const exportResult0 = await interpret(configSyncHandler.export({ config: {"type":"variable","name":"c"} }), storage);
       expect(exportResult0.variant).toBe("ok");
-      const data = exportResult0.output["data"];
+      let data = exportResult0.output["data"];
       const thenResult0 = await interpret(configSyncHandler.import({ config: {"type":"variable","name":"c"}, data: {"type":"variable","name":"d"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(configSyncHandler.export({ config: {"type":"variable","name":"c"} }), storage);

@@ -186,7 +186,8 @@ describe('Spec functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Spec');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Spec');
     });
   });
 
@@ -195,8 +196,8 @@ describe('Spec functional handler', () => {
       const storage = createInMemoryStorage();
       const emitResult0 = await interpret(specHandler.emit({ projections: {"type":"list","items":[{"type":"literal","value":"proj-1"}]}, format: {"type":"literal","value":"openapi"}, config: {"type":"literal","value":"{}"} }), storage);
       expect(emitResult0.variant).toBe("ok");
-      const document = emitResult0.output["document"];
-      const content = emitResult0.output["content"];
+      let document = emitResult0.output["document"];
+      let content = emitResult0.output["content"];
       const thenResult0 = await interpret(specHandler.validate({ document: {"type":"variable","name":"d"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

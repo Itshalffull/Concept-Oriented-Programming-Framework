@@ -188,7 +188,8 @@ describe('ApiSurface functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ApiSurface');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ApiSurface');
     });
   });
 
@@ -197,9 +198,9 @@ describe('ApiSurface functional handler', () => {
       const storage = createInMemoryStorage();
       const composeResult0 = await interpret(apiSurfaceHandler.compose({ suite: {"type":"literal","value":"test-suite"}, target: {"type":"literal","value":"rest"}, outputs: {"type":"list","items":[{"type":"literal","value":"todo-output"},{"type":"literal","value":"user-output"}]} }), storage);
       expect(composeResult0.variant).toBe("ok");
-      const surface = composeResult0.output["surface"];
-      const entrypoint = composeResult0.output["entrypoint"];
-      const conceptCount = composeResult0.output["conceptCount"];
+      let surface = composeResult0.output["surface"];
+      let entrypoint = composeResult0.output["entrypoint"];
+      let conceptCount = composeResult0.output["conceptCount"];
       const thenResult0 = await interpret(apiSurfaceHandler.entrypoint({ surface: {"type":"variable","name":"s"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

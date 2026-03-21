@@ -248,7 +248,8 @@ describe('DerivedScaffoldGen functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('DerivedScaffoldGen');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('DerivedScaffoldGen');
     });
   });
 
@@ -257,8 +258,8 @@ describe('DerivedScaffoldGen functional handler', () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(derivedScaffoldGenHandler.generate({ name: {"type":"literal","value":"TaskBoard"}, typeParam: {"type":"literal","value":"T"}, purpose: {"type":"literal","value":"Compose tasks"}, composes: {"type":"list","items":[]}, syncs: {"type":"list","items":[]}, surfaceActions: {"type":"list","items":[]}, surfaceQueries: {"type":"list","items":[]}, principle: {"type":"list","items":[]} }), storage);
       expect(generateResult0.variant).toBe("ok");
-      const files = generateResult0.output["files"];
-      const filesGenerated = generateResult0.output["filesGenerated"];
+      let files = generateResult0.output["files"];
+      let filesGenerated = generateResult0.output["filesGenerated"];
     });
 
   });

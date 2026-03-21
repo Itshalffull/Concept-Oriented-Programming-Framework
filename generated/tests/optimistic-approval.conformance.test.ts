@@ -318,7 +318,8 @@ describe('OptimisticApproval functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('OptimisticApproval');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('OptimisticApproval');
     });
   });
 
@@ -327,7 +328,7 @@ describe('OptimisticApproval functional handler', () => {
       const storage = createInMemoryStorage();
       const assertResult0 = await interpret(optimisticApprovalHandler.assert({ asserter: {"type":"variable","name":"_"}, payload: {"type":"variable","name":"_"}, bond: {"type":"variable","name":"_"}, challengePeriodHours: {"type":"variable","name":"_"} }), storage);
       expect(assertResult0.variant).toBe("asserted");
-      const assertion = assertResult0.output["assertion"];
+      let assertion = assertResult0.output["assertion"];
       const thenResult0 = await interpret(optimisticApprovalHandler.finalize({ assertion: {"type":"variable","name":"o"} }), storage);
       expect(thenResult0.variant).toBe("approved");
     });

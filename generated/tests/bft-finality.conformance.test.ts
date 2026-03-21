@@ -341,7 +341,8 @@ describe('BFTFinality functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('BFTFinality');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('BFTFinality');
     });
   });
 
@@ -350,7 +351,7 @@ describe('BFTFinality functional handler', () => {
       const storage = createInMemoryStorage();
       const configureCommitteeResult0 = await interpret(bftFinalityHandler.configureCommittee({ validators: {"type":"variable","name":"_"}, faultTolerance: {"type":"literal","value":0.333}, protocol: {"type":"literal","value":"PBFT"} }), storage);
       expect(configureCommitteeResult0.variant).toBe("configured");
-      const committee = configureCommitteeResult0.output["committee"];
+      let committee = configureCommitteeResult0.output["committee"];
       const thenResult0 = await interpret(bftFinalityHandler.proposeFinality({ committee: {"type":"variable","name":"bf"}, operationRef: {"type":"variable","name":"_"}, proposer: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("proposed");
     });

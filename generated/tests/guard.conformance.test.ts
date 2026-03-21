@@ -384,27 +384,13 @@ describe('Guard functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof guardHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = guardHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Guard');
-    });
-  });
 
   describe('invariant examples', () => {
     it("register-then-checkPre", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(guardHandler.register({ name: {"type":"variable","name":"_"}, checkType: {"type":"variable","name":"_"}, condition: {"type":"variable","name":"_"}, targetAction: {"type":"variable","name":"_"} }), storage);
       expect(registerResult0.variant).toBe("registered");
-      const guard = registerResult0.output["guard"];
+      let guard = registerResult0.output["guard"];
       const thenResult0 = await interpret(guardHandler.checkPre({ guard: {"type":"variable","name":"gd"}, context: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("passed");
     });

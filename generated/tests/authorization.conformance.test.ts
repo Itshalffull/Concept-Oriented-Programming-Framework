@@ -318,7 +318,8 @@ describe('Authorization functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Authorization');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Authorization');
     });
   });
 
@@ -327,12 +328,12 @@ describe('Authorization functional handler', () => {
       const storage = createInMemoryStorage();
       const grantPermissionResult0 = await interpret(authorizationHandler.grantPermission({ role: {"type":"literal","value":"admin"}, permission: {"type":"literal","value":"write"} }), storage);
       expect(grantPermissionResult0.variant).toBe("ok");
-      const role = grantPermissionResult0.output["role"];
-      const permission = grantPermissionResult0.output["permission"];
+      let role = grantPermissionResult0.output["role"];
+      let permission = grantPermissionResult0.output["permission"];
       const assignRoleResult1 = await interpret(authorizationHandler.assignRole({ user: {"type":"variable","name":"x"}, role: {"type":"literal","value":"admin"} }), storage);
       expect(assignRoleResult1.variant).toBe("ok");
-      const user = assignRoleResult1.output["user"];
-      const role = assignRoleResult1.output["role"];
+      let user = assignRoleResult1.output["user"];
+      role = assignRoleResult1.output["role"];
       const thenResult0 = await interpret(authorizationHandler.checkPermission({ user: {"type":"variable","name":"x"}, permission: {"type":"literal","value":"write"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -341,16 +342,16 @@ describe('Authorization functional handler', () => {
       const storage = createInMemoryStorage();
       const grantPermissionResult0 = await interpret(authorizationHandler.grantPermission({ role: {"type":"literal","value":"editor"}, permission: {"type":"literal","value":"publish"} }), storage);
       expect(grantPermissionResult0.variant).toBe("ok");
-      const role = grantPermissionResult0.output["role"];
-      const permission = grantPermissionResult0.output["permission"];
+      let role = grantPermissionResult0.output["role"];
+      let permission = grantPermissionResult0.output["permission"];
       const assignRoleResult1 = await interpret(authorizationHandler.assignRole({ user: {"type":"variable","name":"x"}, role: {"type":"literal","value":"editor"} }), storage);
       expect(assignRoleResult1.variant).toBe("ok");
-      const user = assignRoleResult1.output["user"];
-      const role = assignRoleResult1.output["role"];
+      let user = assignRoleResult1.output["user"];
+      role = assignRoleResult1.output["role"];
       const revokePermissionResult2 = await interpret(authorizationHandler.revokePermission({ role: {"type":"literal","value":"editor"}, permission: {"type":"literal","value":"publish"} }), storage);
       expect(revokePermissionResult2.variant).toBe("ok");
-      const role = revokePermissionResult2.output["role"];
-      const permission = revokePermissionResult2.output["permission"];
+      role = revokePermissionResult2.output["role"];
+      permission = revokePermissionResult2.output["permission"];
       const thenResult0 = await interpret(authorizationHandler.checkPermission({ user: {"type":"variable","name":"x"}, permission: {"type":"literal","value":"publish"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

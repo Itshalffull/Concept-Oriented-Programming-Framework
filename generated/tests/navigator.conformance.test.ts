@@ -536,27 +536,13 @@ describe('Navigator functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof navigatorHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = navigatorHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Navigator');
-    });
-  });
 
   describe('invariant examples', () => {
     it("register then go", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(navigatorHandler.register({ nav: {"type":"variable","name":"n"}, name: {"type":"literal","value":"detail"}, targetConcept: {"type":"literal","value":"Article"}, targetView: {"type":"literal","value":"detail"}, paramsSchema: {"type":"variable","name":"_"}, meta: {"type":"variable","name":"_"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const nav = registerResult0.output["nav"];
+      let nav = registerResult0.output["nav"];
       const thenResult0 = await interpret(navigatorHandler.go({ nav: {"type":"variable","name":"n"}, params: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -565,8 +551,8 @@ describe('Navigator functional handler', () => {
       const storage = createInMemoryStorage();
       const goResult0 = await interpret(navigatorHandler.go({ nav: {"type":"variable","name":"a"}, params: {"type":"variable","name":"_"} }), storage);
       expect(goResult0.variant).toBe("ok");
-      const nav = goResult0.output["nav"];
-      const previous = goResult0.output["previous"];
+      let nav = goResult0.output["nav"];
+      let previous = goResult0.output["previous"];
       const thenResult0 = await interpret(navigatorHandler.back({ nav: {"type":"variable","name":"b"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

@@ -97,23 +97,13 @@ describe('WebhookEndpoint imperative handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof webhookEndpointHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await webhookEndpointHandler.register({}, storage);
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('WebhookEndpoint');
-    });
-  });
 
   describe('invariant examples', () => {
     it("resolve after register", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await webhookEndpointHandler.register({ name: {"type":"literal","value":"deploy-webhook"}, url: {"type":"literal","value":"https://hooks.example.com/deploy"}, headers: {"type":"literal","value":"{}"} }, storage);
       expect(registerResult0.variant).toBe("ok");
-      const endpoint = registerResult0.output["endpoint"];
+      let endpoint = registerResult0.output["endpoint"];
       const thenResult0 = await webhookEndpointHandler.resolve({ name: {"type":"literal","value":"deploy-webhook"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

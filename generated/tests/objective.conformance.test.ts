@@ -319,7 +319,8 @@ describe('Objective functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Objective');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Objective');
     });
   });
 
@@ -328,7 +329,7 @@ describe('Objective functional handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(objectiveHandler.create({ title: {"type":"variable","name":"_"}, description: {"type":"variable","name":"_"}, owner: {"type":"variable","name":"_"}, metricRefs: {"type":"variable","name":"_"}, targetDate: {"type":"variable","name":"_"} }), storage);
       expect(createResult0.variant).toBe("created");
-      const objective = createResult0.output["objective"];
+      let objective = createResult0.output["objective"];
       const thenResult0 = await interpret(objectiveHandler.updateProgress({ objective: {"type":"variable","name":"ob"}, currentValue: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("progressed");
     });

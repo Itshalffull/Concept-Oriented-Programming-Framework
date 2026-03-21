@@ -168,7 +168,8 @@ describe('SpatialConnector imperative handler', () => {
       const result = await spatialConnectorHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('SpatialConnector');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('SpatialConnector');
     });
   });
 
@@ -177,7 +178,7 @@ describe('SpatialConnector imperative handler', () => {
       const storage = createInMemoryStorage();
       const drawResult0 = await spatialConnectorHandler.draw({ canvas: {"type":"literal","value":"c1"}, source: {"type":"literal","value":"a"}, target: {"type":"literal","value":"b"}, type: {"type":"literal","value":"visual"} }, storage);
       expect(drawResult0.variant).toBe("ok");
-      const connector = drawResult0.output["connector"];
+      let connector = drawResult0.output["connector"];
       const thenResult0 = await spatialConnectorHandler.promote({ connector: {"type":"variable","name":"conn"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

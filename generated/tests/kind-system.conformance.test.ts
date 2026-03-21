@@ -607,7 +607,8 @@ describe('KindSystem functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('KindSystem');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('KindSystem');
     });
   });
 
@@ -616,10 +617,10 @@ describe('KindSystem functional handler', () => {
       const storage = createInMemoryStorage();
       const defineResult0 = await interpret(kindSystemHandler.define({ name: {"type":"literal","value":"ConceptAST"}, category: {"type":"literal","value":"model"} }), storage);
       expect(defineResult0.variant).toBe("ok");
-      const kind = defineResult0.output["kind"];
+      let kind = defineResult0.output["kind"];
       const defineResult1 = await interpret(kindSystemHandler.define({ name: {"type":"literal","value":"ConceptManifest"}, category: {"type":"literal","value":"model"} }), storage);
       expect(defineResult1.variant).toBe("ok");
-      const kind = defineResult1.output["kind"];
+      kind = defineResult1.output["kind"];
       const connectResult2 = await interpret(kindSystemHandler.connect({ from: {"type":"variable","name":"ast"}, to: {"type":"variable","name":"mfst"}, relation: {"type":"literal","value":"normalizes_to"}, transformName: {"type":"literal","value":"SchemaGen"} }), storage);
       expect(connectResult2.variant).toBe("ok");
       const thenResult0 = await interpret(kindSystemHandler.validate({ from: {"type":"variable","name":"ast"}, to: {"type":"variable","name":"mfst"} }), storage);

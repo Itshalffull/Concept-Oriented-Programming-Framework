@@ -310,27 +310,13 @@ describe('DestinationCatalog functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof destinationCatalogHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = destinationCatalogHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('DestinationCatalog');
-    });
-  });
 
   describe('invariant examples', () => {
     it("register then resolveByName", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(destinationCatalogHandler.register({ destination: {"type":"variable","name":"d"}, name: {"type":"literal","value":"dashboard"}, targetConcept: {"type":"literal","value":"AppShell"}, targetView: {"type":"literal","value":"dashboard"}, href: {"type":"literal","value":"/admin"}, icon: {"type":"literal","value":"home"}, group: {"type":"literal","value":"Content"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const destination = registerResult0.output["destination"];
+      let destination = registerResult0.output["destination"];
       const thenResult0 = await interpret(destinationCatalogHandler.resolveByName({ name: {"type":"literal","value":"dashboard"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

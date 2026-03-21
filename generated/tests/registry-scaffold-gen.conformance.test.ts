@@ -248,7 +248,8 @@ describe('RegistryScaffoldGen functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('RegistryScaffoldGen');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('RegistryScaffoldGen');
     });
   });
 
@@ -257,8 +258,8 @@ describe('RegistryScaffoldGen functional handler', () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(registryScaffoldGenHandler.generate({ deployManifest: {"type":"literal","value":"deploy.yaml"}, outputPath: {"type":"literal","value":"./generated/"}, language: {"type":"literal","value":"typescript"} }), storage);
       expect(generateResult0.variant).toBe("ok");
-      const files = generateResult0.output["files"];
-      const filesGenerated = generateResult0.output["filesGenerated"];
+      let files = generateResult0.output["files"];
+      let filesGenerated = generateResult0.output["filesGenerated"];
     });
 
   });

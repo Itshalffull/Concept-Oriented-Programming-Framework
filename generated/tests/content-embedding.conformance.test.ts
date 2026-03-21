@@ -138,7 +138,8 @@ describe('ContentEmbedding imperative handler', () => {
       const result = await contentEmbeddingHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ContentEmbedding');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ContentEmbedding');
     });
   });
 
@@ -147,7 +148,7 @@ describe('ContentEmbedding imperative handler', () => {
       const storage = createInMemoryStorage();
       const indexResult0 = await contentEmbeddingHandler.index({ entity_id: {"type":"literal","value":"node-1"}, source_type: {"type":"literal","value":"page"}, text: {"type":"literal","value":"hello world"}, model: {"type":"literal","value":"text-embedding-3-small"} }, storage);
       expect(indexResult0.variant).toBe("ok");
-      const embedding = indexResult0.output["embedding"];
+      let embedding = indexResult0.output["embedding"];
       const thenResult0 = await contentEmbeddingHandler.get({ entity_id: {"type":"literal","value":"node-1"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

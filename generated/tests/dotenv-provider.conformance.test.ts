@@ -125,7 +125,8 @@ describe('DotenvProvider functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('DotenvProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('DotenvProvider');
     });
   });
 
@@ -134,7 +135,7 @@ describe('DotenvProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const fetchResult0 = await interpret(dotenvProviderHandler.fetch({ name: {"type":"literal","value":"DB_HOST"}, filePath: {"type":"literal","value":".env"} }), storage);
       expect(fetchResult0.variant).toBe("ok");
-      const value = fetchResult0.output["value"];
+      let value = fetchResult0.output["value"];
       const thenResult0 = await interpret(dotenvProviderHandler.fetch({ name: {"type":"literal","value":"DB_HOST"}, filePath: {"type":"literal","value":".env"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

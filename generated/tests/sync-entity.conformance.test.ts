@@ -509,27 +509,13 @@ describe('SyncEntity functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof syncEntityHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = syncEntityHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('SyncEntity');
-    });
-  });
 
   describe('invariant examples', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(syncEntityHandler.register({ name: {"type":"literal","value":"ArticlePublishSync"}, source: {"type":"literal","value":"syncs/article-publish.sync"}, compiled: {"type":"literal","value":"{}"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const sync = registerResult0.output["sync"];
+      let sync = registerResult0.output["sync"];
       const thenResult0 = await interpret(syncEntityHandler.get({ sync: {"type":"variable","name":"y"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -538,7 +524,7 @@ describe('SyncEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(syncEntityHandler.register({ name: {"type":"literal","value":"ArticlePublishSync"}, source: {"type":"literal","value":"syncs/article-publish.sync"}, compiled: {"type":"literal","value":"{}"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const sync = registerResult0.output["sync"];
+      let sync = registerResult0.output["sync"];
       const thenResult0 = await interpret(syncEntityHandler.register({ name: {"type":"literal","value":"ArticlePublishSync"}, source: {"type":"literal","value":"syncs/article-publish.sync"}, compiled: {"type":"literal","value":"{}"} }), storage);
       expect(thenResult0.variant).toBe("alreadyRegistered");
     });

@@ -138,23 +138,13 @@ describe('VariantEntity imperative handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof variantEntityHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await variantEntityHandler.register({}, storage);
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('VariantEntity');
-    });
-  });
 
   describe('invariant examples', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await variantEntityHandler.register({ action: {"type":"literal","value":"Article/create"}, tag: {"type":"literal","value":"ok"}, fields: {"type":"literal","value":"[]"} }, storage);
       expect(registerResult0.variant).toBe("ok");
-      const variant = registerResult0.output["variant"];
+      let variant = registerResult0.output["variant"];
       const thenResult0 = await variantEntityHandler.get({ variant: {"type":"variable","name":"v"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

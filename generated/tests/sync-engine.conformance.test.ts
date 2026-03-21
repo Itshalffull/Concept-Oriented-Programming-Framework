@@ -436,7 +436,8 @@ describe('SyncEngine functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('SyncEngine');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('SyncEngine');
     });
   });
 
@@ -453,7 +454,7 @@ describe('SyncEngine functional handler', () => {
       const storage = createInMemoryStorage();
       const queueSyncResult0 = await interpret(syncEngineHandler.queueSync({ sync: {"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"EventualSync"}},{"name":"annotations","value":{"type":"list","items":[{"type":"literal","value":"eventual"}]}}]}, bindings: {"type":"record","fields":[]}, flow: {"type":"literal","value":"f2"} }), storage);
       expect(queueSyncResult0.variant).toBe("ok");
-      const pendingId = queueSyncResult0.output["pendingId"];
+      let pendingId = queueSyncResult0.output["pendingId"];
       const thenResult0 = await interpret(syncEngineHandler.onAvailabilityChange({ conceptUri: {"type":"literal","value":"urn:clef/Other"}, available: {"type":"literal","value":true} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

@@ -272,7 +272,8 @@ describe('Telemetry functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Telemetry');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Telemetry');
     });
   });
 
@@ -281,7 +282,7 @@ describe('Telemetry functional handler', () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(telemetryHandler.configure({ concept: {"type":"literal","value":"User"}, endpoint: {"type":"literal","value":"http://otel:4317"}, samplingRate: {"type":"literal","value":0.5} }), storage);
       expect(configureResult0.variant).toBe("ok");
-      const config = configureResult0.output["config"];
+      let config = configureResult0.output["config"];
       const thenResult0 = await interpret(telemetryHandler.deployMarker({ suite: {"type":"literal","value":"auth"}, version: {"type":"literal","value":"1.0.0"}, environment: {"type":"literal","value":"staging"}, status: {"type":"literal","value":"started"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

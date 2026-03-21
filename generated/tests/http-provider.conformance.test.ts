@@ -134,7 +134,8 @@ describe('HttpProvider imperative handler', () => {
       const result = await httpProviderHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('HttpProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('HttpProvider');
     });
   });
 
@@ -143,7 +144,7 @@ describe('HttpProvider imperative handler', () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await httpProviderHandler.configure({ name: {"type":"literal","value":"test-api"}, baseUrl: {"type":"literal","value":"https://api.example.com"}, headers: {"type":"literal","value":"{}"}, timeout: {"type":"literal","value":5000} }, storage);
       expect(configureResult0.variant).toBe("ok");
-      const instance = configureResult0.output["instance"];
+      let instance = configureResult0.output["instance"];
       const thenResult0 = await httpProviderHandler.execute({ instance: {"type":"literal","value":"unknown-api"}, method: {"type":"literal","value":"GET"}, path: {"type":"literal","value":"/health"}, body: {"type":"literal","value":""}, headers: {"type":"literal","value":"{}"} }, storage);
       expect(thenResult0.variant).toBe("notFound");
     });

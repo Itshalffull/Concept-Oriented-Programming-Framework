@@ -181,7 +181,8 @@ describe('WebSocketProvider imperative handler', () => {
       const result = await webSocketProviderHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('WebSocketProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('WebSocketProvider');
     });
   });
 
@@ -190,7 +191,7 @@ describe('WebSocketProvider imperative handler', () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await webSocketProviderHandler.configure({ name: {"type":"literal","value":"events"}, url: {"type":"literal","value":"wss://events.example.com"}, protocols: {"type":"literal","value":"[]"} }, storage);
       expect(configureResult0.variant).toBe("ok");
-      const connection = configureResult0.output["connection"];
+      let connection = configureResult0.output["connection"];
       const thenResult0 = await webSocketProviderHandler.close({ connection: {"type":"literal","value":"unknown"} }, storage);
       expect(thenResult0.variant).toBe("notFound");
     });

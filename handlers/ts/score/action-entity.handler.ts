@@ -10,7 +10,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.js';
 import {
-  createProgram, get, find, put, branch, complete, pureFrom, mapBindings,
+  createProgram, get, find, put, branch, complete, completeFrom, pureFrom, mapBindings,
 } from '../../../runtime/storage-program.js';
 
 export const actionEntityHandler: FunctionalConceptHandler = {
@@ -58,7 +58,7 @@ export const actionEntityHandler: FunctionalConceptHandler = {
       })));
     }, 'result');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', actions: b.result }));
+    return completeFrom(p, 'ok', (b) => ({ actions: b.result }));
   },
 
   triggeringSyncs(input) {
@@ -72,7 +72,7 @@ export const actionEntityHandler: FunctionalConceptHandler = {
       return entry ? (entry.triggeringSyncsCache as string || '[]') : '[]';
     }, 'syncs');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', syncs: b.syncs }));
+    return completeFrom(p, 'ok', (b) => ({ syncs: b.syncs }));
   },
 
   invokingSyncs(input) {
@@ -86,7 +86,7 @@ export const actionEntityHandler: FunctionalConceptHandler = {
       return entry ? (entry.invokingSyncsCache as string || '[]') : '[]';
     }, 'syncs');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', syncs: b.syncs }));
+    return completeFrom(p, 'ok', (b) => ({ syncs: b.syncs }));
   },
 
   implementations(input) {
@@ -100,7 +100,7 @@ export const actionEntityHandler: FunctionalConceptHandler = {
       return entry ? (entry.implementationSymbols as string || '[]') : '[]';
     }, 'symbols');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', symbols: b.symbols }));
+    return completeFrom(p, 'ok', (b) => ({ symbols: b.symbols }));
   },
 
   interfaceExposures(input) {
@@ -114,7 +114,7 @@ export const actionEntityHandler: FunctionalConceptHandler = {
       return entry ? (entry.interfaceExposuresCache as string || '[]') : '[]';
     }, 'exposures');
 
-    return pureFrom(p, (b) => ({ variant: 'ok', exposures: b.exposures }));
+    return completeFrom(p, 'ok', (b) => ({ exposures: b.exposures }));
   },
 
   get(input) {
@@ -129,11 +129,10 @@ export const actionEntityHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => b.entry != null,
-      pureFrom(createProgram(), (b) => {
+      completeFrom(createProgram(), 'ok', (b) => {
         const e = b.entry as Record<string, unknown>;
         const variants: unknown[] = JSON.parse(e.variants as string || '[]');
         return {
-          variant: 'ok',
           action: e.id, concept: e.concept, name: e.name,
           params: e.params, variantCount: variants.length,
         };

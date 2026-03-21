@@ -329,7 +329,8 @@ describe('SemanticEmbedding functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('SemanticEmbedding');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('SemanticEmbedding');
     });
   });
 
@@ -338,7 +339,7 @@ describe('SemanticEmbedding functional handler', () => {
       const storage = createInMemoryStorage();
       const computeResult0 = await interpret(semanticEmbeddingHandler.compute({ unit: {"type":"literal","value":"def-123"}, model: {"type":"literal","value":"codeBERT"} }), storage);
       expect(computeResult0.variant).toBe("ok");
-      const embedding = computeResult0.output["embedding"];
+      let embedding = computeResult0.output["embedding"];
       const thenResult0 = await interpret(semanticEmbeddingHandler.get({ embedding: {"type":"variable","name":"b"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

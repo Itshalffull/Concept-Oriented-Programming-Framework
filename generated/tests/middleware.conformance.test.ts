@@ -263,27 +263,13 @@ describe('Middleware functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof middlewareHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = middlewareHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Middleware');
-    });
-  });
 
   describe('invariant examples', () => {
     it("register-then-inject", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(middlewareHandler.register({ trait: {"type":"literal","value":"auth"}, target: {"type":"literal","value":"rest"}, implementation: {"type":"literal","value":"bearer-check"}, position: {"type":"literal","value":"auth"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const middleware = registerResult0.output["middleware"];
+      let middleware = registerResult0.output["middleware"];
       const thenResult0 = await interpret(middlewareHandler.resolve({ traits: {"type":"list","items":[{"type":"literal","value":"auth"}]}, target: {"type":"literal","value":"rest"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(middlewareHandler.inject({ output: {"type":"literal","value":"route-code"}, middlewares: {"type":"list","items":[{"type":"literal","value":"bearer-check"}]}, target: {"type":"literal","value":"rest"} }), storage);

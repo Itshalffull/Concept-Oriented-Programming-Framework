@@ -253,7 +253,8 @@ describe('FormalProperty imperative handler', () => {
       const result = await formalPropertyHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('FormalProperty');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('FormalProperty');
     });
   });
 
@@ -262,7 +263,7 @@ describe('FormalProperty imperative handler', () => {
       const storage = createInMemoryStorage();
       const defineResult0 = await formalPropertyHandler.define({ target_symbol: {"type":"literal","value":"clef/concept/Password"}, kind: {"type":"literal","value":"invariant"}, property_text: {"type":"literal","value":"forall p: Password | len(p.hash) > 0"}, formal_language: {"type":"literal","value":"smtlib"}, scope: {"type":"literal","value":"local"}, priority: {"type":"literal","value":"required"} }, storage);
       expect(defineResult0.variant).toBe("ok");
-      const property = defineResult0.output["property"];
+      let property = defineResult0.output["property"];
       const thenResult0 = await formalPropertyHandler.check({ property: {"type":"variable","name":"p"}, solver: {"type":"literal","value":"z3"}, timeout_ms: {"type":"literal","value":5000} }, storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await formalPropertyHandler.coverage({ target_symbol: {"type":"literal","value":"clef/concept/Password"} }, storage);

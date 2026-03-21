@@ -463,7 +463,8 @@ describe('Surface functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Surface');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Surface');
     });
   });
 
@@ -472,7 +473,7 @@ describe('Surface functional handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(surfaceHandler.create({ surface: {"type":"variable","name":"f"}, kind: {"type":"literal","value":"browser-dom"}, mountPoint: {"type":"literal","value":"#app"} }), storage);
       expect(createResult0.variant).toBe("ok");
-      const surface = createResult0.output["surface"];
+      let surface = createResult0.output["surface"];
       const thenResult0 = await interpret(surfaceHandler.destroy({ surface: {"type":"variable","name":"f"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -551,9 +552,6 @@ describe('Surface functional handler', () => {
       );
     });
 
-  });
-
-  describe('action contracts (PBT)', () => {
   });
 
 });

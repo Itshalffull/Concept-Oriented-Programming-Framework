@@ -318,7 +318,8 @@ describe('Treasury functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Treasury');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Treasury');
     });
   });
 
@@ -327,8 +328,8 @@ describe('Treasury functional handler', () => {
       const storage = createInMemoryStorage();
       const depositResult0 = await interpret(treasuryHandler.deposit({ vault: {"type":"variable","name":"v"}, token: {"type":"variable","name":"t"}, amount: {"type":"literal","value":100} }), storage);
       expect(depositResult0.variant).toBe("deposited");
-      const vault = depositResult0.output["vault"];
-      const newBalance = depositResult0.output["newBalance"];
+      let vault = depositResult0.output["vault"];
+      let newBalance = depositResult0.output["newBalance"];
       const thenResult0 = await interpret(treasuryHandler.withdraw({ vault: {"type":"variable","name":"v"}, token: {"type":"variable","name":"t"}, amount: {"type":"literal","value":50} }), storage);
       expect(thenResult0.variant).toBe("withdrawn");
     });

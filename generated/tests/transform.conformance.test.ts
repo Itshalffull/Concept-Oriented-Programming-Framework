@@ -258,7 +258,8 @@ describe('Transform functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Transform');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Transform');
     });
   });
 
@@ -267,7 +268,7 @@ describe('Transform functional handler', () => {
       const storage = createInMemoryStorage();
       const applyResult0 = await interpret(transformHandler.apply({ value: {"type":"literal","value":"<p>Hello World</p>"}, transformId: {"type":"literal","value":"html_to_markdown"} }), storage);
       expect(applyResult0.variant).toBe("ok");
-      const result = applyResult0.output["result"];
+      let result = applyResult0.output["result"];
       const thenResult0 = await interpret(transformHandler.preview({ value: {"type":"literal","value":"test"}, transformId: {"type":"literal","value":"html_to_markdown"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -276,7 +277,7 @@ describe('Transform functional handler', () => {
       const storage = createInMemoryStorage();
       const chainResult0 = await interpret(transformHandler.chain({ value: {"type":"literal","value":"Hello World!"}, transformIds: {"type":"literal","value":"slugify,truncate"} }), storage);
       expect(chainResult0.variant).toBe("ok");
-      const result = chainResult0.output["result"];
+      let result = chainResult0.output["result"];
       const thenResult0 = await interpret(transformHandler.preview({ value: {"type":"literal","value":"hello-world"}, transformId: {"type":"literal","value":"slugify"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

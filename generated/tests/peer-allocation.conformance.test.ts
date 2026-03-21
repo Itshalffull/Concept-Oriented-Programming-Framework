@@ -249,7 +249,8 @@ describe('PeerAllocation functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('PeerAllocation');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('PeerAllocation');
     });
   });
 
@@ -258,7 +259,7 @@ describe('PeerAllocation functional handler', () => {
       const storage = createInMemoryStorage();
       const openRoundResult0 = await interpret(peerAllocationHandler.openRound({ budget: {"type":"literal","value":100}, deadlineDays: {"type":"literal","value":7} }), storage);
       expect(openRoundResult0.variant).toBe("opened");
-      const round = openRoundResult0.output["round"];
+      let round = openRoundResult0.output["round"];
       const thenResult0 = await interpret(peerAllocationHandler.allocate({ round: {"type":"variable","name":"pa"}, allocator: {"type":"variable","name":"a"}, recipient: {"type":"variable","name":"b"}, amount: {"type":"literal","value":30}, note: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("allocated");
       const thenResult1 = await interpret(peerAllocationHandler.finalize({ round: {"type":"variable","name":"pa"} }), storage);

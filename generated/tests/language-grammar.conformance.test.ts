@@ -369,27 +369,13 @@ describe('LanguageGrammar functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof languageGrammarHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = languageGrammarHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('LanguageGrammar');
-    });
-  });
 
   describe('invariant examples', () => {
     it("register-then-resolve", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(languageGrammarHandler.register({ name: {"type":"literal","value":"typescript"}, extensions: {"type":"literal","value":"[\".ts\",\".tsx\"]"}, parserWasmPath: {"type":"literal","value":"tree-sitter-typescript.wasm"}, nodeTypes: {"type":"literal","value":"{}"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const grammar = registerResult0.output["grammar"];
+      let grammar = registerResult0.output["grammar"];
       const thenResult0 = await interpret(languageGrammarHandler.resolve({ fileExtension: {"type":"literal","value":".ts"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -398,7 +384,7 @@ describe('LanguageGrammar functional handler', () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(languageGrammarHandler.register({ name: {"type":"literal","value":"typescript"}, extensions: {"type":"literal","value":"[\".ts\"]"}, parserWasmPath: {"type":"literal","value":"ts.wasm"}, nodeTypes: {"type":"literal","value":"{}"} }), storage);
       expect(registerResult0.variant).toBe("ok");
-      const grammar = registerResult0.output["grammar"];
+      let grammar = registerResult0.output["grammar"];
       const thenResult0 = await interpret(languageGrammarHandler.register({ name: {"type":"literal","value":"typescript"}, extensions: {"type":"literal","value":"[\".ts\"]"}, parserWasmPath: {"type":"literal","value":"ts.wasm"}, nodeTypes: {"type":"literal","value":"{}"} }), storage);
       expect(thenResult0.variant).toBe("alreadyRegistered");
     });

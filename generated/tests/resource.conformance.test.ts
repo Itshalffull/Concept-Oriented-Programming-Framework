@@ -398,7 +398,8 @@ describe('Resource functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Resource');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Resource');
     });
   });
 
@@ -407,7 +408,7 @@ describe('Resource functional handler', () => {
       const storage = createInMemoryStorage();
       const upsertResult0 = await interpret(resourceHandler.upsert({ locator: {"type":"literal","value":"./specs/password.concept"}, kind: {"type":"literal","value":"concept-spec"}, digest: {"type":"literal","value":"abc123"} }), storage);
       expect(upsertResult0.variant).toBe("created");
-      const resource = upsertResult0.output["resource"];
+      let resource = upsertResult0.output["resource"];
       const thenResult0 = await interpret(resourceHandler.get({ locator: {"type":"literal","value":"./specs/password.concept"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(resourceHandler.upsert({ locator: {"type":"literal","value":"./specs/password.concept"}, kind: {"type":"literal","value":"concept-spec"}, digest: {"type":"literal","value":"abc123"} }), storage);

@@ -414,7 +414,8 @@ describe('Capture functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Capture');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Capture');
     });
   });
 
@@ -423,8 +424,8 @@ describe('Capture functional handler', () => {
       const storage = createInMemoryStorage();
       const clipResult0 = await interpret(captureHandler.clip({ url: {"type":"literal","value":"https://example.com/article"}, mode: {"type":"literal","value":"web_article"}, metadata: {"type":"literal","value":"{}"} }), storage);
       expect(clipResult0.variant).toBe("ok");
-      const itemId = clipResult0.output["itemId"];
-      const content = clipResult0.output["content"];
+      let itemId = clipResult0.output["itemId"];
+      let content = clipResult0.output["content"];
       const thenResult0 = await interpret(captureHandler.markReady({ itemId: {"type":"literal","value":"cap-1"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -433,7 +434,7 @@ describe('Capture functional handler', () => {
       const storage = createInMemoryStorage();
       const subscribeResult0 = await interpret(captureHandler.subscribe({ sourceId: {"type":"literal","value":"src-1"}, schedule: {"type":"literal","value":"*/30 * * * *"}, mode: {"type":"literal","value":"api_poll"} }), storage);
       expect(subscribeResult0.variant).toBe("ok");
-      const subscriptionId = subscribeResult0.output["subscriptionId"];
+      let subscriptionId = subscribeResult0.output["subscriptionId"];
       const thenResult0 = await interpret(captureHandler.detectChanges({ subscriptionId: {"type":"literal","value":"sub-1"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

@@ -400,7 +400,8 @@ describe('DeployPlan functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('DeployPlan');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('DeployPlan');
     });
   });
 
@@ -409,9 +410,9 @@ describe('DeployPlan functional handler', () => {
       const storage = createInMemoryStorage();
       const planResult0 = await interpret(deployPlanHandler.plan({ manifest: {"type":"literal","value":"valid-manifest"}, environment: {"type":"literal","value":"staging"} }), storage);
       expect(planResult0.variant).toBe("ok");
-      const plan = planResult0.output["plan"];
-      const graph = planResult0.output["graph"];
-      const estimatedDuration = planResult0.output["estimatedDuration"];
+      let plan = planResult0.output["plan"];
+      let graph = planResult0.output["graph"];
+      let estimatedDuration = planResult0.output["estimatedDuration"];
       const thenResult0 = await interpret(deployPlanHandler.validate({ plan: {"type":"variable","name":"p"} }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(deployPlanHandler.execute({ plan: {"type":"variable","name":"p"} }), storage);

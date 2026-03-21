@@ -311,7 +311,8 @@ describe('Wallet functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Wallet');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Wallet');
     });
   });
 
@@ -320,8 +321,8 @@ describe('Wallet functional handler', () => {
       const storage = createInMemoryStorage();
       const verifyResult0 = await interpret(walletHandler.verify({ address: {"type":"variable","name":"addr"}, message: {"type":"variable","name":"msg"}, signature: {"type":"variable","name":"sig"} }), storage);
       expect(verifyResult0.variant).toBe("ok");
-      const address = verifyResult0.output["address"];
-      const recoveredAddress = verifyResult0.output["recoveredAddress"];
+      let address = verifyResult0.output["address"];
+      let recoveredAddress = verifyResult0.output["recoveredAddress"];
       const thenResult0 = await interpret(walletHandler.verify({ address: {"type":"variable","name":"addr"}, message: {"type":"variable","name":"msg"}, signature: {"type":"variable","name":"sig"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

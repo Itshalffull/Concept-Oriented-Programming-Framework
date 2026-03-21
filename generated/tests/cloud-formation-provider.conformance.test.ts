@@ -317,7 +317,8 @@ describe('CloudFormationProvider functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('CloudFormationProvider');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('CloudFormationProvider');
     });
   });
 
@@ -326,8 +327,8 @@ describe('CloudFormationProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(cloudformationProviderHandler.generate({ plan: {"type":"literal","value":"dp-001"} }), storage);
       expect(generateResult0.variant).toBe("ok");
-      const stack = generateResult0.output["stack"];
-      const files = generateResult0.output["files"];
+      let stack = generateResult0.output["stack"];
+      let files = generateResult0.output["files"];
       const thenResult0 = await interpret(cloudformationProviderHandler.apply({ stack: {"type":"variable","name":"s"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });

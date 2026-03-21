@@ -108,23 +108,13 @@ describe('Z3SolverEndpoint imperative handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof z3SolverEndpointHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await z3SolverEndpointHandler.register({}, storage);
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Z3SolverEndpoint');
-    });
-  });
 
   describe('invariant examples', () => {
     it("solve after register", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await z3SolverEndpointHandler.register({ name: {"type":"literal","value":"z3-local"}, binaryPath: {"type":"literal","value":"/usr/bin/z3"}, timeout: {"type":"literal","value":30000}, options: {"type":"literal","value":"-smt2"} }, storage);
       expect(registerResult0.variant).toBe("ok");
-      const endpoint = registerResult0.output["endpoint"];
+      let endpoint = registerResult0.output["endpoint"];
       const thenResult0 = await z3SolverEndpointHandler.resolve({ name: {"type":"literal","value":"z3-local"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

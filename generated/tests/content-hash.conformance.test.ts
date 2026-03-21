@@ -137,7 +137,8 @@ describe('ContentHash imperative handler', () => {
       const result = await contentHashHandler.register({}, storage);
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ContentHash');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ContentHash');
     });
   });
 
@@ -146,7 +147,7 @@ describe('ContentHash imperative handler', () => {
       const storage = createInMemoryStorage();
       const storeResult0 = await contentHashHandler.store({ content: {"type":"variable","name":"c"} }, storage);
       expect(storeResult0.variant).toBe("ok");
-      const hash = storeResult0.output["hash"];
+      let hash = storeResult0.output["hash"];
       const thenResult0 = await contentHashHandler.retrieve({ hash: {"type":"variable","name":"h"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -155,7 +156,7 @@ describe('ContentHash imperative handler', () => {
       const storage = createInMemoryStorage();
       const storeResult0 = await contentHashHandler.store({ content: {"type":"variable","name":"c"} }, storage);
       expect(storeResult0.variant).toBe("ok");
-      const hash = storeResult0.output["hash"];
+      let hash = storeResult0.output["hash"];
       const thenResult0 = await contentHashHandler.verify({ hash: {"type":"variable","name":"h"}, content: {"type":"variable","name":"c"} }, storage);
       expect(thenResult0.variant).toBe("valid");
     });
@@ -164,7 +165,7 @@ describe('ContentHash imperative handler', () => {
       const storage = createInMemoryStorage();
       const storeResult0 = await contentHashHandler.store({ content: {"type":"variable","name":"c"} }, storage);
       expect(storeResult0.variant).toBe("ok");
-      const hash = storeResult0.output["hash"];
+      let hash = storeResult0.output["hash"];
       const thenResult0 = await contentHashHandler.store({ content: {"type":"variable","name":"c"} }, storage);
       expect(thenResult0.variant).toBe("alreadyExists");
     });

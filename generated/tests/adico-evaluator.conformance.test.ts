@@ -181,7 +181,8 @@ describe('ADICOEvaluator functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('ADICOEvaluator');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('ADICOEvaluator');
     });
   });
 
@@ -190,7 +191,7 @@ describe('ADICOEvaluator functional handler', () => {
       const storage = createInMemoryStorage();
       const parseResult0 = await interpret(adicoEvaluatorHandler.parse({ ruleText: {"type":"variable","name":"_"} }), storage);
       expect(parseResult0.variant).toBe("parsed");
-      const rule = parseResult0.output["rule"];
+      let rule = parseResult0.output["rule"];
       const thenResult0 = await interpret(adicoEvaluatorHandler.evaluate({ rule: {"type":"variable","name":"ae"}, context: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("permitted");
     });

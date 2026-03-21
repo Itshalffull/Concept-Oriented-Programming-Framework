@@ -383,7 +383,8 @@ describe('Sanction functional handler', () => {
         : program;
       if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
-      expect(result.name).toBe('Sanction');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('Sanction');
     });
   });
 
@@ -392,7 +393,7 @@ describe('Sanction functional handler', () => {
       const storage = createInMemoryStorage();
       const imposeResult0 = await interpret(sanctionHandler.impose({ subject: {"type":"variable","name":"_"}, severity: {"type":"literal","value":"Warning"}, consequence: {"type":"variable","name":"_"}, reason: {"type":"variable","name":"_"} }), storage);
       expect(imposeResult0.variant).toBe("imposed");
-      const sanction = imposeResult0.output["sanction"];
+      let sanction = imposeResult0.output["sanction"];
       const thenResult0 = await interpret(sanctionHandler.escalate({ sanction: {"type":"variable","name":"sn"} }), storage);
       expect(thenResult0.variant).toBe("escalated");
       const thenResult1 = await interpret(sanctionHandler.appeal({ sanction: {"type":"variable","name":"sn"} }), storage);
