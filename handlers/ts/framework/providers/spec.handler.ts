@@ -43,6 +43,7 @@ const _handler: FunctionalConceptHandler = {
   },
 
   validate(input: Record<string, unknown>) {
+    const p = createProgram();
     return complete(p, 'ok', { document: input.document as string }) as StorageProgram<Result>;
   },
 };

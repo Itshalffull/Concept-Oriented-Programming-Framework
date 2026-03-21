@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-21T18:18:09.090Z",
+  "generatedAt": "2026-03-21T19:29:43.806Z",
   "files": [
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/spec-parser/spec-parser.commands.ts",
@@ -3868,7 +3868,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/agents/handler-scaffold-gen.md",
       "relativePath": "claude-agents/handler-scaffold-gen.md",
-      "hash": "2591827bc73f14a58b8d5336a83a817bc15117059f06073d5e38037765e4e2f6",
+      "hash": "2ae39897a189705052ab05d7ee751a592f53bde9d82a41e24a6809c0181f91eb",
       "target": "claude-agents"
     },
     {

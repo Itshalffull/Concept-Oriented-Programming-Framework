@@ -33,6 +33,9 @@ each action returns a `StorageProgram` (a free monad describing storage operatio
 
 ## Rules
 
+- **Every action must be implemented** — a missing method is a conformance failure. If the spec declares 7 actions, the handler must have 7 methods
+- **Every function used must be imported** — find, traverse, mergeFrom, merge, del, mapBindings, completeFrom, pureFrom etc. must all appear in the import from storage-program. A ReferenceError at runtime means a missing import. ALWAYS verify imports match usage
+- **Use complete()/completeFrom() for terminals** — NOT pure()/pureFrom(). complete/completeFrom track the variant in the structural effect set; pure/pureFrom do not, causing 'declares completion variants' test failures
 - **Functional style by default** — use createProgram(), put(), get(), find(), complete(), branch()
 - **Export convention** — `export const <camelCase>Handler = autoInterpret(_handler)`
 - **Variant coverage** — every variant in the spec must be reachable

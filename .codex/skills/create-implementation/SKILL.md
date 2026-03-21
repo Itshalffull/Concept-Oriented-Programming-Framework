@@ -730,12 +730,13 @@ it('covers all declared variants', () => {
 Before considering the implementation complete:
 
 **For functional handlers (FunctionalConceptHandler) — the default:**
-- [ ] One method per action in the spec (synchronous — no async)
+- [ ] **Every action in the spec has a corresponding method** — missing actions are conformance failures
+- [ ] **Every function used in the handler body is imported** — `find`, `traverse`, `mergeFrom`, `merge`, `del`, `mapBindings`, `completeFrom`, `pureFrom` etc. must all appear in the import statement. A `ReferenceError: X is not defined` at runtime means a missing import
 - [ ] All input fields extracted with correct type casts
 - [ ] Every variant from the spec is returned on the appropriate code path
 - [ ] Storage relation names match the spec's state section
 - [ ] Handler returns `StorageProgram`, never calls storage directly
-- [ ] Uses `complete()` for all terminal values (not plain `pure()`)
+- [ ] Uses `complete()` or `completeFrom()` for all terminal values (not plain `pure()` or `pureFrom()`) — `complete`/`completeFrom` track the variant in the structural effect set; `pure`/`pureFrom` do not
 - [ ] Uses `branch()` for conditionals (not if/else)
 - [ ] Declared purity matches actual structural effects
 - [ ] Lens-based access used where possible (not raw string keys)

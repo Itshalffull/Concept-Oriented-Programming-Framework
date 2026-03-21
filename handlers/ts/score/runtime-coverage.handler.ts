@@ -9,7 +9,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.js';
 import {
-  createProgram, get, find, put, merge, branch, complete, completeFrom, pureFrom, mapBindings,
+  createProgram, get, find, put, merge, mergeFrom, branch, complete, completeFrom, pureFrom, mapBindings,
 } from '../../../runtime/storage-program.js';
 
 export const runtimeCoverageHandler: FunctionalConceptHandler = {

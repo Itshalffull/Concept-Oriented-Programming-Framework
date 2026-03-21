@@ -47,8 +47,11 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     const output = input.output as string;
     p = get(p, 'outputs', output, 'stored');
-    if (!stored) return complete(p, 'ok', { changes: [] }) as StorageProgram<Result>;
-    return complete(p, 'ok', { changes: [] }) as StorageProgram<Result>;
+    return branch(p,
+      (b) => b.stored == null,
+      complete(createProgram(), 'ok', { changes: [] }) as StorageProgram<Result>,
+      complete(createProgram(), 'ok', { changes: [] }) as StorageProgram<Result>,
+    ) as StorageProgram<Result>;
   },
 };
 
