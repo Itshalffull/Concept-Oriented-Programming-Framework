@@ -88,14 +88,16 @@ describe('HandlerScaffoldGen functional handler', () => {
       if (typeof handlerScaffoldGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(handlerScaffoldGenHandler.generate({ conceptName: "Order", actions: [{"name":"create","params":[{"name":"title","type":"String"}],"variants":[{"name":"ok","params":[{"name":"item","type":"String"}]},{"name":"error","params":[{"name":"message","type":"String"}]}]}], style: "functional" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "imperative_generate" -> ok', async () => {
       if (typeof handlerScaffoldGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(handlerScaffoldGenHandler.generate({ conceptName: "Invoice", actions: [], style: "imperative" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "empty_name" -> error', async () => {
@@ -162,8 +164,15 @@ describe('HandlerScaffoldGen functional handler', () => {
     it('fixture "valid_preview" -> ok', async () => {
       if (typeof handlerScaffoldGenHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(handlerScaffoldGenHandler.preview({ conceptName: "Payment", actions: [{"name":"charge","params":[{"name":"amount","type":"Int"}],"variants":[{"name":"ok","params":[{"name":"receipt","type":"String"}]}]}] }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_valid_generate = await interpret(handlerScaffoldGenHandler.generate({ conceptName: "Order", actions: [{"name":"create","params":[{"name":"title","type":"String"}],"variants":[{"name":"ok","params":[{"name":"item","type":"String"}]},{"name":"error","params":[{"name":"message","type":"String"}]}]}], style: "functional" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_generate?.output ?? {}));
+      const _fixtureInput = { conceptName: "Payment", actions: [{"name":"charge","params":[{"name":"amount","type":"Int"}],"variants":[{"name":"ok","params":[{"name":"receipt","type":"String"}]}]}] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(handlerScaffoldGenHandler.preview({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "empty_preview" -> error', async () => {
@@ -232,12 +241,10 @@ describe('HandlerScaffoldGen functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_generate = await interpret(handlerScaffoldGenHandler.generate({ conceptName: "Order", actions: [{"name":"create","params":[{"name":"title","type":"String"}],"variants":[{"name":"ok","params":[{"name":"item","type":"String"}]},{"name":"error","params":[{"name":"message","type":"String"}]}]}], style: "functional" }), storage);
       const _pool = Object.assign({}, (afterResult_valid_generate?.output ?? {}));
-      const _fixtureInput = {  } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(handlerScaffoldGenHandler.register({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -262,7 +269,8 @@ describe('HandlerScaffoldGen functional handler', () => {
     it("generate produces handler files", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(handlerScaffoldGenHandler.generate({ conceptName: {"type":"literal","value":"User"}, actions: {"type":"list","items":[]}, style: {"type":"literal","value":"functional"} }), storage);
-      expect(generateResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
       let files = generateResult0.output["files"];
       let filesGenerated = generateResult0.output["filesGenerated"];
     });

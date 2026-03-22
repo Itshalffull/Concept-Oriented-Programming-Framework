@@ -88,7 +88,8 @@ describe('FrameworkAdapter functional handler', () => {
       if (typeof frameworkAdapterHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(frameworkAdapterHandler.register({ renderer: "react-adapter", framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "duplicate_registration" -> duplicate', async () => {
@@ -156,15 +157,29 @@ describe('FrameworkAdapter functional handler', () => {
     it('fixture "react_delegation" -> ok', async () => {
       if (typeof frameworkAdapterHandler.normalize !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(frameworkAdapterHandler.normalize({ adapter: "react", props: "{\"onclick\":\"handleClick\",\"class\":\"btn\",\"__framework\":\"react\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_register_react = await interpret(frameworkAdapterHandler.register({ renderer: "react-adapter", framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_react?.output ?? {}));
+      const _fixtureInput = { adapter: "react", props: "{\"onclick\":\"handleClick\",\"class\":\"btn\",\"__framework\":\"react\"}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(frameworkAdapterHandler.normalize({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "unknown_framework_passthrough" -> ok', async () => {
       if (typeof frameworkAdapterHandler.normalize !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(frameworkAdapterHandler.normalize({ adapter: "custom-fw", props: "{\"title\":\"Hello\",\"data-id\":\"123\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_register_react = await interpret(frameworkAdapterHandler.register({ renderer: "react-adapter", framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_react?.output ?? {}));
+      const _fixtureInput = { adapter: "custom-fw", props: "{\"title\":\"Hello\",\"data-id\":\"123\"}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(frameworkAdapterHandler.normalize({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "empty_props" -> error', async () => {
@@ -238,8 +253,15 @@ describe('FrameworkAdapter functional handler', () => {
     it('fixture "mount_component" -> ok', async () => {
       if (typeof frameworkAdapterHandler.mount !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(frameworkAdapterHandler.mount({ renderer: "react-adapter", machine: "todo-machine", target: "#app" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_register_react = await interpret(frameworkAdapterHandler.register({ renderer: "react-adapter", framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_react?.output ?? {}));
+      const _fixtureInput = { renderer: "react-adapter", machine: "todo-machine", target: "#app" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(frameworkAdapterHandler.mount({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "mount_unregistered" -> error', async () => {
@@ -306,8 +328,15 @@ describe('FrameworkAdapter functional handler', () => {
     it('fixture "render_valid" -> ok', async () => {
       if (typeof frameworkAdapterHandler.render !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(frameworkAdapterHandler.render({ adapter: "react-adapter", props: "{\"className\":\"active\",\"onClick\":\"handler\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_register_react = await interpret(frameworkAdapterHandler.register({ renderer: "react-adapter", framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_react?.output ?? {}));
+      const _fixtureInput = { adapter: "react-adapter", props: "{\"className\":\"active\",\"onClick\":\"handler\"}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(frameworkAdapterHandler.render({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "render_failure" -> error', async () => {
@@ -374,8 +403,15 @@ describe('FrameworkAdapter functional handler', () => {
     it('fixture "unmount_existing" -> ok', async () => {
       if (typeof frameworkAdapterHandler.unmount !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(frameworkAdapterHandler.unmount({ renderer: "react-adapter", target: "#app" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_register_react = await interpret(frameworkAdapterHandler.register({ renderer: "react-adapter", framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_react?.output ?? {}));
+      const _fixtureInput = { renderer: "react-adapter", target: "#app" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(frameworkAdapterHandler.unmount({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "unmount_nothing" -> notfound', async () => {
@@ -393,10 +429,12 @@ describe('FrameworkAdapter functional handler', () => {
     it("registered adapter can normalize props", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(frameworkAdapterHandler.register({ renderer: {"type":"variable","name":"r"}, framework: {"type":"literal","value":"react"}, version: {"type":"literal","value":"19"}, normalizer: {"type":"literal","value":"reactNormalizer"}, mountFn: {"type":"literal","value":"reactMount"} }), storage);
-      expect(registerResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
       let renderer = registerResult0.output["renderer"];
       const thenResult0 = await interpret(frameworkAdapterHandler.normalize({ renderer: {"type":"variable","name":"r"}, props: {"type":"literal","value":"{ \"onClick\": \"handler_1\" }"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

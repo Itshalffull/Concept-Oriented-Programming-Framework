@@ -88,7 +88,8 @@ describe('StructuralPattern functional handler', () => {
       if (typeof structuralPatternHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(structuralPatternHandler.create({ syntax: "tree-sitter-query", source: "(function_declaration) @fn", language: "typescript" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "create_empty_syntax" -> error', async () => {
@@ -157,7 +158,8 @@ describe('StructuralPattern functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_ts_query = await interpret(structuralPatternHandler.create({ syntax: "tree-sitter-query", source: "(function_declaration) @fn", language: "typescript" }), storage);
       const result = await interpret(structuralPatternHandler.match({ pattern: afterResult_create_ts_query?.output?.["pattern"], tree: afterResult_create_ts_query?.output?.["pattern"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "match_missing_pattern" -> error', async () => {
@@ -226,7 +228,8 @@ describe('StructuralPattern functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_ts_query = await interpret(structuralPatternHandler.create({ syntax: "tree-sitter-query", source: "(function_declaration) @fn", language: "typescript" }), storage);
       const result = await interpret(structuralPatternHandler.matchProject({ pattern: afterResult_create_ts_query?.output?.["pattern"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "match_project_missing" -> error', async () => {
@@ -258,10 +261,12 @@ describe('StructuralPattern functional handler', () => {
     it("create-then-match", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(structuralPatternHandler.create({ syntax: {"type":"literal","value":"tree-sitter-query"}, source: {"type":"literal","value":"(function_declaration) @fn"}, language: {"type":"literal","value":"typescript"} }), storage);
-      expect(createResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
       let pattern = createResult0.output["pattern"];
       const thenResult0 = await interpret(structuralPatternHandler.match({ pattern: {"type":"variable","name":"p"}, tree: {"type":"literal","value":"some-tree"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

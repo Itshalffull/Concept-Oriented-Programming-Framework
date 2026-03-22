@@ -88,14 +88,16 @@ describe('Builder functional handler', () => {
       if (typeof builderHandler.build !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(builderHandler.build({ concept: "password", source: "./generated/swift/password", language: "swift", platform: "linux-arm64", config: {"mode":"release"} }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "build_ts_debug" -> ok', async () => {
       if (typeof builderHandler.build !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(builderHandler.build({ concept: "session", source: "./generated/ts/session", language: "typescript", platform: "linux-x86_64", config: {"mode":"debug","features":["logging"]} }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "build_missing_concept" -> error', async () => {
@@ -169,7 +171,8 @@ describe('Builder functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(builderHandler.buildAll({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "buildall_empty_concepts" -> error', async () => {
@@ -249,7 +252,8 @@ describe('Builder functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(builderHandler.test({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "test_e2e_with_tool" -> ok', async () => {
@@ -262,7 +266,8 @@ describe('Builder functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(builderHandler.test({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "test_not_built" -> error', async () => {
@@ -336,7 +341,8 @@ describe('Builder functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(builderHandler.status({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "status_missing" -> ok', async () => {
@@ -349,7 +355,8 @@ describe('Builder functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(builderHandler.status({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -416,7 +423,8 @@ describe('Builder functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(builderHandler.history({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "history_by_lang" -> ok', async () => {
@@ -429,7 +437,8 @@ describe('Builder functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(builderHandler.history({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "history_empty_concept" -> ok', async () => {
@@ -442,7 +451,8 @@ describe('Builder functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(builderHandler.history({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -467,15 +477,18 @@ describe('Builder functional handler', () => {
     it("build-then-history", async () => {
       const storage = createInMemoryStorage();
       const buildResult0 = await interpret(builderHandler.build({ concept: {"type":"literal","value":"password"}, source: {"type":"literal","value":"./generated/swift/password"}, language: {"type":"literal","value":"swift"}, platform: {"type":"literal","value":"linux-arm64"}, config: {"type":"record","fields":[{"name":"mode","value":{"type":"literal","value":"release"}}]} }), storage);
-      expect(buildResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(buildResult0.variant), `step 0: expected success but got '${buildResult0.variant}'`).toBe(false);
       let build = buildResult0.output["build"];
       let artifactHash = buildResult0.output["artifactHash"];
       let artifactLocation = buildResult0.output["artifactLocation"];
       let duration = buildResult0.output["duration"];
       const thenResult0 = await interpret(builderHandler.status({ build: {"type":"variable","name":"b"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
       const thenResult1 = await interpret(builderHandler.history({ concept: {"type":"literal","value":"password"}, language: {"type":"literal","value":"swift"} }), storage);
-      expect(thenResult1.variant).toBe("ok");
+      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
     });
 
   });

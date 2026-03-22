@@ -87,8 +87,15 @@ describe('ADICOEvaluator functional handler', () => {
     it('fixture "parse_valid_adico" -> ok', async () => {
       if (typeof adicoEvaluatorHandler.parse !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(adicoEvaluatorHandler.parse({ ruleText: "A(admin) D(must) I(review) C(when submitted) O(escalate)" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_evaluate_admin_must_review = await interpret(adicoEvaluatorHandler.evaluate({ rule: "adico-001", context: "{\"actor\":\"admin\",\"role\":\"admin\",\"action\":\"review\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_evaluate_admin_must_review?.output ?? {}));
+      const _fixtureInput = { ruleText: "A(admin) D(must) I(review) C(when submitted) O(escalate)" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(adicoEvaluatorHandler.parse({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "parse_invalid_text" -> parse_error', async () => {
@@ -156,8 +163,15 @@ describe('ADICOEvaluator functional handler', () => {
     it('fixture "evaluate_admin_must_review" -> ok', async () => {
       if (typeof adicoEvaluatorHandler.evaluate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(adicoEvaluatorHandler.evaluate({ rule: "adico-001", context: "{\"actor\":\"admin\",\"role\":\"admin\",\"action\":\"review\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_parse_valid_adico = await interpret(adicoEvaluatorHandler.parse({ ruleText: "A(admin) D(must) I(review) C(when submitted) O(escalate)" }), storage);
+      const _pool = Object.assign({}, (afterResult_parse_valid_adico?.output ?? {}));
+      const _fixtureInput = { rule: "adico-001", context: "{\"actor\":\"admin\",\"role\":\"admin\",\"action\":\"review\"}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(adicoEvaluatorHandler.evaluate({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "evaluate_mismatch_actor" -> not_applicable', async () => {

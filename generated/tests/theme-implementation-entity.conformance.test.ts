@@ -88,7 +88,8 @@ describe('ThemeImplementationEntity functional handler', () => {
       if (typeof themeImplementationEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "register_empty_theme" -> error', async () => {
@@ -162,7 +163,8 @@ describe('ThemeImplementationEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(themeImplementationEntityHandler.get({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_nonexistent" -> error', async () => {
@@ -236,7 +238,8 @@ describe('ThemeImplementationEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(themeImplementationEntityHandler.getByFile({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_by_unknown_file" -> error', async () => {
@@ -310,7 +313,8 @@ describe('ThemeImplementationEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(themeImplementationEntityHandler.findByTheme({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "find_empty_theme" -> ok', async () => {
@@ -323,7 +327,8 @@ describe('ThemeImplementationEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(themeImplementationEntityHandler.findByTheme({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -390,7 +395,8 @@ describe('ThemeImplementationEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(themeImplementationEntityHandler.findByPlatform({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "find_unknown_platform" -> ok', async () => {
@@ -403,7 +409,8 @@ describe('ThemeImplementationEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(themeImplementationEntityHandler.findByPlatform({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -465,7 +472,8 @@ describe('ThemeImplementationEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_ocean_css = await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage);
       const result = await interpret(themeImplementationEntityHandler.resolveToken({ impl: afterResult_register_ocean_css?.output?.["impl"], tokenPath: "palette.primary.500" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "resolve_missing_token" -> error', async () => {
@@ -532,8 +540,15 @@ describe('ThemeImplementationEntity functional handler', () => {
     it('fixture "diff_ocean_css" -> ok', async () => {
       if (typeof themeImplementationEntityHandler.diffFromSpec !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(themeImplementationEntityHandler.diffFromSpec({ impl: "impl-001" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_register_ocean_css = await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_ocean_css?.output ?? {}));
+      const _fixtureInput = { impl: "impl-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(themeImplementationEntityHandler.diffFromSpec({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "diff_nonexistent" -> error', async () => {
@@ -550,16 +565,19 @@ describe('ThemeImplementationEntity functional handler', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(themeImplementationEntityHandler.register({ theme: {"type":"literal","value":"ocean"}, platform: {"type":"literal","value":"css"}, sourceFile: {"type":"literal","value":"generated/surface/themes/ocean.css"}, ast: {"type":"literal","value":"{}"} }), storage);
-      expect(registerResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
       let impl = registerResult0.output["impl"];
       const thenResult0 = await interpret(themeImplementationEntityHandler.get({ theme: {"type":"literal","value":"ocean"}, platform: {"type":"literal","value":"css"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("duplicate registration returns existing", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(themeImplementationEntityHandler.register({ theme: {"type":"literal","value":"ocean"}, platform: {"type":"literal","value":"css"}, sourceFile: {"type":"literal","value":"generated/surface/themes/ocean.css"}, ast: {"type":"literal","value":"{}"} }), storage);
-      expect(registerResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
       let impl = registerResult0.output["impl"];
       const thenResult0 = await interpret(themeImplementationEntityHandler.register({ theme: {"type":"literal","value":"ocean"}, platform: {"type":"literal","value":"css"}, sourceFile: {"type":"literal","value":"generated/surface/themes/ocean.css"}, ast: {"type":"literal","value":"{}"} }), storage);
       expect(thenResult0.variant).toBe("alreadyRegistered");

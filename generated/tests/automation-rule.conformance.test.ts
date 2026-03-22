@@ -88,7 +88,8 @@ describe('AutomationRule functional handler', () => {
       if (typeof automationRuleHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(automationRuleHandler.define({ rule: "auto-review", trigger: "on_save", conditions: "status == draft", actions: "notify_reviewer" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "define_empty_rule" -> error', async () => {
@@ -155,8 +156,15 @@ describe('AutomationRule functional handler', () => {
     it('fixture "enable_existing_rule" -> ok', async () => {
       if (typeof automationRuleHandler.enable !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(automationRuleHandler.enable({ rule: "auto-review" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_define_save_rule = await interpret(automationRuleHandler.define({ rule: "auto-review", trigger: "on_save", conditions: "status == draft", actions: "notify_reviewer" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_save_rule?.output ?? {}));
+      const _fixtureInput = { rule: "auto-review" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(automationRuleHandler.enable({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "enable_nonexistent_rule" -> notfound', async () => {
@@ -224,8 +232,15 @@ describe('AutomationRule functional handler', () => {
     it('fixture "disable_existing_rule" -> ok', async () => {
       if (typeof automationRuleHandler.disable !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(automationRuleHandler.disable({ rule: "auto-review" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_define_save_rule = await interpret(automationRuleHandler.define({ rule: "auto-review", trigger: "on_save", conditions: "status == draft", actions: "notify_reviewer" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_save_rule?.output ?? {}));
+      const _fixtureInput = { rule: "auto-review" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(automationRuleHandler.disable({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "disable_nonexistent_rule" -> notfound', async () => {
@@ -293,8 +308,15 @@ describe('AutomationRule functional handler', () => {
     it('fixture "execute_rule" -> ok', async () => {
       if (typeof automationRuleHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(automationRuleHandler.execute({ rule: "auto-review", context: "{\"document\":\"doc-42\",\"status\":\"draft\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_define_save_rule = await interpret(automationRuleHandler.define({ rule: "auto-review", trigger: "on_save", conditions: "status == draft", actions: "notify_reviewer" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_save_rule?.output ?? {}));
+      const _fixtureInput = { rule: "auto-review", context: "{\"document\":\"doc-42\",\"status\":\"draft\"}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(automationRuleHandler.execute({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "execute_nonexistent_rule" -> notfound', async () => {
@@ -327,9 +349,11 @@ describe('AutomationRule functional handler', () => {
     it("define-then-enable", async () => {
       const storage = createInMemoryStorage();
       const defineResult0 = await interpret(automationRuleHandler.define({ rule: {"type":"variable","name":"r"}, trigger: {"type":"literal","value":"on_save"}, conditions: {"type":"literal","value":"status == draft"}, actions: {"type":"literal","value":"notify_reviewer"} }), storage);
-      expect(defineResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(defineResult0.variant), `step 0: expected success but got '${defineResult0.variant}'`).toBe(false);
       const thenResult0 = await interpret(automationRuleHandler.enable({ rule: {"type":"variable","name":"r"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

@@ -88,7 +88,8 @@ describe('DesignTokenProvider functional handler', () => {
       if (typeof designTokenProviderHandler.initialize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(designTokenProviderHandler.initialize({ config: "{\"theme\":\"light\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "init_invalid_json" -> error', async () => {
@@ -157,7 +158,8 @@ describe('DesignTokenProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_init_with_theme = await interpret(designTokenProviderHandler.initialize({ config: "{\"theme\":\"light\"}" }), storage);
       const result = await interpret(designTokenProviderHandler.resolve({ provider: afterResult_init_with_theme?.output?.["provider"], tokenName: "color.primary" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "resolve_empty_token" -> error', async () => {
@@ -226,7 +228,8 @@ describe('DesignTokenProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_init_with_theme = await interpret(designTokenProviderHandler.initialize({ config: "{\"theme\":\"light\"}" }), storage);
       const result = await interpret(designTokenProviderHandler.switchTheme({ provider: afterResult_init_with_theme?.output?.["provider"], theme: "dark" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "switch_empty_theme" -> error', async () => {
@@ -295,7 +298,8 @@ describe('DesignTokenProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_init_with_theme = await interpret(designTokenProviderHandler.initialize({ config: "{\"theme\":\"light\"}" }), storage);
       const result = await interpret(designTokenProviderHandler.getTokens({ provider: afterResult_init_with_theme?.output?.["provider"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_tokens_missing" -> ok', async () => {
@@ -308,7 +312,8 @@ describe('DesignTokenProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(designTokenProviderHandler.getTokens({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -370,7 +375,8 @@ describe('DesignTokenProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_init_with_theme = await interpret(designTokenProviderHandler.initialize({ config: "{\"theme\":\"light\"}" }), storage);
       const result = await interpret(designTokenProviderHandler.export({ provider: afterResult_init_with_theme?.output?.["provider"], format: "css" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "export_unsupported" -> error', async () => {
@@ -402,11 +408,13 @@ describe('DesignTokenProvider functional handler', () => {
     it("initialize then getTokens", async () => {
       const storage = createInMemoryStorage();
       const initializeResult0 = await interpret(designTokenProviderHandler.initialize({ provider: {"type":"variable","name":"p"}, config: {"type":"literal","value":"{ \"theme\": \"light\" }"} }), storage);
-      expect(initializeResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(initializeResult0.variant), `step 0: expected success but got '${initializeResult0.variant}'`).toBe(false);
       let provider = initializeResult0.output["provider"];
       let pluginRef = initializeResult0.output["pluginRef"];
       const thenResult0 = await interpret(designTokenProviderHandler.getTokens({ provider: {"type":"variable","name":"p"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

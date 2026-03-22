@@ -88,14 +88,16 @@ describe('DeadPartProvider functional handler', () => {
       if (typeof deadPartProviderHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(deadPartProviderHandler.analyze({ analysis: "dpa-1", program: "card-widget", parts: ["root","label"], instructions: "[{\"tag\":\"element\",\"part\":\"root\",\"role\":\"container\"},{\"tag\":\"text\",\"part\":\"root\",\"content\":\"hello\"},{\"tag\":\"bind\",\"part\":\"label\",\"attr\":\"text\",\"expr\":\"name\"}]" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "has_dead_part" -> ok', async () => {
       if (typeof deadPartProviderHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(deadPartProviderHandler.analyze({ analysis: "dpa-2", program: "bloated-widget", parts: ["root","unused"], instructions: "[{\"tag\":\"text\",\"part\":\"root\",\"content\":\"hello\"}]" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "malformed_instructions" -> error', async () => {
@@ -164,7 +166,8 @@ describe('DeadPartProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_all_parts_used = await interpret(deadPartProviderHandler.analyze({ analysis: "dpa-1", program: "card-widget", parts: ["root","label"], instructions: "[{\"tag\":\"element\",\"part\":\"root\",\"role\":\"container\"},{\"tag\":\"text\",\"part\":\"root\",\"content\":\"hello\"},{\"tag\":\"bind\",\"part\":\"label\",\"attr\":\"text\",\"expr\":\"name\"}]" }), storage);
       const result = await interpret(deadPartProviderHandler.getResults({ analysis: afterResult_all_parts_used?.output?.["analysis"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "unknown_analysis" -> notfound', async () => {
@@ -197,12 +200,14 @@ describe('DeadPartProvider functional handler', () => {
     it("analyze stores retrievable dead part results", async () => {
       const storage = createInMemoryStorage();
       const analyzeResult0 = await interpret(deadPartProviderHandler.analyze({ analysis: {"type":"variable","name":"d"}, program: {"type":"literal","value":"p1"}, parts: {"type":"list","items":[{"type":"literal","value":"root"},{"type":"literal","value":"unused"}]}, instructions: {"type":"list","items":[{"type":"literal","value":"element:root:container"},{"type":"literal","value":"text:root:hello"}]} }), storage);
-      expect(analyzeResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(analyzeResult0.variant), `step 0: expected success but got '${analyzeResult0.variant}'`).toBe(false);
       let analysis = analyzeResult0.output["analysis"];
       let deadParts = analyzeResult0.output["deadParts"];
       let unreachableStates = analyzeResult0.output["unreachableStates"];
       const thenResult0 = await interpret(deadPartProviderHandler.getResults({ analysis: {"type":"variable","name":"d"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

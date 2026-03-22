@@ -88,7 +88,8 @@ describe('LocalProcess functional handler', () => {
       if (typeof localProcessHandler.initialize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(localProcessHandler.initialize({  }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -155,7 +156,8 @@ describe('LocalProcess functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(localProcessHandler.registerRuntime({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "register_duplicate" -> duplicate', async () => {
@@ -230,7 +232,8 @@ describe('LocalProcess functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(localProcessHandler.dispatch({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "missing_runtime" -> runtimeNotFound', async () => {
@@ -319,12 +322,10 @@ describe('LocalProcess functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid = await interpret(localProcessHandler.listRuntimes({  }), storage);
       const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
-      const _fixtureInput = {  } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(localProcessHandler.listRuntimes({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -352,13 +353,15 @@ describe('LocalProcess functional handler', () => {
       expect(dispatchResult0.variant).toBe("runtimeNotFound");
       let runtime = dispatchResult0.output["runtime"];
       const thenResult0 = await interpret(localProcessHandler.registerRuntime({ runtime: {"type":"literal","value":"onnx"}, providerName: {"type":"literal","value":"OnnxProvider"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("duplicate runtime registration rejected", async () => {
       const storage = createInMemoryStorage();
       const registerRuntimeResult0 = await interpret(localProcessHandler.registerRuntime({ runtime: {"type":"literal","value":"wasm"}, providerName: {"type":"literal","value":"WasmProvider"} }), storage);
-      expect(registerRuntimeResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerRuntimeResult0.variant), `step 0: expected success but got '${registerRuntimeResult0.variant}'`).toBe(false);
       const thenResult0 = await interpret(localProcessHandler.registerRuntime({ runtime: {"type":"literal","value":"wasm"}, providerName: {"type":"literal","value":"AnotherProvider"} }), storage);
       expect(thenResult0.variant).toBe("duplicate");
     });

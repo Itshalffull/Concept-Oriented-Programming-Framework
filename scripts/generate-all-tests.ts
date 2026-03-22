@@ -249,12 +249,16 @@ async function main() {
       // Parse @clef-handler annotation for style, concept, and export
       // Format: // @clef-handler style=functional [concept=Name] [export=handlerVarName]
       const handlerSource = readFileSync(join(ROOT, handlerTsPath), 'utf-8');
+      // Auto-detect actual handler style from code: if the handler uses
+      // FunctionalConceptHandler/StorageProgram/createProgram, treat as functional
+      // even if the annotation says imperative (common after migration).
+      const actuallyFunctional = /FunctionalConceptHandler|StorageProgram|createProgram/.test(handlerSource);
       const annotationLine = handlerSource.match(/^\/\/\s*@clef-handler\s+(.+)/m);
       if (annotationLine) {
         const attrs = annotationLine[1];
         const styleAttr = attrs.match(/style=(\w+)/);
         if (styleAttr && (styleAttr[1] === 'functional' || styleAttr[1] === 'imperative')) {
-          plan.handlerStyle = styleAttr[1];
+          plan.handlerStyle = actuallyFunctional ? 'functional' : styleAttr[1];
         }
         const exportAttr = attrs.match(/export=(\w+)/);
         if (exportAttr) {
@@ -269,6 +273,17 @@ async function main() {
         if (exportMatch) {
           plan.handlerExportName = exportMatch[1];
         }
+      }
+
+      // Detect autoInterpret wrapping: if the exported handler is
+      // autoInterpret(_rawHandler), expose the raw handler for structural tests
+      // so extractCompletionVariants/etc. can analyze the StorageProgram.
+      const autoInterpretMatch = handlerSource.match(
+        /export\s+const\s+(\w+Handler)\s*=\s*autoInterpret\(\s*(_\w+Handler)\s*\)/
+      );
+      if (autoInterpretMatch) {
+        plan.handlerExportName = plan.handlerExportName || autoInterpretMatch[1];
+        plan.rawHandlerExportName = autoInterpretMatch[2];
       }
 
       // Render TypeScript tests

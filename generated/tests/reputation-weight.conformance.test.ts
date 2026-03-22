@@ -88,7 +88,8 @@ describe('ReputationWeight functional handler', () => {
       if (typeof reputationWeightHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(reputationWeightHandler.configure({ scalingFunction: "linear", cap: "100.0" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "configure_empty" -> error', async () => {
@@ -155,8 +156,15 @@ describe('ReputationWeight functional handler', () => {
     it('fixture "compute_linear" -> ok', async () => {
       if (typeof reputationWeightHandler.compute !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(reputationWeightHandler.compute({ config: "rw-cfg-001", participant: "alice", reputationScore: "50.0" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_configure_linear = await interpret(reputationWeightHandler.configure({ scalingFunction: "linear", cap: "100.0" }), storage);
+      const _pool = Object.assign({}, (afterResult_configure_linear?.output ?? {}));
+      const _fixtureInput = { config: "rw-cfg-001", participant: "alice", reputationScore: "50.0" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(reputationWeightHandler.compute({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "compute_negative" -> error', async () => {

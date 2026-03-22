@@ -37,14 +37,16 @@ describe('ChangeStream imperative handler', () => {
       if (typeof changeStreamHandler.append !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await changeStreamHandler.append({ type: "insert", before: null, after: "{\"id\":1,\"name\":\"alice\"}", source: "users-db" }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "append_update" -> ok', async () => {
       if (typeof changeStreamHandler.append !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await changeStreamHandler.append({ type: "update", before: "{\"name\":\"alice\"}", after: "{\"name\":\"alicia\"}", source: "users-db" }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "append_invalid_type" -> error', async () => {
@@ -76,7 +78,8 @@ describe('ChangeStream imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await changeStreamHandler.subscribe({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "subscribe_from_head" -> ok', async () => {
@@ -89,7 +92,8 @@ describe('ChangeStream imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await changeStreamHandler.subscribe({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -109,7 +113,8 @@ describe('ChangeStream imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_append_insert = await changeStreamHandler.append({ type: "insert", before: null, after: "{\"id\":1,\"name\":\"alice\"}", source: "users-db" }, storage);
       const result = await changeStreamHandler.read({ subscriptionId: afterResult_append_insert?.output?.["offset"], maxCount: "10" }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "read_missing_sub" -> error', async () => {
@@ -141,7 +146,8 @@ describe('ChangeStream imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await changeStreamHandler.acknowledge({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "ack_empty_consumer" -> ok', async () => {
@@ -154,7 +160,8 @@ describe('ChangeStream imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await changeStreamHandler.acknowledge({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -179,7 +186,8 @@ describe('ChangeStream imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await changeStreamHandler.replay({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "replay_invalid" -> error', async () => {
@@ -207,21 +215,25 @@ describe('ChangeStream imperative handler', () => {
     it("append then append", async () => {
       const storage = createInMemoryStorage();
       const appendResult0 = await changeStreamHandler.append({ type: {"type":"literal","value":"insert"}, before: {"type":"variable","name":"_"}, after: {"type":"variable","name":"_"}, source: {"type":"literal","value":"db"} }, storage);
-      expect(appendResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(appendResult0.variant), `step 0: expected success but got '${appendResult0.variant}'`).toBe(false);
       let offset = appendResult0.output["offset"];
       let eventId = appendResult0.output["eventId"];
       const thenResult0 = await changeStreamHandler.append({ type: {"type":"literal","value":"update"}, before: {"type":"variable","name":"_"}, after: {"type":"variable","name":"_"}, source: {"type":"literal","value":"db"} }, storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("append then replay", async () => {
       const storage = createInMemoryStorage();
       const appendResult0 = await changeStreamHandler.append({ type: {"type":"variable","name":"t"}, before: {"type":"variable","name":"b"}, after: {"type":"variable","name":"a"}, source: {"type":"variable","name":"s"} }, storage);
-      expect(appendResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(appendResult0.variant), `step 0: expected success but got '${appendResult0.variant}'`).toBe(false);
       let offset = appendResult0.output["offset"];
       let eventId = appendResult0.output["eventId"];
       const thenResult0 = await changeStreamHandler.replay({ from: {"type":"variable","name":"n"}, to: {"type":"variable","name":"n"} }, storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

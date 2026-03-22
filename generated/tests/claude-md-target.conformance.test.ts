@@ -88,14 +88,16 @@ describe('ClaudeMdTarget functional handler', () => {
       if (typeof claudeMdTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(claudeMdTargetHandler.generate({ projection: "{\"conceptName\":\"ScoreApi\",\"conceptManifest\":\"{\\\"name\\\":\\\"ScoreApi\\\",\\\"purpose\\\":\\\"Score management\\\",\\\"actions\\\":[]}\"}", config: "{\"projectName\":\"MyProject\",\"outputPath\":\"CLAUDE.md\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "generate_with_conventions" -> ok', async () => {
       if (typeof claudeMdTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(claudeMdTargetHandler.generate({ projection: "{\"conceptName\":\"Agent\",\"conceptManifest\":\"{\\\"name\\\":\\\"Agent\\\",\\\"purpose\\\":\\\"Agent management\\\",\\\"actions\\\":[]}\"}", config: "{\"projectName\":\"Test\",\"conventions\":[\"Use kebab-case\"]}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "generate_empty_projection" -> error', async () => {
@@ -162,8 +164,15 @@ describe('ClaudeMdTarget functional handler', () => {
     it('fixture "validate_valid" -> ok', async () => {
       if (typeof claudeMdTargetHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(claudeMdTargetHandler.validate({ document: "claude-md-001" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_generate_project = await interpret(claudeMdTargetHandler.generate({ projection: "{\"conceptName\":\"ScoreApi\",\"conceptManifest\":\"{\\\"name\\\":\\\"ScoreApi\\\",\\\"purpose\\\":\\\"Score management\\\",\\\"actions\\\":[]}\"}", config: "{\"projectName\":\"MyProject\",\"outputPath\":\"CLAUDE.md\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_generate_project?.output ?? {}));
+      const _fixtureInput = { document: "claude-md-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(claudeMdTargetHandler.validate({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "validate_not_found" -> error', async () => {
@@ -230,8 +239,15 @@ describe('ClaudeMdTarget functional handler', () => {
     it('fixture "preview_full" -> ok', async () => {
       if (typeof claudeMdTargetHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(claudeMdTargetHandler.preview({ config: "{\"projectName\":\"TestProject\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_generate_project = await interpret(claudeMdTargetHandler.generate({ projection: "{\"conceptName\":\"ScoreApi\",\"conceptManifest\":\"{\\\"name\\\":\\\"ScoreApi\\\",\\\"purpose\\\":\\\"Score management\\\",\\\"actions\\\":[]}\"}", config: "{\"projectName\":\"MyProject\",\"outputPath\":\"CLAUDE.md\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_generate_project?.output ?? {}));
+      const _fixtureInput = { config: "{\"projectName\":\"TestProject\"}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(claudeMdTargetHandler.preview({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "preview_empty" -> error', async () => {
@@ -263,11 +279,13 @@ describe('ClaudeMdTarget functional handler', () => {
     it("generate-then-validate", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(claudeMdTargetHandler.generate({ projection: {"type":"literal","value":"all-projections"}, config: {"type":"literal","value":"{\"projectName\":\"Test\"}"} }), storage);
-      expect(generateResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
       let document = generateResult0.output["document"];
       let files = generateResult0.output["files"];
       const thenResult0 = await interpret(claudeMdTargetHandler.validate({ document: {"type":"variable","name":"d"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

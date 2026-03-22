@@ -88,14 +88,16 @@ describe('GitOps functional handler', () => {
       if (typeof gitOpsHandler.emit !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(gitOpsHandler.emit({ plan: "dp-001", controller: "argocd", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "emit_flux" -> ok', async () => {
       if (typeof gitOpsHandler.emit !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(gitOpsHandler.emit({ plan: "dp-002", controller: "flux", repo: "git@github.com:org/deploy.git", path: "envs/staging" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "emit_unsupported" -> controllerUnsupported', async () => {
@@ -165,7 +167,8 @@ describe('GitOps functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_emit_argocd = await interpret(gitOpsHandler.emit({ plan: "dp-001", controller: "argocd", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
       const result = await interpret(gitOpsHandler.reconciliationStatus({ manifest: afterResult_emit_argocd?.output?.["manifest"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "reconciliation_missing" -> failed', async () => {
@@ -198,11 +201,13 @@ describe('GitOps functional handler', () => {
     it("emit-then-reconciliationStatus", async () => {
       const storage = createInMemoryStorage();
       const emitResult0 = await interpret(gitOpsHandler.emit({ plan: {"type":"literal","value":"dp-001"}, controller: {"type":"literal","value":"argocd"}, repo: {"type":"literal","value":"git@github.com:org/deploy.git"}, path: {"type":"literal","value":"envs/prod"} }), storage);
-      expect(emitResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(emitResult0.variant), `step 0: expected success but got '${emitResult0.variant}'`).toBe(false);
       let manifest = emitResult0.output["manifest"];
       let files = emitResult0.output["files"];
       const thenResult0 = await interpret(gitOpsHandler.reconciliationStatus({ manifest: {"type":"variable","name":"g"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

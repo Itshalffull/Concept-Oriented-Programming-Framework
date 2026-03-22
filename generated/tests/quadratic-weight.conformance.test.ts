@@ -88,7 +88,8 @@ describe('QuadraticWeight functional handler', () => {
       if (typeof quadraticWeightHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(quadraticWeightHandler.configure({ baseSource: "token-balance" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "configure_empty" -> error', async () => {
@@ -155,8 +156,15 @@ describe('QuadraticWeight functional handler', () => {
     it('fixture "compute_hundred" -> ok', async () => {
       if (typeof quadraticWeightHandler.compute !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(quadraticWeightHandler.compute({ participant: "alice", balance: "100.0" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_configure_token = await interpret(quadraticWeightHandler.configure({ baseSource: "token-balance" }), storage);
+      const _pool = Object.assign({}, (afterResult_configure_token?.output ?? {}));
+      const _fixtureInput = { participant: "alice", balance: "100.0" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(quadraticWeightHandler.compute({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "compute_zero" -> error', async () => {

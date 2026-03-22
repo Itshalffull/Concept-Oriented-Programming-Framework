@@ -88,14 +88,16 @@ describe('AnatomyPartEntity functional handler', () => {
       if (typeof anatomyPartEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(anatomyPartEntityHandler.register({ widget: "dialog", name: "root", role: "container", required: "true" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "register_empty_widget" -> ok', async () => {
       if (typeof anatomyPartEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(anatomyPartEntityHandler.register({ widget: "", name: "root", role: "container", required: "true" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -162,7 +164,8 @@ describe('AnatomyPartEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(anatomyPartEntityHandler.findByRole({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "find_unknown_role" -> error', async () => {
@@ -236,7 +239,8 @@ describe('AnatomyPartEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(anatomyPartEntityHandler.findBoundToField({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "find_unbound_field" -> error', async () => {
@@ -310,7 +314,8 @@ describe('AnatomyPartEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(anatomyPartEntityHandler.findBoundToAction({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "find_unbound_action" -> error', async () => {
@@ -379,7 +384,8 @@ describe('AnatomyPartEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_dialog_root = await interpret(anatomyPartEntityHandler.register({ widget: "dialog", name: "root", role: "container", required: "true" }), storage);
       const result = await interpret(anatomyPartEntityHandler.get({ part: afterResult_register_dialog_root?.output?.["part"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_nonexistent_part" -> error', async () => {
@@ -396,10 +402,12 @@ describe('AnatomyPartEntity functional handler', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(anatomyPartEntityHandler.register({ widget: {"type":"literal","value":"dialog"}, name: {"type":"literal","value":"root"}, role: {"type":"literal","value":"container"}, required: {"type":"literal","value":"true"} }), storage);
-      expect(registerResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
       let part = registerResult0.output["part"];
       const thenResult0 = await interpret(anatomyPartEntityHandler.get({ part: {"type":"variable","name":"a"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

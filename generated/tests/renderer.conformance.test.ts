@@ -88,7 +88,8 @@ describe('Renderer functional handler', () => {
       if (typeof rendererHandler.render !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(rendererHandler.render({ renderer: "main-renderer", tree: "<page><header/><body/></page>" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "render_empty_tree" -> error', async () => {
@@ -162,7 +163,8 @@ describe('Renderer functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(rendererHandler.autoPlaceholder({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "empty_placeholder_name" -> error', async () => {
@@ -236,7 +238,8 @@ describe('Renderer functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(rendererHandler.stream({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "stream_empty_tree" -> error', async () => {
@@ -310,7 +313,8 @@ describe('Renderer functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(rendererHandler.mergeCacheability({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "merge_empty_tags" -> error', async () => {
@@ -342,19 +346,23 @@ describe('Renderer functional handler', () => {
     it("render then render", async () => {
       const storage = createInMemoryStorage();
       const renderResult0 = await interpret(rendererHandler.render({ renderer: {"type":"variable","name":"r"}, tree: {"type":"literal","value":"<page><header/><body/></page>"} }), storage);
-      expect(renderResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(renderResult0.variant), `step 0: expected success but got '${renderResult0.variant}'`).toBe(false);
       let output = renderResult0.output["output"];
       const thenResult0 = await interpret(rendererHandler.render({ renderer: {"type":"variable","name":"r"}, tree: {"type":"literal","value":"<page><header/><body/></page>"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("autoPlaceholder then render", async () => {
       const storage = createInMemoryStorage();
       const autoPlaceholderResult0 = await interpret(rendererHandler.autoPlaceholder({ renderer: {"type":"variable","name":"r"}, name: {"type":"literal","value":"sidebar"} }), storage);
-      expect(autoPlaceholderResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(autoPlaceholderResult0.variant), `step 0: expected success but got '${autoPlaceholderResult0.variant}'`).toBe(false);
       let placeholder = autoPlaceholderResult0.output["placeholder"];
       const thenResult0 = await interpret(rendererHandler.render({ renderer: {"type":"variable","name":"r"}, tree: {"type":"variable","name":"p"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

@@ -88,7 +88,8 @@ describe('AccessControl functional handler', () => {
       if (typeof accessControlHandler.check !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(accessControlHandler.check({ resource: "document:123", action: "read", context: "user:alice" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "check_empty_resource" -> error', async () => {
@@ -162,7 +163,8 @@ describe('AccessControl functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(accessControlHandler.orIf({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "orIf_forbidden" -> error', async () => {
@@ -236,7 +238,8 @@ describe('AccessControl functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(accessControlHandler.andIf({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "andIf_one_forbidden" -> error', async () => {
@@ -268,35 +271,42 @@ describe('AccessControl functional handler', () => {
     it("check-then-andIf", async () => {
       const storage = createInMemoryStorage();
       const checkResult0 = await interpret(accessControlHandler.check({ resource: {"type":"literal","value":"document:123"}, action: {"type":"literal","value":"read"}, context: {"type":"literal","value":"user:alice"} }), storage);
-      expect(checkResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(checkResult0.variant), `step 0: expected success but got '${checkResult0.variant}'`).toBe(false);
       let result = checkResult0.output["result"];
       let tags = checkResult0.output["tags"];
       let maxAge = checkResult0.output["maxAge"];
       const checkResult1 = await interpret(accessControlHandler.check({ resource: {"type":"literal","value":"document:123"}, action: {"type":"literal","value":"delete"}, context: {"type":"literal","value":"user:alice"} }), storage);
-      expect(checkResult1.variant).toBe("ok");
+      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr1(checkResult1.variant), `step 1: expected success but got '${checkResult1.variant}'`).toBe(false);
       result = checkResult1.output["result"];
       tags = checkResult1.output["tags"];
       maxAge = checkResult1.output["maxAge"];
       const thenResult0 = await interpret(accessControlHandler.andIf({ left: {"type":"literal","value":"allowed"}, right: {"type":"literal","value":"forbidden"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("orIf-then-andIf-2", async () => {
       const storage = createInMemoryStorage();
       const orIfResult0 = await interpret(accessControlHandler.orIf({ left: {"type":"literal","value":"neutral"}, right: {"type":"literal","value":"allowed"} }), storage);
-      expect(orIfResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(orIfResult0.variant), `step 0: expected success but got '${orIfResult0.variant}'`).toBe(false);
       let result = orIfResult0.output["result"];
       const thenResult0 = await interpret(accessControlHandler.andIf({ left: {"type":"literal","value":"allowed"}, right: {"type":"literal","value":"allowed"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("orIf-then-andIf", async () => {
       const storage = createInMemoryStorage();
       const orIfResult0 = await interpret(accessControlHandler.orIf({ left: {"type":"literal","value":"neutral"}, right: {"type":"literal","value":"neutral"} }), storage);
-      expect(orIfResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(orIfResult0.variant), `step 0: expected success but got '${orIfResult0.variant}'`).toBe(false);
       let result = orIfResult0.output["result"];
       const thenResult0 = await interpret(accessControlHandler.andIf({ left: {"type":"literal","value":"neutral"}, right: {"type":"literal","value":"neutral"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

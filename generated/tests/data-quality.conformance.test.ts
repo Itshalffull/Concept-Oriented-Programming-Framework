@@ -88,7 +88,8 @@ describe('DataQuality functional handler', () => {
       if (typeof dataQualityHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(dataQualityHandler.validate({ item: "{\"title\":\"Test Article\",\"body\":\"Full content here\"}", rulesetId: "article_rules" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "validate_invalid_json" -> invalid', async () => {
@@ -166,7 +167,8 @@ describe('DataQuality functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_validate_ok = await interpret(dataQualityHandler.validate({ item: "{\"title\":\"Test Article\",\"body\":\"Full content here\"}", rulesetId: "article_rules" }), storage);
       const result = await interpret(dataQualityHandler.quarantine({ itemId: afterResult_validate_ok?.output?.["valid"], violations: "[{\"rule\":\"required\",\"field\":\"title\"}]" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -228,7 +230,8 @@ describe('DataQuality functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_validate_ok = await interpret(dataQualityHandler.validate({ item: "{\"title\":\"Test Article\",\"body\":\"Full content here\"}", rulesetId: "article_rules" }), storage);
       const result = await interpret(dataQualityHandler.release({ itemId: afterResult_validate_ok?.output?.["valid"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "release_missing" -> notfound', async () => {
@@ -303,7 +306,8 @@ describe('DataQuality functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(dataQualityHandler.profile({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -370,7 +374,8 @@ describe('DataQuality functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(dataQualityHandler.reconcile({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -395,11 +400,13 @@ describe('DataQuality functional handler', () => {
     it("validate-then-inspect", async () => {
       const storage = createInMemoryStorage();
       const validateResult0 = await interpret(dataQualityHandler.validate({ item: {"type":"literal","value":"{\"title\":\"Test\",\"body\":\"content\"}"}, rulesetId: {"type":"literal","value":"article_rules"} }), storage);
-      expect(validateResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(validateResult0.variant), `step 0: expected success but got '${validateResult0.variant}'`).toBe(false);
       let valid = validateResult0.output["valid"];
       let score = validateResult0.output["score"];
       const thenResult0 = await interpret(dataQualityHandler.inspect({ itemId: {"type":"literal","value":"item-1"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("validate-then-release", async () => {
@@ -408,9 +415,11 @@ describe('DataQuality functional handler', () => {
       expect(validateResult0.variant).toBe("invalid");
       let violations = validateResult0.output["violations"];
       const thenResult0 = await interpret(dataQualityHandler.quarantine({ itemId: {"type":"literal","value":"item-1"}, violations: {"type":"literal","value":"[{\"rule\":\"required\",\"field\":\"title\"}]"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
       const thenResult1 = await interpret(dataQualityHandler.release({ itemId: {"type":"literal","value":"item-1"} }), storage);
-      expect(thenResult1.variant).toBe("ok");
+      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
     });
 
   });

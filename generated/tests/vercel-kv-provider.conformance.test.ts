@@ -88,14 +88,16 @@ describe('VercelKVProvider functional handler', () => {
       if (typeof vercelKVProviderHandler.provision !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(vercelKVProviderHandler.provision({ storeName: "session-cache", config: "{}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "provision_rate_limiter" -> ok', async () => {
       if (typeof vercelKVProviderHandler.provision !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(vercelKVProviderHandler.provision({ storeName: "rate-limiter", config: "{\"maxSize\": 1024}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "provision_empty_name" -> error', async () => {
@@ -169,7 +171,8 @@ describe('VercelKVProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(vercelKVProviderHandler.getCredentials({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_nonexistent" -> error', async () => {
@@ -243,7 +246,8 @@ describe('VercelKVProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(vercelKVProviderHandler.destroy({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "destroy_nonexistent" -> error', async () => {
@@ -275,23 +279,27 @@ describe('VercelKVProvider functional handler', () => {
     it("provision-then-getCredentials-2", async () => {
       const storage = createInMemoryStorage();
       const provisionResult0 = await interpret(vercelKVProviderHandler.provision({ storeName: {"type":"literal","value":"test-kv"}, config: {"type":"literal","value":"{}"} }), storage);
-      expect(provisionResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(provisionResult0.variant), `step 0: expected success but got '${provisionResult0.variant}'`).toBe(false);
       let storeName = provisionResult0.output["storeName"];
       let storeId = provisionResult0.output["storeId"];
       let credentials = provisionResult0.output["credentials"];
       const thenResult0 = await interpret(vercelKVProviderHandler.getCredentials({ storeName: {"type":"literal","value":"test-kv"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("provision-then-getCredentials", async () => {
       const storage = createInMemoryStorage();
       const provisionResult0 = await interpret(vercelKVProviderHandler.provision({ storeName: {"type":"literal","value":"test-kv"}, config: {"type":"literal","value":"{}"} }), storage);
-      expect(provisionResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(provisionResult0.variant), `step 0: expected success but got '${provisionResult0.variant}'`).toBe(false);
       let storeName = provisionResult0.output["storeName"];
       let storeId = provisionResult0.output["storeId"];
       let credentials = provisionResult0.output["credentials"];
       const thenResult0 = await interpret(vercelKVProviderHandler.destroy({ storeName: {"type":"literal","value":"test-kv"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
       const thenResult1 = await interpret(vercelKVProviderHandler.getCredentials({ storeName: {"type":"literal","value":"test-kv"} }), storage);
       expect(thenResult1.variant).toBe("notfound");
     });

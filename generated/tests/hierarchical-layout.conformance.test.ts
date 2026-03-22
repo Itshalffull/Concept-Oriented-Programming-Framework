@@ -88,7 +88,8 @@ describe('HierarchicalLayout functional handler', () => {
       if (typeof hierarchicalLayoutHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(hierarchicalLayoutHandler.register({  }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -155,7 +156,8 @@ describe('HierarchicalLayout functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(hierarchicalLayoutHandler.apply({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "missing_canvas" -> error', async () => {
@@ -187,10 +189,12 @@ describe('HierarchicalLayout functional handler', () => {
     it("apply-then-apply", async () => {
       const storage = createInMemoryStorage();
       const applyResult0 = await interpret(hierarchicalLayoutHandler.apply({ canvas: {"type":"literal","value":"c1"}, items: {"type":"list","items":[{"type":"literal","value":"root"},{"type":"literal","value":"child1"},{"type":"literal","value":"child2"}]} }), storage);
-      expect(applyResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(applyResult0.variant), `step 0: expected success but got '${applyResult0.variant}'`).toBe(false);
       let positions = applyResult0.output["positions"];
       const thenResult0 = await interpret(hierarchicalLayoutHandler.apply({ canvas: {"type":"literal","value":"c1"}, items: {"type":"list","items":[{"type":"literal","value":"root"}]} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

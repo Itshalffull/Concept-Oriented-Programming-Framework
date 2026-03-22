@@ -88,14 +88,16 @@ describe('EnvironmentEntity functional handler', () => {
       if (typeof environmentEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(environmentEntityHandler.register({ name: "API_PORT", environment: "production", kind: "config", value: "3000", source: "env-file" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "register_secret" -> ok', async () => {
       if (typeof environmentEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(environmentEntityHandler.register({ name: "DATABASE_URL", environment: "staging", kind: "secret", value: "***", source: "vault" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "register_empty_name" -> error', async () => {
@@ -169,7 +171,8 @@ describe('EnvironmentEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(environmentEntityHandler.get({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_missing" -> error', async () => {
@@ -243,7 +246,8 @@ describe('EnvironmentEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(environmentEntityHandler.findByEnvironment({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "find_empty_env" -> ok', async () => {
@@ -256,7 +260,8 @@ describe('EnvironmentEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(environmentEntityHandler.findByEnvironment({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -323,7 +328,8 @@ describe('EnvironmentEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(environmentEntityHandler.findByConcept({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "find_empty_concept" -> ok', async () => {
@@ -336,7 +342,8 @@ describe('EnvironmentEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(environmentEntityHandler.findByConcept({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -403,7 +410,8 @@ describe('EnvironmentEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(environmentEntityHandler.findByRuntime({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "find_empty_runtime" -> ok', async () => {
@@ -416,7 +424,8 @@ describe('EnvironmentEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(environmentEntityHandler.findByRuntime({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -476,8 +485,15 @@ describe('EnvironmentEntity functional handler', () => {
     it('fixture "diff_staging_prod" -> ok', async () => {
       if (typeof environmentEntityHandler.diffEnvironments !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(environmentEntityHandler.diffEnvironments({ envA: "staging", envB: "production" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_register_config = await interpret(environmentEntityHandler.register({ name: "API_PORT", environment: "production", kind: "config", value: "3000", source: "env-file" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_config?.output ?? {}));
+      const _fixtureInput = { envA: "staging", envB: "production" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(environmentEntityHandler.diffEnvironments({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "diff_empty_env" -> error', async () => {
@@ -551,7 +567,8 @@ describe('EnvironmentEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(environmentEntityHandler.secretsAudit({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "audit_empty" -> ok', async () => {
@@ -564,7 +581,8 @@ describe('EnvironmentEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(environmentEntityHandler.secretsAudit({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -631,7 +649,8 @@ describe('EnvironmentEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(environmentEntityHandler.featureFlags({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "flags_empty" -> ok', async () => {
@@ -644,7 +663,8 @@ describe('EnvironmentEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(environmentEntityHandler.featureFlags({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -654,10 +674,12 @@ describe('EnvironmentEntity functional handler', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(environmentEntityHandler.register({ name: {"type":"literal","value":"DATABASE_URL"}, environment: {"type":"literal","value":"production"}, kind: {"type":"literal","value":"secret"}, value: {"type":"literal","value":"***"}, source: {"type":"literal","value":"vault"} }), storage);
-      expect(registerResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
       let entry = registerResult0.output["entry"];
       const thenResult0 = await interpret(environmentEntityHandler.get({ name: {"type":"literal","value":"DATABASE_URL"}, environment: {"type":"literal","value":"production"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

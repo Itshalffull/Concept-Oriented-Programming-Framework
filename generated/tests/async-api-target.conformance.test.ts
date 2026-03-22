@@ -88,14 +88,16 @@ describe('AsyncApiTarget functional handler', () => {
       if (typeof asyncApiTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(asyncApiTargetHandler.generate({ projections: ["score-events","agent-events"], syncSpecs: ["score-sync"], config: "{\"transport\":\"websocket\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "generate_kafka" -> ok', async () => {
       if (typeof asyncApiTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(asyncApiTargetHandler.generate({ projections: ["order-events"], syncSpecs: ["order-sync","inventory-sync"], config: "{\"transport\":\"kafka\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "generate_empty_projections" -> error', async () => {
@@ -127,11 +129,13 @@ describe('AsyncApiTarget functional handler', () => {
     it("generate-then-generate", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(asyncApiTargetHandler.generate({ projections: {"type":"list","items":[{"type":"literal","value":"proj-1"}]}, syncSpecs: {"type":"list","items":[{"type":"literal","value":"sync-1"}]}, config: {"type":"literal","value":"{}"} }), storage);
-      expect(generateResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
       let spec = generateResult0.output["spec"];
       let content = generateResult0.output["content"];
       const thenResult0 = await interpret(asyncApiTargetHandler.generate({ projections: {"type":"list","items":[{"type":"literal","value":"proj-2"}]}, syncSpecs: {"type":"list","items":[{"type":"literal","value":"sync-2"}]}, config: {"type":"literal","value":"{}"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

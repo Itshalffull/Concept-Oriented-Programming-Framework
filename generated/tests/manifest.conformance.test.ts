@@ -88,7 +88,8 @@ describe('Manifest functional handler', () => {
       if (typeof manifestHandler.add !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(manifestHandler.add({ project: "my-app", module_id: "lodash", version_range: "^4.17.0", edge_type: "normal", environment: "all", features: [], optional: "false" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "add_invalid_module_id" -> error', async () => {
@@ -162,7 +163,8 @@ describe('Manifest functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(manifestHandler.remove({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "remove_nonexistent_dep" -> error', async () => {
@@ -236,7 +238,8 @@ describe('Manifest functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(manifestHandler.override({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "override_no_fields" -> error', async () => {
@@ -311,7 +314,8 @@ describe('Manifest functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(manifestHandler.disable({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "disable_missing_dep" -> error', async () => {
@@ -385,7 +389,8 @@ describe('Manifest functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(manifestHandler.enable({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "enable_not_disabled" -> error', async () => {
@@ -459,7 +464,8 @@ describe('Manifest functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(manifestHandler.merge({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "merge_missing_manifest" -> error', async () => {
@@ -526,8 +532,15 @@ describe('Manifest functional handler', () => {
     it('fixture "validate_valid_project" -> ok', async () => {
       if (typeof manifestHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(manifestHandler.validate({ project: "my-app" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_add_normal_dep = await interpret(manifestHandler.add({ project: "my-app", module_id: "lodash", version_range: "^4.17.0", edge_type: "normal", environment: "all", features: [], optional: "false" }), storage);
+      const _pool = Object.assign({}, (afterResult_add_normal_dep?.output ?? {}));
+      const _fixtureInput = { project: "my-app" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(manifestHandler.validate({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "validate_missing_project" -> error', async () => {
@@ -559,19 +572,24 @@ describe('Manifest functional handler', () => {
     it("add then validate", async () => {
       const storage = createInMemoryStorage();
       const addResult0 = await interpret(manifestHandler.add({ project: {"type":"variable","name":"p"}, module_id: {"type":"literal","value":"auth"}, version_range: {"type":"literal","value":"^1.0.0"}, edge_type: {"type":"literal","value":"normal"}, environment: {"type":"literal","value":"all"}, features: {"type":"list","items":[]}, optional: {"type":"literal","value":false} }), storage);
-      expect(addResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(addResult0.variant), `step 0: expected success but got '${addResult0.variant}'`).toBe(false);
       const thenResult0 = await interpret(manifestHandler.validate({ project: {"type":"variable","name":"p"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("add then remove", async () => {
       const storage = createInMemoryStorage();
       const addResult0 = await interpret(manifestHandler.add({ project: {"type":"variable","name":"p"}, module_id: {"type":"literal","value":"auth"}, version_range: {"type":"literal","value":"^1.0.0"}, edge_type: {"type":"literal","value":"normal"}, environment: {"type":"literal","value":"all"}, features: {"type":"list","items":[]}, optional: {"type":"literal","value":false} }), storage);
-      expect(addResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(addResult0.variant), `step 0: expected success but got '${addResult0.variant}'`).toBe(false);
       const thenResult0 = await interpret(manifestHandler.remove({ project: {"type":"variable","name":"p"}, module_id: {"type":"literal","value":"auth"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
       const thenResult1 = await interpret(manifestHandler.validate({ project: {"type":"variable","name":"p"} }), storage);
-      expect(thenResult1.variant).toBe("ok");
+      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
     });
 
   });

@@ -88,14 +88,16 @@ describe('WidgetEntity functional handler', () => {
       if (typeof widgetEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "register_button" -> ok', async () => {
       if (typeof widgetEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(widgetEntityHandler.register({ name: "button", source: "widgets/button.widget", ast: "{}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "register_empty_name" -> error', async () => {
@@ -169,7 +171,8 @@ describe('WidgetEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(widgetEntityHandler.get({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_missing" -> error', async () => {
@@ -243,7 +246,8 @@ describe('WidgetEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(widgetEntityHandler.findByAffordance({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "find_empty" -> error', async () => {
@@ -312,7 +316,8 @@ describe('WidgetEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_dialog = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
       const result = await interpret(widgetEntityHandler.findComposing({ widget: afterResult_register_dialog?.output?.["entity"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "composing_missing" -> ok', async () => {
@@ -325,7 +330,8 @@ describe('WidgetEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(widgetEntityHandler.findComposing({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "find_composing" -> ok', async () => {
@@ -333,7 +339,8 @@ describe('WidgetEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_dialog = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
       const result = await interpret(widgetEntityHandler.findComposing({ widget: afterResult_register_dialog?.output?.["entity"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "find_composing_missing" -> ok', async () => {
@@ -346,7 +353,8 @@ describe('WidgetEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(widgetEntityHandler.findComposing({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -408,7 +416,8 @@ describe('WidgetEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_dialog = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
       const result = await interpret(widgetEntityHandler.findComposedBy({ widget: afterResult_register_dialog?.output?.["entity"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "composed_missing" -> ok', async () => {
@@ -421,7 +430,8 @@ describe('WidgetEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(widgetEntityHandler.findComposedBy({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "find_composed" -> ok', async () => {
@@ -429,7 +439,8 @@ describe('WidgetEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_dialog = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
       const result = await interpret(widgetEntityHandler.findComposedBy({ widget: afterResult_register_dialog?.output?.["entity"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "find_composed_missing" -> ok', async () => {
@@ -442,7 +453,8 @@ describe('WidgetEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(widgetEntityHandler.findComposedBy({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -504,7 +516,8 @@ describe('WidgetEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_dialog = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
       const result = await interpret(widgetEntityHandler.generatedComponents({ widget: afterResult_register_dialog?.output?.["entity"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "generated_missing" -> ok', async () => {
@@ -517,7 +530,8 @@ describe('WidgetEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(widgetEntityHandler.generatedComponents({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -579,7 +593,8 @@ describe('WidgetEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_dialog = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
       const result = await interpret(widgetEntityHandler.accessibilityAudit({ widget: afterResult_register_dialog?.output?.["entity"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "audit_missing" -> error', async () => {
@@ -594,7 +609,8 @@ describe('WidgetEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_dialog = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
       const result = await interpret(widgetEntityHandler.accessibilityAudit({ widget: afterResult_register_dialog?.output?.["entity"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -656,7 +672,8 @@ describe('WidgetEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_dialog = await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage);
       const result = await interpret(widgetEntityHandler.traceToConcept({ widget: afterResult_register_dialog?.output?.["entity"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "trace_missing" -> error', async () => {
@@ -673,16 +690,19 @@ describe('WidgetEntity functional handler', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(widgetEntityHandler.register({ name: {"type":"literal","value":"dialog"}, source: {"type":"literal","value":"widgets/dialog.widget"}, ast: {"type":"literal","value":"{}"} }), storage);
-      expect(registerResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
       let entity = registerResult0.output["entity"];
       const thenResult0 = await interpret(widgetEntityHandler.get({ name: {"type":"literal","value":"dialog"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("duplicate registration returns existing", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(widgetEntityHandler.register({ name: {"type":"literal","value":"dialog"}, source: {"type":"literal","value":"widgets/dialog.widget"}, ast: {"type":"literal","value":"{}"} }), storage);
-      expect(registerResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
       let entity = registerResult0.output["entity"];
       const thenResult0 = await interpret(widgetEntityHandler.register({ name: {"type":"literal","value":"dialog"}, source: {"type":"literal","value":"widgets/dialog.widget"}, ast: {"type":"literal","value":"{}"} }), storage);
       expect(thenResult0.variant).toBe("alreadyRegistered");

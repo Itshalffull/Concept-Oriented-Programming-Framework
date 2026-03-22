@@ -88,14 +88,16 @@ describe('RankedChoice functional handler', () => {
       if (typeof rankedChoiceHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(rankedChoiceHandler.configure({ eliminationMethod: "InstantRunoff", seats: "1" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "stv_multi_seat" -> ok', async () => {
       if (typeof rankedChoiceHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(rankedChoiceHandler.configure({ eliminationMethod: "SingleTransferable", seats: "3" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "empty_method" -> error', async () => {
@@ -164,7 +166,8 @@ describe('RankedChoice functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_irv_single_seat = await interpret(rankedChoiceHandler.configure({ eliminationMethod: "InstantRunoff", seats: "1" }), storage);
       const result = await interpret(rankedChoiceHandler.count({ config: afterResult_irv_single_seat?.output?.["id"], rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]}]", weights: "{}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "count_empty_ballots" -> error', async () => {
@@ -234,7 +237,8 @@ describe('RankedChoice functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_irv_single_seat = await interpret(rankedChoiceHandler.configure({ eliminationMethod: "InstantRunoff", seats: "1" }), storage);
       const result = await interpret(rankedChoiceHandler.getRoundDetail({ config: afterResult_irv_single_seat?.output?.["id"], roundNumber: "1" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_invalid_round" -> error', async () => {

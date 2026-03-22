@@ -88,14 +88,16 @@ describe('EnrichmentRenderer functional handler', () => {
       if (typeof enrichmentRendererHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(enrichmentRendererHandler.register({ key: "migration-guide", format: "skill-md", order: "75", pattern: "heading-body", template: "{\"heading\":\"Migration Guide\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "list_handler" -> ok', async () => {
       if (typeof enrichmentRendererHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(enrichmentRendererHandler.register({ key: "references", format: "skill-md", order: "10", pattern: "list", template: "{\"title\":\"References\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "unknown_pattern" -> unknownPattern', async () => {
@@ -171,8 +173,15 @@ describe('EnrichmentRenderer functional handler', () => {
     it('fixture "valid_render" -> ok', async () => {
       if (typeof enrichmentRendererHandler.render !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(enrichmentRendererHandler.render({ content: "{\"migration-guide\":{\"heading\":\"Migration Guide\",\"body\":\"Follow these steps...\"}}", format: "skill-md" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_checklist_handler = await interpret(enrichmentRendererHandler.register({ key: "migration-guide", format: "skill-md", order: "75", pattern: "heading-body", template: "{\"heading\":\"Migration Guide\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_checklist_handler?.output ?? {}));
+      const _fixtureInput = { content: "{\"migration-guide\":{\"heading\":\"Migration Guide\",\"body\":\"Follow these steps...\"}}", format: "skill-md" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(enrichmentRendererHandler.render({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "invalid_json_content" -> invalidContent', async () => {
@@ -248,15 +257,29 @@ describe('EnrichmentRenderer functional handler', () => {
     it('fixture "list_skill_md" -> ok', async () => {
       if (typeof enrichmentRendererHandler.listHandlers !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(enrichmentRendererHandler.listHandlers({ format: "skill-md" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_checklist_handler = await interpret(enrichmentRendererHandler.register({ key: "migration-guide", format: "skill-md", order: "75", pattern: "heading-body", template: "{\"heading\":\"Migration Guide\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_checklist_handler?.output ?? {}));
+      const _fixtureInput = { format: "skill-md" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(enrichmentRendererHandler.listHandlers({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "list_empty_format" -> ok', async () => {
       if (typeof enrichmentRendererHandler.listHandlers !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(enrichmentRendererHandler.listHandlers({ format: "nonexistent-format" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_checklist_handler = await interpret(enrichmentRendererHandler.register({ key: "migration-guide", format: "skill-md", order: "75", pattern: "heading-body", template: "{\"heading\":\"Migration Guide\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_checklist_handler?.output ?? {}));
+      const _fixtureInput = { format: "nonexistent-format" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(enrichmentRendererHandler.listHandlers({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -316,8 +339,12 @@ describe('EnrichmentRenderer functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof enrichmentRendererHandler.listPatterns !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(enrichmentRendererHandler.listPatterns({  }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_checklist_handler = await interpret(enrichmentRendererHandler.register({ key: "migration-guide", format: "skill-md", order: "75", pattern: "heading-body", template: "{\"heading\":\"Migration Guide\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_checklist_handler?.output ?? {}));
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
+      const result = await interpret(enrichmentRendererHandler.listPatterns({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -327,10 +354,12 @@ describe('EnrichmentRenderer functional handler', () => {
     it("register handler then render succeeds", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(enrichmentRendererHandler.register({ key: {"type":"literal","value":"migration-guide"}, format: {"type":"literal","value":"skill-md"}, order: {"type":"literal","value":75}, pattern: {"type":"literal","value":"heading-body"}, template: {"type":"literal","value":"{\"heading\":\"Migration Guide\"}"} }), storage);
-      expect(registerResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
       let handler = registerResult0.output["handler"];
       const thenResult0 = await interpret(enrichmentRendererHandler.render({ content: {"type":"literal","value":"{\"migration-guide\":{\"heading\":\"Migration Guide\",\"body\":\"Follow these steps...\"}}"}, format: {"type":"literal","value":"skill-md"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

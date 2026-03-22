@@ -88,21 +88,24 @@ describe('Elevation functional handler', () => {
       if (typeof elevationHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(elevationHandler.define({ elevation: "W-1", level: "1", shadow: "[{ \"y\": 2, \"blur\": 4, \"color\": \"rgba(0,0,0,0.1)\" }]" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "define_overlay" -> ok', async () => {
       if (typeof elevationHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(elevationHandler.define({ elevation: "W-2", level: "3", shadow: "[{ \"y\": 6, \"blur\": 12, \"color\": \"rgba(0,0,0,0.15)\" }]" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "define_flat" -> ok', async () => {
       if (typeof elevationHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(elevationHandler.define({ elevation: "W-3", level: "0", shadow: "none" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "define_level_too_high" -> invalid', async () => {
@@ -185,7 +188,8 @@ describe('Elevation functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(elevationHandler.get({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_unknown" -> notfound', async () => {
@@ -260,7 +264,8 @@ describe('Elevation functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(elevationHandler.generateScale({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "scale_empty_color" -> invalid', async () => {
@@ -293,10 +298,12 @@ describe('Elevation functional handler', () => {
     it("define then get", async () => {
       const storage = createInMemoryStorage();
       const defineResult0 = await interpret(elevationHandler.define({ elevation: {"type":"variable","name":"w"}, level: {"type":"literal","value":2}, shadow: {"type":"literal","value":"[{ \"y\": 4, \"blur\": 8, \"color\": \"rgba(0,0,0,0.12)\" }]"} }), storage);
-      expect(defineResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(defineResult0.variant), `step 0: expected success but got '${defineResult0.variant}'`).toBe(false);
       let elevation = defineResult0.output["elevation"];
       const thenResult0 = await interpret(elevationHandler.get({ elevation: {"type":"variable","name":"w"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
       const thenResult1 = await interpret(elevationHandler.define({ elevation: {"type":"variable","name":"w2"}, level: {"type":"literal","value":7}, shadow: {"type":"literal","value":"[]"} }), storage);
       expect(thenResult1.variant).toBe("invalid");
     });

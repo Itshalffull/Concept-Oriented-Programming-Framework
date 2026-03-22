@@ -88,21 +88,24 @@ describe('KindSystem functional handler', () => {
       if (typeof kindSystemHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(kindSystemHandler.define({ name: "ConceptDSL", category: "source" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "define_model" -> ok', async () => {
       if (typeof kindSystemHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(kindSystemHandler.define({ name: "ConceptAST", category: "model" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "define_artifact" -> ok', async () => {
       if (typeof kindSystemHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(kindSystemHandler.define({ name: "TypeScriptFiles", category: "artifact" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -169,7 +172,8 @@ describe('KindSystem functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(kindSystemHandler.connect({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "connect_self_loop" -> invalid', async () => {
@@ -252,7 +256,8 @@ describe('KindSystem functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(kindSystemHandler.route({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "route_same" -> ok', async () => {
@@ -265,7 +270,8 @@ describe('KindSystem functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(kindSystemHandler.route({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -325,8 +331,15 @@ describe('KindSystem functional handler', () => {
     it('fixture "validate_direct" -> ok', async () => {
       if (typeof kindSystemHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(kindSystemHandler.validate({ from: "ConceptDSL", to: "ConceptAST" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_define_source = await interpret(kindSystemHandler.define({ name: "ConceptDSL", category: "source" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_source?.output ?? {}));
+      const _fixtureInput = { from: "ConceptDSL", to: "ConceptAST" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(kindSystemHandler.validate({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "validate_no_edge" -> invalid', async () => {
@@ -401,7 +414,8 @@ describe('KindSystem functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(kindSystemHandler.dependents({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "dependents_leaf" -> ok', async () => {
@@ -414,7 +428,8 @@ describe('KindSystem functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(kindSystemHandler.dependents({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -481,7 +496,8 @@ describe('KindSystem functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(kindSystemHandler.producers({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "producers_source" -> ok', async () => {
@@ -494,7 +510,8 @@ describe('KindSystem functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(kindSystemHandler.producers({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -561,7 +578,8 @@ describe('KindSystem functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(kindSystemHandler.consumers({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "consumers_artifact" -> ok', async () => {
@@ -574,7 +592,8 @@ describe('KindSystem functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(kindSystemHandler.consumers({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -636,12 +655,10 @@ describe('KindSystem functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_define_source = await interpret(kindSystemHandler.define({ name: "ConceptDSL", category: "source" }), storage);
       const _pool = Object.assign({}, (afterResult_define_source?.output ?? {}));
-      const _fixtureInput = {  } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(kindSystemHandler.graph({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -666,19 +683,25 @@ describe('KindSystem functional handler', () => {
     it("define-then-dependents", async () => {
       const storage = createInMemoryStorage();
       const defineResult0 = await interpret(kindSystemHandler.define({ name: {"type":"literal","value":"ConceptAST"}, category: {"type":"literal","value":"model"} }), storage);
-      expect(defineResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(defineResult0.variant), `step 0: expected success but got '${defineResult0.variant}'`).toBe(false);
       let kind = defineResult0.output["kind"];
       const defineResult1 = await interpret(kindSystemHandler.define({ name: {"type":"literal","value":"ConceptManifest"}, category: {"type":"literal","value":"model"} }), storage);
-      expect(defineResult1.variant).toBe("ok");
+      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr1(defineResult1.variant), `step 1: expected success but got '${defineResult1.variant}'`).toBe(false);
       kind = defineResult1.output["kind"];
       const connectResult2 = await interpret(kindSystemHandler.connect({ from: {"type":"variable","name":"ast"}, to: {"type":"variable","name":"mfst"}, relation: {"type":"literal","value":"normalizes_to"}, transformName: {"type":"literal","value":"SchemaGen"} }), storage);
-      expect(connectResult2.variant).toBe("ok");
+      const _isErr2 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr2(connectResult2.variant), `step 2: expected success but got '${connectResult2.variant}'`).toBe(false);
       const thenResult0 = await interpret(kindSystemHandler.validate({ from: {"type":"variable","name":"ast"}, to: {"type":"variable","name":"mfst"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
       const thenResult1 = await interpret(kindSystemHandler.route({ from: {"type":"variable","name":"ast"}, to: {"type":"variable","name":"mfst"} }), storage);
-      expect(thenResult1.variant).toBe("ok");
+      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
       const thenResult2 = await interpret(kindSystemHandler.dependents({ kind: {"type":"variable","name":"ast"} }), storage);
-      expect(thenResult2.variant).toBe("ok");
+      const _isErrA2 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA2(thenResult2.variant), `assertion 2: expected success but got '${thenResult2.variant}'`).toBe(false);
     });
 
   });

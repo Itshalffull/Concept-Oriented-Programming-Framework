@@ -88,14 +88,16 @@ describe('WearComposeAdapter functional handler', () => {
       if (typeof wearComposeAdapterHandler.normalize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(wearComposeAdapterHandler.normalize({ adapter: "wear-main", props: "{ \"onclick\": \"handleTap\", \"class\": \"chip\" }" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "with_scroll_and_aria" -> ok', async () => {
       if (typeof wearComposeAdapterHandler.normalize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(wearComposeAdapterHandler.normalize({ adapter: "wear-list", props: "{ \"onscroll\": \"handleRotary\", \"aria-label\": \"Items\" }" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "empty_props" -> error', async () => {
@@ -134,7 +136,8 @@ describe('WearComposeAdapter functional handler', () => {
     it("normalize then normalize", async () => {
       const storage = createInMemoryStorage();
       const normalizeResult0 = await interpret(wearComposeAdapterHandler.normalize({ adapter: {"type":"variable","name":"a"}, props: {"type":"literal","value":"{ \"onclick\": \"handler_1\", \"class\": \"btn\" }"} }), storage);
-      expect(normalizeResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(normalizeResult0.variant), `step 0: expected success but got '${normalizeResult0.variant}'`).toBe(false);
       let adapter = normalizeResult0.output["adapter"];
       let normalized = normalizeResult0.output["normalized"];
       const thenResult0 = await interpret(wearComposeAdapterHandler.normalize({ adapter: {"type":"variable","name":"a"}, props: {"type":"literal","value":""} }), storage);

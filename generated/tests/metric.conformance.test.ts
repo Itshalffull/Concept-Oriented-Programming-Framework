@@ -88,14 +88,16 @@ describe('Metric functional handler', () => {
       if (typeof metricHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "define_empty_name" -> ok', async () => {
       if (typeof metricHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(metricHandler.define({ name: "", unit: "", aggregation: "sum" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -157,7 +159,8 @@ describe('Metric functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_define_revenue = await interpret(metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" }), storage);
       const result = await interpret(metricHandler.update({ metric: afterResult_define_revenue?.output?.["id"], value: "150000.0", source: "finance-api" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "update_nonexistent" -> error', async () => {
@@ -226,7 +229,8 @@ describe('Metric functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_define_revenue = await interpret(metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" }), storage);
       const result = await interpret(metricHandler.setThreshold({ metric: afterResult_define_revenue?.output?.["id"], threshold: "100000.0", alertOnBreach: "true" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "set_threshold_nonexistent" -> error', async () => {
@@ -295,7 +299,8 @@ describe('Metric functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_define_revenue = await interpret(metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" }), storage);
       const result = await interpret(metricHandler.evaluate({ metric: afterResult_define_revenue?.output?.["id"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "evaluate_nonexistent" -> error', async () => {

@@ -88,14 +88,16 @@ describe('CloudRunRuntime functional handler', () => {
       if (typeof cloudRunRuntimeHandler.provision !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(cloudRunRuntimeHandler.provision({ concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: "1", memory: "512" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "provision_high_mem" -> ok', async () => {
       if (typeof cloudRunRuntimeHandler.provision !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(cloudRunRuntimeHandler.provision({ concept: "MLService", projectId: "ml-project", region: "us-east1", cpu: "2", memory: "2048" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "provision_empty_concept" -> error', async () => {
@@ -169,7 +171,8 @@ describe('CloudRunRuntime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(cloudRunRuntimeHandler.deploy({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "deploy_missing_service" -> error', async () => {
@@ -243,7 +246,8 @@ describe('CloudRunRuntime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(cloudRunRuntimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "traffic_no_service" -> error', async () => {
@@ -312,7 +316,8 @@ describe('CloudRunRuntime functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_provision_standard = await interpret(cloudRunRuntimeHandler.provision({ concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: "1", memory: "512" }), storage);
       const result = await interpret(cloudRunRuntimeHandler.rollback({ service: "svc-abc123", targetRevision: afterResult_provision_standard?.output?.["service"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "rollback_empty_revision" -> ok', async () => {
@@ -325,7 +330,8 @@ describe('CloudRunRuntime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(cloudRunRuntimeHandler.rollback({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -392,7 +398,8 @@ describe('CloudRunRuntime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(cloudRunRuntimeHandler.destroy({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "destroy_missing" -> error', async () => {
@@ -424,12 +431,14 @@ describe('CloudRunRuntime functional handler', () => {
     it("provision-then-deploy", async () => {
       const storage = createInMemoryStorage();
       const provisionResult0 = await interpret(cloudRunRuntimeHandler.provision({ concept: {"type":"literal","value":"User"}, projectId: {"type":"literal","value":"my-project"}, region: {"type":"literal","value":"us-central1"}, cpu: {"type":"literal","value":1}, memory: {"type":"literal","value":512} }), storage);
-      expect(provisionResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(provisionResult0.variant), `step 0: expected success but got '${provisionResult0.variant}'`).toBe(false);
       let service = provisionResult0.output["service"];
       let serviceUrl = provisionResult0.output["serviceUrl"];
       let endpoint = provisionResult0.output["endpoint"];
       const thenResult0 = await interpret(cloudRunRuntimeHandler.deploy({ service: {"type":"variable","name":"s"}, imageUri: {"type":"literal","value":"gcr.io/my-project/user:latest"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

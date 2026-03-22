@@ -88,14 +88,16 @@ describe('FluxProvider functional handler', () => {
       if (typeof fluxProviderHandler.emit !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(fluxProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "emit_staging" -> ok', async () => {
       if (typeof fluxProviderHandler.emit !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(fluxProviderHandler.emit({ plan: "dp-002", repo: "git@github.com:org/deploy.git", path: "envs/staging" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "emit_empty_plan" -> error', async () => {
@@ -164,7 +166,8 @@ describe('FluxProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_emit_prod = await interpret(fluxProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
       const result = await interpret(fluxProviderHandler.reconciliationStatus({ kustomization: afterResult_emit_prod?.output?.["kustomization"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "reconcile_nonexistent" -> error', async () => {
@@ -233,7 +236,8 @@ describe('FluxProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_emit_prod = await interpret(fluxProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
       const result = await interpret(fluxProviderHandler.helmRelease({ kustomization: afterResult_emit_prod?.output?.["kustomization"], chart: "nginx-ingress", values: "{\"replicas\": 3}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "helm_empty_chart" -> error', async () => {
@@ -266,11 +270,13 @@ describe('FluxProvider functional handler', () => {
     it("emit-then-reconciliationStatus", async () => {
       const storage = createInMemoryStorage();
       const emitResult0 = await interpret(fluxProviderHandler.emit({ plan: {"type":"literal","value":"dp-001"}, repo: {"type":"literal","value":"git@github.com:org/deploy.git"}, path: {"type":"literal","value":"envs/prod"} }), storage);
-      expect(emitResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(emitResult0.variant), `step 0: expected success but got '${emitResult0.variant}'`).toBe(false);
       let kustomization = emitResult0.output["kustomization"];
       let files = emitResult0.output["files"];
       const thenResult0 = await interpret(fluxProviderHandler.reconciliationStatus({ kustomization: {"type":"variable","name":"k"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

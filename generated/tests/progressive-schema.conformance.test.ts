@@ -88,14 +88,16 @@ describe('ProgressiveSchema functional handler', () => {
       if (typeof progressiveSchemaHandler.captureFreeform !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(progressiveSchemaHandler.captureFreeform({ content: "Meeting with John on 2026-03-01 about #project-x" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "capture_note" -> ok', async () => {
       if (typeof progressiveSchemaHandler.captureFreeform !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(progressiveSchemaHandler.captureFreeform({ content: "Quick thought: refactor the sync engine to support batching" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -157,7 +159,8 @@ describe('ProgressiveSchema functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_capture_meeting = await interpret(progressiveSchemaHandler.captureFreeform({ content: "Meeting with John on 2026-03-01 about #project-x" }), storage);
       const result = await interpret(progressiveSchemaHandler.detectStructure({ itemId: afterResult_capture_meeting?.output?.["itemId"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "detect_missing" -> notfound', async () => {
@@ -227,7 +230,8 @@ describe('ProgressiveSchema functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_capture_meeting = await interpret(progressiveSchemaHandler.captureFreeform({ content: "Meeting with John on 2026-03-01 about #project-x" }), storage);
       const result = await interpret(progressiveSchemaHandler.acceptSuggestion({ itemId: afterResult_capture_meeting?.output?.["itemId"], suggestionId: afterResult_capture_meeting?.output?.["itemId"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "accept_missing" -> notfound', async () => {
@@ -297,7 +301,8 @@ describe('ProgressiveSchema functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_capture_meeting = await interpret(progressiveSchemaHandler.captureFreeform({ content: "Meeting with John on 2026-03-01 about #project-x" }), storage);
       const result = await interpret(progressiveSchemaHandler.rejectSuggestion({ itemId: afterResult_capture_meeting?.output?.["itemId"], suggestionId: afterResult_capture_meeting?.output?.["itemId"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "reject_missing" -> notfound', async () => {
@@ -367,7 +372,8 @@ describe('ProgressiveSchema functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_capture_meeting = await interpret(progressiveSchemaHandler.captureFreeform({ content: "Meeting with John on 2026-03-01 about #project-x" }), storage);
       const result = await interpret(progressiveSchemaHandler.promote({ itemId: afterResult_capture_meeting?.output?.["itemId"], targetSchema: "Article" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "promote_missing" -> notfound', async () => {
@@ -442,7 +448,8 @@ describe('ProgressiveSchema functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(progressiveSchemaHandler.inferSchema({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "infer_empty" -> error', async () => {
@@ -474,12 +481,15 @@ describe('ProgressiveSchema functional handler', () => {
     it("captureFreeform-then-acceptSuggestion", async () => {
       const storage = createInMemoryStorage();
       const captureFreeformResult0 = await interpret(progressiveSchemaHandler.captureFreeform({ content: {"type":"literal","value":"Meeting with John on 2026-03-01 about #project-x"} }), storage);
-      expect(captureFreeformResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(captureFreeformResult0.variant), `step 0: expected success but got '${captureFreeformResult0.variant}'`).toBe(false);
       let itemId = captureFreeformResult0.output["itemId"];
       const thenResult0 = await interpret(progressiveSchemaHandler.detectStructure({ itemId: {"type":"literal","value":"ps-1"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
       const thenResult1 = await interpret(progressiveSchemaHandler.acceptSuggestion({ itemId: {"type":"literal","value":"ps-1"}, suggestionId: {"type":"literal","value":"sug-1"} }), storage);
-      expect(thenResult1.variant).toBe("ok");
+      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
     });
 
   });

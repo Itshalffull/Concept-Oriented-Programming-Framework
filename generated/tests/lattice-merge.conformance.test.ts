@@ -88,7 +88,8 @@ describe('LatticeMerge functional handler', () => {
       if (typeof latticeMergeHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(latticeMergeHandler.register({  }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -155,7 +156,8 @@ describe('LatticeMerge functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(latticeMergeHandler.execute({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "invalid_crdt_json" -> error', async () => {

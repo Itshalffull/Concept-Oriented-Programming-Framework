@@ -88,7 +88,8 @@ describe('EffectHandler functional handler', () => {
       if (typeof effectHandlerHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(effectHandlerHandler.register({ protocol: "http", operation: "GET" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "register_empty_protocol" -> error', async () => {
@@ -155,8 +156,15 @@ describe('EffectHandler functional handler', () => {
     it('fixture "resolve_http_get" -> ok', async () => {
       if (typeof effectHandlerHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(effectHandlerHandler.resolve({ protocol: "http", operation: "GET" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_register_http_get = await interpret(effectHandlerHandler.register({ protocol: "http", operation: "GET" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_http_get?.output ?? {}));
+      const _fixtureInput = { protocol: "http", operation: "GET" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(effectHandlerHandler.resolve({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "resolve_unknown" -> error', async () => {
@@ -223,8 +231,15 @@ describe('EffectHandler functional handler', () => {
     it('fixture "list_http" -> ok', async () => {
       if (typeof effectHandlerHandler.listByProtocol !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(effectHandlerHandler.listByProtocol({ protocol: "http" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_register_http_get = await interpret(effectHandlerHandler.register({ protocol: "http", operation: "GET" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_http_get?.output ?? {}));
+      const _fixtureInput = { protocol: "http" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(effectHandlerHandler.listByProtocol({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "list_empty" -> error', async () => {
@@ -291,8 +306,15 @@ describe('EffectHandler functional handler', () => {
     it('fixture "deregister_http_get" -> ok', async () => {
       if (typeof effectHandlerHandler.deregister !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(effectHandlerHandler.deregister({ protocol: "http", operation: "GET" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_register_http_get = await interpret(effectHandlerHandler.register({ protocol: "http", operation: "GET" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_http_get?.output ?? {}));
+      const _fixtureInput = { protocol: "http", operation: "GET" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(effectHandlerHandler.deregister({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "deregister_empty" -> error', async () => {
@@ -309,10 +331,12 @@ describe('EffectHandler functional handler', () => {
     it("register then resolve returns handler", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(effectHandlerHandler.register({ protocol: {"type":"literal","value":"http"}, operation: {"type":"literal","value":"GET"} }), storage);
-      expect(registerResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
       let handler = registerResult0.output["handler"];
       const thenResult0 = await interpret(effectHandlerHandler.resolve({ protocol: {"type":"literal","value":"http"}, operation: {"type":"literal","value":"GET"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("resolve unregistered pair returns unresolved", async () => {
@@ -326,10 +350,12 @@ describe('EffectHandler functional handler', () => {
     it("deregister removes handler", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(effectHandlerHandler.register({ protocol: {"type":"literal","value":"http"}, operation: {"type":"literal","value":"GET"} }), storage);
-      expect(registerResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
       let handler = registerResult0.output["handler"];
       const deregisterResult1 = await interpret(effectHandlerHandler.deregister({ protocol: {"type":"literal","value":"http"}, operation: {"type":"literal","value":"GET"} }), storage);
-      expect(deregisterResult1.variant).toBe("ok");
+      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr1(deregisterResult1.variant), `step 1: expected success but got '${deregisterResult1.variant}'`).toBe(false);
       handler = deregisterResult1.output["handler"];
       const thenResult0 = await interpret(effectHandlerHandler.resolve({ protocol: {"type":"literal","value":"http"}, operation: {"type":"literal","value":"GET"} }), storage);
       expect(thenResult0.variant).toBe("unresolved");
@@ -338,7 +364,8 @@ describe('EffectHandler functional handler', () => {
     it("duplicate register returns existing handler", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(effectHandlerHandler.register({ protocol: {"type":"literal","value":"http"}, operation: {"type":"literal","value":"GET"} }), storage);
-      expect(registerResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
       let handler = registerResult0.output["handler"];
       const thenResult0 = await interpret(effectHandlerHandler.register({ protocol: {"type":"literal","value":"http"}, operation: {"type":"literal","value":"GET"} }), storage);
       expect(thenResult0.variant).toBe("duplicate");

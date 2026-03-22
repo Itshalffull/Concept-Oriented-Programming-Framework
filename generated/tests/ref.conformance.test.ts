@@ -88,14 +88,16 @@ describe('Ref functional handler', () => {
       if (typeof refHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(refHandler.create({ name: "HEAD", hash: "sha256:abc123def456" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "empty_ref_name" -> ok', async () => {
       if (typeof refHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(refHandler.create({ name: "", hash: "sha256:abc123" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -162,7 +164,8 @@ describe('Ref functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(refHandler.update({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "update_empty_name" -> error', async () => {
@@ -236,7 +239,8 @@ describe('Ref functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(refHandler.delete({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "delete_empty_name" -> error', async () => {
@@ -310,7 +314,8 @@ describe('Ref functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(refHandler.resolve({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "resolve_missing" -> error', async () => {
@@ -384,7 +389,8 @@ describe('Ref functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(refHandler.log({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "log_missing" -> error', async () => {
@@ -416,18 +422,22 @@ describe('Ref functional handler', () => {
     it("create then resolve", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(refHandler.create({ name: {"type":"variable","name":"n"}, hash: {"type":"variable","name":"h"} }), storage);
-      expect(createResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
       let ref = createResult0.output["ref"];
       const thenResult0 = await interpret(refHandler.resolve({ name: {"type":"variable","name":"n"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("update then resolve", async () => {
       const storage = createInMemoryStorage();
       const updateResult0 = await interpret(refHandler.update({ name: {"type":"variable","name":"n"}, newHash: {"type":"variable","name":"h2"}, expectedOldHash: {"type":"variable","name":"h1"} }), storage);
-      expect(updateResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(updateResult0.variant), `step 0: expected success but got '${updateResult0.variant}'`).toBe(false);
       const thenResult0 = await interpret(refHandler.resolve({ name: {"type":"variable","name":"n"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

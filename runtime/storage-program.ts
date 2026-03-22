@@ -475,10 +475,15 @@ export function pure<A>(
   value: A,
 ): StorageProgram<A> {
   if (program.terminated) throw new Error('Program is sealed — cannot append after pure()');
+  // If the value contains a variant field, register it in effects so
+  // structural analysis can discover completion variants without walking instructions.
+  const variant = value !== null && typeof value === 'object' && 'variant' in (value as Record<string, unknown>)
+    ? (value as Record<string, unknown>).variant as string
+    : undefined;
   return {
     instructions: [...program.instructions, { tag: 'pure', value }],
     terminated: true,
-    effects: program.effects,
+    effects: variant ? addCompletionVariant(program.effects, variant) : program.effects,
   };
 }
 

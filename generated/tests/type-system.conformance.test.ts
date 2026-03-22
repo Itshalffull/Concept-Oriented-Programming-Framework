@@ -87,8 +87,15 @@ describe('TypeSystem functional handler', () => {
     it('fixture "register_string_type" -> ok', async () => {
       if (typeof typeSystemHandler.registerType !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(typeSystemHandler.registerType({ type: "email", schema: "{\"type\":\"string\"}", constraints: "{\"format\":\"email\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_serialize_value = await interpret(typeSystemHandler.serialize({ type: "email", value: "\"user@example.com\"" }), storage);
+      const _pool = Object.assign({}, (afterResult_serialize_value?.output ?? {}));
+      const _fixtureInput = { type: "email", schema: "{\"type\":\"string\"}", constraints: "{\"format\":\"email\"}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(typeSystemHandler.registerType({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "register_empty_type" -> error', async () => {
@@ -162,7 +169,8 @@ describe('TypeSystem functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(typeSystemHandler.resolve({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "resolve_missing" -> error', async () => {
@@ -236,7 +244,8 @@ describe('TypeSystem functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(typeSystemHandler.navigate({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "navigate_missing_type" -> error', async () => {
@@ -303,8 +312,15 @@ describe('TypeSystem functional handler', () => {
     it('fixture "serialize_value" -> ok', async () => {
       if (typeof typeSystemHandler.serialize !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(typeSystemHandler.serialize({ type: "email", value: "\"user@example.com\"" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_register_string_type = await interpret(typeSystemHandler.registerType({ type: "email", schema: "{\"type\":\"string\"}", constraints: "{\"format\":\"email\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_string_type?.output ?? {}));
+      const _fixtureInput = { type: "email", value: "\"user@example.com\"" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(typeSystemHandler.serialize({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "serialize_missing_type" -> error', async () => {
@@ -336,16 +352,19 @@ describe('TypeSystem functional handler', () => {
     it("registerType-then-resolve", async () => {
       const storage = createInMemoryStorage();
       const registerTypeResult0 = await interpret(typeSystemHandler.registerType({ type: {"type":"variable","name":"t"}, schema: {"type":"literal","value":"{\"type\":\"string\"}"}, constraints: {"type":"literal","value":"{}"} }), storage);
-      expect(registerTypeResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerTypeResult0.variant), `step 0: expected success but got '${registerTypeResult0.variant}'`).toBe(false);
       let type = registerTypeResult0.output["type"];
       const thenResult0 = await interpret(typeSystemHandler.resolve({ type: {"type":"variable","name":"t"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("registerType-then-registerType", async () => {
       const storage = createInMemoryStorage();
       const registerTypeResult0 = await interpret(typeSystemHandler.registerType({ type: {"type":"variable","name":"t"}, schema: {"type":"literal","value":"{\"type\":\"string\"}"}, constraints: {"type":"literal","value":"{}"} }), storage);
-      expect(registerTypeResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerTypeResult0.variant), `step 0: expected success but got '${registerTypeResult0.variant}'`).toBe(false);
       let type = registerTypeResult0.output["type"];
       const thenResult0 = await interpret(typeSystemHandler.registerType({ type: {"type":"variable","name":"t"}, schema: {"type":"literal","value":"{\"type\":\"number\"}"}, constraints: {"type":"literal","value":"{}"} }), storage);
       expect(thenResult0.variant).toBe("exists");

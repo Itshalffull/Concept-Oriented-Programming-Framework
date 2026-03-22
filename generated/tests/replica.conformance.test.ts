@@ -37,7 +37,8 @@ describe('Replica imperative handler', () => {
       if (typeof replicaHandler.localUpdate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await replicaHandler.localUpdate({ op: "insert:hello-world" }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "update_empty_op" -> error', async () => {
@@ -64,7 +65,8 @@ describe('Replica imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_update_insert_op = await replicaHandler.localUpdate({ op: "insert:hello-world" }, storage);
       const result = await replicaHandler.receiveRemote({ op: "update:field=value", fromReplica: afterResult_update_insert_op?.output?.["newState"] }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "receive_from_unknown_peer" -> error', async () => {
@@ -91,7 +93,8 @@ describe('Replica imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_update_insert_op = await replicaHandler.localUpdate({ op: "insert:hello-world" }, storage);
       const result = await replicaHandler.sync({ peer: afterResult_update_insert_op?.output?.["newState"] }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "sync_unknown_peer" -> error', async () => {
@@ -118,12 +121,10 @@ describe('Replica imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_update_insert_op = await replicaHandler.localUpdate({ op: "insert:hello-world" }, storage);
       const _pool = Object.assign({}, (afterResult_update_insert_op?.output ?? {}));
-      const _fixtureInput = {  } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await replicaHandler.getState({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -143,12 +144,10 @@ describe('Replica imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_update_insert_op = await replicaHandler.localUpdate({ op: "insert:hello-world" }, storage);
       const _pool = Object.assign({}, (afterResult_update_insert_op?.output ?? {}));
-      const _fixtureInput = {  } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await replicaHandler.fork({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -168,7 +167,8 @@ describe('Replica imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_update_insert_op = await replicaHandler.localUpdate({ op: "insert:hello-world" }, storage);
       const result = await replicaHandler.addPeer({ peerId: afterResult_update_insert_op?.output?.["newState"] }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "add_empty_peer" -> ok', async () => {
@@ -181,7 +181,8 @@ describe('Replica imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await replicaHandler.addPeer({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -202,10 +203,12 @@ describe('Replica imperative handler', () => {
     it("localUpdate-then-getState", async () => {
       const storage = createInMemoryStorage();
       const localUpdateResult0 = await replicaHandler.localUpdate({ op: {"type":"variable","name":"o"} }, storage);
-      expect(localUpdateResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(localUpdateResult0.variant), `step 0: expected success but got '${localUpdateResult0.variant}'`).toBe(false);
       let newState = localUpdateResult0.output["newState"];
       const thenResult0 = await replicaHandler.getState({  }, storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

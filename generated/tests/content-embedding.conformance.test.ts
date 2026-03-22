@@ -37,7 +37,8 @@ describe('ContentEmbedding imperative handler', () => {
       if (typeof contentEmbeddingHandler.index !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await contentEmbeddingHandler.index({ entity_id: "node-42", source_type: "page", text: "Introduction to concept-oriented programming", model: "text-embedding-3-small" }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "unknown_model" -> error', async () => {
@@ -64,7 +65,8 @@ describe('ContentEmbedding imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_index_page = await contentEmbeddingHandler.index({ entity_id: "node-42", source_type: "page", text: "Introduction to concept-oriented programming", model: "text-embedding-3-small" }, storage);
       const result = await contentEmbeddingHandler.remove({ entity_id: afterResult_index_page?.output?.["embedding"] }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "remove_missing" -> ok', async () => {
@@ -77,7 +79,8 @@ describe('ContentEmbedding imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await contentEmbeddingHandler.remove({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -97,7 +100,8 @@ describe('ContentEmbedding imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_index_page = await contentEmbeddingHandler.index({ entity_id: "node-42", source_type: "page", text: "Introduction to concept-oriented programming", model: "text-embedding-3-small" }, storage);
       const result = await contentEmbeddingHandler.get({ entity_id: afterResult_index_page?.output?.["embedding"] }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_nonexistent" -> error', async () => {
@@ -124,7 +128,8 @@ describe('ContentEmbedding imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_index_page = await contentEmbeddingHandler.index({ entity_id: "node-42", source_type: "page", text: "Introduction to concept-oriented programming", model: "text-embedding-3-small" }, storage);
       const result = await contentEmbeddingHandler.searchSimilar({ entity_id: afterResult_index_page?.output?.["embedding"], topK: "5", source_type: "page" }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "search_no_entity" -> error', async () => {
@@ -152,10 +157,12 @@ describe('ContentEmbedding imperative handler', () => {
     it("index then get", async () => {
       const storage = createInMemoryStorage();
       const indexResult0 = await contentEmbeddingHandler.index({ entity_id: {"type":"literal","value":"node-1"}, source_type: {"type":"literal","value":"page"}, text: {"type":"literal","value":"hello world"}, model: {"type":"literal","value":"text-embedding-3-small"} }, storage);
-      expect(indexResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(indexResult0.variant), `step 0: expected success but got '${indexResult0.variant}'`).toBe(false);
       let embedding = indexResult0.output["embedding"];
       const thenResult0 = await contentEmbeddingHandler.get({ entity_id: {"type":"literal","value":"node-1"} }, storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

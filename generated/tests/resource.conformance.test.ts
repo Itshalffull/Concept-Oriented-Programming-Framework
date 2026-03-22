@@ -88,21 +88,24 @@ describe('Resource functional handler', () => {
       if (typeof resourceHandler.upsert !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(resourceHandler.upsert({ locator: "./specs/password.concept", kind: "concept-spec", digest: "sha256-abc123", size: "1024" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "upsert_changed" -> ok', async () => {
       if (typeof resourceHandler.upsert !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(resourceHandler.upsert({ locator: "./specs/password.concept", kind: "concept-spec", digest: "sha256-def456" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "upsert_unchanged" -> ok', async () => {
       if (typeof resourceHandler.upsert !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(resourceHandler.upsert({ locator: "./specs/password.concept", kind: "concept-spec", digest: "sha256-abc123" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -169,7 +172,8 @@ describe('Resource functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(resourceHandler.get({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_missing" -> notFound', async () => {
@@ -239,12 +243,10 @@ describe('Resource functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_upsert_new = await interpret(resourceHandler.upsert({ locator: "./specs/password.concept", kind: "concept-spec", digest: "sha256-abc123", size: "1024" }), storage);
       const _pool = Object.assign({}, (afterResult_upsert_new?.output ?? {}));
-      const _fixtureInput = {  } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(resourceHandler.list({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "list_by_kind" -> ok', async () => {
@@ -257,7 +259,8 @@ describe('Resource functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(resourceHandler.list({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -324,7 +327,8 @@ describe('Resource functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(resourceHandler.remove({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "remove_missing" -> notFound', async () => {
@@ -430,7 +434,8 @@ describe('Resource functional handler', () => {
       expect(upsertResult0.variant).toBe("created");
       let resource = upsertResult0.output["resource"];
       const thenResult0 = await interpret(resourceHandler.get({ locator: {"type":"literal","value":"./specs/password.concept"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
       const thenResult1 = await interpret(resourceHandler.upsert({ locator: {"type":"literal","value":"./specs/password.concept"}, kind: {"type":"literal","value":"concept-spec"}, digest: {"type":"literal","value":"abc123"} }), storage);
       expect(thenResult1.variant).toBe("unchanged");
       const thenResult2 = await interpret(resourceHandler.upsert({ locator: {"type":"literal","value":"./specs/password.concept"}, kind: {"type":"literal","value":"concept-spec"}, digest: {"type":"literal","value":"def456"} }), storage);

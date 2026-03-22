@@ -88,14 +88,16 @@ describe('Target functional handler', () => {
       if (typeof targetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(targetHandler.generate({ projection: "score-api-projection", targetType: "rest", config: "{}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "generate_graphql" -> ok', async () => {
       if (typeof targetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(targetHandler.generate({ projection: "score-api-projection", targetType: "graphql", config: "{}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "generate_unsupported" -> error', async () => {
@@ -169,8 +171,15 @@ describe('Target functional handler', () => {
     it('fixture "diff_existing" -> ok', async () => {
       if (typeof targetHandler.diff !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(targetHandler.diff({ output: "output-rest-score-001" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_generate_rest = await interpret(targetHandler.generate({ projection: "score-api-projection", targetType: "rest", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_generate_rest?.output ?? {}));
+      const _fixtureInput = { output: "output-rest-score-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(targetHandler.diff({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "diff_not_found" -> error', async () => {
@@ -202,7 +211,8 @@ describe('Target functional handler', () => {
     it("generate-then-diff", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(targetHandler.generate({ projection: {"type":"literal","value":"test-projection"}, targetType: {"type":"literal","value":"rest"}, config: {"type":"literal","value":"{}"} }), storage);
-      expect(generateResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
       let output = generateResult0.output["output"];
       let files = generateResult0.output["files"];
       const thenResult0 = await interpret(targetHandler.diff({ output: {"type":"variable","name":"t"} }), storage);

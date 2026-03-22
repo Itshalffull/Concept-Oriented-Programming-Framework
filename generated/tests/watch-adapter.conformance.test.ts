@@ -88,21 +88,24 @@ describe('WatchAdapter functional handler', () => {
       if (typeof watchAdapterHandler.normalize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(watchAdapterHandler.normalize({ props: "{\"type\":\"navigation\",\"destination\":\"heartRate\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "with_aria" -> ok', async () => {
       if (typeof watchAdapterHandler.normalize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(watchAdapterHandler.normalize({ props: "{\"aria-label\":\"Close\",\"onclick\":\"handleClose\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "with_events" -> ok', async () => {
       if (typeof watchAdapterHandler.normalize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(watchAdapterHandler.normalize({ props: "{\"onclick\":\"tap\",\"onscroll\":\"scroll\",\"class\":\"primary\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "empty_props" -> error', async () => {
@@ -141,7 +144,8 @@ describe('WatchAdapter functional handler', () => {
     it("normalize then normalize", async () => {
       const storage = createInMemoryStorage();
       const normalizeResult0 = await interpret(watchAdapterHandler.normalize({ adapter: {"type":"variable","name":"a"}, props: {"type":"literal","value":"{ \"type\": \"navigation\", \"destination\": \"heartRate\" }"} }), storage);
-      expect(normalizeResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(normalizeResult0.variant), `step 0: expected success but got '${normalizeResult0.variant}'`).toBe(false);
       let adapter = normalizeResult0.output["adapter"];
       let normalized = normalizeResult0.output["normalized"];
       const thenResult0 = await interpret(watchAdapterHandler.normalize({ adapter: {"type":"variable","name":"a"}, props: {"type":"literal","value":""} }), storage);

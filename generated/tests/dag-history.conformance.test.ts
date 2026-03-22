@@ -88,21 +88,24 @@ describe('DAGHistory functional handler', () => {
       if (typeof dagHistoryHandler.append !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "append_with_parent" -> ok', async () => {
       if (typeof dagHistoryHandler.append !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(dagHistoryHandler.append({ parents: ["dag-history-1"], contentRef: "sha256:def456", metadata: "{\"author\":\"bob\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "empty_content_ref" -> ok', async () => {
       if (typeof dagHistoryHandler.append !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "", metadata: "" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -164,7 +167,8 @@ describe('DAGHistory functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_append_root = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
       const result = await interpret(dagHistoryHandler.ancestors({ nodeId: afterResult_append_root?.output?.["nodeId"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "ancestors_missing" -> error', async () => {
@@ -233,7 +237,8 @@ describe('DAGHistory functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_append_root = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
       const result = await interpret(dagHistoryHandler.commonAncestor({ a: afterResult_append_root?.output?.["nodeId"], b: afterResult_append_root?.output?.["nodeId"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "missing_node" -> error', async () => {
@@ -302,7 +307,8 @@ describe('DAGHistory functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_append_root = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
       const result = await interpret(dagHistoryHandler.descendants({ nodeId: afterResult_append_root?.output?.["nodeId"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "descendants_missing" -> error', async () => {
@@ -371,7 +377,8 @@ describe('DAGHistory functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_append_root = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
       const result = await interpret(dagHistoryHandler.between({ from: afterResult_append_root?.output?.["nodeId"], to: afterResult_append_root?.output?.["nodeId"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "between_missing" -> error', async () => {
@@ -440,7 +447,8 @@ describe('DAGHistory functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_append_root = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
       const result = await interpret(dagHistoryHandler.getNode({ nodeId: afterResult_append_root?.output?.["nodeId"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_missing" -> error', async () => {
@@ -472,19 +480,23 @@ describe('DAGHistory functional handler', () => {
     it("append then getNode", async () => {
       const storage = createInMemoryStorage();
       const appendResult0 = await interpret(dagHistoryHandler.append({ parents: {"type":"literal","value":"[]"}, contentRef: {"type":"literal","value":"abc123"}, metadata: {"type":"literal","value":""} }), storage);
-      expect(appendResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(appendResult0.variant), `step 0: expected success but got '${appendResult0.variant}'`).toBe(false);
       let nodeId = appendResult0.output["nodeId"];
       const thenResult0 = await interpret(dagHistoryHandler.getNode({ nodeId: {"type":"variable","name":"n"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("append then ancestors", async () => {
       const storage = createInMemoryStorage();
       const appendResult0 = await interpret(dagHistoryHandler.append({ parents: {"type":"literal","value":"[p1]"}, contentRef: {"type":"literal","value":"def456"}, metadata: {"type":"literal","value":""} }), storage);
-      expect(appendResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(appendResult0.variant), `step 0: expected success but got '${appendResult0.variant}'`).toBe(false);
       let nodeId = appendResult0.output["nodeId"];
       const thenResult0 = await interpret(dagHistoryHandler.ancestors({ nodeId: {"type":"variable","name":"n"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

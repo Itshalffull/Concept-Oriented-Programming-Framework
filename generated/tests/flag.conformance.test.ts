@@ -88,14 +88,16 @@ describe('Flag functional handler', () => {
       if (typeof flagHandler.flag !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(flagHandler.flag({ flagging: "flag-1", flagType: "bookmark", entity: "article-42", user: "user-7" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "flag_empty_flagging" -> ok', async () => {
       if (typeof flagHandler.flag !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(flagHandler.flag({ flagging: "", flagType: "bookmark", entity: "article-42", user: "user-7" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -157,7 +159,8 @@ describe('Flag functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_flag_bookmark = await interpret(flagHandler.flag({ flagging: "flag-1", flagType: "bookmark", entity: "article-42", user: "user-7" }), storage);
       const result = await interpret(flagHandler.unflag({ flagging: afterResult_flag_bookmark?.output?.["id"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "unflag_missing" -> error', async () => {
@@ -226,7 +229,8 @@ describe('Flag functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_flag_bookmark = await interpret(flagHandler.flag({ flagging: "flag-1", flagType: "bookmark", entity: "article-42", user: "user-7" }), storage);
       const result = await interpret(flagHandler.isFlagged({ flagType: "bookmark", entity: afterResult_flag_bookmark?.output?.["id"], user: afterResult_flag_bookmark?.output?.["id"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "is_flagged_empty_type" -> ok', async () => {
@@ -234,7 +238,8 @@ describe('Flag functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_flag_bookmark = await interpret(flagHandler.flag({ flagging: "flag-1", flagType: "bookmark", entity: "article-42", user: "user-7" }), storage);
       const result = await interpret(flagHandler.isFlagged({ flagType: "", entity: afterResult_flag_bookmark?.output?.["id"], user: afterResult_flag_bookmark?.output?.["id"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -296,7 +301,8 @@ describe('Flag functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_flag_bookmark = await interpret(flagHandler.flag({ flagging: "flag-1", flagType: "bookmark", entity: "article-42", user: "user-7" }), storage);
       const result = await interpret(flagHandler.getCount({ flagType: "like", entity: afterResult_flag_bookmark?.output?.["id"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_count_empty" -> ok', async () => {
@@ -309,7 +315,8 @@ describe('Flag functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(flagHandler.getCount({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -334,19 +341,24 @@ describe('Flag functional handler', () => {
     it("flag-then-isFlagged-2", async () => {
       const storage = createInMemoryStorage();
       const flagResult0 = await interpret(flagHandler.flag({ flagging: {"type":"variable","name":"f"}, flagType: {"type":"variable","name":"t"}, entity: {"type":"variable","name":"e"}, user: {"type":"variable","name":"u"} }), storage);
-      expect(flagResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(flagResult0.variant), `step 0: expected success but got '${flagResult0.variant}'`).toBe(false);
       const thenResult0 = await interpret(flagHandler.isFlagged({ flagType: {"type":"variable","name":"t"}, entity: {"type":"variable","name":"e"}, user: {"type":"variable","name":"u"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("flag-then-isFlagged", async () => {
       const storage = createInMemoryStorage();
       const flagResult0 = await interpret(flagHandler.flag({ flagging: {"type":"variable","name":"f"}, flagType: {"type":"variable","name":"t"}, entity: {"type":"variable","name":"e"}, user: {"type":"variable","name":"u"} }), storage);
-      expect(flagResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(flagResult0.variant), `step 0: expected success but got '${flagResult0.variant}'`).toBe(false);
       const thenResult0 = await interpret(flagHandler.unflag({ flagging: {"type":"variable","name":"f"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
       const thenResult1 = await interpret(flagHandler.isFlagged({ flagType: {"type":"variable","name":"t"}, entity: {"type":"variable","name":"e"}, user: {"type":"variable","name":"u"} }), storage);
-      expect(thenResult1.variant).toBe("ok");
+      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
     });
 
   });

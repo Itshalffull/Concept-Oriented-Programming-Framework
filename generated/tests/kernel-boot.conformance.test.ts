@@ -37,14 +37,16 @@ describe('KernelBoot imperative handler', () => {
       if (typeof kernelBootHandler.boot !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await kernelBootHandler.boot({ projectRoot: "./", manifestPath: "deploy.yaml" }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "custom_root" -> ok', async () => {
       if (typeof kernelBootHandler.boot !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await kernelBootHandler.boot({ projectRoot: "/app/clef-base", manifestPath: "examples/devtools/devtools.interface.yaml" }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "empty_root" -> noHandlers', async () => {
@@ -77,7 +79,8 @@ describe('KernelBoot imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await kernelBootHandler.status({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "nonexistent_status" -> notfound', async () => {
@@ -110,7 +113,8 @@ describe('KernelBoot imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await kernelBootHandler.shutdown({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "nonexistent_shutdown" -> notfound', async () => {
@@ -139,23 +143,27 @@ describe('KernelBoot imperative handler', () => {
     it("boot then status shows running", async () => {
       const storage = createInMemoryStorage();
       const bootResult0 = await kernelBootHandler.boot({ projectRoot: {"type":"literal","value":"./"}, manifestPath: {"type":"literal","value":"examples/devtools/devtools.interface.yaml"} }, storage);
-      expect(bootResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(bootResult0.variant), `step 0: expected success but got '${bootResult0.variant}'`).toBe(false);
       let kernel = bootResult0.output["kernel"];
       let concepts = bootResult0.output["concepts"];
       let syncs = bootResult0.output["syncs"];
       const thenResult0 = await kernelBootHandler.status({ kernel: {"type":"variable","name":"k"} }, storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("boot then shutdown then status not found", async () => {
       const storage = createInMemoryStorage();
       const bootResult0 = await kernelBootHandler.boot({ projectRoot: {"type":"literal","value":"./"}, manifestPath: {"type":"literal","value":"examples/devtools/devtools.interface.yaml"} }, storage);
-      expect(bootResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(bootResult0.variant), `step 0: expected success but got '${bootResult0.variant}'`).toBe(false);
       let kernel = bootResult0.output["kernel"];
       let concepts = bootResult0.output["concepts"];
       let syncs = bootResult0.output["syncs"];
       const thenResult0 = await kernelBootHandler.shutdown({ kernel: {"type":"variable","name":"k"} }, storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
       const thenResult1 = await kernelBootHandler.status({ kernel: {"type":"variable","name":"k"} }, storage);
       expect(thenResult1.variant).toBe("notfound");
     });

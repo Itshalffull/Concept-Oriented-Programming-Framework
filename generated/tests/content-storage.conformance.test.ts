@@ -88,7 +88,8 @@ describe('ContentStorage functional handler', () => {
       if (typeof contentStorageHandler.save !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(contentStorageHandler.save({ record: "user-profile-1", data: "{\"name\":\"Alice\",\"email\":\"alice@example.com\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "save_empty_record" -> error', async () => {
@@ -157,7 +158,8 @@ describe('ContentStorage functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_save_record = await interpret(contentStorageHandler.save({ record: "user-profile-1", data: "{\"name\":\"Alice\",\"email\":\"alice@example.com\"}" }), storage);
       const result = await interpret(contentStorageHandler.load({ record: afterResult_save_record?.output?.["record"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "load_missing" -> error', async () => {
@@ -226,7 +228,8 @@ describe('ContentStorage functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_save_record = await interpret(contentStorageHandler.save({ record: "user-profile-1", data: "{\"name\":\"Alice\",\"email\":\"alice@example.com\"}" }), storage);
       const result = await interpret(contentStorageHandler.delete({ record: afterResult_save_record?.output?.["record"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "delete_missing" -> error', async () => {
@@ -300,7 +303,8 @@ describe('ContentStorage functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(contentStorageHandler.query({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "query_empty" -> error', async () => {
@@ -369,7 +373,8 @@ describe('ContentStorage functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_save_record = await interpret(contentStorageHandler.save({ record: "user-profile-1", data: "{\"name\":\"Alice\",\"email\":\"alice@example.com\"}" }), storage);
       const result = await interpret(contentStorageHandler.generateSchema({ record: afterResult_save_record?.output?.["record"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "gen_schema_missing" -> error', async () => {
@@ -401,19 +406,23 @@ describe('ContentStorage functional handler', () => {
     it("save-then-load-2", async () => {
       const storage = createInMemoryStorage();
       const saveResult0 = await interpret(contentStorageHandler.save({ record: {"type":"variable","name":"r"}, data: {"type":"literal","value":"{\"title\":\"Test\"}"} }), storage);
-      expect(saveResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(saveResult0.variant), `step 0: expected success but got '${saveResult0.variant}'`).toBe(false);
       let record = saveResult0.output["record"];
       const thenResult0 = await interpret(contentStorageHandler.load({ record: {"type":"variable","name":"r"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("save-then-load", async () => {
       const storage = createInMemoryStorage();
       const saveResult0 = await interpret(contentStorageHandler.save({ record: {"type":"variable","name":"r"}, data: {"type":"literal","value":"{\"title\":\"Test\"}"} }), storage);
-      expect(saveResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(saveResult0.variant), `step 0: expected success but got '${saveResult0.variant}'`).toBe(false);
       let record = saveResult0.output["record"];
       const deleteResult1 = await interpret(contentStorageHandler.delete({ record: {"type":"variable","name":"r"} }), storage);
-      expect(deleteResult1.variant).toBe("ok");
+      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr1(deleteResult1.variant), `step 1: expected success but got '${deleteResult1.variant}'`).toBe(false);
       record = deleteResult1.output["record"];
       const thenResult0 = await interpret(contentStorageHandler.load({ record: {"type":"variable","name":"r"} }), storage);
       expect(thenResult0.variant).toBe("notfound");

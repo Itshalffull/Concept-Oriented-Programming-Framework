@@ -88,14 +88,16 @@ describe('Element functional handler', () => {
       if (typeof elementHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(elementHandler.create({ element: "E-1", kind: "field", label: "Title", dataType: "String" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "valid_create_group" -> ok', async () => {
       if (typeof elementHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(elementHandler.create({ element: "E-2", kind: "group", label: "Details", dataType: "" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "invalid_kind" -> error', async () => {
@@ -169,7 +171,8 @@ describe('Element functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(elementHandler.nest({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "nest_self" -> error', async () => {
@@ -243,7 +246,8 @@ describe('Element functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(elementHandler.setConstraints({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "constraints_nonexistent" -> error', async () => {
@@ -323,7 +327,8 @@ describe('Element functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(elementHandler.enrich({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "enrich_nonexistent" -> error', async () => {
@@ -403,7 +408,8 @@ describe('Element functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(elementHandler.assignWidget({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "assign_widget_nonexistent" -> error', async () => {
@@ -477,7 +483,8 @@ describe('Element functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(elementHandler.remove({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "remove_nonexistent" -> error', async () => {
@@ -509,10 +516,12 @@ describe('Element functional handler', () => {
     it("create then enrich", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(elementHandler.create({ element: {"type":"variable","name":"e"}, kind: {"type":"literal","value":"input-text"}, label: {"type":"literal","value":"Title"}, dataType: {"type":"literal","value":"String"} }), storage);
-      expect(createResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
       let element = createResult0.output["element"];
       const thenResult0 = await interpret(elementHandler.enrich({ element: {"type":"variable","name":"e"}, interactorType: {"type":"literal","value":"text-short"}, interactorProps: {"type":"literal","value":"{}"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

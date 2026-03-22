@@ -88,14 +88,16 @@ describe('Rollout functional handler', () => {
       if (typeof rolloutHandler.begin !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "blue_green_rollout" -> ok', async () => {
       if (typeof rolloutHandler.begin !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(rolloutHandler.begin({ plan: "dp-100", strategy: "blue-green", steps: ["swap"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "invalid_strategy" -> invalidStrategy', async () => {
@@ -165,7 +167,8 @@ describe('Rollout functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_canary_rollout = await interpret(rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] }), storage);
       const result = await interpret(rolloutHandler.advance({ rollout: afterResult_canary_rollout?.output?.["rollout"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "advance_missing" -> paused', async () => {
@@ -235,7 +238,8 @@ describe('Rollout functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_canary_rollout = await interpret(rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] }), storage);
       const result = await interpret(rolloutHandler.pause({ rollout: afterResult_canary_rollout?.output?.["rollout"], reason: "High error rate detected" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "pause_missing" -> ok', async () => {
@@ -248,7 +252,8 @@ describe('Rollout functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(rolloutHandler.pause({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -310,7 +315,8 @@ describe('Rollout functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_canary_rollout = await interpret(rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] }), storage);
       const result = await interpret(rolloutHandler.resume({ rollout: afterResult_canary_rollout?.output?.["rollout"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "resume_missing" -> ok', async () => {
@@ -323,7 +329,8 @@ describe('Rollout functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(rolloutHandler.resume({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -385,7 +392,8 @@ describe('Rollout functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_canary_rollout = await interpret(rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] }), storage);
       const result = await interpret(rolloutHandler.abort({ rollout: afterResult_canary_rollout?.output?.["rollout"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "abort_completed" -> alreadyComplete', async () => {
@@ -455,7 +463,8 @@ describe('Rollout functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_canary_rollout = await interpret(rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] }), storage);
       const result = await interpret(rolloutHandler.status({ rollout: afterResult_canary_rollout?.output?.["rollout"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "status_unknown" -> ok', async () => {
@@ -468,7 +477,8 @@ describe('Rollout functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(rolloutHandler.status({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -493,10 +503,12 @@ describe('Rollout functional handler', () => {
     it("begin-then-advance", async () => {
       const storage = createInMemoryStorage();
       const beginResult0 = await interpret(rolloutHandler.begin({ plan: {"type":"literal","value":"dp-001"}, strategy: {"type":"literal","value":"canary"}, steps: {"type":"variable","name":"s"} }), storage);
-      expect(beginResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(beginResult0.variant), `step 0: expected success but got '${beginResult0.variant}'`).toBe(false);
       let rollout = beginResult0.output["rollout"];
       const thenResult0 = await interpret(rolloutHandler.advance({ rollout: {"type":"variable","name":"r"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

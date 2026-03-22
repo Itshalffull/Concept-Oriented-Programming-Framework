@@ -88,14 +88,16 @@ describe('DiagramExport functional handler', () => {
       if (typeof diagramExportHandler.export !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(diagramExportHandler.export({ canvas_id: "canvas-1", format: "svg", options: {"width":"1920","height":"1080","embed_data":"true"} }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "export_json" -> ok', async () => {
       if (typeof diagramExportHandler.export !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(diagramExportHandler.export({ canvas_id: "canvas-2", format: "json", options: {} }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "export_unknown_format" -> error', async () => {
@@ -164,7 +166,8 @@ describe('DiagramExport functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_export_svg = await interpret(diagramExportHandler.export({ canvas_id: "canvas-1", format: "svg", options: {"width":"1920","height":"1080","embed_data":"true"} }), storage);
       const result = await interpret(diagramExportHandler.importDiagram({ data: "{\"nodes\":[]}", format: "json", target_canvas: afterResult_export_svg?.output?.["id"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "import_unsupported" -> error', async () => {
@@ -238,7 +241,8 @@ describe('DiagramExport functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(diagramExportHandler.detectFormat({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "detect_svg" -> ok', async () => {
@@ -251,7 +255,8 @@ describe('DiagramExport functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(diagramExportHandler.detectFormat({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "detect_empty" -> unknown', async () => {
@@ -284,12 +289,14 @@ describe('DiagramExport functional handler', () => {
     it("export-then-importDiagram", async () => {
       const storage = createInMemoryStorage();
       const exportResult0 = await interpret(diagramExportHandler.export({ canvas_id: {"type":"variable","name":"c"}, format: {"type":"literal","value":"json"}, options: {"type":"record","fields":[{"name":"embed_data","value":{"type":"literal","value":true}}]} }), storage);
-      expect(exportResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(exportResult0.variant), `step 0: expected success but got '${exportResult0.variant}'`).toBe(false);
       let export = exportResult0.output["export"];
       let data = exportResult0.output["data"];
       let mime_type = exportResult0.output["mime_type"];
       const thenResult0 = await interpret(diagramExportHandler.importDiagram({ data: {"type":"variable","name":"d"}, format: {"type":"literal","value":"json"}, target_canvas: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

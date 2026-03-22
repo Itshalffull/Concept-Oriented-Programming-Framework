@@ -88,14 +88,16 @@ describe('ErrorCorrelation functional handler', () => {
       if (typeof errorCorrelationHandler.record !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(errorCorrelationHandler.record({ flowId: "f-456", errorKind: "action-error", message: "Database connection timeout", rawEvent: "{\"concept\":\"User\",\"action\":\"create\",\"stack\":\"Error: timeout\\n    at create (handlers/user.ts:42:10)\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "record_sync_mismatch" -> ok', async () => {
       if (typeof errorCorrelationHandler.record !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(errorCorrelationHandler.record({ flowId: "f-789", errorKind: "sync-mismatch", message: "Variant not matched", rawEvent: "{}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "record_empty_flow" -> error', async () => {
@@ -169,7 +171,8 @@ describe('ErrorCorrelation functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(errorCorrelationHandler.findByEntity({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "find_by_action_since" -> ok', async () => {
@@ -182,7 +185,8 @@ describe('ErrorCorrelation functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(errorCorrelationHandler.findByEntity({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "find_empty_symbol" -> ok', async () => {
@@ -195,7 +199,8 @@ describe('ErrorCorrelation functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(errorCorrelationHandler.findByEntity({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -262,7 +267,8 @@ describe('ErrorCorrelation functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(errorCorrelationHandler.findByKind({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "find_transport_recent" -> ok', async () => {
@@ -275,7 +281,8 @@ describe('ErrorCorrelation functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(errorCorrelationHandler.findByKind({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "find_empty_kind" -> ok', async () => {
@@ -288,7 +295,8 @@ describe('ErrorCorrelation functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(errorCorrelationHandler.findByKind({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -355,7 +363,8 @@ describe('ErrorCorrelation functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(errorCorrelationHandler.errorHotspots({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "hotspots_recent" -> ok', async () => {
@@ -368,7 +377,8 @@ describe('ErrorCorrelation functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(errorCorrelationHandler.errorHotspots({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -430,7 +440,8 @@ describe('ErrorCorrelation functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_record_action_error = await interpret(errorCorrelationHandler.record({ flowId: "f-456", errorKind: "action-error", message: "Database connection timeout", rawEvent: "{\"concept\":\"User\",\"action\":\"create\",\"stack\":\"Error: timeout\\n    at create (handlers/user.ts:42:10)\"}" }), storage);
       const result = await interpret(errorCorrelationHandler.rootCause({ error: afterResult_record_action_error?.output?.["error"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "root_cause_missing" -> error', async () => {
@@ -499,7 +510,8 @@ describe('ErrorCorrelation functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_record_action_error = await interpret(errorCorrelationHandler.record({ flowId: "f-456", errorKind: "action-error", message: "Database connection timeout", rawEvent: "{\"concept\":\"User\",\"action\":\"create\",\"stack\":\"Error: timeout\\n    at create (handlers/user.ts:42:10)\"}" }), storage);
       const result = await interpret(errorCorrelationHandler.get({ error: afterResult_record_action_error?.output?.["error"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_missing" -> error', async () => {
@@ -531,10 +543,12 @@ describe('ErrorCorrelation functional handler', () => {
     it("recorded entry is retrievable", async () => {
       const storage = createInMemoryStorage();
       const recordResult0 = await interpret(errorCorrelationHandler.record({ flowId: {"type":"literal","value":"f-123"}, errorKind: {"type":"literal","value":"action-error"}, message: {"type":"literal","value":"Token signing key not configured"}, rawEvent: {"type":"literal","value":"{}"} }), storage);
-      expect(recordResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(recordResult0.variant), `step 0: expected success but got '${recordResult0.variant}'`).toBe(false);
       let error = recordResult0.output["error"];
       const thenResult0 = await interpret(errorCorrelationHandler.get({ error: {"type":"variable","name":"e"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

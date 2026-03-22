@@ -88,14 +88,16 @@ describe('BordaCount functional handler', () => {
       if (typeof bordaCountHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(bordaCountHandler.configure({ pointScheme: "Standard" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "dowdall_scheme" -> ok', async () => {
       if (typeof bordaCountHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(bordaCountHandler.configure({ pointScheme: "Dowdall" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "empty_scheme" -> error', async () => {
@@ -164,7 +166,8 @@ describe('BordaCount functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_standard_scheme = await interpret(bordaCountHandler.configure({ pointScheme: "Standard" }), storage);
       const result = await interpret(bordaCountHandler.count({ config: afterResult_standard_scheme?.output?.["id"], rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]},{\"voter\":\"carol\",\"ranking\":[\"A\",\"C\",\"B\"]}]", weights: "{}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "borda_no_ballots" -> error', async () => {

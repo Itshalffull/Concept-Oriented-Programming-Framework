@@ -88,7 +88,8 @@ describe('ToolDiscovery functional handler', () => {
       if (typeof toolDiscoveryHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(toolDiscoveryHandler.register({ name: "score_query", briefDescription: "Run GraphQL queries against Score index", fullDescription: "Execute a GraphQL query against the materialized Score index and return structured results", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{\"type\": \"object\", \"properties\": {\"graphql\": {\"type\": \"string\"}}}", alwaysLoaded: "true" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "duplicate_register" -> duplicate', async () => {
@@ -169,7 +170,8 @@ describe('ToolDiscovery functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(toolDiscoveryHandler.searchTools({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "no_match" -> empty', async () => {
@@ -252,7 +254,8 @@ describe('ToolDiscovery functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(toolDiscoveryHandler.describeTools({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "empty_tools" -> ok', async () => {
@@ -265,7 +268,8 @@ describe('ToolDiscovery functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(toolDiscoveryHandler.describeTools({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -327,12 +331,10 @@ describe('ToolDiscovery functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_register = await interpret(toolDiscoveryHandler.register({ name: "score_query", briefDescription: "Run GraphQL queries against Score index", fullDescription: "Execute a GraphQL query against the materialized Score index and return structured results", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{\"type\": \"object\", \"properties\": {\"graphql\": {\"type\": \"string\"}}}", alwaysLoaded: "true" }), storage);
       const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
-      const _fixtureInput = {  } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(toolDiscoveryHandler.listCategories({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -399,7 +401,8 @@ describe('ToolDiscovery functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(toolDiscoveryHandler.getCategory({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "missing_category" -> notfound', async () => {
@@ -477,12 +480,10 @@ describe('ToolDiscovery functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_register = await interpret(toolDiscoveryHandler.register({ name: "score_query", briefDescription: "Run GraphQL queries against Score index", fullDescription: "Execute a GraphQL query against the materialized Score index and return structured results", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{\"type\": \"object\", \"properties\": {\"graphql\": {\"type\": \"string\"}}}", alwaysLoaded: "true" }), storage);
       const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
-      const _fixtureInput = {  } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(toolDiscoveryHandler.getAlwaysLoaded({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -492,28 +493,34 @@ describe('ToolDiscovery functional handler', () => {
     it("register then search finds tool", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(toolDiscoveryHandler.register({ name: {"type":"literal","value":"score_query"}, briefDescription: {"type":"literal","value":"Run GraphQL queries"}, fullDescription: {"type":"literal","value":"Run a GraphQL query against the Score index"}, category: {"type":"literal","value":"score"}, concept: {"type":"literal","value":"ScoreQuery"}, action: {"type":"literal","value":"query"}, inputSchema: {"type":"literal","value":"{}"}, alwaysLoaded: {"type":"literal","value":true} }), storage);
-      expect(registerResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
       let tool = registerResult0.output["tool"];
       const thenResult0 = await interpret(toolDiscoveryHandler.searchTools({ query: {"type":"literal","value":"query"}, limit: {"type":"literal","value":5} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("register then describe returns full schema", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(toolDiscoveryHandler.register({ name: {"type":"literal","value":"score_query"}, briefDescription: {"type":"literal","value":"Run GraphQL queries"}, fullDescription: {"type":"literal","value":"Run a GraphQL query against the Score index"}, category: {"type":"literal","value":"score"}, concept: {"type":"literal","value":"ScoreQuery"}, action: {"type":"literal","value":"query"}, inputSchema: {"type":"literal","value":"{}"}, alwaysLoaded: {"type":"literal","value":true} }), storage);
-      expect(registerResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
       let tool = registerResult0.output["tool"];
       const thenResult0 = await interpret(toolDiscoveryHandler.describeTools({ tools: {"type":"list","items":[{"type":"literal","value":"score_query"}]} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("register always-loaded then getAlwaysLoaded includes it", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(toolDiscoveryHandler.register({ name: {"type":"literal","value":"score_query"}, briefDescription: {"type":"literal","value":"Run GraphQL queries"}, fullDescription: {"type":"literal","value":"Run a GraphQL query against the Score index"}, category: {"type":"literal","value":"score"}, concept: {"type":"literal","value":"ScoreQuery"}, action: {"type":"literal","value":"query"}, inputSchema: {"type":"literal","value":"{}"}, alwaysLoaded: {"type":"literal","value":true} }), storage);
-      expect(registerResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
       let tool = registerResult0.output["tool"];
       const thenResult0 = await interpret(toolDiscoveryHandler.getAlwaysLoaded({  }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

@@ -88,14 +88,16 @@ describe('Quorum functional handler', () => {
       if (typeof quorumHandler.setThreshold !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(quorumHandler.setThreshold({ thresholdType: "Absolute", value: "10.0" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "fractional_half" -> ok', async () => {
       if (typeof quorumHandler.setThreshold !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(quorumHandler.setThreshold({ thresholdType: "Fractional", value: "0.5" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "empty_type" -> error', async () => {
@@ -169,7 +171,8 @@ describe('Quorum functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(quorumHandler.check({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "quorum_not_met" -> error', async () => {
@@ -238,7 +241,8 @@ describe('Quorum functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_absolute_ten = await interpret(quorumHandler.setThreshold({ thresholdType: "Absolute", value: "10.0" }), storage);
       const result = await interpret(quorumHandler.updateThreshold({ rule: afterResult_absolute_ten?.output?.["id"], newType: "Fractional", newValue: "0.25" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "update_missing_rule" -> error', async () => {

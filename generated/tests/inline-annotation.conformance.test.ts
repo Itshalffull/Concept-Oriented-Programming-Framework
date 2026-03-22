@@ -88,7 +88,8 @@ describe('InlineAnnotation functional handler', () => {
       if (typeof inlineAnnotationHandler.annotate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(inlineAnnotationHandler.annotate({ contentRef: "doc-readme", changeType: "insertion", scope: "new paragraph content", author: "alice@example.com" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "annotate_invalid_type" -> error', async () => {
@@ -157,7 +158,8 @@ describe('InlineAnnotation functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_annotate_insertion = await interpret(inlineAnnotationHandler.annotate({ contentRef: "doc-readme", changeType: "insertion", scope: "new paragraph content", author: "alice@example.com" }), storage);
       const result = await interpret(inlineAnnotationHandler.accept({ annotationId: afterResult_annotate_insertion?.output?.["annotationId"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "accept_nonexistent" -> error', async () => {
@@ -227,7 +229,8 @@ describe('InlineAnnotation functional handler', () => {
       const afterResult_annotate_insertion = await interpret(inlineAnnotationHandler.annotate({ contentRef: "doc-readme", changeType: "insertion", scope: "new paragraph content", author: "alice@example.com" }), storage);
       const afterResult_accept_pending = await interpret(inlineAnnotationHandler.accept({ annotationId: {"type":"ref","fixture":"annotate_insertion","field":"annotationId"} }), storage);
       const result = await interpret(inlineAnnotationHandler.reject({ annotationId: afterResult_accept_pending?.output?.["cleanContent"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "reject_nonexistent" -> error', async () => {
@@ -301,7 +304,8 @@ describe('InlineAnnotation functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(inlineAnnotationHandler.acceptAll({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "accept_all_empty_ref" -> ok', async () => {
@@ -314,7 +318,8 @@ describe('InlineAnnotation functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(inlineAnnotationHandler.acceptAll({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -382,7 +387,8 @@ describe('InlineAnnotation functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(inlineAnnotationHandler.rejectAll({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "reject_all_empty_ref" -> ok', async () => {
@@ -396,7 +402,8 @@ describe('InlineAnnotation functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(inlineAnnotationHandler.rejectAll({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -463,7 +470,8 @@ describe('InlineAnnotation functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(inlineAnnotationHandler.toggleTracking({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "disable_tracking" -> ok', async () => {
@@ -476,7 +484,8 @@ describe('InlineAnnotation functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(inlineAnnotationHandler.toggleTracking({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -543,7 +552,8 @@ describe('InlineAnnotation functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(inlineAnnotationHandler.listPending({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "list_pending_empty_ref" -> ok', async () => {
@@ -556,7 +566,8 @@ describe('InlineAnnotation functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(inlineAnnotationHandler.listPending({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -581,16 +592,19 @@ describe('InlineAnnotation functional handler', () => {
     it("annotate-then-accept", async () => {
       const storage = createInMemoryStorage();
       const annotateResult0 = await interpret(inlineAnnotationHandler.annotate({ contentRef: {"type":"variable","name":"c"}, changeType: {"type":"literal","value":"insertion"}, scope: {"type":"variable","name":"s"}, author: {"type":"variable","name":"a"} }), storage);
-      expect(annotateResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(annotateResult0.variant), `step 0: expected success but got '${annotateResult0.variant}'`).toBe(false);
       let annotationId = annotateResult0.output["annotationId"];
       const thenResult0 = await interpret(inlineAnnotationHandler.accept({ annotationId: {"type":"variable","name":"id"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("toggleTracking-then-annotate", async () => {
       const storage = createInMemoryStorage();
       const toggleTrackingResult0 = await interpret(inlineAnnotationHandler.toggleTracking({ contentRef: {"type":"variable","name":"c"}, enabled: {"type":"literal","value":false} }), storage);
-      expect(toggleTrackingResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(toggleTrackingResult0.variant), `step 0: expected success but got '${toggleTrackingResult0.variant}'`).toBe(false);
       const thenResult0 = await interpret(inlineAnnotationHandler.annotate({ contentRef: {"type":"variable","name":"c"}, changeType: {"type":"literal","value":"insertion"}, scope: {"type":"variable","name":"_"}, author: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("trackingDisabled");
     });

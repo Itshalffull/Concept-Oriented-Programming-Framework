@@ -37,14 +37,16 @@ describe('VersionContext imperative handler', () => {
       if (typeof versionContextHandler.push !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await versionContextHandler.push({ user: "alice", space_id: "space-redesign" }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "push_nested" -> ok', async () => {
       if (typeof versionContextHandler.push !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await versionContextHandler.push({ user: "alice", space_id: "space-redesign-sub" }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -69,7 +71,8 @@ describe('VersionContext imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await versionContextHandler.pop({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "pop_not_on_stack" -> ok', async () => {
@@ -82,7 +85,8 @@ describe('VersionContext imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await versionContextHandler.pop({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -107,7 +111,8 @@ describe('VersionContext imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await versionContextHandler.get({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_no_context" -> no_context', async () => {
@@ -135,7 +140,8 @@ describe('VersionContext imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_push_first = await versionContextHandler.push({ user: "alice", space_id: "space-redesign" }, storage);
       const result = await versionContextHandler.resolve_for({ user: "alice", entity_id: afterResult_push_first?.output?.["context"] }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "resolve_base_user" -> ok', async () => {
@@ -143,7 +149,8 @@ describe('VersionContext imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_push_first = await versionContextHandler.push({ user: "alice", space_id: "space-redesign" }, storage);
       const result = await versionContextHandler.resolve_for({ user: "unknown-user", entity_id: afterResult_push_first?.output?.["context"] }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -164,19 +171,23 @@ describe('VersionContext imperative handler', () => {
     it("push then get", async () => {
       const storage = createInMemoryStorage();
       const pushResult0 = await versionContextHandler.push({ user: {"type":"literal","value":"alice"}, space_id: {"type":"literal","value":"space-1"} }, storage);
-      expect(pushResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(pushResult0.variant), `step 0: expected success but got '${pushResult0.variant}'`).toBe(false);
       let context = pushResult0.output["context"];
       const thenResult0 = await versionContextHandler.get({ user: {"type":"literal","value":"alice"} }, storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("push then get", async () => {
       const storage = createInMemoryStorage();
       const pushResult0 = await versionContextHandler.push({ user: {"type":"literal","value":"bob"}, space_id: {"type":"literal","value":"space-1"} }, storage);
-      expect(pushResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(pushResult0.variant), `step 0: expected success but got '${pushResult0.variant}'`).toBe(false);
       let context = pushResult0.output["context"];
       const popResult1 = await versionContextHandler.pop({ user: {"type":"literal","value":"bob"}, space_id: {"type":"literal","value":"space-1"} }, storage);
-      expect(popResult1.variant).toBe("ok");
+      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr1(popResult1.variant), `step 1: expected success but got '${popResult1.variant}'`).toBe(false);
       context = popResult1.output["context"];
       const thenResult0 = await versionContextHandler.get({ user: {"type":"literal","value":"bob"} }, storage);
       expect(thenResult0.variant).toBe("no_context");

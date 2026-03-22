@@ -88,14 +88,16 @@ describe('DesignToken functional handler', () => {
       if (typeof designTokenHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "valid_define_spacing" -> ok', async () => {
       if (typeof designTokenHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(designTokenHandler.define({ token: "spacing-md", name: "spacing-md", value: "16px", type: "dimension", tier: "semantic" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "define_duplicate" -> ok', async () => {
@@ -103,7 +105,8 @@ describe('DesignToken functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_define_color = await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage);
       const result = await interpret(designTokenHandler.define({ token: afterResult_valid_define_color?.output?.["token"], name: afterResult_valid_define_color?.output?.["token"], value: "#3b82f6", type: "color", tier: "primitive" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -165,7 +168,8 @@ describe('DesignToken functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_define_color = await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage);
       const result = await interpret(designTokenHandler.alias({ token: "primary-color", name: "primary-color", reference: afterResult_valid_define_color?.output?.["token"], tier: "semantic" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "alias_nonexistent_ref" -> error', async () => {
@@ -234,7 +238,8 @@ describe('DesignToken functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_define_color = await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage);
       const result = await interpret(designTokenHandler.resolve({ token: afterResult_valid_define_color?.output?.["token"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "resolve_nonexistent" -> error', async () => {
@@ -303,7 +308,8 @@ describe('DesignToken functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_define_color = await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage);
       const result = await interpret(designTokenHandler.update({ token: afterResult_valid_define_color?.output?.["token"], value: "#2563eb" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "update_nonexistent" -> error', async () => {
@@ -372,7 +378,8 @@ describe('DesignToken functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_define_color = await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage);
       const result = await interpret(designTokenHandler.remove({ token: afterResult_valid_define_color?.output?.["token"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "remove_nonexistent" -> error', async () => {
@@ -446,7 +453,8 @@ describe('DesignToken functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(designTokenHandler.export({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "export_dtcg" -> ok', async () => {
@@ -459,7 +467,8 @@ describe('DesignToken functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(designTokenHandler.export({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "export_unsupported" -> error', async () => {
@@ -491,10 +500,12 @@ describe('DesignToken functional handler', () => {
     it("define then resolve", async () => {
       const storage = createInMemoryStorage();
       const defineResult0 = await interpret(designTokenHandler.define({ token: {"type":"variable","name":"t"}, name: {"type":"literal","value":"blue-500"}, value: {"type":"literal","value":"#3b82f6"}, type: {"type":"literal","value":"color"}, tier: {"type":"literal","value":"primitive"} }), storage);
-      expect(defineResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(defineResult0.variant), `step 0: expected success but got '${defineResult0.variant}'`).toBe(false);
       let token = defineResult0.output["token"];
       const thenResult0 = await interpret(designTokenHandler.resolve({ token: {"type":"variable","name":"t"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

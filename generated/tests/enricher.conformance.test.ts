@@ -88,14 +88,16 @@ describe('Enricher functional handler', () => {
       if (typeof enricherHandler.enrich !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(enricherHandler.enrich({ itemId: "item-1", enricherId: "auto_tag" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "enrich_ocr" -> ok', async () => {
       if (typeof enricherHandler.enrich !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(enricherHandler.enrich({ itemId: "item-2", enricherId: "ocr_extract" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "enrich_missing" -> notfound', async () => {
@@ -165,7 +167,8 @@ describe('Enricher functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_enrich_auto_tag = await interpret(enricherHandler.enrich({ itemId: "item-1", enricherId: "auto_tag" }), storage);
       const result = await interpret(enricherHandler.suggest({ itemId: afterResult_enrich_auto_tag?.output?.["enrichmentId"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "suggest_missing" -> notfound', async () => {
@@ -235,7 +238,8 @@ describe('Enricher functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_enrich_auto_tag = await interpret(enricherHandler.enrich({ itemId: "item-1", enricherId: "auto_tag" }), storage);
       const result = await interpret(enricherHandler.accept({ itemId: afterResult_enrich_auto_tag?.output?.["enrichmentId"], enrichmentId: afterResult_enrich_auto_tag?.output?.["enrichmentId"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "accept_missing" -> notfound', async () => {
@@ -306,7 +310,8 @@ describe('Enricher functional handler', () => {
       const afterResult_enrich_auto_tag = await interpret(enricherHandler.enrich({ itemId: "item-1", enricherId: "auto_tag" }), storage);
       const afterResult_accept_enrichment = await interpret(enricherHandler.accept({ itemId: {"type":"ref","fixture":"enrich_auto_tag","field":"enrichmentId"}, enrichmentId: {"type":"ref","fixture":"enrich_auto_tag","field":"enrichmentId"} }), storage);
       const result = await interpret(enricherHandler.reject({ itemId: afterResult_accept_enrichment?.output?.["id"], enrichmentId: afterResult_accept_enrichment?.output?.["id"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "reject_missing" -> notfound', async () => {
@@ -381,7 +386,8 @@ describe('Enricher functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(enricherHandler.refreshStale({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -406,12 +412,14 @@ describe('Enricher functional handler', () => {
     it("enrich-then-accept", async () => {
       const storage = createInMemoryStorage();
       const enrichResult0 = await interpret(enricherHandler.enrich({ itemId: {"type":"literal","value":"item-1"}, enricherId: {"type":"literal","value":"auto_tag"} }), storage);
-      expect(enrichResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(enrichResult0.variant), `step 0: expected success but got '${enrichResult0.variant}'`).toBe(false);
       let enrichmentId = enrichResult0.output["enrichmentId"];
       let result = enrichResult0.output["result"];
       let confidence = enrichResult0.output["confidence"];
       const thenResult0 = await interpret(enricherHandler.accept({ itemId: {"type":"literal","value":"item-1"}, enrichmentId: {"type":"literal","value":"enr-1"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

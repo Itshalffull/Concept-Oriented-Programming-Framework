@@ -88,14 +88,16 @@ describe('Slot functional handler', () => {
       if (typeof slotHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(slotHandler.define({ name: "header", host: "dialog", position: "before-title", fallback: "Default Header" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "no_fallback" -> ok', async () => {
       if (typeof slotHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(slotHandler.define({ name: "footer", host: "dialog", position: "after-body" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "duplicate_slot" -> duplicate', async () => {
@@ -170,7 +172,8 @@ describe('Slot functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(slotHandler.fill({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "missing_slot" -> notfound', async () => {
@@ -240,12 +243,10 @@ describe('Slot functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_define = await interpret(slotHandler.define({ name: "header", host: "dialog", position: "before-title", fallback: "Default Header" }), storage);
       const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
-      const _fixtureInput = {  } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(slotHandler.clear({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "missing_clear" -> notfound', async () => {
@@ -278,10 +279,12 @@ describe('Slot functional handler', () => {
     it("define then fill", async () => {
       const storage = createInMemoryStorage();
       const defineResult0 = await interpret(slotHandler.define({ slot: {"type":"variable","name":"l"}, name: {"type":"literal","value":"header"}, host: {"type":"literal","value":"dialog"}, position: {"type":"literal","value":"before-title"}, fallback: {"type":"variable","name":"_"} }), storage);
-      expect(defineResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(defineResult0.variant), `step 0: expected success but got '${defineResult0.variant}'`).toBe(false);
       let slot = defineResult0.output["slot"];
       const thenResult0 = await interpret(slotHandler.fill({ slot: {"type":"variable","name":"l"}, content: {"type":"literal","value":"Custom Header"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

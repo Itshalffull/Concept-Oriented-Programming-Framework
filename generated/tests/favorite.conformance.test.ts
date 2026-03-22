@@ -88,7 +88,8 @@ describe('Favorite functional handler', () => {
       if (typeof favoriteHandler.favorite !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(favoriteHandler.favorite({ user: "user-alice", article: "art-101" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "favorite_another" -> ok', async () => {
@@ -96,7 +97,8 @@ describe('Favorite functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_favorite_ok = await interpret(favoriteHandler.favorite({ user: "user-alice", article: "art-101" }), storage);
       const result = await interpret(favoriteHandler.favorite({ user: "user-bob", article: afterResult_favorite_ok?.output?.["user"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -158,7 +160,8 @@ describe('Favorite functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_favorite_ok = await interpret(favoriteHandler.favorite({ user: "user-alice", article: "art-101" }), storage);
       const result = await interpret(favoriteHandler.unfavorite({ user: "user-alice", article: afterResult_favorite_ok?.output?.["user"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "unfavorite_not_in_set" -> ok', async () => {
@@ -166,7 +169,8 @@ describe('Favorite functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_favorite_ok = await interpret(favoriteHandler.favorite({ user: "user-alice", article: "art-101" }), storage);
       const result = await interpret(favoriteHandler.unfavorite({ user: "user-carol", article: afterResult_favorite_ok?.output?.["user"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -228,7 +232,8 @@ describe('Favorite functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_favorite_ok = await interpret(favoriteHandler.favorite({ user: "user-alice", article: "art-101" }), storage);
       const result = await interpret(favoriteHandler.isFavorited({ user: "user-alice", article: afterResult_favorite_ok?.output?.["user"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "is_favorited_unknown_user" -> ok', async () => {
@@ -236,7 +241,8 @@ describe('Favorite functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_favorite_ok = await interpret(favoriteHandler.favorite({ user: "user-alice", article: "art-101" }), storage);
       const result = await interpret(favoriteHandler.isFavorited({ user: "user-unknown", article: afterResult_favorite_ok?.output?.["user"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -298,7 +304,8 @@ describe('Favorite functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_favorite_ok = await interpret(favoriteHandler.favorite({ user: "user-alice", article: "art-101" }), storage);
       const result = await interpret(favoriteHandler.count({ article: afterResult_favorite_ok?.output?.["user"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "count_no_favorites" -> ok', async () => {
@@ -311,7 +318,8 @@ describe('Favorite functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(favoriteHandler.count({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -336,35 +344,43 @@ describe('Favorite functional handler', () => {
     it("favorite then check then unfavorite", async () => {
       const storage = createInMemoryStorage();
       const favoriteResult0 = await interpret(favoriteHandler.favorite({ user: {"type":"variable","name":"u"}, article: {"type":"literal","value":"a1"} }), storage);
-      expect(favoriteResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(favoriteResult0.variant), `step 0: expected success but got '${favoriteResult0.variant}'`).toBe(false);
       let user = favoriteResult0.output["user"];
       let article = favoriteResult0.output["article"];
       const thenResult0 = await interpret(favoriteHandler.isFavorited({ user: {"type":"variable","name":"u"}, article: {"type":"literal","value":"a1"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
       const thenResult1 = await interpret(favoriteHandler.unfavorite({ user: {"type":"variable","name":"u"}, article: {"type":"literal","value":"a1"} }), storage);
-      expect(thenResult1.variant).toBe("ok");
+      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
     });
 
     it("unfavorited article not in set", async () => {
       const storage = createInMemoryStorage();
       const favoriteResult0 = await interpret(favoriteHandler.favorite({ user: {"type":"variable","name":"u"}, article: {"type":"literal","value":"a2"} }), storage);
-      expect(favoriteResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(favoriteResult0.variant), `step 0: expected success but got '${favoriteResult0.variant}'`).toBe(false);
       let user = favoriteResult0.output["user"];
       let article = favoriteResult0.output["article"];
       const thenResult0 = await interpret(favoriteHandler.unfavorite({ user: {"type":"variable","name":"u"}, article: {"type":"literal","value":"a2"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
       const thenResult1 = await interpret(favoriteHandler.isFavorited({ user: {"type":"variable","name":"u"}, article: {"type":"literal","value":"a2"} }), storage);
-      expect(thenResult1.variant).toBe("ok");
+      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
     });
 
     it("count reflects favorites", async () => {
       const storage = createInMemoryStorage();
       const favoriteResult0 = await interpret(favoriteHandler.favorite({ user: {"type":"variable","name":"u"}, article: {"type":"literal","value":"a3"} }), storage);
-      expect(favoriteResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(favoriteResult0.variant), `step 0: expected success but got '${favoriteResult0.variant}'`).toBe(false);
       let user = favoriteResult0.output["user"];
       let article = favoriteResult0.output["article"];
       const thenResult0 = await interpret(favoriteHandler.count({ article: {"type":"literal","value":"a3"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

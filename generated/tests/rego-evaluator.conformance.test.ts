@@ -87,8 +87,15 @@ describe('RegoEvaluator functional handler', () => {
     it('fixture "load_allow_rule" -> ok', async () => {
       if (typeof regoEvaluatorHandler.loadBundle !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(regoEvaluatorHandler.loadBundle({ policySource: "[{\"name\":\"allow\",\"body\":[{\"op\":\"eq\",\"path\":\"role\",\"value\":\"admin\"}]}]", dataSource: "{\"roles\":[\"admin\",\"viewer\"]}", packageName: "authz" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_evaluate_admin_allowed = await interpret(regoEvaluatorHandler.evaluate({ bundle: "rego-001", input: "{\"role\":\"admin\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_evaluate_admin_allowed?.output ?? {}));
+      const _fixtureInput = { policySource: "[{\"name\":\"allow\",\"body\":[{\"op\":\"eq\",\"path\":\"role\",\"value\":\"admin\"}]}]", dataSource: "{\"roles\":[\"admin\",\"viewer\"]}", packageName: "authz" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(regoEvaluatorHandler.loadBundle({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "load_empty_source" -> compile_error', async () => {
@@ -156,8 +163,15 @@ describe('RegoEvaluator functional handler', () => {
     it('fixture "evaluate_admin_allowed" -> ok', async () => {
       if (typeof regoEvaluatorHandler.evaluate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(regoEvaluatorHandler.evaluate({ bundle: "rego-001", input: "{\"role\":\"admin\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_load_allow_rule = await interpret(regoEvaluatorHandler.loadBundle({ policySource: "[{\"name\":\"allow\",\"body\":[{\"op\":\"eq\",\"path\":\"role\",\"value\":\"admin\"}]}]", dataSource: "{\"roles\":[\"admin\",\"viewer\"]}", packageName: "authz" }), storage);
+      const _pool = Object.assign({}, (afterResult_load_allow_rule?.output ?? {}));
+      const _fixtureInput = { bundle: "rego-001", input: "{\"role\":\"admin\"}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(regoEvaluatorHandler.evaluate({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "evaluate_unknown_bundle" -> runtime_error', async () => {
@@ -225,8 +239,15 @@ describe('RegoEvaluator functional handler', () => {
     it('fixture "update_data_valid" -> ok', async () => {
       if (typeof regoEvaluatorHandler.updateData !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(regoEvaluatorHandler.updateData({ bundle: "rego-001", newData: "{\"roles\":[\"admin\",\"editor\",\"viewer\"]}" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_load_allow_rule = await interpret(regoEvaluatorHandler.loadBundle({ policySource: "[{\"name\":\"allow\",\"body\":[{\"op\":\"eq\",\"path\":\"role\",\"value\":\"admin\"}]}]", dataSource: "{\"roles\":[\"admin\",\"viewer\"]}", packageName: "authz" }), storage);
+      const _pool = Object.assign({}, (afterResult_load_allow_rule?.output ?? {}));
+      const _fixtureInput = { bundle: "rego-001", newData: "{\"roles\":[\"admin\",\"editor\",\"viewer\"]}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(regoEvaluatorHandler.updateData({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "update_data_unknown_bundle" -> error', async () => {

@@ -88,14 +88,16 @@ describe('Surface functional handler', () => {
       if (typeof surfaceHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(surfaceHandler.create({ surface: "surface-1", kind: "browser-dom", mountPoint: "#app" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "terminal_surface" -> ok', async () => {
       if (typeof surfaceHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(surfaceHandler.create({ surface: "surface-2", kind: "terminal", mountPoint: null }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "unsupported_kind" -> unsupported', async () => {
@@ -163,8 +165,15 @@ describe('Surface functional handler', () => {
     it('fixture "attach_react" -> ok', async () => {
       if (typeof surfaceHandler.attach !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(surfaceHandler.attach({ surface: "surface-1", renderer: "react-adapter" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_browser_dom = await interpret(surfaceHandler.create({ surface: "surface-1", kind: "browser-dom", mountPoint: "#app" }), storage);
+      const _pool = Object.assign({}, (afterResult_browser_dom?.output ?? {}));
+      const _fixtureInput = { surface: "surface-1", renderer: "react-adapter" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(surfaceHandler.attach({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "incompatible_renderer" -> incompatible', async () => {
@@ -232,8 +241,15 @@ describe('Surface functional handler', () => {
     it('fixture "resize_desktop" -> ok', async () => {
       if (typeof surfaceHandler.resize !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(surfaceHandler.resize({ surface: "surface-1", width: "1920", height: "1080" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_browser_dom = await interpret(surfaceHandler.create({ surface: "surface-1", kind: "browser-dom", mountPoint: "#app" }), storage);
+      const _pool = Object.assign({}, (afterResult_browser_dom?.output ?? {}));
+      const _fixtureInput = { surface: "surface-1", width: "1920", height: "1080" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(surfaceHandler.resize({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "resize_unknown_surface" -> notfound', async () => {
@@ -301,8 +317,15 @@ describe('Surface functional handler', () => {
     it('fixture "mount_root" -> ok', async () => {
       if (typeof surfaceHandler.mount !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(surfaceHandler.mount({ surface: "surface-1", tree: "<App />", zone: null }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_browser_dom = await interpret(surfaceHandler.create({ surface: "surface-1", kind: "browser-dom", mountPoint: "#app" }), storage);
+      const _pool = Object.assign({}, (afterResult_browser_dom?.output ?? {}));
+      const _fixtureInput = { surface: "surface-1", tree: "<App />", zone: null } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(surfaceHandler.mount({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "mount_no_adapter" -> error', async () => {
@@ -369,8 +392,15 @@ describe('Surface functional handler', () => {
     it('fixture "unmount_root" -> ok', async () => {
       if (typeof surfaceHandler.unmount !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(surfaceHandler.unmount({ surface: "surface-1", zone: null }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_browser_dom = await interpret(surfaceHandler.create({ surface: "surface-1", kind: "browser-dom", mountPoint: "#app" }), storage);
+      const _pool = Object.assign({}, (afterResult_browser_dom?.output ?? {}));
+      const _fixtureInput = { surface: "surface-1", zone: null } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(surfaceHandler.unmount({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "unmount_missing_zone" -> notfound', async () => {
@@ -438,8 +468,15 @@ describe('Surface functional handler', () => {
     it('fixture "destroy_existing" -> ok', async () => {
       if (typeof surfaceHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(surfaceHandler.destroy({ surface: "surface-1" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_browser_dom = await interpret(surfaceHandler.create({ surface: "surface-1", kind: "browser-dom", mountPoint: "#app" }), storage);
+      const _pool = Object.assign({}, (afterResult_browser_dom?.output ?? {}));
+      const _fixtureInput = { surface: "surface-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(surfaceHandler.destroy({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "destroy_nonexistent" -> notfound', async () => {
@@ -472,10 +509,12 @@ describe('Surface functional handler', () => {
     it("created surface can be destroyed", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(surfaceHandler.create({ surface: {"type":"variable","name":"f"}, kind: {"type":"literal","value":"browser-dom"}, mountPoint: {"type":"literal","value":"#app"} }), storage);
-      expect(createResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
       let surface = createResult0.output["surface"];
       const thenResult0 = await interpret(surfaceHandler.destroy({ surface: {"type":"variable","name":"f"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

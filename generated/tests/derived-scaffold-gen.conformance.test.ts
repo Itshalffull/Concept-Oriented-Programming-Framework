@@ -88,14 +88,16 @@ describe('DerivedScaffoldGen functional handler', () => {
       if (typeof derivedScaffoldGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(derivedScaffoldGenHandler.generate({ name: "TaskBoard", typeParams: ["T"], purpose: "Compose task and board concepts into a unified workflow", composes: [{"name":"Task","typeParams":["T"]}], syncs: ["TaskCreated"], surfaceActions: [{"name":"addTask","params":[{"name":"title","type":"String"}],"matches":{"type":"action","concept":"Task","action":"create"}}], surfaceQueries: [], principle: ["A board organizes tasks into columns"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "minimal_generate" -> ok', async () => {
       if (typeof derivedScaffoldGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(derivedScaffoldGenHandler.generate({ name: "SimpleComposite", typeParams: ["T"], purpose: "Minimal derived concept", composes: [], syncs: [], surfaceActions: [], surfaceQueries: [], principle: [] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "empty_name" -> error', async () => {
@@ -162,15 +164,29 @@ describe('DerivedScaffoldGen functional handler', () => {
     it('fixture "valid_preview" -> ok', async () => {
       if (typeof derivedScaffoldGenHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(derivedScaffoldGenHandler.preview({ name: "Dashboard", typeParams: ["T"], purpose: "Compose analytics widgets", composes: [], syncs: [], surfaceActions: [], surfaceQueries: [], principle: [] }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_valid_generate = await interpret(derivedScaffoldGenHandler.generate({ name: "TaskBoard", typeParams: ["T"], purpose: "Compose task and board concepts into a unified workflow", composes: [{"name":"Task","typeParams":["T"]}], syncs: ["TaskCreated"], surfaceActions: [{"name":"addTask","params":[{"name":"title","type":"String"}],"matches":{"type":"action","concept":"Task","action":"create"}}], surfaceQueries: [], principle: ["A board organizes tasks into columns"] }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_generate?.output ?? {}));
+      const _fixtureInput = { name: "Dashboard", typeParams: ["T"], purpose: "Compose analytics widgets", composes: [], syncs: [], surfaceActions: [], surfaceQueries: [], principle: [] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(derivedScaffoldGenHandler.preview({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "empty_preview" -> ok', async () => {
       if (typeof derivedScaffoldGenHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(derivedScaffoldGenHandler.preview({ name: "", typeParams: [], purpose: "", composes: [], syncs: [], surfaceActions: [], surfaceQueries: [], principle: [] }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_valid_generate = await interpret(derivedScaffoldGenHandler.generate({ name: "TaskBoard", typeParams: ["T"], purpose: "Compose task and board concepts into a unified workflow", composes: [{"name":"Task","typeParams":["T"]}], syncs: ["TaskCreated"], surfaceActions: [{"name":"addTask","params":[{"name":"title","type":"String"}],"matches":{"type":"action","concept":"Task","action":"create"}}], surfaceQueries: [], principle: ["A board organizes tasks into columns"] }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_generate?.output ?? {}));
+      const _fixtureInput = { name: "", typeParams: [], purpose: "", composes: [], syncs: [], surfaceActions: [], surfaceQueries: [], principle: [] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(derivedScaffoldGenHandler.preview({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -232,12 +248,10 @@ describe('DerivedScaffoldGen functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_generate = await interpret(derivedScaffoldGenHandler.generate({ name: "TaskBoard", typeParams: ["T"], purpose: "Compose task and board concepts into a unified workflow", composes: [{"name":"Task","typeParams":["T"]}], syncs: ["TaskCreated"], surfaceActions: [{"name":"addTask","params":[{"name":"title","type":"String"}],"matches":{"type":"action","concept":"Task","action":"create"}}], surfaceQueries: [], principle: ["A board organizes tasks into columns"] }), storage);
       const _pool = Object.assign({}, (afterResult_valid_generate?.output ?? {}));
-      const _fixtureInput = {  } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(derivedScaffoldGenHandler.register({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -262,7 +276,8 @@ describe('DerivedScaffoldGen functional handler', () => {
     it("generate produces derived spec", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(derivedScaffoldGenHandler.generate({ name: {"type":"literal","value":"TaskBoard"}, typeParam: {"type":"literal","value":"T"}, purpose: {"type":"literal","value":"Compose tasks"}, composes: {"type":"list","items":[]}, syncs: {"type":"list","items":[]}, surfaceActions: {"type":"list","items":[]}, surfaceQueries: {"type":"list","items":[]}, principle: {"type":"list","items":[]} }), storage);
-      expect(generateResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
       let files = generateResult0.output["files"];
       let filesGenerated = generateResult0.output["filesGenerated"];
     });

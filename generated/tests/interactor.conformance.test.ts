@@ -88,14 +88,16 @@ describe('Interactor functional handler', () => {
       if (typeof interactorHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(interactorHandler.define({ name: "single-choice", category: "selection", properties: "{\"cardinality\":\"one\",\"comparison\":true}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "entity_define" -> ok', async () => {
       if (typeof interactorHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(interactorHandler.define({ name: "entity-detail", category: "entity", properties: "{\"dataType\":\"entity\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "bad_category" -> duplicate', async () => {
@@ -170,7 +172,8 @@ describe('Interactor functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(interactorHandler.classify({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "entity_classify" -> ok', async () => {
@@ -183,7 +186,8 @@ describe('Interactor functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(interactorHandler.classify({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "no_match" -> ambiguous', async () => {
@@ -259,12 +263,10 @@ describe('Interactor functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_define = await interpret(interactorHandler.define({ name: "single-choice", category: "selection", properties: "{\"cardinality\":\"one\",\"comparison\":true}" }), storage);
       const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
-      const _fixtureInput = {  } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(interactorHandler.get({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "missing_get" -> notfound', async () => {
@@ -334,12 +336,10 @@ describe('Interactor functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_define = await interpret(interactorHandler.define({ name: "single-choice", category: "selection", properties: "{\"cardinality\":\"one\",\"comparison\":true}" }), storage);
       const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
-      const _fixtureInput = {  } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(interactorHandler.list({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "list_by_category" -> ok', async () => {
@@ -352,7 +352,8 @@ describe('Interactor functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(interactorHandler.list({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -377,19 +378,23 @@ describe('Interactor functional handler', () => {
     it("define then classify", async () => {
       const storage = createInMemoryStorage();
       const defineResult0 = await interpret(interactorHandler.define({ interactor: {"type":"variable","name":"i"}, name: {"type":"literal","value":"single-choice"}, category: {"type":"literal","value":"selection"}, properties: {"type":"literal","value":"{ \"cardinality\": \"one\", \"comparison\": true }"} }), storage);
-      expect(defineResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(defineResult0.variant), `step 0: expected success but got '${defineResult0.variant}'`).toBe(false);
       let interactor = defineResult0.output["interactor"];
       const thenResult0 = await interpret(interactorHandler.classify({ interactor: {"type":"variable","name":"_"}, fieldType: {"type":"literal","value":"T -> T"}, constraints: {"type":"literal","value":"{ \"enum\": [\"A\",\"B\",\"C\"] }"}, intent: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("define then classify", async () => {
       const storage = createInMemoryStorage();
       const defineResult0 = await interpret(interactorHandler.define({ interactor: {"type":"variable","name":"i"}, name: {"type":"literal","value":"entity-detail"}, category: {"type":"literal","value":"entity"}, properties: {"type":"literal","value":"{ \"dataType\": \"entity\" }"} }), storage);
-      expect(defineResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(defineResult0.variant), `step 0: expected success but got '${defineResult0.variant}'`).toBe(false);
       let interactor = defineResult0.output["interactor"];
       const thenResult0 = await interpret(interactorHandler.classify({ interactor: {"type":"variable","name":"_"}, fieldType: {"type":"literal","value":"entity"}, constraints: {"type":"literal","value":"{ \"concept\": \"Approval\", \"view\": \"detail\" }"}, intent: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

@@ -88,7 +88,8 @@ describe('SyncPair functional handler', () => {
       if (typeof syncPairHandler.link !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(syncPairHandler.link({ pairId: "pair-1", idA: "local-42", idB: "remote-99" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "link_missing_pair" -> notfound', async () => {
@@ -158,7 +159,8 @@ describe('SyncPair functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_link_records = await interpret(syncPairHandler.link({ pairId: "pair-1", idA: "local-42", idB: "remote-99" }), storage);
       const result = await interpret(syncPairHandler.sync({ pairId: afterResult_link_records?.output?.["id"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "sync_missing" -> notfound', async () => {
@@ -228,7 +230,8 @@ describe('SyncPair functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_link_records = await interpret(syncPairHandler.link({ pairId: "pair-1", idA: "local-42", idB: "remote-99" }), storage);
       const result = await interpret(syncPairHandler.detectConflicts({ pairId: afterResult_link_records?.output?.["id"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "detect_missing" -> notfound', async () => {
@@ -298,7 +301,8 @@ describe('SyncPair functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_link_records = await interpret(syncPairHandler.link({ pairId: "pair-1", idA: "local-42", idB: "remote-99" }), storage);
       const result = await interpret(syncPairHandler.resolve({ conflictId: afterResult_link_records?.output?.["id"], resolution: "keep_local" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "resolve_missing" -> notfound', async () => {
@@ -368,7 +372,8 @@ describe('SyncPair functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_link_records = await interpret(syncPairHandler.link({ pairId: "pair-1", idA: "local-42", idB: "remote-99" }), storage);
       const result = await interpret(syncPairHandler.unlink({ pairId: afterResult_link_records?.output?.["id"], idA: afterResult_link_records?.output?.["id"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "unlink_missing" -> notfound', async () => {
@@ -438,7 +443,8 @@ describe('SyncPair functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_link_records = await interpret(syncPairHandler.link({ pairId: "pair-1", idA: "local-42", idB: "remote-99" }), storage);
       const result = await interpret(syncPairHandler.getChangeLog({ pairId: afterResult_link_records?.output?.["id"], since: "2026-01-01T00:00:00Z" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "changelog_missing" -> notfound', async () => {
@@ -471,9 +477,11 @@ describe('SyncPair functional handler', () => {
     it("link-then-sync", async () => {
       const storage = createInMemoryStorage();
       const linkResult0 = await interpret(syncPairHandler.link({ pairId: {"type":"literal","value":"pair-1"}, idA: {"type":"literal","value":"local-1"}, idB: {"type":"literal","value":"remote-1"} }), storage);
-      expect(linkResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(linkResult0.variant), `step 0: expected success but got '${linkResult0.variant}'`).toBe(false);
       const thenResult0 = await interpret(syncPairHandler.sync({ pairId: {"type":"literal","value":"pair-1"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

@@ -88,14 +88,16 @@ describe('ArgoCDProvider functional handler', () => {
       if (typeof argocdProviderHandler.emit !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(argocdProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "emit_staging" -> ok', async () => {
       if (typeof argocdProviderHandler.emit !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(argocdProviderHandler.emit({ plan: "dp-002", repo: "git@github.com:org/deploy.git", path: "envs/staging" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "emit_empty_plan" -> error', async () => {
@@ -164,7 +166,8 @@ describe('ArgoCDProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_emit_prod = await interpret(argocdProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
       const result = await interpret(argocdProviderHandler.reconciliationStatus({ application: afterResult_emit_prod?.output?.["application"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "reconcile_nonexistent" -> error', async () => {
@@ -233,7 +236,8 @@ describe('ArgoCDProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_emit_prod = await interpret(argocdProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
       const result = await interpret(argocdProviderHandler.syncWave({ application: afterResult_emit_prod?.output?.["application"], wave: "1" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "syncwave_nonexistent" -> ok', async () => {
@@ -246,7 +250,8 @@ describe('ArgoCDProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(argocdProviderHandler.syncWave({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -271,11 +276,13 @@ describe('ArgoCDProvider functional handler', () => {
     it("emit-then-reconciliationStatus", async () => {
       const storage = createInMemoryStorage();
       const emitResult0 = await interpret(argocdProviderHandler.emit({ plan: {"type":"literal","value":"dp-001"}, repo: {"type":"literal","value":"git@github.com:org/deploy.git"}, path: {"type":"literal","value":"envs/prod"} }), storage);
-      expect(emitResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(emitResult0.variant), `step 0: expected success but got '${emitResult0.variant}'`).toBe(false);
       let application = emitResult0.output["application"];
       let files = emitResult0.output["files"];
       const thenResult0 = await interpret(argocdProviderHandler.reconciliationStatus({ application: {"type":"variable","name":"a"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

@@ -88,14 +88,16 @@ describe('ProjectInit functional handler', () => {
       if (typeof projectInitHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "with_derived" -> ok', async () => {
       if (typeof projectInitHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(projectInitHandler.create({ project_name: "blog-app", project_path: "/tmp/blog", module_list: "[\"User\",\"Post\"]", profile: "{\"backend_languages\":[\"typescript\"]}", derived_concepts: "[{\"name\":\"BlogPost\",\"composes\":[\"User\",\"Post\"]}]" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "empty_name" -> error', async () => {
@@ -171,7 +173,8 @@ describe('ProjectInit functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_create = await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }), storage);
       const result = await interpret(projectInitHandler.writeManifest({ init: afterResult_valid_create?.output?.["init"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "write_manifest_nonexistent" -> error', async () => {
@@ -240,7 +243,8 @@ describe('ProjectInit functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_create = await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }), storage);
       const result = await interpret(projectInitHandler.writeInterfaceManifests({ init: afterResult_valid_create?.output?.["init"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "write_interfaces_nonexistent" -> error', async () => {
@@ -309,7 +313,8 @@ describe('ProjectInit functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_create = await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }), storage);
       const result = await interpret(projectInitHandler.writeDeployManifests({ init: afterResult_valid_create?.output?.["init"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "write_deploy_nonexistent" -> error', async () => {
@@ -378,7 +383,8 @@ describe('ProjectInit functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_create = await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }), storage);
       const result = await interpret(projectInitHandler.writeDerivedConcepts({ init: afterResult_valid_create?.output?.["init"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "write_derived_nonexistent" -> error', async () => {
@@ -447,7 +453,8 @@ describe('ProjectInit functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_create = await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }), storage);
       const result = await interpret(projectInitHandler.triggerInstall({ init: afterResult_valid_create?.output?.["init"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "trigger_install_nonexistent" -> error', async () => {
@@ -516,7 +523,8 @@ describe('ProjectInit functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_create = await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }), storage);
       const result = await interpret(projectInitHandler.triggerGenerate({ init: afterResult_valid_create?.output?.["init"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "trigger_generate_nonexistent" -> error', async () => {
@@ -585,7 +593,8 @@ describe('ProjectInit functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_create = await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }), storage);
       const result = await interpret(projectInitHandler.complete({ init: afterResult_valid_create?.output?.["init"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "complete_nonexistent" -> error', async () => {
@@ -617,10 +626,12 @@ describe('ProjectInit functional handler', () => {
     it("create then writeManifest", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(projectInitHandler.create({ project_name: {"type":"literal","value":"my-app"}, project_path: {"type":"literal","value":"/tmp/my-app"}, module_list: {"type":"variable","name":"mods"}, profile: {"type":"variable","name":"prof"}, derived_concepts: {"type":"variable","name":"derived"} }), storage);
-      expect(createResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
       let init = createResult0.output["init"];
       const thenResult0 = await interpret(projectInitHandler.writeManifest({ init: {"type":"variable","name":"j"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

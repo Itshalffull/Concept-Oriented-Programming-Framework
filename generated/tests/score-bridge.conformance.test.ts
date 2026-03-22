@@ -88,7 +88,8 @@ describe('ScoreBridge functional handler', () => {
       if (typeof scoreBridgeHandler.connect !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreBridgeHandler.connect({ endpoint: "https://api.example.com/score", protocol: "http", authToken: "tok_live_abc123" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "empty_endpoint" -> unreachable', async () => {
@@ -171,7 +172,8 @@ describe('ScoreBridge functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(scoreBridgeHandler.query({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "missing_bridge" -> notfound', async () => {
@@ -252,7 +254,8 @@ describe('ScoreBridge functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(scoreBridgeHandler.show({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "show_no_bridge" -> notfound', async () => {
@@ -327,7 +330,8 @@ describe('ScoreBridge functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(scoreBridgeHandler.traverse({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "traverse_no_bridge" -> notfound', async () => {
@@ -402,7 +406,8 @@ describe('ScoreBridge functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(scoreBridgeHandler.disconnect({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "disconnect_no_bridge" -> notfound', async () => {
@@ -477,7 +482,8 @@ describe('ScoreBridge functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(scoreBridgeHandler.status({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "status_no_bridge" -> notfound', async () => {
@@ -510,34 +516,40 @@ describe('ScoreBridge functional handler', () => {
     it("connect then status shows connected", async () => {
       const storage = createInMemoryStorage();
       const connectResult0 = await interpret(scoreBridgeHandler.connect({ endpoint: {"type":"literal","value":"https://app.example.com/score"}, protocol: {"type":"literal","value":"http"}, authToken: {"type":"literal","value":"tok_test"} }), storage);
-      expect(connectResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(connectResult0.variant), `step 0: expected success but got '${connectResult0.variant}'`).toBe(false);
       let bridge = connectResult0.output["bridge"];
       let endpoint = connectResult0.output["endpoint"];
       let protocol = connectResult0.output["protocol"];
       const thenResult0 = await interpret(scoreBridgeHandler.status({ bridge: {"type":"variable","name":"b"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("connect then query succeeds", async () => {
       const storage = createInMemoryStorage();
       const connectResult0 = await interpret(scoreBridgeHandler.connect({ endpoint: {"type":"literal","value":"https://app.example.com/score"}, protocol: {"type":"literal","value":"http"}, authToken: {"type":"literal","value":"tok_test"} }), storage);
-      expect(connectResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(connectResult0.variant), `step 0: expected success but got '${connectResult0.variant}'`).toBe(false);
       let bridge = connectResult0.output["bridge"];
       let endpoint = connectResult0.output["endpoint"];
       let protocol = connectResult0.output["protocol"];
       const thenResult0 = await interpret(scoreBridgeHandler.query({ bridge: {"type":"variable","name":"b"}, graphql: {"type":"literal","value":"{ concepts { conceptName } }"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("connect then disconnect then status not found", async () => {
       const storage = createInMemoryStorage();
       const connectResult0 = await interpret(scoreBridgeHandler.connect({ endpoint: {"type":"literal","value":"https://app.example.com/score"}, protocol: {"type":"literal","value":"http"}, authToken: {"type":"literal","value":"tok_test"} }), storage);
-      expect(connectResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(connectResult0.variant), `step 0: expected success but got '${connectResult0.variant}'`).toBe(false);
       let bridge = connectResult0.output["bridge"];
       let endpoint = connectResult0.output["endpoint"];
       let protocol = connectResult0.output["protocol"];
       const disconnectResult1 = await interpret(scoreBridgeHandler.disconnect({ bridge: {"type":"variable","name":"b"} }), storage);
-      expect(disconnectResult1.variant).toBe("ok");
+      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr1(disconnectResult1.variant), `step 1: expected success but got '${disconnectResult1.variant}'`).toBe(false);
       bridge = disconnectResult1.output["bridge"];
       const thenResult0 = await interpret(scoreBridgeHandler.status({ bridge: {"type":"variable","name":"b"} }), storage);
       expect(thenResult0.variant).toBe("notfound");

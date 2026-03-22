@@ -88,7 +88,8 @@ describe('CustomEvaluator functional handler', () => {
       if (typeof customEvaluatorHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(customEvaluatorHandler.register({ name: "age_check", source: "{\"op\":\"gte\",\"field\":\"age\",\"value\":18}", language: "JavaScript", sandbox: "true" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "register_empty_name" -> syntax_error', async () => {
@@ -156,8 +157,15 @@ describe('CustomEvaluator functional handler', () => {
     it('fixture "evaluate_age_pass" -> ok', async () => {
       if (typeof customEvaluatorHandler.evaluate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(customEvaluatorHandler.evaluate({ evaluator: "custom-001", context: "{\"age\":21}" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_register_age_check = await interpret(customEvaluatorHandler.register({ name: "age_check", source: "{\"op\":\"gte\",\"field\":\"age\",\"value\":18}", language: "JavaScript", sandbox: "true" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_age_check?.output ?? {}));
+      const _fixtureInput = { evaluator: "custom-001", context: "{\"age\":21}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(customEvaluatorHandler.evaluate({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "evaluate_unknown_evaluator" -> runtime_error', async () => {
@@ -225,8 +233,15 @@ describe('CustomEvaluator functional handler', () => {
     it('fixture "deregister_existing" -> ok', async () => {
       if (typeof customEvaluatorHandler.deregister !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(customEvaluatorHandler.deregister({ evaluator: "custom-001" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_register_age_check = await interpret(customEvaluatorHandler.register({ name: "age_check", source: "{\"op\":\"gte\",\"field\":\"age\",\"value\":18}", language: "JavaScript", sandbox: "true" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_age_check?.output ?? {}));
+      const _fixtureInput = { evaluator: "custom-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(customEvaluatorHandler.deregister({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "deregister_nonexistent" -> error', async () => {

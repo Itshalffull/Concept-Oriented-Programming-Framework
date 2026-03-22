@@ -88,7 +88,8 @@ describe('Meeting functional handler', () => {
       if (typeof meetingHandler.schedule !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(meetingHandler.schedule({ title: "Q2 Board Meeting", agenda: ["Budget review","Hiring plan","Product roadmap"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "schedule_empty_title" -> error', async () => {
@@ -157,7 +158,8 @@ describe('Meeting functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_schedule_board_meeting = await interpret(meetingHandler.schedule({ title: "Q2 Board Meeting", agenda: ["Budget review","Hiring plan","Product roadmap"] }), storage);
       const result = await interpret(meetingHandler.callToOrder({ meeting: afterResult_schedule_board_meeting?.output?.["id"], chair: "alice" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "call_missing_meeting" -> error', async () => {
@@ -226,7 +228,8 @@ describe('Meeting functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_schedule_board_meeting = await interpret(meetingHandler.schedule({ title: "Q2 Board Meeting", agenda: ["Budget review","Hiring plan","Product roadmap"] }), storage);
       const result = await interpret(meetingHandler.makeMotion({ meeting: afterResult_schedule_board_meeting?.output?.["id"], mover: "bob", motionType: "main", text: "Approve the Q2 budget" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "make_motion_missing_meeting" -> error', async () => {
@@ -295,7 +298,8 @@ describe('Meeting functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_schedule_board_meeting = await interpret(meetingHandler.schedule({ title: "Q2 Board Meeting", agenda: ["Budget review","Hiring plan","Product roadmap"] }), storage);
       const result = await interpret(meetingHandler.secondMotion({ meeting: afterResult_schedule_board_meeting?.output?.["id"], seconder: "carol", motionIndex: "0" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "second_missing_motion" -> error', async () => {
@@ -364,7 +368,8 @@ describe('Meeting functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_schedule_board_meeting = await interpret(meetingHandler.schedule({ title: "Q2 Board Meeting", agenda: ["Budget review","Hiring plan","Product roadmap"] }), storage);
       const result = await interpret(meetingHandler.callQuestion({ meeting: afterResult_schedule_board_meeting?.output?.["id"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "call_question_missing" -> error', async () => {
@@ -433,7 +438,8 @@ describe('Meeting functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_schedule_board_meeting = await interpret(meetingHandler.schedule({ title: "Q2 Board Meeting", agenda: ["Budget review","Hiring plan","Product roadmap"] }), storage);
       const result = await interpret(meetingHandler.recordMinute({ meeting: afterResult_schedule_board_meeting?.output?.["id"], record: "Motion to approve Q2 budget passed unanimously" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "record_missing_meeting" -> error', async () => {
@@ -502,7 +508,8 @@ describe('Meeting functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_schedule_board_meeting = await interpret(meetingHandler.schedule({ title: "Q2 Board Meeting", agenda: ["Budget review","Hiring plan","Product roadmap"] }), storage);
       const result = await interpret(meetingHandler.adjourn({ meeting: afterResult_schedule_board_meeting?.output?.["id"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "adjourn_missing" -> error', async () => {

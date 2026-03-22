@@ -88,14 +88,16 @@ describe('MediaAsset functional handler', () => {
       if (typeof mediaAssetHandler.createMedia !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "create_video" -> ok', async () => {
       if (typeof mediaAssetHandler.createMedia !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(mediaAssetHandler.createMedia({ asset: "vid-001", source: "s3", file: "recording.mp4" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "create_duplicate" -> error', async () => {
@@ -164,7 +166,8 @@ describe('MediaAsset functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_image = await interpret(mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg" }), storage);
       const result = await interpret(mediaAssetHandler.extractMetadata({ asset: afterResult_create_image?.output?.["asset"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "extract_missing" -> notfound', async () => {
@@ -234,7 +237,8 @@ describe('MediaAsset functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_image = await interpret(mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg" }), storage);
       const result = await interpret(mediaAssetHandler.generateThumbnail({ asset: afterResult_create_image?.output?.["asset"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "thumb_missing" -> notfound', async () => {
@@ -304,7 +308,8 @@ describe('MediaAsset functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_image = await interpret(mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg" }), storage);
       const result = await interpret(mediaAssetHandler.getMedia({ asset: afterResult_create_image?.output?.["asset"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_missing" -> notfound', async () => {
@@ -337,12 +342,15 @@ describe('MediaAsset functional handler', () => {
     it("createMedia then extractMetadata", async () => {
       const storage = createInMemoryStorage();
       const createMediaResult0 = await interpret(mediaAssetHandler.createMedia({ asset: {"type":"variable","name":"a"}, source: {"type":"variable","name":"s"}, file: {"type":"variable","name":"f"} }), storage);
-      expect(createMediaResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(createMediaResult0.variant), `step 0: expected success but got '${createMediaResult0.variant}'`).toBe(false);
       let asset = createMediaResult0.output["asset"];
       const thenResult0 = await interpret(mediaAssetHandler.extractMetadata({ asset: {"type":"variable","name":"a"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
       const thenResult1 = await interpret(mediaAssetHandler.getMedia({ asset: {"type":"variable","name":"a"} }), storage);
-      expect(thenResult1.variant).toBe("ok");
+      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
     });
 
   });

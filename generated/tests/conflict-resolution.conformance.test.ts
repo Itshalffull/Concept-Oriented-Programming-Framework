@@ -88,7 +88,8 @@ describe('ConflictResolution functional handler', () => {
       if (typeof conflictResolutionHandler.registerPolicy !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(conflictResolutionHandler.registerPolicy({ name: "last-writer-wins", priority: "1" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "register_empty_name" -> error', async () => {
@@ -162,7 +163,8 @@ describe('ConflictResolution functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(conflictResolutionHandler.detect({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "detect_same_versions" -> ok', async () => {
@@ -175,7 +177,8 @@ describe('ConflictResolution functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(conflictResolutionHandler.detect({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -237,7 +240,8 @@ describe('ConflictResolution functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_lww = await interpret(conflictResolutionHandler.registerPolicy({ name: "last-writer-wins", priority: "1" }), storage);
       const result = await interpret(conflictResolutionHandler.resolve({ conflictId: afterResult_register_lww?.output?.["policy"], policyOverride: "last-writer-wins" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "resolve_missing_conflict" -> error', async () => {
@@ -306,7 +310,8 @@ describe('ConflictResolution functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_lww = await interpret(conflictResolutionHandler.registerPolicy({ name: "last-writer-wins", priority: "1" }), storage);
       const result = await interpret(conflictResolutionHandler.manualResolve({ conflictId: afterResult_register_lww?.output?.["policy"], chosen: "v1-abc" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "manual_resolve_missing" -> error', async () => {

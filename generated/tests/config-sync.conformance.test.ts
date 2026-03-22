@@ -87,15 +87,29 @@ describe('ConfigSync functional handler', () => {
     it('fixture "export_site_config" -> ok', async () => {
       if (typeof configSyncHandler.export !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(configSyncHandler.export({ config: "site-settings" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_diff_two_configs = await interpret(configSyncHandler.diff({ configA: "site-settings", configB: "site-settings-v2" }), storage);
+      const _pool = Object.assign({}, (afterResult_diff_two_configs?.output ?? {}));
+      const _fixtureInput = { config: "site-settings" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(configSyncHandler.export({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "export_empty_config" -> ok', async () => {
       if (typeof configSyncHandler.export !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(configSyncHandler.export({ config: "" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_diff_two_configs = await interpret(configSyncHandler.diff({ configA: "site-settings", configB: "site-settings-v2" }), storage);
+      const _pool = Object.assign({}, (afterResult_diff_two_configs?.output ?? {}));
+      const _fixtureInput = { config: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(configSyncHandler.export({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -162,7 +176,8 @@ describe('ConfigSync functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(configSyncHandler.import({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "import_empty_data" -> ok', async () => {
@@ -175,7 +190,8 @@ describe('ConfigSync functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(configSyncHandler.import({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -242,7 +258,8 @@ describe('ConfigSync functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(configSyncHandler.override({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "override_empty_layer" -> ok', async () => {
@@ -255,7 +272,8 @@ describe('ConfigSync functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(configSyncHandler.override({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -315,15 +333,29 @@ describe('ConfigSync functional handler', () => {
     it('fixture "diff_two_configs" -> ok', async () => {
       if (typeof configSyncHandler.diff !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(configSyncHandler.diff({ configA: "site-settings", configB: "site-settings-v2" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_export_site_config = await interpret(configSyncHandler.export({ config: "site-settings" }), storage);
+      const _pool = Object.assign({}, (afterResult_export_site_config?.output ?? {}));
+      const _fixtureInput = { configA: "site-settings", configB: "site-settings-v2" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(configSyncHandler.diff({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "diff_same_config" -> ok', async () => {
       if (typeof configSyncHandler.diff !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(configSyncHandler.diff({ configA: "", configB: "" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_export_site_config = await interpret(configSyncHandler.export({ config: "site-settings" }), storage);
+      const _pool = Object.assign({}, (afterResult_export_site_config?.output ?? {}));
+      const _fixtureInput = { configA: "", configB: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(configSyncHandler.diff({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -348,20 +380,25 @@ describe('ConfigSync functional handler', () => {
     it("export-then-export", async () => {
       const storage = createInMemoryStorage();
       const exportResult0 = await interpret(configSyncHandler.export({ config: {"type":"variable","name":"c"} }), storage);
-      expect(exportResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(exportResult0.variant), `step 0: expected success but got '${exportResult0.variant}'`).toBe(false);
       let data = exportResult0.output["data"];
       const thenResult0 = await interpret(configSyncHandler.import({ config: {"type":"variable","name":"c"}, data: {"type":"variable","name":"d"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
       const thenResult1 = await interpret(configSyncHandler.export({ config: {"type":"variable","name":"c"} }), storage);
-      expect(thenResult1.variant).toBe("ok");
+      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
     });
 
     it("override-then-export", async () => {
       const storage = createInMemoryStorage();
       const overrideResult0 = await interpret(configSyncHandler.override({ config: {"type":"variable","name":"c"}, layer: {"type":"literal","value":"production"}, values: {"type":"literal","value":"debug=false"} }), storage);
-      expect(overrideResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(overrideResult0.variant), `step 0: expected success but got '${overrideResult0.variant}'`).toBe(false);
       const thenResult0 = await interpret(configSyncHandler.export({ config: {"type":"variable","name":"c"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

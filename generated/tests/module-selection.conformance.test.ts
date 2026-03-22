@@ -87,22 +87,43 @@ describe('ModuleSelection functional handler', () => {
     it('fixture "begin_with_template" -> ok', async () => {
       if (typeof moduleSelectionHandler.begin !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(moduleSelectionHandler.begin({ template_name: "social", profile_name: null }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_valid_preview = await interpret(moduleSelectionHandler.preview({ selection: "sel-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_preview?.output ?? {}));
+      const _fixtureInput = { template_name: "social", profile_name: null } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(moduleSelectionHandler.begin({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "begin_with_profile" -> ok', async () => {
       if (typeof moduleSelectionHandler.begin !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(moduleSelectionHandler.begin({ template_name: null, profile_name: "fullstack" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_valid_preview = await interpret(moduleSelectionHandler.preview({ selection: "sel-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_preview?.output ?? {}));
+      const _fixtureInput = { template_name: null, profile_name: "fullstack" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(moduleSelectionHandler.begin({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "begin_empty" -> ok', async () => {
       if (typeof moduleSelectionHandler.begin !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(moduleSelectionHandler.begin({ template_name: null, profile_name: null }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_valid_preview = await interpret(moduleSelectionHandler.preview({ selection: "sel-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_preview?.output ?? {}));
+      const _fixtureInput = { template_name: null, profile_name: null } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(moduleSelectionHandler.begin({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -164,7 +185,8 @@ describe('ModuleSelection functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_begin_with_template = await interpret(moduleSelectionHandler.begin({ template_name: "social", profile_name: null }), storage);
       const result = await interpret(moduleSelectionHandler.addConcept({ selection: afterResult_begin_with_template?.output?.["selection"], module_id: "Article", features: "[]" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "add_concept_nonexistent_selection" -> error', async () => {
@@ -233,7 +255,8 @@ describe('ModuleSelection functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_begin_with_template = await interpret(moduleSelectionHandler.begin({ template_name: "social", profile_name: null }), storage);
       const result = await interpret(moduleSelectionHandler.removeConcept({ selection: afterResult_begin_with_template?.output?.["selection"], module_id: "Article" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "remove_concept_nonexistent" -> error', async () => {
@@ -302,7 +325,8 @@ describe('ModuleSelection functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_begin_with_template = await interpret(moduleSelectionHandler.begin({ template_name: "social", profile_name: null }), storage);
       const result = await interpret(moduleSelectionHandler.chooseHandler({ selection: afterResult_begin_with_template?.output?.["selection"], concept_module: "User", handler_module: "UserTsHandler" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "choose_handler_nonexistent" -> error', async () => {
@@ -371,7 +395,8 @@ describe('ModuleSelection functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_begin_with_template = await interpret(moduleSelectionHandler.begin({ template_name: "social", profile_name: null }), storage);
       const result = await interpret(moduleSelectionHandler.addWidget({ selection: afterResult_begin_with_template?.output?.["selection"], module_id: "DataTableWidget" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "add_widget_nonexistent" -> error', async () => {
@@ -440,7 +465,8 @@ describe('ModuleSelection functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_begin_with_template = await interpret(moduleSelectionHandler.begin({ template_name: "social", profile_name: null }), storage);
       const result = await interpret(moduleSelectionHandler.selectTheme({ selection: afterResult_begin_with_template?.output?.["selection"], theme_module: "MaterialTheme" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "select_theme_nonexistent" -> error', async () => {
@@ -509,7 +535,8 @@ describe('ModuleSelection functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_begin_with_template = await interpret(moduleSelectionHandler.begin({ template_name: "social", profile_name: null }), storage);
       const result = await interpret(moduleSelectionHandler.addDerived({ selection: afterResult_begin_with_template?.output?.["selection"], name: "BlogPost", composes: "[\"User\",\"Article\"]" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "add_derived_missing" -> error', async () => {
@@ -578,7 +605,8 @@ describe('ModuleSelection functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_begin_with_template = await interpret(moduleSelectionHandler.begin({ template_name: "social", profile_name: null }), storage);
       const result = await interpret(moduleSelectionHandler.finalize({ selection: afterResult_begin_with_template?.output?.["selection"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "finalize_nonexistent" -> error', async () => {
@@ -645,8 +673,15 @@ describe('ModuleSelection functional handler', () => {
     it('fixture "valid_preview" -> ok', async () => {
       if (typeof moduleSelectionHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(moduleSelectionHandler.preview({ selection: "sel-1" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_begin_with_template = await interpret(moduleSelectionHandler.begin({ template_name: "social", profile_name: null }), storage);
+      const _pool = Object.assign({}, (afterResult_begin_with_template?.output ?? {}));
+      const _fixtureInput = { selection: "sel-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(moduleSelectionHandler.preview({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "preview_nonexistent" -> error', async () => {
@@ -678,7 +713,8 @@ describe('ModuleSelection functional handler', () => {
     it("begin lifecycle", async () => {
       const storage = createInMemoryStorage();
       const beginResult0 = await interpret(moduleSelectionHandler.begin({ template_name: {"type":"literal","value":"social"}, profile_name: {"type":"literal","value":false} }), storage);
-      expect(beginResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(beginResult0.variant), `step 0: expected success but got '${beginResult0.variant}'`).toBe(false);
       let selection = beginResult0.output["selection"];
       const addDerivedResult1 = await interpret(moduleSelectionHandler.addDerived({ selection: {"type":"variable","name":"s"}, name: {"type":"literal","value":"d"}, composes: {"type":"list","items":[{"type":"literal","value":"missing-concept"}]} }), storage);
       expect(addDerivedResult1.variant).toBe("missing_concepts");

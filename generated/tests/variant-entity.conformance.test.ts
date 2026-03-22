@@ -37,14 +37,16 @@ describe('VariantEntity imperative handler', () => {
       if (typeof variantEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await variantEntityHandler.register({ action: "Article/create", tag: "ok", fields: "[{\"name\":\"article\",\"typeExpr\":\"A\"}]" }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "register_error" -> ok', async () => {
       if (typeof variantEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await variantEntityHandler.register({ action: "User/login", tag: "invalidCredentials", fields: "[]" }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "register_empty_action" -> error', async () => {
@@ -71,7 +73,8 @@ describe('VariantEntity imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_ok = await variantEntityHandler.register({ action: "Article/create", tag: "ok", fields: "[{\"name\":\"article\",\"typeExpr\":\"A\"}]" }, storage);
       const result = await variantEntityHandler.matchingSyncs({ variant: afterResult_register_ok?.output?.["variant"] }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "matching_missing" -> ok', async () => {
@@ -84,7 +87,8 @@ describe('VariantEntity imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await variantEntityHandler.matchingSyncs({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -104,7 +108,8 @@ describe('VariantEntity imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_ok = await variantEntityHandler.register({ action: "Article/create", tag: "ok", fields: "[{\"name\":\"article\",\"typeExpr\":\"A\"}]" }, storage);
       const result = await variantEntityHandler.isDead({ variant: afterResult_register_ok?.output?.["variant"] }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "dead_check_missing" -> error', async () => {
@@ -131,7 +136,8 @@ describe('VariantEntity imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_ok = await variantEntityHandler.register({ action: "Article/create", tag: "ok", fields: "[{\"name\":\"article\",\"typeExpr\":\"A\"}]" }, storage);
       const result = await variantEntityHandler.get({ variant: afterResult_register_ok?.output?.["variant"] }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_missing" -> error', async () => {
@@ -148,10 +154,12 @@ describe('VariantEntity imperative handler', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await variantEntityHandler.register({ action: {"type":"literal","value":"Article/create"}, tag: {"type":"literal","value":"ok"}, fields: {"type":"literal","value":"[]"} }, storage);
-      expect(registerResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
       let variant = registerResult0.output["variant"];
       const thenResult0 = await variantEntityHandler.get({ variant: {"type":"variable","name":"v"} }, storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

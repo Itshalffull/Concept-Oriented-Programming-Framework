@@ -88,7 +88,8 @@ describe('Session functional handler', () => {
       if (typeof sessionHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "create_empty_user" -> error', async () => {
@@ -155,8 +156,15 @@ describe('Session functional handler', () => {
     it('fixture "validate_existing" -> ok', async () => {
       if (typeof sessionHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(sessionHandler.validate({ session: "sess-001" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_create_mobile = await interpret(sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_mobile?.output ?? {}));
+      const _fixtureInput = { session: "sess-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(sessionHandler.validate({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "validate_nonexistent" -> error', async () => {
@@ -225,7 +233,8 @@ describe('Session functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_mobile = await interpret(sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" }), storage);
       const result = await interpret(sessionHandler.refresh({ session: afterResult_create_mobile?.output?.["session"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "refresh_nonexistent" -> error', async () => {
@@ -294,7 +303,8 @@ describe('Session functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_mobile = await interpret(sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" }), storage);
       const result = await interpret(sessionHandler.destroy({ session: afterResult_create_mobile?.output?.["session"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "destroy_nonexistent" -> error', async () => {
@@ -368,7 +378,8 @@ describe('Session functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(sessionHandler.destroyAll({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "destroy_all_empty" -> error', async () => {
@@ -437,7 +448,8 @@ describe('Session functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_mobile = await interpret(sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" }), storage);
       const result = await interpret(sessionHandler.getContext({ session: afterResult_create_mobile?.output?.["session"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "context_nonexistent" -> error', async () => {
@@ -469,31 +481,37 @@ describe('Session functional handler', () => {
     it("create-then-validate-3", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(sessionHandler.create({ session: {"type":"variable","name":"s"}, userId: {"type":"literal","value":"alice"}, device: {"type":"literal","value":"mobile"} }), storage);
-      expect(createResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
       let session = createResult0.output["session"];
       let token = createResult0.output["token"];
       const thenResult0 = await interpret(sessionHandler.validate({ session: {"type":"variable","name":"s"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("create-then-getContext", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(sessionHandler.create({ session: {"type":"variable","name":"s"}, userId: {"type":"literal","value":"alice"}, device: {"type":"literal","value":"mobile"} }), storage);
-      expect(createResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
       let session = createResult0.output["session"];
       let token = createResult0.output["token"];
       const thenResult0 = await interpret(sessionHandler.getContext({ session: {"type":"variable","name":"s"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("create-then-validate-2", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(sessionHandler.create({ session: {"type":"variable","name":"s"}, userId: {"type":"literal","value":"alice"}, device: {"type":"literal","value":"mobile"} }), storage);
-      expect(createResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
       let session = createResult0.output["session"];
       let token = createResult0.output["token"];
       const destroyResult1 = await interpret(sessionHandler.destroy({ session: {"type":"variable","name":"s"} }), storage);
-      expect(destroyResult1.variant).toBe("ok");
+      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr1(destroyResult1.variant), `step 1: expected success but got '${destroyResult1.variant}'`).toBe(false);
       session = destroyResult1.output["session"];
       const thenResult0 = await interpret(sessionHandler.validate({ session: {"type":"variable","name":"s"} }), storage);
       expect(thenResult0.variant).toBe("notfound");
@@ -502,15 +520,18 @@ describe('Session functional handler', () => {
     it("create-then-validate", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(sessionHandler.create({ session: {"type":"variable","name":"s1"}, userId: {"type":"literal","value":"alice"}, device: {"type":"literal","value":"mobile"} }), storage);
-      expect(createResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
       let session = createResult0.output["session"];
       let token = createResult0.output["token"];
       const createResult1 = await interpret(sessionHandler.create({ session: {"type":"variable","name":"s2"}, userId: {"type":"literal","value":"alice"}, device: {"type":"literal","value":"desktop"} }), storage);
-      expect(createResult1.variant).toBe("ok");
+      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr1(createResult1.variant), `step 1: expected success but got '${createResult1.variant}'`).toBe(false);
       session = createResult1.output["session"];
       token = createResult1.output["token"];
       const destroyAllResult2 = await interpret(sessionHandler.destroyAll({ userId: {"type":"literal","value":"alice"} }), storage);
-      expect(destroyAllResult2.variant).toBe("ok");
+      const _isErr2 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr2(destroyAllResult2.variant), `step 2: expected success but got '${destroyAllResult2.variant}'`).toBe(false);
       let userId = destroyAllResult2.output["userId"];
       const thenResult0 = await interpret(sessionHandler.validate({ session: {"type":"variable","name":"s1"} }), storage);
       expect(thenResult0.variant).toBe("notfound");

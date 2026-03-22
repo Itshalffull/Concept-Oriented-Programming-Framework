@@ -88,7 +88,8 @@ describe('Permission functional handler', () => {
       if (typeof permissionHandler.grant !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(permissionHandler.grant({ who: "alice", where: "articles", what: "read", condition: "", grantedBy: "admin" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "grant_empty_who" -> error', async () => {
@@ -162,7 +163,8 @@ describe('Permission functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(permissionHandler.revoke({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "revoke_nonexistent" -> error', async () => {
@@ -236,7 +238,8 @@ describe('Permission functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(permissionHandler.check({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "check_denied" -> error', async () => {

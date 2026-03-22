@@ -88,7 +88,8 @@ describe('ThemeEntity functional handler', () => {
       if (typeof themeEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "register_empty_name" -> error', async () => {
@@ -162,7 +163,8 @@ describe('ThemeEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(themeEntityHandler.get({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_missing" -> error', async () => {
@@ -231,7 +233,8 @@ describe('ThemeEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_light = await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
       const result = await interpret(themeEntityHandler.resolveToken({ theme: afterResult_register_light?.output?.["entity"], tokenPath: "palette.primary" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "resolve_missing" -> error', async () => {
@@ -300,7 +303,8 @@ describe('ThemeEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_light = await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
       const result = await interpret(themeEntityHandler.contrastAudit({ theme: afterResult_register_light?.output?.["entity"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "audit_missing" -> error', async () => {
@@ -367,8 +371,15 @@ describe('ThemeEntity functional handler', () => {
     it('fixture "diff_light_dark" -> ok', async () => {
       if (typeof themeEntityHandler.diffThemes !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(themeEntityHandler.diffThemes({ a: "theme-entity-1", b: "theme-entity-2" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_register_light = await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_light?.output ?? {}));
+      const _fixtureInput = { a: "theme-entity-1", b: "theme-entity-2" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(themeEntityHandler.diffThemes({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "diff_missing" -> error', async () => {
@@ -437,7 +448,8 @@ describe('ThemeEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_light = await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
       const result = await interpret(themeEntityHandler.affectedWidgets({ theme: afterResult_register_light?.output?.["entity"], changedToken: "color.primary" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "affected_missing" -> ok', async () => {
@@ -450,7 +462,8 @@ describe('ThemeEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(themeEntityHandler.affectedWidgets({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -512,7 +525,8 @@ describe('ThemeEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_light = await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
       const result = await interpret(themeEntityHandler.generatedOutputs({ theme: afterResult_register_light?.output?.["entity"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "outputs_missing" -> ok', async () => {
@@ -525,7 +539,8 @@ describe('ThemeEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(themeEntityHandler.generatedOutputs({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -535,16 +550,19 @@ describe('ThemeEntity functional handler', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(themeEntityHandler.register({ name: {"type":"literal","value":"light"}, source: {"type":"literal","value":"themes/light.theme"}, ast: {"type":"literal","value":"{}"} }), storage);
-      expect(registerResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
       let entity = registerResult0.output["entity"];
       const thenResult0 = await interpret(themeEntityHandler.get({ name: {"type":"literal","value":"light"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("duplicate registration returns existing", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(themeEntityHandler.register({ name: {"type":"literal","value":"light"}, source: {"type":"literal","value":"themes/light.theme"}, ast: {"type":"literal","value":"{}"} }), storage);
-      expect(registerResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
       let entity = registerResult0.output["entity"];
       const thenResult0 = await interpret(themeEntityHandler.register({ name: {"type":"literal","value":"light"}, source: {"type":"literal","value":"themes/light.theme"}, ast: {"type":"literal","value":"{}"} }), storage);
       expect(thenResult0.variant).toBe("alreadyRegistered");

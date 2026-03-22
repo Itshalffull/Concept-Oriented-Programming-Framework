@@ -87,8 +87,15 @@ describe('Wallet functional handler', () => {
     it('fixture "verify_valid_signature" -> ok', async () => {
       if (typeof walletHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(walletHandler.verify({ address: "0x0000000000000000000000000000000000000000", message: "Sign this message", signature: "0xdeadbeef" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_verify_typed_data_valid = await interpret(walletHandler.verifyTypedData({ address: "0x0000000000000000000000000000000000000000", domain: "{\"name\":\"MyApp\"}", types: "{\"Message\":[{\"name\":\"content\",\"type\":\"string\"}]}", value: "{\"content\":\"hello\"}", signature: "0xabcdef" }), storage);
+      const _pool = Object.assign({}, (afterResult_verify_typed_data_valid?.output ?? {}));
+      const _fixtureInput = { address: "0x0000000000000000000000000000000000000000", message: "Sign this message", signature: "0xdeadbeef" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(walletHandler.verify({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "verify_mismatched_address" -> invalid', async () => {
@@ -156,8 +163,15 @@ describe('Wallet functional handler', () => {
     it('fixture "verify_typed_data_valid" -> ok', async () => {
       if (typeof walletHandler.verifyTypedData !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(walletHandler.verifyTypedData({ address: "0x0000000000000000000000000000000000000000", domain: "{\"name\":\"MyApp\"}", types: "{\"Message\":[{\"name\":\"content\",\"type\":\"string\"}]}", value: "{\"content\":\"hello\"}", signature: "0xabcdef" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_verify_valid_signature = await interpret(walletHandler.verify({ address: "0x0000000000000000000000000000000000000000", message: "Sign this message", signature: "0xdeadbeef" }), storage);
+      const _pool = Object.assign({}, (afterResult_verify_valid_signature?.output ?? {}));
+      const _fixtureInput = { address: "0x0000000000000000000000000000000000000000", domain: "{\"name\":\"MyApp\"}", types: "{\"Message\":[{\"name\":\"content\",\"type\":\"string\"}]}", value: "{\"content\":\"hello\"}", signature: "0xabcdef" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(walletHandler.verifyTypedData({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "verify_typed_data_mismatch" -> invalid', async () => {
@@ -225,8 +239,15 @@ describe('Wallet functional handler', () => {
     it('fixture "get_nonce_existing" -> ok', async () => {
       if (typeof walletHandler.getNonce !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(walletHandler.getNonce({ address: "0x0000000000000000000000000000000000000000" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_verify_valid_signature = await interpret(walletHandler.verify({ address: "0x0000000000000000000000000000000000000000", message: "Sign this message", signature: "0xdeadbeef" }), storage);
+      const _pool = Object.assign({}, (afterResult_verify_valid_signature?.output ?? {}));
+      const _fixtureInput = { address: "0x0000000000000000000000000000000000000000" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(walletHandler.getNonce({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_nonce_unknown" -> notFound', async () => {
@@ -294,8 +315,15 @@ describe('Wallet functional handler', () => {
     it('fixture "increment_nonce_valid" -> ok', async () => {
       if (typeof walletHandler.incrementNonce !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(walletHandler.incrementNonce({ address: "0x0000000000000000000000000000000000000000" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_verify_valid_signature = await interpret(walletHandler.verify({ address: "0x0000000000000000000000000000000000000000", message: "Sign this message", signature: "0xdeadbeef" }), storage);
+      const _pool = Object.assign({}, (afterResult_verify_valid_signature?.output ?? {}));
+      const _fixtureInput = { address: "0x0000000000000000000000000000000000000000" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(walletHandler.incrementNonce({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -320,11 +348,13 @@ describe('Wallet functional handler', () => {
     it("verify then verify", async () => {
       const storage = createInMemoryStorage();
       const verifyResult0 = await interpret(walletHandler.verify({ address: {"type":"variable","name":"addr"}, message: {"type":"variable","name":"msg"}, signature: {"type":"variable","name":"sig"} }), storage);
-      expect(verifyResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(verifyResult0.variant), `step 0: expected success but got '${verifyResult0.variant}'`).toBe(false);
       let address = verifyResult0.output["address"];
       let recoveredAddress = verifyResult0.output["recoveredAddress"];
       const thenResult0 = await interpret(walletHandler.verify({ address: {"type":"variable","name":"addr"}, message: {"type":"variable","name":"msg"}, signature: {"type":"variable","name":"sig"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

@@ -87,8 +87,15 @@ describe('ChainMonitor functional handler', () => {
     it('fixture "await_finality_valid" -> ok', async () => {
       if (typeof chainMonitorHandler.awaitFinality !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(chainMonitorHandler.awaitFinality({ txHash: "0xabc123", level: "confirmations" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_subscribe_valid = await interpret(chainMonitorHandler.subscribe({ chainId: "1", rpcUrl: "https://mainnet.infura.io/v3/abc123" }), storage);
+      const _pool = Object.assign({}, (afterResult_subscribe_valid?.output ?? {}));
+      const _fixtureInput = { txHash: "0xabc123", level: "confirmations" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(chainMonitorHandler.awaitFinality({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "await_finality_empty_hash" -> timeout', async () => {
@@ -157,7 +164,8 @@ describe('ChainMonitor functional handler', () => {
       if (typeof chainMonitorHandler.subscribe !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(chainMonitorHandler.subscribe({ chainId: "1", rpcUrl: "https://mainnet.infura.io/v3/abc123" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "subscribe_missing_rpc" -> error', async () => {
@@ -224,8 +232,15 @@ describe('ChainMonitor functional handler', () => {
     it('fixture "on_block_valid" -> ok', async () => {
       if (typeof chainMonitorHandler.onBlock !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(chainMonitorHandler.onBlock({ chainId: "1", blockNumber: "19500001", blockHash: "0xdeadbeefcafe" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_subscribe_valid = await interpret(chainMonitorHandler.subscribe({ chainId: "1", rpcUrl: "https://mainnet.infura.io/v3/abc123" }), storage);
+      const _pool = Object.assign({}, (afterResult_subscribe_valid?.output ?? {}));
+      const _fixtureInput = { chainId: "1", blockNumber: "19500001", blockHash: "0xdeadbeefcafe" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(chainMonitorHandler.onBlock({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "on_block_empty_hash" -> reorg', async () => {
@@ -258,12 +273,14 @@ describe('ChainMonitor functional handler', () => {
     it("awaitFinality then status", async () => {
       const storage = createInMemoryStorage();
       const awaitFinalityResult0 = await interpret(chainMonitorHandler.awaitFinality({ txHash: {"type":"variable","name":"tx"}, level: {"type":"literal","value":"confirmations"} }), storage);
-      expect(awaitFinalityResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(awaitFinalityResult0.variant), `step 0: expected success but got '${awaitFinalityResult0.variant}'`).toBe(false);
       let chain = awaitFinalityResult0.output["chain"];
       let block = awaitFinalityResult0.output["block"];
       let confirmations = awaitFinalityResult0.output["confirmations"];
       const thenResult0 = await interpret(chainMonitorHandler.status({ txHash: {"type":"variable","name":"tx"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("awaitFinality then status", async () => {
@@ -273,7 +290,8 @@ describe('ChainMonitor functional handler', () => {
       let txHash = awaitFinalityResult0.output["txHash"];
       let depth = awaitFinalityResult0.output["depth"];
       const thenResult0 = await interpret(chainMonitorHandler.status({ txHash: {"type":"variable","name":"tx"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

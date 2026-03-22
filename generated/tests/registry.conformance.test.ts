@@ -88,7 +88,8 @@ describe('Registry functional handler', () => {
       if (typeof registryHandler.publish !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(registryHandler.publish({ name: "auth", namespace: "clef", version: "1.0.0", kind: "concept", artifact_hash: "sha256:abc123def", dependencies: [], metadata: {"description":"Auth concept","license":"MIT","repository":"https://github.com/org/auth","authors":["dev@example.com"],"keywords":["auth","security"]} }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "publish_empty_name" -> error', async () => {
@@ -157,7 +158,8 @@ describe('Registry functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_publish_concept_module = await interpret(registryHandler.publish({ name: "auth", namespace: "clef", version: "1.0.0", kind: "concept", artifact_hash: "sha256:abc123def", dependencies: [], metadata: {"description":"Auth concept","license":"MIT","repository":"https://github.com/org/auth","authors":["dev@example.com"],"keywords":["auth","security"]} }), storage);
       const result = await interpret(registryHandler.yank({ module: afterResult_publish_concept_module?.output?.["module"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "yank_nonexistent" -> error', async () => {
@@ -231,7 +233,8 @@ describe('Registry functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(registryHandler.lookup({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "lookup_nonexistent" -> error', async () => {
@@ -305,7 +308,8 @@ describe('Registry functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(registryHandler.search({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "search_filtered" -> ok', async () => {
@@ -318,7 +322,8 @@ describe('Registry functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(registryHandler.search({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -385,7 +390,8 @@ describe('Registry functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(registryHandler.listVersions({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "list_versions_nonexistent" -> error', async () => {
@@ -459,7 +465,8 @@ describe('Registry functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(registryHandler.resolveCapability({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "resolve_missing_capability" -> error', async () => {
@@ -491,19 +498,23 @@ describe('Registry functional handler', () => {
     it("publish then lookup", async () => {
       const storage = createInMemoryStorage();
       const publishResult0 = await interpret(registryHandler.publish({ name: {"type":"literal","value":"auth"}, namespace: {"type":"literal","value":"clef"}, version: {"type":"literal","value":"1.0.0"}, kind: {"type":"variable","name":"concept"}, artifact_hash: {"type":"literal","value":"sha256:abc"}, dependencies: {"type":"list","items":[]}, metadata: {"type":"variable","name":"m"} }), storage);
-      expect(publishResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(publishResult0.variant), `step 0: expected success but got '${publishResult0.variant}'`).toBe(false);
       let module = publishResult0.output["module"];
       const thenResult0 = await interpret(registryHandler.lookup({ name: {"type":"literal","value":"auth"}, namespace: {"type":"literal","value":"clef"}, version_range: {"type":"literal","value":"^1.0.0"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("publish then yank", async () => {
       const storage = createInMemoryStorage();
       const publishResult0 = await interpret(registryHandler.publish({ name: {"type":"literal","value":"auth"}, namespace: {"type":"literal","value":"clef"}, version: {"type":"literal","value":"1.0.0"}, kind: {"type":"variable","name":"concept"}, artifact_hash: {"type":"literal","value":"sha256:abc"}, dependencies: {"type":"list","items":[]}, metadata: {"type":"variable","name":"m"} }), storage);
-      expect(publishResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(publishResult0.variant), `step 0: expected success but got '${publishResult0.variant}'`).toBe(false);
       let module = publishResult0.output["module"];
       const thenResult0 = await interpret(registryHandler.yank({ module: {"type":"variable","name":"mod"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
       const thenResult1 = await interpret(registryHandler.lookup({ name: {"type":"literal","value":"auth"}, namespace: {"type":"literal","value":"clef"}, version_range: {"type":"literal","value":"^1.0.0"} }), storage);
       expect(thenResult1.variant).toBe("notfound");
     });

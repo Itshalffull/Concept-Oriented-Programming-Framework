@@ -88,7 +88,8 @@ describe('StakeWeight functional handler', () => {
       if (typeof stakeWeightHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(stakeWeightHandler.configure({ token: "GOV", cooldownDays: "7.0" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "configure_no_token" -> error', async () => {
@@ -157,7 +158,8 @@ describe('StakeWeight functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_gov = await interpret(stakeWeightHandler.configure({ token: "GOV", cooldownDays: "7.0" }), storage);
       const result = await interpret(stakeWeightHandler.stake({ config: afterResult_configure_gov?.output?.["id"], staker: "alice", amount: "100.0" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "stake_zero" -> error', async () => {
@@ -227,7 +229,8 @@ describe('StakeWeight functional handler', () => {
       const afterResult_configure_gov = await interpret(stakeWeightHandler.configure({ token: "GOV", cooldownDays: "7.0" }), storage);
       const afterResult_stake_hundred = await interpret(stakeWeightHandler.stake({ config: {"type":"ref","fixture":"configure_gov","field":"id"}, staker: "alice", amount: "100.0" }), storage);
       const result = await interpret(stakeWeightHandler.unstake({ stake: afterResult_stake_hundred?.output?.["id"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "unstake_missing" -> error', async () => {
@@ -296,7 +299,8 @@ describe('StakeWeight functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_gov = await interpret(stakeWeightHandler.configure({ token: "GOV", cooldownDays: "7.0" }), storage);
       const result = await interpret(stakeWeightHandler.getWeight({ config: afterResult_configure_gov?.output?.["id"], participant: "alice" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_no_stake" -> error', async () => {

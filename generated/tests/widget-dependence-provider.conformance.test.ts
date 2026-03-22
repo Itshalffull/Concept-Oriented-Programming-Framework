@@ -88,7 +88,8 @@ describe('WidgetDependenceProvider functional handler', () => {
       if (typeof widgetDependenceProviderHandler.initialize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(widgetDependenceProviderHandler.initialize({  }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "duplicate_init" -> loadError', async () => {

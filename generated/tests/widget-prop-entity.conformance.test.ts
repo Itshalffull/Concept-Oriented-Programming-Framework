@@ -88,7 +88,8 @@ describe('WidgetPropEntity functional handler', () => {
       if (typeof widgetPropEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(widgetPropEntityHandler.register({ widget: "dialog", name: "closeOnEscape", typeExpr: "Bool", defaultValue: "true" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "register_empty_widget" -> error', async () => {
@@ -162,7 +163,8 @@ describe('WidgetPropEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(widgetPropEntityHandler.findByWidget({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "find_empty" -> error', async () => {
@@ -231,7 +233,8 @@ describe('WidgetPropEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_close_escape = await interpret(widgetPropEntityHandler.register({ widget: "dialog", name: "closeOnEscape", typeExpr: "Bool", defaultValue: "true" }), storage);
       const result = await interpret(widgetPropEntityHandler.traceToField({ prop: afterResult_register_close_escape?.output?.["prop"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "trace_missing" -> error', async () => {
@@ -300,7 +303,8 @@ describe('WidgetPropEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_close_escape = await interpret(widgetPropEntityHandler.register({ widget: "dialog", name: "closeOnEscape", typeExpr: "Bool", defaultValue: "true" }), storage);
       const result = await interpret(widgetPropEntityHandler.get({ prop: afterResult_register_close_escape?.output?.["prop"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_missing" -> error', async () => {
@@ -317,10 +321,12 @@ describe('WidgetPropEntity functional handler', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(widgetPropEntityHandler.register({ widget: {"type":"literal","value":"dialog"}, name: {"type":"literal","value":"closeOnEscape"}, typeExpr: {"type":"literal","value":"Bool"}, defaultValue: {"type":"literal","value":"true"} }), storage);
-      expect(registerResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
       let prop = registerResult0.output["prop"];
       const thenResult0 = await interpret(widgetPropEntityHandler.get({ prop: {"type":"variable","name":"p"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

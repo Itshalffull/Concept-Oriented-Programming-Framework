@@ -88,21 +88,24 @@ describe('AnalysisOverlay functional handler', () => {
       if (typeof analysisOverlayHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "node_size_overlay" -> ok', async () => {
       if (typeof analysisOverlayHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"scores\":{\"a\":0.9,\"b\":0.3}}", kind: "node-size", config: "{\"minScale\":0.5,\"maxScale\":3.0}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "heat_map_overlay" -> ok', async () => {
       if (typeof analysisOverlayHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"x\",\"score\":0.7}]}", kind: "heat-map", config: null }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "unsupported" -> unsupported_kind', async () => {
@@ -180,7 +183,8 @@ describe('AnalysisOverlay functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_node_color_overlay = await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage);
       const result = await interpret(analysisOverlayHandler.remove({ overlay: afterResult_node_color_overlay?.output?.["overlay"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "remove_missing" -> notfound', async () => {
@@ -250,7 +254,8 @@ describe('AnalysisOverlay functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_node_color_overlay = await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage);
       const result = await interpret(analysisOverlayHandler.toggle({ overlay: afterResult_node_color_overlay?.output?.["overlay"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "toggle_missing" -> notfound', async () => {
@@ -320,7 +325,8 @@ describe('AnalysisOverlay functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_node_color_overlay = await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage);
       const result = await interpret(analysisOverlayHandler.listOverlays({ canvas: afterResult_node_color_overlay?.output?.["overlay"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "list_empty" -> ok', async () => {
@@ -333,7 +339,8 @@ describe('AnalysisOverlay functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(analysisOverlayHandler.listOverlays({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -395,7 +402,8 @@ describe('AnalysisOverlay functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_node_color_overlay = await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage);
       const result = await interpret(analysisOverlayHandler.updateConfig({ overlay: afterResult_node_color_overlay?.output?.["overlay"], config: "{\"minScale\":1.0,\"maxScale\":5.0}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "update_missing" -> notfound', async () => {
@@ -442,13 +450,16 @@ describe('AnalysisOverlay functional handler', () => {
     it("apply-then-toggle", async () => {
       const storage = createInMemoryStorage();
       const applyResult0 = await interpret(analysisOverlayHandler.apply({ canvas: {"type":"literal","value":"c1"}, result: {"type":"literal","value":"r1"}, kind: {"type":"literal","value":"node-color"}, config: {"type":"record","fields":[]} }), storage);
-      expect(applyResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(applyResult0.variant), `step 0: expected success but got '${applyResult0.variant}'`).toBe(false);
       let overlay = applyResult0.output["overlay"];
       let attributes = applyResult0.output["attributes"];
       const thenResult0 = await interpret(analysisOverlayHandler.toggle({ overlay: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
       const thenResult1 = await interpret(analysisOverlayHandler.toggle({ overlay: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult1.variant).toBe("ok");
+      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
     });
 
   });

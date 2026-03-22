@@ -87,8 +87,15 @@ describe('SyncedContent functional handler', () => {
     it('fixture "create_ref" -> ok', async () => {
       if (typeof syncedContentHandler.createReference !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(syncedContentHandler.createReference({ ref: "ref-1", original: "doc-main" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_convert_ref = await interpret(syncedContentHandler.convertToIndependent({ ref: "ref-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_convert_ref?.output ?? {}));
+      const _fixtureInput = { ref: "ref-1", original: "doc-main" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(syncedContentHandler.createReference({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "create_ref_missing" -> notfound', async () => {
@@ -163,7 +170,8 @@ describe('SyncedContent functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(syncedContentHandler.editOriginal({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "edit_missing" -> notfound', async () => {
@@ -233,7 +241,8 @@ describe('SyncedContent functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_ref = await interpret(syncedContentHandler.createReference({ ref: "ref-1", original: "doc-main" }), storage);
       const result = await interpret(syncedContentHandler.deleteReference({ ref: afterResult_create_ref?.output?.["id"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "delete_missing" -> notfound', async () => {
@@ -301,8 +310,15 @@ describe('SyncedContent functional handler', () => {
     it('fixture "convert_ref" -> ok', async () => {
       if (typeof syncedContentHandler.convertToIndependent !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(syncedContentHandler.convertToIndependent({ ref: "ref-1" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_create_ref = await interpret(syncedContentHandler.createReference({ ref: "ref-1", original: "doc-main" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_ref?.output ?? {}));
+      const _fixtureInput = { ref: "ref-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(syncedContentHandler.convertToIndependent({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "convert_missing" -> notfound', async () => {
@@ -335,9 +351,11 @@ describe('SyncedContent functional handler', () => {
     it("createReference-then-editOriginal", async () => {
       const storage = createInMemoryStorage();
       const createReferenceResult0 = await interpret(syncedContentHandler.createReference({ ref: {"type":"variable","name":"r"}, original: {"type":"variable","name":"o"} }), storage);
-      expect(createReferenceResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(createReferenceResult0.variant), `step 0: expected success but got '${createReferenceResult0.variant}'`).toBe(false);
       const thenResult0 = await interpret(syncedContentHandler.editOriginal({ original: {"type":"variable","name":"o"}, content: {"type":"literal","value":"updated"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

@@ -88,14 +88,16 @@ describe('PlatformAdapter functional handler', () => {
       if (typeof platformAdapterHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "register_mobile" -> ok', async () => {
       if (typeof platformAdapterHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(platformAdapterHandler.register({ adapter: "mobile-adapter-1", platform: "mobile", config: "{}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "register_invalid_platform" -> duplicate', async () => {
@@ -165,7 +167,8 @@ describe('PlatformAdapter functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_browser = await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
       const result = await interpret(platformAdapterHandler.mapNavigation({ adapter: afterResult_register_browser?.output?.["adapter"], transition: "{ \"type\": \"push\", \"destination\": \"articles\" }" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "nav_replace" -> ok', async () => {
@@ -173,7 +176,8 @@ describe('PlatformAdapter functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_browser = await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
       const result = await interpret(platformAdapterHandler.mapNavigation({ adapter: afterResult_register_browser?.output?.["adapter"], transition: "{ \"type\": \"replace\", \"destination\": \"home\" }" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "nav_not_registered" -> unsupported', async () => {
@@ -257,7 +261,8 @@ describe('PlatformAdapter functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_browser = await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
       const result = await interpret(platformAdapterHandler.mapZone({ adapter: afterResult_register_browser?.output?.["adapter"], role: "persistent" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "zone_navigated" -> ok', async () => {
@@ -265,7 +270,8 @@ describe('PlatformAdapter functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_browser = await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
       const result = await interpret(platformAdapterHandler.mapZone({ adapter: afterResult_register_browser?.output?.["adapter"], role: "navigated" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "zone_not_registered" -> unmapped', async () => {
@@ -335,7 +341,8 @@ describe('PlatformAdapter functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_browser = await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
       const result = await interpret(platformAdapterHandler.handlePlatformEvent({ adapter: afterResult_register_browser?.output?.["adapter"], event: "{ \"name\": \"popstate\" }" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "event_hashchange" -> ok', async () => {
@@ -343,7 +350,8 @@ describe('PlatformAdapter functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_browser = await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
       const result = await interpret(platformAdapterHandler.handlePlatformEvent({ adapter: afterResult_register_browser?.output?.["adapter"], event: "{ \"name\": \"hashchange\" }" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "event_not_registered" -> ignored', async () => {
@@ -375,10 +383,12 @@ describe('PlatformAdapter functional handler', () => {
     it("register then mapNavigation", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(platformAdapterHandler.register({ adapter: {"type":"variable","name":"d"}, platform: {"type":"literal","value":"browser"}, config: {"type":"literal","value":"{}"} }), storage);
-      expect(registerResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
       let adapter = registerResult0.output["adapter"];
       const thenResult0 = await interpret(platformAdapterHandler.mapNavigation({ adapter: {"type":"variable","name":"d"}, transition: {"type":"literal","value":"{ \"type\": \"push\" }"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

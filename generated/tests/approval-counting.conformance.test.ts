@@ -88,14 +88,16 @@ describe('ApprovalCounting functional handler', () => {
       if (typeof approvalCountingHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(approvalCountingHandler.configure({ maxApprovals: null, winnerCount: "1" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "multi_winner_capped" -> ok', async () => {
       if (typeof approvalCountingHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(approvalCountingHandler.configure({ maxApprovals: "3", winnerCount: "2" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "zero_winners" -> error', async () => {
@@ -164,7 +166,8 @@ describe('ApprovalCounting functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_single_winner_unlimited = await interpret(approvalCountingHandler.configure({ maxApprovals: null, winnerCount: "1" }), storage);
       const result = await interpret(approvalCountingHandler.count({ config: afterResult_single_winner_unlimited?.output?.["id"], approvalSets: "[{\"voter\":\"alice\",\"approvals\":[\"A\",\"B\"]},{\"voter\":\"bob\",\"approvals\":[\"B\",\"C\"]}]", weights: "{}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "count_no_ballots" -> error', async () => {

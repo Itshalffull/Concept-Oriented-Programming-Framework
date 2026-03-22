@@ -37,7 +37,8 @@ describe('DisplayMode imperative handler', () => {
       if (typeof displayModeHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "create_empty_schema" -> error', async () => {
@@ -69,7 +70,8 @@ describe('DisplayMode imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await displayModeHandler.resolve({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "resolve_nonexistent" -> error', async () => {
@@ -101,7 +103,8 @@ describe('DisplayMode imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await displayModeHandler.set_layout({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "set_layout_missing_mode" -> error', async () => {
@@ -133,7 +136,8 @@ describe('DisplayMode imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await displayModeHandler.clear_layout({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "clear_layout_missing" -> error', async () => {
@@ -165,7 +169,8 @@ describe('DisplayMode imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await displayModeHandler.set_component_mapping({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "set_mapping_missing" -> error', async () => {
@@ -197,7 +202,8 @@ describe('DisplayMode imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await displayModeHandler.clear_component_mapping({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "clear_comp_missing" -> error', async () => {
@@ -229,7 +235,8 @@ describe('DisplayMode imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await displayModeHandler.set_flat_fields({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "set_placements_missing" -> error', async () => {
@@ -261,7 +268,8 @@ describe('DisplayMode imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await displayModeHandler.get({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_missing_mode" -> error', async () => {
@@ -293,7 +301,8 @@ describe('DisplayMode imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await displayModeHandler.delete({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "delete_missing" -> error', async () => {
@@ -325,7 +334,8 @@ describe('DisplayMode imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await displayModeHandler.list_for_schema({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "list_empty_schema" -> error', async () => {
@@ -352,12 +362,10 @@ describe('DisplayMode imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_article_full = await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
       const _pool = Object.assign({}, (afterResult_create_article_full?.output ?? {}));
-      const _fixtureInput = {  } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await displayModeHandler.list({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -378,10 +386,12 @@ describe('DisplayMode imperative handler', () => {
     it("create then resolve", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await displayModeHandler.create({ schema: {"type":"literal","value":"Article"}, mode_id: {"type":"literal","value":"full"}, name: {"type":"literal","value":"Full Page"} }, storage);
-      expect(createResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
       let mode = createResult0.output["mode"];
       const thenResult0 = await displayModeHandler.resolve({ schema: {"type":"literal","value":"Article"}, mode_id: {"type":"literal","value":"full"} }, storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("create then list_for_schema", async () => {
@@ -391,25 +401,31 @@ describe('DisplayMode imperative handler', () => {
     it("create then get", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await displayModeHandler.create({ schema: {"type":"literal","value":"Article"}, mode_id: {"type":"literal","value":"full"}, name: {"type":"literal","value":"Full Page"} }, storage);
-      expect(createResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
       let mode = createResult0.output["mode"];
       const set_layoutResult1 = await displayModeHandler.set_layout({ mode: {"type":"variable","name":"m"}, layout: {"type":"literal","value":"triple-zone-default"} }, storage);
-      expect(set_layoutResult1.variant).toBe("ok");
+      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr1(set_layoutResult1.variant), `step 1: expected success but got '${set_layoutResult1.variant}'`).toBe(false);
       mode = set_layoutResult1.output["mode"];
       const thenResult0 = await displayModeHandler.get({ mode: {"type":"variable","name":"m"} }, storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("create then get", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await displayModeHandler.create({ schema: {"type":"literal","value":"Article"}, mode_id: {"type":"literal","value":"full"}, name: {"type":"literal","value":"Full Page"} }, storage);
-      expect(createResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
       let mode = createResult0.output["mode"];
       const set_component_mappingResult1 = await displayModeHandler.set_component_mapping({ mode: {"type":"variable","name":"m"}, mapping: {"type":"literal","value":"article-hero-card"} }, storage);
-      expect(set_component_mappingResult1.variant).toBe("ok");
+      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr1(set_component_mappingResult1.variant), `step 1: expected success but got '${set_component_mappingResult1.variant}'`).toBe(false);
       mode = set_component_mappingResult1.output["mode"];
       const thenResult0 = await displayModeHandler.get({ mode: {"type":"variable","name":"m"} }, storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

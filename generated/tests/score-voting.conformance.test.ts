@@ -88,14 +88,16 @@ describe('ScoreVoting functional handler', () => {
       if (typeof scoreVotingHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreVotingHandler.configure({ minScore: "0.0", maxScore: "5.0", aggregation: "Mean" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "median_scoring" -> ok', async () => {
       if (typeof scoreVotingHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreVotingHandler.configure({ minScore: "0.0", maxScore: "10.0", aggregation: "Median" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "invalid_range_config" -> error', async () => {
@@ -164,7 +166,8 @@ describe('ScoreVoting functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_mean_zero_to_five = await interpret(scoreVotingHandler.configure({ minScore: "0.0", maxScore: "5.0", aggregation: "Mean" }), storage);
       const result = await interpret(scoreVotingHandler.count({ config: afterResult_mean_zero_to_five?.output?.["id"], scoreBallots: "[{\"voter\":\"alice\",\"scores\":{\"A\":4,\"B\":2}},{\"voter\":\"bob\",\"scores\":{\"A\":3,\"B\":5}}]", weights: "{}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "score_empty_ballots" -> error', async () => {

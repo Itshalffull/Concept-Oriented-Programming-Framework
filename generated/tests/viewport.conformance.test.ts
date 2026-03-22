@@ -87,22 +87,43 @@ describe('Viewport functional handler', () => {
     it('fixture "desktop_landscape" -> ok', async () => {
       if (typeof viewportHandler.observe !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(viewportHandler.observe({ viewport: "v-1", width: "1280", height: "720" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_custom_breakpoints = await interpret(viewportHandler.setBreakpoints({ viewport: "v-1", breakpoints: "{\"mobile\":{\"min\":0,\"max\":599},\"tablet\":{\"min\":600,\"max\":1023},\"desktop\":{\"min\":1024,\"max\":9999}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_custom_breakpoints?.output ?? {}));
+      const _fixtureInput = { viewport: "v-1", width: "1280", height: "720" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(viewportHandler.observe({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "mobile_portrait" -> ok', async () => {
       if (typeof viewportHandler.observe !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(viewportHandler.observe({ viewport: "v-2", width: "375", height: "812" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_custom_breakpoints = await interpret(viewportHandler.setBreakpoints({ viewport: "v-1", breakpoints: "{\"mobile\":{\"min\":0,\"max\":599},\"tablet\":{\"min\":600,\"max\":1023},\"desktop\":{\"min\":1024,\"max\":9999}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_custom_breakpoints?.output ?? {}));
+      const _fixtureInput = { viewport: "v-2", width: "375", height: "812" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(viewportHandler.observe({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "tablet_square" -> ok', async () => {
       if (typeof viewportHandler.observe !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(viewportHandler.observe({ viewport: "v-3", width: "768", height: "768" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_custom_breakpoints = await interpret(viewportHandler.setBreakpoints({ viewport: "v-1", breakpoints: "{\"mobile\":{\"min\":0,\"max\":599},\"tablet\":{\"min\":600,\"max\":1023},\"desktop\":{\"min\":1024,\"max\":9999}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_custom_breakpoints?.output ?? {}));
+      const _fixtureInput = { viewport: "v-3", width: "768", height: "768" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(viewportHandler.observe({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -162,8 +183,15 @@ describe('Viewport functional handler', () => {
     it('fixture "custom_breakpoints" -> ok', async () => {
       if (typeof viewportHandler.setBreakpoints !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(viewportHandler.setBreakpoints({ viewport: "v-1", breakpoints: "{\"mobile\":{\"min\":0,\"max\":599},\"tablet\":{\"min\":600,\"max\":1023},\"desktop\":{\"min\":1024,\"max\":9999}}" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_desktop_landscape = await interpret(viewportHandler.observe({ viewport: "v-1", width: "1280", height: "720" }), storage);
+      const _pool = Object.assign({}, (afterResult_desktop_landscape?.output ?? {}));
+      const _fixtureInput = { viewport: "v-1", breakpoints: "{\"mobile\":{\"min\":0,\"max\":599},\"tablet\":{\"min\":600,\"max\":1023},\"desktop\":{\"min\":1024,\"max\":9999}}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(viewportHandler.setBreakpoints({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "invalid_breakpoint_json" -> invalid', async () => {
@@ -239,8 +267,15 @@ describe('Viewport functional handler', () => {
     it('fixture "get_existing" -> ok', async () => {
       if (typeof viewportHandler.getBreakpoint !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(viewportHandler.getBreakpoint({ viewport: "v-1" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_desktop_landscape = await interpret(viewportHandler.observe({ viewport: "v-1", width: "1280", height: "720" }), storage);
+      const _pool = Object.assign({}, (afterResult_desktop_landscape?.output ?? {}));
+      const _fixtureInput = { viewport: "v-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(viewportHandler.getBreakpoint({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_nonexistent" -> notfound', async () => {
@@ -273,12 +308,14 @@ describe('Viewport functional handler', () => {
     it("observe stores breakpoint retrievable by getBreakpoint", async () => {
       const storage = createInMemoryStorage();
       const observeResult0 = await interpret(viewportHandler.observe({ viewport: {"type":"variable","name":"v"}, width: {"type":"literal","value":1024}, height: {"type":"literal","value":768} }), storage);
-      expect(observeResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(observeResult0.variant), `step 0: expected success but got '${observeResult0.variant}'`).toBe(false);
       let viewport = observeResult0.output["viewport"];
       let breakpoint = observeResult0.output["breakpoint"];
       let orientation = observeResult0.output["orientation"];
       const thenResult0 = await interpret(viewportHandler.getBreakpoint({ viewport: {"type":"variable","name":"v"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

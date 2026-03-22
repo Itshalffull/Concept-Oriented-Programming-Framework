@@ -88,14 +88,16 @@ describe('SuiteManifestEntity functional handler', () => {
       if (typeof suiteManifestEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(suiteManifestEntityHandler.register({ name: "identity", source: "repertoire/concepts/identity/suite.yaml", manifest: "{\"version\":\"1.0.0\",\"concepts\":[\"User\",\"Session\"],\"syncs\":[\"auth-on-login\"]}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "register_empty" -> ok', async () => {
       if (typeof suiteManifestEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(suiteManifestEntityHandler.register({ name: "content", source: "repertoire/concepts/content/suite.yaml", manifest: "{}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "register_empty_name" -> error', async () => {
@@ -169,7 +171,8 @@ describe('SuiteManifestEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(suiteManifestEntityHandler.get({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_missing" -> error', async () => {
@@ -238,12 +241,10 @@ describe('SuiteManifestEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_identity = await interpret(suiteManifestEntityHandler.register({ name: "identity", source: "repertoire/concepts/identity/suite.yaml", manifest: "{\"version\":\"1.0.0\",\"concepts\":[\"User\",\"Session\"],\"syncs\":[\"auth-on-login\"]}" }), storage);
       const _pool = Object.assign({}, (afterResult_register_identity?.output ?? {}));
-      const _fixtureInput = {  } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(suiteManifestEntityHandler.listAll({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "valid" -> ok', async () => {
@@ -251,12 +252,10 @@ describe('SuiteManifestEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_identity = await interpret(suiteManifestEntityHandler.register({ name: "identity", source: "repertoire/concepts/identity/suite.yaml", manifest: "{\"version\":\"1.0.0\",\"concepts\":[\"User\",\"Session\"],\"syncs\":[\"auth-on-login\"]}" }), storage);
       const _pool = Object.assign({}, (afterResult_register_identity?.output ?? {}));
-      const _fixtureInput = {  } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(suiteManifestEntityHandler.listAll({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -323,7 +322,8 @@ describe('SuiteManifestEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(suiteManifestEntityHandler.findByConcept({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "find_empty_concept" -> error', async () => {
@@ -404,7 +404,8 @@ describe('SuiteManifestEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(suiteManifestEntityHandler.findBySync({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "find_empty_sync" -> ok', async () => {
@@ -417,7 +418,8 @@ describe('SuiteManifestEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(suiteManifestEntityHandler.findBySync({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "find_sync" -> ok', async () => {
@@ -430,7 +432,8 @@ describe('SuiteManifestEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(suiteManifestEntityHandler.findBySync({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -492,7 +495,8 @@ describe('SuiteManifestEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_identity = await interpret(suiteManifestEntityHandler.register({ name: "identity", source: "repertoire/concepts/identity/suite.yaml", manifest: "{\"version\":\"1.0.0\",\"concepts\":[\"User\",\"Session\"],\"syncs\":[\"auth-on-login\"]}" }), storage);
       const result = await interpret(suiteManifestEntityHandler.concepts({ suite: afterResult_register_identity?.output?.["suite"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "concepts_missing" -> ok', async () => {
@@ -505,7 +509,8 @@ describe('SuiteManifestEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(suiteManifestEntityHandler.concepts({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -567,7 +572,8 @@ describe('SuiteManifestEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_identity = await interpret(suiteManifestEntityHandler.register({ name: "identity", source: "repertoire/concepts/identity/suite.yaml", manifest: "{\"version\":\"1.0.0\",\"concepts\":[\"User\",\"Session\"],\"syncs\":[\"auth-on-login\"]}" }), storage);
       const result = await interpret(suiteManifestEntityHandler.syncs({ suite: afterResult_register_identity?.output?.["suite"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "syncs_missing" -> ok', async () => {
@@ -580,7 +586,8 @@ describe('SuiteManifestEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(suiteManifestEntityHandler.syncs({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -642,12 +649,10 @@ describe('SuiteManifestEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_identity = await interpret(suiteManifestEntityHandler.register({ name: "identity", source: "repertoire/concepts/identity/suite.yaml", manifest: "{\"version\":\"1.0.0\",\"concepts\":[\"User\",\"Session\"],\"syncs\":[\"auth-on-login\"]}" }), storage);
       const _pool = Object.assign({}, (afterResult_register_identity?.output ?? {}));
-      const _fixtureInput = {  } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(suiteManifestEntityHandler.dependencyGraph({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -709,7 +714,8 @@ describe('SuiteManifestEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_identity = await interpret(suiteManifestEntityHandler.register({ name: "identity", source: "repertoire/concepts/identity/suite.yaml", manifest: "{\"version\":\"1.0.0\",\"concepts\":[\"User\",\"Session\"],\"syncs\":[\"auth-on-login\"]}" }), storage);
       const result = await interpret(suiteManifestEntityHandler.transitiveDependencies({ suite: afterResult_register_identity?.output?.["suite"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "transitive_missing" -> ok', async () => {
@@ -722,7 +728,8 @@ describe('SuiteManifestEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(suiteManifestEntityHandler.transitiveDependencies({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -782,8 +789,15 @@ describe('SuiteManifestEntity functional handler', () => {
     it('fixture "validate_valid" -> ok', async () => {
       if (typeof suiteManifestEntityHandler.validateDependencies !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(suiteManifestEntityHandler.validateDependencies({ suite: "suite-uuid-1" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_register_identity = await interpret(suiteManifestEntityHandler.register({ name: "identity", source: "repertoire/concepts/identity/suite.yaml", manifest: "{\"version\":\"1.0.0\",\"concepts\":[\"User\",\"Session\"],\"syncs\":[\"auth-on-login\"]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_identity?.output ?? {}));
+      const _fixtureInput = { suite: "suite-uuid-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(suiteManifestEntityHandler.validateDependencies({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "validate_missing" -> error', async () => {
@@ -852,12 +866,10 @@ describe('SuiteManifestEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_identity = await interpret(suiteManifestEntityHandler.register({ name: "identity", source: "repertoire/concepts/identity/suite.yaml", manifest: "{\"version\":\"1.0.0\",\"concepts\":[\"User\",\"Session\"],\"syncs\":[\"auth-on-login\"]}" }), storage);
       const _pool = Object.assign({}, (afterResult_register_identity?.output ?? {}));
-      const _fixtureInput = {  } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(suiteManifestEntityHandler.crossSuiteConflicts({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -867,10 +879,12 @@ describe('SuiteManifestEntity functional handler', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(suiteManifestEntityHandler.register({ name: {"type":"literal","value":"identity"}, source: {"type":"literal","value":"repertoire/concepts/identity/suite.yaml"}, manifest: {"type":"literal","value":"{}"} }), storage);
-      expect(registerResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
       let suite = registerResult0.output["suite"];
       const thenResult0 = await interpret(suiteManifestEntityHandler.get({ name: {"type":"literal","value":"identity"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

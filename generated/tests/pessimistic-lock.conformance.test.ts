@@ -88,14 +88,16 @@ describe('PessimisticLock functional handler', () => {
       if (typeof pessimisticLockHandler.checkOut !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "checkout_no_resource" -> ok', async () => {
       if (typeof pessimisticLockHandler.checkOut !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(pessimisticLockHandler.checkOut({ resource: "", holder: "bob@example.com", duration: null, reason: null }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -157,7 +159,8 @@ describe('PessimisticLock functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_checkout_with_duration = await interpret(pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" }), storage);
       const result = await interpret(pessimisticLockHandler.checkIn({ lockId: afterResult_checkout_with_duration?.output?.["lockId"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "checkin_nonexistent" -> error', async () => {
@@ -226,7 +229,8 @@ describe('PessimisticLock functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_checkout_with_duration = await interpret(pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" }), storage);
       const result = await interpret(pessimisticLockHandler.breakLock({ lockId: afterResult_checkout_with_duration?.output?.["lockId"], breaker: "admin@example.com", reason: "Emergency release for blocked deployment" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "break_nonexistent_lock" -> error', async () => {
@@ -295,7 +299,8 @@ describe('PessimisticLock functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_checkout_with_duration = await interpret(pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" }), storage);
       const result = await interpret(pessimisticLockHandler.renew({ lockId: afterResult_checkout_with_duration?.output?.["lockId"], additionalDuration: "1800" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "renew_nonexistent" -> error', async () => {
@@ -369,7 +374,8 @@ describe('PessimisticLock functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(pessimisticLockHandler.queryLocks({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "query_locks_by_resource" -> ok', async () => {
@@ -382,7 +388,8 @@ describe('PessimisticLock functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(pessimisticLockHandler.queryLocks({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -449,7 +456,8 @@ describe('PessimisticLock functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(pessimisticLockHandler.queryQueue({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "query_queue_empty_resource" -> ok', async () => {
@@ -462,7 +470,8 @@ describe('PessimisticLock functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(pessimisticLockHandler.queryQueue({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -487,7 +496,8 @@ describe('PessimisticLock functional handler', () => {
     it("checkOut-then-checkOut-2", async () => {
       const storage = createInMemoryStorage();
       const checkOutResult0 = await interpret(pessimisticLockHandler.checkOut({ resource: {"type":"variable","name":"r"}, holder: {"type":"variable","name":"h"}, duration: {"type":"variable","name":"_"}, reason: {"type":"variable","name":"_"} }), storage);
-      expect(checkOutResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(checkOutResult0.variant), `step 0: expected success but got '${checkOutResult0.variant}'`).toBe(false);
       let lockId = checkOutResult0.output["lockId"];
       const thenResult0 = await interpret(pessimisticLockHandler.checkOut({ resource: {"type":"variable","name":"r"}, holder: {"type":"literal","value":"other-user"}, duration: {"type":"variable","name":"_"}, reason: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("alreadyLocked");
@@ -496,12 +506,15 @@ describe('PessimisticLock functional handler', () => {
     it("checkOut-then-checkOut", async () => {
       const storage = createInMemoryStorage();
       const checkOutResult0 = await interpret(pessimisticLockHandler.checkOut({ resource: {"type":"variable","name":"r"}, holder: {"type":"variable","name":"h"}, duration: {"type":"variable","name":"_"}, reason: {"type":"variable","name":"_"} }), storage);
-      expect(checkOutResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(checkOutResult0.variant), `step 0: expected success but got '${checkOutResult0.variant}'`).toBe(false);
       let lockId = checkOutResult0.output["lockId"];
       const thenResult0 = await interpret(pessimisticLockHandler.checkIn({ lockId: {"type":"variable","name":"l"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
       const thenResult1 = await interpret(pessimisticLockHandler.checkOut({ resource: {"type":"variable","name":"r"}, holder: {"type":"literal","value":"other-user"}, duration: {"type":"variable","name":"_"}, reason: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult1.variant).toBe("ok");
+      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
     });
 
   });

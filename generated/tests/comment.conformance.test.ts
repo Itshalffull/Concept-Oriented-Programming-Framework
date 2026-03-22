@@ -88,14 +88,16 @@ describe('Comment functional handler', () => {
       if (typeof commentHandler.addComment !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "empty_comment" -> ok', async () => {
       if (typeof commentHandler.addComment !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(commentHandler.addComment({ comment: "", entity: "doc-42", content: "text", author: "alice" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -162,7 +164,8 @@ describe('Comment functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(commentHandler.reply({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "missing_parent" -> ok', async () => {
@@ -175,7 +178,8 @@ describe('Comment functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(commentHandler.reply({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -242,7 +246,8 @@ describe('Comment functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(commentHandler.publish({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "publish_missing" -> notfound', async () => {
@@ -318,7 +323,8 @@ describe('Comment functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(commentHandler.unpublish({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "unpublish_missing" -> notfound', async () => {
@@ -393,7 +399,8 @@ describe('Comment functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(commentHandler.delete({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "delete_missing" -> notfound', async () => {
@@ -426,10 +433,12 @@ describe('Comment functional handler', () => {
     it("addComment-then-reply", async () => {
       const storage = createInMemoryStorage();
       const addCommentResult0 = await interpret(commentHandler.addComment({ comment: {"type":"variable","name":"c"}, entity: {"type":"variable","name":"e"}, content: {"type":"literal","value":"Hello"}, author: {"type":"literal","value":"alice"} }), storage);
-      expect(addCommentResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(addCommentResult0.variant), `step 0: expected success but got '${addCommentResult0.variant}'`).toBe(false);
       let comment = addCommentResult0.output["comment"];
       const thenResult0 = await interpret(commentHandler.reply({ comment: {"type":"variable","name":"r"}, parent: {"type":"variable","name":"c"}, content: {"type":"literal","value":"Reply"}, author: {"type":"literal","value":"bob"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

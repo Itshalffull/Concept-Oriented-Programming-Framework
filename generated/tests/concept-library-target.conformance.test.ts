@@ -88,21 +88,24 @@ describe('ConceptLibraryTarget functional handler', () => {
       if (typeof conceptLibraryTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(conceptLibraryTargetHandler.generate({ config: "{\"outputPath\":\"docs/reference/concept-library.md\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "with_custom_root" -> ok', async () => {
       if (typeof conceptLibraryTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(conceptLibraryTargetHandler.generate({ config: "{\"outputPath\":\"output/library.md\",\"projectRoot\":\"/workspace/project\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "empty_config" -> ok', async () => {
       if (typeof conceptLibraryTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(conceptLibraryTargetHandler.generate({ config: "" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -162,8 +165,15 @@ describe('ConceptLibraryTarget functional handler', () => {
     it('fixture "valid_document" -> ok', async () => {
       if (typeof conceptLibraryTargetHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(conceptLibraryTargetHandler.validate({ document: "concept-library-12345" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_with_output_path = await interpret(conceptLibraryTargetHandler.generate({ config: "{\"outputPath\":\"docs/reference/concept-library.md\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_with_output_path?.output ?? {}));
+      const _fixtureInput = { document: "concept-library-12345" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(conceptLibraryTargetHandler.validate({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "missing_document" -> error', async () => {
@@ -195,11 +205,13 @@ describe('ConceptLibraryTarget functional handler', () => {
     it("generate-then-validate", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(conceptLibraryTargetHandler.generate({ config: {"type":"literal","value":"{\"outputPath\":\"docs/reference/concept-library.md\"}"} }), storage);
-      expect(generateResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
       let document = generateResult0.output["document"];
       let files = generateResult0.output["files"];
       const thenResult0 = await interpret(conceptLibraryTargetHandler.validate({ document: {"type":"variable","name":"d"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

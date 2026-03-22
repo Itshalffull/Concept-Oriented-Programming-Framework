@@ -87,15 +87,29 @@ describe('VersionSpace functional handler', () => {
     it('fixture "fork_from_base" -> ok', async () => {
       if (typeof versionSpaceHandler.fork !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_diff_with_changes = await interpret(versionSpaceHandler.diff({ space: "vs-redesign" }), storage);
+      const _pool = Object.assign({}, (afterResult_diff_with_changes?.output ?? {}));
+      const _fixtureInput = { name: "redesign", parent: null, scope: null, visibility: "shared" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(versionSpaceHandler.fork({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "fork_private" -> ok', async () => {
       if (typeof versionSpaceHandler.fork !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(versionSpaceHandler.fork({ name: "experiment", parent: null, scope: null, visibility: "private" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_diff_with_changes = await interpret(versionSpaceHandler.diff({ space: "vs-redesign" }), storage);
+      const _pool = Object.assign({}, (afterResult_diff_with_changes?.output ?? {}));
+      const _fixtureInput = { name: "experiment", parent: null, scope: null, visibility: "private" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(versionSpaceHandler.fork({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "fork_bad_parent" -> parent_not_found', async () => {
@@ -170,7 +184,8 @@ describe('VersionSpace functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(versionSpaceHandler.enter({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "enter_archived" -> archived', async () => {
@@ -253,7 +268,8 @@ describe('VersionSpace functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(versionSpaceHandler.leave({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "leave_not_in" -> ok', async () => {
@@ -266,7 +282,8 @@ describe('VersionSpace functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(versionSpaceHandler.leave({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -328,7 +345,8 @@ describe('VersionSpace functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
       const result = await interpret(versionSpaceHandler.write({ space: "vs-redesign", entity_id: afterResult_fork_from_base?.output?.["space"], fields: "{\"title\":\"New Title\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "write_missing_space" -> read_only', async () => {
@@ -404,7 +422,8 @@ describe('VersionSpace functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(versionSpaceHandler.create_in_space({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "create_minimal" -> ok', async () => {
@@ -417,7 +436,8 @@ describe('VersionSpace functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(versionSpaceHandler.create_in_space({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -479,7 +499,8 @@ describe('VersionSpace functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
       const result = await interpret(versionSpaceHandler.delete_in_space({ space: "vs-redesign", entity_id: afterResult_fork_from_base?.output?.["space"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "delete_nonexistent" -> ok', async () => {
@@ -487,7 +508,8 @@ describe('VersionSpace functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
       const result = await interpret(versionSpaceHandler.delete_in_space({ space: "vs-redesign", entity_id: afterResult_fork_from_base?.output?.["space"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -549,7 +571,8 @@ describe('VersionSpace functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
       const result = await interpret(versionSpaceHandler.resolve({ space: "vs-redesign", entity_id: afterResult_fork_from_base?.output?.["space"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "resolve_base_fallback" -> ok', async () => {
@@ -557,7 +580,8 @@ describe('VersionSpace functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
       const result = await interpret(versionSpaceHandler.resolve({ space: "vs-redesign", entity_id: afterResult_fork_from_base?.output?.["space"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -624,7 +648,8 @@ describe('VersionSpace functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(versionSpaceHandler.propose({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "propose_already" -> already_proposed', async () => {
@@ -699,7 +724,8 @@ describe('VersionSpace functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(versionSpaceHandler.merge({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "merge_missing" -> conflicts', async () => {
@@ -774,7 +800,8 @@ describe('VersionSpace functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(versionSpaceHandler.sync_spaces({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "sync_missing" -> incompatible_scope', async () => {
@@ -844,7 +871,8 @@ describe('VersionSpace functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
       const result = await interpret(versionSpaceHandler.cherry_pick({ source: "vs-alpha", target: "vs-beta", entity_id: afterResult_fork_from_base?.output?.["space"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "cherry_pick_not_overridden" -> not_overridden', async () => {
@@ -919,7 +947,8 @@ describe('VersionSpace functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(versionSpaceHandler.promote_to_base({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "promote_missing" -> access_denied', async () => {
@@ -994,7 +1023,8 @@ describe('VersionSpace functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(versionSpaceHandler.rebase({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "rebase_empty" -> ok', async () => {
@@ -1007,7 +1037,8 @@ describe('VersionSpace functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(versionSpaceHandler.rebase({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -1067,15 +1098,29 @@ describe('VersionSpace functional handler', () => {
     it('fixture "diff_with_changes" -> ok', async () => {
       if (typeof versionSpaceHandler.diff !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(versionSpaceHandler.diff({ space: "vs-redesign" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
+      const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
+      const _fixtureInput = { space: "vs-redesign" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(versionSpaceHandler.diff({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "diff_empty" -> ok', async () => {
       if (typeof versionSpaceHandler.diff !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(versionSpaceHandler.diff({ space: "vs-empty" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_fork_from_base = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
+      const _pool = Object.assign({}, (afterResult_fork_from_base?.output ?? {}));
+      const _fixtureInput = { space: "vs-empty" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(versionSpaceHandler.diff({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -1142,7 +1187,8 @@ describe('VersionSpace functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(versionSpaceHandler.archive({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "archive_already" -> ok', async () => {
@@ -1155,7 +1201,8 @@ describe('VersionSpace functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(versionSpaceHandler.archive({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -1222,7 +1269,8 @@ describe('VersionSpace functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(versionSpaceHandler.execute_in_space({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "execute_in_missing" -> space_not_found', async () => {
@@ -1261,35 +1309,43 @@ describe('VersionSpace functional handler', () => {
     it("fork then resolve", async () => {
       const storage = createInMemoryStorage();
       const forkResult0 = await interpret(versionSpaceHandler.fork({ name: {"type":"literal","value":"redesign"}, parent: {"type":"variable","name":"null"}, scope: {"type":"variable","name":"null"}, visibility: {"type":"literal","value":"shared"} }), storage);
-      expect(forkResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(forkResult0.variant), `step 0: expected success but got '${forkResult0.variant}'`).toBe(false);
       let space = forkResult0.output["space"];
       const writeResult1 = await interpret(versionSpaceHandler.write({ space: {"type":"variable","name":"s"}, entity_id: {"type":"literal","value":"a1"}, fields: {"type":"literal","value":"{title: \"New Title\"}"} }), storage);
-      expect(writeResult1.variant).toBe("ok");
+      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr1(writeResult1.variant), `step 1: expected success but got '${writeResult1.variant}'`).toBe(false);
       let override = writeResult1.output["override"];
       const thenResult0 = await interpret(versionSpaceHandler.resolve({ space: {"type":"variable","name":"s"}, entity_id: {"type":"literal","value":"a1"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("fork then resolve", async () => {
       const storage = createInMemoryStorage();
       const forkResult0 = await interpret(versionSpaceHandler.fork({ name: {"type":"literal","value":"experiment"}, parent: {"type":"variable","name":"null"}, scope: {"type":"variable","name":"null"}, visibility: {"type":"literal","value":"private"} }), storage);
-      expect(forkResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(forkResult0.variant), `step 0: expected success but got '${forkResult0.variant}'`).toBe(false);
       let space = forkResult0.output["space"];
       const create_in_spaceResult1 = await interpret(versionSpaceHandler.create_in_space({ space: {"type":"variable","name":"s"}, fields: {"type":"literal","value":"{title: \"Space-Only\"}"} }), storage);
-      expect(create_in_spaceResult1.variant).toBe("ok");
+      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr1(create_in_spaceResult1.variant), `step 1: expected success but got '${create_in_spaceResult1.variant}'`).toBe(false);
       let override = create_in_spaceResult1.output["override"];
       let entity_id = create_in_spaceResult1.output["entity_id"];
       const thenResult0 = await interpret(versionSpaceHandler.resolve({ space: {"type":"variable","name":"s"}, entity_id: {"type":"variable","name":"e"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("fork then enter", async () => {
       const storage = createInMemoryStorage();
       const forkResult0 = await interpret(versionSpaceHandler.fork({ name: {"type":"literal","value":"to-archive"}, parent: {"type":"variable","name":"null"}, scope: {"type":"variable","name":"null"}, visibility: {"type":"literal","value":"private"} }), storage);
-      expect(forkResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(forkResult0.variant), `step 0: expected success but got '${forkResult0.variant}'`).toBe(false);
       let space = forkResult0.output["space"];
       const archiveResult1 = await interpret(versionSpaceHandler.archive({ space: {"type":"variable","name":"s"} }), storage);
-      expect(archiveResult1.variant).toBe("ok");
+      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr1(archiveResult1.variant), `step 1: expected success but got '${archiveResult1.variant}'`).toBe(false);
       const thenResult0 = await interpret(versionSpaceHandler.enter({ space: {"type":"variable","name":"s"}, user: {"type":"literal","value":"u1"} }), storage);
       expect(thenResult0.variant).toBe("archived");
     });

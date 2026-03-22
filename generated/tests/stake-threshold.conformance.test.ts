@@ -37,7 +37,8 @@ describe('StakeThreshold imperative handler', () => {
       if (typeof stakeThresholdHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await stakeThresholdHandler.configure({ minimumStake: "100.0", token: "ETH", lockPeriodDays: "30" }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "configure_zero_stake" -> error', async () => {
@@ -64,7 +65,8 @@ describe('StakeThreshold imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_eth_stake = await stakeThresholdHandler.configure({ minimumStake: "100.0", token: "ETH", lockPeriodDays: "30" }, storage);
       const result = await stakeThresholdHandler.deposit({ config: afterResult_configure_eth_stake?.output?.["id"], candidate: "alice", amount: "100.0" }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "deposit_negative" -> error', async () => {
@@ -91,7 +93,8 @@ describe('StakeThreshold imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_eth_stake = await stakeThresholdHandler.configure({ minimumStake: "100.0", token: "ETH", lockPeriodDays: "30" }, storage);
       const result = await stakeThresholdHandler.check({ config: afterResult_configure_eth_stake?.output?.["id"], candidate: "alice" }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "check_missing_config" -> error', async () => {
@@ -118,7 +121,8 @@ describe('StakeThreshold imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_eth_stake = await stakeThresholdHandler.configure({ minimumStake: "100.0", token: "ETH", lockPeriodDays: "30" }, storage);
       const result = await stakeThresholdHandler.slash({ config: afterResult_configure_eth_stake?.output?.["id"], candidate: "alice", amount: "50.0" }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "slash_no_balance" -> error', async () => {

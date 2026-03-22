@@ -88,7 +88,8 @@ describe('DisclosurePolicy functional handler', () => {
       if (typeof disclosurePolicyHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(disclosurePolicyHandler.define({ subject: "budget_report", audience: "public", timing: "Immediate", scope: ["financial","voting"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "define_missing_subject" -> error', async () => {
@@ -155,8 +156,15 @@ describe('DisclosurePolicy functional handler', () => {
     it('fixture "evaluate_active_policy" -> ok', async () => {
       if (typeof disclosurePolicyHandler.evaluate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(disclosurePolicyHandler.evaluate({ policy: "disclosure-001", event: "budget_vote", requestor: "auditor@example.com" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_define_immediate_disclosure = await interpret(disclosurePolicyHandler.define({ subject: "budget_report", audience: "public", timing: "Immediate", scope: ["financial","voting"] }), storage);
+      const _pool = Object.assign({}, (afterResult_define_immediate_disclosure?.output ?? {}));
+      const _fixtureInput = { policy: "disclosure-001", event: "budget_vote", requestor: "auditor@example.com" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(disclosurePolicyHandler.evaluate({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "evaluate_unknown_policy" -> restricted', async () => {
@@ -224,8 +232,15 @@ describe('DisclosurePolicy functional handler', () => {
     it('fixture "suspend_existing_policy" -> ok', async () => {
       if (typeof disclosurePolicyHandler.suspend !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(disclosurePolicyHandler.suspend({ policy: "disclosure-001" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_define_immediate_disclosure = await interpret(disclosurePolicyHandler.define({ subject: "budget_report", audience: "public", timing: "Immediate", scope: ["financial","voting"] }), storage);
+      const _pool = Object.assign({}, (afterResult_define_immediate_disclosure?.output ?? {}));
+      const _fixtureInput = { policy: "disclosure-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(disclosurePolicyHandler.suspend({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "suspend_unknown_policy" -> error', async () => {

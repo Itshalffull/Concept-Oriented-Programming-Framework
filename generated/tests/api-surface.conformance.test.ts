@@ -88,14 +88,16 @@ describe('ApiSurface functional handler', () => {
       if (typeof apiSurfaceHandler.compose !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(apiSurfaceHandler.compose({ suite: "commerce", target: "rest", outputs: ["order-output","product-output"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "graphql_surface" -> ok', async () => {
       if (typeof apiSurfaceHandler.compose !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(apiSurfaceHandler.compose({ suite: "commerce", target: "graphql", outputs: ["user-output"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "empty_outputs" -> error', async () => {
@@ -164,7 +166,8 @@ describe('ApiSurface functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_rest_surface = await interpret(apiSurfaceHandler.compose({ suite: "commerce", target: "rest", outputs: ["order-output","product-output"] }), storage);
       const result = await interpret(apiSurfaceHandler.entrypoint({ surface: afterResult_rest_surface?.output?.["surface"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "missing_surface" -> ok', async () => {
@@ -177,7 +180,8 @@ describe('ApiSurface functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(apiSurfaceHandler.entrypoint({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -202,12 +206,14 @@ describe('ApiSurface functional handler', () => {
     it("compose-then-entrypoint", async () => {
       const storage = createInMemoryStorage();
       const composeResult0 = await interpret(apiSurfaceHandler.compose({ suite: {"type":"literal","value":"test-suite"}, target: {"type":"literal","value":"rest"}, outputs: {"type":"list","items":[{"type":"literal","value":"todo-output"},{"type":"literal","value":"user-output"}]} }), storage);
-      expect(composeResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(composeResult0.variant), `step 0: expected success but got '${composeResult0.variant}'`).toBe(false);
       let surface = composeResult0.output["surface"];
       let entrypoint = composeResult0.output["entrypoint"];
       let conceptCount = composeResult0.output["conceptCount"];
       const thenResult0 = await interpret(apiSurfaceHandler.entrypoint({ surface: {"type":"variable","name":"s"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

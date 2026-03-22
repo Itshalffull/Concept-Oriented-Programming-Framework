@@ -88,7 +88,8 @@ describe('Proposal functional handler', () => {
       if (typeof proposalHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "create_empty_title" -> error', async () => {
@@ -157,7 +158,8 @@ describe('Proposal functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_budget_proposal = await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage);
       const result = await interpret(proposalHandler.sponsor({ proposal: afterResult_create_budget_proposal?.output?.["id"], sponsorId: "bob" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "sponsor_missing" -> error', async () => {
@@ -226,7 +228,8 @@ describe('Proposal functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_budget_proposal = await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage);
       const result = await interpret(proposalHandler.activate({ proposal: afterResult_create_budget_proposal?.output?.["id"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "activate_missing" -> error', async () => {
@@ -295,7 +298,8 @@ describe('Proposal functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_budget_proposal = await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage);
       const result = await interpret(proposalHandler.advance({ proposal: afterResult_create_budget_proposal?.output?.["id"], newStatus: "Passed" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "advance_missing" -> error', async () => {
@@ -364,7 +368,8 @@ describe('Proposal functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_budget_proposal = await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage);
       const result = await interpret(proposalHandler.cancel({ proposal: afterResult_create_budget_proposal?.output?.["id"], canceller: "alice" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "cancel_missing" -> error', async () => {

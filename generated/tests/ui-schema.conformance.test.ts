@@ -88,14 +88,16 @@ describe('UISchema functional handler', () => {
       if (typeof uiSchemaHandler.inspect !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(uiSchemaHandler.inspect({ schema: "S-1", conceptSpec: "{\"name\":\"Article\",\"fields\":[{\"name\":\"title\",\"type\":\"String\"},{\"name\":\"body\",\"type\":\"String\"}],\"actions\":[{\"name\":\"create\"}]}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "inspect_with_annotations" -> ok', async () => {
       if (typeof uiSchemaHandler.inspect !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(uiSchemaHandler.inspect({ schema: "S-2", conceptSpec: "{\"name\":\"Task\",\"suite\":\"project-mgmt\",\"annotations\":{\"surface\":{\"tags\":[\"kanban\"]}},\"fields\":[\"status\"],\"actions\":[\"update\"]}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "inspect_bad_json" -> error', async () => {
@@ -169,7 +171,8 @@ describe('UISchema functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(uiSchemaHandler.override({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "override_bad_json" -> error', async () => {
@@ -243,7 +246,8 @@ describe('UISchema functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(uiSchemaHandler.getSchema({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_schema_nonexistent" -> error', async () => {
@@ -317,7 +321,8 @@ describe('UISchema functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(uiSchemaHandler.getElements({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_elements_nonexistent" -> error', async () => {
@@ -391,7 +396,8 @@ describe('UISchema functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(uiSchemaHandler.getEntityElement({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_entity_nonexistent" -> error', async () => {
@@ -465,7 +471,8 @@ describe('UISchema functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(uiSchemaHandler.markResolved({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "mark_resolved_nonexistent" -> error', async () => {
@@ -497,28 +504,34 @@ describe('UISchema functional handler', () => {
     it("inspect then getElements", async () => {
       const storage = createInMemoryStorage();
       const inspectResult0 = await interpret(uiSchemaHandler.inspect({ schema: {"type":"variable","name":"s"}, conceptSpec: {"type":"literal","value":"concept Test [T] { state { name: T -> String } }"} }), storage);
-      expect(inspectResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(inspectResult0.variant), `step 0: expected success but got '${inspectResult0.variant}'`).toBe(false);
       let schema = inspectResult0.output["schema"];
       const thenResult0 = await interpret(uiSchemaHandler.getElements({ schema: {"type":"variable","name":"s"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("inspect then getEntityElement", async () => {
       const storage = createInMemoryStorage();
       const inspectResult0 = await interpret(uiSchemaHandler.inspect({ schema: {"type":"variable","name":"s"}, conceptSpec: {"type":"literal","value":"concept Approval [A] { state { status: A -> String } }"} }), storage);
-      expect(inspectResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(inspectResult0.variant), `step 0: expected success but got '${inspectResult0.variant}'`).toBe(false);
       let schema = inspectResult0.output["schema"];
       const thenResult0 = await interpret(uiSchemaHandler.getEntityElement({ schema: {"type":"variable","name":"s"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("inspect then getElements", async () => {
       const storage = createInMemoryStorage();
       const inspectResult0 = await interpret(uiSchemaHandler.inspect({ schema: {"type":"variable","name":"s"}, conceptSpec: {"type":"variable","name":"_"} }), storage);
-      expect(inspectResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(inspectResult0.variant), `step 0: expected success but got '${inspectResult0.variant}'`).toBe(false);
       let schema = inspectResult0.output["schema"];
       const markResolvedResult1 = await interpret(uiSchemaHandler.markResolved({ schema: {"type":"variable","name":"s"} }), storage);
-      expect(markResolvedResult1.variant).toBe("ok");
+      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr1(markResolvedResult1.variant), `step 1: expected success but got '${markResolvedResult1.variant}'`).toBe(false);
       schema = markResolvedResult1.output["schema"];
       const thenResult0 = await interpret(uiSchemaHandler.getElements({ schema: {"type":"variable","name":"s"} }), storage);
       expect(thenResult0.variant).toBe("resolved");

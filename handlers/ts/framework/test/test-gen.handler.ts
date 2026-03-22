@@ -129,6 +129,8 @@ export interface TestPlan {
   handlerPath: string;
   handlerStyle: 'functional' | 'imperative';
   handlerExportName?: string;
+  /** Raw (unwrapped) handler export for structural tests when autoInterpret is used */
+  rawHandlerExportName?: string;
   actions: TestPlanAction[];
   examples: TestPlanExample[];
   properties: TestPlanForall[];

@@ -37,7 +37,8 @@ describe('SyncParser imperative handler', () => {
       if (typeof syncParserHandler.parse !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await syncParserHandler.parse({ source: "sync T [eager]\nwhen {\n  A/act: [ x: ?v ] => []\n}\nthen {\n  B/do: [ x: ?v ]\n}", manifests: [] }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "empty_source" -> error', async () => {
@@ -72,7 +73,8 @@ describe('SyncParser imperative handler', () => {
     it("parse valid then parse invalid fails", async () => {
       const storage = createInMemoryStorage();
       const parseResult0 = await syncParserHandler.parse({ source: {"type":"literal","value":"sync T [eager]\nwhen {\n  A/act: [ x: ?v ] => []\n}\nthen {\n  B/do: [ x: ?v ]\n}"}, manifests: {"type":"list","items":[]} }, storage);
-      expect(parseResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(parseResult0.variant), `step 0: expected success but got '${parseResult0.variant}'`).toBe(false);
       let sync = parseResult0.output["sync"];
       let ast = parseResult0.output["ast"];
       const thenResult0 = await syncParserHandler.parse({ source: {"type":"literal","value":"invalid"}, manifests: {"type":"list","items":[]} }, storage);

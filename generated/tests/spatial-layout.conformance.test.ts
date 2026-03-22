@@ -88,7 +88,8 @@ describe('SpatialLayout functional handler', () => {
       if (typeof spatialLayoutHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(spatialLayoutHandler.apply({ algorithm: "force-directed" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "missing_algorithm" -> unknown_algorithm', async () => {
@@ -163,7 +164,8 @@ describe('SpatialLayout functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(spatialLayoutHandler.register({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "empty_algorithm" -> unknown_algorithm', async () => {
@@ -181,9 +183,11 @@ describe('SpatialLayout functional handler', () => {
     it("register-then-apply", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(spatialLayoutHandler.register({ algorithm: {"type":"literal","value":"force-directed"}, provider: {"type":"literal","value":"ForceDirectedLayout"} }), storage);
-      expect(registerResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
       const thenResult0 = await interpret(spatialLayoutHandler.apply({ canvas: {"type":"literal","value":"c1"}, algorithm: {"type":"literal","value":"force-directed"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

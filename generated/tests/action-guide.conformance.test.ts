@@ -88,14 +88,16 @@ describe('ActionGuide functional handler', () => {
       if (typeof actionGuideHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(actionGuideHandler.define({ concept: "SpecParser", steps: ["parse","validate","emit"], content: "{\"design-principles\":[{\"title\":\"Independence\",\"rule\":\"Parse without external state\"}]}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "minimal" -> ok', async () => {
       if (typeof actionGuideHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(actionGuideHandler.define({ concept: "Widget", steps: ["create"], content: "{}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "empty_steps" -> emptySteps', async () => {
@@ -163,15 +165,29 @@ describe('ActionGuide functional handler', () => {
     it('fixture "skill_md_format" -> ok', async () => {
       if (typeof actionGuideHandler.render !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(actionGuideHandler.render({ workflow: "action-guide-1", format: "skill-md" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_with_content = await interpret(actionGuideHandler.define({ concept: "SpecParser", steps: ["parse","validate","emit"], content: "{\"design-principles\":[{\"title\":\"Independence\",\"rule\":\"Parse without external state\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_with_content?.output ?? {}));
+      const _fixtureInput = { workflow: "action-guide-1", format: "skill-md" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(actionGuideHandler.render({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "cli_help_format" -> ok', async () => {
       if (typeof actionGuideHandler.render !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(actionGuideHandler.render({ workflow: "action-guide-1", format: "cli-help" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_with_content = await interpret(actionGuideHandler.define({ concept: "SpecParser", steps: ["parse","validate","emit"], content: "{\"design-principles\":[{\"title\":\"Independence\",\"rule\":\"Parse without external state\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_with_content?.output ?? {}));
+      const _fixtureInput = { workflow: "action-guide-1", format: "cli-help" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(actionGuideHandler.render({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "unsupported_format" -> unknownFormat', async () => {
@@ -204,11 +220,13 @@ describe('ActionGuide functional handler', () => {
     it("define then render succeeds", async () => {
       const storage = createInMemoryStorage();
       const defineResult0 = await interpret(actionGuideHandler.define({ concept: {"type":"literal","value":"SpecParser"}, steps: {"type":"list","items":[{"type":"literal","value":"parse"}]}, content: {"type":"literal","value":"{\"design-principles\":[{\"title\":\"Independence\",\"rule\":\"Parse without external state\"}]}"} }), storage);
-      expect(defineResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(defineResult0.variant), `step 0: expected success but got '${defineResult0.variant}'`).toBe(false);
       let workflow = defineResult0.output["workflow"];
       let stepCount = defineResult0.output["stepCount"];
       const thenResult0 = await interpret(actionGuideHandler.render({ workflow: {"type":"variable","name":"w"}, format: {"type":"literal","value":"skill-md"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

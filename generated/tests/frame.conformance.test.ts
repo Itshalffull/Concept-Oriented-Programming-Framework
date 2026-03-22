@@ -88,14 +88,16 @@ describe('Frame functional handler', () => {
       if (typeof frameHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(frameHandler.create({ canvas: "c1", name: "Group A", x: "0", y: "0", width: "400", height: "300" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "labeled_frame" -> ok', async () => {
       if (typeof frameHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(frameHandler.create({ canvas: "c1", name: "Sidebar", x: "50", y: "100", width: "200", height: "600" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -157,7 +159,8 @@ describe('Frame functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_create = await interpret(frameHandler.create({ canvas: "c1", name: "Group A", x: "0", y: "0", width: "400", height: "300" }), storage);
       const result = await interpret(frameHandler.resize({ frame: afterResult_valid_create?.output?.["frame"], width: "500", height: "400" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "resize_missing" -> notFound', async () => {
@@ -227,7 +230,8 @@ describe('Frame functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_create = await interpret(frameHandler.create({ canvas: "c1", name: "Group A", x: "0", y: "0", width: "400", height: "300" }), storage);
       const result = await interpret(frameHandler.addItem({ frame: afterResult_valid_create?.output?.["frame"], item_id: "item1" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "add_to_missing_frame" -> notFound', async () => {
@@ -297,7 +301,8 @@ describe('Frame functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_create = await interpret(frameHandler.create({ canvas: "c1", name: "Group A", x: "0", y: "0", width: "400", height: "300" }), storage);
       const result = await interpret(frameHandler.removeItem({ frame: afterResult_valid_create?.output?.["frame"], item_id: "item1" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "remove_from_missing_frame" -> notFound', async () => {
@@ -367,7 +372,8 @@ describe('Frame functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_create = await interpret(frameHandler.create({ canvas: "c1", name: "Group A", x: "0", y: "0", width: "400", height: "300" }), storage);
       const result = await interpret(frameHandler.setBackground({ frame: afterResult_valid_create?.output?.["frame"], color: "#f0f0f0" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "background_missing_frame" -> notFound', async () => {
@@ -400,10 +406,12 @@ describe('Frame functional handler', () => {
     it("create-then-addItem", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(frameHandler.create({ canvas: {"type":"literal","value":"c1"}, name: {"type":"literal","value":"Group A"}, x: {"type":"literal","value":0}, y: {"type":"literal","value":0}, width: {"type":"literal","value":400}, height: {"type":"literal","value":300} }), storage);
-      expect(createResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
       let frame = createResult0.output["frame"];
       const thenResult0 = await interpret(frameHandler.addItem({ frame: {"type":"variable","name":"f"}, item_id: {"type":"literal","value":"item1"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

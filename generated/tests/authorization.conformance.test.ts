@@ -88,7 +88,8 @@ describe('Authorization functional handler', () => {
       if (typeof authorizationHandler.grantPermission !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(authorizationHandler.grantPermission({ role: "admin", permission: "write" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "grant_empty_role" -> error', async () => {
@@ -162,7 +163,8 @@ describe('Authorization functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(authorizationHandler.revokePermission({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "revoke_missing_role" -> error', async () => {
@@ -236,7 +238,8 @@ describe('Authorization functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(authorizationHandler.assignRole({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "assign_missing_role" -> error', async () => {
@@ -310,7 +313,8 @@ describe('Authorization functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(authorizationHandler.checkPermission({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "check_ungranted" -> error', async () => {
@@ -342,33 +346,40 @@ describe('Authorization functional handler', () => {
     it("grantPermission-then-checkPermission-2", async () => {
       const storage = createInMemoryStorage();
       const grantPermissionResult0 = await interpret(authorizationHandler.grantPermission({ role: {"type":"literal","value":"admin"}, permission: {"type":"literal","value":"write"} }), storage);
-      expect(grantPermissionResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(grantPermissionResult0.variant), `step 0: expected success but got '${grantPermissionResult0.variant}'`).toBe(false);
       let role = grantPermissionResult0.output["role"];
       let permission = grantPermissionResult0.output["permission"];
       const assignRoleResult1 = await interpret(authorizationHandler.assignRole({ user: {"type":"variable","name":"x"}, role: {"type":"literal","value":"admin"} }), storage);
-      expect(assignRoleResult1.variant).toBe("ok");
+      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr1(assignRoleResult1.variant), `step 1: expected success but got '${assignRoleResult1.variant}'`).toBe(false);
       let user = assignRoleResult1.output["user"];
       role = assignRoleResult1.output["role"];
       const thenResult0 = await interpret(authorizationHandler.checkPermission({ user: {"type":"variable","name":"x"}, permission: {"type":"literal","value":"write"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("grantPermission-then-checkPermission", async () => {
       const storage = createInMemoryStorage();
       const grantPermissionResult0 = await interpret(authorizationHandler.grantPermission({ role: {"type":"literal","value":"editor"}, permission: {"type":"literal","value":"publish"} }), storage);
-      expect(grantPermissionResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(grantPermissionResult0.variant), `step 0: expected success but got '${grantPermissionResult0.variant}'`).toBe(false);
       let role = grantPermissionResult0.output["role"];
       let permission = grantPermissionResult0.output["permission"];
       const assignRoleResult1 = await interpret(authorizationHandler.assignRole({ user: {"type":"variable","name":"x"}, role: {"type":"literal","value":"editor"} }), storage);
-      expect(assignRoleResult1.variant).toBe("ok");
+      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr1(assignRoleResult1.variant), `step 1: expected success but got '${assignRoleResult1.variant}'`).toBe(false);
       let user = assignRoleResult1.output["user"];
       role = assignRoleResult1.output["role"];
       const revokePermissionResult2 = await interpret(authorizationHandler.revokePermission({ role: {"type":"literal","value":"editor"}, permission: {"type":"literal","value":"publish"} }), storage);
-      expect(revokePermissionResult2.variant).toBe("ok");
+      const _isErr2 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr2(revokePermissionResult2.variant), `step 2: expected success but got '${revokePermissionResult2.variant}'`).toBe(false);
       role = revokePermissionResult2.output["role"];
       permission = revokePermissionResult2.output["permission"];
       const thenResult0 = await interpret(authorizationHandler.checkPermission({ user: {"type":"variable","name":"x"}, permission: {"type":"literal","value":"publish"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

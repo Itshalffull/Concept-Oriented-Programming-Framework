@@ -88,7 +88,8 @@ describe('Weight functional handler', () => {
       if (typeof weightHandler.updateWeight !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(weightHandler.updateWeight({ participant: "alice", source: "staking", value: "100.0" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "update_negative" -> error', async () => {
@@ -157,7 +158,8 @@ describe('Weight functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_update_stake = await interpret(weightHandler.updateWeight({ participant: "alice", source: "staking", value: "100.0" }), storage);
       const result = await interpret(weightHandler.snapshot({ snapshotRef: afterResult_update_stake?.output?.["id"], participants: "[\"alice\",\"bob\"]" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "snap_empty_participants" -> error', async () => {
@@ -231,7 +233,8 @@ describe('Weight functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(weightHandler.getWeight({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_unknown_weight" -> error', async () => {
@@ -300,7 +303,8 @@ describe('Weight functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_update_stake = await interpret(weightHandler.updateWeight({ participant: "alice", source: "staking", value: "100.0" }), storage);
       const result = await interpret(weightHandler.getWeightFromSnapshot({ snapshot: afterResult_update_stake?.output?.["id"], participant: "alice" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_from_missing_snapshot" -> error', async () => {

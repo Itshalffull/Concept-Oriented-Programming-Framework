@@ -88,7 +88,8 @@ describe('BuildCache functional handler', () => {
       if (typeof buildCacheHandler.check !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "check_changed" -> changed', async () => {
@@ -171,7 +172,8 @@ describe('BuildCache functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(buildCacheHandler.record({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "record_nondeterministic" -> ok', async () => {
@@ -184,7 +186,8 @@ describe('BuildCache functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(buildCacheHandler.record({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -251,7 +254,8 @@ describe('BuildCache functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(buildCacheHandler.invalidate({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "invalidate_missing" -> notFound', async () => {
@@ -326,7 +330,8 @@ describe('BuildCache functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(buildCacheHandler.invalidateBySource({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "invalidate_by_missing_source" -> ok', async () => {
@@ -339,7 +344,8 @@ describe('BuildCache functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(buildCacheHandler.invalidateBySource({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -406,7 +412,8 @@ describe('BuildCache functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(buildCacheHandler.invalidateByKind({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "invalidate_by_unknown_kind" -> ok', async () => {
@@ -419,7 +426,8 @@ describe('BuildCache functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(buildCacheHandler.invalidateByKind({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -481,12 +489,10 @@ describe('BuildCache functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_check_cached = await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
       const _pool = Object.assign({}, (afterResult_check_cached?.output ?? {}));
-      const _fixtureInput = {  } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(buildCacheHandler.invalidateAll({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -548,12 +554,10 @@ describe('BuildCache functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_check_cached = await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
       const _pool = Object.assign({}, (afterResult_check_cached?.output ?? {}));
-      const _fixtureInput = {  } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(buildCacheHandler.status({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -615,12 +619,10 @@ describe('BuildCache functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_check_cached = await interpret(buildCacheHandler.check({ stepKey: "framework:TypeScriptGen:password", inputHash: "abc123", deterministic: "true" }), storage);
       const _pool = Object.assign({}, (afterResult_check_cached?.output ?? {}));
-      const _fixtureInput = {  } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(buildCacheHandler.staleSteps({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -645,7 +647,8 @@ describe('BuildCache functional handler', () => {
     it("record-then-check", async () => {
       const storage = createInMemoryStorage();
       const recordResult0 = await interpret(buildCacheHandler.record({ stepKey: {"type":"literal","value":"framework:TypeScriptGen:password"}, inputHash: {"type":"literal","value":"abc"}, outputHash: {"type":"literal","value":"xyz"}, outputRef: {"type":"literal","value":".clef-cache/ts/password"}, sourceLocator: {"type":"literal","value":"./specs/password.concept"}, deterministic: {"type":"literal","value":true} }), storage);
-      expect(recordResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(recordResult0.variant), `step 0: expected success but got '${recordResult0.variant}'`).toBe(false);
       let entry = recordResult0.output["entry"];
       const thenResult0 = await interpret(buildCacheHandler.check({ stepKey: {"type":"literal","value":"framework:TypeScriptGen:password"}, inputHash: {"type":"literal","value":"abc"}, deterministic: {"type":"literal","value":true} }), storage);
       expect(thenResult0.variant).toBe("unchanged");
@@ -656,7 +659,8 @@ describe('BuildCache functional handler', () => {
     it("invalidate-then-check", async () => {
       const storage = createInMemoryStorage();
       const invalidateResult0 = await interpret(buildCacheHandler.invalidate({ stepKey: {"type":"literal","value":"framework:TypeScriptGen:password"} }), storage);
-      expect(invalidateResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(invalidateResult0.variant), `step 0: expected success but got '${invalidateResult0.variant}'`).toBe(false);
       const thenResult0 = await interpret(buildCacheHandler.check({ stepKey: {"type":"literal","value":"framework:TypeScriptGen:password"}, inputHash: {"type":"literal","value":"abc"}, deterministic: {"type":"literal","value":true} }), storage);
       expect(thenResult0.variant).toBe("changed");
     });

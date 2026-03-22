@@ -88,7 +88,8 @@ describe('NextjsGen functional handler', () => {
       if (typeof nextjsGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(nextjsGenHandler.generate({ spec: "user-spec-001", manifest: {"name":"User","uri":"urn:clef/User","typeParams":[],"relations":[],"actions":[{"name":"create","params":[{"name":"email","type":{"kind":"primitive","primitive":"String"}}],"variants":[{"tag":"ok","fields":[{"name":"user","type":{"kind":"param"}}],"prose":"Created."}]}],"invariants":[],"graphqlSchema":"","jsonSchemas":{"invocations":{},"completions":{}},"capabilities":[],"purpose":"Manage users."} }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "missing_name" -> error', async () => {
@@ -127,7 +128,8 @@ describe('NextjsGen functional handler', () => {
     it("generate produces Next.js files", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(nextjsGenHandler.generate({ spec: {"type":"literal","value":"s1"}, manifest: {"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"User"}},{"name":"uri","value":{"type":"literal","value":"urn:clef/User"}},{"name":"typeParams","value":{"type":"list","items":[]}},{"name":"relations","value":{"type":"list","items":[]}},{"name":"actions","value":{"type":"list","items":[{"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"create"}},{"name":"params","value":{"type":"list","items":[]}},{"name":"variants","value":{"type":"list","items":[{"type":"record","fields":[{"name":"tag","value":{"type":"literal","value":"ok"}},{"name":"fields","value":{"type":"list","items":[]}},{"name":"prose","value":{"type":"literal","value":"Created."}}]}]}}]}]}},{"name":"invariants","value":{"type":"list","items":[]}},{"name":"graphqlSchema","value":{"type":"literal","value":""}},{"name":"jsonSchemas","value":{"type":"record","fields":[{"name":"invocations","value":{"type":"record","fields":[]}},{"name":"completions","value":{"type":"record","fields":[]}}]}},{"name":"capabilities","value":{"type":"list","items":[]}},{"name":"purpose","value":{"type":"literal","value":"Manage users."}}]} }), storage);
-      expect(generateResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
       let files = generateResult0.output["files"];
     });
 

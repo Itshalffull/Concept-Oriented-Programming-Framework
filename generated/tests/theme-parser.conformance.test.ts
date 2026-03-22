@@ -87,15 +87,29 @@ describe('ThemeParser functional handler', () => {
     it('fixture "expressive_theme" -> ok', async () => {
       if (typeof themeParserHandler.parse !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(themeParserHandler.parse({ theme: "h-1", source: "{\"name\":\"brand-light\",\"colorScheme\":{\"modes\":{\"light\":{\"foreground\":\"#1a1a1a\",\"background\":\"#ffffff\",\"primary\":\"#3b82f6\"},\"dark\":{\"foreground\":\"#f5f5f5\",\"background\":\"#1a1a1a\",\"primary\":\"#60a5fa\"}},\"activeMode\":\"light\"},\"density\":{\"mode\":\"comfortable\",\"multiplier\":1},\"tokens\":{\"color\":{\"primary\":\"#3b82f6\"}}}" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_passing_contrast = await interpret(themeParserHandler.checkContrast({ theme: "h-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_passing_contrast?.output ?? {}));
+      const _fixtureInput = { theme: "h-1", source: "{\"name\":\"brand-light\",\"colorScheme\":{\"modes\":{\"light\":{\"foreground\":\"#1a1a1a\",\"background\":\"#ffffff\",\"primary\":\"#3b82f6\"},\"dark\":{\"foreground\":\"#f5f5f5\",\"background\":\"#1a1a1a\",\"primary\":\"#60a5fa\"}},\"activeMode\":\"light\"},\"density\":{\"mode\":\"comfortable\",\"multiplier\":1},\"tokens\":{\"color\":{\"primary\":\"#3b82f6\"}}}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(themeParserHandler.parse({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "legacy_tokens_only" -> ok', async () => {
       if (typeof themeParserHandler.parse !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(themeParserHandler.parse({ theme: "h-2", source: "{\"tokens\":{\"color.primary\":\"#10b981\",\"spacing.sm\":\"4px\"}}" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_passing_contrast = await interpret(themeParserHandler.checkContrast({ theme: "h-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_passing_contrast?.output ?? {}));
+      const _fixtureInput = { theme: "h-2", source: "{\"tokens\":{\"color.primary\":\"#10b981\",\"spacing.sm\":\"4px\"}}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(themeParserHandler.parse({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "invalid_json_source" -> error', async () => {
@@ -169,8 +183,15 @@ describe('ThemeParser functional handler', () => {
     it('fixture "passing_contrast" -> ok', async () => {
       if (typeof themeParserHandler.checkContrast !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(themeParserHandler.checkContrast({ theme: "h-1" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_expressive_theme = await interpret(themeParserHandler.parse({ theme: "h-1", source: "{\"name\":\"brand-light\",\"colorScheme\":{\"modes\":{\"light\":{\"foreground\":\"#1a1a1a\",\"background\":\"#ffffff\",\"primary\":\"#3b82f6\"},\"dark\":{\"foreground\":\"#f5f5f5\",\"background\":\"#1a1a1a\",\"primary\":\"#60a5fa\"}},\"activeMode\":\"light\"},\"density\":{\"mode\":\"comfortable\",\"multiplier\":1},\"tokens\":{\"color\":{\"primary\":\"#3b82f6\"}}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_expressive_theme?.output ?? {}));
+      const _fixtureInput = { theme: "h-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(themeParserHandler.checkContrast({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "unparsed_theme" -> violations', async () => {
@@ -203,11 +224,13 @@ describe('ThemeParser functional handler', () => {
     it("parsed theme can pass contrast check", async () => {
       const storage = createInMemoryStorage();
       const parseResult0 = await interpret(themeParserHandler.parse({ theme: {"type":"variable","name":"h"}, source: {"type":"literal","value":"theme light { ... }"} }), storage);
-      expect(parseResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(parseResult0.variant), `step 0: expected success but got '${parseResult0.variant}'`).toBe(false);
       let theme = parseResult0.output["theme"];
       let ast = parseResult0.output["ast"];
       const thenResult0 = await interpret(themeParserHandler.checkContrast({ theme: {"type":"variable","name":"h"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

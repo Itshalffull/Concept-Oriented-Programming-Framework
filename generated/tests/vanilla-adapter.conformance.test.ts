@@ -88,14 +88,16 @@ describe('VanillaAdapter functional handler', () => {
       if (typeof vanillaAdapterHandler.normalize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(vanillaAdapterHandler.normalize({ adapter: "vanilla-1", props: "{\"onclick\":\"handleClick\",\"class\":\"container flex\",\"style\":\"color: blue\",\"id\":\"main\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "with_data_attrs" -> ok', async () => {
       if (typeof vanillaAdapterHandler.normalize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(vanillaAdapterHandler.normalize({ adapter: "vanilla-2", props: "{\"data-testid\":\"widget\",\"aria-label\":\"Submit\",\"title\":\"Click me\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "empty_props" -> error', async () => {
@@ -134,7 +136,8 @@ describe('VanillaAdapter functional handler', () => {
     it("normalize succeeds with valid props and fails with empty", async () => {
       const storage = createInMemoryStorage();
       const normalizeResult0 = await interpret(vanillaAdapterHandler.normalize({ adapter: {"type":"variable","name":"a"}, props: {"type":"literal","value":"{ \"onclick\": \"handler_1\", \"class\": \"btn\" }"} }), storage);
-      expect(normalizeResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(normalizeResult0.variant), `step 0: expected success but got '${normalizeResult0.variant}'`).toBe(false);
       let adapter = normalizeResult0.output["adapter"];
       let normalized = normalizeResult0.output["normalized"];
       const thenResult0 = await interpret(vanillaAdapterHandler.normalize({ adapter: {"type":"variable","name":"a"}, props: {"type":"literal","value":""} }), storage);

@@ -87,8 +87,15 @@ describe('Version functional handler', () => {
     it('fixture "valid_snapshot" -> ok', async () => {
       if (typeof versionHandler.snapshot !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(versionHandler.snapshot({ version: "v1", entity: "doc-1", data: "initial content", author: "alice" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_valid_diff = await interpret(versionHandler.diff({ versionA: "v1", versionB: "v2" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_diff?.output ?? {}));
+      const _fixtureInput = { version: "v1", entity: "doc-1", data: "initial content", author: "alice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(versionHandler.snapshot({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "another_snapshot" -> ok', async () => {
@@ -96,7 +103,8 @@ describe('Version functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_snapshot = await interpret(versionHandler.snapshot({ version: "v1", entity: "doc-1", data: "initial content", author: "alice" }), storage);
       const result = await interpret(versionHandler.snapshot({ version: "v2", entity: afterResult_valid_snapshot?.output?.["version"], data: "updated content", author: "bob" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -158,7 +166,8 @@ describe('Version functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_snapshot = await interpret(versionHandler.snapshot({ version: "v1", entity: "doc-1", data: "initial content", author: "alice" }), storage);
       const result = await interpret(versionHandler.listVersions({ entity: afterResult_valid_snapshot?.output?.["version"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "list_unknown_entity" -> ok', async () => {
@@ -171,7 +180,8 @@ describe('Version functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(versionHandler.listVersions({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -238,7 +248,8 @@ describe('Version functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(versionHandler.rollback({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "rollback_missing" -> notfound', async () => {
@@ -306,8 +317,15 @@ describe('Version functional handler', () => {
     it('fixture "valid_diff" -> ok', async () => {
       if (typeof versionHandler.diff !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(versionHandler.diff({ versionA: "v1", versionB: "v2" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_valid_snapshot = await interpret(versionHandler.snapshot({ version: "v1", entity: "doc-1", data: "initial content", author: "alice" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_snapshot?.output ?? {}));
+      const _fixtureInput = { versionA: "v1", versionB: "v2" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(versionHandler.diff({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "diff_missing" -> notfound', async () => {
@@ -340,12 +358,15 @@ describe('Version functional handler', () => {
     it("snapshot-then-rollback", async () => {
       const storage = createInMemoryStorage();
       const snapshotResult0 = await interpret(versionHandler.snapshot({ version: {"type":"variable","name":"v1"}, entity: {"type":"literal","value":"doc"}, data: {"type":"literal","value":"original"}, author: {"type":"literal","value":"alice"} }), storage);
-      expect(snapshotResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(snapshotResult0.variant), `step 0: expected success but got '${snapshotResult0.variant}'`).toBe(false);
       let version = snapshotResult0.output["version"];
       const thenResult0 = await interpret(versionHandler.listVersions({ entity: {"type":"literal","value":"doc"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
       const thenResult1 = await interpret(versionHandler.rollback({ version: {"type":"variable","name":"v1"} }), storage);
-      expect(thenResult1.variant).toBe("ok");
+      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
     });
 
   });

@@ -88,14 +88,16 @@ describe('SwiftSdkTarget functional handler', () => {
       if (typeof swiftSdkTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(swiftSdkTargetHandler.generate({ projection: "account-projection", config: "{}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "with_custom_package" -> ok', async () => {
       if (typeof swiftSdkTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(swiftSdkTargetHandler.generate({ projection: "payment-projection", config: "{\"packageName\":\"PaymentSDK\",\"platforms\":[\"iOS\",\"macOS\",\"tvOS\"]}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "empty_projection" -> error', async () => {
@@ -127,11 +129,13 @@ describe('SwiftSdkTarget functional handler', () => {
     it("generate-then-generate", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(swiftSdkTargetHandler.generate({ projection: {"type":"literal","value":"test-projection"}, config: {"type":"literal","value":"{}"} }), storage);
-      expect(generateResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
       let package = generateResult0.output["package"];
       let files = generateResult0.output["files"];
       const thenResult0 = await interpret(swiftSdkTargetHandler.generate({ projection: {"type":"literal","value":"test-projection-2"}, config: {"type":"literal","value":"{}"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

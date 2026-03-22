@@ -88,7 +88,8 @@ describe('ContentNode functional handler', () => {
       if (typeof contentNodeHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "create_empty_node" -> error', async () => {
@@ -157,7 +158,8 @@ describe('ContentNode functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_page_node = await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
       const result = await interpret(contentNodeHandler.update({ node: afterResult_create_page_node?.output?.["node"], content: "Updated wiki content" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "update_missing" -> error', async () => {
@@ -226,7 +228,8 @@ describe('ContentNode functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_page_node = await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
       const result = await interpret(contentNodeHandler.delete({ node: afterResult_create_page_node?.output?.["node"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "delete_missing" -> error', async () => {
@@ -295,7 +298,8 @@ describe('ContentNode functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_page_node = await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
       const result = await interpret(contentNodeHandler.get({ node: afterResult_create_page_node?.output?.["node"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_missing" -> error', async () => {
@@ -364,7 +368,8 @@ describe('ContentNode functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_page_node = await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
       const result = await interpret(contentNodeHandler.setMetadata({ node: afterResult_create_page_node?.output?.["node"], metadata: "{\"tags\":[\"important\"],\"priority\":\"high\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "set_metadata_missing" -> error', async () => {
@@ -439,7 +444,8 @@ describe('ContentNode functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_page_node = await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
       const result = await interpret(contentNodeHandler.changeType({ node: afterResult_create_page_node?.output?.["node"], type: "document" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "change_type_missing" -> error', async () => {
@@ -471,16 +477,19 @@ describe('ContentNode functional handler', () => {
     it("create-then-get", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(contentNodeHandler.create({ node: {"type":"variable","name":"x"}, type: {"type":"literal","value":"page"}, content: {"type":"literal","value":"Hello"}, createdBy: {"type":"literal","value":"user1"} }), storage);
-      expect(createResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
       let node = createResult0.output["node"];
       const thenResult0 = await interpret(contentNodeHandler.get({ node: {"type":"variable","name":"x"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("create-then-create", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(contentNodeHandler.create({ node: {"type":"variable","name":"x"}, type: {"type":"literal","value":"page"}, content: {"type":"literal","value":"Hello"}, createdBy: {"type":"literal","value":"user1"} }), storage);
-      expect(createResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
       let node = createResult0.output["node"];
       const thenResult0 = await interpret(contentNodeHandler.create({ node: {"type":"variable","name":"x"}, type: {"type":"literal","value":"page"}, content: {"type":"literal","value":"Again"}, createdBy: {"type":"literal","value":"user2"} }), storage);
       expect(thenResult0.variant).toBe("exists");

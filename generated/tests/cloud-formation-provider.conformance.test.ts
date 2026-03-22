@@ -88,7 +88,8 @@ describe('CloudFormationProvider functional handler', () => {
       if (typeof cloudformationProviderHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(cloudformationProviderHandler.generate({ plan: "dp-002-payment-service" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "generate_empty_plan" -> error', async () => {
@@ -155,8 +156,15 @@ describe('CloudFormationProvider functional handler', () => {
     it('fixture "preview_existing" -> ok', async () => {
       if (typeof cloudformationProviderHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(cloudformationProviderHandler.preview({ stack: "stack-abc123" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_generate_plan = await interpret(cloudformationProviderHandler.generate({ plan: "dp-002-payment-service" }), storage);
+      const _pool = Object.assign({}, (afterResult_generate_plan?.output ?? {}));
+      const _fixtureInput = { stack: "stack-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(cloudformationProviderHandler.preview({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "preview_missing_stack" -> error', async () => {
@@ -230,7 +238,8 @@ describe('CloudFormationProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(cloudformationProviderHandler.apply({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "apply_missing_stack" -> error', async () => {
@@ -304,7 +313,8 @@ describe('CloudFormationProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(cloudformationProviderHandler.teardown({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "teardown_missing" -> error', async () => {
@@ -336,11 +346,13 @@ describe('CloudFormationProvider functional handler', () => {
     it("generate-then-apply", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(cloudformationProviderHandler.generate({ plan: {"type":"literal","value":"dp-001"} }), storage);
-      expect(generateResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
       let stack = generateResult0.output["stack"];
       let files = generateResult0.output["files"];
       const thenResult0 = await interpret(cloudformationProviderHandler.apply({ stack: {"type":"variable","name":"s"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

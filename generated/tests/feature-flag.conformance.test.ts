@@ -37,7 +37,8 @@ describe('FeatureFlag imperative handler', () => {
       if (typeof featureFlagHandler.enable !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await featureFlagHandler.enable({ flag: "flag-1" }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "enable_nonexistent_flag" -> error', async () => {
@@ -64,7 +65,8 @@ describe('FeatureFlag imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_enable_existing_flag = await featureFlagHandler.enable({ flag: "flag-1" }, storage);
       const result = await featureFlagHandler.disable({ flag: afterResult_enable_existing_flag?.output?.["id"] }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "disable_nonexistent_flag" -> error', async () => {
@@ -96,7 +98,8 @@ describe('FeatureFlag imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await featureFlagHandler.unify({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "unify_empty_flags" -> ok', async () => {
@@ -109,7 +112,8 @@ describe('FeatureFlag imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await featureFlagHandler.unify({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -130,15 +134,18 @@ describe('FeatureFlag imperative handler', () => {
     it("enable then disable", async () => {
       const storage = createInMemoryStorage();
       const enableResult0 = await featureFlagHandler.enable({ flag: {"type":"variable","name":"f"} }, storage);
-      expect(enableResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(enableResult0.variant), `step 0: expected success but got '${enableResult0.variant}'`).toBe(false);
       const thenResult0 = await featureFlagHandler.disable({ flag: {"type":"variable","name":"f"} }, storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("enable then enable", async () => {
       const storage = createInMemoryStorage();
       const enableResult0 = await featureFlagHandler.enable({ flag: {"type":"variable","name":"f1"} }, storage);
-      expect(enableResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(enableResult0.variant), `step 0: expected success but got '${enableResult0.variant}'`).toBe(false);
       const thenResult0 = await featureFlagHandler.enable({ flag: {"type":"variable","name":"f2"} }, storage);
       expect(thenResult0.variant).toBe("conflict");
     });

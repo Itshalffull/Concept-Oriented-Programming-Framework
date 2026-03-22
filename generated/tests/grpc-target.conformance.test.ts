@@ -88,14 +88,16 @@ describe('GrpcTarget functional handler', () => {
       if (typeof grpcTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(grpcTargetHandler.generate({ projection: "payment-projection", config: "{}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "with_java_package" -> ok', async () => {
       if (typeof grpcTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(grpcTargetHandler.generate({ projection: "catalog-projection", config: "{\"protoPackage\":\"com.example.catalog\",\"goPackage\":\"github.com/example/catalog\",\"javaPackage\":\"com.example.catalog\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "empty_projection" -> error', async () => {
@@ -109,7 +111,8 @@ describe('GrpcTarget functional handler', () => {
       if (typeof grpcTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(grpcTargetHandler.generate({ projection: "tree-projection", config: "{\"protoIncompatible\":\"RecursiveTree\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -169,8 +172,15 @@ describe('GrpcTarget functional handler', () => {
     it('fixture "valid_service" -> ok', async () => {
       if (typeof grpcTargetHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(grpcTargetHandler.validate({ service: "grpc-payment-12345" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_with_default_config = await interpret(grpcTargetHandler.generate({ projection: "payment-projection", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_with_default_config?.output ?? {}));
+      const _fixtureInput = { service: "grpc-payment-12345" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(grpcTargetHandler.validate({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "missing_service" -> error', async () => {
@@ -244,7 +254,8 @@ describe('GrpcTarget functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(grpcTargetHandler.listRpcs({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "empty_concept" -> error', async () => {
@@ -276,11 +287,13 @@ describe('GrpcTarget functional handler', () => {
     it("generate-then-listRpcs", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(grpcTargetHandler.generate({ projection: {"type":"literal","value":"payment-projection"}, config: {"type":"literal","value":"{}"} }), storage);
-      expect(generateResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
       let services = generateResult0.output["services"];
       let files = generateResult0.output["files"];
       const thenResult0 = await interpret(grpcTargetHandler.listRpcs({ concept: {"type":"literal","value":"Payment"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

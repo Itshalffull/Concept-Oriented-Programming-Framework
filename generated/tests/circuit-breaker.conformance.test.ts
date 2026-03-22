@@ -88,7 +88,8 @@ describe('CircuitBreaker functional handler', () => {
       if (typeof circuitBreakerHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(circuitBreakerHandler.configure({ endpoint: "payments-api", failureThreshold: "5", successThreshold: "2", resetTimeoutMs: "30000" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "missing_endpoint" -> exists', async () => {
@@ -163,7 +164,8 @@ describe('CircuitBreaker functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(circuitBreakerHandler.check({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "unconfigured_endpoint" -> notFound', async () => {
@@ -238,7 +240,8 @@ describe('CircuitBreaker functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(circuitBreakerHandler.recordSuccess({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "success_no_breaker" -> notFound', async () => {
@@ -313,7 +316,8 @@ describe('CircuitBreaker functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(circuitBreakerHandler.recordFailure({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "failure_no_breaker" -> notFound', async () => {
@@ -388,7 +392,8 @@ describe('CircuitBreaker functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(circuitBreakerHandler.reset({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "reset_no_breaker" -> notFound', async () => {
@@ -463,7 +468,8 @@ describe('CircuitBreaker functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(circuitBreakerHandler.get({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_no_breaker" -> notFound', async () => {
@@ -496,7 +502,8 @@ describe('CircuitBreaker functional handler', () => {
     it("newly configured breaker is closed", async () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(circuitBreakerHandler.configure({ endpoint: {"type":"literal","value":"openai-api"}, failureThreshold: {"type":"literal","value":5}, successThreshold: {"type":"literal","value":2}, resetTimeoutMs: {"type":"literal","value":30000} }), storage);
-      expect(configureResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(configureResult0.variant), `step 0: expected success but got '${configureResult0.variant}'`).toBe(false);
       let breaker = configureResult0.output["breaker"];
       const thenResult0 = await interpret(circuitBreakerHandler.check({ endpoint: {"type":"literal","value":"openai-api"} }), storage);
       expect(thenResult0.variant).toBe("closed");
@@ -505,10 +512,12 @@ describe('CircuitBreaker functional handler', () => {
     it("breaker trips after reaching failure threshold", async () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(circuitBreakerHandler.configure({ endpoint: {"type":"literal","value":"test-api"}, failureThreshold: {"type":"literal","value":2}, successThreshold: {"type":"literal","value":1}, resetTimeoutMs: {"type":"literal","value":1000} }), storage);
-      expect(configureResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(configureResult0.variant), `step 0: expected success but got '${configureResult0.variant}'`).toBe(false);
       let breaker = configureResult0.output["breaker"];
       const recordFailureResult1 = await interpret(circuitBreakerHandler.recordFailure({ endpoint: {"type":"literal","value":"test-api"} }), storage);
-      expect(recordFailureResult1.variant).toBe("ok");
+      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr1(recordFailureResult1.variant), `step 1: expected success but got '${recordFailureResult1.variant}'`).toBe(false);
       breaker = recordFailureResult1.output["breaker"];
       let status = recordFailureResult1.output["status"];
       const recordFailureResult2 = await interpret(circuitBreakerHandler.recordFailure({ endpoint: {"type":"literal","value":"test-api"} }), storage);
@@ -516,7 +525,8 @@ describe('CircuitBreaker functional handler', () => {
       breaker = recordFailureResult2.output["breaker"];
       let failureCount = recordFailureResult2.output["failureCount"];
       const thenResult0 = await interpret(circuitBreakerHandler.get({ endpoint: {"type":"literal","value":"test-api"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

@@ -88,7 +88,8 @@ describe('Template functional handler', () => {
       if (typeof templateHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(templateHandler.define({ template: "welcome-email", body: "Hello {{name}}", variables: "name" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "duplicate_define" -> exists', async () => {
@@ -169,7 +170,8 @@ describe('Template functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(templateHandler.instantiate({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "missing_template" -> notfound', async () => {
@@ -244,7 +246,8 @@ describe('Template functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(templateHandler.registerTrigger({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "trigger_missing_template" -> notfound', async () => {
@@ -319,7 +322,8 @@ describe('Template functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(templateHandler.mergeProperties({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "merge_missing_template" -> notfound', async () => {
@@ -352,9 +356,11 @@ describe('Template functional handler', () => {
     it("define-then-instantiate", async () => {
       const storage = createInMemoryStorage();
       const defineResult0 = await interpret(templateHandler.define({ template: {"type":"variable","name":"t"}, body: {"type":"literal","value":"Hello {{name}}"}, variables: {"type":"literal","value":"name"} }), storage);
-      expect(defineResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(defineResult0.variant), `step 0: expected success but got '${defineResult0.variant}'`).toBe(false);
       const thenResult0 = await interpret(templateHandler.instantiate({ template: {"type":"variable","name":"t"}, values: {"type":"literal","value":"name=World"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

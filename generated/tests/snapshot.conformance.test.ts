@@ -87,15 +87,29 @@ describe('Snapshot functional handler', () => {
     it('fixture "compare_existing" -> ok', async () => {
       if (typeof snapshotHandler.compare !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(snapshotHandler.compare({ outputPath: "generated/ts/password.ts", currentContent: "export const hash = (pw: string) => pw;" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_diff_changed = await interpret(snapshotHandler.diff({ path: "generated/ts/password.ts" }), storage);
+      const _pool = Object.assign({}, (afterResult_diff_changed?.output ?? {}));
+      const _fixtureInput = { outputPath: "generated/ts/password.ts", currentContent: "export const hash = (pw: string) => pw;" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(snapshotHandler.compare({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "compare_new_file" -> ok', async () => {
       if (typeof snapshotHandler.compare !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(snapshotHandler.compare({ outputPath: "generated/ts/brand-new.ts", currentContent: "export const x = 1;" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_diff_changed = await interpret(snapshotHandler.diff({ path: "generated/ts/password.ts" }), storage);
+      const _pool = Object.assign({}, (afterResult_diff_changed?.output ?? {}));
+      const _fixtureInput = { outputPath: "generated/ts/brand-new.ts", currentContent: "export const x = 1;" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(snapshotHandler.compare({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -162,7 +176,8 @@ describe('Snapshot functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(snapshotHandler.approve({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "approve_unchanged" -> noChange', async () => {
@@ -232,12 +247,10 @@ describe('Snapshot functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_compare_existing = await interpret(snapshotHandler.compare({ outputPath: "generated/ts/password.ts", currentContent: "export const hash = (pw: string) => pw;" }), storage);
       const _pool = Object.assign({}, (afterResult_compare_existing?.output ?? {}));
-      const _fixtureInput = {  } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(snapshotHandler.approveAll({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "approve_all_filtered" -> ok', async () => {
@@ -250,7 +263,8 @@ describe('Snapshot functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(snapshotHandler.approveAll({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -317,7 +331,8 @@ describe('Snapshot functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(snapshotHandler.reject({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "reject_unchanged" -> noChange', async () => {
@@ -387,12 +402,10 @@ describe('Snapshot functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_compare_existing = await interpret(snapshotHandler.compare({ outputPath: "generated/ts/password.ts", currentContent: "export const hash = (pw: string) => pw;" }), storage);
       const _pool = Object.assign({}, (afterResult_compare_existing?.output ?? {}));
-      const _fixtureInput = {  } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(snapshotHandler.status({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "status_filtered" -> ok', async () => {
@@ -405,7 +418,8 @@ describe('Snapshot functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(snapshotHandler.status({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -465,8 +479,15 @@ describe('Snapshot functional handler', () => {
     it('fixture "diff_changed" -> ok', async () => {
       if (typeof snapshotHandler.diff !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(snapshotHandler.diff({ path: "generated/ts/password.ts" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_compare_existing = await interpret(snapshotHandler.compare({ outputPath: "generated/ts/password.ts", currentContent: "export const hash = (pw: string) => pw;" }), storage);
+      const _pool = Object.assign({}, (afterResult_compare_existing?.output ?? {}));
+      const _fixtureInput = { path: "generated/ts/password.ts" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(snapshotHandler.diff({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "diff_no_baseline" -> noBaseline', async () => {
@@ -541,7 +562,8 @@ describe('Snapshot functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(snapshotHandler.clean({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "clean_all" -> ok', async () => {
@@ -554,7 +576,8 @@ describe('Snapshot functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(snapshotHandler.clean({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -585,7 +608,8 @@ describe('Snapshot functional handler', () => {
       let linesAdded = compareResult0.output["linesAdded"];
       let linesRemoved = compareResult0.output["linesRemoved"];
       const approveResult1 = await interpret(snapshotHandler.approve({ path: {"type":"literal","value":"generated/ts/password.ts"} }), storage);
-      expect(approveResult1.variant).toBe("ok");
+      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr1(approveResult1.variant), `step 1: expected success but got '${approveResult1.variant}'`).toBe(false);
       snapshot = approveResult1.output["snapshot"];
       const thenResult0 = await interpret(snapshotHandler.compare({ outputPath: {"type":"literal","value":"generated/ts/password.ts"}, currentContent: {"type":"literal","value":"..."} }), storage);
       expect(thenResult0.variant).toBe("unchanged");

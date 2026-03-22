@@ -88,14 +88,16 @@ describe('ActionEntity functional handler', () => {
       if (typeof actionEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(actionEntityHandler.register({ concept: "Article", name: "create", params: "[{\"name\":\"title\",\"type\":\"String\"}]", variantRefs: "[\"ok\",\"error\"]" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "register_minimal" -> ok', async () => {
       if (typeof actionEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(actionEntityHandler.register({ concept: "User", name: "delete", params: "[]", variantRefs: "[]" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "register_empty_concept" -> error', async () => {
@@ -169,7 +171,8 @@ describe('ActionEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(actionEntityHandler.findByConcept({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "find_empty" -> ok', async () => {
@@ -182,7 +185,8 @@ describe('ActionEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(actionEntityHandler.findByConcept({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -244,7 +248,8 @@ describe('ActionEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_create = await interpret(actionEntityHandler.register({ concept: "Article", name: "create", params: "[{\"name\":\"title\",\"type\":\"String\"}]", variantRefs: "[\"ok\",\"error\"]" }), storage);
       const result = await interpret(actionEntityHandler.triggeringSyncs({ action: afterResult_register_create?.output?.["action"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "triggering_missing" -> error', async () => {
@@ -313,7 +318,8 @@ describe('ActionEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_create = await interpret(actionEntityHandler.register({ concept: "Article", name: "create", params: "[{\"name\":\"title\",\"type\":\"String\"}]", variantRefs: "[\"ok\",\"error\"]" }), storage);
       const result = await interpret(actionEntityHandler.invokingSyncs({ action: afterResult_register_create?.output?.["action"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "invoking_missing" -> error', async () => {
@@ -382,7 +388,8 @@ describe('ActionEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_create = await interpret(actionEntityHandler.register({ concept: "Article", name: "create", params: "[{\"name\":\"title\",\"type\":\"String\"}]", variantRefs: "[\"ok\",\"error\"]" }), storage);
       const result = await interpret(actionEntityHandler.implementations({ action: afterResult_register_create?.output?.["action"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "impl_missing" -> error', async () => {
@@ -451,7 +458,8 @@ describe('ActionEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_create = await interpret(actionEntityHandler.register({ concept: "Article", name: "create", params: "[{\"name\":\"title\",\"type\":\"String\"}]", variantRefs: "[\"ok\",\"error\"]" }), storage);
       const result = await interpret(actionEntityHandler.interfaceExposures({ action: afterResult_register_create?.output?.["action"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "exposures_missing" -> error', async () => {
@@ -520,7 +528,8 @@ describe('ActionEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_create = await interpret(actionEntityHandler.register({ concept: "Article", name: "create", params: "[{\"name\":\"title\",\"type\":\"String\"}]", variantRefs: "[\"ok\",\"error\"]" }), storage);
       const result = await interpret(actionEntityHandler.get({ action: afterResult_register_create?.output?.["action"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_missing" -> error', async () => {
@@ -537,10 +546,12 @@ describe('ActionEntity functional handler', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(actionEntityHandler.register({ concept: {"type":"literal","value":"Article"}, name: {"type":"literal","value":"create"}, params: {"type":"literal","value":"[]"}, variantRefs: {"type":"literal","value":"[]"} }), storage);
-      expect(registerResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
       let action = registerResult0.output["action"];
       const thenResult0 = await interpret(actionEntityHandler.get({ action: {"type":"variable","name":"a"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

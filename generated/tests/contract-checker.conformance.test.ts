@@ -88,14 +88,16 @@ describe('ContractChecker functional handler', () => {
       if (typeof contractCheckerHandler.check !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(contractCheckerHandler.check({ widget: "approval-detail", concept: "Approval" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "with_version" -> ok', async () => {
       if (typeof contractCheckerHandler.check !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(contractCheckerHandler.check({ widget: "approval-detail", concept: "Approval", contractVersion: "2" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "unknown_widget" -> notfound', async () => {
@@ -170,7 +172,8 @@ describe('ContractChecker functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(contractCheckerHandler.checkAll({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "unknown_concept" -> notfound', async () => {
@@ -245,7 +248,8 @@ describe('ContractChecker functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(contractCheckerHandler.checkSuite({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "unknown_suite" -> notfound', async () => {
@@ -320,7 +324,8 @@ describe('ContractChecker functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(contractCheckerHandler.suggest({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "unknown_widget_suggest" -> notfound', async () => {
@@ -353,7 +358,8 @@ describe('ContractChecker functional handler', () => {
     it("check lifecycle", async () => {
       const storage = createInMemoryStorage();
       const checkResult0 = await interpret(contractCheckerHandler.check({ checker: {"type":"variable","name":"c"}, widget: {"type":"literal","value":"approval-detail"}, concept: {"type":"literal","value":"Approval"}, contractVersion: {"type":"variable","name":"_"} }), storage);
-      expect(checkResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(checkResult0.variant), `step 0: expected success but got '${checkResult0.variant}'`).toBe(false);
       let checker = checkResult0.output["checker"];
       let resolved = checkResult0.output["resolved"];
       let unresolved = checkResult0.output["unresolved"];

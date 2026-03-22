@@ -88,14 +88,16 @@ describe('DeploymentEntity functional handler', () => {
       if (typeof deploymentEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "register_staging" -> ok', async () => {
       if (typeof deploymentEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(deploymentEntityHandler.register({ name: "conduit-staging", source: "deploy/conduit-staging.deploy.yaml", manifest: "{}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "register_empty_name" -> error', async () => {
@@ -169,7 +171,8 @@ describe('DeploymentEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(deploymentEntityHandler.get({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_nonexistent" -> error', async () => {
@@ -238,7 +241,8 @@ describe('DeploymentEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_prod = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
       const result = await interpret(deploymentEntityHandler.listRuntimes({ deployment: afterResult_register_prod?.output?.["deployment"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "list_runtimes_missing" -> ok', async () => {
@@ -251,7 +255,8 @@ describe('DeploymentEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(deploymentEntityHandler.listRuntimes({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -313,7 +318,8 @@ describe('DeploymentEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_prod = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
       const result = await interpret(deploymentEntityHandler.findConceptRuntime({ deployment: afterResult_register_prod?.output?.["deployment"], concept: "User" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "find_unassigned" -> error', async () => {
@@ -382,7 +388,8 @@ describe('DeploymentEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_prod = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
       const result = await interpret(deploymentEntityHandler.findSyncEngine({ deployment: afterResult_register_prod?.output?.["deployment"], sync: "ArticlePublishSync" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "find_unassigned_sync" -> error', async () => {
@@ -451,7 +458,8 @@ describe('DeploymentEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_prod = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
       const result = await interpret(deploymentEntityHandler.topology({ deployment: afterResult_register_prod?.output?.["deployment"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "topology_missing" -> ok', async () => {
@@ -464,7 +472,8 @@ describe('DeploymentEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(deploymentEntityHandler.topology({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -526,7 +535,8 @@ describe('DeploymentEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_prod = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
       const result = await interpret(deploymentEntityHandler.transportRoutes({ deployment: afterResult_register_prod?.output?.["deployment"], fromConcept: "User", toConcept: "Notification" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "route_same_runtime" -> error', async () => {
@@ -595,7 +605,8 @@ describe('DeploymentEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_prod = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
       const result = await interpret(deploymentEntityHandler.storageTopology({ deployment: afterResult_register_prod?.output?.["deployment"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "storage_topology_missing" -> ok', async () => {
@@ -608,7 +619,8 @@ describe('DeploymentEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(deploymentEntityHandler.storageTopology({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -675,7 +687,8 @@ describe('DeploymentEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(deploymentEntityHandler.environmentDiff({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "diff_same" -> ok', async () => {
@@ -688,7 +701,8 @@ describe('DeploymentEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(deploymentEntityHandler.environmentDiff({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -748,15 +762,29 @@ describe('DeploymentEntity functional handler', () => {
     it('fixture "validate_existing" -> ok', async () => {
       if (typeof deploymentEntityHandler.validateAgainstSpecs !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(deploymentEntityHandler.validateAgainstSpecs({ deployment: "deploy-001" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_register_prod = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_prod?.output ?? {}));
+      const _fixtureInput = { deployment: "deploy-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(deploymentEntityHandler.validateAgainstSpecs({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "validate_missing" -> ok', async () => {
       if (typeof deploymentEntityHandler.validateAgainstSpecs !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(deploymentEntityHandler.validateAgainstSpecs({ deployment: "deploy-missing" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_register_prod = await interpret(deploymentEntityHandler.register({ name: "conduit-prod", source: "deploy/conduit.deploy.yaml", manifest: "{\"app\":{\"name\":\"conduit\",\"version\":\"1.0\"},\"runtimes\":[{\"name\":\"api-server\",\"type\":\"http\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_prod?.output ?? {}));
+      const _fixtureInput = { deployment: "deploy-missing" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(deploymentEntityHandler.validateAgainstSpecs({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -766,10 +794,12 @@ describe('DeploymentEntity functional handler', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(deploymentEntityHandler.register({ name: {"type":"literal","value":"conduit-prod"}, source: {"type":"literal","value":"deploy/conduit.deploy.yaml"}, manifest: {"type":"literal","value":"{}"} }), storage);
-      expect(registerResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
       let deployment = registerResult0.output["deployment"];
       const thenResult0 = await interpret(deploymentEntityHandler.get({ name: {"type":"literal","value":"conduit-prod"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

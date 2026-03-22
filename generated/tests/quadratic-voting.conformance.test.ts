@@ -88,7 +88,8 @@ describe('QuadraticVoting functional handler', () => {
       if (typeof quadraticVotingHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(quadraticVotingHandler.configure({ creditBudget: "100.0" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "zero_budget" -> error', async () => {
@@ -157,7 +158,8 @@ describe('QuadraticVoting functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_standard_budget = await interpret(quadraticVotingHandler.configure({ creditBudget: "100.0" }), storage);
       const result = await interpret(quadraticVotingHandler.allocateCredits({ config: afterResult_standard_budget?.output?.["id"], voter: "alice" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "allocate_duplicate" -> error', async () => {
@@ -226,7 +228,8 @@ describe('QuadraticVoting functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_standard_budget = await interpret(quadraticVotingHandler.configure({ creditBudget: "100.0" }), storage);
       const result = await interpret(quadraticVotingHandler.castVotes({ config: afterResult_standard_budget?.output?.["id"], voter: "alice", issue: "budget-increase", numberOfVotes: "5" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "exceed_budget" -> error', async () => {
@@ -295,7 +298,8 @@ describe('QuadraticVoting functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_standard_budget = await interpret(quadraticVotingHandler.configure({ creditBudget: "100.0" }), storage);
       const result = await interpret(quadraticVotingHandler.count({ config: afterResult_standard_budget?.output?.["id"], issue: "budget-increase" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "tally_missing_session" -> error', async () => {

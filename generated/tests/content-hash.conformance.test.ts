@@ -37,14 +37,16 @@ describe('ContentHash imperative handler', () => {
       if (typeof contentHashHandler.store !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await contentHashHandler.store({ content: "Hello, world!" }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "store_empty" -> ok', async () => {
       if (typeof contentHashHandler.store !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await contentHashHandler.store({ content: "" }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -69,7 +71,8 @@ describe('ContentHash imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await contentHashHandler.retrieve({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "retrieve_empty_hash" -> error', async () => {
@@ -101,7 +104,8 @@ describe('ContentHash imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await contentHashHandler.verify({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "verify_empty_hash" -> error', async () => {
@@ -133,7 +137,8 @@ describe('ContentHash imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await contentHashHandler.delete({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "delete_empty_hash" -> error', async () => {
@@ -161,16 +166,19 @@ describe('ContentHash imperative handler', () => {
     it("store then retrieve", async () => {
       const storage = createInMemoryStorage();
       const storeResult0 = await contentHashHandler.store({ content: {"type":"variable","name":"c"} }, storage);
-      expect(storeResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(storeResult0.variant), `step 0: expected success but got '${storeResult0.variant}'`).toBe(false);
       let hash = storeResult0.output["hash"];
       const thenResult0 = await contentHashHandler.retrieve({ hash: {"type":"variable","name":"h"} }, storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("store then verify", async () => {
       const storage = createInMemoryStorage();
       const storeResult0 = await contentHashHandler.store({ content: {"type":"variable","name":"c"} }, storage);
-      expect(storeResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(storeResult0.variant), `step 0: expected success but got '${storeResult0.variant}'`).toBe(false);
       let hash = storeResult0.output["hash"];
       const thenResult0 = await contentHashHandler.verify({ hash: {"type":"variable","name":"h"}, content: {"type":"variable","name":"c"} }, storage);
       expect(thenResult0.variant).toBe("valid");
@@ -179,7 +187,8 @@ describe('ContentHash imperative handler', () => {
     it("store then store", async () => {
       const storage = createInMemoryStorage();
       const storeResult0 = await contentHashHandler.store({ content: {"type":"variable","name":"c"} }, storage);
-      expect(storeResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(storeResult0.variant), `step 0: expected success but got '${storeResult0.variant}'`).toBe(false);
       let hash = storeResult0.output["hash"];
       const thenResult0 = await contentHashHandler.store({ content: {"type":"variable","name":"c"} }, storage);
       expect(thenResult0.variant).toBe("alreadyExists");

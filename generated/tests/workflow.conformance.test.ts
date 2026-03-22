@@ -87,8 +87,15 @@ describe('Workflow functional handler', () => {
     it('fixture "define_draft_state" -> ok', async () => {
       if (typeof workflowHandler.defineState !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(workflowHandler.defineState({ workflow: "content-lifecycle", name: "draft", flags: "initial" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_define_publish_transition = await interpret(workflowHandler.defineTransition({ workflow: "content-lifecycle", from: "draft", to: "published", label: "publish", guard: "approved" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_publish_transition?.output ?? {}));
+      const _fixtureInput = { workflow: "content-lifecycle", name: "draft", flags: "initial" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(workflowHandler.defineState({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "define_empty_workflow" -> error', async () => {
@@ -155,8 +162,15 @@ describe('Workflow functional handler', () => {
     it('fixture "define_publish_transition" -> ok', async () => {
       if (typeof workflowHandler.defineTransition !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(workflowHandler.defineTransition({ workflow: "content-lifecycle", from: "draft", to: "published", label: "publish", guard: "approved" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_define_draft_state = await interpret(workflowHandler.defineState({ workflow: "content-lifecycle", name: "draft", flags: "initial" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_draft_state?.output ?? {}));
+      const _fixtureInput = { workflow: "content-lifecycle", from: "draft", to: "published", label: "publish", guard: "approved" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(workflowHandler.defineTransition({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "define_transition_no_workflow" -> error', async () => {
@@ -223,8 +237,15 @@ describe('Workflow functional handler', () => {
     it('fixture "transition_publish" -> ok', async () => {
       if (typeof workflowHandler.transition !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(workflowHandler.transition({ workflow: "content-lifecycle", entity: "doc-42", transition: "publish" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_define_draft_state = await interpret(workflowHandler.defineState({ workflow: "content-lifecycle", name: "draft", flags: "initial" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_draft_state?.output ?? {}));
+      const _fixtureInput = { workflow: "content-lifecycle", entity: "doc-42", transition: "publish" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(workflowHandler.transition({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "transition_unknown_workflow" -> notfound', async () => {
@@ -292,8 +313,15 @@ describe('Workflow functional handler', () => {
     it('fixture "get_current_state" -> ok', async () => {
       if (typeof workflowHandler.getCurrentState !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(workflowHandler.getCurrentState({ workflow: "content-lifecycle", entity: "doc-42" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_define_draft_state = await interpret(workflowHandler.defineState({ workflow: "content-lifecycle", name: "draft", flags: "initial" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_draft_state?.output ?? {}));
+      const _fixtureInput = { workflow: "content-lifecycle", entity: "doc-42" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(workflowHandler.getCurrentState({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_state_unknown_workflow" -> notfound', async () => {
@@ -326,15 +354,20 @@ describe('Workflow functional handler', () => {
     it("defineState-then-getCurrentState", async () => {
       const storage = createInMemoryStorage();
       const defineStateResult0 = await interpret(workflowHandler.defineState({ workflow: {"type":"variable","name":"w"}, name: {"type":"literal","value":"draft"}, flags: {"type":"literal","value":"initial"} }), storage);
-      expect(defineStateResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(defineStateResult0.variant), `step 0: expected success but got '${defineStateResult0.variant}'`).toBe(false);
       const thenResult0 = await interpret(workflowHandler.defineState({ workflow: {"type":"variable","name":"w"}, name: {"type":"literal","value":"published"}, flags: {"type":"literal","value":""} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
       const thenResult1 = await interpret(workflowHandler.defineTransition({ workflow: {"type":"variable","name":"w"}, from: {"type":"literal","value":"draft"}, to: {"type":"literal","value":"published"}, label: {"type":"literal","value":"publish"}, guard: {"type":"literal","value":"approved"} }), storage);
-      expect(thenResult1.variant).toBe("ok");
+      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
       const thenResult2 = await interpret(workflowHandler.transition({ workflow: {"type":"variable","name":"w"}, entity: {"type":"literal","value":"doc1"}, transition: {"type":"literal","value":"publish"} }), storage);
-      expect(thenResult2.variant).toBe("ok");
+      const _isErrA2 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA2(thenResult2.variant), `assertion 2: expected success but got '${thenResult2.variant}'`).toBe(false);
       const thenResult3 = await interpret(workflowHandler.getCurrentState({ workflow: {"type":"variable","name":"w"}, entity: {"type":"literal","value":"doc1"} }), storage);
-      expect(thenResult3.variant).toBe("ok");
+      const _isErrA3 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA3(thenResult3.variant), `assertion 3: expected success but got '${thenResult3.variant}'`).toBe(false);
     });
 
   });

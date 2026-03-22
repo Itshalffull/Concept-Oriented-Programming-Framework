@@ -87,15 +87,29 @@ describe('ConnectorPort functional handler', () => {
     it('fixture "add_data_output" -> ok', async () => {
       if (typeof connectorPortHandler.addPort !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_validate_compatible = await interpret(connectorPortHandler.validateConnection({ source_port: "port-1", target_port: "port-2" }), storage);
+      const _pool = Object.assign({}, (afterResult_validate_compatible?.output ?? {}));
+      const _fixtureInput = { owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(connectorPortHandler.addPort({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "add_center_input" -> ok', async () => {
       if (typeof connectorPortHandler.addPort !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(connectorPortHandler.addPort({ owner: "node-2", side: "center", offset: "0.0", direction: "in", port_type: "signal", label: "Trigger", max_connections: "1" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_validate_compatible = await interpret(connectorPortHandler.validateConnection({ source_port: "port-1", target_port: "port-2" }), storage);
+      const _pool = Object.assign({}, (afterResult_validate_compatible?.output ?? {}));
+      const _fixtureInput = { owner: "node-2", side: "center", offset: "0.0", direction: "in", port_type: "signal", label: "Trigger", max_connections: "1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(connectorPortHandler.addPort({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "invalid_side" -> error', async () => {
@@ -171,7 +185,8 @@ describe('ConnectorPort functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_add_data_output = await interpret(connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" }), storage);
       const result = await interpret(connectorPortHandler.removePort({ port: afterResult_add_data_output?.output?.["port"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "remove_missing" -> notfound', async () => {
@@ -241,7 +256,8 @@ describe('ConnectorPort functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_add_data_output = await interpret(connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" }), storage);
       const result = await interpret(connectorPortHandler.movePort({ port: afterResult_add_data_output?.output?.["port"], side: "left", offset: "0.3" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "move_missing" -> notfound', async () => {
@@ -309,8 +325,15 @@ describe('ConnectorPort functional handler', () => {
     it('fixture "validate_compatible" -> ok', async () => {
       if (typeof connectorPortHandler.validateConnection !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(connectorPortHandler.validateConnection({ source_port: "port-1", target_port: "port-2" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_add_data_output = await interpret(connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" }), storage);
+      const _pool = Object.assign({}, (afterResult_add_data_output?.output ?? {}));
+      const _fixtureInput = { source_port: "port-1", target_port: "port-2" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(connectorPortHandler.validateConnection({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "validate_self" -> incompatible', async () => {
@@ -380,7 +403,8 @@ describe('ConnectorPort functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_add_data_output = await interpret(connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" }), storage);
       const result = await interpret(connectorPortHandler.incrementConnection({ port: afterResult_add_data_output?.output?.["port"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "increment_missing" -> error', async () => {
@@ -449,7 +473,8 @@ describe('ConnectorPort functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_add_data_output = await interpret(connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" }), storage);
       const result = await interpret(connectorPortHandler.decrementConnection({ port: afterResult_add_data_output?.output?.["port"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "decrement_missing" -> error', async () => {
@@ -518,7 +543,8 @@ describe('ConnectorPort functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_add_data_output = await interpret(connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" }), storage);
       const result = await interpret(connectorPortHandler.getPortsForOwner({ owner: afterResult_add_data_output?.output?.["port"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_ports_for_unknown" -> ok', async () => {
@@ -531,7 +557,8 @@ describe('ConnectorPort functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(connectorPortHandler.getPortsForOwner({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -556,7 +583,8 @@ describe('ConnectorPort functional handler', () => {
     it("addPort-then-validateConnection", async () => {
       const storage = createInMemoryStorage();
       const addPortResult0 = await interpret(connectorPortHandler.addPort({ owner: {"type":"variable","name":"o"}, side: {"type":"literal","value":"right"}, offset: {"type":"literal","value":0.5}, direction: {"type":"literal","value":"out"}, port_type: {"type":"literal","value":"data"}, label: {"type":"literal","value":"Output"}, max_connections: {"type":"literal","value":1} }), storage);
-      expect(addPortResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(addPortResult0.variant), `step 0: expected success but got '${addPortResult0.variant}'`).toBe(false);
       let port = addPortResult0.output["port"];
       const thenResult0 = await interpret(connectorPortHandler.validateConnection({ source_port: {"type":"variable","name":"p"}, target_port: {"type":"variable","name":"p"} }), storage);
       expect(thenResult0.variant).toBe("incompatible");

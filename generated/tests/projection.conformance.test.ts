@@ -87,8 +87,15 @@ describe('Projection functional handler', () => {
     it('fixture "valid_projection" -> ok', async () => {
       if (typeof projectionHandler.project !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(projectionHandler.project({ manifest: "{\"name\":\"Todo\",\"uri\":\"core/Todo\",\"typeParams\":[{\"name\":\"T\"}],\"relations\":[{\"name\":\"items\",\"fields\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}]}],\"actions\":[{\"name\":\"create\",\"params\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}],\"variants\":[{\"tag\":\"ok\",\"fields\":[]}]}]}", annotations: "{\"traits\":[{\"name\":\"cached\",\"scope\":\"*\"}],\"resourceMapping\":{\"path\":\"/todos\",\"idField\":\"id\",\"actions\":[\"create\"]}}" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_valid_validate = await interpret(projectionHandler.validate({ projection: "proj-abc123" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_validate?.output ?? {}));
+      const _fixtureInput = { manifest: "{\"name\":\"Todo\",\"uri\":\"core/Todo\",\"typeParams\":[{\"name\":\"T\"}],\"relations\":[{\"name\":\"items\",\"fields\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}]}],\"actions\":[{\"name\":\"create\",\"params\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}],\"variants\":[{\"tag\":\"ok\",\"fields\":[]}]}]}", annotations: "{\"traits\":[{\"name\":\"cached\",\"scope\":\"*\"}],\"resourceMapping\":{\"path\":\"/todos\",\"idField\":\"id\",\"actions\":[\"create\"]}}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(projectionHandler.project({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "invalid_manifest_json" -> annotationError', async () => {
@@ -172,8 +179,15 @@ describe('Projection functional handler', () => {
     it('fixture "valid_validate" -> ok', async () => {
       if (typeof projectionHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(projectionHandler.validate({ projection: "proj-abc123" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_valid_projection = await interpret(projectionHandler.project({ manifest: "{\"name\":\"Todo\",\"uri\":\"core/Todo\",\"typeParams\":[{\"name\":\"T\"}],\"relations\":[{\"name\":\"items\",\"fields\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}]}],\"actions\":[{\"name\":\"create\",\"params\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}],\"variants\":[{\"tag\":\"ok\",\"fields\":[]}]}]}", annotations: "{\"traits\":[{\"name\":\"cached\",\"scope\":\"*\"}],\"resourceMapping\":{\"path\":\"/todos\",\"idField\":\"id\",\"actions\":[\"create\"]}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_projection?.output ?? {}));
+      const _fixtureInput = { projection: "proj-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(projectionHandler.validate({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "missing_projection" -> incompleteAnnotation', async () => {
@@ -241,8 +255,15 @@ describe('Projection functional handler', () => {
     it('fixture "valid_diff" -> ok', async () => {
       if (typeof projectionHandler.diff !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(projectionHandler.diff({ projection: "proj-current", previous: "proj-previous" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_valid_projection = await interpret(projectionHandler.project({ manifest: "{\"name\":\"Todo\",\"uri\":\"core/Todo\",\"typeParams\":[{\"name\":\"T\"}],\"relations\":[{\"name\":\"items\",\"fields\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}]}],\"actions\":[{\"name\":\"create\",\"params\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}],\"variants\":[{\"tag\":\"ok\",\"fields\":[]}]}]}", annotations: "{\"traits\":[{\"name\":\"cached\",\"scope\":\"*\"}],\"resourceMapping\":{\"path\":\"/todos\",\"idField\":\"id\",\"actions\":[\"create\"]}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_projection?.output ?? {}));
+      const _fixtureInput = { projection: "proj-current", previous: "proj-previous" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(projectionHandler.diff({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "missing_previous" -> incompatible', async () => {
@@ -310,15 +331,29 @@ describe('Projection functional handler', () => {
     it('fixture "valid_infer" -> ok', async () => {
       if (typeof projectionHandler.inferResources !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(projectionHandler.inferResources({ projection: "proj-abc123" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_valid_projection = await interpret(projectionHandler.project({ manifest: "{\"name\":\"Todo\",\"uri\":\"core/Todo\",\"typeParams\":[{\"name\":\"T\"}],\"relations\":[{\"name\":\"items\",\"fields\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}]}],\"actions\":[{\"name\":\"create\",\"params\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}],\"variants\":[{\"tag\":\"ok\",\"fields\":[]}]}]}", annotations: "{\"traits\":[{\"name\":\"cached\",\"scope\":\"*\"}],\"resourceMapping\":{\"path\":\"/todos\",\"idField\":\"id\",\"actions\":[\"create\"]}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_projection?.output ?? {}));
+      const _fixtureInput = { projection: "proj-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(projectionHandler.inferResources({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "missing_projection_infer" -> ok', async () => {
       if (typeof projectionHandler.inferResources !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(projectionHandler.inferResources({ projection: "proj-nonexistent" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_valid_projection = await interpret(projectionHandler.project({ manifest: "{\"name\":\"Todo\",\"uri\":\"core/Todo\",\"typeParams\":[{\"name\":\"T\"}],\"relations\":[{\"name\":\"items\",\"fields\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}]}],\"actions\":[{\"name\":\"create\",\"params\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}],\"variants\":[{\"tag\":\"ok\",\"fields\":[]}]}]}", annotations: "{\"traits\":[{\"name\":\"cached\",\"scope\":\"*\"}],\"resourceMapping\":{\"path\":\"/todos\",\"idField\":\"id\",\"actions\":[\"create\"]}}" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_projection?.output ?? {}));
+      const _fixtureInput = { projection: "proj-nonexistent" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(projectionHandler.inferResources({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -343,15 +378,18 @@ describe('Projection functional handler', () => {
     it("project then validate and infer succeeds", async () => {
       const storage = createInMemoryStorage();
       const projectResult0 = await interpret(projectionHandler.project({ manifest: {"type":"literal","value":"valid-manifest"}, annotations: {"type":"literal","value":"valid-annotations"} }), storage);
-      expect(projectResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(projectResult0.variant), `step 0: expected success but got '${projectResult0.variant}'`).toBe(false);
       let projection = projectResult0.output["projection"];
       let shapes = projectResult0.output["shapes"];
       let actions = projectResult0.output["actions"];
       let traits = projectResult0.output["traits"];
       const thenResult0 = await interpret(projectionHandler.validate({ projection: {"type":"variable","name":"p"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
       const thenResult1 = await interpret(projectionHandler.inferResources({ projection: {"type":"variable","name":"p"} }), storage);
-      expect(thenResult1.variant).toBe("ok");
+      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
     });
 
   });

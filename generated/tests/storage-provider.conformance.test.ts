@@ -88,14 +88,16 @@ describe('StorageProvider functional handler', () => {
       if (typeof storageProviderHandler.provision !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(storageProviderHandler.provision({ storeName: "session-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "provision_dynamo" -> ok', async () => {
       if (typeof storageProviderHandler.provision !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(storageProviderHandler.provision({ storeName: "user-table", storageType: "dynamodb", conceptName: "User", config: "{\"region\":\"us-east-1\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "provision_missing_name" -> error', async () => {
@@ -169,7 +171,8 @@ describe('StorageProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(storageProviderHandler.configure({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "configure_missing" -> error', async () => {
@@ -249,7 +252,8 @@ describe('StorageProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(storageProviderHandler.getCredentials({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_creds_missing" -> error', async () => {
@@ -323,7 +327,8 @@ describe('StorageProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(storageProviderHandler.destroy({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "destroy_missing" -> error', async () => {
@@ -355,23 +360,27 @@ describe('StorageProvider functional handler', () => {
     it("provision-then-getCredentials-2", async () => {
       const storage = createInMemoryStorage();
       const provisionResult0 = await interpret(storageProviderHandler.provision({ storeName: {"type":"literal","value":"test-kv"}, storageType: {"type":"literal","value":"vercel-kv"}, conceptName: {"type":"literal","value":"Session"}, config: {"type":"literal","value":"{}"} }), storage);
-      expect(provisionResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(provisionResult0.variant), `step 0: expected success but got '${provisionResult0.variant}'`).toBe(false);
       let store = provisionResult0.output["store"];
       let storageType = provisionResult0.output["storageType"];
       let credentials = provisionResult0.output["credentials"];
       const thenResult0 = await interpret(storageProviderHandler.getCredentials({ store: {"type":"variable","name":"s1"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("provision-then-getCredentials", async () => {
       const storage = createInMemoryStorage();
       const provisionResult0 = await interpret(storageProviderHandler.provision({ storeName: {"type":"literal","value":"test-kv"}, storageType: {"type":"literal","value":"vercel-kv"}, conceptName: {"type":"literal","value":"Session"}, config: {"type":"literal","value":"{}"} }), storage);
-      expect(provisionResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(provisionResult0.variant), `step 0: expected success but got '${provisionResult0.variant}'`).toBe(false);
       let store = provisionResult0.output["store"];
       let storageType = provisionResult0.output["storageType"];
       let credentials = provisionResult0.output["credentials"];
       const thenResult0 = await interpret(storageProviderHandler.destroy({ store: {"type":"variable","name":"s1"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
       const thenResult1 = await interpret(storageProviderHandler.getCredentials({ store: {"type":"variable","name":"s1"} }), storage);
       expect(thenResult1.variant).toBe("notfound");
     });

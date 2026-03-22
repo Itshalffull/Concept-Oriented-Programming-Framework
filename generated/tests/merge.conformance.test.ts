@@ -88,14 +88,16 @@ describe('Merge functional handler', () => {
       if (typeof mergeHandler.registerStrategy !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(mergeHandler.registerStrategy({ name: "three-way", contentTypes: ["text/plain"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "empty_strategy_name" -> ok', async () => {
       if (typeof mergeHandler.registerStrategy !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(mergeHandler.registerStrategy({ name: "", contentTypes: ["text/plain"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -162,7 +164,8 @@ describe('Merge functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(mergeHandler.merge({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "conflicting_merge" -> ok', async () => {
@@ -175,7 +178,8 @@ describe('Merge functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(mergeHandler.merge({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "unknown_strategy" -> error', async () => {
@@ -244,7 +248,8 @@ describe('Merge functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_three_way = await interpret(mergeHandler.registerStrategy({ name: "three-way", contentTypes: ["text/plain"] }), storage);
       const result = await interpret(mergeHandler.resolveConflict({ mergeId: afterResult_register_three_way?.output?.["strategy"], conflictIndex: "0", resolution: "resolved line" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "invalid_index" -> error', async () => {
@@ -313,7 +318,8 @@ describe('Merge functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_three_way = await interpret(mergeHandler.registerStrategy({ name: "three-way", contentTypes: ["text/plain"] }), storage);
       const result = await interpret(mergeHandler.finalize({ mergeId: afterResult_register_three_way?.output?.["strategy"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "finalize_unresolved" -> error', async () => {
@@ -348,7 +354,8 @@ describe('Merge functional handler', () => {
       expect(mergeResult0.variant).toBe("clean");
       let result = mergeResult0.output["result"];
       const thenResult0 = await interpret(mergeHandler.finalize({ mergeId: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

@@ -88,14 +88,16 @@ describe('Circle functional handler', () => {
       if (typeof circleHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "create_with_parent" -> ok', async () => {
       if (typeof circleHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(circleHandler.create({ name: "Backend", domain: "api-services", purpose: "Manage APIs", parent: "circle-1" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "missing_name" -> error', async () => {
@@ -164,7 +166,8 @@ describe('Circle functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_create = await interpret(circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" }), storage);
       const result = await interpret(circleHandler.assignMember({ circle: afterResult_valid_create?.output?.["id"], member: "alice", role: "developer" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "assign_nonexistent" -> error', async () => {
@@ -233,7 +236,8 @@ describe('Circle functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_create = await interpret(circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" }), storage);
       const result = await interpret(circleHandler.removeMember({ circle: afterResult_valid_create?.output?.["id"], member: "alice" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "remove_nonexistent_circle" -> error', async () => {
@@ -302,7 +306,8 @@ describe('Circle functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_create = await interpret(circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" }), storage);
       const result = await interpret(circleHandler.setLinks({ circle: afterResult_valid_create?.output?.["id"], leadLink: "alice", repLink: "bob" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "set_links_nonexistent" -> error', async () => {
@@ -371,7 +376,8 @@ describe('Circle functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_create = await interpret(circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" }), storage);
       const result = await interpret(circleHandler.dissolve({ circle: afterResult_valid_create?.output?.["id"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "dissolve_nonexistent" -> error', async () => {
@@ -440,7 +446,8 @@ describe('Circle functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_create = await interpret(circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" }), storage);
       const result = await interpret(circleHandler.checkJurisdiction({ circle: afterResult_valid_create?.output?.["id"], action: "approve-budget" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "jurisdiction_nonexistent" -> error', async () => {

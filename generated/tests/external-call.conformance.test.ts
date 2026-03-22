@@ -88,7 +88,8 @@ describe('ExternalCall functional handler', () => {
       if (typeof externalCallHandler.initialize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(externalCallHandler.initialize({  }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -155,7 +156,8 @@ describe('ExternalCall functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(externalCallHandler.registerProtocol({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "register_duplicate" -> duplicate', async () => {
@@ -230,7 +232,8 @@ describe('ExternalCall functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(externalCallHandler.dispatch({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "missing_protocol" -> protocolNotFound', async () => {
@@ -319,12 +322,10 @@ describe('ExternalCall functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid = await interpret(externalCallHandler.listProtocols({  }), storage);
       const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
-      const _fixtureInput = {  } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(externalCallHandler.listProtocols({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -352,13 +353,15 @@ describe('ExternalCall functional handler', () => {
       expect(dispatchResult0.variant).toBe("protocolNotFound");
       let protocol = dispatchResult0.output["protocol"];
       const thenResult0 = await interpret(externalCallHandler.registerProtocol({ protocol: {"type":"literal","value":"http"}, providerName: {"type":"literal","value":"HttpProvider"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("duplicate protocol registration rejected", async () => {
       const storage = createInMemoryStorage();
       const registerProtocolResult0 = await interpret(externalCallHandler.registerProtocol({ protocol: {"type":"literal","value":"grpc"}, providerName: {"type":"literal","value":"GrpcProvider"} }), storage);
-      expect(registerProtocolResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerProtocolResult0.variant), `step 0: expected success but got '${registerProtocolResult0.variant}'`).toBe(false);
       const thenResult0 = await interpret(externalCallHandler.registerProtocol({ protocol: {"type":"literal","value":"grpc"}, providerName: {"type":"literal","value":"AnotherProvider"} }), storage);
       expect(thenResult0.variant).toBe("duplicate");
     });

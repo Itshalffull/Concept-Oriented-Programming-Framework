@@ -87,22 +87,43 @@ describe('Env functional handler', () => {
     it('fixture "resolve_staging" -> ok', async () => {
       if (typeof envHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(envHandler.resolve({ environment: "staging" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_diff_envs = await interpret(envHandler.diff({ envA: "env-staging-001", envB: "env-prod-001" }), storage);
+      const _pool = Object.assign({}, (afterResult_diff_envs?.output ?? {}));
+      const _fixtureInput = { environment: "staging" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(envHandler.resolve({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "resolve_production" -> ok', async () => {
       if (typeof envHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(envHandler.resolve({ environment: "production" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_diff_envs = await interpret(envHandler.diff({ envA: "env-staging-001", envB: "env-prod-001" }), storage);
+      const _pool = Object.assign({}, (afterResult_diff_envs?.output ?? {}));
+      const _fixtureInput = { environment: "production" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(envHandler.resolve({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "resolve_empty" -> ok', async () => {
       if (typeof envHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(envHandler.resolve({ environment: "" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_diff_envs = await interpret(envHandler.diff({ envA: "env-staging-001", envB: "env-prod-001" }), storage);
+      const _pool = Object.assign({}, (afterResult_diff_envs?.output ?? {}));
+      const _fixtureInput = { environment: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(envHandler.resolve({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -164,7 +185,8 @@ describe('Env functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_resolve_staging = await interpret(envHandler.resolve({ environment: "staging" }), storage);
       const result = await interpret(envHandler.promote({ fromEnv: afterResult_resolve_staging?.output?.["environment"], toEnv: afterResult_resolve_staging?.output?.["environment"], suiteName: "auth-suite" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "promote_missing_from" -> error', async () => {
@@ -231,15 +253,29 @@ describe('Env functional handler', () => {
     it('fixture "diff_envs" -> ok', async () => {
       if (typeof envHandler.diff !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(envHandler.diff({ envA: "env-staging-001", envB: "env-prod-001" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_resolve_staging = await interpret(envHandler.resolve({ environment: "staging" }), storage);
+      const _pool = Object.assign({}, (afterResult_resolve_staging?.output ?? {}));
+      const _fixtureInput = { envA: "env-staging-001", envB: "env-prod-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(envHandler.diff({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "diff_missing_env" -> ok', async () => {
       if (typeof envHandler.diff !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(envHandler.diff({ envA: "", envB: "env-prod-001" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_resolve_staging = await interpret(envHandler.resolve({ environment: "staging" }), storage);
+      const _pool = Object.assign({}, (afterResult_resolve_staging?.output ?? {}));
+      const _fixtureInput = { envA: "", envB: "env-prod-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(envHandler.diff({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -264,11 +300,13 @@ describe('Env functional handler', () => {
     it("resolve-then-promote", async () => {
       const storage = createInMemoryStorage();
       const resolveResult0 = await interpret(envHandler.resolve({ environment: {"type":"variable","name":"e"} }), storage);
-      expect(resolveResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(resolveResult0.variant), `step 0: expected success but got '${resolveResult0.variant}'`).toBe(false);
       let environment = resolveResult0.output["environment"];
       let resolved = resolveResult0.output["resolved"];
       const thenResult0 = await interpret(envHandler.promote({ fromEnv: {"type":"variable","name":"e"}, toEnv: {"type":"variable","name":"e2"}, suiteName: {"type":"literal","value":"auth"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

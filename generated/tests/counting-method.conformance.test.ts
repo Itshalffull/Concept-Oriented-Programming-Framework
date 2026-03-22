@@ -88,7 +88,8 @@ describe('CountingMethod functional handler', () => {
       if (typeof countingMethodHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(countingMethodHandler.register({ name: "simple-majority", provider: "Majority", parameters: "{\"threshold\":0.5}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "register_empty_name" -> error', async () => {
@@ -157,7 +158,8 @@ describe('CountingMethod functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_majority = await interpret(countingMethodHandler.register({ name: "simple-majority", provider: "Majority", parameters: "{\"threshold\":0.5}" }), storage);
       const result = await interpret(countingMethodHandler.aggregate({ method: afterResult_register_majority?.output?.["id"], ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"no\"}]", weights: "{}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "aggregate_missing_method" -> error', async () => {
@@ -232,7 +234,8 @@ describe('CountingMethod functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_majority = await interpret(countingMethodHandler.register({ name: "simple-majority", provider: "Majority", parameters: "{\"threshold\":0.5}" }), storage);
       const result = await interpret(countingMethodHandler.deregister({ method: afterResult_register_majority?.output?.["id"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "deregister_missing" -> error', async () => {

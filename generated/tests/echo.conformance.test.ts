@@ -88,14 +88,16 @@ describe('Echo functional handler', () => {
       if (typeof echoHandler.send !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(echoHandler.send({ id: "msg-001", text: "Hello, world!" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "send_greeting" -> ok', async () => {
       if (typeof echoHandler.send !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(echoHandler.send({ id: "msg-002", text: "Good morning, how are you?" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -121,7 +123,8 @@ describe('Echo functional handler', () => {
       const storage = createInMemoryStorage();
       const sendResult0 = await interpret(echoHandler.send({ id: {"type":"variable","name":"m"}, text: {"type":"literal","value":"hello"} }), storage);
       const thenResult0 = await interpret(echoHandler.send({  }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

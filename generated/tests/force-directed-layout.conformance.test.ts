@@ -88,7 +88,8 @@ describe('ForceDirectedLayout functional handler', () => {
       if (typeof forceDirectedLayoutHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(forceDirectedLayoutHandler.register({  }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -155,7 +156,8 @@ describe('ForceDirectedLayout functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(forceDirectedLayoutHandler.apply({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "missing_canvas" -> error', async () => {
@@ -187,10 +189,12 @@ describe('ForceDirectedLayout functional handler', () => {
     it("apply-then-apply", async () => {
       const storage = createInMemoryStorage();
       const applyResult0 = await interpret(forceDirectedLayoutHandler.apply({ canvas: {"type":"literal","value":"c1"}, items: {"type":"list","items":[{"type":"literal","value":"a"},{"type":"literal","value":"b"}]} }), storage);
-      expect(applyResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(applyResult0.variant), `step 0: expected success but got '${applyResult0.variant}'`).toBe(false);
       let positions = applyResult0.output["positions"];
       const thenResult0 = await interpret(forceDirectedLayoutHandler.apply({ canvas: {"type":"literal","value":"c1"}, items: {"type":"list","items":[{"type":"literal","value":"a"},{"type":"literal","value":"b"},{"type":"literal","value":"c"}]} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

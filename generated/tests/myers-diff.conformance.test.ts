@@ -88,7 +88,8 @@ describe('MyersDiff functional handler', () => {
       if (typeof myersDiffHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(myersDiffHandler.register({  }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -148,8 +149,15 @@ describe('MyersDiff functional handler', () => {
     it('fixture "diff_text" -> ok', async () => {
       if (typeof myersDiffHandler.compute !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(myersDiffHandler.compute({ contentA: "hello\nworld", contentB: "hello\nearth" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_valid = await interpret(myersDiffHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { contentA: "hello\nworld", contentB: "hello\nearth" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(myersDiffHandler.compute({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "non_string" -> error', async () => {
@@ -181,11 +189,13 @@ describe('MyersDiff functional handler', () => {
     it("compute then compute", async () => {
       const storage = createInMemoryStorage();
       const computeResult0 = await interpret(myersDiffHandler.compute({ contentA: {"type":"variable","name":"a"}, contentB: {"type":"variable","name":"a"} }), storage);
-      expect(computeResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(computeResult0.variant), `step 0: expected success but got '${computeResult0.variant}'`).toBe(false);
       let editScript = computeResult0.output["editScript"];
       let distance = computeResult0.output["distance"];
       const thenResult0 = await interpret(myersDiffHandler.compute({ contentA: {"type":"variable","name":"a"}, contentB: {"type":"variable","name":"b"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

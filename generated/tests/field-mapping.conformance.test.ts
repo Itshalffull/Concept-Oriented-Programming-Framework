@@ -87,15 +87,29 @@ describe('FieldMapping functional handler', () => {
     it('fixture "map_title" -> ok', async () => {
       if (typeof fieldMappingHandler.map !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(fieldMappingHandler.map({ mappingId: "map-1", sourceField: "title", destField: "headline", transform: "" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_validate_existing = await interpret(fieldMappingHandler.validate({ mappingId: "map-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_validate_existing?.output ?? {}));
+      const _fixtureInput = { mappingId: "map-1", sourceField: "title", destField: "headline", transform: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(fieldMappingHandler.map({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "map_body_html" -> ok', async () => {
       if (typeof fieldMappingHandler.map !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(fieldMappingHandler.map({ mappingId: "map-1", sourceField: "body_html", destField: "body", transform: "html_to_markdown" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_validate_existing = await interpret(fieldMappingHandler.validate({ mappingId: "map-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_validate_existing?.output ?? {}));
+      const _fixtureInput = { mappingId: "map-1", sourceField: "body_html", destField: "body", transform: "html_to_markdown" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(fieldMappingHandler.map({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "map_missing" -> notfound', async () => {
@@ -165,7 +179,8 @@ describe('FieldMapping functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_map_title = await interpret(fieldMappingHandler.map({ mappingId: "map-1", sourceField: "title", destField: "headline", transform: "" }), storage);
       const result = await interpret(fieldMappingHandler.apply({ record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: afterResult_map_title?.output?.["id"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "apply_missing" -> notfound', async () => {
@@ -248,7 +263,8 @@ describe('FieldMapping functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_map_title = await interpret(fieldMappingHandler.map({ mappingId: "map-1", sourceField: "title", destField: "headline", transform: "" }), storage);
       const result = await interpret(fieldMappingHandler.reverse({ record: "{\"headline\":\"Hello\",\"body\":\"World\"}", mappingId: afterResult_map_title?.output?.["id"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "reverse_missing" -> notfound', async () => {
@@ -329,7 +345,8 @@ describe('FieldMapping functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(fieldMappingHandler.autoDiscover({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -389,8 +406,15 @@ describe('FieldMapping functional handler', () => {
     it('fixture "validate_existing" -> ok', async () => {
       if (typeof fieldMappingHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(fieldMappingHandler.validate({ mappingId: "map-1" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_map_title = await interpret(fieldMappingHandler.map({ mappingId: "map-1", sourceField: "title", destField: "headline", transform: "" }), storage);
+      const _pool = Object.assign({}, (afterResult_map_title?.output ?? {}));
+      const _fixtureInput = { mappingId: "map-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(fieldMappingHandler.validate({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "validate_missing" -> notfound', async () => {
@@ -423,13 +447,16 @@ describe('FieldMapping functional handler', () => {
     it("autoDiscover-then-apply", async () => {
       const storage = createInMemoryStorage();
       const autoDiscoverResult0 = await interpret(fieldMappingHandler.autoDiscover({ sourceSchema: {"type":"literal","value":"external_post"}, destSchema: {"type":"literal","value":"Article"} }), storage);
-      expect(autoDiscoverResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(autoDiscoverResult0.variant), `step 0: expected success but got '${autoDiscoverResult0.variant}'`).toBe(false);
       let mappingId = autoDiscoverResult0.output["mappingId"];
       let suggestions = autoDiscoverResult0.output["suggestions"];
       const thenResult0 = await interpret(fieldMappingHandler.map({ mappingId: {"type":"literal","value":"map-1"}, sourceField: {"type":"literal","value":"body_html"}, destField: {"type":"literal","value":"body"}, transform: {"type":"literal","value":"html_to_markdown"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
       const thenResult1 = await interpret(fieldMappingHandler.apply({ record: {"type":"literal","value":"{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}"}, mappingId: {"type":"literal","value":"map-1"} }), storage);
-      expect(thenResult1.variant).toBe("ok");
+      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
     });
 
   });

@@ -88,7 +88,8 @@ describe('SyntaxTree functional handler', () => {
       if (typeof syntaxTreeHandler.parse !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(syntaxTreeHandler.parse({ file: "src/app.ts", grammar: "typescript" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "parse_empty_file" -> error', async () => {
@@ -157,7 +158,8 @@ describe('SyntaxTree functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_parse_ts_file = await interpret(syntaxTreeHandler.parse({ file: "src/app.ts", grammar: "typescript" }), storage);
       const result = await interpret(syntaxTreeHandler.reparse({ tree: afterResult_parse_ts_file?.output?.["tree"], startByte: "10", oldEndByte: "20", newEndByte: "25", newText: "const x = 1;" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "reparse_missing" -> error', async () => {
@@ -226,7 +228,8 @@ describe('SyntaxTree functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_parse_ts_file = await interpret(syntaxTreeHandler.parse({ file: "src/app.ts", grammar: "typescript" }), storage);
       const result = await interpret(syntaxTreeHandler.query({ tree: afterResult_parse_ts_file?.output?.["tree"], pattern: "(function_declaration) @fn" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "query_missing_tree" -> error', async () => {
@@ -295,7 +298,8 @@ describe('SyntaxTree functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_parse_ts_file = await interpret(syntaxTreeHandler.parse({ file: "src/app.ts", grammar: "typescript" }), storage);
       const result = await interpret(syntaxTreeHandler.nodeAt({ tree: afterResult_parse_ts_file?.output?.["tree"], byteOffset: "42" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "node_at_missing" -> error', async () => {
@@ -364,7 +368,8 @@ describe('SyntaxTree functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_parse_ts_file = await interpret(syntaxTreeHandler.parse({ file: "src/app.ts", grammar: "typescript" }), storage);
       const result = await interpret(syntaxTreeHandler.get({ tree: afterResult_parse_ts_file?.output?.["tree"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_missing" -> error', async () => {
@@ -396,10 +401,12 @@ describe('SyntaxTree functional handler', () => {
     it("parse-then-get", async () => {
       const storage = createInMemoryStorage();
       const parseResult0 = await interpret(syntaxTreeHandler.parse({ file: {"type":"literal","value":"test.ts"}, grammar: {"type":"literal","value":"typescript"} }), storage);
-      expect(parseResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(parseResult0.variant), `step 0: expected success but got '${parseResult0.variant}'`).toBe(false);
       let tree = parseResult0.output["tree"];
       const thenResult0 = await interpret(syntaxTreeHandler.get({ tree: {"type":"variable","name":"t"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

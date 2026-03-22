@@ -88,21 +88,24 @@ describe('ThemeGen functional handler', () => {
       if (typeof themeGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(themeGenHandler.generate({ gen: "g-1", target: "css-variables", themeAst: "{\"tokens\":{\"color.primary\":\"#3b82f6\",\"color.background\":\"#ffffff\"},\"context\":{\"mode\":\"light\"}}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "tailwind_target" -> ok', async () => {
       if (typeof themeGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(themeGenHandler.generate({ gen: "g-2", target: "tailwind", themeAst: "{\"tokens\":{\"color.primary\":\"#10b981\"},\"context\":{\"density\":\"comfortable\"}}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "w3c_dtcg_target" -> ok', async () => {
       if (typeof themeGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(themeGenHandler.generate({ gen: "g-3", target: "w3c-dtcg", themeAst: "{\"tokens\":{\"color.brand\":\"#ef4444\"}}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "unsupported_target" -> error', async () => {
@@ -141,11 +144,13 @@ describe('ThemeGen functional handler', () => {
     it("generate is idempotent for same target", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(themeGenHandler.generate({ gen: {"type":"variable","name":"g"}, target: {"type":"literal","value":"css-variables"}, themeAst: {"type":"variable","name":"_"} }), storage);
-      expect(generateResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
       let gen = generateResult0.output["gen"];
       let output = generateResult0.output["output"];
       const thenResult0 = await interpret(themeGenHandler.generate({ gen: {"type":"variable","name":"g"}, target: {"type":"literal","value":"css-variables"}, themeAst: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

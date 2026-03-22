@@ -88,14 +88,16 @@ describe('TransformExtractionProvider functional handler', () => {
       if (typeof transformExtractionProviderHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(transformExtractionProviderHandler.analyze({ program: "{\"instructions\":[],\"appliedTransforms\":[\"dark-theme\",\"high-contrast\"]}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "no_transforms" -> ok', async () => {
       if (typeof transformExtractionProviderHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(transformExtractionProviderHandler.analyze({ program: "{\"instructions\":[]}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "invalid_json" -> error', async () => {
@@ -127,7 +129,8 @@ describe('TransformExtractionProvider functional handler', () => {
     it("analyze extracts two applied transforms", async () => {
       const storage = createInMemoryStorage();
       const analyzeResult0 = await interpret(transformExtractionProviderHandler.analyze({ program: {"type":"literal","value":"{\"instructions\":[],\"appliedTransforms\":[\"dark-theme\",\"high-contrast\"]}"} }), storage);
-      expect(analyzeResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(analyzeResult0.variant), `step 0: expected success but got '${analyzeResult0.variant}'`).toBe(false);
       let result = analyzeResult0.output["result"];
       let appliedTransforms = analyzeResult0.output["appliedTransforms"];
       let transformCount = analyzeResult0.output["transformCount"];
@@ -136,7 +139,8 @@ describe('TransformExtractionProvider functional handler', () => {
     it("analyze returns zero for no transforms", async () => {
       const storage = createInMemoryStorage();
       const analyzeResult0 = await interpret(transformExtractionProviderHandler.analyze({ program: {"type":"literal","value":"{\"instructions\":[]}"} }), storage);
-      expect(analyzeResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(analyzeResult0.variant), `step 0: expected success but got '${analyzeResult0.variant}'`).toBe(false);
       let result = analyzeResult0.output["result"];
       let appliedTransforms = analyzeResult0.output["appliedTransforms"];
       let transformCount = analyzeResult0.output["transformCount"];

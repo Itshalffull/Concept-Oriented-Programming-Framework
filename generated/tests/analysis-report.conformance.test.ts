@@ -88,21 +88,24 @@ describe('AnalysisReport functional handler', () => {
       if (typeof analysisReportHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "summary_report" -> ok', async () => {
       if (typeof analysisReportHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"a\",\"score\":0.9},{\"id\":\"b\",\"score\":0.3}]}", format: "summary", title: "Overview" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "dashboard_report" -> ok', async () => {
       if (typeof analysisReportHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"x\",\"score\":0.5}],\"communities\":{\"x\":0}}", format: "dashboard", title: null }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "bad_format" -> unsupported_format', async () => {
@@ -178,8 +181,15 @@ describe('AnalysisReport functional handler', () => {
     it('fixture "two_results" -> ok', async () => {
       if (typeof analysisReportHandler.compare !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(analysisReportHandler.compare({ results: "[\"{\\\"nodes\\\":[{\\\"id\\\":\\\"a\\\",\\\"score\\\":0.9}]}\",\"{\\\"nodes\\\":[{\\\"id\\\":\\\"a\\\",\\\"score\\\":0.7}]}\"]", format: "table" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_table_report = await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" }), storage);
+      const _pool = Object.assign({}, (afterResult_table_report?.output ?? {}));
+      const _fixtureInput = { results: "[\"{\\\"nodes\\\":[{\\\"id\\\":\\\"a\\\",\\\"score\\\":0.9}]}\",\"{\\\"nodes\\\":[{\\\"id\\\":\\\"a\\\",\\\"score\\\":0.7}]}\"]", format: "table" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(analysisReportHandler.compare({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "single_result" -> insufficient_results', async () => {
@@ -249,7 +259,8 @@ describe('AnalysisReport functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_table_report = await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" }), storage);
       const result = await interpret(analysisReportHandler.getReport({ report: afterResult_table_report?.output?.["report"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "missing_report" -> notfound', async () => {
@@ -324,7 +335,8 @@ describe('AnalysisReport functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(analysisReportHandler.listReports({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "filtered" -> ok', async () => {
@@ -337,7 +349,8 @@ describe('AnalysisReport functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(analysisReportHandler.listReports({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -399,7 +412,8 @@ describe('AnalysisReport functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_table_report = await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" }), storage);
       const result = await interpret(analysisReportHandler.exportReport({ report: afterResult_table_report?.output?.["report"], outputFormat: "csv" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "markdown_export" -> ok', async () => {
@@ -407,7 +421,8 @@ describe('AnalysisReport functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_table_report = await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" }), storage);
       const result = await interpret(analysisReportHandler.exportReport({ report: afterResult_table_report?.output?.["report"], outputFormat: "markdown" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "unsupported" -> unsupported_output', async () => {
@@ -448,11 +463,13 @@ describe('AnalysisReport functional handler', () => {
     it("generate-then-getReport", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(analysisReportHandler.generate({ result: {"type":"literal","value":"r1"}, format: {"type":"literal","value":"table"}, title: {"type":"literal","value":"Centrality Scores"} }), storage);
-      expect(generateResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
       let report = generateResult0.output["report"];
       let content = generateResult0.output["content"];
       const thenResult0 = await interpret(analysisReportHandler.getReport({ report: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

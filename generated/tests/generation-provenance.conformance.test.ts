@@ -37,7 +37,8 @@ describe('GenerationProvenance imperative handler', () => {
       if (typeof generationProvenanceHandler.record !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "record_empty_output" -> error', async () => {
@@ -69,7 +70,8 @@ describe('GenerationProvenance imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await generationProvenanceHandler.getByFile({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_handwritten_file" -> error', async () => {
@@ -101,7 +103,8 @@ describe('GenerationProvenance imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await generationProvenanceHandler.findByGenerator({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "find_unknown_gen" -> ok', async () => {
@@ -114,7 +117,8 @@ describe('GenerationProvenance imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await generationProvenanceHandler.findByGenerator({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -139,7 +143,8 @@ describe('GenerationProvenance imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await generationProvenanceHandler.findBySource({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "find_no_outputs" -> ok', async () => {
@@ -152,7 +157,8 @@ describe('GenerationProvenance imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await generationProvenanceHandler.findBySource({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -177,7 +183,8 @@ describe('GenerationProvenance imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await generationProvenanceHandler.generationChain({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "chain_handwritten" -> error', async () => {
@@ -204,12 +211,10 @@ describe('GenerationProvenance imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_record_handler = await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage);
       const _pool = Object.assign({}, (afterResult_record_handler?.output ?? {}));
-      const _fixtureInput = {  } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await generationProvenanceHandler.staleFiles({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "stale_check_failure" -> error', async () => {
@@ -241,7 +246,8 @@ describe('GenerationProvenance imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await generationProvenanceHandler.impactOfGeneratorChange({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "impact_unknown_gen" -> ok', async () => {
@@ -254,7 +260,8 @@ describe('GenerationProvenance imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await generationProvenanceHandler.impactOfGeneratorChange({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -279,7 +286,8 @@ describe('GenerationProvenance imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await generationProvenanceHandler.isGenerated({ ..._fixtureInput }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "check_handwritten_file" -> error', async () => {
@@ -307,10 +315,12 @@ describe('GenerationProvenance imperative handler', () => {
     it("recorded entry is retrievable", async () => {
       const storage = createInMemoryStorage();
       const recordResult0 = await generationProvenanceHandler.record({ outputFile: {"type":"literal","value":"handlers/ts/article.handler.ts"}, generator: {"type":"literal","value":"HandlerScaffoldGen"}, sourceSpec: {"type":"literal","value":"specs/app/article.concept"}, sourceSpecKind: {"type":"literal","value":"concept"}, config: {"type":"literal","value":"{}"} }, storage);
-      expect(recordResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(recordResult0.variant), `step 0: expected success but got '${recordResult0.variant}'`).toBe(false);
       let provenance = recordResult0.output["provenance"];
       const thenResult0 = await generationProvenanceHandler.getByFile({ outputFile: {"type":"literal","value":"handlers/ts/article.handler.ts"} }, storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

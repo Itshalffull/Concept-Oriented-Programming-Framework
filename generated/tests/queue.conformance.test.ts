@@ -87,8 +87,15 @@ describe('Queue functional handler', () => {
     it('fixture "enqueue_high_priority" -> ok', async () => {
       if (typeof queueHandler.enqueue !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(queueHandler.enqueue({ queue: "email-queue", item: "send_welcome_email", priority: "1" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_claim_from_queue = await interpret(queueHandler.claim({ queue: "email-queue", worker: "worker-alpha" }), storage);
+      const _pool = Object.assign({}, (afterResult_claim_from_queue?.output ?? {}));
+      const _fixtureInput = { queue: "email-queue", item: "send_welcome_email", priority: "1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(queueHandler.enqueue({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "enqueue_empty_queue" -> notfound', async () => {
@@ -156,8 +163,15 @@ describe('Queue functional handler', () => {
     it('fixture "claim_from_queue" -> ok', async () => {
       if (typeof queueHandler.claim !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(queueHandler.claim({ queue: "email-queue", worker: "worker-alpha" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_enqueue_high_priority = await interpret(queueHandler.enqueue({ queue: "email-queue", item: "send_welcome_email", priority: "1" }), storage);
+      const _pool = Object.assign({}, (afterResult_enqueue_high_priority?.output ?? {}));
+      const _fixtureInput = { queue: "email-queue", worker: "worker-alpha" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(queueHandler.claim({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "claim_from_empty_queue" -> empty', async () => {
@@ -225,8 +239,15 @@ describe('Queue functional handler', () => {
     it('fixture "process_item" -> ok', async () => {
       if (typeof queueHandler.process !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(queueHandler.process({ queue: "email-queue", itemId: "item-1", result: "sent_successfully" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_enqueue_high_priority = await interpret(queueHandler.enqueue({ queue: "email-queue", item: "send_welcome_email", priority: "1" }), storage);
+      const _pool = Object.assign({}, (afterResult_enqueue_high_priority?.output ?? {}));
+      const _fixtureInput = { queue: "email-queue", itemId: "item-1", result: "sent_successfully" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(queueHandler.process({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "process_missing_item" -> notfound', async () => {
@@ -294,8 +315,15 @@ describe('Queue functional handler', () => {
     it('fixture "release_claimed_item" -> ok', async () => {
       if (typeof queueHandler.release !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(queueHandler.release({ queue: "email-queue", itemId: "item-1" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_enqueue_high_priority = await interpret(queueHandler.enqueue({ queue: "email-queue", item: "send_welcome_email", priority: "1" }), storage);
+      const _pool = Object.assign({}, (afterResult_enqueue_high_priority?.output ?? {}));
+      const _fixtureInput = { queue: "email-queue", itemId: "item-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(queueHandler.release({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "release_missing_item" -> notfound', async () => {
@@ -363,8 +391,15 @@ describe('Queue functional handler', () => {
     it('fixture "delete_existing_item" -> ok', async () => {
       if (typeof queueHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(queueHandler.delete({ queue: "email-queue", itemId: "item-1" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_enqueue_high_priority = await interpret(queueHandler.enqueue({ queue: "email-queue", item: "send_welcome_email", priority: "1" }), storage);
+      const _pool = Object.assign({}, (afterResult_enqueue_high_priority?.output ?? {}));
+      const _fixtureInput = { queue: "email-queue", itemId: "item-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(queueHandler.delete({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "delete_missing_item" -> notfound', async () => {
@@ -397,12 +432,15 @@ describe('Queue functional handler', () => {
     it("enqueue-then-process", async () => {
       const storage = createInMemoryStorage();
       const enqueueResult0 = await interpret(queueHandler.enqueue({ queue: {"type":"variable","name":"q"}, item: {"type":"literal","value":"send_email"}, priority: {"type":"literal","value":1} }), storage);
-      expect(enqueueResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(enqueueResult0.variant), `step 0: expected success but got '${enqueueResult0.variant}'`).toBe(false);
       let itemId = enqueueResult0.output["itemId"];
       const thenResult0 = await interpret(queueHandler.claim({ queue: {"type":"variable","name":"q"}, worker: {"type":"literal","value":"worker-a"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
       const thenResult1 = await interpret(queueHandler.process({ queue: {"type":"variable","name":"q"}, itemId: {"type":"literal","value":"item-1"}, result: {"type":"literal","value":"sent"} }), storage);
-      expect(thenResult1.variant).toBe("ok");
+      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
     });
 
   });

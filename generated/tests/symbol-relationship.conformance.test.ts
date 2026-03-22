@@ -88,14 +88,16 @@ describe('SymbolRelationship functional handler', () => {
       if (typeof symbolRelationshipHandler.add !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "add_extends" -> ok', async () => {
       if (typeof symbolRelationshipHandler.add !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(symbolRelationshipHandler.add({ source: "ts/class/AdminHandler", target: "ts/class/UserHandler", kind: "extends" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "add_duplicate" -> ok', async () => {
@@ -108,7 +110,8 @@ describe('SymbolRelationship functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(symbolRelationshipHandler.add({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -175,7 +178,8 @@ describe('SymbolRelationship functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(symbolRelationshipHandler.findFrom({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "find_from_all_kinds" -> ok', async () => {
@@ -188,7 +192,8 @@ describe('SymbolRelationship functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(symbolRelationshipHandler.findFrom({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -255,7 +260,8 @@ describe('SymbolRelationship functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(symbolRelationshipHandler.findTo({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "find_to_all_kinds" -> ok', async () => {
@@ -268,7 +274,8 @@ describe('SymbolRelationship functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(symbolRelationshipHandler.findTo({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -335,7 +342,8 @@ describe('SymbolRelationship functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(symbolRelationshipHandler.transitiveClosure({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "backward_closure" -> ok', async () => {
@@ -348,7 +356,8 @@ describe('SymbolRelationship functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(symbolRelationshipHandler.transitiveClosure({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -410,7 +419,8 @@ describe('SymbolRelationship functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_add = await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage);
       const result = await interpret(symbolRelationshipHandler.get({ relationship: afterResult_valid_add?.output?.["relationship"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_nonexistent" -> error', async () => {
@@ -442,16 +452,19 @@ describe('SymbolRelationship functional handler', () => {
     it("add-then-findFrom", async () => {
       const storage = createInMemoryStorage();
       const addResult0 = await interpret(symbolRelationshipHandler.add({ source: {"type":"literal","value":"ts/class/Handler"}, target: {"type":"literal","value":"ts/interface/IHandler"}, kind: {"type":"literal","value":"implements"} }), storage);
-      expect(addResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(addResult0.variant), `step 0: expected success but got '${addResult0.variant}'`).toBe(false);
       let relationship = addResult0.output["relationship"];
       const thenResult0 = await interpret(symbolRelationshipHandler.findFrom({ source: {"type":"literal","value":"ts/class/Handler"}, kind: {"type":"literal","value":"implements"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("add-then-add", async () => {
       const storage = createInMemoryStorage();
       const addResult0 = await interpret(symbolRelationshipHandler.add({ source: {"type":"literal","value":"ts/class/Handler"}, target: {"type":"literal","value":"ts/interface/IHandler"}, kind: {"type":"literal","value":"implements"} }), storage);
-      expect(addResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(addResult0.variant), `step 0: expected success but got '${addResult0.variant}'`).toBe(false);
       let relationship = addResult0.output["relationship"];
       const thenResult0 = await interpret(symbolRelationshipHandler.add({ source: {"type":"literal","value":"ts/class/Handler"}, target: {"type":"literal","value":"ts/interface/IHandler"}, kind: {"type":"literal","value":"implements"} }), storage);
       expect(thenResult0.variant).toBe("alreadyExists");

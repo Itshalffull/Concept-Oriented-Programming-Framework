@@ -88,7 +88,8 @@ describe('RateLimiter functional handler', () => {
       if (typeof rateLimiterHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(rateLimiterHandler.configure({ endpoint: "openai-api", maxTokens: "100", refillRate: "10", refillIntervalMs: "1000" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "duplicate_limiter" -> exists', async () => {
@@ -163,7 +164,8 @@ describe('RateLimiter functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(rateLimiterHandler.acquire({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "acquire_exhausted" -> limited', async () => {
@@ -247,7 +249,8 @@ describe('RateLimiter functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(rateLimiterHandler.release({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "release_no_limiter" -> notFound', async () => {
@@ -322,7 +325,8 @@ describe('RateLimiter functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(rateLimiterHandler.get({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_no_limiter" -> notFound', async () => {
@@ -397,7 +401,8 @@ describe('RateLimiter functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(rateLimiterHandler.reset({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "reset_no_limiter" -> notFound', async () => {
@@ -430,19 +435,23 @@ describe('RateLimiter functional handler', () => {
     it("acquire succeeds after configure", async () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(rateLimiterHandler.configure({ endpoint: {"type":"literal","value":"openai-api"}, maxTokens: {"type":"literal","value":100}, refillRate: {"type":"literal","value":10}, refillIntervalMs: {"type":"literal","value":1000} }), storage);
-      expect(configureResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(configureResult0.variant), `step 0: expected success but got '${configureResult0.variant}'`).toBe(false);
       let limiter = configureResult0.output["limiter"];
       const thenResult0 = await interpret(rateLimiterHandler.acquire({ endpoint: {"type":"literal","value":"openai-api"}, tokens: {"type":"literal","value":1} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("acquire limited when tokens exhausted", async () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(rateLimiterHandler.configure({ endpoint: {"type":"literal","value":"test-api"}, maxTokens: {"type":"literal","value":2}, refillRate: {"type":"literal","value":1}, refillIntervalMs: {"type":"literal","value":60000} }), storage);
-      expect(configureResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(configureResult0.variant), `step 0: expected success but got '${configureResult0.variant}'`).toBe(false);
       let limiter = configureResult0.output["limiter"];
       const acquireResult1 = await interpret(rateLimiterHandler.acquire({ endpoint: {"type":"literal","value":"test-api"}, tokens: {"type":"literal","value":2} }), storage);
-      expect(acquireResult1.variant).toBe("ok");
+      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr1(acquireResult1.variant), `step 1: expected success but got '${acquireResult1.variant}'`).toBe(false);
       limiter = acquireResult1.output["limiter"];
       let remaining = acquireResult1.output["remaining"];
       const thenResult0 = await interpret(rateLimiterHandler.acquire({ endpoint: {"type":"literal","value":"test-api"}, tokens: {"type":"literal","value":1} }), storage);

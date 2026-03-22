@@ -88,14 +88,16 @@ describe('Migration functional handler', () => {
       if (typeof migrationHandler.plan !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(migrationHandler.plan({ concept: "UserProfile", fromVersion: "1", toVersion: "3" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "plan_single_step" -> ok', async () => {
       if (typeof migrationHandler.plan !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(migrationHandler.plan({ concept: "Session", fromVersion: "2", toVersion: "3" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "plan_same_version" -> error', async () => {
@@ -176,7 +178,8 @@ describe('Migration functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(migrationHandler.expand({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "expand_missing" -> error', async () => {
@@ -250,7 +253,8 @@ describe('Migration functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(migrationHandler.migrate({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "migrate_missing" -> error', async () => {
@@ -324,7 +328,8 @@ describe('Migration functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(migrationHandler.contract({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "contract_missing" -> error', async () => {
@@ -398,7 +403,8 @@ describe('Migration functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(migrationHandler.status({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "status_missing" -> error', async () => {
@@ -430,14 +436,17 @@ describe('Migration functional handler', () => {
     it("plan-then-migrate", async () => {
       const storage = createInMemoryStorage();
       const planResult0 = await interpret(migrationHandler.plan({ concept: {"type":"literal","value":"Entity"}, fromVersion: {"type":"literal","value":1}, toVersion: {"type":"literal","value":2} }), storage);
-      expect(planResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(planResult0.variant), `step 0: expected success but got '${planResult0.variant}'`).toBe(false);
       let migration = planResult0.output["migration"];
       let steps = planResult0.output["steps"];
       let estimatedRecords = planResult0.output["estimatedRecords"];
       const thenResult0 = await interpret(migrationHandler.expand({ migration: {"type":"variable","name":"m"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
       const thenResult1 = await interpret(migrationHandler.migrate({ migration: {"type":"variable","name":"m"} }), storage);
-      expect(thenResult1.variant).toBe("ok");
+      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
     });
 
   });

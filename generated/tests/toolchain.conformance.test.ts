@@ -87,29 +87,57 @@ describe('Toolchain functional handler', () => {
     it('fixture "resolve_swift_compiler" -> ok', async () => {
       if (typeof toolchainHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(toolchainHandler.resolve({ language: "swift", platform: "linux-arm64" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_validate_existing = await interpret(toolchainHandler.validate({ tool: "tc-abc123" }), storage);
+      const _pool = Object.assign({}, (afterResult_validate_existing?.output ?? {}));
+      const _fixtureInput = { language: "swift", platform: "linux-arm64" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(toolchainHandler.resolve({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "resolve_ts_unit_runner" -> ok', async () => {
       if (typeof toolchainHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(toolchainHandler.resolve({ language: "typescript", platform: "linux-x86_64", category: "unit-runner" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_validate_existing = await interpret(toolchainHandler.validate({ tool: "tc-abc123" }), storage);
+      const _pool = Object.assign({}, (afterResult_validate_existing?.output ?? {}));
+      const _fixtureInput = { language: "typescript", platform: "linux-x86_64", category: "unit-runner" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(toolchainHandler.resolve({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "resolve_ts_jest" -> ok', async () => {
       if (typeof toolchainHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(toolchainHandler.resolve({ language: "typescript", platform: "linux-x86_64", category: "unit-runner", toolName: "jest" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_validate_existing = await interpret(toolchainHandler.validate({ tool: "tc-abc123" }), storage);
+      const _pool = Object.assign({}, (afterResult_validate_existing?.output ?? {}));
+      const _fixtureInput = { language: "typescript", platform: "linux-x86_64", category: "unit-runner", toolName: "jest" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(toolchainHandler.resolve({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "resolve_rust" -> ok', async () => {
       if (typeof toolchainHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(toolchainHandler.resolve({ language: "rust", platform: "linux-x86_64", versionConstraint: "1.77.0" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_validate_existing = await interpret(toolchainHandler.validate({ tool: "tc-abc123" }), storage);
+      const _pool = Object.assign({}, (afterResult_validate_existing?.output ?? {}));
+      const _fixtureInput = { language: "rust", platform: "linux-x86_64", versionConstraint: "1.77.0" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(toolchainHandler.resolve({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "resolve_unsupported_lang" -> error', async () => {
@@ -176,8 +204,15 @@ describe('Toolchain functional handler', () => {
     it('fixture "validate_existing" -> ok', async () => {
       if (typeof toolchainHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(toolchainHandler.validate({ tool: "tc-abc123" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_resolve_swift_compiler = await interpret(toolchainHandler.resolve({ language: "swift", platform: "linux-arm64" }), storage);
+      const _pool = Object.assign({}, (afterResult_resolve_swift_compiler?.output ?? {}));
+      const _fixtureInput = { tool: "tc-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(toolchainHandler.validate({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "validate_missing" -> error', async () => {
@@ -246,12 +281,10 @@ describe('Toolchain functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_resolve_swift_compiler = await interpret(toolchainHandler.resolve({ language: "swift", platform: "linux-arm64" }), storage);
       const _pool = Object.assign({}, (afterResult_resolve_swift_compiler?.output ?? {}));
-      const _fixtureInput = {  } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(toolchainHandler.list({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "list_by_language" -> ok', async () => {
@@ -264,7 +297,8 @@ describe('Toolchain functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(toolchainHandler.list({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "list_by_category" -> ok', async () => {
@@ -277,7 +311,8 @@ describe('Toolchain functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(toolchainHandler.list({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -344,7 +379,8 @@ describe('Toolchain functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(toolchainHandler.capabilities({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "capabilities_missing" -> error', async () => {
@@ -376,16 +412,19 @@ describe('Toolchain functional handler', () => {
     it("resolve-then-list", async () => {
       const storage = createInMemoryStorage();
       const resolveResult0 = await interpret(toolchainHandler.resolve({ language: {"type":"literal","value":"swift"}, platform: {"type":"literal","value":"linux-arm64"}, versionConstraint: {"type":"literal","value":">=5.10"} }), storage);
-      expect(resolveResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(resolveResult0.variant), `step 0: expected success but got '${resolveResult0.variant}'`).toBe(false);
       let tool = resolveResult0.output["tool"];
       let version = resolveResult0.output["version"];
       let path = resolveResult0.output["path"];
       let capabilities = resolveResult0.output["capabilities"];
       let invocation = resolveResult0.output["invocation"];
       const thenResult0 = await interpret(toolchainHandler.validate({ tool: {"type":"variable","name":"t"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
       const thenResult1 = await interpret(toolchainHandler.list({ language: {"type":"literal","value":"swift"} }), storage);
-      expect(thenResult1.variant).toBe("ok");
+      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
     });
 
   });

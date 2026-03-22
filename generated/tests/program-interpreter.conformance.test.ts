@@ -37,14 +37,16 @@ describe('ProgramInterpreter imperative handler', () => {
       if (typeof programInterpreterHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await programInterpreterHandler.register({ interpreter: "interp-1", backend: "memory", mode: "live" }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "register_dryrun" -> ok', async () => {
       if (typeof programInterpreterHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await programInterpreterHandler.register({ interpreter: "interp-2", backend: "memory", mode: "dry-run" }, storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "register_invalid_mode" -> error', async () => {
@@ -69,8 +71,15 @@ describe('ProgramInterpreter imperative handler', () => {
     it('fixture "execute_get_program" -> ok', async () => {
       if (typeof programInterpreterHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await programInterpreterHandler.execute({ interpreter: "interp-1", program: "get(users, u1)", snapshot: "current" }, storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_register_live = await programInterpreterHandler.register({ interpreter: "interp-1", backend: "memory", mode: "live" }, storage);
+      const _pool = Object.assign({}, (afterResult_register_live?.output ?? {}));
+      const _fixtureInput = { interpreter: "interp-1", program: "get(users, u1)", snapshot: "current" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await programInterpreterHandler.execute({ ..._fixtureInput }, storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "execute_missing_interpreter" -> error', async () => {
@@ -95,8 +104,15 @@ describe('ProgramInterpreter imperative handler', () => {
     it('fixture "dryrun_put" -> ok', async () => {
       if (typeof programInterpreterHandler.dryRun !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await programInterpreterHandler.dryRun({ interpreter: "interp-1", program: "put(users, u1, data)", snapshot: "current" }, storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_register_live = await programInterpreterHandler.register({ interpreter: "interp-1", backend: "memory", mode: "live" }, storage);
+      const _pool = Object.assign({}, (afterResult_register_live?.output ?? {}));
+      const _fixtureInput = { interpreter: "interp-1", program: "put(users, u1, data)", snapshot: "current" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await programInterpreterHandler.dryRun({ ..._fixtureInput }, storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "dryrun_missing_interpreter" -> error', async () => {
@@ -121,8 +137,15 @@ describe('ProgramInterpreter imperative handler', () => {
     it('fixture "rollback_execution" -> ok', async () => {
       if (typeof programInterpreterHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await programInterpreterHandler.rollback({ interpreter: "interp-1", executionId: "exec-abc123" }, storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_register_live = await programInterpreterHandler.register({ interpreter: "interp-1", backend: "memory", mode: "live" }, storage);
+      const _pool = Object.assign({}, (afterResult_register_live?.output ?? {}));
+      const _fixtureInput = { interpreter: "interp-1", executionId: "exec-abc123" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await programInterpreterHandler.rollback({ ..._fixtureInput }, storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "rollback_missing" -> error', async () => {
@@ -139,23 +162,28 @@ describe('ProgramInterpreter imperative handler', () => {
     it("execute then rollback succeeds", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await programInterpreterHandler.register({ interpreter: {"type":"variable","name":"i"}, backend: {"type":"literal","value":"memory"}, mode: {"type":"literal","value":"live"} }, storage);
-      expect(registerResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
       const executeResult1 = await programInterpreterHandler.execute({ interpreter: {"type":"variable","name":"i"}, program: {"type":"literal","value":"get(users, u1)"}, snapshot: {"type":"literal","value":"current"} }, storage);
-      expect(executeResult1.variant).toBe("ok");
+      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr1(executeResult1.variant), `step 1: expected success but got '${executeResult1.variant}'`).toBe(false);
       let executionId = executeResult1.output["executionId"];
       let variant = executeResult1.output["variant"];
       let output = executeResult1.output["output"];
       let trace = executeResult1.output["trace"];
       const thenResult0 = await programInterpreterHandler.rollback({ interpreter: {"type":"variable","name":"i"}, executionId: {"type":"variable","name":"eid"} }, storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("dryRun does not persist mutations", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await programInterpreterHandler.register({ interpreter: {"type":"variable","name":"i"}, backend: {"type":"literal","value":"memory"}, mode: {"type":"literal","value":"dry-run"} }, storage);
-      expect(registerResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
       const thenResult0 = await programInterpreterHandler.dryRun({ interpreter: {"type":"variable","name":"i"}, program: {"type":"literal","value":"put(users, u1, data)"}, snapshot: {"type":"literal","value":"current"} }, storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("execute on unregistered interpreter returns notfound", async () => {

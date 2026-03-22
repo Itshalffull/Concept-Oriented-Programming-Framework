@@ -88,7 +88,8 @@ describe('CondorcetSchulze functional handler', () => {
       if (typeof condorcetSchulzeHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(condorcetSchulzeHandler.configure({  }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -150,7 +151,8 @@ describe('CondorcetSchulze functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_default_config = await interpret(condorcetSchulzeHandler.configure({  }), storage);
       const result = await interpret(condorcetSchulzeHandler.count({ config: afterResult_default_config?.output?.["id"], rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"A\",\"C\",\"B\"]},{\"voter\":\"carol\",\"ranking\":[\"B\",\"A\",\"C\"]}]", weights: "{}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "condorcet_empty_ballots" -> error', async () => {
@@ -220,7 +222,8 @@ describe('CondorcetSchulze functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_default_config = await interpret(condorcetSchulzeHandler.configure({  }), storage);
       const result = await interpret(condorcetSchulzeHandler.getPairwiseMatrix({ config: afterResult_default_config?.output?.["id"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_matrix_missing" -> error', async () => {

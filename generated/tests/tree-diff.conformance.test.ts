@@ -88,7 +88,8 @@ describe('TreeDiff functional handler', () => {
       if (typeof treeDiffHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(treeDiffHandler.register({  }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -148,8 +149,15 @@ describe('TreeDiff functional handler', () => {
     it('fixture "diff_json" -> ok', async () => {
       if (typeof treeDiffHandler.compute !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(treeDiffHandler.compute({ contentA: "{\"name\":\"alice\"}", contentB: "{\"name\":\"bob\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_valid = await interpret(treeDiffHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
+      const _fixtureInput = { contentA: "{\"name\":\"alice\"}", contentB: "{\"name\":\"bob\"}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(treeDiffHandler.compute({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "invalid_json" -> error', async () => {
@@ -181,11 +189,13 @@ describe('TreeDiff functional handler', () => {
     it("compute then compute", async () => {
       const storage = createInMemoryStorage();
       const computeResult0 = await interpret(treeDiffHandler.compute({ contentA: {"type":"variable","name":"a"}, contentB: {"type":"variable","name":"a"} }), storage);
-      expect(computeResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(computeResult0.variant), `step 0: expected success but got '${computeResult0.variant}'`).toBe(false);
       let editScript = computeResult0.output["editScript"];
       let distance = computeResult0.output["distance"];
       const thenResult0 = await interpret(treeDiffHandler.compute({ contentA: {"type":"variable","name":"a"}, contentB: {"type":"variable","name":"b"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

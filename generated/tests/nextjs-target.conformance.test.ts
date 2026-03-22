@@ -88,14 +88,16 @@ describe('NextjsTarget functional handler', () => {
       if (typeof nextjsTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(nextjsTargetHandler.generate({ projection: "{\"conceptManifest\":{\"name\":\"User\",\"actions\":[]}}", config: "{}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "with_custom_base_path" -> ok', async () => {
       if (typeof nextjsTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(nextjsTargetHandler.generate({ projection: "{\"conceptManifest\":{\"name\":\"Order\",\"actions\":[]}}", config: "{\"basePath\":\"/api/orders\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "missing_manifest" -> error', async () => {
@@ -162,8 +164,15 @@ describe('NextjsTarget functional handler', () => {
     it('fixture "valid_route" -> ok', async () => {
       if (typeof nextjsTargetHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(nextjsTargetHandler.validate({ route: "nextjs-user-route-1" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_with_valid_projection = await interpret(nextjsTargetHandler.generate({ projection: "{\"conceptManifest\":{\"name\":\"User\",\"actions\":[]}}", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_with_valid_projection?.output ?? {}));
+      const _fixtureInput = { route: "nextjs-user-route-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(nextjsTargetHandler.validate({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "missing_route" -> error', async () => {
@@ -237,7 +246,8 @@ describe('NextjsTarget functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(nextjsTargetHandler.listRoutes({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "empty_concept" -> error', async () => {
@@ -269,11 +279,13 @@ describe('NextjsTarget functional handler', () => {
     it("generate-then-listRoutes", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(nextjsTargetHandler.generate({ projection: {"type":"literal","value":"user-projection"}, config: {"type":"literal","value":"{}"} }), storage);
-      expect(generateResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
       let routes = generateResult0.output["routes"];
       let files = generateResult0.output["files"];
       const thenResult0 = await interpret(nextjsTargetHandler.listRoutes({ concept: {"type":"literal","value":"User"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

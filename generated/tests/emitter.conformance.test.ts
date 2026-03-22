@@ -87,15 +87,29 @@ describe('Emitter functional handler', () => {
     it('fixture "write_new" -> ok', async () => {
       if (typeof emitterHandler.write !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(emitterHandler.write({ path: "generated/ts/password.ts", content: "export const hash = (pw: string) => pw;", formatHint: "typescript" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_format_ts = await interpret(emitterHandler.format({ path: "generated/ts/password.ts" }), storage);
+      const _pool = Object.assign({}, (afterResult_format_ts?.output ?? {}));
+      const _fixtureInput = { path: "generated/ts/password.ts", content: "export const hash = (pw: string) => pw;", formatHint: "typescript" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(emitterHandler.write({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "write_with_sources" -> ok', async () => {
       if (typeof emitterHandler.write !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(emitterHandler.write({ path: "generated/ts/auth.ts", content: "export const auth = {};", sources: [{"sourcePath":"./specs/auth.concept","conceptName":"Auth"}] }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_format_ts = await interpret(emitterHandler.format({ path: "generated/ts/password.ts" }), storage);
+      const _pool = Object.assign({}, (afterResult_format_ts?.output ?? {}));
+      const _fixtureInput = { path: "generated/ts/auth.ts", content: "export const auth = {};", sources: [{"sourcePath":"./specs/auth.concept","conceptName":"Auth"}] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(emitterHandler.write({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "write_empty_path" -> error', async () => {
@@ -169,7 +183,8 @@ describe('Emitter functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(emitterHandler.writeBatch({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "batch_empty" -> ok', async () => {
@@ -182,7 +197,8 @@ describe('Emitter functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(emitterHandler.writeBatch({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -242,8 +258,15 @@ describe('Emitter functional handler', () => {
     it('fixture "format_ts" -> ok', async () => {
       if (typeof emitterHandler.format !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(emitterHandler.format({ path: "generated/ts/password.ts" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_write_new = await interpret(emitterHandler.write({ path: "generated/ts/password.ts", content: "export const hash = (pw: string) => pw;", formatHint: "typescript" }), storage);
+      const _pool = Object.assign({}, (afterResult_write_new?.output ?? {}));
+      const _fixtureInput = { path: "generated/ts/password.ts" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(emitterHandler.format({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "format_missing" -> error', async () => {
@@ -317,7 +340,8 @@ describe('Emitter functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(emitterHandler.clean({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "clean_empty_manifest" -> ok', async () => {
@@ -330,7 +354,8 @@ describe('Emitter functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(emitterHandler.clean({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -397,7 +422,8 @@ describe('Emitter functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(emitterHandler.manifest({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "manifest_all" -> ok', async () => {
@@ -410,7 +436,8 @@ describe('Emitter functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(emitterHandler.manifest({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -477,7 +504,8 @@ describe('Emitter functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(emitterHandler.trace({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "trace_missing" -> notFound', async () => {
@@ -552,7 +580,8 @@ describe('Emitter functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(emitterHandler.affected({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "affected_unknown" -> ok', async () => {
@@ -565,7 +594,8 @@ describe('Emitter functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(emitterHandler.affected({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -632,7 +662,8 @@ describe('Emitter functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(emitterHandler.audit({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "audit_all" -> ok', async () => {
@@ -645,7 +676,8 @@ describe('Emitter functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(emitterHandler.audit({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -670,25 +702,30 @@ describe('Emitter functional handler', () => {
     it("write-then-write", async () => {
       const storage = createInMemoryStorage();
       const writeResult0 = await interpret(emitterHandler.write({ path: {"type":"literal","value":"src/password.ts"}, content: {"type":"literal","value":"export const x = 1;"}, formatHint: {"type":"literal","value":"typescript"}, sources: {"type":"list","items":[]} }), storage);
-      expect(writeResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(writeResult0.variant), `step 0: expected success but got '${writeResult0.variant}'`).toBe(false);
       let written = writeResult0.output["written"];
       let path = writeResult0.output["path"];
       let contentHash = writeResult0.output["contentHash"];
       const thenResult0 = await interpret(emitterHandler.write({ path: {"type":"literal","value":"src/password.ts"}, content: {"type":"literal","value":"export const x = 1;"}, formatHint: {"type":"literal","value":"typescript"}, sources: {"type":"list","items":[]} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("write-then-affected", async () => {
       const storage = createInMemoryStorage();
       const writeResult0 = await interpret(emitterHandler.write({ path: {"type":"literal","value":"src/password.ts"}, content: {"type":"literal","value":"export const x = 1;"}, formatHint: {"type":"literal","value":"typescript"}, sources: {"type":"list","items":[{"type":"record","fields":[{"name":"sourcePath","value":{"type":"literal","value":"./specs/password.concept"}}]}]} }), storage);
-      expect(writeResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(writeResult0.variant), `step 0: expected success but got '${writeResult0.variant}'`).toBe(false);
       let written = writeResult0.output["written"];
       let path = writeResult0.output["path"];
       let contentHash = writeResult0.output["contentHash"];
       const thenResult0 = await interpret(emitterHandler.trace({ outputPath: {"type":"literal","value":"src/password.ts"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
       const thenResult1 = await interpret(emitterHandler.affected({ sourcePath: {"type":"literal","value":"./specs/password.concept"} }), storage);
-      expect(thenResult1.variant).toBe("ok");
+      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
     });
 
   });

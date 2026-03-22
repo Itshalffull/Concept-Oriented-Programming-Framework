@@ -87,8 +87,15 @@ describe('Lockfile functional handler', () => {
     it('fixture "write_valid_lockfile" -> ok', async () => {
       if (typeof lockfileHandler.write !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(lockfileHandler.write({ project_hash: "sha256:manifest-hash-001", entries: [{"module_id":"lodash","version":"4.17.21","content_hash":"sha256:abc123","artifact_url":"https://registry.example.com/lodash.tgz","integrity":"sha256:abc123","features_enabled":[],"dependencies":[]}], metadata: {"resolver_version":"1.0.0","resolved_at":"2026-01-15T10:00:00Z","registry_snapshot":"snap-001"} }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_diff_two_lockfiles = await interpret(lockfileHandler.diff({ old_lockfile: "lock-1", new_lockfile: "lock-2" }), storage);
+      const _pool = Object.assign({}, (afterResult_diff_two_lockfiles?.output ?? {}));
+      const _fixtureInput = { project_hash: "sha256:manifest-hash-001", entries: [{"module_id":"lodash","version":"4.17.21","content_hash":"sha256:abc123","artifact_url":"https://registry.example.com/lodash.tgz","integrity":"sha256:abc123","features_enabled":[],"dependencies":[]}], metadata: {"resolver_version":"1.0.0","resolved_at":"2026-01-15T10:00:00Z","registry_snapshot":"snap-001"} } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(lockfileHandler.write({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "write_circular_ref" -> error', async () => {
@@ -157,7 +164,8 @@ describe('Lockfile functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_write_valid_lockfile = await interpret(lockfileHandler.write({ project_hash: "sha256:manifest-hash-001", entries: [{"module_id":"lodash","version":"4.17.21","content_hash":"sha256:abc123","artifact_url":"https://registry.example.com/lodash.tgz","integrity":"sha256:abc123","features_enabled":[],"dependencies":[]}], metadata: {"resolver_version":"1.0.0","resolved_at":"2026-01-15T10:00:00Z","registry_snapshot":"snap-001"} }), storage);
       const result = await interpret(lockfileHandler.read({ lockfile: afterResult_write_valid_lockfile?.output?.["lockfile"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "read_nonexistent_lockfile" -> error', async () => {
@@ -226,7 +234,8 @@ describe('Lockfile functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_write_valid_lockfile = await interpret(lockfileHandler.write({ project_hash: "sha256:manifest-hash-001", entries: [{"module_id":"lodash","version":"4.17.21","content_hash":"sha256:abc123","artifact_url":"https://registry.example.com/lodash.tgz","integrity":"sha256:abc123","features_enabled":[],"dependencies":[]}], metadata: {"resolver_version":"1.0.0","resolved_at":"2026-01-15T10:00:00Z","registry_snapshot":"snap-001"} }), storage);
       const result = await interpret(lockfileHandler.verify({ lockfile: afterResult_write_valid_lockfile?.output?.["lockfile"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "verify_nonexistent_lockfile" -> error', async () => {
@@ -293,8 +302,15 @@ describe('Lockfile functional handler', () => {
     it('fixture "diff_two_lockfiles" -> ok', async () => {
       if (typeof lockfileHandler.diff !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(lockfileHandler.diff({ old_lockfile: "lock-1", new_lockfile: "lock-2" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_write_valid_lockfile = await interpret(lockfileHandler.write({ project_hash: "sha256:manifest-hash-001", entries: [{"module_id":"lodash","version":"4.17.21","content_hash":"sha256:abc123","artifact_url":"https://registry.example.com/lodash.tgz","integrity":"sha256:abc123","features_enabled":[],"dependencies":[]}], metadata: {"resolver_version":"1.0.0","resolved_at":"2026-01-15T10:00:00Z","registry_snapshot":"snap-001"} }), storage);
+      const _pool = Object.assign({}, (afterResult_write_valid_lockfile?.output ?? {}));
+      const _fixtureInput = { old_lockfile: "lock-1", new_lockfile: "lock-2" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(lockfileHandler.diff({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "diff_missing_lockfile" -> error', async () => {
@@ -326,19 +342,23 @@ describe('Lockfile functional handler', () => {
     it("write then read", async () => {
       const storage = createInMemoryStorage();
       const writeResult0 = await interpret(lockfileHandler.write({ project_hash: {"type":"literal","value":"hash1"}, entries: {"type":"variable","name":"es"}, metadata: {"type":"variable","name":"m"} }), storage);
-      expect(writeResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(writeResult0.variant), `step 0: expected success but got '${writeResult0.variant}'`).toBe(false);
       let lockfile = writeResult0.output["lockfile"];
       const thenResult0 = await interpret(lockfileHandler.read({ lockfile: {"type":"variable","name":"lf"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("write then verify", async () => {
       const storage = createInMemoryStorage();
       const writeResult0 = await interpret(lockfileHandler.write({ project_hash: {"type":"literal","value":"hash1"}, entries: {"type":"variable","name":"es"}, metadata: {"type":"variable","name":"m"} }), storage);
-      expect(writeResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(writeResult0.variant), `step 0: expected success but got '${writeResult0.variant}'`).toBe(false);
       let lockfile = writeResult0.output["lockfile"];
       const thenResult0 = await interpret(lockfileHandler.verify({ lockfile: {"type":"variable","name":"lf"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

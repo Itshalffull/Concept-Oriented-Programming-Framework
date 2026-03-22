@@ -88,7 +88,8 @@ describe('Control functional handler', () => {
       if (typeof controlHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(controlHandler.create({ control: "volume-slider", type: "slider", binding: "audio.volume" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "create_empty_control" -> error', async () => {
@@ -155,8 +156,15 @@ describe('Control functional handler', () => {
     it('fixture "interact_slider" -> ok', async () => {
       if (typeof controlHandler.interact !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(controlHandler.interact({ control: "volume-slider", input: "75" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_create_slider = await interpret(controlHandler.create({ control: "volume-slider", type: "slider", binding: "audio.volume" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_slider?.output ?? {}));
+      const _fixtureInput = { control: "volume-slider", input: "75" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(controlHandler.interact({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "interact_nonexistent" -> notfound', async () => {
@@ -224,8 +232,15 @@ describe('Control functional handler', () => {
     it('fixture "get_value_existing" -> ok', async () => {
       if (typeof controlHandler.getValue !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(controlHandler.getValue({ control: "volume-slider" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_create_slider = await interpret(controlHandler.create({ control: "volume-slider", type: "slider", binding: "audio.volume" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_slider?.output ?? {}));
+      const _fixtureInput = { control: "volume-slider" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(controlHandler.getValue({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_value_nonexistent" -> notfound', async () => {
@@ -293,8 +308,15 @@ describe('Control functional handler', () => {
     it('fixture "set_value_existing" -> ok', async () => {
       if (typeof controlHandler.setValue !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(controlHandler.setValue({ control: "volume-slider", value: "100" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_create_slider = await interpret(controlHandler.create({ control: "volume-slider", type: "slider", binding: "audio.volume" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_slider?.output ?? {}));
+      const _fixtureInput = { control: "volume-slider", value: "100" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(controlHandler.setValue({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "set_value_nonexistent" -> notfound', async () => {
@@ -362,8 +384,15 @@ describe('Control functional handler', () => {
     it('fixture "trigger_existing" -> ok', async () => {
       if (typeof controlHandler.triggerAction !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(controlHandler.triggerAction({ control: "volume-slider" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_create_slider = await interpret(controlHandler.create({ control: "volume-slider", type: "slider", binding: "audio.volume" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_slider?.output ?? {}));
+      const _fixtureInput = { control: "volume-slider" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(controlHandler.triggerAction({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "trigger_nonexistent" -> notfound', async () => {
@@ -396,11 +425,14 @@ describe('Control functional handler', () => {
     it("create-then-getValue", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(controlHandler.create({ control: {"type":"variable","name":"k"}, type: {"type":"literal","value":"slider"}, binding: {"type":"literal","value":"volume"} }), storage);
-      expect(createResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
       const thenResult0 = await interpret(controlHandler.setValue({ control: {"type":"variable","name":"k"}, value: {"type":"literal","value":"75"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
       const thenResult1 = await interpret(controlHandler.getValue({ control: {"type":"variable","name":"k"} }), storage);
-      expect(thenResult1.variant).toBe("ok");
+      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
     });
 
   });

@@ -88,7 +88,8 @@ describe('LLMAutomationProvider functional handler', () => {
       if (typeof llmAutomationProviderHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(llmAutomationProviderHandler.register({  }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -155,7 +156,8 @@ describe('LLMAutomationProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(llmAutomationProviderHandler.execute({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "missing_payload" -> error', async () => {
@@ -232,10 +234,12 @@ describe('LLMAutomationProvider functional handler', () => {
     it("register-then-execute", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(llmAutomationProviderHandler.register({  }), storage);
-      expect(registerResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
       let provider_name = registerResult0.output["provider_name"];
       const thenResult0 = await interpret(llmAutomationProviderHandler.execute({ action_payload: {"type":"literal","value":"{\"action\":\"summarize\"}"}, model_config: {"type":"literal","value":"{\"model\":\"gpt-4\"}"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

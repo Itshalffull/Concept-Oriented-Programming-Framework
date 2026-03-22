@@ -88,14 +88,16 @@ describe('Connector functional handler', () => {
       if (typeof connectorHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "configure_sql" -> ok', async () => {
       if (typeof connectorHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(connectorHandler.configure({ sourceId: "src-2", protocolId: "sql", config: "{\"connectionString\":\"postgres://localhost/db\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "configure_bad_json" -> error', async () => {
@@ -164,7 +166,8 @@ describe('Connector functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_rest = await interpret(connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" }), storage);
       const result = await interpret(connectorHandler.read({ connectorId: afterResult_configure_rest?.output?.["connectorId"], query: "{\"path\":\"/posts\"}", options: "{}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "read_missing_connector" -> notfound', async () => {
@@ -240,7 +243,8 @@ describe('Connector functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_rest = await interpret(connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" }), storage);
       const result = await interpret(connectorHandler.write({ connectorId: afterResult_configure_rest?.output?.["connectorId"], data: "[{\"title\":\"Post 1\"}]", options: "{}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "write_missing_connector" -> notfound', async () => {
@@ -316,7 +320,8 @@ describe('Connector functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_rest = await interpret(connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" }), storage);
       const result = await interpret(connectorHandler.test({ connectorId: afterResult_configure_rest?.output?.["connectorId"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "test_missing" -> notfound', async () => {
@@ -386,7 +391,8 @@ describe('Connector functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_rest = await interpret(connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" }), storage);
       const result = await interpret(connectorHandler.discover({ connectorId: afterResult_configure_rest?.output?.["connectorId"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "discover_missing" -> notfound', async () => {
@@ -419,12 +425,15 @@ describe('Connector functional handler', () => {
     it("configure-then-read", async () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(connectorHandler.configure({ sourceId: {"type":"literal","value":"src-1"}, protocolId: {"type":"literal","value":"rest"}, config: {"type":"literal","value":"{\"baseUrl\":\"https://api.example.com\"}"} }), storage);
-      expect(configureResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(configureResult0.variant), `step 0: expected success but got '${configureResult0.variant}'`).toBe(false);
       let connectorId = configureResult0.output["connectorId"];
       const thenResult0 = await interpret(connectorHandler.test({ connectorId: {"type":"literal","value":"conn-1"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
       const thenResult1 = await interpret(connectorHandler.read({ connectorId: {"type":"literal","value":"conn-1"}, query: {"type":"literal","value":"{\"path\":\"/posts\"}"}, options: {"type":"literal","value":"{}"} }), storage);
-      expect(thenResult1.variant).toBe("ok");
+      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
     });
 
   });

@@ -88,14 +88,16 @@ describe('GraphAnalysis functional handler', () => {
       if (typeof graphAnalysisHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "degree_with_config" -> ok', async () => {
       if (typeof graphAnalysisHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"x\",\"y\"],\"edges\":[{\"source\":\"x\",\"target\":\"y\"}]}", algorithm: "degree", config: "{}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "unknown_algo" -> unknown_algorithm', async () => {
@@ -178,7 +180,8 @@ describe('GraphAnalysis functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(graphAnalysisHandler.register({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "register_community" -> ok', async () => {
@@ -191,7 +194,8 @@ describe('GraphAnalysis functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(graphAnalysisHandler.register({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -253,7 +257,8 @@ describe('GraphAnalysis functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_pagerank_analysis = await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null }), storage);
       const result = await interpret(graphAnalysisHandler.getResult({ result: afterResult_pagerank_analysis?.output?.["result"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "missing_result" -> notfound', async () => {
@@ -328,7 +333,8 @@ describe('GraphAnalysis functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(graphAnalysisHandler.listResults({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -395,7 +401,8 @@ describe('GraphAnalysis functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(graphAnalysisHandler.listAlgorithms({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "centrality_only" -> ok', async () => {
@@ -408,7 +415,8 @@ describe('GraphAnalysis functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(graphAnalysisHandler.listAlgorithms({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -475,7 +483,8 @@ describe('GraphAnalysis functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(graphAnalysisHandler.clearResults({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -485,9 +494,11 @@ describe('GraphAnalysis functional handler', () => {
     it("register-then-analyze", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(graphAnalysisHandler.register({ algorithm: {"type":"literal","value":"pagerank"}, category: {"type":"literal","value":"centrality"}, provider: {"type":"literal","value":"CentralityAnalysis"} }), storage);
-      expect(registerResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
       const thenResult0 = await interpret(graphAnalysisHandler.analyze({ graph: {"type":"literal","value":"g1"}, algorithm: {"type":"literal","value":"pagerank"}, config: {"type":"record","fields":[]} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

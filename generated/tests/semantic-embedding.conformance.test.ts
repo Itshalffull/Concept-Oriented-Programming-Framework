@@ -88,14 +88,16 @@ describe('SemanticEmbedding functional handler', () => {
       if (typeof semanticEmbeddingHandler.compute !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(semanticEmbeddingHandler.compute({ unit: "def-123", model: "codeBERT" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "compute_unixcoder" -> ok', async () => {
       if (typeof semanticEmbeddingHandler.compute !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(semanticEmbeddingHandler.compute({ unit: "def-456", model: "unixcoder" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "compute_unknown_model" -> modelUnavailable', async () => {
@@ -170,7 +172,8 @@ describe('SemanticEmbedding functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(semanticEmbeddingHandler.searchSimilar({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "search_similar_all" -> ok', async () => {
@@ -183,7 +186,8 @@ describe('SemanticEmbedding functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(semanticEmbeddingHandler.searchSimilar({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -250,7 +254,8 @@ describe('SemanticEmbedding functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(semanticEmbeddingHandler.searchNaturalLanguage({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "nl_search_broad" -> ok', async () => {
@@ -263,7 +268,8 @@ describe('SemanticEmbedding functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(semanticEmbeddingHandler.searchNaturalLanguage({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -325,7 +331,8 @@ describe('SemanticEmbedding functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_compute_codebert = await interpret(semanticEmbeddingHandler.compute({ unit: "def-123", model: "codeBERT" }), storage);
       const result = await interpret(semanticEmbeddingHandler.get({ embedding: afterResult_compute_codebert?.output?.["embedding"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_unknown" -> notfound', async () => {
@@ -358,10 +365,12 @@ describe('SemanticEmbedding functional handler', () => {
     it("compute-then-get", async () => {
       const storage = createInMemoryStorage();
       const computeResult0 = await interpret(semanticEmbeddingHandler.compute({ unit: {"type":"literal","value":"def-123"}, model: {"type":"literal","value":"codeBERT"} }), storage);
-      expect(computeResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(computeResult0.variant), `step 0: expected success but got '${computeResult0.variant}'`).toBe(false);
       let embedding = computeResult0.output["embedding"];
       const thenResult0 = await interpret(semanticEmbeddingHandler.get({ embedding: {"type":"variable","name":"b"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

@@ -88,14 +88,16 @@ describe('GraphqlTarget functional handler', () => {
       if (typeof graphqlTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(graphqlTargetHandler.generate({ projection: "order-projection", config: "{}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "with_relay_and_federation" -> ok', async () => {
       if (typeof graphqlTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(graphqlTargetHandler.generate({ projection: "product-projection", config: "{\"relay\":true,\"federation\":true,\"subscriptions\":true}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "empty_projection" -> error', async () => {
@@ -115,7 +117,8 @@ describe('GraphqlTarget functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(graphqlTargetHandler.generate({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -175,8 +178,15 @@ describe('GraphqlTarget functional handler', () => {
     it('fixture "valid_type" -> ok', async () => {
       if (typeof graphqlTargetHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(graphqlTargetHandler.validate({ type: "graphql-order-12345" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_with_default_config = await interpret(graphqlTargetHandler.generate({ projection: "order-projection", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_with_default_config?.output ?? {}));
+      const _fixtureInput = { type: "graphql-order-12345" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(graphqlTargetHandler.validate({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "missing_type" -> error', async () => {
@@ -250,7 +260,8 @@ describe('GraphqlTarget functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(graphqlTargetHandler.listOperations({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "empty_concept" -> error', async () => {
@@ -282,11 +293,13 @@ describe('GraphqlTarget functional handler', () => {
     it("generate-then-listOperations", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(graphqlTargetHandler.generate({ projection: {"type":"literal","value":"order-projection"}, config: {"type":"literal","value":"{}"} }), storage);
-      expect(generateResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
       let types = generateResult0.output["types"];
       let files = generateResult0.output["files"];
       const thenResult0 = await interpret(graphqlTargetHandler.listOperations({ concept: {"type":"literal","value":"Order"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

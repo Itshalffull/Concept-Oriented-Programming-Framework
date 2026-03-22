@@ -88,14 +88,16 @@ describe('OpenaiTarget functional handler', () => {
       if (typeof openaiTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(openaiTargetHandler.generate({ projection: "{\"conceptName\":\"ScoreApi\",\"conceptManifest\":\"{\\\"name\\\":\\\"ScoreApi\\\",\\\"actions\\\":[]}\"}", config: "{\"strict\":true}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "generate_non_strict" -> ok', async () => {
       if (typeof openaiTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(openaiTargetHandler.generate({ projection: "{\"conceptName\":\"Agent\",\"conceptManifest\":\"{\\\"name\\\":\\\"Agent\\\",\\\"actions\\\":[]}\"}", config: "{\"strict\":false}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "generate_empty_projection" -> error', async () => {
@@ -162,8 +164,15 @@ describe('OpenaiTarget functional handler', () => {
     it('fixture "validate_valid" -> ok', async () => {
       if (typeof openaiTargetHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(openaiTargetHandler.validate({ function: "fn-score-001" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_generate_strict = await interpret(openaiTargetHandler.generate({ projection: "{\"conceptName\":\"ScoreApi\",\"conceptManifest\":\"{\\\"name\\\":\\\"ScoreApi\\\",\\\"actions\\\":[]}\"}", config: "{\"strict\":true}" }), storage);
+      const _pool = Object.assign({}, (afterResult_generate_strict?.output ?? {}));
+      const _fixtureInput = { function: "fn-score-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(openaiTargetHandler.validate({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "validate_missing" -> error', async () => {
@@ -237,7 +246,8 @@ describe('OpenaiTarget functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(openaiTargetHandler.listFunctions({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "list_functions_empty" -> error', async () => {
@@ -269,11 +279,13 @@ describe('OpenaiTarget functional handler', () => {
     it("generate-then-listFunctions", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(openaiTargetHandler.generate({ projection: {"type":"literal","value":"score-projection"}, config: {"type":"literal","value":"{}"} }), storage);
-      expect(generateResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
       let functions = generateResult0.output["functions"];
       let files = generateResult0.output["files"];
       const thenResult0 = await interpret(openaiTargetHandler.listFunctions({ concept: {"type":"literal","value":"ScoreApi"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

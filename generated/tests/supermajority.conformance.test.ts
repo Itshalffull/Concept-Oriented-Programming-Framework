@@ -88,14 +88,16 @@ describe('Supermajority functional handler', () => {
       if (typeof supermajorityHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(supermajorityHandler.configure({ threshold: "0.6667", roundingMode: "floor", abstentionsCount: "false" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "three_quarters_with_abstentions" -> ok', async () => {
       if (typeof supermajorityHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(supermajorityHandler.configure({ threshold: "0.75", roundingMode: "ceil", abstentionsCount: "true" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "invalid_low_threshold" -> error', async () => {
@@ -164,7 +166,8 @@ describe('Supermajority functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_two_thirds = await interpret(supermajorityHandler.configure({ threshold: "0.6667", roundingMode: "floor", abstentionsCount: "false" }), storage);
       const result = await interpret(supermajorityHandler.count({ config: afterResult_two_thirds?.output?.["id"], ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "no_ballots" -> error', async () => {

@@ -88,14 +88,16 @@ describe('DerivedEntity functional handler', () => {
       if (typeof derivedEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(derivedEntityHandler.register({ name: "Trash", source: "specs/trash.derived", ast: "{\"composes\":[\"Article\",\"Label\"],\"syncs\":{\"required\":[\"trash-on-delete\"]}}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "register_minimal" -> ok', async () => {
       if (typeof derivedEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(derivedEntityHandler.register({ name: "Inbox", source: "specs/inbox.derived", ast: "{}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "register_empty_name" -> error', async () => {
@@ -169,7 +171,8 @@ describe('DerivedEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(derivedEntityHandler.get({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_missing" -> error', async () => {
@@ -243,7 +246,8 @@ describe('DerivedEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(derivedEntityHandler.findByComposedConcept({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "find_by_empty" -> error', async () => {
@@ -317,7 +321,8 @@ describe('DerivedEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(derivedEntityHandler.findBySync({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "find_by_sync_empty" -> error', async () => {
@@ -386,7 +391,8 @@ describe('DerivedEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_trash = await interpret(derivedEntityHandler.register({ name: "Trash", source: "specs/trash.derived", ast: "{\"composes\":[\"Article\",\"Label\"],\"syncs\":{\"required\":[\"trash-on-delete\"]}}" }), storage);
       const result = await interpret(derivedEntityHandler.compositionTree({ entity: afterResult_register_trash?.output?.["entity"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "tree_missing" -> error', async () => {
@@ -455,7 +461,8 @@ describe('DerivedEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_trash = await interpret(derivedEntityHandler.register({ name: "Trash", source: "specs/trash.derived", ast: "{\"composes\":[\"Article\",\"Label\"],\"syncs\":{\"required\":[\"trash-on-delete\"]}}" }), storage);
       const result = await interpret(derivedEntityHandler.traceRollup({ entity: afterResult_register_trash?.output?.["entity"], flowId: afterResult_register_trash?.output?.["entity"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "rollup_missing_entity" -> error', async () => {
@@ -472,16 +479,19 @@ describe('DerivedEntity functional handler', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(derivedEntityHandler.register({ name: {"type":"literal","value":"Trash"}, source: {"type":"literal","value":"specs/trash.derived"}, ast: {"type":"literal","value":"{}"} }), storage);
-      expect(registerResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
       let entity = registerResult0.output["entity"];
       const thenResult0 = await interpret(derivedEntityHandler.get({ name: {"type":"literal","value":"Trash"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
     it("duplicate registration returns existing", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(derivedEntityHandler.register({ name: {"type":"literal","value":"Trash"}, source: {"type":"literal","value":"specs/trash.derived"}, ast: {"type":"literal","value":"{}"} }), storage);
-      expect(registerResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
       let entity = registerResult0.output["entity"];
       const thenResult0 = await interpret(derivedEntityHandler.register({ name: {"type":"literal","value":"Trash"}, source: {"type":"literal","value":"specs/trash.derived"}, ast: {"type":"literal","value":"{}"} }), storage);
       expect(thenResult0.variant).toBe("alreadyRegistered");

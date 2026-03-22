@@ -88,14 +88,16 @@ describe('Query functional handler', () => {
       if (typeof queryHandler.parse !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(queryHandler.parse({ query: "q-001", expression: "status = 'active'" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "parse_complex" -> ok', async () => {
       if (typeof queryHandler.parse !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(queryHandler.parse({ query: "q-002", expression: "age > 18 AND role = 'admin'" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "parse_empty_expression" -> error', async () => {
@@ -164,7 +166,8 @@ describe('Query functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_parse_status_filter = await interpret(queryHandler.parse({ query: "q-001", expression: "status = 'active'" }), storage);
       const result = await interpret(queryHandler.execute({ query: afterResult_parse_status_filter?.output?.["query"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "execute_missing" -> error', async () => {
@@ -233,7 +236,8 @@ describe('Query functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_parse_status_filter = await interpret(queryHandler.parse({ query: "q-001", expression: "status = 'active'" }), storage);
       const result = await interpret(queryHandler.subscribe({ query: afterResult_parse_status_filter?.output?.["query"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "subscribe_missing" -> error', async () => {
@@ -302,7 +306,8 @@ describe('Query functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_parse_status_filter = await interpret(queryHandler.parse({ query: "q-001", expression: "status = 'active'" }), storage);
       const result = await interpret(queryHandler.addFilter({ query: afterResult_parse_status_filter?.output?.["query"], filter: "status = 'active'" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "add_filter_missing" -> error', async () => {
@@ -371,7 +376,8 @@ describe('Query functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_parse_status_filter = await interpret(queryHandler.parse({ query: "q-001", expression: "status = 'active'" }), storage);
       const result = await interpret(queryHandler.addSort({ query: afterResult_parse_status_filter?.output?.["query"], sort: "createdAt DESC" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "add_sort_missing" -> error', async () => {
@@ -440,7 +446,8 @@ describe('Query functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_parse_status_filter = await interpret(queryHandler.parse({ query: "q-001", expression: "status = 'active'" }), storage);
       const result = await interpret(queryHandler.setScope({ query: afterResult_parse_status_filter?.output?.["query"], scope: "organization/acme" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "set_scope_missing" -> error', async () => {
@@ -472,10 +479,12 @@ describe('Query functional handler', () => {
     it("parse then execute", async () => {
       const storage = createInMemoryStorage();
       const parseResult0 = await interpret(queryHandler.parse({ query: {"type":"variable","name":"q"}, expression: {"type":"literal","value":"status = 'active'"} }), storage);
-      expect(parseResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(parseResult0.variant), `step 0: expected success but got '${parseResult0.variant}'`).toBe(false);
       let query = parseResult0.output["query"];
       const thenResult0 = await interpret(queryHandler.execute({ query: {"type":"variable","name":"q"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

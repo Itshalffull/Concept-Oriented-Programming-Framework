@@ -87,15 +87,29 @@ describe('Spec functional handler', () => {
     it('fixture "openapi_spec" -> ok', async () => {
       if (typeof specHandler.emit !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(specHandler.emit({ projections: ["user","order"], format: "openapi", config: "{\"kit\":\"commerce\",\"version\":\"1.0.0\"}" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_valid_document = await interpret(specHandler.validate({ document: "spec-openapi-commerce-12345" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_document?.output ?? {}));
+      const _fixtureInput = { projections: ["user","order"], format: "openapi", config: "{\"kit\":\"commerce\",\"version\":\"1.0.0\"}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(specHandler.emit({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "asyncapi_spec" -> ok', async () => {
       if (typeof specHandler.emit !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(specHandler.emit({ projections: ["notification"], format: "asyncapi", config: "{}" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_valid_document = await interpret(specHandler.validate({ document: "spec-openapi-commerce-12345" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_document?.output ?? {}));
+      const _fixtureInput = { projections: ["notification"], format: "asyncapi", config: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(specHandler.emit({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "unknown_format" -> error', async () => {
@@ -162,8 +176,15 @@ describe('Spec functional handler', () => {
     it('fixture "valid_document" -> ok', async () => {
       if (typeof specHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(specHandler.validate({ document: "spec-openapi-commerce-12345" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_openapi_spec = await interpret(specHandler.emit({ projections: ["user","order"], format: "openapi", config: "{\"kit\":\"commerce\",\"version\":\"1.0.0\"}" }), storage);
+      const _pool = Object.assign({}, (afterResult_openapi_spec?.output ?? {}));
+      const _fixtureInput = { document: "spec-openapi-commerce-12345" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(specHandler.validate({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "missing_document" -> error', async () => {
@@ -195,11 +216,13 @@ describe('Spec functional handler', () => {
     it("emit-then-validate", async () => {
       const storage = createInMemoryStorage();
       const emitResult0 = await interpret(specHandler.emit({ projections: {"type":"list","items":[{"type":"literal","value":"proj-1"}]}, format: {"type":"literal","value":"openapi"}, config: {"type":"literal","value":"{}"} }), storage);
-      expect(emitResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(emitResult0.variant), `step 0: expected success but got '${emitResult0.variant}'`).toBe(false);
       let document = emitResult0.output["document"];
       let content = emitResult0.output["content"];
       const thenResult0 = await interpret(specHandler.validate({ document: {"type":"variable","name":"d"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

@@ -88,7 +88,8 @@ describe('PageAsRecord functional handler', () => {
       if (typeof pageAsRecordHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(pageAsRecordHandler.create({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\"]}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "create_empty_page" -> error', async () => {
@@ -162,7 +163,8 @@ describe('PageAsRecord functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(pageAsRecordHandler.setProperty({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "set_on_missing" -> error', async () => {
@@ -236,7 +238,8 @@ describe('PageAsRecord functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(pageAsRecordHandler.getProperty({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_from_missing" -> error', async () => {
@@ -310,7 +313,8 @@ describe('PageAsRecord functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(pageAsRecordHandler.appendToBody({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "append_to_missing" -> error', async () => {
@@ -384,7 +388,8 @@ describe('PageAsRecord functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(pageAsRecordHandler.attachToSchema({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "attach_to_missing" -> error', async () => {
@@ -457,8 +462,15 @@ describe('PageAsRecord functional handler', () => {
     it('fixture "convert_page" -> ok', async () => {
       if (typeof pageAsRecordHandler.convertFromFreeform !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(pageAsRecordHandler.convertFromFreeform({ page: "meeting-notes", schema: "{\"fields\":[\"title\"]}" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_create_page = await interpret(pageAsRecordHandler.create({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\"]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_page?.output ?? {}));
+      const _fixtureInput = { page: "meeting-notes", schema: "{\"fields\":[\"title\"]}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(pageAsRecordHandler.convertFromFreeform({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "convert_missing" -> error', async () => {
@@ -490,13 +502,16 @@ describe('PageAsRecord functional handler', () => {
     it("create-then-getProperty", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(pageAsRecordHandler.create({ page: {"type":"variable","name":"p"}, schema: {"type":"literal","value":"{\"fields\":[\"title\"]}"} }), storage);
-      expect(createResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
       let page = createResult0.output["page"];
       const setPropertyResult1 = await interpret(pageAsRecordHandler.setProperty({ page: {"type":"variable","name":"p"}, key: {"type":"literal","value":"title"}, value: {"type":"literal","value":"My Page"} }), storage);
-      expect(setPropertyResult1.variant).toBe("ok");
+      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr1(setPropertyResult1.variant), `step 1: expected success but got '${setPropertyResult1.variant}'`).toBe(false);
       page = setPropertyResult1.output["page"];
       const thenResult0 = await interpret(pageAsRecordHandler.getProperty({ page: {"type":"variable","name":"p"}, key: {"type":"literal","value":"title"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

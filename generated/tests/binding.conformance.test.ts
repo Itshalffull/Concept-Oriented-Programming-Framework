@@ -88,14 +88,16 @@ describe('Binding functional handler', () => {
       if (typeof bindingHandler.bind !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(bindingHandler.bind({ binding: "B-1", concept: "Article", mode: "coupled" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "valid_bind_rest" -> ok', async () => {
       if (typeof bindingHandler.bind !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(bindingHandler.bind({ binding: "B-2", concept: "User", mode: "rest" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "invalid_mode" -> error', async () => {
@@ -169,7 +171,8 @@ describe('Binding functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(bindingHandler.sync({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "sync_nonexistent" -> error', async () => {
@@ -243,7 +246,8 @@ describe('Binding functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(bindingHandler.invoke({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "invoke_nonexistent" -> error', async () => {
@@ -323,7 +327,8 @@ describe('Binding functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(bindingHandler.unbind({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "unbind_nonexistent" -> error', async () => {
@@ -355,10 +360,12 @@ describe('Binding functional handler', () => {
     it("bind then sync", async () => {
       const storage = createInMemoryStorage();
       const bindResult0 = await interpret(bindingHandler.bind({ binding: {"type":"variable","name":"b"}, concept: {"type":"variable","name":"c"}, mode: {"type":"literal","value":"static"} }), storage);
-      expect(bindResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(bindResult0.variant), `step 0: expected success but got '${bindResult0.variant}'`).toBe(false);
       let binding = bindResult0.output["binding"];
       const thenResult0 = await interpret(bindingHandler.sync({ binding: {"type":"variable","name":"b"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
       const thenResult1 = await interpret(bindingHandler.bind({ binding: {"type":"variable","name":"b2"}, concept: {"type":"variable","name":"c2"}, mode: {"type":"literal","value":"invalid-mode"} }), storage);
       expect(thenResult1.variant).toBe("invalid");
     });

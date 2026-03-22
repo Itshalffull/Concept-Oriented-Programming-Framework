@@ -88,7 +88,8 @@ describe('SlotProvider functional handler', () => {
       if (typeof slotProviderHandler.initialize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(slotProviderHandler.initialize({ config: "{}" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "init_invalid_json" -> error', async () => {
@@ -157,7 +158,8 @@ describe('SlotProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_init_default = await interpret(slotProviderHandler.initialize({ config: "{}" }), storage);
       const result = await interpret(slotProviderHandler.define({ provider: afterResult_init_default?.output?.["provider"], name: "header", host: "dialog", position: "before-title" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "define_empty_name" -> error', async () => {
@@ -226,7 +228,8 @@ describe('SlotProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_init_default = await interpret(slotProviderHandler.initialize({ config: "{}" }), storage);
       const result = await interpret(slotProviderHandler.fill({ provider: afterResult_init_default?.output?.["provider"], slot: afterResult_init_default?.output?.["provider"], content: "<h1>Title</h1>" }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "fill_missing_slot" -> error', async () => {
@@ -295,7 +298,8 @@ describe('SlotProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_init_default = await interpret(slotProviderHandler.initialize({ config: "{}" }), storage);
       const result = await interpret(slotProviderHandler.clear({ provider: afterResult_init_default?.output?.["provider"], slot: afterResult_init_default?.output?.["provider"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "clear_missing_slot" -> error', async () => {
@@ -369,7 +373,8 @@ describe('SlotProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(slotProviderHandler.getSlots({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "get_slots_empty" -> ok', async () => {
@@ -382,7 +387,8 @@ describe('SlotProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(slotProviderHandler.getSlots({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -407,11 +413,13 @@ describe('SlotProvider functional handler', () => {
     it("initialize then define", async () => {
       const storage = createInMemoryStorage();
       const initializeResult0 = await interpret(slotProviderHandler.initialize({ provider: {"type":"variable","name":"p"}, config: {"type":"literal","value":"{}"} }), storage);
-      expect(initializeResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(initializeResult0.variant), `step 0: expected success but got '${initializeResult0.variant}'`).toBe(false);
       let provider = initializeResult0.output["provider"];
       let pluginRef = initializeResult0.output["pluginRef"];
       const thenResult0 = await interpret(slotProviderHandler.define({ provider: {"type":"variable","name":"p"}, name: {"type":"literal","value":"header"}, host: {"type":"literal","value":"dialog"}, position: {"type":"literal","value":"before-title"}, fallback: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

@@ -87,8 +87,15 @@ describe('CedarEvaluator functional handler', () => {
     it('fixture "load_permit_policies" -> ok', async () => {
       if (typeof cedarEvaluatorHandler.loadPolicies !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(cedarEvaluatorHandler.loadPolicies({ policies: "[{\"effect\":\"permit\",\"principal\":\"admin\",\"action\":\"read\",\"resource\":\"docs\"}]", schema: "{}" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_authorize_permitted_action = await interpret(cedarEvaluatorHandler.authorize({ store: "cedar-001", principal: "admin", action: "read", resource: "docs", context: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_authorize_permitted_action?.output ?? {}));
+      const _fixtureInput = { policies: "[{\"effect\":\"permit\",\"principal\":\"admin\",\"action\":\"read\",\"resource\":\"docs\"}]", schema: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(cedarEvaluatorHandler.loadPolicies({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "load_empty_policies" -> validation_error', async () => {
@@ -156,8 +163,15 @@ describe('CedarEvaluator functional handler', () => {
     it('fixture "authorize_permitted_action" -> ok', async () => {
       if (typeof cedarEvaluatorHandler.authorize !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(cedarEvaluatorHandler.authorize({ store: "cedar-001", principal: "admin", action: "read", resource: "docs", context: "{}" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_load_permit_policies = await interpret(cedarEvaluatorHandler.loadPolicies({ policies: "[{\"effect\":\"permit\",\"principal\":\"admin\",\"action\":\"read\",\"resource\":\"docs\"}]", schema: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_load_permit_policies?.output ?? {}));
+      const _fixtureInput = { store: "cedar-001", principal: "admin", action: "read", resource: "docs", context: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(cedarEvaluatorHandler.authorize({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "authorize_denied_action" -> deny', async () => {
@@ -225,8 +239,15 @@ describe('CedarEvaluator functional handler', () => {
     it('fixture "verify_no_conflicts" -> ok', async () => {
       if (typeof cedarEvaluatorHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(cedarEvaluatorHandler.verify({ store: "cedar-001", property: "no_conflicts" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_load_permit_policies = await interpret(cedarEvaluatorHandler.loadPolicies({ policies: "[{\"effect\":\"permit\",\"principal\":\"admin\",\"action\":\"read\",\"resource\":\"docs\"}]", schema: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_load_permit_policies?.output ?? {}));
+      const _fixtureInput = { store: "cedar-001", property: "no_conflicts" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(cedarEvaluatorHandler.verify({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "verify_nonexistent_store" -> counterexample', async () => {

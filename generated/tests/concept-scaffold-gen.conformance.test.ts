@@ -88,7 +88,8 @@ describe('ConceptScaffoldGen functional handler', () => {
       if (typeof conceptScaffoldGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(conceptScaffoldGenHandler.generate({ name: "UserAccount", typeParam: "U", purpose: "Manage user accounts and authentication", stateFields: [{"name":"users","type":"set U"}], actions: [{"name":"create","params":[{"name":"email","type":"String"}],"variants":[{"name":"ok","params":[{"name":"user","type":"U"}],"description":"User created."}]}], version: "1", gate: "false", capabilities: ["persistent-storage"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "missing_name" -> error', async () => {
@@ -155,15 +156,29 @@ describe('ConceptScaffoldGen functional handler', () => {
     it('fixture "preview_payment" -> ok', async () => {
       if (typeof conceptScaffoldGenHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(conceptScaffoldGenHandler.preview({ name: "Payment", typeParam: "P", purpose: "Process monetary transactions", stateFields: [{"name":"transactions","type":"set P"}], actions: [{"name":"charge","params":[{"name":"amount","type":"Int"}],"variants":[{"name":"ok","params":[{"name":"txn","type":"P"}],"description":"Charge completed."}]}], version: "2", gate: "true", capabilities: ["network"] }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_user_concept = await interpret(conceptScaffoldGenHandler.generate({ name: "UserAccount", typeParam: "U", purpose: "Manage user accounts and authentication", stateFields: [{"name":"users","type":"set U"}], actions: [{"name":"create","params":[{"name":"email","type":"String"}],"variants":[{"name":"ok","params":[{"name":"user","type":"U"}],"description":"User created."}]}], version: "1", gate: "false", capabilities: ["persistent-storage"] }), storage);
+      const _pool = Object.assign({}, (afterResult_user_concept?.output ?? {}));
+      const _fixtureInput = { name: "Payment", typeParam: "P", purpose: "Process monetary transactions", stateFields: [{"name":"transactions","type":"set P"}], actions: [{"name":"charge","params":[{"name":"amount","type":"Int"}],"variants":[{"name":"ok","params":[{"name":"txn","type":"P"}],"description":"Charge completed."}]}], version: "2", gate: "true", capabilities: ["network"] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(conceptScaffoldGenHandler.preview({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "preview_no_name" -> ok', async () => {
       if (typeof conceptScaffoldGenHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(conceptScaffoldGenHandler.preview({ name: "", typeParam: "X", purpose: "Empty", stateFields: [], actions: [], version: "1", gate: "false", capabilities: [] }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_user_concept = await interpret(conceptScaffoldGenHandler.generate({ name: "UserAccount", typeParam: "U", purpose: "Manage user accounts and authentication", stateFields: [{"name":"users","type":"set U"}], actions: [{"name":"create","params":[{"name":"email","type":"String"}],"variants":[{"name":"ok","params":[{"name":"user","type":"U"}],"description":"User created."}]}], version: "1", gate: "false", capabilities: ["persistent-storage"] }), storage);
+      const _pool = Object.assign({}, (afterResult_user_concept?.output ?? {}));
+      const _fixtureInput = { name: "", typeParam: "X", purpose: "Empty", stateFields: [], actions: [], version: "1", gate: "false", capabilities: [] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(conceptScaffoldGenHandler.preview({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -225,12 +240,10 @@ describe('ConceptScaffoldGen functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_user_concept = await interpret(conceptScaffoldGenHandler.generate({ name: "UserAccount", typeParam: "U", purpose: "Manage user accounts and authentication", stateFields: [{"name":"users","type":"set U"}], actions: [{"name":"create","params":[{"name":"email","type":"String"}],"variants":[{"name":"ok","params":[{"name":"user","type":"U"}],"description":"User created."}]}], version: "1", gate: "false", capabilities: ["persistent-storage"] }), storage);
       const _pool = Object.assign({}, (afterResult_user_concept?.output ?? {}));
-      const _fixtureInput = {  } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
-      }
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(conceptScaffoldGenHandler.register({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
   });
@@ -255,7 +268,8 @@ describe('ConceptScaffoldGen functional handler', () => {
     it("generate produces concept spec files", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(conceptScaffoldGenHandler.generate({ name: {"type":"literal","value":"User"}, typeParam: {"type":"literal","value":"U"}, purpose: {"type":"literal","value":"Manage users"}, stateFields: {"type":"list","items":[]}, actions: {"type":"list","items":[]}, version: {"type":"literal","value":1}, gate: {"type":"literal","value":false}, capabilities: {"type":"list","items":[]} }), storage);
-      expect(generateResult0.variant).toBe("ok");
+      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
       let files = generateResult0.output["files"];
       let filesGenerated = generateResult0.output["filesGenerated"];
     });

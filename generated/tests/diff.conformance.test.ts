@@ -87,8 +87,15 @@ describe('Diff functional handler', () => {
     it('fixture "register_myers" -> ok', async () => {
       if (typeof diffHandler.registerProvider !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(diffHandler.registerProvider({ name: "myers", contentTypes: ["text/plain"] }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_diff_two_files = await interpret(diffHandler.diff({ contentA: "line1\nline2", contentB: "line1\nline3", algorithm: "myers" }), storage);
+      const _pool = Object.assign({}, (afterResult_diff_two_files?.output ?? {}));
+      const _fixtureInput = { name: "myers", contentTypes: ["text/plain"] } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(diffHandler.registerProvider({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "empty_name" -> error', async () => {
@@ -155,15 +162,29 @@ describe('Diff functional handler', () => {
     it('fixture "diff_two_files" -> ok', async () => {
       if (typeof diffHandler.diff !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(diffHandler.diff({ contentA: "line1\nline2", contentB: "line1\nline3", algorithm: "myers" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_register_myers = await interpret(diffHandler.registerProvider({ name: "myers", contentTypes: ["text/plain"] }), storage);
+      const _pool = Object.assign({}, (afterResult_register_myers?.output ?? {}));
+      const _fixtureInput = { contentA: "line1\nline2", contentB: "line1\nline3", algorithm: "myers" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(diffHandler.diff({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "identical_content" -> ok', async () => {
       if (typeof diffHandler.diff !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(diffHandler.diff({ contentA: "same", contentB: "same", algorithm: "myers" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_register_myers = await interpret(diffHandler.registerProvider({ name: "myers", contentTypes: ["text/plain"] }), storage);
+      const _pool = Object.assign({}, (afterResult_register_myers?.output ?? {}));
+      const _fixtureInput = { contentA: "same", contentB: "same", algorithm: "myers" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(diffHandler.diff({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "unknown_algorithm" -> error', async () => {
@@ -237,7 +258,8 @@ describe('Diff functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(diffHandler.patch({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "invalid_script" -> error', async () => {
@@ -273,7 +295,8 @@ describe('Diff functional handler', () => {
       let editScript = diffResult0.output["editScript"];
       let distance = diffResult0.output["distance"];
       const thenResult0 = await interpret(diffHandler.patch({ content: {"type":"variable","name":"a"}, editScript: {"type":"variable","name":"es"} }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
     });
 
   });

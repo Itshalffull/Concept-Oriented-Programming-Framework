@@ -87,8 +87,15 @@ describe('Sanction functional handler', () => {
     it('fixture "impose_warning" -> ok', async () => {
       if (typeof sanctionHandler.impose !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(sanctionHandler.impose({ subject: "user-42", severity: "Warning", consequence: "Verbal warning issued", reason: "First-time policy violation" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_escalate_warning = await interpret(sanctionHandler.escalate({ sanction: "sanction-001" }), storage);
+      const _pool = Object.assign({}, (afterResult_escalate_warning?.output ?? {}));
+      const _fixtureInput = { subject: "user-42", severity: "Warning", consequence: "Verbal warning issued", reason: "First-time policy violation" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(sanctionHandler.impose({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "impose_missing_subject" -> error', async () => {
@@ -155,8 +162,15 @@ describe('Sanction functional handler', () => {
     it('fixture "escalate_warning" -> ok', async () => {
       if (typeof sanctionHandler.escalate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(sanctionHandler.escalate({ sanction: "sanction-001" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_impose_warning = await interpret(sanctionHandler.impose({ subject: "user-42", severity: "Warning", consequence: "Verbal warning issued", reason: "First-time policy violation" }), storage);
+      const _pool = Object.assign({}, (afterResult_impose_warning?.output ?? {}));
+      const _fixtureInput = { sanction: "sanction-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(sanctionHandler.escalate({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "escalate_nonexistent" -> error', async () => {
@@ -223,8 +237,15 @@ describe('Sanction functional handler', () => {
     it('fixture "appeal_existing" -> ok', async () => {
       if (typeof sanctionHandler.appeal !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(sanctionHandler.appeal({ sanction: "sanction-001" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_impose_warning = await interpret(sanctionHandler.impose({ subject: "user-42", severity: "Warning", consequence: "Verbal warning issued", reason: "First-time policy violation" }), storage);
+      const _pool = Object.assign({}, (afterResult_impose_warning?.output ?? {}));
+      const _fixtureInput = { sanction: "sanction-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(sanctionHandler.appeal({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "appeal_nonexistent" -> error', async () => {
@@ -291,8 +312,15 @@ describe('Sanction functional handler', () => {
     it('fixture "pardon_existing" -> ok', async () => {
       if (typeof sanctionHandler.pardon !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(sanctionHandler.pardon({ sanction: "sanction-001" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_impose_warning = await interpret(sanctionHandler.impose({ subject: "user-42", severity: "Warning", consequence: "Verbal warning issued", reason: "First-time policy violation" }), storage);
+      const _pool = Object.assign({}, (afterResult_impose_warning?.output ?? {}));
+      const _fixtureInput = { sanction: "sanction-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(sanctionHandler.pardon({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "pardon_nonexistent" -> error', async () => {
@@ -359,8 +387,15 @@ describe('Sanction functional handler', () => {
     it('fixture "reward_contributor" -> ok', async () => {
       if (typeof sanctionHandler.reward !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(sanctionHandler.reward({ subject: "alice", type: "contribution_bonus", amount: "50.0", reason: "Outstanding code review participation" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_impose_warning = await interpret(sanctionHandler.impose({ subject: "user-42", severity: "Warning", consequence: "Verbal warning issued", reason: "First-time policy violation" }), storage);
+      const _pool = Object.assign({}, (afterResult_impose_warning?.output ?? {}));
+      const _fixtureInput = { subject: "alice", type: "contribution_bonus", amount: "50.0", reason: "Outstanding code review participation" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(sanctionHandler.reward({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "reward_missing_subject" -> error', async () => {

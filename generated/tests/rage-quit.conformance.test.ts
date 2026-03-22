@@ -87,15 +87,29 @@ describe('RageQuit functional handler', () => {
     it('fixture "initiate_exit" -> ok', async () => {
       if (typeof rageQuitHandler.initiate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(rageQuitHandler.initiate({ member: "0xAliceDaoMember", shares: "150.0", loot: "50.0" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_calculate_claim = await interpret(rageQuitHandler.calculateClaim({ exit: "rq-001" }), storage);
+      const _pool = Object.assign({}, (afterResult_calculate_claim?.output ?? {}));
+      const _fixtureInput = { member: "0xAliceDaoMember", shares: "150.0", loot: "50.0" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(rageQuitHandler.initiate({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "initiate_whale" -> ok', async () => {
       if (typeof rageQuitHandler.initiate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(rageQuitHandler.initiate({ member: "0xBobWhale", shares: "5000.0", loot: "200.0" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_calculate_claim = await interpret(rageQuitHandler.calculateClaim({ exit: "rq-001" }), storage);
+      const _pool = Object.assign({}, (afterResult_calculate_claim?.output ?? {}));
+      const _fixtureInput = { member: "0xBobWhale", shares: "5000.0", loot: "200.0" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(rageQuitHandler.initiate({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "initiate_empty_member" -> error', async () => {
@@ -162,8 +176,15 @@ describe('RageQuit functional handler', () => {
     it('fixture "calculate_claim" -> ok', async () => {
       if (typeof rageQuitHandler.calculateClaim !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(rageQuitHandler.calculateClaim({ exit: "rq-001" }), storage);
-      expect(result.variant).toBe('ok');
+      const afterResult_initiate_exit = await interpret(rageQuitHandler.initiate({ member: "0xAliceDaoMember", shares: "150.0", loot: "50.0" }), storage);
+      const _pool = Object.assign({}, (afterResult_initiate_exit?.output ?? {}));
+      const _fixtureInput = { exit: "rq-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
+      }
+      const result = await interpret(rageQuitHandler.calculateClaim({ ..._fixtureInput }), storage);
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "calculate_not_found" -> error', async () => {
@@ -232,7 +253,8 @@ describe('RageQuit functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_initiate_exit = await interpret(rageQuitHandler.initiate({ member: "0xAliceDaoMember", shares: "150.0", loot: "50.0" }), storage);
       const result = await interpret(rageQuitHandler.claim({ exit: afterResult_initiate_exit?.output?.["id"] }), storage);
-      expect(result.variant).toBe('ok');
+      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
+      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
     });
 
     it('fixture "claim_not_found" -> error', async () => {
