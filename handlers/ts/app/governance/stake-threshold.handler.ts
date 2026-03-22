@@ -21,7 +21,7 @@ export const stakeThresholdHandler: ConceptHandler = {
       provider: 'StakeThreshold',
       instanceId: id,
     });
-    return { variant: 'configured', config: id };
+    return { variant: 'ok', config: id };
   },
 
   async deposit(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {

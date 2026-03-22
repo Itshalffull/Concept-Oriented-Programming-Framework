@@ -113,7 +113,7 @@ const _handler: FunctionalConceptHandler = {
 
           if (hashLen % 4 === 0) {
             const l1_block = block_number - Math.floor(Math.random() * 1000);
-            return { variant: 'executed', block_number, batch_number, l1_block };
+            return { variant: 'ok', block_number, batch_number, l1_block };
           } else if (hashLen % 4 === 1) {
             return { variant: 'proven', block_number, batch_number };
           } else if (hashLen % 4 === 2) {

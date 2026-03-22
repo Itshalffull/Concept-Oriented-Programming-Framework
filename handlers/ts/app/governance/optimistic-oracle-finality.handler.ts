@@ -31,7 +31,7 @@ export const optimisticOracleFinalityHandler: ConceptHandler = {
       instanceId: id,
     });
 
-    return { variant: 'asserted', assertion: id };
+    return { variant: 'ok', assertion: id };
   },
 
   async challenge(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {

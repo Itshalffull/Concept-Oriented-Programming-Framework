@@ -37,7 +37,7 @@ const _timelockHandler: FunctionalConceptHandler = {
           if (new Date() < new Date(record.eta as string)) {
             return { variant: 'not_ready', lock, eta: record.eta };
           }
-          return { variant: 'executed', lock, payload: record.payload };
+          return { variant: 'ok', lock, payload: record.payload };
         });
       },
       (b) => complete(b, 'not_found', { lock }),

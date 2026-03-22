@@ -67,9 +67,9 @@ const _stakeWeightHandler: FunctionalConceptHandler = {
           const record = bindings.record as Record<string, unknown>;
           const now = new Date();
           if (now < new Date(record.lockedUntil as string)) {
-            return { variant: 'locked', stake, lockedUntil: record.lockedUntil };
+            return { variant: 'ok', stake, lockedUntil: record.lockedUntil };
           }
-          return { variant: 'unstaked', stake, amount: record.amount };
+          return { variant: 'ok', stake, amount: record.amount };
         });
       },
       (b) => complete(b, 'not_found', { stake }),

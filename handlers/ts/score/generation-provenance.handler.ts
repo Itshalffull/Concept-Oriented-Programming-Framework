@@ -30,7 +30,7 @@ export const generationProvenanceHandler: ConceptHandler = {
         generatorConfig: config || '{}',
         generatedAt: now, contentHash: '', isStale: 'false',
       });
-      return { variant: 'updated', existing: existing.id as string };
+      return { variant: 'ok', existing: existing.id as string };
     }
 
     const id = crypto.randomUUID();

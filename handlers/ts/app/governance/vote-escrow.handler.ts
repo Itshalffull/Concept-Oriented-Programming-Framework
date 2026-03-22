@@ -20,7 +20,7 @@ export const voteEscrowHandler: ConceptHandler = {
       provider: 'VoteEscrow',
       instanceId: id,
     });
-    return { variant: 'configured', config: id };
+    return { variant: 'ok', config: id };
   },
 
   async lock(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
@@ -41,7 +41,7 @@ export const voteEscrowHandler: ConceptHandler = {
       createdAt: new Date().toISOString(),
     });
 
-    return { variant: 'locked', lock: id, veTokens };
+    return { variant: 'ok', lock: id, veTokens };
   },
 
   async extendLock(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
@@ -62,7 +62,7 @@ export const voteEscrowHandler: ConceptHandler = {
       veTokens,
     });
 
-    return { variant: 'extended', lock, veTokens, newLockYears: newYears };
+    return { variant: 'ok', lock, veTokens, newLockYears: newYears };
   },
 
   async getWeight(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
@@ -84,6 +84,6 @@ export const voteEscrowHandler: ConceptHandler = {
       totalDecayed += decayed;
     }
 
-    return { variant: 'weight', participant, veTokens: totalVeTokens, decayedWeight: totalDecayed };
+    return { variant: 'ok', participant, veTokens: totalVeTokens, decayedWeight: totalDecayed };
   },
 };

@@ -39,7 +39,7 @@ const _convictionHandler: FunctionalConceptHandler = {
         return completeFrom(thenP, 'staked', (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           const newTotal = (record.totalStaked as number) + (amount as number);
-          return { variant: 'staked', proposal, newTotal };
+          return { variant: 'ok', proposal, newTotal };
         });
       },
       (elseP) => complete(elseP, 'not_found', { proposal }),
@@ -61,7 +61,7 @@ const _convictionHandler: FunctionalConceptHandler = {
         return completeFrom(thenP, 'unstaked', (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           const newTotal = Math.max(0, (record.totalStaked as number) - (amount as number));
-          return { variant: 'unstaked', proposal, newTotal };
+          return { variant: 'ok', proposal, newTotal };
         });
       },
       (elseP) => complete(elseP, 'not_found', { proposal }),
@@ -96,7 +96,7 @@ const _convictionHandler: FunctionalConceptHandler = {
           if (bindings.triggered) {
             return { variant: 'triggered', proposal, conviction };
           }
-          return { variant: 'updated', proposal, conviction };
+          return { variant: 'ok', proposal, conviction };
         });
       },
       (elseP) => complete(elseP, 'not_found', { proposal }),
