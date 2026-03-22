@@ -156,7 +156,7 @@ const _handler: FunctionalConceptHandler = {
         sub = put(sub, ENTRIES_RELATION, entry.stepKey as string, { ...entry, stale: true });
         return complete(sub, 'invalidated', { stepKey: entry.stepKey });
       }
-      return complete(sub, 'skipped', {});
+      return complete(sub, 'ok', {});
     }, '_traverseResults', { writes: ['entries'], completionVariants: ['invalidated', 'skipped'] });
 
     return completeFrom(p, 'ok', (bindings) => {
@@ -189,7 +189,7 @@ const _handler: FunctionalConceptHandler = {
         sub = put(sub, ENTRIES_RELATION, stepKey, { ...entry, stale: true });
         return complete(sub, 'invalidated', { stepKey });
       }
-      return complete(sub, 'skipped', {});
+      return complete(sub, 'ok', {});
     }, '_traverseResults', { writes: ['entries'], completionVariants: ['invalidated', 'skipped'] });
 
     return completeFrom(p, 'ok', (bindings) => {

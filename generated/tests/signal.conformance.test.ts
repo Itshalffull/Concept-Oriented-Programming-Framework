@@ -88,16 +88,14 @@ describe('Signal functional handler', () => {
       if (typeof signalHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(signalHandler.create({ signal: "G-1", kind: "state", initialValue: "hello" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "valid_create_computed" -> ok', async () => {
       if (typeof signalHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(signalHandler.create({ signal: "G-2", kind: "computed", initialValue: "" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_kind" -> error', async () => {
@@ -171,8 +169,7 @@ describe('Signal functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(signalHandler.read({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "read_nonexistent" -> error', async () => {
@@ -246,8 +243,7 @@ describe('Signal functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(signalHandler.write({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "write_nonexistent" -> error', async () => {
@@ -321,8 +317,7 @@ describe('Signal functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(signalHandler.batch({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_batch" -> error', async () => {
@@ -396,8 +391,7 @@ describe('Signal functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(signalHandler.dispose({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "dispose_nonexistent" -> error', async () => {
@@ -429,12 +423,10 @@ describe('Signal functional handler', () => {
     it("create then read", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(signalHandler.create({ signal: {"type":"variable","name":"g"}, kind: {"type":"literal","value":"state"}, initialValue: {"type":"literal","value":"hello"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
+      expect(createResult0.variant).toBe("ok");
       let signal = createResult0.output["signal"];
       const thenResult0 = await interpret(signalHandler.read({ signal: {"type":"variable","name":"g"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

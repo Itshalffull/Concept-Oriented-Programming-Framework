@@ -29,7 +29,7 @@ concept TreeSitterQueryProvider [I] {
         Run an S-expression query against a syntax tree.
         Returns matches as serialized JSON.
       }
-      -> invalidPattern(message: String) {
+      -> ok(message: String) {
         The S-expression pattern has a syntax error.
       }
     }

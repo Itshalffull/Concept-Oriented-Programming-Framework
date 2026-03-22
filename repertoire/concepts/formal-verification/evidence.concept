@@ -90,7 +90,7 @@ concept Evidence [E] {
         reproducing sequence. For model traces: strips
         irrelevant variable assignments.
       }
-      -> not_applicable(id: String, artifact_type: String, message: String) {
+      -> ok(id: String, artifact_type: String, message: String) {
         Artifact type does not support minimization.
       }
       -> notfound(id: String) {

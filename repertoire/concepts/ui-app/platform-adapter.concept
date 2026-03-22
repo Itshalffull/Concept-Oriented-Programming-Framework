@@ -51,7 +51,7 @@ concept PlatformAdapter [D] {
       -> ok(adapter: D, platformConfig: String) {
         Translate zone role to platform layout.
       }
-      -> unmapped(message: String) { Role has no platform equivalent. }
+      -> ok(message: String) { Role has no platform equivalent. }
 
       fixture zone_persistent { adapter: $register_browser.adapter, role: "persistent" } after register_browser
       fixture zone_navigated { adapter: $register_browser.adapter, role: "navigated" } after register_browser
@@ -62,7 +62,7 @@ concept PlatformAdapter [D] {
       -> ok(adapter: D, action: String) {
         Translate platform-native event to abstract action.
       }
-      -> ignored(message: String) { Event not relevant. }
+      -> ok(message: String) { Event not relevant. }
 
       fixture event_popstate { adapter: $register_browser.adapter, event: "{ \"name\": \"popstate\" }" } after register_browser
       fixture event_hashchange { adapter: $register_browser.adapter, event: "{ \"name\": \"hashchange\" }" } after register_browser

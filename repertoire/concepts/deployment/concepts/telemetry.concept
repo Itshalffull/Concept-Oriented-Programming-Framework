@@ -40,7 +40,7 @@ concept Telemetry [T] {
         Includes suite name, version, environment, start and end
         time, changed concepts, and deployment strategy.
       }
-      -> backendUnavailable(endpoint: String) {
+      -> ok(endpoint: String) {
         Observability backend unreachable. Non-fatal so
         deployment continues and marker is queued for retry.
       }
@@ -56,11 +56,11 @@ concept Telemetry [T] {
         over the specified time window. Used by Rollout to decide
         whether to advance, pause, or abort.
       }
-      -> insufficientData(concept: String, samplesFound: Int, samplesNeeded: Int) {
+      -> ok(concept: String, samplesFound: Int, samplesNeeded: Int) {
         Not enough data points in the window to make a decision.
         Rollout should wait and retry.
       }
-      -> backendUnavailable(endpoint: String) {
+      -> ok(endpoint: String) {
         Cannot query metrics. Conservative action is pause rollout.
       }
 

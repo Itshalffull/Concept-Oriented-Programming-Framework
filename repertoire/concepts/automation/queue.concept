@@ -39,7 +39,7 @@ concept Queue [Q] {
       -> ok(item: String) {
         The next available item was assigned to the worker.
       }
-      -> empty(message: String) {
+      -> ok(message: String) {
         No items are available in the queue.
       }
 

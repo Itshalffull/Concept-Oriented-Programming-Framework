@@ -38,7 +38,7 @@ concept TestEntity [T] {
         theme-contrast, e2e. targetEntity is the concept, sync,
         handler, or widget being tested.
       }
-      -> alreadyRegistered(existing: T) {
+      -> ok(existing: T) {
         A test with this name and file already exists.
       }
 
@@ -94,7 +94,7 @@ concept TestEntity [T] {
         as serialized JSON array of { name, kind, targetEntity,
         sourceFile, errorMessage }.
       }
-      -> allPassing() {
+      -> ok() {
         All tests are passing.
       }
 
@@ -121,7 +121,7 @@ concept TestEntity [T] {
         Result as serialized JSON array of { concept, action,
         declaredIn }.
       }
-      -> fullCoverage() {
+      -> ok() {
         All actions have test coverage.
       }
 
@@ -134,7 +134,7 @@ concept TestEntity [T] {
         Return all declared invariants that have no test. Result
         as serialized JSON array of { concept, invariant, declaredIn }.
       }
-      -> fullCoverage() {
+      -> ok() {
         All invariants have test coverage.
       }
 

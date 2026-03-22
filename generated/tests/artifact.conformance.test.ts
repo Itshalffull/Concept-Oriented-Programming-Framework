@@ -88,8 +88,7 @@ describe('Artifact functional handler', () => {
       if (typeof artifactHandler.build !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(artifactHandler.build({ concept: "User", spec: "user.concept", implementation: "user.handler.ts", deps: [] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "build_missing_spec" -> error', async () => {
@@ -163,8 +162,7 @@ describe('Artifact functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(artifactHandler.store({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "store_empty_hash" -> ok', async () => {
@@ -177,8 +175,7 @@ describe('Artifact functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(artifactHandler.store({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -245,8 +242,7 @@ describe('Artifact functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(artifactHandler.resolve({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_missing" -> error', async () => {
@@ -320,8 +316,7 @@ describe('Artifact functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(artifactHandler.gc({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "gc_negative_keep" -> ok', async () => {
@@ -334,8 +329,7 @@ describe('Artifact functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(artifactHandler.gc({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -360,14 +354,12 @@ describe('Artifact functional handler', () => {
     it("build-then-resolve", async () => {
       const storage = createInMemoryStorage();
       const buildResult0 = await interpret(artifactHandler.build({ concept: {"type":"literal","value":"User"}, spec: {"type":"literal","value":"user.concept"}, implementation: {"type":"literal","value":"user.impl.ts"}, deps: {"type":"variable","name":"d"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(buildResult0.variant), `step 0: expected success but got '${buildResult0.variant}'`).toBe(false);
+      expect(buildResult0.variant).toBe("ok");
       let artifact = buildResult0.output["artifact"];
       let hash = buildResult0.output["hash"];
       let sizeBytes = buildResult0.output["sizeBytes"];
       const thenResult0 = await interpret(artifactHandler.resolve({ hash: {"type":"variable","name":"h"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

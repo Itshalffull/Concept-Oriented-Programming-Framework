@@ -94,8 +94,7 @@ describe('WidgetParser functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(widgetParserHandler.parse({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "minimal_widget" -> ok', async () => {
@@ -108,8 +107,7 @@ describe('WidgetParser functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(widgetParserHandler.parse({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_json_source" -> error', async () => {
@@ -197,8 +195,7 @@ describe('WidgetParser functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(widgetParserHandler.validate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "validate_unparsed" -> incomplete', async () => {
@@ -231,13 +228,11 @@ describe('WidgetParser functional handler', () => {
     it("parsed widget can pass validation", async () => {
       const storage = createInMemoryStorage();
       const parseResult0 = await interpret(widgetParserHandler.parse({ widget: {"type":"variable","name":"w"}, source: {"type":"literal","value":"widget button { ... }"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(parseResult0.variant), `step 0: expected success but got '${parseResult0.variant}'`).toBe(false);
+      expect(parseResult0.variant).toBe("ok");
       let widget = parseResult0.output["widget"];
       let ast = parseResult0.output["ast"];
       const thenResult0 = await interpret(widgetParserHandler.validate({ widget: {"type":"variable","name":"w"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

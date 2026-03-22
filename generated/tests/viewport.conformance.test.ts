@@ -94,8 +94,7 @@ describe('Viewport functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(viewportHandler.observe({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "mobile_portrait" -> ok', async () => {
@@ -108,8 +107,7 @@ describe('Viewport functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(viewportHandler.observe({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "tablet_square" -> ok', async () => {
@@ -122,8 +120,7 @@ describe('Viewport functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(viewportHandler.observe({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -190,8 +187,7 @@ describe('Viewport functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(viewportHandler.setBreakpoints({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_breakpoint_json" -> invalid', async () => {
@@ -274,8 +270,7 @@ describe('Viewport functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(viewportHandler.getBreakpoint({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_nonexistent" -> notfound', async () => {
@@ -308,14 +303,12 @@ describe('Viewport functional handler', () => {
     it("observe stores breakpoint retrievable by getBreakpoint", async () => {
       const storage = createInMemoryStorage();
       const observeResult0 = await interpret(viewportHandler.observe({ viewport: {"type":"variable","name":"v"}, width: {"type":"literal","value":1024}, height: {"type":"literal","value":768} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(observeResult0.variant), `step 0: expected success but got '${observeResult0.variant}'`).toBe(false);
+      expect(observeResult0.variant).toBe("ok");
       let viewport = observeResult0.output["viewport"];
       let breakpoint = observeResult0.output["breakpoint"];
       let orientation = observeResult0.output["orientation"];
       const thenResult0 = await interpret(viewportHandler.getBreakpoint({ viewport: {"type":"variable","name":"v"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

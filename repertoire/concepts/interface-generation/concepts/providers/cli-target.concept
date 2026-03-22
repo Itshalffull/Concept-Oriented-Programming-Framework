@@ -55,7 +55,7 @@ concept CliTarget [C] {
         Output formatters attached per command. Help text
         generated from concept purpose and action prose.
       }
-      -> tooManyPositional(action: String, count: Int) {
+      -> ok(action: String, count: Int) {
         Action has more positional arguments than CLI
         conventions allow. Excess arguments should be
         converted to flags via annotation.
@@ -73,7 +73,7 @@ concept CliTarget [C] {
         All required arguments have consistent types. Shell
         completion scripts are syntactically valid.
       }
-      -> flagCollision(command: C, flag: String, actions: list String) {
+      -> ok(command: C, flag: String, actions: list String) {
         Two actions in the same command subtree define flags
         with the same name but different types.
       }

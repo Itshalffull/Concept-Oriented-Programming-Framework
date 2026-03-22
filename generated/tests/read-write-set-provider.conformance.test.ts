@@ -88,24 +88,21 @@ describe('ReadWriteSetProvider functional handler', () => {
       if (typeof readWriteSetProviderHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(readWriteSetProviderHandler.analyze({ program: "get(users, u1); put(users, u1, data)" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "read_only_program" -> ok', async () => {
       if (typeof readWriteSetProviderHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(readWriteSetProviderHandler.analyze({ program: "get(users, u1)" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "pure_program" -> ok', async () => {
       if (typeof readWriteSetProviderHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(readWriteSetProviderHandler.analyze({ program: "{\"instructions\":[{\"tag\":\"pure\",\"value\":{\"variant\":\"ok\"}}],\"effects\":{\"reads\":[],\"writes\":[]}}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_program" -> error', async () => {
@@ -137,8 +134,7 @@ describe('ReadWriteSetProvider functional handler', () => {
     it("get and put yields read-write purity", async () => {
       const storage = createInMemoryStorage();
       const analyzeResult0 = await interpret(readWriteSetProviderHandler.analyze({ program: {"type":"literal","value":"get(users, u1); put(users, u1, data)"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(analyzeResult0.variant), `step 0: expected success but got '${analyzeResult0.variant}'`).toBe(false);
+      expect(analyzeResult0.variant).toBe("ok");
       let result = analyzeResult0.output["result"];
       let readSet = analyzeResult0.output["readSet"];
       let writeSet = analyzeResult0.output["writeSet"];
@@ -148,8 +144,7 @@ describe('ReadWriteSetProvider functional handler', () => {
     it("get-only yields read-only purity", async () => {
       const storage = createInMemoryStorage();
       const analyzeResult0 = await interpret(readWriteSetProviderHandler.analyze({ program: {"type":"literal","value":"get(users, u1)"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(analyzeResult0.variant), `step 0: expected success but got '${analyzeResult0.variant}'`).toBe(false);
+      expect(analyzeResult0.variant).toBe("ok");
       let result = analyzeResult0.output["result"];
       let readSet = analyzeResult0.output["readSet"];
       let writeSet = analyzeResult0.output["writeSet"];

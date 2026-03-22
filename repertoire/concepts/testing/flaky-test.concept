@@ -46,7 +46,7 @@ concept FlakyTest [F] {
         If the result differs from the previous result
         (pass to fail or fail to pass), increments flipCount.
       }
-      -> flakyDetected(test: F, flipCount: Int, recentResults: list Bool) {
+      -> ok(test: F, flipCount: Int, recentResults: list Bool) {
         The test has exceeded the flip threshold within
         the configured window. This test is flaky.
         If autoQuarantine is enabled, automatically quarantines.
@@ -62,10 +62,10 @@ concept FlakyTest [F] {
         run but their failures don't block builds or deploys.
         Results are still recorded for monitoring.
       }
-      -> alreadyQuarantined(test: F) {
+      -> ok(test: F) {
         Test is already quarantined.
       }
-      -> notFound(testId: String) {
+      -> ok(testId: String) {
         No history for this test ID.
       }
 
@@ -78,7 +78,7 @@ concept FlakyTest [F] {
         Release a test from quarantine. It will block builds
         again if it fails. Used when a flaky test is fixed.
       }
-      -> notQuarantined(test: F) {
+      -> ok(test: F) {
         Test wasn't quarantined.
       }
 
@@ -94,7 +94,7 @@ concept FlakyTest [F] {
       -> no(test: F) {
         Test is not quarantined. Failures are real.
       }
-      -> unknown(testId: String) {
+      -> ok(testId: String) {
         No history for this test.
       }
 

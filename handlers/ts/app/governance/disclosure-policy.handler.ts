@@ -20,7 +20,7 @@ const _disclosurePolicyHandler: FunctionalConceptHandler = {
       audience: input.audience, format: input.format ?? null,
       status: 'Active', createdAt: new Date().toISOString(),
     });
-    return complete(p, 'defined', { policy: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { policy: id }) as StorageProgram<Result>;
   },
 
   evaluate(input: Record<string, unknown>) {
@@ -33,7 +33,7 @@ const _disclosurePolicyHandler: FunctionalConceptHandler = {
         return branch(b,
           (bindings) => (bindings.record as Record<string, unknown>).status !== 'Active',
           (b2) => complete(b2, 'suspended', { policy }),
-          (b2) => complete(b2, 'disclosable', { policy, disclosedTo: requestor }),
+          (b2) => complete(b2, 'ok', { policy, disclosedTo: requestor }),
         );
       },
       (b) => complete(b, 'not_found', { policy }),

@@ -23,7 +23,7 @@ concept TypeScriptScopeProvider [I] {
         Register this scope provider with PluginRegistry for
         TypeScript and JavaScript languages.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the TypeScript scope provider.
       }
     }

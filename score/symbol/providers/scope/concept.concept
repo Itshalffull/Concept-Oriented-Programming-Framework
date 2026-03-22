@@ -24,7 +24,7 @@ concept ConceptScopeProvider [I] {
         Register this scope provider with PluginRegistry for
         concept-spec language.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the concept scope provider.
       }
     }

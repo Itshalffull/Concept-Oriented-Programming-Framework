@@ -88,8 +88,7 @@ describe('FormalProperty functional handler', () => {
       if (typeof formalPropertyHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(formalPropertyHandler.define({ name: "hash-nonzero", target_symbol: "clef/concept/Password", kind: "invariant", expression: "forall p: Password | len(p.hash) > 0", formal_language: "smtlib", scope: "local", priority: "required" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_kind" -> invalid', async () => {
@@ -159,8 +158,7 @@ describe('FormalProperty functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_define = await interpret(formalPropertyHandler.define({ name: "hash-nonzero", target_symbol: "clef/concept/Password", kind: "invariant", expression: "forall p: Password | len(p.hash) > 0", formal_language: "smtlib", scope: "local", priority: "required" }), storage);
       const result = await interpret(formalPropertyHandler.prove({ id: afterResult_valid_define?.output?.["property"], evidence_ref: "ev-abc" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "prove_missing" -> notfound', async () => {
@@ -230,8 +228,7 @@ describe('FormalProperty functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_define = await interpret(formalPropertyHandler.define({ name: "hash-nonzero", target_symbol: "clef/concept/Password", kind: "invariant", expression: "forall p: Password | len(p.hash) > 0", formal_language: "smtlib", scope: "local", priority: "required" }), storage);
       const result = await interpret(formalPropertyHandler.refute({ id: afterResult_valid_define?.output?.["property"], evidence_ref: "ev-counter" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "refute_missing" -> notfound', async () => {
@@ -301,8 +298,7 @@ describe('FormalProperty functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_define = await interpret(formalPropertyHandler.define({ name: "hash-nonzero", target_symbol: "clef/concept/Password", kind: "invariant", expression: "forall p: Password | len(p.hash) > 0", formal_language: "smtlib", scope: "local", priority: "required" }), storage);
       const result = await interpret(formalPropertyHandler.check({ id: afterResult_valid_define?.output?.["property"], solver: "z3" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "check_missing" -> notfound', async () => {
@@ -372,8 +368,7 @@ describe('FormalProperty functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_define = await interpret(formalPropertyHandler.define({ name: "hash-nonzero", target_symbol: "clef/concept/Password", kind: "invariant", expression: "forall p: Password | len(p.hash) > 0", formal_language: "smtlib", scope: "local", priority: "required" }), storage);
       const result = await interpret(formalPropertyHandler.synthesize({ target_symbol: "clef/concept/Password", intent_ref: afterResult_valid_define?.output?.["property"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "synthesize_with_lang" -> ok', async () => {
@@ -381,8 +376,7 @@ describe('FormalProperty functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_define = await interpret(formalPropertyHandler.define({ name: "hash-nonzero", target_symbol: "clef/concept/Password", kind: "invariant", expression: "forall p: Password | len(p.hash) > 0", formal_language: "smtlib", scope: "local", priority: "required" }), storage);
       const result = await interpret(formalPropertyHandler.synthesize({ target_symbol: "clef/concept/User", intent_ref: afterResult_valid_define?.output?.["property"], formal_language: "lean" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -449,8 +443,7 @@ describe('FormalProperty functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(formalPropertyHandler.coverage({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "coverage_unknown" -> ok', async () => {
@@ -463,8 +456,7 @@ describe('FormalProperty functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(formalPropertyHandler.coverage({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -528,8 +520,7 @@ describe('FormalProperty functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(formalPropertyHandler.list({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "list_by_kind" -> ok', async () => {
@@ -542,8 +533,7 @@ describe('FormalProperty functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(formalPropertyHandler.list({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -605,8 +595,7 @@ describe('FormalProperty functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_define = await interpret(formalPropertyHandler.define({ name: "hash-nonzero", target_symbol: "clef/concept/Password", kind: "invariant", expression: "forall p: Password | len(p.hash) > 0", formal_language: "smtlib", scope: "local", priority: "required" }), storage);
       const result = await interpret(formalPropertyHandler.invalidate({ id: afterResult_valid_define?.output?.["property"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalidate_missing" -> notfound', async () => {
@@ -639,15 +628,12 @@ describe('FormalProperty functional handler', () => {
     it("define-then-coverage", async () => {
       const storage = createInMemoryStorage();
       const defineResult0 = await interpret(formalPropertyHandler.define({ target_symbol: {"type":"literal","value":"clef/concept/Password"}, kind: {"type":"literal","value":"invariant"}, property_text: {"type":"literal","value":"forall p: Password | len(p.hash) > 0"}, formal_language: {"type":"literal","value":"smtlib"}, scope: {"type":"literal","value":"local"}, priority: {"type":"literal","value":"required"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(defineResult0.variant), `step 0: expected success but got '${defineResult0.variant}'`).toBe(false);
+      expect(defineResult0.variant).toBe("ok");
       let property = defineResult0.output["property"];
       const thenResult0 = await interpret(formalPropertyHandler.check({ property: {"type":"variable","name":"p"}, solver: {"type":"literal","value":"z3"}, timeout_ms: {"type":"literal","value":5000} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(formalPropertyHandler.coverage({ target_symbol: {"type":"literal","value":"clef/concept/Password"} }), storage);
-      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
+      expect(thenResult1.variant).toBe("ok");
     });
 
   });

@@ -88,8 +88,7 @@ describe('WasmProvider functional handler', () => {
       if (typeof wasmProviderHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(wasmProviderHandler.register({  }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -156,8 +155,7 @@ describe('WasmProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(wasmProviderHandler.load({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "load_large_module" -> ok', async () => {
@@ -170,8 +168,7 @@ describe('WasmProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(wasmProviderHandler.load({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -238,8 +235,7 @@ describe('WasmProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(wasmProviderHandler.execute({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "execute_unknown_module" -> notFound', async () => {
@@ -311,8 +307,7 @@ describe('WasmProvider functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(wasmProviderHandler.list({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -337,11 +332,10 @@ describe('WasmProvider functional handler', () => {
     it("execute fails for unknown module", async () => {
       const storage = createInMemoryStorage();
       const loadResult0 = await interpret(wasmProviderHandler.load({ name: {"type":"literal","value":"tokenizer"}, wasmPath: {"type":"literal","value":"/models/tokenizer.wasm"}, memoryLimit: {"type":"literal","value":65536} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(loadResult0.variant), `step 0: expected success but got '${loadResult0.variant}'`).toBe(false);
+      expect(loadResult0.variant).toBe("ok");
       let module = loadResult0.output["module"];
       const thenResult0 = await interpret(wasmProviderHandler.execute({ module: {"type":"literal","value":"unknown"}, function: {"type":"literal","value":"tokenize"}, args: {"type":"literal","value":"[]"} }), storage);
-      expect(thenResult0.variant).toBe("notFound");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

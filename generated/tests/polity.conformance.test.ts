@@ -88,16 +88,14 @@ describe('Polity functional handler', () => {
       if (typeof polityHandler.establish !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(polityHandler.establish({ name: "Acme Co-op", purpose: "Democratic governance for Acme", values: ["transparency","equity"], scope: ["budgets","hiring"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "minimal_establish" -> ok', async () => {
       if (typeof polityHandler.establish !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(polityHandler.establish({ name: "Small Circle", purpose: "Team coordination", values: [], scope: ["sprint-planning"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_name" -> error', async () => {
@@ -166,8 +164,7 @@ describe('Polity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_establish = await interpret(polityHandler.establish({ name: "Acme Co-op", purpose: "Democratic governance for Acme", values: ["transparency","equity"], scope: ["budgets","hiring"] }), storage);
       const result = await interpret(polityHandler.amend({ polity: afterResult_valid_establish?.output?.["id"], field: "purpose", newValue: "Updated governance mission" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "amend_nonexistent" -> error', async () => {
@@ -236,8 +233,7 @@ describe('Polity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_establish = await interpret(polityHandler.establish({ name: "Acme Co-op", purpose: "Democratic governance for Acme", values: ["transparency","equity"], scope: ["budgets","hiring"] }), storage);
       const result = await interpret(polityHandler.dissolve({ polity: afterResult_valid_establish?.output?.["id"], reason: "Merger with partner org" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "dissolve_nonexistent" -> error', async () => {
@@ -269,10 +265,10 @@ describe('Polity functional handler', () => {
     it("establish-then-amend", async () => {
       const storage = createInMemoryStorage();
       const establishResult0 = await interpret(polityHandler.establish({ name: {"type":"variable","name":"_"}, purpose: {"type":"variable","name":"_"}, values: {"type":"variable","name":"_"}, scope: {"type":"variable","name":"_"} }), storage);
-      expect(establishResult0.variant).toBe("established");
+      expect(establishResult0.variant).toBe("ok");
       let polity = establishResult0.output["polity"];
       const thenResult0 = await interpret(polityHandler.amend({ polity: {"type":"variable","name":"g"}, field: {"type":"literal","value":"purpose"}, newValue: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("amended");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

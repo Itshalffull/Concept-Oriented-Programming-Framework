@@ -104,7 +104,7 @@ const _handler: FunctionalConceptHandler = {
       (thenP) => {
         return branch(thenP,
           (bindings) => (bindings.record as Record<string, unknown>).status === 'archived',
-          (archivedP) => complete(archivedP, 'archived', { space }),
+          (archivedP) => complete(archivedP, 'ok', { space }),
           (activeP) => {
             activeP = find(activeP, 'members', { member_space: space }, 'members');
             return branch(activeP,

@@ -88,16 +88,14 @@ describe('TransportEffectProvider functional handler', () => {
       if (typeof transportEffectProviderHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(transportEffectProviderHandler.analyze({ program: "{\"instructions\":[{\"tag\":\"perform\",\"protocol\":\"http\",\"operation\":\"GET\",\"payload\":{},\"bindAs\":\"resp\"}],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[\"http:GET\"]}}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_program" -> ok', async () => {
       if (typeof transportEffectProviderHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(transportEffectProviderHandler.analyze({ program: "{\"instructions\":[],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[]}}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_json" -> error', async () => {
@@ -129,8 +127,7 @@ describe('TransportEffectProvider functional handler', () => {
     it("single perform instruction yields count 1", async () => {
       const storage = createInMemoryStorage();
       const analyzeResult0 = await interpret(transportEffectProviderHandler.analyze({ program: {"type":"literal","value":"{\"instructions\":[{\"tag\":\"perform\",\"protocol\":\"http\",\"operation\":\"GET\",\"payload\":{},\"bindAs\":\"resp\"}],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[\"http:GET\"]}}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(analyzeResult0.variant), `step 0: expected success but got '${analyzeResult0.variant}'`).toBe(false);
+      expect(analyzeResult0.variant).toBe("ok");
       let result = analyzeResult0.output["result"];
       let performs = analyzeResult0.output["performs"];
       let performCount = analyzeResult0.output["performCount"];

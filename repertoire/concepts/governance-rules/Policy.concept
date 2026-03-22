@@ -27,7 +27,7 @@ concept Policy [PL] {
 
   actions {
     action create(attributes: String, deontic: String, aim: String, conditions: String, orElse: option String, domain: option String) {
-      -> created(policy: PL) {
+      -> ok(policy: PL) {
         A new policy is created in Active status.
       }
 
@@ -48,16 +48,16 @@ concept Policy [PL] {
     }
 
     action evaluate(policy: PL, context: String) {
-      -> permitted(policy: PL) {
+      -> ok(policy: PL) {
         The action described by the policy is permitted in the given context.
       }
-      -> required(policy: PL) {
+      -> ok(policy: PL) {
         The action is required (deontic = Must) in the given context.
       }
       -> forbidden(policy: PL) {
         The action is forbidden (deontic = MustNot) in the given context.
       }
-      -> not_applicable(policy: PL) {
+      -> ok(policy: PL) {
         The policy's conditions do not match the given context.
       }
 
@@ -72,7 +72,7 @@ concept Policy [PL] {
     }
 
     action suspend(policy: PL) {
-      -> suspended(policy: PL) {
+      -> ok(policy: PL) {
         The policy is temporarily inactive and will not be evaluated.
       }
 
@@ -85,7 +85,7 @@ concept Policy [PL] {
     }
 
     action repeal(policy: PL) {
-      -> repealed(policy: PL) {
+      -> ok(policy: PL) {
         The policy is permanently deactivated.
       }
 
@@ -98,7 +98,7 @@ concept Policy [PL] {
     }
 
     action modify(policy: PL, field: String, newValue: String) {
-      -> modified(policy: PL) {
+      -> ok(policy: PL) {
         The specified field of the policy is updated.
       }
       -> not_found(policy: PL) {
@@ -120,9 +120,9 @@ concept Policy [PL] {
 
   example "create-then-evaluate": {
 
-    after create(attributes: _, deontic: "Must", aim: _, conditions: _, orElse: _, domain: _) -> created(policy: pl)
+    after create(attributes: _, deontic: "Must", aim: _, conditions: _, orElse: _, domain: _) -> ok(policy: pl)
 
-        then evaluate(policy: pl, context: _) -> required(policy: pl)
+        then evaluate(policy: pl, context: _) -> ok(policy: pl)
 
   }
 
@@ -147,7 +147,7 @@ concept Policy [PL] {
 
     requires: attributes != ""
 
-    ensures created: attributes != none
+    ensures ok: attributes != none
 
   }
 }

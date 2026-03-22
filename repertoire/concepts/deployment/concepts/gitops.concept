@@ -27,7 +27,7 @@ concept GitOps [G] {
         Manifests generated and committed to deploy repo.
         Controller will detect and reconcile.
       }
-      -> controllerUnsupported(controller: String) {
+      -> ok(controller: String) {
         Unknown GitOps controller type.
       }
 

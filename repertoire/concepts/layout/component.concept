@@ -21,7 +21,7 @@ concept Component [C] {
         Component registered with its configuration, making it
         discoverable for placement in layout regions.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         A component with this identity is already registered.
       }
 

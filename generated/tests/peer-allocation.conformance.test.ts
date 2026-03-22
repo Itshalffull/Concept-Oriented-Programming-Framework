@@ -88,8 +88,7 @@ describe('PeerAllocation functional handler', () => {
       if (typeof peerAllocationHandler.openRound !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(peerAllocationHandler.openRound({ budget: "100", deadlineDays: "7.0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "open_zero_budget" -> error', async () => {
@@ -158,8 +157,7 @@ describe('PeerAllocation functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_open_weekly_round = await interpret(peerAllocationHandler.openRound({ budget: "100", deadlineDays: "7.0" }), storage);
       const result = await interpret(peerAllocationHandler.allocate({ round: afterResult_open_weekly_round?.output?.["id"], allocator: "alice", recipient: "bob", amount: "30", note: "Great code review" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "allocate_to_self" -> error', async () => {
@@ -228,8 +226,7 @@ describe('PeerAllocation functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_open_weekly_round = await interpret(peerAllocationHandler.openRound({ budget: "100", deadlineDays: "7.0" }), storage);
       const result = await interpret(peerAllocationHandler.finalize({ round: afterResult_open_weekly_round?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "finalize_nonexistent" -> error', async () => {
@@ -261,12 +258,12 @@ describe('PeerAllocation functional handler', () => {
     it("openRound-then-finalize", async () => {
       const storage = createInMemoryStorage();
       const openRoundResult0 = await interpret(peerAllocationHandler.openRound({ budget: {"type":"literal","value":100}, deadlineDays: {"type":"literal","value":7} }), storage);
-      expect(openRoundResult0.variant).toBe("opened");
+      expect(openRoundResult0.variant).toBe("ok");
       let round = openRoundResult0.output["round"];
       const thenResult0 = await interpret(peerAllocationHandler.allocate({ round: {"type":"variable","name":"pa"}, allocator: {"type":"variable","name":"a"}, recipient: {"type":"variable","name":"b"}, amount: {"type":"literal","value":30}, note: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("allocated");
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(peerAllocationHandler.finalize({ round: {"type":"variable","name":"pa"} }), storage);
-      expect(thenResult1.variant).toBe("finalized");
+      expect(thenResult1.variant).toBe("ok");
     });
 
   });
@@ -283,7 +280,7 @@ describe('PeerAllocation functional handler', () => {
       }
     });
 
-    it('openRound ensures on opened: ', async () => {
+    it('openRound ensures on ok: ', async () => {
       if (typeof peerAllocationHandler.openRound !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -295,7 +292,7 @@ describe('PeerAllocation functional handler', () => {
               const program = peerAllocationHandler.openRound(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "opened") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

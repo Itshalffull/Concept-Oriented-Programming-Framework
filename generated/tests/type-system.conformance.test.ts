@@ -94,8 +94,7 @@ describe('TypeSystem functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(typeSystemHandler.registerType({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_empty_type" -> error', async () => {
@@ -169,8 +168,7 @@ describe('TypeSystem functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(typeSystemHandler.resolve({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_missing" -> error', async () => {
@@ -244,8 +242,7 @@ describe('TypeSystem functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(typeSystemHandler.navigate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "navigate_missing_type" -> error', async () => {
@@ -319,8 +316,7 @@ describe('TypeSystem functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(typeSystemHandler.serialize({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "serialize_missing_type" -> error', async () => {
@@ -352,22 +348,19 @@ describe('TypeSystem functional handler', () => {
     it("registerType-then-resolve", async () => {
       const storage = createInMemoryStorage();
       const registerTypeResult0 = await interpret(typeSystemHandler.registerType({ type: {"type":"variable","name":"t"}, schema: {"type":"literal","value":"{\"type\":\"string\"}"}, constraints: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerTypeResult0.variant), `step 0: expected success but got '${registerTypeResult0.variant}'`).toBe(false);
+      expect(registerTypeResult0.variant).toBe("ok");
       let type = registerTypeResult0.output["type"];
       const thenResult0 = await interpret(typeSystemHandler.resolve({ type: {"type":"variable","name":"t"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("registerType-then-registerType", async () => {
       const storage = createInMemoryStorage();
       const registerTypeResult0 = await interpret(typeSystemHandler.registerType({ type: {"type":"variable","name":"t"}, schema: {"type":"literal","value":"{\"type\":\"string\"}"}, constraints: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerTypeResult0.variant), `step 0: expected success but got '${registerTypeResult0.variant}'`).toBe(false);
+      expect(registerTypeResult0.variant).toBe("ok");
       let type = registerTypeResult0.output["type"];
       const thenResult0 = await interpret(typeSystemHandler.registerType({ type: {"type":"variable","name":"t"}, schema: {"type":"literal","value":"{\"type\":\"number\"}"}, constraints: {"type":"literal","value":"{}"} }), storage);
-      expect(thenResult0.variant).toBe("exists");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

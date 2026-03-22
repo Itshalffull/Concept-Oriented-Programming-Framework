@@ -88,16 +88,14 @@ describe('Guard functional handler', () => {
       if (typeof guardHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(guardHandler.register({ name: "balance-check", targetAction: "transfer", checkType: "Pre", condition: "balance > amount" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_rate_limit" -> ok', async () => {
       if (typeof guardHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(guardHandler.register({ name: "rate-limiter", targetAction: "execute", checkType: "Both", condition: "requests_per_minute < 100" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_empty_name" -> error', async () => {
@@ -166,8 +164,7 @@ describe('Guard functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_balance_guard = await interpret(guardHandler.register({ name: "balance-check", targetAction: "transfer", checkType: "Pre", condition: "balance > amount" }), storage);
       const result = await interpret(guardHandler.checkPre({ guard: afterResult_register_balance_guard?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "checkpre_disabled" -> error', async () => {
@@ -236,8 +233,7 @@ describe('Guard functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_balance_guard = await interpret(guardHandler.register({ name: "balance-check", targetAction: "transfer", checkType: "Pre", condition: "balance > amount" }), storage);
       const result = await interpret(guardHandler.checkPost({ guard: afterResult_register_balance_guard?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "checkpost_disabled" -> error', async () => {
@@ -306,8 +302,7 @@ describe('Guard functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_balance_guard = await interpret(guardHandler.register({ name: "balance-check", targetAction: "transfer", checkType: "Pre", condition: "balance > amount" }), storage);
       const result = await interpret(guardHandler.enable({ guard: afterResult_register_balance_guard?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "enable_not_found" -> error', async () => {
@@ -377,8 +372,7 @@ describe('Guard functional handler', () => {
       const afterResult_register_balance_guard = await interpret(guardHandler.register({ name: "balance-check", targetAction: "transfer", checkType: "Pre", condition: "balance > amount" }), storage);
       const afterResult_enable_guard = await interpret(guardHandler.enable({ guard: {"type":"ref","fixture":"register_balance_guard","field":"id"} }), storage);
       const result = await interpret(guardHandler.disable({ guard: afterResult_enable_guard?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "disable_not_found" -> error', async () => {
@@ -395,10 +389,10 @@ describe('Guard functional handler', () => {
     it("register-then-checkPre", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(guardHandler.register({ name: {"type":"variable","name":"_"}, checkType: {"type":"variable","name":"_"}, condition: {"type":"variable","name":"_"}, targetAction: {"type":"variable","name":"_"} }), storage);
-      expect(registerResult0.variant).toBe("registered");
+      expect(registerResult0.variant).toBe("ok");
       let guard = registerResult0.output["guard"];
       const thenResult0 = await interpret(guardHandler.checkPre({ guard: {"type":"variable","name":"gd"}, context: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("passed");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });
@@ -487,7 +481,7 @@ describe('Guard functional handler', () => {
       }
     });
 
-    it('register ensures on registered: ', async () => {
+    it('register ensures on ok: ', async () => {
       if (typeof guardHandler.register !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -499,7 +493,7 @@ describe('Guard functional handler', () => {
               const program = guardHandler.register(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "registered") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

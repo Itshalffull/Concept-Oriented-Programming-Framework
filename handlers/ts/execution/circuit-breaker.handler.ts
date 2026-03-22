@@ -47,7 +47,7 @@ export const circuitBreakerHandler: FunctionalConceptHandler = {
 
     // The actual state machine logic runs at interpretation time.
     // For now, return the check with current status.
-    p = complete(p, 'closed', { breaker: breakerId });
+    p = complete(p, 'ok', { breaker: breakerId });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 

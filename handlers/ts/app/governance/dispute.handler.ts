@@ -20,7 +20,7 @@ const _disputeHandler: FunctionalConceptHandler = {
       subject: input.subject, evidence: [input.evidence], bond: input.bond,
       status: 'Open', openedAt: new Date().toISOString(),
     });
-    return complete(p, 'opened', { dispute: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { dispute: id }) as StorageProgram<Result>;
   },
 
   submitEvidence(input: Record<string, unknown>) {
@@ -37,7 +37,7 @@ const _disputeHandler: FunctionalConceptHandler = {
           return { ...rec, evidence: evidenceList, status: 'EvidencePhase' };
         }, 'updated');
         b2 = putFrom(b2, 'dispute', dispute as string, (bindings) => bindings.updated as Record<string, unknown>);
-        return complete(b2, 'evidence_added', { dispute });
+        return complete(b2, 'ok', { dispute });
       },
       (b) => complete(b, 'not_found', { dispute }),
     );
@@ -60,7 +60,7 @@ const _disputeHandler: FunctionalConceptHandler = {
           };
         }, 'updated');
         b2 = putFrom(b2, 'dispute', dispute as string, (bindings) => bindings.updated as Record<string, unknown>);
-        return complete(b2, 'resolved', { dispute, decision });
+        return complete(b2, 'ok', { dispute, decision });
       },
       (b) => complete(b, 'not_found', { dispute }),
     );
@@ -84,7 +84,7 @@ const _disputeHandler: FunctionalConceptHandler = {
               return { ...rec, status: 'Appealed', appellant, appealGrounds: grounds };
             }, 'updated');
             b3 = putFrom(b3, 'dispute', dispute as string, (bindings) => bindings.updated as Record<string, unknown>);
-            return complete(b3, 'appealed', { dispute });
+            return complete(b3, 'ok', { dispute });
           },
         );
       },

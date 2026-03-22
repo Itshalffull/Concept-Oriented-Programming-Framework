@@ -88,16 +88,14 @@ describe('ActionLog functional handler', () => {
       if (typeof actionLogHandler.append !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(actionLogHandler.append({ record: {"flow":"flow-42","concept":"UserAuth","action":"login","type":"completion","variant":"ok"} }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invocation_record" -> ok', async () => {
       if (typeof actionLogHandler.append !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(actionLogHandler.append({ record: {"flow":"flow-99","concept":"Payment","action":"charge","type":"invocation","variant":"pending"} }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -159,8 +157,7 @@ describe('ActionLog functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_completion_record = await interpret(actionLogHandler.append({ record: {"flow":"flow-42","concept":"UserAuth","action":"login","type":"completion","variant":"ok"} }), storage);
       const result = await interpret(actionLogHandler.addEdge({ from: afterResult_completion_record?.output?.["id"], to: afterResult_completion_record?.output?.["id"], sync: "UserToProfile" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "link_with_different_sync" -> ok', async () => {
@@ -168,8 +165,7 @@ describe('ActionLog functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_completion_record = await interpret(actionLogHandler.append({ record: {"flow":"flow-42","concept":"UserAuth","action":"login","type":"completion","variant":"ok"} }), storage);
       const result = await interpret(actionLogHandler.addEdge({ from: afterResult_completion_record?.output?.["id"], to: afterResult_completion_record?.output?.["id"], sync: "PaymentToInvoice" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -231,8 +227,7 @@ describe('ActionLog functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_completion_record = await interpret(actionLogHandler.append({ record: {"flow":"flow-42","concept":"UserAuth","action":"login","type":"completion","variant":"ok"} }), storage);
       const result = await interpret(actionLogHandler.query({ flow: afterResult_completion_record?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_flow" -> ok', async () => {
@@ -245,8 +240,7 @@ describe('ActionLog functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(actionLogHandler.query({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -271,27 +265,22 @@ describe('ActionLog functional handler', () => {
     it("append then query returns the record", async () => {
       const storage = createInMemoryStorage();
       const appendResult0 = await interpret(actionLogHandler.append({ record: {"type":"record","fields":[{"name":"flow","value":{"type":"literal","value":"f1"}},{"name":"concept","value":{"type":"literal","value":"Echo"}},{"name":"action","value":{"type":"literal","value":"send"}},{"name":"type","value":{"type":"literal","value":"completion"}},{"name":"variant","value":{"type":"literal","value":"ok"}}]} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(appendResult0.variant), `step 0: expected success but got '${appendResult0.variant}'`).toBe(false);
+      expect(appendResult0.variant).toBe("ok");
       let id = appendResult0.output["id"];
       const thenResult0 = await interpret(actionLogHandler.query({ flow: {"type":"literal","value":"f1"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("addEdge links two records", async () => {
       const storage = createInMemoryStorage();
       const appendResult0 = await interpret(actionLogHandler.append({ record: {"type":"record","fields":[{"name":"flow","value":{"type":"literal","value":"f1"}},{"name":"concept","value":{"type":"literal","value":"A"}},{"name":"action","value":{"type":"literal","value":"x"}},{"name":"type","value":{"type":"literal","value":"completion"}},{"name":"variant","value":{"type":"literal","value":"ok"}}]} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(appendResult0.variant), `step 0: expected success but got '${appendResult0.variant}'`).toBe(false);
+      expect(appendResult0.variant).toBe("ok");
       let id = appendResult0.output["id"];
       const appendResult1 = await interpret(actionLogHandler.append({ record: {"type":"record","fields":[{"name":"flow","value":{"type":"literal","value":"f1"}},{"name":"concept","value":{"type":"literal","value":"B"}},{"name":"action","value":{"type":"literal","value":"y"}},{"name":"type","value":{"type":"literal","value":"completion"}},{"name":"variant","value":{"type":"literal","value":"ok"}}]} }), storage);
-      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr1(appendResult1.variant), `step 1: expected success but got '${appendResult1.variant}'`).toBe(false);
+      expect(appendResult1.variant).toBe("ok");
       id = appendResult1.output["id"];
       const thenResult0 = await interpret(actionLogHandler.addEdge({ from: {"type":"variable","name":"r1"}, to: {"type":"variable","name":"r2"}, sync: {"type":"literal","value":"AtoB"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

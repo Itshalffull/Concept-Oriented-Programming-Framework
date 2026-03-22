@@ -34,7 +34,7 @@ concept RuntimeCoverage [C] {
         widget-prop-change, slot-fill, slot-clear, affordance-match,
         widget-unnecessary-render.
       }
-      -> created(entry: C) {
+      -> ok(entry: C) {
         First time this entity was ever exercised.
       }
       fixture record_action { symbol: "clef/action/Article/create", kind: "action", flowId: "flow-001" }

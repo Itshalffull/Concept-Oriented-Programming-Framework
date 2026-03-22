@@ -88,8 +88,7 @@ describe('ScoreKernel functional handler', () => {
       if (typeof scoreKernelHandler.boot !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreKernelHandler.boot({ projectRoot: "/home/user/my-project" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "boot_empty" -> error', async () => {
@@ -158,8 +157,7 @@ describe('ScoreKernel functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_boot_project = await interpret(scoreKernelHandler.boot({ projectRoot: "/home/user/my-project" }), storage);
       const result = await interpret(scoreKernelHandler.discover({ kernel: afterResult_boot_project?.output?.["kernel"], basePaths: "src,specs" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "discover_not_booted" -> error', async () => {
@@ -228,8 +226,7 @@ describe('ScoreKernel functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_boot_project = await interpret(scoreKernelHandler.boot({ projectRoot: "/home/user/my-project" }), storage);
       const result = await interpret(scoreKernelHandler.status({ kernel: afterResult_boot_project?.output?.["kernel"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "status_missing" -> error', async () => {
@@ -298,8 +295,7 @@ describe('ScoreKernel functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_boot_project = await interpret(scoreKernelHandler.boot({ projectRoot: "/home/user/my-project" }), storage);
       const result = await interpret(scoreKernelHandler.connectRuntime({ kernel: afterResult_boot_project?.output?.["kernel"], endpoint: "ws://localhost:8080/changes" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "connect_not_booted" -> error', async () => {
@@ -331,26 +327,23 @@ describe('ScoreKernel functional handler', () => {
     it("booted kernel reports status", async () => {
       const storage = createInMemoryStorage();
       const bootResult0 = await interpret(scoreKernelHandler.boot({ projectRoot: {"type":"literal","value":"/tmp/test-project"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(bootResult0.variant), `step 0: expected success but got '${bootResult0.variant}'`).toBe(false);
+      expect(bootResult0.variant).toBe("ok");
       let kernel = bootResult0.output["kernel"];
       let conceptCount = bootResult0.output["conceptCount"];
       let syncCount = bootResult0.output["syncCount"];
       const thenResult0 = await interpret(scoreKernelHandler.status({ kernel: {"type":"variable","name":"k"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("duplicate registration returns existing", async () => {
       const storage = createInMemoryStorage();
       const bootResult0 = await interpret(scoreKernelHandler.boot({ projectRoot: {"type":"literal","value":"/tmp/test-project"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(bootResult0.variant), `step 0: expected success but got '${bootResult0.variant}'`).toBe(false);
+      expect(bootResult0.variant).toBe("ok");
       let kernel = bootResult0.output["kernel"];
       let conceptCount = bootResult0.output["conceptCount"];
       let syncCount = bootResult0.output["syncCount"];
       const thenResult0 = await interpret(scoreKernelHandler.boot({ projectRoot: {"type":"literal","value":"/tmp/test-project"} }), storage);
-      expect(thenResult0.variant).toBe("alreadyBooted");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

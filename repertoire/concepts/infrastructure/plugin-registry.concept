@@ -21,7 +21,7 @@ concept PluginRegistry [P] {
         Metadata is a JSON string containing plugin-specific attributes
         (e.g., inputKind, outputKind, deterministic for generators).
       }
-      -> exists(plugin: P) {
+      -> ok(plugin: P) {
         Plugin with this name and type already registered. Returns existing ref.
         Idempotent — not an error.
       }

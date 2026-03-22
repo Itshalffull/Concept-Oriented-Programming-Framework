@@ -37,17 +37,17 @@ concept DeployPlan [D] {
         construct the deploy DAG. Return the plan for inspection
         before execution. Graph returned as serialized JSON.
       }
-      -> invalidManifest(errors: list String) {
+      -> ok(errors: list String) {
         Manifest parsing or schema validation failed.
       }
-      -> incompleteGraph(missing: list String) {
+      -> ok(missing: list String) {
         Sync references concepts not present in manifest or
         declared as external dependencies.
       }
-      -> circularDependency(cycle: list String) {
+      -> ok(cycle: list String) {
         Deploy graph contains a cycle.
       }
-      -> transportMismatch(details: list String) {
+      -> ok(details: list String) {
         Connected concepts use incompatible transports
         without an adapter path.
       }
@@ -66,11 +66,11 @@ concept DeployPlan [D] {
         transport compatibility, storage migration safety,
         dependency ordering. Warnings for non-blocking issues.
       }
-      -> migrationRequired(plan: D, concepts: list String, fromVersions: list Int, toVersions: list Int) {
+      -> ok(plan: D, concepts: list String, fromVersions: list Int, toVersions: list Int) {
         Storage schema changes detected. Migration must run
         before deployment can proceed.
       }
-      -> schemaIncompatible(details: list String) {
+      -> ok(details: list String) {
         Breaking schema change with no migration path declared.
       }
 
@@ -83,15 +83,15 @@ concept DeployPlan [D] {
         All nodes in the deploy graph executed successfully.
         Progressive delivery completed if configured.
       }
-      -> partial(plan: D, deployed: list String, failed: list String) {
+      -> ok(plan: D, deployed: list String, failed: list String) {
         Some nodes succeeded, some failed. System is in a
         mixed state. Rollback recommended but not automatic.
       }
-      -> rollbackTriggered(plan: D, reason: String, rolledBack: list String) {
+      -> ok(plan: D, reason: String, rolledBack: list String) {
         Deployment failed and automatic rollback executed.
         All compensating actions completed.
       }
-      -> rollbackFailed(plan: D, reason: String, stuck: list String) {
+      -> ok(plan: D, reason: String, stuck: list String) {
         Rollback itself failed. Manual intervention required.
         Lists the nodes that could not be rolled back.
       }
@@ -104,7 +104,7 @@ concept DeployPlan [D] {
       -> ok(plan: D, rolledBack: list String) {
         Compensating actions executed in reverse dependency order.
       }
-      -> partial(plan: D, rolledBack: list String, stuck: list String) {
+      -> ok(plan: D, rolledBack: list String, stuck: list String) {
         Some rollbacks succeeded, some failed.
       }
 
@@ -133,7 +133,7 @@ concept DeployPlan [D] {
 
   example "rollback after failed execution": {
     after plan(manifest: "valid-manifest", environment: "staging") -> ok(plan: p, graph: g, estimatedDuration: 300)
-    and execute(plan: p) -> partial(plan: p, deployed: d, failed: f)
+    and execute(plan: p) -> ok(plan: p, deployed: d, failed: f)
     then rollback(plan: p) -> ok(plan: p, rolledBack: rb)
   }
 

@@ -28,7 +28,7 @@ concept LatticeMerge [C] {
       -> clean(result: Bytes) {
         Lattice join computed. Always conflict-free.
       }
-      -> unsupportedContent(message: String) {
+      -> ok(message: String) {
         Content is not a recognized CRDT lattice type.
       }
 

@@ -25,7 +25,7 @@ const _delegationHandler: FunctionalConceptHandler = {
           id, from, to, scope, expiresAt: expiresAt ?? null,
           createdAt: new Date().toISOString(),
         });
-        return complete(b2, 'delegated', { edge: id });
+        return complete(b2, 'ok', { edge: id });
       },
     );
 
@@ -40,7 +40,7 @@ const _delegationHandler: FunctionalConceptHandler = {
     p = branch(p, 'record',
       (b) => {
         let b2 = del(b, 'delegation', `${from}:${to}`);
-        return complete(b2, 'undelegated', { from, to });
+        return complete(b2, 'ok', { from, to });
       },
       (b) => complete(b, 'not_found', { from, to }),
     );
@@ -52,7 +52,7 @@ const _delegationHandler: FunctionalConceptHandler = {
     const { participant } = input;
     let p = createProgram();
     // Stub: return base weight of 1 (real impl would traverse delegation graph)
-    return complete(p, 'weight', { participant, effectiveWeight: 1.0, delegators: [] }) as StorageProgram<Result>;
+    return complete(p, 'ok', { participant, effectiveWeight: 1.0, delegators: [] }) as StorageProgram<Result>;
   },
 };
 

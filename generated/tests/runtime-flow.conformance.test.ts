@@ -94,8 +94,7 @@ describe('RuntimeFlow functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(runtimeFlowHandler.correlate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "correlate_empty" -> error', async () => {
@@ -169,8 +168,7 @@ describe('RuntimeFlow functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(runtimeFlowHandler.findByAction({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_empty" -> error', async () => {
@@ -244,8 +242,7 @@ describe('RuntimeFlow functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(runtimeFlowHandler.findBySync({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_empty_sync" -> error', async () => {
@@ -319,8 +316,7 @@ describe('RuntimeFlow functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(runtimeFlowHandler.findByVariant({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_empty_variant" -> error', async () => {
@@ -394,8 +390,7 @@ describe('RuntimeFlow functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(runtimeFlowHandler.findFailures({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_all" -> ok', async () => {
@@ -408,8 +403,7 @@ describe('RuntimeFlow functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(runtimeFlowHandler.findFailures({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -476,8 +470,7 @@ describe('RuntimeFlow functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(runtimeFlowHandler.compareToStatic({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "compare_missing" -> error', async () => {
@@ -546,8 +539,7 @@ describe('RuntimeFlow functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_correlate_flow = await interpret(runtimeFlowHandler.correlate({ flowId: "f-123" }), storage);
       const result = await interpret(runtimeFlowHandler.sourceLocations({ flow: afterResult_correlate_flow?.output?.["flow"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "locations_missing" -> error', async () => {
@@ -616,8 +608,7 @@ describe('RuntimeFlow functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_correlate_flow = await interpret(runtimeFlowHandler.correlate({ flowId: "f-123" }), storage);
       const result = await interpret(runtimeFlowHandler.get({ flow: afterResult_correlate_flow?.output?.["flow"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_missing" -> error', async () => {
@@ -649,12 +640,10 @@ describe('RuntimeFlow functional handler', () => {
     it("correlated flow is retrievable", async () => {
       const storage = createInMemoryStorage();
       const correlateResult0 = await interpret(runtimeFlowHandler.correlate({ flowId: {"type":"literal","value":"f-123"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(correlateResult0.variant), `step 0: expected success but got '${correlateResult0.variant}'`).toBe(false);
+      expect(correlateResult0.variant).toBe("ok");
       let flow = correlateResult0.output["flow"];
       const thenResult0 = await interpret(runtimeFlowHandler.get({ flow: {"type":"variable","name":"f"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

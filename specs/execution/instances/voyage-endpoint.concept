@@ -29,7 +29,7 @@ concept VoyageEndpoint [V] {
         ("query" or "document"). Base URL defaults to the Voyage
         API. The endpoint becomes addressable by name.
       }
-      -> exists(name: String) {
+      -> ok(name: String) {
         An endpoint with this name is already registered.
       }
 
@@ -60,7 +60,7 @@ concept VoyageEndpoint [V] {
         Look up the named endpoint and return its base URL, model,
         and pre-built authorization headers ready for HTTP calls.
       }
-      -> notFound(name: String) {
+      -> ok(name: String) {
         No endpoint is registered with this name.
       }
 

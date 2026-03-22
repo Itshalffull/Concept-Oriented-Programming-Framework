@@ -79,7 +79,7 @@ concept PromptAssembly [P] {
         examples reduced first, then retrieved context compressed.
         Calculates estimated cost based on token count.
       }
-      -> over_budget(minimum_tokens: Int, available_tokens: Int) {
+      -> ok(minimum_tokens: Int, available_tokens: Int) {
         Required-only sections exceed context_window.
       }
     }
@@ -89,7 +89,7 @@ concept PromptAssembly [P] {
         Assembles and converts to provider message format.
         Each section becomes a message with its assigned role.
       }
-      -> over_budget(minimum_tokens: Int, available_tokens: Int) {
+      -> ok(minimum_tokens: Int, available_tokens: Int) {
         Required sections exceed budget.
       }
     }

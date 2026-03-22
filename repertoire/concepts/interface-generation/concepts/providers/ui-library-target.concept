@@ -45,7 +45,7 @@ concept UILibraryTarget [D] {
       -> ok(document: D, files: list String) {
         ui-library.md generated with all themes, widgets, and affordances.
       }
-      -> noWidgets(reason: String) {
+      -> ok(reason: String) {
         No widget or theme files found in the repertoire directory.
       }
 
@@ -58,7 +58,7 @@ concept UILibraryTarget [D] {
       -> ok(document: D) {
         Document contains themes, widget catalog, and affordance index.
       }
-      -> missingSection(document: D, section: String) {
+      -> ok(document: D, section: String) {
         A required section is missing from the document.
       }
 

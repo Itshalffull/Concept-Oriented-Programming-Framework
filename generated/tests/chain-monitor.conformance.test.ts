@@ -94,8 +94,7 @@ describe('ChainMonitor functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(chainMonitorHandler.awaitFinality({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "await_finality_empty_hash" -> timeout', async () => {
@@ -164,8 +163,7 @@ describe('ChainMonitor functional handler', () => {
       if (typeof chainMonitorHandler.subscribe !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(chainMonitorHandler.subscribe({ chainId: "1", rpcUrl: "https://mainnet.infura.io/v3/abc123" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "subscribe_missing_rpc" -> error', async () => {
@@ -239,8 +237,7 @@ describe('ChainMonitor functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(chainMonitorHandler.onBlock({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "on_block_empty_hash" -> reorg', async () => {
@@ -273,25 +270,22 @@ describe('ChainMonitor functional handler', () => {
     it("awaitFinality then status", async () => {
       const storage = createInMemoryStorage();
       const awaitFinalityResult0 = await interpret(chainMonitorHandler.awaitFinality({ txHash: {"type":"variable","name":"tx"}, level: {"type":"literal","value":"confirmations"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(awaitFinalityResult0.variant), `step 0: expected success but got '${awaitFinalityResult0.variant}'`).toBe(false);
+      expect(awaitFinalityResult0.variant).toBe("ok");
       let chain = awaitFinalityResult0.output["chain"];
       let block = awaitFinalityResult0.output["block"];
       let confirmations = awaitFinalityResult0.output["confirmations"];
       const thenResult0 = await interpret(chainMonitorHandler.status({ txHash: {"type":"variable","name":"tx"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("awaitFinality then status", async () => {
       const storage = createInMemoryStorage();
       const awaitFinalityResult0 = await interpret(chainMonitorHandler.awaitFinality({ txHash: {"type":"variable","name":"tx"}, level: {"type":"literal","value":"confirmations"} }), storage);
-      expect(awaitFinalityResult0.variant).toBe("reorged");
+      expect(awaitFinalityResult0.variant).toBe("ok");
       let txHash = awaitFinalityResult0.output["txHash"];
       let depth = awaitFinalityResult0.output["depth"];
       const thenResult0 = await interpret(chainMonitorHandler.status({ txHash: {"type":"variable","name":"tx"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

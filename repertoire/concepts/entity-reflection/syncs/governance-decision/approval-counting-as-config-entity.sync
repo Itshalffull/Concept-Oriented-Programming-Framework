@@ -6,7 +6,7 @@ sync ApprovalCountingAsConfigEntity [eager]
   purpose { Persist approval counting configuration as queryable config entity. }
 when {
   ApprovalCounting/configure: [ topN: ?topN ]
-    => configured(config: ?config)
+    => ok(config: ?config)
 }
 then {
   ContentStorage/save: [ record: ?config; data: ?topN ]
@@ -17,7 +17,7 @@ sync ApprovalCountingTagBundle [eager]
   purpose { Tag approval counting configuration with its bundle type. }
 when {
   ApprovalCounting/configure: [ topN: ?topN ]
-    => configured(config: ?config)
+    => ok(config: ?config)
 }
 then {
   Property/set: [ entity: ?config; key: "config_bundle"; value: "counting_method_approval" ]

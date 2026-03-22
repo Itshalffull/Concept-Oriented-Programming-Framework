@@ -39,7 +39,7 @@ concept PulumiProvider [P] {
       -> ok(stack: P, toCreate: Int, toUpdate: Int, toDelete: Int, estimatedCost: Float) {
         Pulumi preview executed against stack.
       }
-      -> backendUnreachable(backend: String) {
+      -> ok(backend: String) {
         State backend such as S3 or Pulumi Cloud is inaccessible.
       }
 
@@ -51,13 +51,13 @@ concept PulumiProvider [P] {
       -> ok(stack: P, created: list String, updated: list String) {
         Pulumi up completed successfully.
       }
-      -> pluginMissing(plugin: String, version: String) {
+      -> ok(plugin: String, version: String) {
         Required Pulumi provider plugin not installed.
       }
-      -> conflictingUpdate(stack: P, pendingOps: list String) {
+      -> ok(stack: P, pendingOps: list String) {
         Another update is in progress on this stack.
       }
-      -> partial(stack: P, created: list String, failed: list String) {
+      -> ok(stack: P, created: list String, failed: list String) {
         Apply partially succeeded. Stack state may have
         pending operations.
       }
@@ -70,7 +70,7 @@ concept PulumiProvider [P] {
       -> ok(stack: P, destroyed: list String) {
         Pulumi destroy completed.
       }
-      -> protectedResource(stack: P, resource: String) {
+      -> ok(stack: P, resource: String) {
         Resource has protect true. Must be unprotected first.
       }
 

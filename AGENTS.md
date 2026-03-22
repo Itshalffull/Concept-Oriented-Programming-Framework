@@ -180,10 +180,9 @@ npx tsx cli/src/main.ts generate --concept Foo --target typescript
 npx tsx scripts/generate-all-tests.ts
 
 # Regenerate interface bindings (MCP tools, CLI commands, skills, CLAUDE.md)
-npx tsx --tsconfig tsconfig.json -e "
-  const { interfaceCommand } = await import('./cli/src/commands/interface.ts');
-  await interfaceCommand(['generate'], { manifest: 'examples/devtools/devtools.interface.yaml' });
-"
+# NOTE: --tsconfig tsconfig.json is REQUIRED for top-level await support,
+# but it suppresses stdout. Use the script file for visible output:
+npx tsx --tsconfig tsconfig.json scripts/regen-interface.ts
 ```
 
 ---

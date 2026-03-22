@@ -30,7 +30,7 @@ concept Vote [V] {
 
   actions {
     action openSession(proposalRef: String, deadline: DateTime, snapshotRef: option String) {
-      -> opened(session: V) {
+      -> ok(session: V) {
         A voting session is created in Open status for the given proposal.
         If snapshotRef is provided, voter weights come from that snapshot.
       }
@@ -44,13 +44,13 @@ concept Vote [V] {
       -> recorded(vote: V) {
         The vote is recorded. One vote per voter per session.
       }
-      -> already_voted(voter: String) {
+      -> ok(voter: String) {
         This voter has already cast a vote in this session.
       }
-      -> session_closed(session: V) {
+      -> ok(session: V) {
         The voting session is past its deadline.
       }
-      -> not_eligible(voter: String) {
+      -> ok(voter: String) {
         The voter is not eligible to vote in this session.
       }
 
@@ -60,10 +60,10 @@ concept Vote [V] {
     }
 
     action close(session: V) {
-      -> closed(session: V) {
+      -> ok(session: V) {
         The session is closed. No more votes accepted.
       }
-      -> already_closed(session: V) {
+      -> ok(session: V) {
         The session is already closed.
       }
 
@@ -72,11 +72,11 @@ concept Vote [V] {
     }
 
     action tally(session: V) {
-      -> result(session: V, outcome: String, details: String) {
+      -> ok(session: V, outcome: String, details: String) {
         The votes are counted using the configured counting method.
         The outcome is stored on the session.
       }
-      -> not_closed(session: V) {
+      -> ok(session: V) {
         The session must be closed before tallying.
       }
 
@@ -87,13 +87,13 @@ concept Vote [V] {
 
   example "openSession-then-tally": {
 
-    after openSession(proposalRef: _, deadline: _, snapshotRef: _) -> opened(session: s)
+    after openSession(proposalRef: _, deadline: _, snapshotRef: _) -> ok(session: s)
 
         then castVote(session: s, voter: v, choice: _, weight: _) -> recorded(vote: _)
 
-        and  close(session: s) -> closed(session: s)
+        and  close(session: s) -> ok(session: s)
 
-        and  tally(session: s) -> result(session: s, outcome: _, details: _)
+        and  tally(session: s) -> ok(session: s, outcome: _, details: _)
 
   }
 
@@ -118,7 +118,7 @@ concept Vote [V] {
 
     requires: proposalRef != ""
 
-    ensures opened: proposalRef != none
+    ensures ok: proposalRef != none
 
   }
 }

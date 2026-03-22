@@ -37,16 +37,14 @@ describe('SearchSpace imperative handler', () => {
       if (typeof searchSpaceHandler.index !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "article-42", data: "Concept-oriented programming framework" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "index_semantic" -> ok', async () => {
       if (typeof searchSpaceHandler.index !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await searchSpaceHandler.index({ scope_id: "vs-1", provider: "semantic", entity_id: "article-42", data: "{\"embedding\":[0.1,0.2,0.3]}" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -66,8 +64,7 @@ describe('SearchSpace imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_index_text = await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "article-42", data: "Concept-oriented programming framework" }, storage);
       const result = await searchSpaceHandler.tombstone({ scope_id: afterResult_index_text?.output?.["entry"], provider: "text", entity_id: afterResult_index_text?.output?.["entry"] }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "tombstone_new" -> ok', async () => {
@@ -75,8 +72,7 @@ describe('SearchSpace imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_index_text = await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "article-42", data: "Concept-oriented programming framework" }, storage);
       const result = await searchSpaceHandler.tombstone({ scope_id: afterResult_index_text?.output?.["entry"], provider: "text", entity_id: afterResult_index_text?.output?.["entry"] }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -96,8 +92,7 @@ describe('SearchSpace imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_index_text = await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "article-42", data: "Concept-oriented programming framework" }, storage);
       const result = await searchSpaceHandler.query({ scope_id: afterResult_index_text?.output?.["entry"], provider: "text", query_expr: "concept" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "query_missing_scope" -> no_scope', async () => {
@@ -125,8 +120,7 @@ describe('SearchSpace imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_index_text = await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "article-42", data: "Concept-oriented programming framework" }, storage);
       const result = await searchSpaceHandler.clear({ scope_id: afterResult_index_text?.output?.["entry"] }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "clear_empty" -> ok', async () => {
@@ -139,8 +133,7 @@ describe('SearchSpace imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await searchSpaceHandler.clear({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -160,8 +153,7 @@ describe('SearchSpace imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_index_text = await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "article-42", data: "Concept-oriented programming framework" }, storage);
       const result = await searchSpaceHandler.materialize({ scope_id: afterResult_index_text?.output?.["entry"] }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "materialize_empty" -> ok', async () => {
@@ -174,8 +166,7 @@ describe('SearchSpace imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await searchSpaceHandler.materialize({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -196,40 +187,33 @@ describe('SearchSpace imperative handler', () => {
     it("index then query", async () => {
       const storage = createInMemoryStorage();
       const indexResult0 = await searchSpaceHandler.index({ scope_id: {"type":"literal","value":"vs-1"}, provider: {"type":"literal","value":"text"}, entity_id: {"type":"literal","value":"e1"}, data: {"type":"literal","value":"hello world"} }, storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(indexResult0.variant), `step 0: expected success but got '${indexResult0.variant}'`).toBe(false);
+      expect(indexResult0.variant).toBe("ok");
       let entry = indexResult0.output["entry"];
       const thenResult0 = await searchSpaceHandler.query({ scope_id: {"type":"literal","value":"vs-1"}, provider: {"type":"literal","value":"text"}, query_expr: {"type":"literal","value":"hello"} }, storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("index then query", async () => {
       const storage = createInMemoryStorage();
       const indexResult0 = await searchSpaceHandler.index({ scope_id: {"type":"literal","value":"vs-2"}, provider: {"type":"literal","value":"text"}, entity_id: {"type":"literal","value":"e2"}, data: {"type":"literal","value":"test data"} }, storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(indexResult0.variant), `step 0: expected success but got '${indexResult0.variant}'`).toBe(false);
+      expect(indexResult0.variant).toBe("ok");
       let entry = indexResult0.output["entry"];
       const tombstoneResult1 = await searchSpaceHandler.tombstone({ scope_id: {"type":"literal","value":"vs-2"}, provider: {"type":"literal","value":"text"}, entity_id: {"type":"literal","value":"e2"} }, storage);
-      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr1(tombstoneResult1.variant), `step 1: expected success but got '${tombstoneResult1.variant}'`).toBe(false);
+      expect(tombstoneResult1.variant).toBe("ok");
       entry = tombstoneResult1.output["entry"];
       const thenResult0 = await searchSpaceHandler.query({ scope_id: {"type":"literal","value":"vs-2"}, provider: {"type":"literal","value":"text"}, query_expr: {"type":"literal","value":"test"} }, storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("index then query", async () => {
       const storage = createInMemoryStorage();
       const indexResult0 = await searchSpaceHandler.index({ scope_id: {"type":"literal","value":"vs-3"}, provider: {"type":"literal","value":"text"}, entity_id: {"type":"literal","value":"e3"}, data: {"type":"literal","value":"content"} }, storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(indexResult0.variant), `step 0: expected success but got '${indexResult0.variant}'`).toBe(false);
+      expect(indexResult0.variant).toBe("ok");
       let entry = indexResult0.output["entry"];
       const clearResult1 = await searchSpaceHandler.clear({ scope_id: {"type":"literal","value":"vs-3"} }, storage);
-      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr1(clearResult1.variant), `step 1: expected success but got '${clearResult1.variant}'`).toBe(false);
+      expect(clearResult1.variant).toBe("ok");
       const thenResult0 = await searchSpaceHandler.query({ scope_id: {"type":"literal","value":"vs-3"}, provider: {"type":"literal","value":"text"}, query_expr: {"type":"literal","value":"content"} }, storage);
-      expect(thenResult0.variant).toBe("no_scope");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

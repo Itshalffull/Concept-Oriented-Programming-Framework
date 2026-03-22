@@ -29,7 +29,7 @@ concept ScopeGraph [C] {
         scopes, declarations, references, and import edges
         using a language-specific scope provider.
       }
-      -> unsupportedLanguage(language: String) {
+      -> ok(language: String) {
         No scope provider available for this language.
       }
 
@@ -43,11 +43,11 @@ concept ScopeGraph [C] {
         Resolve a name reference within a scope to its declaration
         symbol, following scope parent chains and import edges.
       }
-      -> unresolved(candidates: String) {
+      -> ok(candidates: String) {
         Name could not be resolved. Candidates lists possible
         matches from nearby scopes as serialized JSON array.
       }
-      -> ambiguous(symbols: String) {
+      -> ok(symbols: String) {
         Multiple declarations match this name in scope.
         Symbols returned as serialized JSON array.
       }
@@ -71,7 +71,7 @@ concept ScopeGraph [C] {
         Attempt to resolve all unresolved references in this graph
         by searching other files' scope graphs for matching exports.
       }
-      -> noUnresolved() {
+      -> ok() {
         All references in this graph are already resolved.
       }
 

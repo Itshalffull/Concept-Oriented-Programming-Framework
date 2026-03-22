@@ -24,7 +24,7 @@ concept ExtensionPermission [P] {
         Permission declared for the extension. Status set to "declared"
         pending grant.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         Permission already declared for this extension.
       }
     }

@@ -19,7 +19,7 @@ concept ApprovalCounting [AC] {
 
   actions {
     action configure(maxApprovals: option Int, winnerCount: Int) {
-      -> configured(config: AC) {
+      -> ok(config: AC) {
         An approval counting configuration is created. MaxApprovals limits
         how many candidates each voter can approve (none = unlimited).
         WinnerCount allows multi-winner elections.
@@ -31,10 +31,10 @@ concept ApprovalCounting [AC] {
     }
 
     action count(config: AC, approvalSets: String, weights: String) {
-      -> winners(rankedResults: String, topChoice: String, approvalCount: Float) {
+      -> ok(rankedResults: String, topChoice: String, approvalCount: Float) {
         Candidates ranked by weighted approval count. Top N per winnerCount.
       }
-      -> tie(tiedCandidates: String, approvalCount: Float) {
+      -> ok(tiedCandidates: String, approvalCount: Float) {
         Multiple candidates have identical approval counts at the winner boundary.
       }
 
@@ -45,9 +45,9 @@ concept ApprovalCounting [AC] {
 
   example "configure-then-count": {
 
-    after configure(maxApprovals: _, winnerCount: 1) -> configured(config: ac)
+    after configure(maxApprovals: _, winnerCount: 1) -> ok(config: ac)
 
-        then count(config: ac, approvalSets: _, weights: _) -> winners(rankedResults: _, topChoice: _, approvalCount: _)
+        then count(config: ac, approvalSets: _, weights: _) -> ok(rankedResults: _, topChoice: _, approvalCount: _)
 
   }
 
@@ -72,7 +72,7 @@ concept ApprovalCounting [AC] {
 
     requires: maxApprovals != ""
 
-    ensures configured: maxApprovals != none
+    ensures ok: maxApprovals != none
 
   }
 }

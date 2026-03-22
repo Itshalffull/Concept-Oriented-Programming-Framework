@@ -44,7 +44,7 @@ concept Navigator [N] {
         Evaluate guards, push previous to history, clear
         forward stack. Return previous for teardown.
       }
-      -> blocked(nav: N, reason: String) { Guard prevented transition. }
+      -> ok(nav: N, reason: String) { Guard prevented transition. }
       -> notfound(message: String) { Destination not registered. }
 
       fixture valid_go { params: "{\"id\":\"article-42\"}" } after valid_register
@@ -56,7 +56,7 @@ concept Navigator [N] {
       -> ok(nav: N, previous: N) {
         Pop from history, push current to forward.
       }
-      -> empty(message: String) { History empty. }
+      -> ok(message: String) { History empty. }
 
       fixture valid_back { } after valid_register
       fixture empty_history { nav: "nonexistent-nav" } -> empty
@@ -66,7 +66,7 @@ concept Navigator [N] {
       -> ok(nav: N, previous: N) {
         Pop from forward, push current to history.
       }
-      -> empty(message: String) { Forward stack empty. }
+      -> ok(message: String) { Forward stack empty. }
 
       fixture valid_forward { } after valid_register
       fixture empty_stack { nav: "nonexistent-nav" } -> empty

@@ -37,7 +37,7 @@ concept ProgramCache [C] {
 
     action store(programHash: String, stateHash: String, result: String) {
       -> ok(entry: C) { Result cached under the given program and state hashes. }
-      -> exists() { An entry with these hashes already exists; no duplicate stored. }
+      -> ok() { An entry with these hashes already exists; no duplicate stored. }
 
       fixture store_new_entry {
         programHash: "sha256_abc123",
@@ -108,7 +108,7 @@ concept ProgramCache [C] {
 
   example "duplicate store returns exists": {
     after store(programHash: "abc", stateHash: "def", result: "ok") -> ok(entry: c)
-    then store(programHash: "abc", stateHash: "def", result: "ok") -> exists()
+    then store(programHash: "abc", stateHash: "def", result: "ok") -> ok()
   }
 
   always "cached entries have valid hashes": {

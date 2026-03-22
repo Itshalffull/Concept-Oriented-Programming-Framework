@@ -88,16 +88,14 @@ describe('Transport functional handler', () => {
       if (typeof transportHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(transportHandler.configure({ transport: "P-1", kind: "rest", baseUrl: "https://api.example.com", auth: "Bearer tok_abc123", retryPolicy: "{ \"maxRetries\": 3, \"backoff\": \"exponential\" }" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_graphql" -> ok', async () => {
       if (typeof transportHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(transportHandler.configure({ transport: "P-2", kind: "graphql", baseUrl: "https://gql.example.com/query", auth: "", retryPolicy: "" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_invalid_kind" -> invalid', async () => {
@@ -172,8 +170,7 @@ describe('Transport functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(transportHandler.setAuth({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "set_auth_new_transport" -> ok', async () => {
@@ -186,8 +183,7 @@ describe('Transport functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(transportHandler.setAuth({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -254,8 +250,7 @@ describe('Transport functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(transportHandler.clearAuth({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "clear_auth_missing" -> notfound', async () => {
@@ -330,8 +325,7 @@ describe('Transport functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(transportHandler.fetch({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "fetch_missing_transport" -> error', async () => {
@@ -411,8 +405,7 @@ describe('Transport functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(transportHandler.mutate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "mutate_missing_transport" -> error', async () => {
@@ -492,8 +485,7 @@ describe('Transport functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(transportHandler.flushQueue({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "flush_missing_transport" -> error', async () => {
@@ -525,12 +517,10 @@ describe('Transport functional handler', () => {
     it("configure then fetch", async () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(transportHandler.configure({ transport: {"type":"variable","name":"p"}, kind: {"type":"literal","value":"rest"}, baseUrl: {"type":"literal","value":"https://api.example.com"}, auth: {"type":"variable","name":"_"}, retryPolicy: {"type":"variable","name":"_"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(configureResult0.variant), `step 0: expected success but got '${configureResult0.variant}'`).toBe(false);
+      expect(configureResult0.variant).toBe("ok");
       let transport = configureResult0.output["transport"];
       const thenResult0 = await interpret(transportHandler.fetch({ transport: {"type":"variable","name":"p"}, query: {"type":"literal","value":"{ \"path\": \"/articles\" }"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

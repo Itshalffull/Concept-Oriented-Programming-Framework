@@ -88,16 +88,14 @@ describe('Quorum functional handler', () => {
       if (typeof quorumHandler.setThreshold !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(quorumHandler.setThreshold({ thresholdType: "Absolute", value: "10.0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "fractional_half" -> ok', async () => {
       if (typeof quorumHandler.setThreshold !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(quorumHandler.setThreshold({ thresholdType: "Fractional", value: "0.5" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_type" -> error', async () => {
@@ -171,8 +169,7 @@ describe('Quorum functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(quorumHandler.check({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "quorum_not_met" -> error', async () => {
@@ -241,8 +238,7 @@ describe('Quorum functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_absolute_ten = await interpret(quorumHandler.setThreshold({ thresholdType: "Absolute", value: "10.0" }), storage);
       const result = await interpret(quorumHandler.updateThreshold({ rule: afterResult_absolute_ten?.output?.["id"], newType: "Fractional", newValue: "0.25" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "update_missing_rule" -> error', async () => {
@@ -274,12 +270,12 @@ describe('Quorum functional handler', () => {
     it("setThreshold-then-check", async () => {
       const storage = createInMemoryStorage();
       const setThresholdResult0 = await interpret(quorumHandler.setThreshold({ thresholdType: {"type":"literal","value":"Absolute"}, value: {"type":"literal","value":10} }), storage);
-      expect(setThresholdResult0.variant).toBe("set");
+      expect(setThresholdResult0.variant).toBe("ok");
       let rule = setThresholdResult0.output["rule"];
       const thenResult0 = await interpret(quorumHandler.check({ totalVotes: {"type":"literal","value":15}, totalEligible: {"type":"literal","value":100} }), storage);
-      expect(thenResult0.variant).toBe("met");
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(quorumHandler.check({ totalVotes: {"type":"literal","value":5}, totalEligible: {"type":"literal","value":100} }), storage);
-      expect(thenResult1.variant).toBe("not_met");
+      expect(thenResult1.variant).toBe("ok");
     });
 
   });
@@ -296,7 +292,7 @@ describe('Quorum functional handler', () => {
       }
     });
 
-    it('setThreshold ensures on set: ', async () => {
+    it('setThreshold ensures on ok: ', async () => {
       if (typeof quorumHandler.setThreshold !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -308,7 +304,7 @@ describe('Quorum functional handler', () => {
               const program = quorumHandler.setThreshold(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "set") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

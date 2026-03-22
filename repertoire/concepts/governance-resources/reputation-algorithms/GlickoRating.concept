@@ -29,7 +29,7 @@ concept GlickoRating [GL] {
 
   actions {
     action configure(initialRating: Float, initialDeviation: Float, initialVolatility: Float, inactivityGrowthRate: Float) {
-      -> configured(config: GL) {
+      -> ok(config: GL) {
         Glicko-2 parameters. Deviation grows with inactivity per
         inactivityGrowthRate, representing increasing uncertainty.
       }
@@ -39,7 +39,7 @@ concept GlickoRating [GL] {
     }
 
     action recordOutcome(config: GL, participant: String, opponent: String, outcome: Float) {
-      -> updated(participant: String, newRating: Float, newDeviation: Float) {
+      -> ok(participant: String, newRating: Float, newDeviation: Float) {
         Rating and deviation updated per Glicko-2 algorithm.
         Deviation decreases (more certain) after activity.
       }
@@ -49,7 +49,7 @@ concept GlickoRating [GL] {
     }
 
     action applyInactivityDecay(config: GL, participant: String, daysSinceActive: Float) {
-      -> decayed(participant: String, newDeviation: Float) {
+      -> ok(participant: String, newDeviation: Float) {
         Deviation increases based on days inactive, reflecting
         growing uncertainty about the participant's current ability.
       }
@@ -59,7 +59,7 @@ concept GlickoRating [GL] {
     }
 
     action getReliableWeight(config: GL, participant: String) {
-      -> weight(participant: String, rating: Float, deviation: Float, reliability: Float) {
+      -> ok(participant: String, rating: Float, deviation: Float, reliability: Float) {
         Reliability = 1 - (deviation / maxDeviation). Can be used
         to discount governance weight for uncertain participants.
       }
@@ -71,9 +71,9 @@ concept GlickoRating [GL] {
 
   example "configure-then-recordOutcome": {
 
-    after configure(initialRating: 1500.0, initialDeviation: 350.0, initialVolatility: 0.06, inactivityGrowthRate: _) -> configured(config: gl)
+    after configure(initialRating: 1500.0, initialDeviation: 350.0, initialVolatility: 0.06, inactivityGrowthRate: _) -> ok(config: gl)
 
-        then recordOutcome(config: gl, participant: p, opponent: _, outcome: _) -> updated(participant: p, newRating: _, newDeviation: _)
+        then recordOutcome(config: gl, participant: p, opponent: _, outcome: _) -> ok(participant: p, newRating: _, newDeviation: _)
 
   }
 
@@ -98,7 +98,7 @@ concept GlickoRating [GL] {
 
     requires: initialRating != ""
 
-    ensures configured: initialRating != none
+    ensures ok: initialRating != none
 
   }
 }

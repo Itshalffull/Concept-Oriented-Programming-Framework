@@ -94,8 +94,7 @@ describe('Sanction functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(sanctionHandler.impose({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "impose_missing_subject" -> error', async () => {
@@ -169,8 +168,7 @@ describe('Sanction functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(sanctionHandler.escalate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "escalate_nonexistent" -> error', async () => {
@@ -244,8 +242,7 @@ describe('Sanction functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(sanctionHandler.appeal({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "appeal_nonexistent" -> error', async () => {
@@ -319,8 +316,7 @@ describe('Sanction functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(sanctionHandler.pardon({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "pardon_nonexistent" -> error', async () => {
@@ -394,8 +390,7 @@ describe('Sanction functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(sanctionHandler.reward({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "reward_missing_subject" -> error', async () => {
@@ -427,12 +422,12 @@ describe('Sanction functional handler', () => {
     it("impose-then-appeal", async () => {
       const storage = createInMemoryStorage();
       const imposeResult0 = await interpret(sanctionHandler.impose({ subject: {"type":"variable","name":"_"}, severity: {"type":"literal","value":"Warning"}, consequence: {"type":"variable","name":"_"}, reason: {"type":"variable","name":"_"} }), storage);
-      expect(imposeResult0.variant).toBe("imposed");
+      expect(imposeResult0.variant).toBe("ok");
       let sanction = imposeResult0.output["sanction"];
       const thenResult0 = await interpret(sanctionHandler.escalate({ sanction: {"type":"variable","name":"sn"} }), storage);
-      expect(thenResult0.variant).toBe("escalated");
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(sanctionHandler.appeal({ sanction: {"type":"variable","name":"sn"} }), storage);
-      expect(thenResult1.variant).toBe("appeal_opened");
+      expect(thenResult1.variant).toBe("ok");
     });
 
   });

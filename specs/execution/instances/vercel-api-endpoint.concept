@@ -29,7 +29,7 @@ concept VercelApiEndpoint [V] {
         https://api.vercel.com. The endpoint becomes addressable
         by name for HttpProvider instance configuration via sync.
       }
-      -> exists(name: String) {
+      -> ok(name: String) {
         An endpoint with this name is already registered.
       }
 
@@ -58,7 +58,7 @@ concept VercelApiEndpoint [V] {
         pre-built authorization headers, and team ID for query
         parameter injection.
       }
-      -> notFound(name: String) {
+      -> ok(name: String) {
         No endpoint is registered with this name.
       }
 

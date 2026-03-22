@@ -38,10 +38,10 @@ concept SolidityBuilder [L] {
         Always produces ABI alongside bytecode — ABI is
         essential for client generation.
       }
-      -> compilationError(errors: list { file: String, line: Int, message: String }) {
+      -> ok(errors: list { file: String, line: Int, message: String }) {
         solc reported errors.
       }
-      -> pragmaMismatch(required: String, installed: String) {
+      -> ok(required: String, installed: String) {
         Contract's Solidity pragma doesn't match compiler.
       }
 
@@ -57,7 +57,7 @@ concept SolidityBuilder [L] {
         and how to parse output. Otherwise auto-detects.
         testType indicates which runner category was used.
       }
-      -> testFailure(passed: Int, failed: Int, failures: list { test: String, message: String }, testType: String) {
+      -> ok(passed: Int, failed: Int, failures: list { test: String, message: String }, testType: String) {
         Some tests failed. Includes gas usage in test output.
       }
 
@@ -72,7 +72,7 @@ concept SolidityBuilder [L] {
         "hardhat-artifacts" -> Hardhat-compatible artifact dir
         "foundry-out" -> Foundry-compatible output
       }
-      -> formatUnsupported(format: String) {
+      -> ok(format: String) {
         Requested format not available.
       }
 

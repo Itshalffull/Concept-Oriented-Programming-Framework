@@ -49,7 +49,7 @@ concept ContentStore [B] {
       -> ok() {
         Re-hashes the stored blob and confirms it matches the recorded hash.
       }
-      -> corrupted(expected: String, actual: String) {
+      -> ok(expected: String, actual: String) {
         Stored data does not match its content hash; blob is corrupt.
       }
 

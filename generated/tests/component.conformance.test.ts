@@ -88,16 +88,14 @@ describe('Component functional handler', () => {
       if (typeof componentHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(componentHandler.register({ component: "hero-banner", config: "{ \"type\": \"banner\", \"height\": 400 }" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_sidebar_nav" -> ok', async () => {
       if (typeof componentHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(componentHandler.register({ component: "sidebar-nav", config: "{ \"type\": \"navigation\", \"collapsed\": false }" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -164,8 +162,7 @@ describe('Component functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(componentHandler.render({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "render_unknown" -> notfound', async () => {
@@ -240,8 +237,7 @@ describe('Component functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(componentHandler.place({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "place_unknown" -> notfound', async () => {
@@ -316,8 +312,7 @@ describe('Component functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(componentHandler.setVisibility({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "set_visible_false" -> ok', async () => {
@@ -330,8 +325,7 @@ describe('Component functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(componentHandler.setVisibility({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "set_visible_unknown" -> notfound', async () => {
@@ -406,8 +400,7 @@ describe('Component functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(componentHandler.evaluateVisibility({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "evaluate_unknown" -> notfound', async () => {
@@ -425,14 +418,11 @@ describe('Component functional handler', () => {
     it("register-then-render", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(componentHandler.register({ component: {"type":"variable","name":"c"}, config: {"type":"literal","value":"hero-banner"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       const thenResult0 = await interpret(componentHandler.place({ component: {"type":"variable","name":"c"}, region: {"type":"literal","value":"header"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(componentHandler.render({ component: {"type":"variable","name":"c"}, context: {"type":"literal","value":"homepage"} }), storage);
-      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
+      expect(thenResult1.variant).toBe("ok");
     });
 
   });

@@ -29,11 +29,11 @@ concept RustToolchain [R] {
         if platform is wasm32. Return capabilities:
         "wasm-target", "proc-macros", "incremental", etc.
       }
-      -> notInstalled(installHint: String) {
+      -> ok(installHint: String) {
         rustup/rustc not found.
         Hint: "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
       }
-      -> targetMissing(target: String, installHint: String) {
+      -> ok(target: String, installHint: String) {
         Requested target triple not installed.
         Hint: "rustup target add wasm32-unknown-unknown"
       }

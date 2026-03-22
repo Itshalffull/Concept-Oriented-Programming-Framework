@@ -88,8 +88,7 @@ describe('TokenRemapProvider functional handler', () => {
       if (typeof tokenRemapProviderHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(tokenRemapProviderHandler.register({  }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -156,8 +155,7 @@ describe('TokenRemapProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(tokenRemapProviderHandler.apply({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_mappings" -> ok', async () => {
@@ -170,8 +168,7 @@ describe('TokenRemapProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(tokenRemapProviderHandler.apply({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_program_json" -> error', async () => {
@@ -209,14 +206,12 @@ describe('TokenRemapProvider functional handler', () => {
     it("apply remaps token paths and handles empty mappings", async () => {
       const storage = createInMemoryStorage();
       const applyResult0 = await interpret(tokenRemapProviderHandler.apply({ program: {"type":"literal","value":"{\"instructions\":[{\"tag\":\"token\",\"path\":\"palette.primary\"}]}"}, spec: {"type":"literal","value":"{\"mappings\":{\"palette.primary\":\"palette.dark\"}}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(applyResult0.variant), `step 0: expected success but got '${applyResult0.variant}'`).toBe(false);
+      expect(applyResult0.variant).toBe("ok");
       let result = applyResult0.output["result"];
       let transformed = applyResult0.output["transformed"];
       let appliedTransforms = applyResult0.output["appliedTransforms"];
       const thenResult0 = await interpret(tokenRemapProviderHandler.apply({ program: {"type":"literal","value":"{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}"}, spec: {"type":"literal","value":"{\"mappings\":{}}"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

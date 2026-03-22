@@ -32,7 +32,7 @@ concept PeerAllocation [PA] {
 
   actions {
     action openRound(budget: Int, deadlineDays: Float) {
-      -> opened(round: PA) {
+      -> ok(round: PA) {
         A new allocation round begins. Each participant receives the
         budget amount of tokens to distribute to others.
       }
@@ -42,16 +42,16 @@ concept PeerAllocation [PA] {
     }
 
     action allocate(round: PA, allocator: String, recipient: String, amount: Int, note: option String) {
-      -> allocated(round: PA) {
+      -> ok(round: PA) {
         Tokens are allocated from the allocator's budget to the recipient.
       }
-      -> budget_exceeded(allocator: String, remaining: Int, requested: Int) {
+      -> ok(allocator: String, remaining: Int, requested: Int) {
         The allocator does not have enough budget remaining.
       }
-      -> self_allocation(allocator: String) {
+      -> ok(allocator: String) {
         Cannot allocate to oneself.
       }
-      -> round_closed(round: PA) {
+      -> ok(round: PA) {
         The round is no longer accepting allocations.
       }
 
@@ -60,7 +60,7 @@ concept PeerAllocation [PA] {
     }
 
     action finalize(round: PA) {
-      -> finalized(round: PA, results: String) {
+      -> ok(round: PA, results: String) {
         The round is closed and results are computed. Each participant's
         received total and number of distinct givers are calculated.
       }
@@ -72,11 +72,11 @@ concept PeerAllocation [PA] {
 
   example "openRound-then-finalize": {
 
-    after openRound(budget: 100, deadlineDays: 7.0) -> opened(round: pa)
+    after openRound(budget: 100, deadlineDays: 7.0) -> ok(round: pa)
 
-        then allocate(round: pa, allocator: a, recipient: b, amount: 30, note: _) -> allocated(round: pa)
+        then allocate(round: pa, allocator: a, recipient: b, amount: 30, note: _) -> ok(round: pa)
 
-        and  finalize(round: pa) -> finalized(round: pa, results: _)
+        and  finalize(round: pa) -> ok(round: pa, results: _)
 
   }
 
@@ -85,7 +85,7 @@ concept PeerAllocation [PA] {
 
     requires: budget != ""
 
-    ensures opened: budget != none
+    ensures ok: budget != none
 
   }
 }

@@ -58,10 +58,10 @@ concept VersionSpace [V] {
         is set to an entity ID, the space covers only that entity and its
         descendants. The space starts with zero overrides.
       }
-      -> parent_not_found(parent: V) {
+      -> ok(parent: V) {
         The specified parent version space does not exist or is archived.
       }
-      -> scope_not_found(scope: String) {
+      -> ok(scope: String) {
         The scoped entity does not exist.
       }
 
@@ -76,10 +76,10 @@ concept VersionSpace [V] {
         onto their version context stack if entering a sub-space within
         an already-active parent space.
       }
-      -> access_denied(user: String) {
+      -> ok(user: String) {
         The user is not a member of a private or shared space.
       }
-      -> archived(space: V) {
+      -> ok(space: V) {
         The space is archived and cannot be entered.
       }
 
@@ -104,7 +104,7 @@ concept VersionSpace [V] {
         Creates or updates a copy-on-write override in this space storing
         only the changed fields as a delta, not a full copy.
       }
-      -> read_only(space: V, user: String) {
+      -> ok(space: V, user: String) {
         The user has viewer role and cannot write in this space.
       }
 
@@ -154,7 +154,7 @@ concept VersionSpace [V] {
         Transitions the space to status=proposed, signaling that the owner
         wants its overrides merged into the target space or into base.
       }
-      -> already_proposed(space: V) {
+      -> ok(space: V) {
         The space is already in proposed status.
       }
 
@@ -168,7 +168,7 @@ concept VersionSpace [V] {
         materialize in the target, deleted entities are removed, and modified
         entities are updated. The source space transitions to status=merged.
       }
-      -> conflicts(conflicts: String) {
+      -> ok(conflicts: String) {
         Unresolvable conflicts exist between the source overrides and the
         target's current state. Returns the conflict set for manual resolution.
       }
@@ -183,10 +183,10 @@ concept VersionSpace [V] {
         without merging either into the other. Both spaces survive and remain
         active. Direction is a_to_b, b_to_a, or bidirectional.
       }
-      -> conflicts(conflicts: String) {
+      -> ok(conflicts: String) {
         Bidirectional conflicts that could not be auto-resolved.
       }
-      -> incompatible_scope(space_a: V, space_b: V) {
+      -> ok(space_a: V, space_b: V) {
         The two spaces have non-overlapping scopes and share no entities.
       }
 
@@ -199,7 +199,7 @@ concept VersionSpace [V] {
         Copies a single entity's override from the source space into the
         target space without modifying the source.
       }
-      -> not_overridden(source: V, entity_id: String) {
+      -> ok(source: V, entity_id: String) {
         The source space has no override for this entity.
       }
       -> conflict(existing_override: String, incoming_override: String) {
@@ -217,11 +217,11 @@ concept VersionSpace [V] {
         base storage, recalculates other active spaces' overrides relative
         to the new base, and archives the promoted space.
       }
-      -> has_children(children: list V) {
+      -> ok(children: list V) {
         The space has active sub-spaces that must be merged or archived
         before promotion.
       }
-      -> access_denied() {
+      -> ok() {
         Only the space owner and system admins can promote to base.
       }
 
@@ -235,7 +235,7 @@ concept VersionSpace [V] {
         Overrides now redundant with base are dissolved. The space's
         fork point is updated to the current base and remains active.
       }
-      -> conflicts(conflicts: String) {
+      -> ok(conflicts: String) {
         Base changes conflict with overrides in this space.
       }
 
@@ -269,7 +269,7 @@ concept VersionSpace [V] {
         then restores the previous context. Enables automation providers to
         run within a specific version space.
       }
-      -> space_not_found(space: V) {
+      -> ok(space: V) {
         The specified space does not exist or is archived.
       }
 
@@ -297,7 +297,7 @@ concept VersionSpace [V] {
     after fork(name: "to-archive", parent: null, scope: null,
                visibility: "private") -> ok(space: s)
     and   archive(space: s) -> ok()
-    then  enter(space: s, user: "u1") -> archived(space: s)
+    then  enter(space: s, user: "u1") -> ok(space: s)
   }
 
 

@@ -88,16 +88,14 @@ describe('Cache functional handler', () => {
       if (typeof cacheHandler.set !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(cacheHandler.set({ bin: "render", key: "home-page", data: "<html>home</html>", tags: "page,frontpage", maxAge: "600" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "set_missing_bin" -> ok', async () => {
       if (typeof cacheHandler.set !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(cacheHandler.set({ bin: "", key: "orphan", data: "test", tags: "", maxAge: "0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -164,8 +162,7 @@ describe('Cache functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(cacheHandler.get({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_nonexistent" -> error', async () => {
@@ -239,8 +236,7 @@ describe('Cache functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(cacheHandler.invalidate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalidate_missing" -> error', async () => {
@@ -314,8 +310,7 @@ describe('Cache functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(cacheHandler.invalidateByTags({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalidate_empty_tags" -> ok', async () => {
@@ -328,8 +323,7 @@ describe('Cache functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(cacheHandler.invalidateByTags({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -354,21 +348,17 @@ describe('Cache functional handler', () => {
     it("set-then-get-2", async () => {
       const storage = createInMemoryStorage();
       const setResult0 = await interpret(cacheHandler.set({ bin: {"type":"variable","name":"b"}, key: {"type":"literal","value":"k"}, data: {"type":"literal","value":"v"}, tags: {"type":"literal","value":"t1"}, maxAge: {"type":"literal","value":300} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(setResult0.variant), `step 0: expected success but got '${setResult0.variant}'`).toBe(false);
+      expect(setResult0.variant).toBe("ok");
       const thenResult0 = await interpret(cacheHandler.get({ bin: {"type":"variable","name":"b"}, key: {"type":"literal","value":"k"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("set-then-get", async () => {
       const storage = createInMemoryStorage();
       const setResult0 = await interpret(cacheHandler.set({ bin: {"type":"variable","name":"b"}, key: {"type":"literal","value":"k"}, data: {"type":"literal","value":"v"}, tags: {"type":"literal","value":"t1"}, maxAge: {"type":"literal","value":300} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(setResult0.variant), `step 0: expected success but got '${setResult0.variant}'`).toBe(false);
+      expect(setResult0.variant).toBe("ok");
       const thenResult0 = await interpret(cacheHandler.invalidateByTags({ tags: {"type":"literal","value":"t1"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(cacheHandler.get({ bin: {"type":"variable","name":"b"}, key: {"type":"literal","value":"k"} }), storage);
       expect(thenResult1.variant).toBe("miss");
     });

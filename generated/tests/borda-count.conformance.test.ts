@@ -88,16 +88,14 @@ describe('BordaCount functional handler', () => {
       if (typeof bordaCountHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(bordaCountHandler.configure({ pointScheme: "Standard" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "dowdall_scheme" -> ok', async () => {
       if (typeof bordaCountHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(bordaCountHandler.configure({ pointScheme: "Dowdall" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_scheme" -> error', async () => {
@@ -166,8 +164,7 @@ describe('BordaCount functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_standard_scheme = await interpret(bordaCountHandler.configure({ pointScheme: "Standard" }), storage);
       const result = await interpret(bordaCountHandler.count({ config: afterResult_standard_scheme?.output?.["id"], rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]},{\"voter\":\"carol\",\"ranking\":[\"A\",\"C\",\"B\"]}]", weights: "{}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "borda_no_ballots" -> error', async () => {
@@ -200,10 +197,10 @@ describe('BordaCount functional handler', () => {
     it("configure-then-count", async () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(bordaCountHandler.configure({ pointScheme: {"type":"literal","value":"Standard"} }), storage);
-      expect(configureResult0.variant).toBe("configured");
+      expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
       const thenResult0 = await interpret(bordaCountHandler.count({ config: {"type":"variable","name":"bd"}, rankedBallots: {"type":"variable","name":"_"}, weights: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("winner");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });
@@ -220,7 +217,7 @@ describe('BordaCount functional handler', () => {
       }
     });
 
-    it('configure ensures on configured: ', async () => {
+    it('configure ensures on ok: ', async () => {
       if (typeof bordaCountHandler.configure !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -232,7 +229,7 @@ describe('BordaCount functional handler', () => {
               const program = bordaCountHandler.configure(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "configured") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

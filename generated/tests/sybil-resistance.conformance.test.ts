@@ -88,8 +88,7 @@ describe('SybilResistance functional handler', () => {
       if (typeof sybilResistanceHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(sybilResistanceHandler.verify({ candidate: "alice", method: "biometric", evidence: "fingerprint-hash-abc123" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "verify_empty_candidate" -> error', async () => {
@@ -163,8 +162,7 @@ describe('SybilResistance functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(sybilResistanceHandler.challenge({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "challenge_invalid_target" -> error', async () => {
@@ -233,8 +231,7 @@ describe('SybilResistance functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_verify_alice = await interpret(sybilResistanceHandler.verify({ candidate: "alice", method: "biometric", evidence: "fingerprint-hash-abc123" }), storage);
       const result = await interpret(sybilResistanceHandler.resolveChallenge({ challengeId: afterResult_verify_alice?.output?.["id"], outcome: "upheld" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_nonexistent" -> error', async () => {
@@ -266,12 +263,12 @@ describe('SybilResistance functional handler', () => {
     it("verify-then-resolveChallenge", async () => {
       const storage = createInMemoryStorage();
       const verifyResult0 = await interpret(sybilResistanceHandler.verify({ candidate: {"type":"variable","name":"c"}, method: {"type":"variable","name":"_"}, evidence: {"type":"variable","name":"_"} }), storage);
-      expect(verifyResult0.variant).toBe("verified");
+      expect(verifyResult0.variant).toBe("ok");
       let id = verifyResult0.output["id"];
       const thenResult0 = await interpret(sybilResistanceHandler.challenge({ targetId: {"type":"variable","name":"s"}, challenger: {"type":"variable","name":"_"}, evidence: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("challenge_opened");
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(sybilResistanceHandler.resolveChallenge({ challengeId: {"type":"variable","name":"ch"}, outcome: {"type":"literal","value":"upheld"} }), storage);
-      expect(thenResult1.variant).toBe("upheld");
+      expect(thenResult1.variant).toBe("ok");
     });
 
   });

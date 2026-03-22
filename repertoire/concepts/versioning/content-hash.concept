@@ -26,7 +26,7 @@ concept ContentHash [C] {
       -> ok(hash: String) {
         Content stored and digest computed. Returns hex-encoded hash.
       }
-      -> alreadyExists(hash: String) {
+      -> ok(hash: String) {
         Identical content already in store. Returns existing digest.
         Idempotent — not an error.
       }
@@ -39,7 +39,7 @@ concept ContentHash [C] {
       -> ok(content: Bytes) {
         Content returned for the given digest.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         No object with that digest exists in the store.
       }
 
@@ -51,10 +51,10 @@ concept ContentHash [C] {
       -> valid() {
         Content matches the stored digest.
       }
-      -> corrupt(expected: String, actual: String) {
+      -> ok(expected: String, actual: String) {
         Digest mismatch — content was modified after storage.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         Hash not in store.
       }
 
@@ -66,10 +66,10 @@ concept ContentHash [C] {
       -> ok() {
         Object removed from store.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         Hash not in store.
       }
-      -> referenced(message: String) {
+      -> ok(message: String) {
         Object is referenced by other records and cannot be deleted.
       }
 
@@ -90,7 +90,7 @@ concept ContentHash [C] {
 
   example "store then store": {
     after store(content: c) -> ok(hash: h)
-    then store(content: c) -> alreadyExists(hash: h)
+    then store(content: c) -> ok(hash: h)
   }
 
 

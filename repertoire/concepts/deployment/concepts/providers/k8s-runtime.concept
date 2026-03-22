@@ -30,10 +30,10 @@ concept K8sRuntime [K] {
       -> ok(deployment: K, serviceName: String, endpoint: String) {
         Kubernetes Deployment and Service created.
       }
-      -> resourceQuotaExceeded(namespace: String, resource: String, requested: String, limit: String) {
+      -> ok(namespace: String, resource: String, requested: String, limit: String) {
         Namespace resource quota would be exceeded.
       }
-      -> namespaceNotFound(namespace: String) {
+      -> ok(namespace: String) {
         Specified namespace does not exist.
       }
 
@@ -45,16 +45,16 @@ concept K8sRuntime [K] {
       -> ok(deployment: K, revision: String) {
         Rolling update initiated with new image.
       }
-      -> podCrashLoop(deployment: K, podName: String, restartCount: Int) {
+      -> ok(deployment: K, podName: String, restartCount: Int) {
         New pods are crash-looping after deployment.
       }
-      -> imageNotFound(imageUri: String) {
+      -> ok(imageUri: String) {
         Container image not found in registry.
       }
-      -> imagePullBackOff(deployment: K, imageUri: String, reason: String) {
+      -> ok(deployment: K, imageUri: String, reason: String) {
         Image exists but cannot be pulled due to auth or network issues.
       }
-      -> oomKilled(deployment: K, podName: String, memoryLimit: String) {
+      -> ok(deployment: K, podName: String, memoryLimit: String) {
         Container exceeded memory limit and was killed (exit code 137).
       }
 

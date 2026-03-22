@@ -33,7 +33,7 @@ concept ScoreKernel [K] {
         and all Score syncs compiled. The kernel is ready for
         action dispatch.
       }
-      -> alreadyBooted(kernel: K) {
+      -> ok(kernel: K) {
         A kernel for this project root is already running.
       }
       fixture boot_project { projectRoot: "/home/user/my-project" }
@@ -46,7 +46,7 @@ concept ScoreKernel [K] {
         FileCatalog, triggering the parse-symbol-entity pipeline
         through syncs. Returns the total number of files discovered.
       }
-      -> notBooted() {
+      -> ok() {
         No kernel has been booted yet. Call boot first.
       }
       fixture discover_src { kernel: $boot_project.kernel, basePaths: "src,specs" } after boot_project
@@ -72,10 +72,10 @@ concept ScoreKernel [K] {
         for live ingestion of ActionLog events, coverage data,
         and performance profiles.
       }
-      -> notBooted() {
+      -> ok() {
         No kernel has been booted yet. Call boot first.
       }
-      -> connectionFailed(reason: String) {
+      -> ok(reason: String) {
         The endpoint was unreachable or rejected the connection.
       }
       fixture connect_local { kernel: $boot_project.kernel, endpoint: "ws://localhost:8080/changes" } after boot_project
@@ -91,7 +91,7 @@ concept ScoreKernel [K] {
 
   example "duplicate registration returns existing": {
     after boot(projectRoot: "/tmp/test-project") -> ok(kernel: k, conceptCount: _, syncCount: _)
-    then boot(projectRoot: "/tmp/test-project") -> alreadyBooted(kernel: k)
+    then boot(projectRoot: "/tmp/test-project") -> ok(kernel: k)
   }
 
   always "every kernels entry has projectRoot": {

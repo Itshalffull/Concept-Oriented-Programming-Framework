@@ -6,7 +6,7 @@ sync ChangeStartsReverification [eager]
   purpose { Start reverification cascade when a concept spec change is detected. }
 when {
   Conformance/monitor: [ concept: ?concept ]
-    => specChanged(concept: ?concept; changedFields: ?fields; version: ?ver)
+    => ok(concept: ?concept; changedFields: ?fields; version: ?ver)
 }
 then {
   ProcessRun/start: [

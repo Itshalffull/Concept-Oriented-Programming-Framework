@@ -36,7 +36,7 @@ concept GraphqlProvider [Q] {
         Create a named GraphQL endpoint with URL, auth headers,
         and optional schema reference for validation.
       }
-      -> exists(name: String) {
+      -> ok(name: String) {
         An endpoint with this name is already configured.
       }
 
@@ -49,14 +49,14 @@ concept GraphqlProvider [Q] {
         Execute the GraphQL operation against the named endpoint,
         passing variables. Returns the data field from the response.
       }
-      -> notFound(endpoint: String) {
+      -> ok(endpoint: String) {
         No endpoint is configured with this name.
       }
-      -> graphqlErrors(errors: String) {
+      -> ok(errors: String) {
         The GraphQL server returned errors in the response. Errors
         are serialized as a JSON array of error objects.
       }
-      -> networkError(message: String) {
+      -> ok(message: String) {
         The request failed at the network level before reaching
         the GraphQL server.
       }
@@ -77,7 +77,7 @@ concept GraphqlProvider [Q] {
 
   example "execute fails for unknown endpoint": {
     after configure(name: "github-api", url: "https://api.github.com/graphql", headers: "{}", schemaRef: "") -> ok(endpoint: q)
-    then execute(endpoint: "unknown-api", query: "{ viewer { login } }", variables: "{}", operationType: "query") -> notFound(endpoint: "unknown-api")
+    then execute(endpoint: "unknown-api", query: "{ viewer { login } }", variables: "{}", operationType: "query") -> ok(endpoint: "unknown-api")
   }
 
   always "endpoints have valid name": {

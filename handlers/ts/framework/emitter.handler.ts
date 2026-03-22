@@ -253,7 +253,7 @@ const _handler: FunctionalConceptHandler = {
           if (file.sources && file.sources.length > 0) {
             r = put(r, SOURCE_MAP_RELATION, key, { path: file.path, sources: file.sources });
           }
-          return complete(r, 'written', { path: file.path, written: true, contentHash: hash });
+          return complete(r, 'ok', { path: file.path, written: true, contentHash: hash });
         },
       );
     }, '_batchResults', { reads: ['files'], writes: ['files', 'sourceMap'], completionVariants: ['checked', 'written'] });

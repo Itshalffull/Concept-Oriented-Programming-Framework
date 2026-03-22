@@ -88,16 +88,14 @@ describe('LensExtractionProvider functional handler', () => {
       if (typeof lensExtractionProviderHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(lensExtractionProviderHandler.analyze({ program: "{\"instructions\":[{\"tag\":\"get\",\"relation\":\"users\",\"key\":\"u1\",\"bindAs\":\"user\"}],\"terminated\":false,\"effects\":{\"reads\":[\"users\"],\"writes\":[]}}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "program_with_put" -> ok', async () => {
       if (typeof lensExtractionProviderHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(lensExtractionProviderHandler.analyze({ program: "{\"instructions\":[{\"tag\":\"put\",\"relation\":\"orders\",\"key\":\"o1\",\"value\":{\"total\":100}}],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[\"orders\"]}}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_json" -> error', async () => {
@@ -129,8 +127,7 @@ describe('LensExtractionProvider functional handler', () => {
     it("get instruction extracts lens reference", async () => {
       const storage = createInMemoryStorage();
       const analyzeResult0 = await interpret(lensExtractionProviderHandler.analyze({ program: {"type":"literal","value":"{\"instructions\":[{\"tag\":\"get\",\"relation\":\"users\",\"key\":\"u1\",\"bindAs\":\"user\"}],\"terminated\":false,\"effects\":{\"reads\":[\"users\"],\"writes\":[]}}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(analyzeResult0.variant), `step 0: expected success but got '${analyzeResult0.variant}'`).toBe(false);
+      expect(analyzeResult0.variant).toBe("ok");
       let result = analyzeResult0.output["result"];
       let lenses = analyzeResult0.output["lenses"];
       let accessPattern = analyzeResult0.output["accessPattern"];

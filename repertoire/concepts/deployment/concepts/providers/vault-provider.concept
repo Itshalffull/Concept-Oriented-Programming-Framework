@@ -32,13 +32,13 @@ concept VaultProvider [V] {
         Secret retrieved from Vault KV v2.
         Lease tracked for renewal.
       }
-      -> sealed(address: String) {
+      -> ok(address: String) {
         Vault is sealed. Manual unseal required.
       }
-      -> tokenExpired(address: String) {
+      -> ok(address: String) {
         Auth token expired. Re-authentication needed.
       }
-      -> pathNotFound(path: String) {
+      -> ok(path: String) {
         Secret path does not exist in Vault.
       }
 
@@ -51,7 +51,7 @@ concept VaultProvider [V] {
       -> ok(leaseId: String, newDuration: Int) {
         Lease renewed.
       }
-      -> leaseExpired(leaseId: String) {
+      -> ok(leaseId: String) {
         Lease already expired. Must re-fetch.
       }
 

@@ -29,7 +29,7 @@ concept RuntimeRegistry [C] {
       -> ok() {
         Record that a concept is registered in the kernel.
       }
-      -> already_registered() {
+      -> ok() {
         This concept URI is already registered.
       }
 
@@ -41,7 +41,7 @@ concept RuntimeRegistry [C] {
       -> ok() {
         Record that a sync is loaded in the kernel.
       }
-      -> already_registered() {
+      -> ok() {
         This sync name is already registered.
       }
 
@@ -107,7 +107,7 @@ concept RuntimeRegistry [C] {
 
         then registerConcept(uri: "urn:clef/ContentNode", has_storage: true, storage_name: "content-node", storage_type: "standard")
 
-          -> already_registered()
+          -> ok()
 
   }
 

@@ -5,7 +5,7 @@
 sync LockBlocksMerge [eager]
 when {
   ConflictResolution/detect: [ base: ?base; version1: ?v1; version2: ?v2; context: ?ctx ]
-    => [ detected(conflictId: ?conflictId, detail: ?detail) ]
+    => [ ok(conflictId: ?conflictId, detail: ?detail) ]
 }
 then {
   PessimisticLock/queryLocks: [ resource: ?ctx ]

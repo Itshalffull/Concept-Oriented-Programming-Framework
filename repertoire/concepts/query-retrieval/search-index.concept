@@ -20,7 +20,7 @@ concept SearchIndex [I] {
         Initialize a new search index with the given
         configuration including backend and analyzer settings.
       }
-      -> exists(index: I) {
+      -> ok(index: I) {
         An index with this identifier already exists.
       }
 

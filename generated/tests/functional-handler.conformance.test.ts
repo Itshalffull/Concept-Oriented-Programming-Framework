@@ -37,16 +37,14 @@ describe('FunctionalHandler imperative handler', () => {
       if (typeof functionalHandlerHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await functionalHandlerHandler.register({ handler: "handler-user-create", concept: "User", action: "create", purity: "read-write", variants: "[\"ok\",\"error\"]" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_pure" -> ok', async () => {
       if (typeof functionalHandlerHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await functionalHandlerHandler.register({ handler: "handler-ping", concept: "Ping", action: "ping", purity: "pure", variants: "[\"ok\"]" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_empty_concept" -> error', async () => {
@@ -72,8 +70,7 @@ describe('FunctionalHandler imperative handler', () => {
       if (typeof functionalHandlerHandler.build !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await functionalHandlerHandler.build({ handler: "handler-user-create", input: "{\"name\":\"Alice\"}" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "build_missing_handler" -> error', async () => {
@@ -105,8 +102,7 @@ describe('FunctionalHandler imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await functionalHandlerHandler.list({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "list_empty" -> error', async () => {
@@ -138,8 +134,7 @@ describe('FunctionalHandler imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await functionalHandlerHandler.validatePurity({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "validate_missing_handler" -> error', async () => {
@@ -156,40 +151,34 @@ describe('FunctionalHandler imperative handler', () => {
     it("register then build produces program", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await functionalHandlerHandler.register({ handler: {"type":"variable","name":"h"}, concept: {"type":"literal","value":"User"}, action: {"type":"literal","value":"create"}, purity: {"type":"literal","value":"read-write"} }, storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       const buildResult1 = await functionalHandlerHandler.build({ handler: {"type":"variable","name":"h"}, input: {"type":"literal","value":"{ name: 'Alice' }"} }, storage);
-      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr1(buildResult1.variant), `step 1: expected success but got '${buildResult1.variant}'`).toBe(false);
+      expect(buildResult1.variant).toBe("ok");
       let program = buildResult1.output["program"];
     });
 
     it("duplicate registration returns exists", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await functionalHandlerHandler.register({ handler: {"type":"variable","name":"h"}, concept: {"type":"literal","value":"User"}, action: {"type":"literal","value":"create"}, purity: {"type":"literal","value":"read-write"} }, storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       const thenResult0 = await functionalHandlerHandler.register({ handler: {"type":"variable","name":"h"}, concept: {"type":"literal","value":"User"}, action: {"type":"literal","value":"create"}, purity: {"type":"literal","value":"read-write"} }, storage);
-      expect(thenResult0.variant).toBe("exists");
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("validatePurity detects violation", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await functionalHandlerHandler.register({ handler: {"type":"variable","name":"h"}, concept: {"type":"literal","value":"User"}, action: {"type":"literal","value":"create"}, purity: {"type":"literal","value":"read-only"} }, storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       const thenResult0 = await functionalHandlerHandler.validatePurity({ handler: {"type":"variable","name":"h"}, program: {"type":"literal","value":"put(users, u1, data)"} }, storage);
-      expect(thenResult0.variant).toBe("violation");
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("list returns handlers for concept", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await functionalHandlerHandler.register({ handler: {"type":"variable","name":"h"}, concept: {"type":"literal","value":"User"}, action: {"type":"literal","value":"create"}, purity: {"type":"literal","value":"read-write"} }, storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       const thenResult0 = await functionalHandlerHandler.list({ concept: {"type":"literal","value":"User"} }, storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

@@ -88,16 +88,14 @@ describe('AlloySolverEndpoint functional handler', () => {
       if (typeof alloySolverEndpointHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(alloySolverEndpointHandler.register({ name: "alloy-local", jarPath: "/opt/alloy/alloy.jar", scope: "5", timeout: "60000", options: "" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "alloy_custom" -> ok', async () => {
       if (typeof alloySolverEndpointHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(alloySolverEndpointHandler.register({ name: "alloy-ci", jarPath: "/usr/share/alloy/alloy6.jar", scope: "10", timeout: "120000", options: "-Xmx4g" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_name" -> error', async () => {
@@ -171,8 +169,7 @@ describe('AlloySolverEndpoint functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(alloySolverEndpointHandler.check({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "check_missing_endpoint" -> error', async () => {
@@ -246,8 +243,7 @@ describe('AlloySolverEndpoint functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(alloySolverEndpointHandler.resolve({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_missing" -> error', async () => {
@@ -264,12 +260,10 @@ describe('AlloySolverEndpoint functional handler', () => {
     it("check after register", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(alloySolverEndpointHandler.register({ name: {"type":"literal","value":"alloy-local"}, jarPath: {"type":"literal","value":"/opt/alloy/alloy.jar"}, scope: {"type":"literal","value":5}, timeout: {"type":"literal","value":60000}, options: {"type":"literal","value":""} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let endpoint = registerResult0.output["endpoint"];
       const thenResult0 = await interpret(alloySolverEndpointHandler.resolve({ name: {"type":"literal","value":"alloy-local"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

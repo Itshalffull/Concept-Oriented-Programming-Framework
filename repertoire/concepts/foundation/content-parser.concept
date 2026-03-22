@@ -19,7 +19,7 @@ concept ContentParser [C] {
       -> ok(name: String) {
         Register a text format with its parsing grammar.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         The format is already registered.
       }
 
@@ -31,7 +31,7 @@ concept ContentParser [C] {
       -> ok(name: String) {
         Register an extractor that identifies patterns in parsed text.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         The extractor is already registered.
       }
 

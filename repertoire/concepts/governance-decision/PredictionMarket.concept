@@ -37,7 +37,7 @@ concept PredictionMarket [PM] {
 
   actions {
     action createMarket(question: String, outcomes: list String, deadline: DateTime) {
-      -> created(market: PM) {
+      -> ok(market: PM) {
         A new prediction market is created in Open status.
         Initial prices are set uniformly across outcomes.
       }
@@ -48,14 +48,14 @@ concept PredictionMarket [PM] {
     }
 
     action trade(market: PM, trader: String, outcome: String, amount: Float) {
-      -> traded(market: PM, sharesReceived: Float, newPrice: Float) {
+      -> ok(market: PM, sharesReceived: Float, newPrice: Float) {
         The trader buys shares in the specified outcome.
         Price is updated per the AMM formula.
       }
-      -> market_closed(market: PM) {
+      -> ok(market: PM) {
         The market is no longer open for trading.
       }
-      -> invalid_outcome(market: PM, outcome: String) {
+      -> ok(market: PM, outcome: String) {
         The outcome is not a valid option for this market.
       }
 
@@ -64,11 +64,11 @@ concept PredictionMarket [PM] {
     }
 
     action resolve(market: PM, outcome: String) {
-      -> resolved(market: PM, winningOutcome: String) {
+      -> ok(market: PM, winningOutcome: String) {
         The market is resolved with the given outcome.
         Winning share holders can claim payouts.
       }
-      -> already_resolved(market: PM) {
+      -> ok(market: PM) {
         The market has already been resolved.
       }
 
@@ -77,13 +77,13 @@ concept PredictionMarket [PM] {
     }
 
     action claimPayout(market: PM, trader: String) {
-      -> payout(market: PM, trader: String, amount: Float) {
+      -> ok(market: PM, trader: String, amount: Float) {
         The trader receives payout for their winning shares.
       }
-      -> no_winnings(market: PM, trader: String) {
+      -> ok(market: PM, trader: String) {
         The trader holds no winning shares.
       }
-      -> not_resolved(market: PM) {
+      -> ok(market: PM) {
         The market has not been resolved yet.
       }
 
@@ -94,11 +94,11 @@ concept PredictionMarket [PM] {
 
   example "createMarket-then-resolve": {
 
-    after createMarket(question: _, outcomes: _, deadline: _) -> created(market: pm)
+    after createMarket(question: _, outcomes: _, deadline: _) -> ok(market: pm)
 
-        then trade(market: pm, trader: _, outcome: _, amount: _) -> traded(market: pm, sharesReceived: _, newPrice: _)
+        then trade(market: pm, trader: _, outcome: _, amount: _) -> ok(market: pm, sharesReceived: _, newPrice: _)
 
-        and  resolve(market: pm, outcome: o) -> resolved(market: pm, winningOutcome: o)
+        and  resolve(market: pm, outcome: o) -> ok(market: pm, winningOutcome: o)
 
   }
 
@@ -123,7 +123,7 @@ concept PredictionMarket [PM] {
 
     requires: question != ""
 
-    ensures created: question != none
+    ensures ok: question != none
 
   }
 }

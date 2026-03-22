@@ -46,7 +46,7 @@ concept WidgetPropEntity [P] {
         Trace this prop back to the concept state field it
         is bound to, via the Binding concept.
       }
-      -> noBinding() {
+      -> ok() {
         This prop is not bound to any concept field.
       }
       fixture trace_prop { prop: $register_close_escape.prop } after register_close_escape

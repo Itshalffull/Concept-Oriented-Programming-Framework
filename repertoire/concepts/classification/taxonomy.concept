@@ -11,7 +11,7 @@ concept Taxonomy [V] {
   actions {
     action createVocabulary(vocab: V, name: String) {
       -> ok() { Create a new named vocabulary. }
-      -> exists(message: String) { Vocabulary already exists. }
+      -> ok(message: String) { Vocabulary already exists. }
 
       fixture create_topics_vocab { vocab: "vocab-topics-1", name: "topics" }
       fixture create_empty_vocab { vocab: "", name: "unnamed" }

@@ -36,11 +36,11 @@ concept AnalysisOverlay [O] {
         - heat-map: { nodeId: string, intensity: number }[]
         - label-annotation: { nodeId: string, label: string, position: string }[]
       }
-      -> unsupported_kind(message: String) {
+      -> ok(message: String) {
         The requested overlay kind is not supported for the given
         analysis result category.
       }
-      -> invalid_result(message: String) {
+      -> ok(message: String) {
         The analysis result reference is invalid or has been cleared.
       }
 

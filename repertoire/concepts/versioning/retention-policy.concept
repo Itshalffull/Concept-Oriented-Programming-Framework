@@ -34,7 +34,7 @@ concept RetentionPolicy [R] {
       -> ok(policyId: R) {
         Retention policy created for the given record type.
       }
-      -> alreadyExists(message: String) {
+      -> ok(message: String) {
         A policy already exists for this record type.
       }
 
@@ -55,10 +55,10 @@ concept RetentionPolicy [R] {
       -> ok() {
         Hold released. Records revert to normal retention rules.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         Hold not found.
       }
-      -> alreadyReleased(message: String) {
+      -> ok(message: String) {
         Hold was already released.
       }
 
@@ -73,7 +73,7 @@ concept RetentionPolicy [R] {
       -> retained(reason: String, until: String) {
         Record is within its retention period.
       }
-      -> held(holdNames: list String) {
+      -> ok(holdNames: list String) {
         Record matches one or more active legal holds.
       }
 
@@ -88,7 +88,7 @@ concept RetentionPolicy [R] {
       -> retained(reason: String) {
         Retention period not yet elapsed.
       }
-      -> held(holdNames: list String) {
+      -> ok(holdNames: list String) {
         Active holds prevent disposition.
       }
 
@@ -108,7 +108,7 @@ concept RetentionPolicy [R] {
 
   example "applyHold then dispose": {
     after applyHold(name: "litigation-2024", scope: "matter:123/*", reason: "pending case", issuer: "legal") -> ok(holdId: h)
-    then dispose(record: "matter:123/doc-1", disposedBy: "system") -> held(holdNames: ["litigation-2024"])
+    then dispose(record: "matter:123/doc-1", disposedBy: "system") -> ok(holdNames: ["litigation-2024"])
   }
 
   example "setRetention then checkDisposition": {

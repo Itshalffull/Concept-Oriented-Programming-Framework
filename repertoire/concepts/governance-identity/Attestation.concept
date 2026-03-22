@@ -25,7 +25,7 @@ concept Attestation [A] {
 
   actions {
     action attest(schema: String, attester: String, recipient: String, data: String, expiry: option DateTime) {
-      -> created(attestation: A) {
+      -> ok(attestation: A) {
         A new attestation is recorded with the given schema, attester,
         recipient, and data. Revoked is set to false.
       }
@@ -35,7 +35,7 @@ concept Attestation [A] {
     }
 
     action revoke(attestation: A, revoker: String) {
-      -> revoked(attestation: A) {
+      -> ok(attestation: A) {
         The attestation is marked as revoked. Only the original attester
         can revoke.
       }
@@ -54,10 +54,10 @@ concept Attestation [A] {
       -> valid(attestation: A) {
         The attestation exists, is not revoked, and has not expired.
       }
-      -> expired(attestation: A) {
+      -> ok(attestation: A) {
         The attestation exists but has passed its expiry.
       }
-      -> revoked_status(attestation: A) {
+      -> ok(attestation: A) {
         The attestation has been revoked.
       }
       -> not_found(attestation: A) {
@@ -71,13 +71,13 @@ concept Attestation [A] {
 
   example "attest-then-verify": {
 
-    after attest(schema: _, attester: _, recipient: _, data: _, expiry: _) -> created(attestation: a)
+    after attest(schema: _, attester: _, recipient: _, data: _, expiry: _) -> ok(attestation: a)
 
         then verify(attestation: a) -> valid(attestation: a)
 
-        and  revoke(attestation: a, revoker: _) -> revoked(attestation: a)
+        and  revoke(attestation: a, revoker: _) -> ok(attestation: a)
 
-        and  verify(attestation: a) -> revoked_status(attestation: a)
+        and  verify(attestation: a) -> ok(attestation: a)
 
   }
 
@@ -102,7 +102,7 @@ concept Attestation [A] {
 
     requires: schema != ""
 
-    ensures created: schema != none
+    ensures ok: schema != none
 
   }
 }

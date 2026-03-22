@@ -94,8 +94,7 @@ describe('ThemeParser functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(themeParserHandler.parse({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "legacy_tokens_only" -> ok', async () => {
@@ -108,8 +107,7 @@ describe('ThemeParser functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(themeParserHandler.parse({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_json_source" -> error', async () => {
@@ -190,8 +188,7 @@ describe('ThemeParser functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(themeParserHandler.checkContrast({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "unparsed_theme" -> violations', async () => {
@@ -224,13 +221,11 @@ describe('ThemeParser functional handler', () => {
     it("parsed theme can pass contrast check", async () => {
       const storage = createInMemoryStorage();
       const parseResult0 = await interpret(themeParserHandler.parse({ theme: {"type":"variable","name":"h"}, source: {"type":"literal","value":"theme light { ... }"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(parseResult0.variant), `step 0: expected success but got '${parseResult0.variant}'`).toBe(false);
+      expect(parseResult0.variant).toBe("ok");
       let theme = parseResult0.output["theme"];
       let ast = parseResult0.output["ast"];
       const thenResult0 = await interpret(themeParserHandler.checkContrast({ theme: {"type":"variable","name":"h"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

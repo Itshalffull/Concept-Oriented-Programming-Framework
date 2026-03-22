@@ -88,16 +88,14 @@ describe('BFTFinality functional handler', () => {
       if (typeof bftFinalityHandler.configureCommittee !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(bftFinalityHandler.configureCommittee({ validators: "[\"val-1\",\"val-2\",\"val-3\"]", faultTolerance: "2/3", protocol: "PBFT" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_hotstuff" -> ok', async () => {
       if (typeof bftFinalityHandler.configureCommittee !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(bftFinalityHandler.configureCommittee({ validators: "[\"node-a\",\"node-b\",\"node-c\",\"node-d\"]", faultTolerance: "2/3", protocol: "HotStuff" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_empty_validators" -> error', async () => {
@@ -166,8 +164,7 @@ describe('BFTFinality functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_pbft = await interpret(bftFinalityHandler.configureCommittee({ validators: "[\"val-1\",\"val-2\",\"val-3\"]", faultTolerance: "2/3", protocol: "PBFT" }), storage);
       const result = await interpret(bftFinalityHandler.proposeFinality({ committee: afterResult_configure_pbft?.output?.["id"], operationRef: afterResult_configure_pbft?.output?.["id"], proposer: afterResult_configure_pbft?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "propose_unknown_committee" -> error', async () => {
@@ -236,8 +233,7 @@ describe('BFTFinality functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_pbft = await interpret(bftFinalityHandler.configureCommittee({ validators: "[\"val-1\",\"val-2\",\"val-3\"]", faultTolerance: "2/3", protocol: "PBFT" }), storage);
       const result = await interpret(bftFinalityHandler.vote({ committee: afterResult_configure_pbft?.output?.["id"], roundNumber: "1", validator: afterResult_configure_pbft?.output?.["id"], approve: "true" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "vote_reject" -> ok', async () => {
@@ -245,8 +241,7 @@ describe('BFTFinality functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_pbft = await interpret(bftFinalityHandler.configureCommittee({ validators: "[\"val-1\",\"val-2\",\"val-3\"]", faultTolerance: "2/3", protocol: "PBFT" }), storage);
       const result = await interpret(bftFinalityHandler.vote({ committee: afterResult_configure_pbft?.output?.["id"], roundNumber: "1", validator: afterResult_configure_pbft?.output?.["id"], approve: "false" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "vote_not_member" -> error', async () => {
@@ -315,8 +310,7 @@ describe('BFTFinality functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_pbft = await interpret(bftFinalityHandler.configureCommittee({ validators: "[\"val-1\",\"val-2\",\"val-3\"]", faultTolerance: "2/3", protocol: "PBFT" }), storage);
       const result = await interpret(bftFinalityHandler.checkConsensus({ committee: afterResult_configure_pbft?.output?.["id"], roundNumber: "1" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "check_consensus_insufficient" -> ok', async () => {
@@ -324,8 +318,7 @@ describe('BFTFinality functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_pbft = await interpret(bftFinalityHandler.configureCommittee({ validators: "[\"val-1\",\"val-2\",\"val-3\"]", faultTolerance: "2/3", protocol: "PBFT" }), storage);
       const result = await interpret(bftFinalityHandler.checkConsensus({ committee: afterResult_configure_pbft?.output?.["id"], roundNumber: "2" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "check_consensus_unknown_round" -> error', async () => {
@@ -357,10 +350,10 @@ describe('BFTFinality functional handler', () => {
     it("configureCommittee-then-proposeFinality", async () => {
       const storage = createInMemoryStorage();
       const configureCommitteeResult0 = await interpret(bftFinalityHandler.configureCommittee({ validators: {"type":"variable","name":"_"}, faultTolerance: {"type":"literal","value":0.333}, protocol: {"type":"literal","value":"PBFT"} }), storage);
-      expect(configureCommitteeResult0.variant).toBe("configured");
+      expect(configureCommitteeResult0.variant).toBe("ok");
       let committee = configureCommitteeResult0.output["committee"];
       const thenResult0 = await interpret(bftFinalityHandler.proposeFinality({ committee: {"type":"variable","name":"bf"}, operationRef: {"type":"variable","name":"_"}, proposer: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("proposed");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });
@@ -447,7 +440,7 @@ describe('BFTFinality functional handler', () => {
       }
     });
 
-    it('configureCommittee ensures on configured: ', async () => {
+    it('configureCommittee ensures on ok: ', async () => {
       if (typeof bftFinalityHandler.configureCommittee !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -459,7 +452,7 @@ describe('BFTFinality functional handler', () => {
               const program = bftFinalityHandler.configureCommittee(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "configured") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

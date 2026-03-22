@@ -43,7 +43,7 @@ concept DiagramExport [X] {
 
     action detectFormat(data: Bytes) {
       -> ok(format: String, confidence: Float) { Identifies format. }
-      -> unknown(message: String) { Cannot determine. }
+      -> ok(message: String) { Cannot determine. }
 
       fixture detect_json { data: "{\"nodes\":[]}" } after export_svg
       fixture detect_svg { data: "<svg xmlns=\"http://www.w3.org/2000/svg\"></svg>" } after export_svg

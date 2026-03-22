@@ -94,8 +94,7 @@ describe('TestGenSwift functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(testGenSwiftHandler.render({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "render_invalid_json" -> error', async () => {
@@ -169,8 +168,7 @@ describe('TestGenSwift functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(testGenSwiftHandler.renderBatch({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "batch_empty" -> error', async () => {
@@ -244,8 +242,7 @@ describe('TestGenSwift functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(testGenSwiftHandler.listRendered({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "list_empty" -> error', async () => {
@@ -277,8 +274,7 @@ describe('TestGenSwift functional handler', () => {
     it("render produces XCTest code", async () => {
       const storage = createInMemoryStorage();
       const renderResult0 = await interpret(testGenSwiftHandler.render({ test_plan: {"type":"literal","value":"{\"conceptName\":\"Wallet\",\"conceptRef\":\"clef/concept/Wallet\",\"handlerPath\":\"codegen/swift/Sources/Wallet.swift\",\"actions\":[{\"name\":\"create\",\"params\":[{\"name\":\"owner\",\"type\":\"String\"}],\"variants\":[\"ok\",\"error\"]}],\"examples\":[],\"properties\":[],\"stateInvariants\":[],\"liveness\":[],\"contracts\":[]}"}, output_path: {"type":"literal","value":"generated/tests/WalletConformanceTests.swift"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(renderResult0.variant), `step 0: expected success but got '${renderResult0.variant}'`).toBe(false);
+      expect(renderResult0.variant).toBe("ok");
       let result = renderResult0.output["result"];
       let rendered_code = renderResult0.output["rendered_code"];
       let file_path = renderResult0.output["file_path"];

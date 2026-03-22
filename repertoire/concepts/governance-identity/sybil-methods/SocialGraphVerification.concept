@@ -25,7 +25,7 @@ concept SocialGraphVerification [SG] {
 
   actions {
     action configure(minimumVouchers: option Int, trustAlgorithm: option String) {
-      -> configured(config: SG) {
+      -> ok(config: SG) {
         MinimumVouchers is the minimum endorsements needed (default 3).
         TrustAlgorithm is the scoring algorithm (default "count").
       }
@@ -35,13 +35,13 @@ concept SocialGraphVerification [SG] {
     }
 
     action addVouch(config: SG, voucher: String, candidate: String) {
-      -> vouched(voucher: String, candidate: String) {
+      -> ok(voucher: String, candidate: String) {
         A vouching edge is added to the graph.
       }
-      -> self_vouch(voucher: String) {
+      -> ok(voucher: String) {
         Cannot vouch for oneself.
       }
-      -> already_vouched(voucher: String, candidate: String) {
+      -> ok(voucher: String, candidate: String) {
         This vouch already exists.
       }
 
@@ -50,7 +50,7 @@ concept SocialGraphVerification [SG] {
     }
 
     action revokeVouch(config: SG, voucher: String, candidate: String) {
-      -> revoked(voucher: String, candidate: String) {
+      -> ok(voucher: String, candidate: String) {
         The vouch is removed.
       }
       -> not_found(voucher: String, candidate: String) {
@@ -62,10 +62,10 @@ concept SocialGraphVerification [SG] {
     }
 
     action verify(config: SG, candidate: String) {
-      -> verified(candidate: String, voucherCount: Int, trustScore: Float) {
+      -> ok(candidate: String, voucherCount: Int, trustScore: Float) {
         The candidate is sufficiently connected to the trust graph.
       }
-      -> insufficient(candidate: String, voucherCount: Int, required: Int, trustScore: Float) {
+      -> ok(candidate: String, voucherCount: Int, required: Int, trustScore: Float) {
         The candidate has too few vouches.
       }
 
@@ -76,9 +76,9 @@ concept SocialGraphVerification [SG] {
 
   example "configure-then-analyze": {
 
-    after configure(minVouches: 3, trustAnchors: _, clusterThreshold: _) -> configured(config: _)
+    after configure(minVouches: 3, trustAnchors: _, clusterThreshold: _) -> ok(config: _)
 
-        then vouch(voucher: _, vouchee: p) -> vouched(vouch: _)
+        then vouch(voucher: _, vouchee: p) -> ok(vouch: _)
 
         // After 3+ vouches from well-connected members:
 
@@ -107,7 +107,7 @@ concept SocialGraphVerification [SG] {
 
     requires: minVouches != ""
 
-    ensures configured: minVouches != none
+    ensures ok: minVouches != none
 
   }
 }

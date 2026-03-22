@@ -29,7 +29,7 @@ concept QuadraticVoting [QV] {
 
   actions {
     action configure(creditBudget: Float) {
-      -> configured(config: QV) {
+      -> ok(config: QV) {
         A quadratic voting configuration with the given per-voter
         credit budget. Cost = votes².
       }
@@ -39,10 +39,10 @@ concept QuadraticVoting [QV] {
     }
 
     action allocateCredits(config: QV, voter: String) {
-      -> allocated(voter: String, credits: Float) {
+      -> ok(voter: String, credits: Float) {
         The voter receives their credit budget for this voting round.
       }
-      -> already_allocated(voter: String) {
+      -> ok(voter: String) {
         Credits have already been allocated to this voter.
       }
 
@@ -51,13 +51,13 @@ concept QuadraticVoting [QV] {
     }
 
     action castVotes(config: QV, voter: String, issue: String, numberOfVotes: Int) {
-      -> cast(voter: String, votesCast: Int, creditsSpent: Float, remaining: Float) {
+      -> ok(voter: String, votesCast: Int, creditsSpent: Float, remaining: Float) {
         The voter casts N votes at cost N². Credits are deducted.
       }
-      -> insufficient_credits(voter: String, needed: Float, available: Float) {
+      -> ok(voter: String, needed: Float, available: Float) {
         The voter does not have enough credits. Needed = votes².
       }
-      -> no_allocation(voter: String) {
+      -> ok(voter: String) {
         The voter has not been allocated credits.
       }
 
@@ -66,10 +66,10 @@ concept QuadraticVoting [QV] {
     }
 
     action count(config: QV, issue: String) {
-      -> winner(choice: String, totalVotes: Float, details: String) {
+      -> ok(choice: String, totalVotes: Float, details: String) {
         Votes (not credits) are summed per choice. Highest total wins.
       }
-      -> tie(choices: String, totalVotes: Float) {
+      -> ok(choices: String, totalVotes: Float) {
         Multiple choices have equal vote totals.
       }
 
@@ -80,11 +80,11 @@ concept QuadraticVoting [QV] {
 
   example "configure-then-castVotes": {
 
-    after configure(creditBudget: 100.0) -> configured(config: qv)
+    after configure(creditBudget: 100.0) -> ok(config: qv)
 
-        then allocateCredits(config: qv, voter: v) -> allocated(voter: v, credits: 100.0)
+        then allocateCredits(config: qv, voter: v) -> ok(voter: v, credits: 100.0)
 
-        and  castVotes(config: qv, voter: v, issue: _, numberOfVotes: 5) -> cast(voter: v, votesCast: 5, creditsSpent: 25.0, remaining: 75.0)
+        and  castVotes(config: qv, voter: v, issue: _, numberOfVotes: 5) -> ok(voter: v, votesCast: 5, creditsSpent: 25.0, remaining: 75.0)
 
         // 5 votes costs 25 credits (5² = 25)
 
@@ -111,7 +111,7 @@ concept QuadraticVoting [QV] {
 
     requires: creditBudget != ""
 
-    ensures configured: creditBudget != none
+    ensures ok: creditBudget != none
 
   }
 }

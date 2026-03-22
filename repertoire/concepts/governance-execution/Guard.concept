@@ -22,7 +22,7 @@ concept Guard [GD] {
 
   actions {
     action register(name: String, targetAction: String, checkType: String, condition: String) {
-      -> registered(guard: GD) {
+      -> ok(guard: GD) {
         A new guard is registered and enabled.
       }
 
@@ -32,13 +32,13 @@ concept Guard [GD] {
     }
 
     action checkPre(guard: GD) {
-      -> passed(guard: GD) {
+      -> ok(guard: GD) {
         The pre-execution check passed.
       }
-      -> blocked(guard: GD, reason: String) {
+      -> ok(guard: GD, reason: String) {
         The pre-execution check failed. The action should not proceed.
       }
-      -> disabled(guard: GD) {
+      -> ok(guard: GD) {
         The guard is disabled and does not apply.
       }
 
@@ -47,10 +47,10 @@ concept Guard [GD] {
     }
 
     action checkPost(guard: GD) {
-      -> passed(guard: GD) {
+      -> ok(guard: GD) {
         The post-execution check passed.
       }
-      -> revert(guard: GD, reason: String) {
+      -> ok(guard: GD, reason: String) {
         The post-execution check failed. The action should be reverted.
       }
 
@@ -59,14 +59,14 @@ concept Guard [GD] {
     }
 
     action enable(guard: GD) {
-      -> enabled(guard: GD) { The guard is activated. }
+      -> ok(guard: GD) { The guard is activated. }
 
       fixture enable_guard { guard: $register_balance_guard.id } after register_balance_guard
       fixture enable_not_found { guard: "guard-nonexistent" } -> error
     }
 
     action disable(guard: GD) {
-      -> disabled(guard: GD) { The guard is deactivated. }
+      -> ok(guard: GD) { The guard is deactivated. }
 
       fixture disable_guard { guard: $enable_guard.id } after enable_guard
       fixture disable_not_found { guard: "guard-nonexistent" } -> error
@@ -75,9 +75,9 @@ concept Guard [GD] {
 
   example "register-then-checkPre": {
 
-    after register(name: _, checkType: _, condition: _, targetAction: _) -> registered(guard: gd)
+    after register(name: _, checkType: _, condition: _, targetAction: _) -> ok(guard: gd)
 
-        then checkPre(guard: gd, context: _) -> passed(guard: gd)
+        then checkPre(guard: gd, context: _) -> ok(guard: gd)
 
   }
 
@@ -102,7 +102,7 @@ concept Guard [GD] {
 
     requires: name != ""
 
-    ensures registered: name != none
+    ensures ok: name != none
 
   }
 }

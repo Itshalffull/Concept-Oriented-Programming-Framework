@@ -16,7 +16,7 @@ concept ImmediateFinality [IF] {
 
   actions {
     action confirm(operationRef: String) {
-      -> finalized(confirmation: IF) {
+      -> ok(confirmation: IF) {
         The operation is immediately confirmed as final.
       }
 
@@ -28,7 +28,7 @@ concept ImmediateFinality [IF] {
 
   example "confirm-basic-flow": {
 
-    after confirm(operationRef: _) -> finalized(confirmation: _)
+    after confirm(operationRef: _) -> ok(confirmation: _)
 
   }
 

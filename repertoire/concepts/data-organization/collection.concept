@@ -18,7 +18,7 @@ concept Collection [C] {
   actions {
     action create(collection: C, type: String, schema: String) {
       -> ok() { New collection initialized with the given type and schema. }
-      -> exists() { Collection already exists. }
+      -> ok() { Collection already exists. }
 
       fixture create_articles { collection: "articles", type: "list", schema: "article-v1" }
       fixture create_empty_name { collection: "", type: "", schema: "" }

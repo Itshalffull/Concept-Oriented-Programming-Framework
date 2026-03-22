@@ -88,16 +88,14 @@ describe('Group functional handler', () => {
       if (typeof groupHandler.createGroup !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(groupHandler.createGroup({ group: "team-engineering", name: "Engineering Team" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_empty_group" -> ok', async () => {
       if (typeof groupHandler.createGroup !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(groupHandler.createGroup({ group: "", name: "" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -164,8 +162,7 @@ describe('Group functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(groupHandler.addMember({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "add_member_missing_group" -> error', async () => {
@@ -239,8 +236,7 @@ describe('Group functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(groupHandler.assignGroupRole({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "assign_to_missing_group" -> error', async () => {
@@ -314,8 +310,7 @@ describe('Group functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(groupHandler.addContent({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "add_to_missing_group" -> error', async () => {
@@ -389,8 +384,7 @@ describe('Group functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(groupHandler.checkGroupAccess({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "check_access_missing_group" -> error', async () => {
@@ -422,14 +416,11 @@ describe('Group functional handler', () => {
     it("createGroup-then-checkGroupAccess", async () => {
       const storage = createInMemoryStorage();
       const createGroupResult0 = await interpret(groupHandler.createGroup({ group: {"type":"variable","name":"g"}, name: {"type":"variable","name":"n"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(createGroupResult0.variant), `step 0: expected success but got '${createGroupResult0.variant}'`).toBe(false);
+      expect(createGroupResult0.variant).toBe("ok");
       const thenResult0 = await interpret(groupHandler.addMember({ group: {"type":"variable","name":"g"}, user: {"type":"variable","name":"u"}, role: {"type":"literal","value":"member"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(groupHandler.checkGroupAccess({ group: {"type":"variable","name":"g"}, user: {"type":"variable","name":"u"}, permission: {"type":"literal","value":"read"} }), storage);
-      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
+      expect(thenResult1.variant).toBe("ok");
     });
 
   });

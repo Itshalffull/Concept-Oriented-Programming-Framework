@@ -88,16 +88,14 @@ describe('DerivedScaffoldGen functional handler', () => {
       if (typeof derivedScaffoldGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(derivedScaffoldGenHandler.generate({ name: "TaskBoard", typeParams: ["T"], purpose: "Compose task and board concepts into a unified workflow", composes: [{"name":"Task","typeParams":["T"]}], syncs: ["TaskCreated"], surfaceActions: [{"name":"addTask","params":[{"name":"title","type":"String"}],"matches":{"type":"action","concept":"Task","action":"create"}}], surfaceQueries: [], principle: ["A board organizes tasks into columns"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "minimal_generate" -> ok', async () => {
       if (typeof derivedScaffoldGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(derivedScaffoldGenHandler.generate({ name: "SimpleComposite", typeParams: ["T"], purpose: "Minimal derived concept", composes: [], syncs: [], surfaceActions: [], surfaceQueries: [], principle: [] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_name" -> error', async () => {
@@ -171,8 +169,7 @@ describe('DerivedScaffoldGen functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(derivedScaffoldGenHandler.preview({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_preview" -> ok', async () => {
@@ -185,8 +182,7 @@ describe('DerivedScaffoldGen functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(derivedScaffoldGenHandler.preview({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -250,8 +246,7 @@ describe('DerivedScaffoldGen functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_generate?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(derivedScaffoldGenHandler.register({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -276,8 +271,7 @@ describe('DerivedScaffoldGen functional handler', () => {
     it("generate produces derived spec", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(derivedScaffoldGenHandler.generate({ name: {"type":"literal","value":"TaskBoard"}, typeParam: {"type":"literal","value":"T"}, purpose: {"type":"literal","value":"Compose tasks"}, composes: {"type":"list","items":[]}, syncs: {"type":"list","items":[]}, surfaceActions: {"type":"list","items":[]}, surfaceQueries: {"type":"list","items":[]}, principle: {"type":"list","items":[]} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
+      expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
       let filesGenerated = generateResult0.output["filesGenerated"];
     });

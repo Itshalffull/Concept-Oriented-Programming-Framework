@@ -37,7 +37,7 @@ concept DeploymentValidator [M] {
         transport configs are valid, engine hierarchy is acyclic.
         Produce a DeploymentPlan with concrete transport assignments.
       }
-      -> warning(plan: DeploymentPlan, issues: list String) {
+      -> ok(plan: DeploymentPlan, issues: list String) {
         Validation passed but with non-fatal issues.
       }
       -> error(issues: list String) {

@@ -40,7 +40,7 @@ concept Retriever [R] {
             metadata: option String}) {
         Core retrieval.
       }
-      -> empty(message: String) {
+      -> ok(message: String) {
         No relevant documents.
       }
     }
@@ -50,7 +50,7 @@ concept Retriever [R] {
         RAG-Fusion: generates multiple query variations via LLM,
         retrieves for each, deduplicates via reciprocal rank fusion.
       }
-      -> empty(message: String) {
+      -> ok(message: String) {
         No results.
       }
     }
@@ -61,7 +61,7 @@ concept Retriever [R] {
         LLM extracts structured filters from natural language.
         Applies semantic + metadata filtering.
       }
-      -> empty(message: String) {
+      -> ok(message: String) {
         No results.
       }
     }

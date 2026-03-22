@@ -88,8 +88,7 @@ describe('CustomEvaluator functional handler', () => {
       if (typeof customEvaluatorHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(customEvaluatorHandler.register({ name: "age_check", source: "{\"op\":\"gte\",\"field\":\"age\",\"value\":18}", language: "JavaScript", sandbox: "true" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_empty_name" -> syntax_error', async () => {
@@ -164,8 +163,7 @@ describe('CustomEvaluator functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(customEvaluatorHandler.evaluate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "evaluate_unknown_evaluator" -> runtime_error', async () => {
@@ -240,8 +238,7 @@ describe('CustomEvaluator functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(customEvaluatorHandler.deregister({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "deregister_nonexistent" -> error', async () => {
@@ -258,10 +255,10 @@ describe('CustomEvaluator functional handler', () => {
     it("register-then-evaluate", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(customEvaluatorHandler.register({ name: {"type":"variable","name":"_"}, source: {"type":"variable","name":"_"}, language: {"type":"variable","name":"_"}, sandbox: {"type":"literal","value":true} }), storage);
-      expect(registerResult0.variant).toBe("registered");
+      expect(registerResult0.variant).toBe("ok");
       let evaluator = registerResult0.output["evaluator"];
       const thenResult0 = await interpret(customEvaluatorHandler.evaluate({ evaluator: {"type":"variable","name":"cu"}, context: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("result");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });
@@ -346,7 +343,7 @@ describe('CustomEvaluator functional handler', () => {
       }
     });
 
-    it('register ensures on registered: ', async () => {
+    it('register ensures on ok: ', async () => {
       if (typeof customEvaluatorHandler.register !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -358,7 +355,7 @@ describe('CustomEvaluator functional handler', () => {
               const program = customEvaluatorHandler.register(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "registered") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

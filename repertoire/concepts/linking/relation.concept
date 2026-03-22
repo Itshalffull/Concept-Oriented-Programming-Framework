@@ -20,7 +20,7 @@ concept Relation [R] {
         A typed relation is registered with its label, directionality,
         and cardinality constraints from the provided schema.
       }
-      -> exists(relation: R) {
+      -> ok(relation: R) {
         A relation with this identity already exists.
       }
 

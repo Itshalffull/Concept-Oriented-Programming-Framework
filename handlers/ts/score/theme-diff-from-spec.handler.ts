@@ -38,7 +38,7 @@ export const themeDiffFromSpecHandler: FunctionalConceptHandler = {
         const impls = bindings.allImpls as Record<string, unknown>[];
         return !impls || !impls.find(i => i.id === implId);
       },
-      complete(createProgram(), 'inSync', {}),
+      complete(createProgram(), 'ok', {}),
       (() => {
         // Implementation found — look up the theme entity and all themes for extends
         let inner = createProgram();

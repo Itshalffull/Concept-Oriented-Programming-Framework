@@ -44,7 +44,7 @@ concept Machine [M] {
         entry actions on entering state. Return new state.
       }
       -> invalid(message: String) { Event not handled in current state. }
-      -> guarded(machine: M, guard: String) { Guard blocked transition. }
+      -> ok(machine: M, guard: String) { Guard blocked transition. }
 
       fixture valid_send { event: "start" } after valid_spawn
       fixture missing_machine { machine: "nonexistent-machine", event: "start" } -> invalid

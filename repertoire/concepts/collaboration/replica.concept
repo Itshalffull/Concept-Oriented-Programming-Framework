@@ -27,7 +27,7 @@ concept Replica [R] {
       -> ok(newState: Bytes) {
         Operation applied to local state and added to pending queue.
       }
-      -> invalidOp(message: String) {
+      -> ok(message: String) {
         Operation is malformed or not applicable to current state.
       }
 
@@ -42,7 +42,7 @@ concept Replica [R] {
       -> conflict(details: Bytes) {
         Concurrent modification detected. Routes to ConflictResolution.
       }
-      -> unknownReplica(message: String) {
+      -> ok(message: String) {
         fromReplica not in the known peers set.
       }
 
@@ -54,7 +54,7 @@ concept Replica [R] {
       -> ok() {
         Pending ops sent to peer. Remote ops received and integrated.
       }
-      -> unreachable(message: String) {
+      -> ok(message: String) {
         Peer is not currently reachable.
       }
 
@@ -82,7 +82,7 @@ concept Replica [R] {
       -> ok() {
         Peer added to known peer set.
       }
-      -> alreadyKnown(message: String) {
+      -> ok(message: String) {
         Peer already in the set.
       }
 

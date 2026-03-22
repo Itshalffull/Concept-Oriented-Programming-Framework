@@ -93,7 +93,7 @@ concept ErrorCorrelation [E] {
         root cause originates (e.g., "ReturnStatement returning
         variant 'error' inside catch block of User/create").
       }
-      -> inconclusive(partialChain: String) {
+      -> ok(partialChain: String) {
         Could not determine root cause — partial chain returned
         as serialized JSON array.
       }

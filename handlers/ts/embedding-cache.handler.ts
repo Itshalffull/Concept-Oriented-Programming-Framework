@@ -70,7 +70,7 @@ export const embeddingCacheHandler: FunctionalConceptHandler = {
       sourceKey,
       cachedAt: now,
     });
-    p = complete(p, 'stored', { entry: digest });
+    p = complete(p, 'ok', { entry: digest });
     return p as StorageProgram<Result>;
   },
 
@@ -148,7 +148,7 @@ export const embeddingCacheHandler: FunctionalConceptHandler = {
       sourceKey,
       cachedAt: now,
     });
-    p = complete(p, 'stored', { entry: configKey });
+    p = complete(p, 'ok', { entry: configKey });
     return p as StorageProgram<Result>;
   },
 };

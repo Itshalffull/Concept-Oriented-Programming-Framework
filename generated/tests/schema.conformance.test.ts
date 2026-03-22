@@ -88,8 +88,7 @@ describe('Schema functional handler', () => {
       if (typeof schemaHandler.defineSchema !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(schemaHandler.defineSchema({ schema: "article", fields: "title,body,author" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_fields" -> error', async () => {
@@ -163,8 +162,7 @@ describe('Schema functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(schemaHandler.addField({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "add_to_missing" -> error', async () => {
@@ -238,8 +236,7 @@ describe('Schema functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(schemaHandler.extendSchema({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "extend_missing_parent" -> error', async () => {
@@ -308,8 +305,7 @@ describe('Schema functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_article = await interpret(schemaHandler.defineSchema({ schema: "article", fields: "title,body,author" }), storage);
       const result = await interpret(schemaHandler.applyTo({ entity_id: afterResult_create_article?.output?.["id"], schema: "article" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "apply_missing_schema" -> error', async () => {
@@ -378,8 +374,7 @@ describe('Schema functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_article = await interpret(schemaHandler.defineSchema({ schema: "article", fields: "title,body,author" }), storage);
       const result = await interpret(schemaHandler.removeFrom({ entity_id: afterResult_create_article?.output?.["id"], schema: "article" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "remove_unapplied" -> error', async () => {
@@ -453,8 +448,7 @@ describe('Schema functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(schemaHandler.getAssociations({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_missing_entities" -> error', async () => {
@@ -528,8 +522,7 @@ describe('Schema functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(schemaHandler.export({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "export_missing" -> error', async () => {
@@ -561,14 +554,11 @@ describe('Schema functional handler', () => {
     it("defineSchema-then-applyTo", async () => {
       const storage = createInMemoryStorage();
       const defineSchemaResult0 = await interpret(schemaHandler.defineSchema({ schema: {"type":"variable","name":"s"}, fields: {"type":"literal","value":"title,body"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(defineSchemaResult0.variant), `step 0: expected success but got '${defineSchemaResult0.variant}'`).toBe(false);
+      expect(defineSchemaResult0.variant).toBe("ok");
       const thenResult0 = await interpret(schemaHandler.addField({ schema: {"type":"variable","name":"s"}, field: {"type":"literal","value":"author"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(schemaHandler.applyTo({ entity: {"type":"literal","value":"page-1"}, schema: {"type":"variable","name":"s"} }), storage);
-      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
+      expect(thenResult1.variant).toBe("ok");
     });
 
   });

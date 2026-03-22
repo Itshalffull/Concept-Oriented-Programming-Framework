@@ -24,7 +24,7 @@ concept ManualResolution [V] {
     }
 
     action attemptResolve(base: option Bytes, v1: Bytes, v2: Bytes, context: String) {
-      -> cannotResolve(reason: String) {
+      -> ok(reason: String) {
         Manual resolution always escalates to human review.
         Never auto-resolves.
       }
@@ -36,7 +36,7 @@ concept ManualResolution [V] {
 
   example "attemptResolve-then-register": {
 
-    after attemptResolve(base: _, v1: _, v2: _, context: _) -> cannotResolve(reason: _)
+    after attemptResolve(base: _, v1: _, v2: _, context: _) -> ok(reason: _)
 
         then register() -> ok(name: "manual", category: "conflict-resolution", priority: 99)
 

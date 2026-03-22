@@ -88,16 +88,14 @@ describe('CommutativityProvider functional handler', () => {
       if (typeof commutativityProviderHandler.check !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(commutativityProviderHandler.check({ programA: "put(users, u1, data)", programB: "put(orders, o1, data)", readWriteSetsA: "{\"r\":[],\"w\":[\"users\"]}", readWriteSetsB: "{\"r\":[],\"w\":[\"orders\"]}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "overlapping_sets" -> ok', async () => {
       if (typeof commutativityProviderHandler.check !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(commutativityProviderHandler.check({ programA: "put(users, u1, data)", programB: "get(users, u1)", readWriteSetsA: "{\"r\":[],\"w\":[\"users\"]}", readWriteSetsB: "{\"r\":[\"users\"],\"w\":[]}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_sets" -> error', async () => {
@@ -129,8 +127,7 @@ describe('CommutativityProvider functional handler', () => {
     it("disjoint write sets commute", async () => {
       const storage = createInMemoryStorage();
       const checkResult0 = await interpret(commutativityProviderHandler.check({ programA: {"type":"literal","value":"put(users, u1, data)"}, programB: {"type":"literal","value":"put(orders, o1, data)"}, readWriteSetsA: {"type":"literal","value":"{r: [], w: [users]}"}, readWriteSetsB: {"type":"literal","value":"{r: [], w: [orders]}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(checkResult0.variant), `step 0: expected success but got '${checkResult0.variant}'`).toBe(false);
+      expect(checkResult0.variant).toBe("ok");
       let result = checkResult0.output["result"];
       let commutes = checkResult0.output["commutes"];
       let reason = checkResult0.output["reason"];
@@ -139,8 +136,7 @@ describe('CommutativityProvider functional handler', () => {
     it("overlapping read-write sets do not commute", async () => {
       const storage = createInMemoryStorage();
       const checkResult0 = await interpret(commutativityProviderHandler.check({ programA: {"type":"literal","value":"put(users, u1, data)"}, programB: {"type":"literal","value":"get(users, u1)"}, readWriteSetsA: {"type":"literal","value":"{r: [], w: [users]}"}, readWriteSetsB: {"type":"literal","value":"{r: [users], w: []}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(checkResult0.variant), `step 0: expected success but got '${checkResult0.variant}'`).toBe(false);
+      expect(checkResult0.variant).toBe("ok");
       let result = checkResult0.output["result"];
       let commutes = checkResult0.output["commutes"];
       let reason = checkResult0.output["reason"];

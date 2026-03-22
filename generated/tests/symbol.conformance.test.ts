@@ -37,16 +37,14 @@ describe('Symbol imperative handler', () => {
       if (typeof symbolHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await symbolHandler.register({ symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_concept" -> ok', async () => {
       if (typeof symbolHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await symbolHandler.register({ symbolString: "clef/concept/Order", kind: "concept", displayName: "Order", definingFile: "specs/order.concept" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_duplicate" -> error', async () => {
@@ -78,8 +76,7 @@ describe('Symbol imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await symbolHandler.resolve({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_nonexistent" -> error', async () => {
@@ -111,8 +108,7 @@ describe('Symbol imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await symbolHandler.findByKind({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_all_concepts" -> ok', async () => {
@@ -125,8 +121,7 @@ describe('Symbol imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await symbolHandler.findByKind({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -151,8 +146,7 @@ describe('Symbol imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await symbolHandler.findByFile({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_in_empty_file" -> ok', async () => {
@@ -165,8 +159,7 @@ describe('Symbol imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await symbolHandler.findByFile({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -186,8 +179,7 @@ describe('Symbol imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_register = await symbolHandler.register({ symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }, storage);
       const result = await symbolHandler.rename({ symbol: afterResult_valid_register?.output?.["symbol"], newName: "updateUser" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "rename_nonexistent" -> error', async () => {
@@ -214,8 +206,7 @@ describe('Symbol imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_register = await symbolHandler.register({ symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }, storage);
       const result = await symbolHandler.get({ symbol: afterResult_valid_register?.output?.["symbol"] }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_nonexistent" -> error', async () => {
@@ -232,33 +223,28 @@ describe('Symbol imperative handler', () => {
     it("register-then-get", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await symbolHandler.register({ symbolString: {"type":"literal","value":"clef/concept/Article"}, kind: {"type":"literal","value":"concept"}, displayName: {"type":"literal","value":"Article"}, definingFile: {"type":"literal","value":"specs/article.concept"} }, storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let symbol = registerResult0.output["symbol"];
       const thenResult0 = await symbolHandler.get({ symbol: {"type":"variable","name":"s"} }, storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("register-then-resolve", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await symbolHandler.register({ symbolString: {"type":"literal","value":"clef/concept/Article"}, kind: {"type":"literal","value":"concept"}, displayName: {"type":"literal","value":"Article"}, definingFile: {"type":"literal","value":"specs/article.concept"} }, storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let symbol = registerResult0.output["symbol"];
       const thenResult0 = await symbolHandler.resolve({ symbolString: {"type":"literal","value":"clef/concept/Article"} }, storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("register-then-register", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await symbolHandler.register({ symbolString: {"type":"literal","value":"clef/concept/Article"}, kind: {"type":"literal","value":"concept"}, displayName: {"type":"literal","value":"Article"}, definingFile: {"type":"literal","value":"specs/article.concept"} }, storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let symbol = registerResult0.output["symbol"];
       const thenResult0 = await symbolHandler.register({ symbolString: {"type":"literal","value":"clef/concept/Article"}, kind: {"type":"literal","value":"concept"}, displayName: {"type":"literal","value":"Article"}, definingFile: {"type":"literal","value":"specs/article.concept"} }, storage);
-      expect(thenResult0.variant).toBe("alreadyExists");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

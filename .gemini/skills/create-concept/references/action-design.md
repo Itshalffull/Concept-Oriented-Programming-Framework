@@ -53,6 +53,16 @@ An action:
 | `invalid` | Input rejected | `message: String` | Constraint violation |
 | `warning` | Success with caveats | Result + `issues: list String` | Validation with non-fatal issues |
 
+**Convention: success is always `ok`.** Do NOT use domain-specific success
+names like `created`, `configured`, `registered`, `updated`, `stored`.
+Domain context belongs in the output fields, not the variant name.
+
+**Exception — multiple distinct success branches.** When an action has two
+or more success outcomes that syncs need to distinguish, use domain-specific
+variant names (e.g., `ok`/`miss` for cache lookup, `clean`/`conflicts` for
+merge, `identical`/`diffed` for diff, `valid`/`invalid` for verification).
+This escape hatch should be rare — most actions have a single success path.
+
 ### Return Value Patterns
 
 **Mutations (create/update/delete) return the entity:**

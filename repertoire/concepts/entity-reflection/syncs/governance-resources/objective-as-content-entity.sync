@@ -6,7 +6,7 @@ sync ObjectiveAsContentEntity [eager]
   purpose { Persist objectives as queryable content entities. }
 when {
   Objective/create: [ title: ?title; description: ?description; owner: ?owner; targets: ?targets ]
-    => created(objective: ?objective)
+    => ok(objective: ?objective)
 }
 then {
   ContentStorage/save: [ record: ?objective; data: ?targets ]
@@ -17,7 +17,7 @@ sync ObjectiveTagEntity [eager]
   purpose { Tag objectives with their entity type. }
 when {
   Objective/create: [ title: ?title; description: ?description; owner: ?owner; targets: ?targets ]
-    => created(objective: ?objective)
+    => ok(objective: ?objective)
 }
 then {
   Tag/addTag: [ entity: ?objective; tag: "system:objective" ]

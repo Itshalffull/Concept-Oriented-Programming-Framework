@@ -27,7 +27,7 @@ concept ConsentProcess [CP] {
 
   actions {
     action initiate(proposalRef: String) {
-      -> initiated(process: CP) {
+      -> ok(process: CP) {
         A consent process begins in Presenting phase.
       }
 
@@ -36,7 +36,7 @@ concept ConsentProcess [CP] {
     }
 
     action advancePhase(process: CP) {
-      -> advanced(process: CP, newPhase: String) {
+      -> ok(process: CP, newPhase: String) {
         The process moves to the next phase in sequence:
         Presenting → Clarifying → Reacting → ObjectionRound.
       }
@@ -46,11 +46,11 @@ concept ConsentProcess [CP] {
     }
 
     action raiseObjection(process: CP, objector: String, reason: String, isParamount: Bool) {
-      -> objection_raised(process: CP) {
+      -> ok(process: CP) {
         An objection is recorded. If paramount (would harm the organization's
         ability to achieve its aim), it blocks the proposal.
       }
-      -> wrong_phase(process: CP) {
+      -> ok(process: CP) {
         Objections can only be raised during ObjectionRound.
       }
 
@@ -59,7 +59,7 @@ concept ConsentProcess [CP] {
     }
 
     action integrateObjection(process: CP, objectionIndex: Int, amendment: String) {
-      -> integrated(process: CP) {
+      -> ok(process: CP) {
         The proposal is amended to address the objection. The objection
         is marked as integrated. If all objections are integrated,
         a new objection round begins on the amended proposal.
@@ -70,10 +70,10 @@ concept ConsentProcess [CP] {
     }
 
     action resolve(process: CP) {
-      -> consented(process: CP) {
+      -> ok(process: CP) {
         No unintegrated objections remain. The proposal has consent.
       }
-      -> blocked(process: CP, outstandingObjections: Int) {
+      -> ok(process: CP, outstandingObjections: Int) {
         Paramount objections remain that could not be integrated.
       }
 
@@ -84,13 +84,13 @@ concept ConsentProcess [CP] {
 
   example "initiate-then-resolve": {
 
-    after initiate(proposalRef: _) -> initiated(process: cp)
+    after initiate(proposalRef: _) -> ok(process: cp)
 
-        then advancePhase(process: cp) -> advanced(process: cp, newPhase: "Clarifying")
+        then advancePhase(process: cp) -> ok(process: cp, newPhase: "Clarifying")
 
         // After full cycle with no objections:
 
-        and  resolve(process: cp) -> consented(process: cp)
+        and  resolve(process: cp) -> ok(process: cp)
 
   }
 

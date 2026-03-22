@@ -36,7 +36,7 @@ concept Rollout [R] {
         Initialize progressive rollout. First step begins
         with minimal traffic weight.
       }
-      -> invalidStrategy(message: String) {
+      -> ok(message: String) {
         Unknown strategy or malformed step configuration.
       }
 
@@ -49,10 +49,10 @@ concept Rollout [R] {
       -> ok(rollout: R, newWeight: Int, step: Int) {
         Move to next traffic weight step.
       }
-      -> complete(rollout: R) {
+      -> ok(rollout: R) {
         All steps completed. New version receives full traffic.
       }
-      -> paused(rollout: R, reason: String) {
+      -> ok(rollout: R, reason: String) {
         Rollout paused due to analysis results. Waiting for
         manual intervention or auto-resume timer.
       }
@@ -84,7 +84,7 @@ concept Rollout [R] {
         Immediately shift all traffic back to old version.
         Triggers compensating deploy actions.
       }
-      -> alreadyComplete(rollout: R) {
+      -> ok(rollout: R) {
         Rollout already finished.
       }
 

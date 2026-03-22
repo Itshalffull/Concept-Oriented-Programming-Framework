@@ -88,8 +88,7 @@ describe('WebhookAutomationProvider functional handler', () => {
       if (typeof webhookAutomationProviderHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(webhookAutomationProviderHandler.register({  }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_already_registered" -> already_registered', async () => {
@@ -164,8 +163,7 @@ describe('WebhookAutomationProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(webhookAutomationProviderHandler.execute({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "execute_missing_payload" -> error', async () => {
@@ -204,12 +202,10 @@ describe('WebhookAutomationProvider functional handler', () => {
     it("register then execute", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(webhookAutomationProviderHandler.register({  }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let provider_name = registerResult0.output["provider_name"];
       const thenResult0 = await interpret(webhookAutomationProviderHandler.execute({ action_payload: {"type":"literal","value":"{\"event\":\"deploy\"}"}, webhook_url: {"type":"literal","value":"https://hooks.example.com/deploy"}, method: {"type":"literal","value":"POST"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

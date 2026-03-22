@@ -20,7 +20,7 @@ concept Validator [V] {
       -> ok() {
         Register a new constraint on the validator.
       }
-      -> exists() {
+      -> ok() {
         The constraint is already registered on this validator.
       }
 
@@ -62,7 +62,7 @@ concept Validator [V] {
       -> ok() {
         Register a custom validator function by name.
       }
-      -> exists() {
+      -> ok() {
         A custom validator with this name is already registered.
       }
 

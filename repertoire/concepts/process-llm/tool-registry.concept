@@ -25,7 +25,7 @@ concept ToolRegistry [G] {
       -> ok(tool: G, version: Int) {
         Registers a new tool or increments version of existing tool.
       }
-      -> invalid_schema(message: String) {
+      -> ok(message: String) {
         Schema is not valid JSON Schema.
       }
     }

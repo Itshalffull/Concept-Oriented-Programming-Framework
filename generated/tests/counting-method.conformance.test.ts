@@ -88,8 +88,7 @@ describe('CountingMethod functional handler', () => {
       if (typeof countingMethodHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(countingMethodHandler.register({ name: "simple-majority", provider: "Majority", parameters: "{\"threshold\":0.5}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_empty_name" -> error', async () => {
@@ -158,8 +157,7 @@ describe('CountingMethod functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_majority = await interpret(countingMethodHandler.register({ name: "simple-majority", provider: "Majority", parameters: "{\"threshold\":0.5}" }), storage);
       const result = await interpret(countingMethodHandler.aggregate({ method: afterResult_register_majority?.output?.["id"], ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"no\"}]", weights: "{}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "aggregate_missing_method" -> error', async () => {
@@ -234,8 +232,7 @@ describe('CountingMethod functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_majority = await interpret(countingMethodHandler.register({ name: "simple-majority", provider: "Majority", parameters: "{\"threshold\":0.5}" }), storage);
       const result = await interpret(countingMethodHandler.deregister({ method: afterResult_register_majority?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "deregister_missing" -> error', async () => {
@@ -252,10 +249,10 @@ describe('CountingMethod functional handler', () => {
     it("register-then-aggregate", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(countingMethodHandler.register({ name: {"type":"variable","name":"_"}, provider: {"type":"variable","name":"_"}, parameters: {"type":"variable","name":"_"} }), storage);
-      expect(registerResult0.variant).toBe("registered");
+      expect(registerResult0.variant).toBe("ok");
       let method = registerResult0.output["method"];
       const thenResult0 = await interpret(countingMethodHandler.aggregate({ method: {"type":"variable","name":"m"}, ballots: {"type":"variable","name":"_"}, weights: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("winner");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });
@@ -340,7 +337,7 @@ describe('CountingMethod functional handler', () => {
       }
     });
 
-    it('register ensures on registered: ', async () => {
+    it('register ensures on ok: ', async () => {
       if (typeof countingMethodHandler.register !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -352,7 +349,7 @@ describe('CountingMethod functional handler', () => {
               const program = countingMethodHandler.register(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "registered") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

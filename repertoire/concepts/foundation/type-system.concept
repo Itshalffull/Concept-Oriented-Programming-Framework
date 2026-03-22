@@ -21,7 +21,7 @@ concept TypeSystem [T] {
       -> ok(type: T) {
         Register a new type definition with its schema and constraints.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         A type with this identifier already exists.
       }
 
@@ -78,7 +78,7 @@ concept TypeSystem [T] {
 
     after registerType(type: t, schema: "{\"type\":\"string\"}", constraints: "{}") -> ok(type: t)
 
-        then registerType(type: t, schema: "{\"type\":\"number\"}", constraints: "{}") -> exists(message: "already exists")
+        then registerType(type: t, schema: "{\"type\":\"number\"}", constraints: "{}") -> ok(message: "already exists")
 
   }
 

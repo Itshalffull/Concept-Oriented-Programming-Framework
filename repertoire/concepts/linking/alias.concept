@@ -17,7 +17,7 @@ concept Alias [A] {
         The name is registered as an alternative identifier for the entity.
         Future resolve calls with this name will return this entity.
       }
-      -> exists(entity: A, name: String) {
+      -> ok(entity: A, name: String) {
         This alias name is already registered for the entity.
       }
 

@@ -31,7 +31,7 @@ concept DevServer [D] {
         Development server started. Resource is tracking
         the specified directories for changes.
       }
-      -> portInUse(port: Int) {
+      -> ok(port: Int) {
         The specified port is already in use.
       }
 
@@ -57,10 +57,10 @@ concept DevServer [D] {
       description {
         Check the current status of a development server session.
       }
-      -> running(port: Int, uptime: Int, lastRecompile: String) {
+      -> ok(port: Int, uptime: Int, lastRecompile: String) {
         Server is running with current stats.
       }
-      -> stopped() {
+      -> ok() {
         Server is not running.
       }
 
@@ -78,7 +78,7 @@ concept DevServer [D] {
   example "start then status shows running": {
     after start(port: 3000, watchDirs: ["./specs", "./syncs"])
       -> ok(session: d, port: 3000, url: "http://localhost:3000")
-    then status(session: d) -> running(port: 3000, uptime: u, lastRecompile: lr)
+    then status(session: d) -> ok(port: 3000, uptime: u, lastRecompile: lr)
   }
 
   always "running sessions have a port": {

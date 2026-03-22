@@ -21,7 +21,7 @@ concept Resource [R] {
 
   actions {
     action upsert(locator: String, kind: String, digest: String, lastModified: option DateTime, size: option Int) {
-      -> created(resource: R) {
+      -> ok(resource: R) {
         New resource. First time this locator has been seen.
         Records kind, digest, and metadata. Downstream syncs
         should treat this as a new input requiring full generation.
@@ -45,7 +45,7 @@ concept Resource [R] {
       -> ok(resource: R, kind: String, digest: String) {
         Return current resource record for this locator.
       }
-      -> notFound(locator: String) {
+      -> ok(locator: String) {
         No resource registered at this locator.
       }
 
@@ -68,7 +68,7 @@ concept Resource [R] {
         treat this as a deletion — clean up generated outputs
         that depended on this resource.
       }
-      -> notFound(locator: String) {
+      -> ok(locator: String) {
         No resource registered at this locator.
       }
 
@@ -84,7 +84,7 @@ concept Resource [R] {
         "breaking" — types changed, fields removed, signatures altered.
         Classification depends on kind-specific diff logic.
       }
-      -> unknown(message: String) {
+      -> ok(message: String) {
         Cannot determine change type — no kind-specific differ
         registered for this resource kind.
       }
@@ -96,7 +96,7 @@ concept Resource [R] {
 
   example "upsert-then-upsert": {
 
-    after upsert(locator: "./specs/password.concept", kind: "concept-spec", digest: "abc123") -> created(resource: r)
+    after upsert(locator: "./specs/password.concept", kind: "concept-spec", digest: "abc123") -> ok(resource: r)
 
         then  get(locator: "./specs/password.concept") -> ok(resource: r, kind: "concept-spec", digest: "abc123")
 
@@ -127,7 +127,7 @@ concept Resource [R] {
 
     requires: locator != ""
 
-    ensures created: locator != none
+    ensures ok: locator != none
 
   }
 }

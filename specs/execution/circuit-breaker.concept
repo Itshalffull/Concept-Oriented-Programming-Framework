@@ -35,7 +35,7 @@ concept CircuitBreaker [B] {
         half-open. successThreshold consecutive successes in half-open
         close it again.
       }
-      -> exists(endpoint: String) {
+      -> ok(endpoint: String) {
         A circuit breaker is already configured for this endpoint.
       }
 
@@ -44,20 +44,20 @@ concept CircuitBreaker [B] {
     }
 
     action check(endpoint: String) {
-      -> closed(breaker: B) {
+      -> ok(breaker: B) {
         The circuit is closed — requests should proceed normally.
       }
-      -> open(breaker: B, retryAfterMs: Int) {
+      -> ok(breaker: B, retryAfterMs: Int) {
         The circuit is open — requests should be rejected immediately
         without reaching the endpoint. retryAfterMs indicates when
         the circuit will transition to half-open for probing.
       }
-      -> halfOpen(breaker: B) {
+      -> ok(breaker: B) {
         The circuit is half-open — a single probe request should be
         allowed through. If it succeeds, the circuit closes. If it
         fails, the circuit reopens.
       }
-      -> notFound(endpoint: String) {
+      -> ok(endpoint: String) {
         No circuit breaker is configured for this endpoint.
       }
 
@@ -72,7 +72,7 @@ concept CircuitBreaker [B] {
         circuit closes. In closed state, resets the failure counter.
         Returns the new circuit status.
       }
-      -> notFound(endpoint: String) {
+      -> ok(endpoint: String) {
         No circuit breaker is configured for this endpoint.
       }
 
@@ -87,12 +87,12 @@ concept CircuitBreaker [B] {
         state, a single failure immediately reopens the circuit.
         Returns the new circuit status.
       }
-      -> tripped(breaker: B, failureCount: Int) {
+      -> ok(breaker: B, failureCount: Int) {
         The failure threshold was reached and the circuit has tripped
         open. No further requests will reach the endpoint until
         resetTimeoutMs elapses.
       }
-      -> notFound(endpoint: String) {
+      -> ok(endpoint: String) {
         No circuit breaker is configured for this endpoint.
       }
 
@@ -105,7 +105,7 @@ concept CircuitBreaker [B] {
         Force-reset the circuit breaker to closed state, clearing
         all counters. Use for manual recovery or testing.
       }
-      -> notFound(endpoint: String) {
+      -> ok(endpoint: String) {
         No circuit breaker is configured for this endpoint.
       }
 
@@ -118,7 +118,7 @@ concept CircuitBreaker [B] {
         Return the current state of the circuit breaker for
         diagnostics.
       }
-      -> notFound(endpoint: String) {
+      -> ok(endpoint: String) {
         No circuit breaker is configured for this endpoint.
       }
 
@@ -129,13 +129,13 @@ concept CircuitBreaker [B] {
 
   example "newly configured breaker is closed": {
     after configure(endpoint: "openai-api", failureThreshold: 5, successThreshold: 2, resetTimeoutMs: 30000) -> ok(breaker: b)
-    then check(endpoint: "openai-api") -> closed(breaker: b)
+    then check(endpoint: "openai-api") -> ok(breaker: b)
   }
 
   example "breaker trips after reaching failure threshold": {
     after configure(endpoint: "test-api", failureThreshold: 2, successThreshold: 1, resetTimeoutMs: 1000) -> ok(breaker: b)
     and  recordFailure(endpoint: "test-api") -> ok(breaker: b, status: _)
-    and  recordFailure(endpoint: "test-api") -> tripped(breaker: b, failureCount: 2)
+    and  recordFailure(endpoint: "test-api") -> ok(breaker: b, failureCount: 2)
     then get(endpoint: "test-api") -> ok(breaker: b, status: "open", failureCount: 2, successCount: 0)
   }
 

@@ -28,7 +28,7 @@ const _attestationSybilHandler: FunctionalConceptHandler = {
       instanceId: id,
     });
 
-    return complete(p, 'configured', { config: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { config: id }) as StorageProgram<Result>;
   },
 
   submitAttestation(input: Record<string, unknown>) {
@@ -44,7 +44,7 @@ const _attestationSybilHandler: FunctionalConceptHandler = {
       expiresAt: expiresAt ?? null,
       submittedAt: new Date().toISOString(),
     });
-    return complete(p, 'submitted', { candidate, attestationRef }) as StorageProgram<Result>;
+    return complete(p, 'ok', { candidate, attestationRef }) as StorageProgram<Result>;
   },
 
   verify(input: Record<string, unknown>) {

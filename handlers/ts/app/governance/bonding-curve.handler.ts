@@ -20,7 +20,7 @@ const _bondingCurveHandler: FunctionalConceptHandler = {
       reserveToken: input.reserveToken, bondedToken: input.bondedToken,
       reserveBalance: 0, bondedSupply: 0,
     });
-    return complete(p, 'created', { curve: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { curve: id }) as StorageProgram<Result>;
   },
 
   buy(input: Record<string, unknown>) {
@@ -40,7 +40,7 @@ const _bondingCurveHandler: FunctionalConceptHandler = {
             bondedSupply: (record.bondedSupply as number) + tokensOut,
           };
         });
-        return complete(thenP, 'bought', { tokensReceived: tokensOut, newPrice: 1.0 });
+        return complete(thenP, 'ok', { tokensReceived: tokensOut, newPrice: 1.0 });
       },
       (elseP) => complete(elseP, 'not_found', { curve }),
     ) as StorageProgram<Result>;
@@ -63,7 +63,7 @@ const _bondingCurveHandler: FunctionalConceptHandler = {
             bondedSupply: (record.bondedSupply as number) - (tokenAmount as number),
           };
         });
-        return complete(thenP, 'sold', { reserveReceived: reserveOut, newPrice: 1.0 });
+        return complete(thenP, 'ok', { reserveReceived: reserveOut, newPrice: 1.0 });
       },
       (elseP) => complete(elseP, 'not_found', { curve }),
     ) as StorageProgram<Result>;
@@ -75,7 +75,7 @@ const _bondingCurveHandler: FunctionalConceptHandler = {
     p = get(p, 'curve', curve as string, 'record');
 
     return branch(p, 'record',
-      (thenP) => complete(thenP, 'price', { spotPrice: 1.0, purchaseCost: amount }),
+      (thenP) => complete(thenP, 'ok', { spotPrice: 1.0, purchaseCost: amount }),
       (elseP) => complete(elseP, 'not_found', { curve }),
     ) as StorageProgram<Result>;
   },

@@ -41,7 +41,7 @@ concept Checkpoint [Z] {
       -> ok(checkpoint: Z) {
         Returns the most recent checkpoint for a run.
       }
-      -> none(run_ref: String) {
+      -> ok(run_ref: String) {
         No checkpoints exist for this run.
       }
     }

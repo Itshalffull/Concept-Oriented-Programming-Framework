@@ -331,7 +331,7 @@ const _definitionUnitHandler: FunctionalConceptHandler = {
     const b = input.b as string;
 
     if (!a || !b) {
-      return complete(createProgram(), 'same', {}) as StorageProgram<Result>;
+      return complete(createProgram(), 'ok', {}) as StorageProgram<Result>;
     }
 
     let p = createProgram();

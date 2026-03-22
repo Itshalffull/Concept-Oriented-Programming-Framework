@@ -25,13 +25,13 @@ concept CompletionCoverage [C] {
     action check(concept: String, action: String,
                  declaredVariants: String, extractedVariants: String,
                  syncPatterns: String) {
-      -> covered(report: C) {
+      -> ok(report: C) {
         Every declared variant has at least one sync when-pattern
         matching it, and every sync when-pattern for this
         concept/action references an existing variant. Full
         bidirectional coverage — no sync wiring gaps.
       }
-      -> uncovered(report: C, uncoveredVariants: String, orphanedPatterns: String) {
+      -> ok(report: C, uncoveredVariants: String, orphanedPatterns: String) {
         One or more declared variants have no sync matching them,
         and/or one or more sync when-patterns reference variants
         not declared by the concept spec. Returns both diagnostic
@@ -93,7 +93,7 @@ concept CompletionCoverage [C] {
                 declaredVariants: "[\"ok\",\"error\"]",
                 extractedVariants: "[\"ok\",\"error\"]",
                 syncPatterns: "[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"},{\"sync\":\"RegistrationError\",\"variant\":\"error\"}]")
-      -> covered(report: r)
+      -> ok(report: r)
     then report(concept: "User") -> ok(reports: reps)
   }
 
@@ -102,7 +102,7 @@ concept CompletionCoverage [C] {
                 declaredVariants: "[\"ok\",\"error\"]",
                 extractedVariants: "[\"ok\"]",
                 syncPatterns: "[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"}]")
-      -> uncovered(report: r, uncoveredVariants: uv, orphanedPatterns: op)
+      -> ok(report: r, uncoveredVariants: uv, orphanedPatterns: op)
     then uv != "[]"
   }
 
@@ -111,7 +111,7 @@ concept CompletionCoverage [C] {
                 declaredVariants: "[\"ok\",\"error\"]",
                 extractedVariants: "[\"ok\"]",
                 syncPatterns: "[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"}]")
-      -> uncovered(report: r, uncoveredVariants: uv, orphanedPatterns: op)
+      -> ok(report: r, uncoveredVariants: uv, orphanedPatterns: op)
     then listUncovered() -> ok(uncovered: u)
   }
 
@@ -121,7 +121,7 @@ concept CompletionCoverage [C] {
   }
 
   never "covered report with uncovered variants": {
-    check(concept: c, action: a, declaredVariants: dv, extractedVariants: ev, syncPatterns: sp) -> covered(report: r)
+    check(concept: c, action: a, declaredVariants: dv, extractedVariants: ev, syncPatterns: sp) -> ok(report: r)
     and r.uncoveredVariants != {}
   }
 

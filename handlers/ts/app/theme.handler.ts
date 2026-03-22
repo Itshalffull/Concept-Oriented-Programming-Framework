@@ -84,9 +84,9 @@ const _themeHandler: FunctionalConceptHandler = {
           let sub = createProgram();
           if ((t.id as string) !== theme && t.active) {
             sub = put(sub, 'theme', t.id as string, { ...t, active: false });
-            return complete(sub, 'deactivated', {});
+            return complete(sub, 'ok', {});
           }
-          return complete(sub, 'skipped', {});
+          return complete(sub, 'ok', {});
         }, '_deactivateResults', { writes: ['theme'], completionVariants: ['deactivated', 'skipped'] });
 
         // Activate the target theme
@@ -131,9 +131,9 @@ const _themeHandler: FunctionalConceptHandler = {
           let sub = createProgram();
           if (fallbackId && (t.id as string) === fallbackId && !t.active) {
             sub = put(sub, 'theme', t.id as string, { ...t, active: true });
-            return complete(sub, 'activated', { theme: t.id });
+            return complete(sub, 'ok', { theme: t.id });
           }
-          return complete(sub, 'skipped', {});
+          return complete(sub, 'ok', {});
         }, '_fallbackResults', { writes: ['theme'], completionVariants: ['activated', 'skipped'] });
 
         return completeFrom(b2, 'ok', (bindings) => {

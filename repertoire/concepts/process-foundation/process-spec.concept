@@ -51,7 +51,7 @@ concept ProcessSpec [P] {
       -> not_found(spec: P) {
         No spec with this identifier exists.
       }
-      -> already_active(spec: P) {
+      -> ok(spec: P) {
         Spec is already in active status.
       }
     }
@@ -71,7 +71,7 @@ concept ProcessSpec [P] {
         Updates the step and edge definitions. Only allowed when status is draft.
         Increments version.
       }
-      -> not_draft(spec: P) {
+      -> ok(spec: P) {
         Spec is not in draft status. Deprecate first, then update.
       }
       -> invalid(message: String) {

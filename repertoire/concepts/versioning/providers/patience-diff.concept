@@ -27,7 +27,7 @@ concept PatienceDiff [C] {
       -> ok(editScript: Bytes, distance: Int) {
         Patience edit script and edit distance.
       }
-      -> unsupportedContent(message: String) {
+      -> ok(message: String) {
         Content type not supported by this provider.
       }
 

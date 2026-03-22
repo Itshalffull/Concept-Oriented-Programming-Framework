@@ -19,7 +19,7 @@ concept Authorization [U] {
         Assigns a role to the user. The role's permissions become
         available immediately.
       }
-      -> exists() {
+      -> ok() {
         The user already has this role.
       }
     }

@@ -23,10 +23,10 @@ concept VercelKVProvider [K] {
         Vercel KV store created and linked to project. Returns
         REST API credentials for the store.
       }
-      -> alreadyProvisioned(storeName: String, credentials: String, storeId: String) {
+      -> ok(storeName: String, credentials: String, storeId: String) {
         A store with this name already exists. Returns existing credentials.
       }
-      -> provisionFailed(storeName: String, reason: String) {
+      -> ok(storeName: String, reason: String) {
         Could not create the KV store, e.g. Vercel API error or quota exceeded.
       }
 

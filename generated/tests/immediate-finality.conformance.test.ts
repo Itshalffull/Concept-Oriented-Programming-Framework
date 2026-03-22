@@ -88,16 +88,14 @@ describe('ImmediateFinality functional handler', () => {
       if (typeof immediateFinalityHandler.confirm !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(immediateFinalityHandler.confirm({ operationRef: "op-transfer-001" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "confirm_vote" -> ok', async () => {
       if (typeof immediateFinalityHandler.confirm !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(immediateFinalityHandler.confirm({ operationRef: "op-vote-042" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "confirm_empty" -> error', async () => {
@@ -129,7 +127,7 @@ describe('ImmediateFinality functional handler', () => {
     it("confirm-basic-flow", async () => {
       const storage = createInMemoryStorage();
       const confirmResult0 = await interpret(immediateFinalityHandler.confirm({ operationRef: {"type":"variable","name":"_"} }), storage);
-      expect(confirmResult0.variant).toBe("finalized");
+      expect(confirmResult0.variant).toBe("ok");
       let confirmation = confirmResult0.output["confirmation"];
     });
 

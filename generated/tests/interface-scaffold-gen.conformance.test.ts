@@ -88,16 +88,14 @@ describe('InterfaceScaffoldGen functional handler', () => {
       if (typeof interfaceScaffoldGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(interfaceScaffoldGenHandler.generate({ name: "commerce-api", targets: ["rest","graphql"], sdks: ["typescript","python"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "minimal_generate" -> ok', async () => {
       if (typeof interfaceScaffoldGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(interfaceScaffoldGenHandler.generate({ name: "my-api", targets: ["rest"], sdks: ["typescript"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_name" -> error', async () => {
@@ -171,8 +169,7 @@ describe('InterfaceScaffoldGen functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(interfaceScaffoldGenHandler.preview({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_preview" -> error', async () => {
@@ -243,8 +240,7 @@ describe('InterfaceScaffoldGen functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_generate?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(interfaceScaffoldGenHandler.register({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -269,8 +265,7 @@ describe('InterfaceScaffoldGen functional handler', () => {
     it("generate produces interface manifest", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(interfaceScaffoldGenHandler.generate({ name: {"type":"literal","value":"my-api"}, targets: {"type":"list","items":[{"type":"literal","value":"rest"},{"type":"literal","value":"graphql"}]}, sdks: {"type":"list","items":[{"type":"literal","value":"typescript"}]} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
+      expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
       let filesGenerated = generateResult0.output["filesGenerated"];
     });

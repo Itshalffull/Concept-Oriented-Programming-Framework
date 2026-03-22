@@ -28,7 +28,7 @@ concept Reputation [RP] {
 
   actions {
     action earn(participant: String, amount: Float, reason: String) {
-      -> earned(entry: RP) {
+      -> ok(entry: RP) {
         The participant's score increases by the given amount.
         A history entry is recorded.
       }
@@ -38,10 +38,10 @@ concept Reputation [RP] {
     }
 
     action burn(participant: String, amount: Float) {
-      -> burned(entry: RP) {
+      -> ok(entry: RP) {
         The participant's score decreases by the given amount.
       }
-      -> insufficient(participant: String, currentScore: Float) {
+      -> ok(participant: String, currentScore: Float) {
         The participant does not have enough reputation to burn.
       }
 
@@ -50,7 +50,7 @@ concept Reputation [RP] {
     }
 
     action decay(participant: String, decayFactor: Float) {
-      -> decayed(entry: RP, newScore: Float) {
+      -> ok(entry: RP, newScore: Float) {
         The participant's score is reduced by the decay factor.
       }
 
@@ -59,7 +59,7 @@ concept Reputation [RP] {
     }
 
     action getScore(participant: String) {
-      -> score(participant: String, value: Float) {
+      -> ok(participant: String, value: Float) {
         Returns the participant's current reputation score.
       }
       -> not_found(participant: String) {
@@ -71,7 +71,7 @@ concept Reputation [RP] {
     }
 
     action recalculate(participant: String) {
-      -> recalculated(participant: String, newScore: Float) {
+      -> ok(participant: String, newScore: Float) {
         The score is recomputed from history using the configured algorithm.
       }
 
@@ -82,9 +82,9 @@ concept Reputation [RP] {
 
   example "earn-then-getScore": {
 
-    after earn(participant: p, amount: 10.0, reason: _) -> earned(entry: _)
+    after earn(participant: p, amount: 10.0, reason: _) -> ok(entry: _)
 
-        then getScore(participant: p) -> score(participant: p, value: _)
+        then getScore(participant: p) -> ok(participant: p, value: _)
 
   }
 

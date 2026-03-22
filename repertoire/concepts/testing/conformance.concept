@@ -46,7 +46,7 @@ concept Conformance [C] {
         is executed against the TypeScript, Rust, Swift, and
         Solidity implementations.
       }
-      -> specError(concept: String, message: String) {
+      -> ok(concept: String, message: String) {
         Spec couldn't be parsed or has ambiguous requirements.
       }
 
@@ -61,11 +61,11 @@ concept Conformance [C] {
         for a specific language. Returns which spec requirements
         are covered by passing tests.
       }
-      -> failure(passed: Int, failed: Int, failures: list { testId: String, requirement: String, expected: String, actual: String }) {
+      -> ok(passed: Int, failed: Int, failures: list { testId: String, requirement: String, expected: String, actual: String }) {
         Some conformance tests failed. Each failure traces back
         to a specific spec requirement.
       }
-      -> deviationDetected(requirement: String, language: String, reason: String) {
+      -> ok(requirement: String, language: String, reason: String) {
         A known deviation — the language can't express this
         requirement. Recorded, not treated as failure.
       }

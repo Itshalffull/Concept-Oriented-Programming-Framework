@@ -88,16 +88,14 @@ describe('McpTarget functional handler', () => {
       if (typeof mcpTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(mcpTargetHandler.generate({ projection: "agent-projection", config: "{\"serverName\":\"agent-mcp\",\"transport\":\"stdio\"}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "generate_default_config" -> ok', async () => {
       if (typeof mcpTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(mcpTargetHandler.generate({ projection: "score-projection", config: "{}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "generate_empty_projection" -> error', async () => {
@@ -171,8 +169,7 @@ describe('McpTarget functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(mcpTargetHandler.validate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "validate_unknown" -> error', async () => {
@@ -246,8 +243,7 @@ describe('McpTarget functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(mcpTargetHandler.listTools({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "list_tools_score" -> ok', async () => {
@@ -260,8 +256,7 @@ describe('McpTarget functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(mcpTargetHandler.listTools({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "list_tools_empty" -> error', async () => {
@@ -293,13 +288,11 @@ describe('McpTarget functional handler', () => {
     it("generate-then-listTools", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(mcpTargetHandler.generate({ projection: {"type":"literal","value":"agent-projection"}, config: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
+      expect(generateResult0.variant).toBe("ok");
       let tools = generateResult0.output["tools"];
       let files = generateResult0.output["files"];
       const thenResult0 = await interpret(mcpTargetHandler.listTools({ concept: {"type":"literal","value":"Agent"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

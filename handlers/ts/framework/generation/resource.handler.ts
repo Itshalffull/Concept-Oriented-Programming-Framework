@@ -87,7 +87,7 @@ const _handler: FunctionalConceptHandler = {
           lastModified: lastModified || null,
           size: size ?? null,
         });
-        return complete(b2, 'created', { resource: resourceId });
+        return complete(b2, 'ok', { resource: resourceId });
       },
     );
 

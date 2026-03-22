@@ -27,10 +27,10 @@ concept OptimismProvider [P] {
         Register an Optimism provider instance and verify initial
         connectivity to both the L2 RPC and the L1 bridge contract.
       }
-      -> already_registered(rpc_url: String) {
+      -> ok(rpc_url: String) {
         A provider is already registered for this RPC URL.
       }
-      -> unreachable(message: String) {
+      -> ok(message: String) {
         The L2 RPC endpoint did not respond during registration.
       }
 
@@ -76,7 +76,7 @@ concept OptimismProvider [P] {
         Submit a cross-domain message relay transaction to L1,
         proving the L2 message on the OptimismPortal contract.
       }
-      -> already_relayed(message_hash: String) {
+      -> ok(message_hash: String) {
         This message has already been relayed and proven on L1.
       }
       -> error(message: String) {

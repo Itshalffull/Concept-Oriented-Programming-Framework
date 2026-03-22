@@ -25,7 +25,7 @@ concept Weight [W] {
 
   actions {
     action updateWeight(participant: String, source: String, value: Float) {
-      -> updated(weight: W, newTotal: Float) {
+      -> ok(weight: W, newTotal: Float) {
         The participant's weight from the given source is set to the
         given value. If multiple sources exist, they are combined per
         the configured aggregation rule.
@@ -36,7 +36,7 @@ concept Weight [W] {
     }
 
     action snapshot(snapshotRef: option String, participants: String) {
-      -> snapped(snapshot: W) {
+      -> ok(snapshot: W) {
         All current weights are captured at the given snapshot reference.
         This snapshot is immutable once created.
       }
@@ -46,7 +46,7 @@ concept Weight [W] {
     }
 
     action getWeight(participant: String) {
-      -> weight(participant: String, total: Float) {
+      -> ok(participant: String, total: Float) {
         Returns the participant's current weight across all sources.
       }
       -> not_found(participant: String) {
@@ -58,7 +58,7 @@ concept Weight [W] {
     }
 
     action getWeightFromSnapshot(snapshot: W, participant: String) {
-      -> weight(participant: String, total: Float, snapshot: W) {
+      -> ok(participant: String, total: Float, snapshot: W) {
         Returns the participant's weight from a specific snapshot.
       }
       -> not_found(snapshot: W) {
@@ -72,9 +72,9 @@ concept Weight [W] {
 
   example "updateWeight-then-getWeight": {
 
-    after updateWeight(participant: p, source: _, value: v) -> updated(weight: _, newTotal: _)
+    after updateWeight(participant: p, source: _, value: v) -> ok(weight: _, newTotal: _)
 
-        then getWeight(participant: p) -> weight(participant: p, total: _)
+        then getWeight(participant: p) -> ok(participant: p, total: _)
 
   }
 
@@ -99,7 +99,7 @@ concept Weight [W] {
 
     requires: participant != ""
 
-    ensures updated: participant != none
+    ensures ok: participant != none
 
   }
 }

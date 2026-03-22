@@ -34,7 +34,7 @@ concept PerformanceProfile [P] {
         Aggregate performance data for a static entity over a
         time window. Window as serialized JSON { start, end }.
       }
-      -> insufficientData(count: Int) {
+      -> ok(count: Int) {
         Not enough data points in the window for meaningful
         statistics.
       }
@@ -72,7 +72,7 @@ concept PerformanceProfile [P] {
         regression detection. Results as serialized JSON:
         { aP50, bP50, aP99, bP99, regression, pctChange }.
       }
-      -> insufficientData(window: String, count: Int) {
+      -> ok(window: String, count: Int) {
         Not enough data in one of the windows.
       }
 

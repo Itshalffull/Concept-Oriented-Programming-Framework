@@ -35,7 +35,7 @@ concept EnvironmentEntity [E] {
         (env-file, vault, ssm, config-map, etc.). For secrets,
         value is a placeholder — never store actual secret values.
       }
-      -> updated(existing: E) {
+      -> ok(existing: E) {
         Updated an existing config entry.
       }
       fixture register_config { name: "API_PORT", environment: "production", kind: "config", value: "3000", source: "env-file" }
@@ -88,7 +88,7 @@ concept EnvironmentEntity [E] {
         vs production). Result as serialized JSON array of
         { name, kind, aValue, bValue, onlyInA, onlyInB }.
       }
-      -> same() {
+      -> ok() {
         Environments have identical config.
       }
       fixture diff_staging_prod { envA: "staging", envB: "production" }

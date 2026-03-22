@@ -27,7 +27,7 @@ concept AgenticDelegate [D] {
 
   actions {
     action register(name: String, principal: String, autonomyLevel: String, allowedActions: list String) {
-      -> registered(delegate: D) {
+      -> ok(delegate: D) {
         A new agentic delegate is created. The principal is the human
         or entity accountable for this agent.
       }
@@ -37,7 +37,7 @@ concept AgenticDelegate [D] {
     }
 
     action assumeRole(delegate: D, role: String) {
-      -> role_assumed(delegate: D, role: String) {
+      -> ok(delegate: D, role: String) {
         The delegate temporarily holds the given role, subject to boundary checks.
       }
       -> not_found(delegate: D) {
@@ -49,7 +49,7 @@ concept AgenticDelegate [D] {
     }
 
     action releaseRole(delegate: D) {
-      -> role_released(delegate: D) {
+      -> ok(delegate: D) {
         The current role is removed from the delegate.
       }
       -> not_found(delegate: D) {
@@ -61,11 +61,11 @@ concept AgenticDelegate [D] {
     }
 
     action proposeAction(delegate: D, action: String, rationale: String) {
-      -> proposed(delegate: D, action: String) {
+      -> ok(delegate: D, action: String) {
         The action is proposed. If autonomy is Supervised, it awaits
         principal approval. If Autonomous, it proceeds directly.
       }
-      -> action_denied(delegate: D, action: String) {
+      -> ok(delegate: D, action: String) {
         The proposed action is not in the delegate's allowed actions list.
       }
       -> not_found(delegate: D) {
@@ -77,7 +77,7 @@ concept AgenticDelegate [D] {
     }
 
     action escalate(delegate: D, action: String, reason: String) {
-      -> escalated(delegate: D, action: String, reason: String) {
+      -> ok(delegate: D, action: String, reason: String) {
         The delegate signals it cannot proceed and escalates to its principal.
       }
 
@@ -86,7 +86,7 @@ concept AgenticDelegate [D] {
     }
 
     action updateAutonomy(delegate: D, autonomyLevel: String) {
-      -> updated(delegate: D) {
+      -> ok(delegate: D) {
         The autonomy level is changed. Only the principal can do this.
       }
       -> not_found(delegate: D) {
@@ -100,11 +100,11 @@ concept AgenticDelegate [D] {
 
   example "register-then-proposeAction": {
 
-    after register(agentType: _, principal: p, systemPrompt: _, boundaries: _) -> registered(delegate: d)
+    after register(agentType: _, principal: p, systemPrompt: _, boundaries: _) -> ok(delegate: d)
 
-        then assumeRole(delegate: d, roleId: r) -> role_assumed(delegate: d, roleId: r)
+        then assumeRole(delegate: d, roleId: r) -> ok(delegate: d, roleId: r)
 
-        and  proposeAction(delegate: d, action: a, justification: _) -> proposed(delegate: d, action: a)
+        and  proposeAction(delegate: d, action: a, justification: _) -> ok(delegate: d, action: a)
 
   }
 
@@ -129,7 +129,7 @@ concept AgenticDelegate [D] {
 
     requires: agentType != ""
 
-    ensures registered: agentType != none
+    ensures ok: agentType != none
 
   }
 }

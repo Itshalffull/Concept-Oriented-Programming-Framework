@@ -27,7 +27,7 @@ concept WebhookEndpoint [W] {
         Create a named webhook endpoint with target URL and
         optional authentication headers. Method defaults to POST.
       }
-      -> exists(name: String) {
+      -> ok(name: String) {
         An endpoint with this name is already registered.
       }
 
@@ -40,7 +40,7 @@ concept WebhookEndpoint [W] {
         Look up the named endpoint and return its URL and headers
         ready for HTTP calls.
       }
-      -> notFound(name: String) {
+      -> ok(name: String) {
         No endpoint is registered with this name.
       }
 

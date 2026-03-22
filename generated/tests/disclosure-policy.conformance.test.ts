@@ -88,8 +88,7 @@ describe('DisclosurePolicy functional handler', () => {
       if (typeof disclosurePolicyHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(disclosurePolicyHandler.define({ subject: "budget_report", audience: "public", timing: "Immediate", scope: ["financial","voting"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "define_missing_subject" -> error', async () => {
@@ -163,8 +162,7 @@ describe('DisclosurePolicy functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(disclosurePolicyHandler.evaluate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "evaluate_unknown_policy" -> restricted', async () => {
@@ -239,8 +237,7 @@ describe('DisclosurePolicy functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(disclosurePolicyHandler.suspend({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "suspend_unknown_policy" -> error', async () => {
@@ -272,7 +269,7 @@ describe('DisclosurePolicy functional handler', () => {
     it("define-then-evaluate", async () => {
       const storage = createInMemoryStorage();
       const defineResult0 = await interpret(disclosurePolicyHandler.define({ subject: {"type":"variable","name":"_"}, audience: {"type":"literal","value":"public"}, timing: {"type":"literal","value":"Immediate"}, scope: {"type":"variable","name":"_"} }), storage);
-      expect(defineResult0.variant).toBe("defined");
+      expect(defineResult0.variant).toBe("ok");
       let policy = defineResult0.output["policy"];
       const thenResult0 = await interpret(disclosurePolicyHandler.evaluate({ subject: {"type":"variable","name":"_"}, requester: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("disclose");
@@ -360,7 +357,7 @@ describe('DisclosurePolicy functional handler', () => {
       }
     });
 
-    it('define ensures on defined: ', async () => {
+    it('define ensures on ok: ', async () => {
       if (typeof disclosurePolicyHandler.define !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -372,7 +369,7 @@ describe('DisclosurePolicy functional handler', () => {
               const program = disclosurePolicyHandler.define(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "defined") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

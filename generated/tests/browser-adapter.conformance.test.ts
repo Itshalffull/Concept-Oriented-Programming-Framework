@@ -88,16 +88,14 @@ describe('BrowserAdapter functional handler', () => {
       if (typeof browserAdapterHandler.normalize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(browserAdapterHandler.normalize({ adapter: "browser-1", props: "{ \"class\": \"bold red\", \"onclick\": \"handleClick\" }" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "normalize_aria" -> ok', async () => {
       if (typeof browserAdapterHandler.normalize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(browserAdapterHandler.normalize({ adapter: "browser-1", props: "{ \"aria-label\": \"Close\", \"data-id\": \"42\" }" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "normalize_empty_props" -> error', async () => {
@@ -136,8 +134,7 @@ describe('BrowserAdapter functional handler', () => {
     it("normalize then normalize", async () => {
       const storage = createInMemoryStorage();
       const normalizeResult0 = await interpret(browserAdapterHandler.normalize({ adapter: {"type":"variable","name":"a"}, props: {"type":"literal","value":"{ \"type\": \"navigation\", \"destination\": \"detail\", \"urlPattern\": \"/articles/:id\" }"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(normalizeResult0.variant), `step 0: expected success but got '${normalizeResult0.variant}'`).toBe(false);
+      expect(normalizeResult0.variant).toBe("ok");
       let adapter = normalizeResult0.output["adapter"];
       let normalized = normalizeResult0.output["normalized"];
       const thenResult0 = await interpret(browserAdapterHandler.normalize({ adapter: {"type":"variable","name":"a"}, props: {"type":"literal","value":""} }), storage);

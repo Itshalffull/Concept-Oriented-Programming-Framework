@@ -27,7 +27,7 @@ concept DAGHistory [N] {
         New node appended to DAG with given parents.
         Node becomes a root if parents set is empty.
       }
-      -> unknownParent(message: String) {
+      -> ok(message: String) {
         One or more parent IDs not found in the DAG.
       }
 
@@ -40,7 +40,7 @@ concept DAGHistory [N] {
       -> ok(nodes: list N) {
         Topologically ordered list of all ancestor nodes.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         nodeId not in DAG.
       }
 
@@ -52,10 +52,10 @@ concept DAGHistory [N] {
       -> found(nodeId: N) {
         Nearest common ancestor of nodes a and b.
       }
-      -> none(message: String) {
+      -> ok(message: String) {
         No common ancestor exists — disjoint DAG histories.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         a or b not in DAG.
       }
 
@@ -67,7 +67,7 @@ concept DAGHistory [N] {
       -> ok(nodes: list N) {
         All descendant nodes in topological order.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         nodeId not in DAG.
       }
 
@@ -79,10 +79,10 @@ concept DAGHistory [N] {
       -> ok(path: list N) {
         Nodes on the path from ancestor to descendant, inclusive.
       }
-      -> noPath(message: String) {
+      -> ok(message: String) {
         No directed path between the two nodes.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         from or to not in DAG.
       }
 
@@ -94,7 +94,7 @@ concept DAGHistory [N] {
       -> ok(parents: set N, contentRef: String, metadata: Bytes) {
         Returns the full data for the given node.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         nodeId not in DAG.
       }
 

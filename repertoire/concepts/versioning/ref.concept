@@ -20,10 +20,10 @@ concept Ref [R] {
       -> ok(ref: R) {
         Named reference created pointing to the given hash.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         A ref with this name already exists.
       }
-      -> invalidHash(message: String) {
+      -> ok(message: String) {
         Hash does not exist in ContentHash store.
       }
 
@@ -36,7 +36,7 @@ concept Ref [R] {
         Reference atomically updated via compare-and-swap.
         Old value recorded in reflog.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         No ref with that name.
       }
       -> conflict(current: String) {
@@ -52,10 +52,10 @@ concept Ref [R] {
       -> ok() {
         Reference removed. Reflog entry added.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         No ref with that name.
       }
-      -> protected(message: String) {
+      -> ok(message: String) {
         Ref is protected and cannot be deleted.
       }
 
@@ -67,7 +67,7 @@ concept Ref [R] {
       -> ok(hash: String) {
         Returns the current hash target of the named ref.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         No ref with that name.
       }
 
@@ -79,7 +79,7 @@ concept Ref [R] {
       -> ok(entries: list { oldHash: String, newHash: String, timestamp: String, agent: String }) {
         Returns the mutation history for this ref.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         No ref with that name.
       }
 

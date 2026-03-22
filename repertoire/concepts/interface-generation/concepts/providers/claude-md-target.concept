@@ -44,7 +44,7 @@ concept ClaudeMdTarget [D] {
       -> ok(document: D, files: list String) {
         CLAUDE.md generated with all configured sections.
       }
-      -> noProjections(reason: String) {
+      -> ok(reason: String) {
         No valid concept projections found to aggregate.
       }
 
@@ -57,7 +57,7 @@ concept ClaudeMdTarget [D] {
       -> ok(document: D) {
         Document contains all required sections and is well-formed.
       }
-      -> missingSection(document: D, section: String) {
+      -> ok(document: D, section: String) {
         A configured section is missing from the document.
       }
 

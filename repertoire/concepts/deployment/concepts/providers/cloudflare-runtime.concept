@@ -28,7 +28,7 @@ concept CloudflareRuntime [W] {
       -> ok(worker: W, scriptName: String, endpoint: String) {
         Worker script created and routes configured.
       }
-      -> routeConflict(route: String, existingWorker: String) {
+      -> ok(route: String, existingWorker: String) {
         Route already claimed by another worker.
       }
 
@@ -40,7 +40,7 @@ concept CloudflareRuntime [W] {
       -> ok(worker: W, version: String) {
         Worker script updated and deployed globally.
       }
-      -> scriptTooLarge(worker: W, sizeBytes: Int, limitBytes: Int) {
+      -> ok(worker: W, sizeBytes: Int, limitBytes: Int) {
         Worker script exceeds Cloudflare size limits.
       }
 

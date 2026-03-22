@@ -88,8 +88,7 @@ describe('ScoreNavigator functional handler', () => {
       if (typeof scoreNavigatorHandler.show !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreNavigatorHandler.show({ kind: "concept", name: "User" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_kind" -> notfound', async () => {
@@ -172,8 +171,7 @@ describe('ScoreNavigator functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(scoreNavigatorHandler.traverse({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_relation" -> notfound', async () => {
@@ -253,8 +251,7 @@ describe('ScoreNavigator functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_show?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(scoreNavigatorHandler.back({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_history" -> empty', async () => {
@@ -329,8 +326,7 @@ describe('ScoreNavigator functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(scoreNavigatorHandler.list({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_kind" -> error', async () => {
@@ -369,39 +365,34 @@ describe('ScoreNavigator functional handler', () => {
     it("show then back is empty", async () => {
       const storage = createInMemoryStorage();
       const showResult0 = await interpret(scoreNavigatorHandler.show({ kind: {"type":"literal","value":"concept"}, name: {"type":"literal","value":"User"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(showResult0.variant), `step 0: expected success but got '${showResult0.variant}'`).toBe(false);
+      expect(showResult0.variant).toBe("ok");
       let item = showResult0.output["item"];
       let related = showResult0.output["related"];
       let cursor = showResult0.output["cursor"];
       const thenResult0 = await interpret(scoreNavigatorHandler.back({  }), storage);
-      expect(thenResult0.variant).toBe("empty");
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("show then traverse then back returns to original", async () => {
       const storage = createInMemoryStorage();
       const showResult0 = await interpret(scoreNavigatorHandler.show({ kind: {"type":"literal","value":"concept"}, name: {"type":"literal","value":"User"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(showResult0.variant), `step 0: expected success but got '${showResult0.variant}'`).toBe(false);
+      expect(showResult0.variant).toBe("ok");
       let item = showResult0.output["item"];
       let related = showResult0.output["related"];
       let cursor = showResult0.output["cursor"];
       const traverseResult1 = await interpret(scoreNavigatorHandler.traverse({ relation: {"type":"literal","value":"actions"}, target: {"type":"literal","value":"register"} }), storage);
-      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr1(traverseResult1.variant), `step 1: expected success but got '${traverseResult1.variant}'`).toBe(false);
+      expect(traverseResult1.variant).toBe("ok");
       item = traverseResult1.output["item"];
       related = traverseResult1.output["related"];
       cursor = traverseResult1.output["cursor"];
       const thenResult0 = await interpret(scoreNavigatorHandler.back({  }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("list entities by kind", async () => {
       const storage = createInMemoryStorage();
       const listResult0 = await interpret(scoreNavigatorHandler.list({ kind: {"type":"literal","value":"concept"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(listResult0.variant), `step 0: expected success but got '${listResult0.variant}'`).toBe(false);
+      expect(listResult0.variant).toBe("ok");
       let items = listResult0.output["items"];
     });
 

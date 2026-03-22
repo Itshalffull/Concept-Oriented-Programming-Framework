@@ -23,7 +23,7 @@ concept DatalogDependenceProvider [I] {
         Register this provider with PluginRegistry for
         Datalog-based dependence analysis.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the Datalog engine.
       }
     }

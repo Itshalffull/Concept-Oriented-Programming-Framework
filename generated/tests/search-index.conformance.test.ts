@@ -88,8 +88,7 @@ describe('SearchIndex functional handler', () => {
       if (typeof searchIndexHandler.createIndex !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(searchIndexHandler.createIndex({ index: "articles", config: "{\"backend\":\"memory\",\"analyzer\":\"standard\"}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_duplicate_index" -> error', async () => {
@@ -164,8 +163,7 @@ describe('SearchIndex functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_articles_index = await interpret(searchIndexHandler.createIndex({ index: "articles", config: "{\"backend\":\"memory\",\"analyzer\":\"standard\"}" }), storage);
       const result = await interpret(searchIndexHandler.indexItem({ index: "articles", item: afterResult_create_articles_index?.output?.["index"], data: "Introduction to functional programming" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "index_missing_index" -> error', async () => {
@@ -234,8 +232,7 @@ describe('SearchIndex functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_articles_index = await interpret(searchIndexHandler.createIndex({ index: "articles", config: "{\"backend\":\"memory\",\"analyzer\":\"standard\"}" }), storage);
       const result = await interpret(searchIndexHandler.removeItem({ index: "articles", item: afterResult_create_articles_index?.output?.["index"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "remove_from_missing_index" -> error', async () => {
@@ -309,8 +306,7 @@ describe('SearchIndex functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(searchIndexHandler.search({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "search_missing_index" -> error', async () => {
@@ -384,8 +380,7 @@ describe('SearchIndex functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(searchIndexHandler.addProcessor({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "add_processor_missing_index" -> error', async () => {
@@ -459,8 +454,7 @@ describe('SearchIndex functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(searchIndexHandler.reindex({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "reindex_missing" -> error', async () => {
@@ -492,15 +486,12 @@ describe('SearchIndex functional handler', () => {
     it("createIndex then indexItem", async () => {
       const storage = createInMemoryStorage();
       const createIndexResult0 = await interpret(searchIndexHandler.createIndex({ index: {"type":"variable","name":"i"}, config: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(createIndexResult0.variant), `step 0: expected success but got '${createIndexResult0.variant}'`).toBe(false);
+      expect(createIndexResult0.variant).toBe("ok");
       let index = createIndexResult0.output["index"];
       const thenResult0 = await interpret(searchIndexHandler.indexItem({ index: {"type":"variable","name":"i"}, item: {"type":"literal","value":"doc-1"}, data: {"type":"literal","value":"hello world"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(searchIndexHandler.search({ index: {"type":"variable","name":"i"}, query: {"type":"literal","value":"hello"} }), storage);
-      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
+      expect(thenResult1.variant).toBe("ok");
     });
 
   });

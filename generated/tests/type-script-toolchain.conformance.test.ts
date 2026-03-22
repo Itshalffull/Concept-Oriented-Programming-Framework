@@ -88,24 +88,21 @@ describe('TypeScriptToolchain functional handler', () => {
       if (typeof typeScriptToolchainHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(typeScriptToolchainHandler.resolve({ platform: "node", versionConstraint: ">=5.7" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_browser" -> ok', async () => {
       if (typeof typeScriptToolchainHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(typeScriptToolchainHandler.resolve({ platform: "browser" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_empty_platform" -> ok', async () => {
       if (typeof typeScriptToolchainHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(typeScriptToolchainHandler.resolve({ platform: "" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -169,8 +166,7 @@ describe('TypeScriptToolchain functional handler', () => {
       const _pool = Object.assign({}, (afterResult_resolve_node?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(typeScriptToolchainHandler.register({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -195,15 +191,13 @@ describe('TypeScriptToolchain functional handler', () => {
     it("resolve-then-register", async () => {
       const storage = createInMemoryStorage();
       const resolveResult0 = await interpret(typeScriptToolchainHandler.resolve({ platform: {"type":"literal","value":"node-20"}, versionConstraint: {"type":"literal","value":">=5.7"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(resolveResult0.variant), `step 0: expected success but got '${resolveResult0.variant}'`).toBe(false);
+      expect(resolveResult0.variant).toBe("ok");
       let toolchain = resolveResult0.output["toolchain"];
       let tscPath = resolveResult0.output["tscPath"];
       let version = resolveResult0.output["version"];
       let capabilities = resolveResult0.output["capabilities"];
       const thenResult0 = await interpret(typeScriptToolchainHandler.register({  }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

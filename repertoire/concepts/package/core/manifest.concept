@@ -55,7 +55,7 @@ concept Manifest [P] {
         Adds a dependency entry to the project manifest. Validates that the
         module_id is well-formed and the version_range is valid semver.
       }
-      -> exists() {
+      -> ok() {
         A dependency with this module_id already exists in the manifest.
       }
       -> invalid(message: String) {

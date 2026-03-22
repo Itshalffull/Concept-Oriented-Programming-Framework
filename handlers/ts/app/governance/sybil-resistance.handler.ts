@@ -22,7 +22,7 @@ const _sybilResistanceHandler: FunctionalConceptHandler = {
       (b) => {
         const id = `sybil-${Date.now()}`;
         let b2 = put(b, 'verified', candidate as string, { id, candidate, method, evidence, verifiedAt: new Date().toISOString() });
-        return complete(b2, 'verified', { id });
+        return complete(b2, 'ok', { id });
       },
     );
 
@@ -38,7 +38,7 @@ const _sybilResistanceHandler: FunctionalConceptHandler = {
       (b) => {
         const challengeId = `challenge-${Date.now()}`;
         let b2 = put(b, 'challenge', challengeId, { challengeId, targetId, challenger, evidence, status: 'Open' });
-        return complete(b2, 'challenge_opened', { challengeId });
+        return complete(b2, 'ok', { challengeId });
       },
       (b) => complete(b, 'invalid_target', { targetId }),
     );
@@ -60,7 +60,7 @@ const _sybilResistanceHandler: FunctionalConceptHandler = {
           });
         }
         let b2 = put(b, 'challenge', challengeId as string, { status: 'Overturned' });
-        return complete(b2, 'overturned', { challengeId });
+        return complete(b2, 'ok', { challengeId });
       },
       (b) => complete(b, 'not_found', { challengeId }),
     );

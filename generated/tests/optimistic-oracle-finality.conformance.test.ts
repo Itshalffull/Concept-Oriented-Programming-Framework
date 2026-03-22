@@ -37,24 +37,21 @@ describe('OptimisticOracleFinality imperative handler', () => {
       if (typeof optimisticOracleFinalityHandler.assertFinality !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await optimisticOracleFinalityHandler.assertFinality({ operationRef: "proposal-001", asserter: "validator-alice", bond: "100.0", challengeWindowHours: "48.0" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "assert_short_window" -> ok', async () => {
       if (typeof optimisticOracleFinalityHandler.assertFinality !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await optimisticOracleFinalityHandler.assertFinality({ operationRef: "proposal-002", asserter: "validator-bob", bond: "50.0", challengeWindowHours: "2.0" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "assert_large_bond" -> ok', async () => {
       if (typeof optimisticOracleFinalityHandler.assertFinality !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await optimisticOracleFinalityHandler.assertFinality({ operationRef: "proposal-003", asserter: "validator-carol", bond: "10000.0", challengeWindowHours: "24.0" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -74,8 +71,7 @@ describe('OptimisticOracleFinality imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_assert_standard = await optimisticOracleFinalityHandler.assertFinality({ operationRef: "proposal-001", asserter: "validator-alice", bond: "100.0", challengeWindowHours: "48.0" }, storage);
       const result = await optimisticOracleFinalityHandler.challenge({ assertion: afterResult_assert_standard?.output?.["id"], challenger: "watchdog-carol", bond: "200.0", evidence: "Invalid state transition detected" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "challenge_already_resolved" -> expired', async () => {
@@ -103,8 +99,7 @@ describe('OptimisticOracleFinality imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_assert_standard = await optimisticOracleFinalityHandler.assertFinality({ operationRef: "proposal-001", asserter: "validator-alice", bond: "100.0", challengeWindowHours: "48.0" }, storage);
       const result = await optimisticOracleFinalityHandler.resolve({ assertion: afterResult_assert_standard?.output?.["id"], validAssertion: "true" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_invalid" -> ok', async () => {
@@ -112,8 +107,7 @@ describe('OptimisticOracleFinality imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_assert_standard = await optimisticOracleFinalityHandler.assertFinality({ operationRef: "proposal-001", asserter: "validator-alice", bond: "100.0", challengeWindowHours: "48.0" }, storage);
       const result = await optimisticOracleFinalityHandler.resolve({ assertion: afterResult_assert_standard?.output?.["id"], validAssertion: "false" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_rejected" -> rejected', async () => {
@@ -141,8 +135,7 @@ describe('OptimisticOracleFinality imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_assert_standard = await optimisticOracleFinalityHandler.assertFinality({ operationRef: "proposal-001", asserter: "validator-alice", bond: "100.0", challengeWindowHours: "48.0" }, storage);
       const result = await optimisticOracleFinalityHandler.checkExpiry({ assertion: afterResult_assert_standard?.output?.["id"] }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "check_still_pending" -> still_pending', async () => {
@@ -171,7 +164,7 @@ describe('OptimisticOracleFinality imperative handler', () => {
     it("assertFinality-then-checkExpiry", async () => {
       const storage = createInMemoryStorage();
       const assertFinalityResult0 = await optimisticOracleFinalityHandler.assertFinality({ operationRef: {"type":"variable","name":"_"}, asserter: {"type":"variable","name":"_"}, bond: {"type":"variable","name":"_"}, challengeWindowHours: {"type":"literal","value":48} }, storage);
-      expect(assertFinalityResult0.variant).toBe("asserted");
+      expect(assertFinalityResult0.variant).toBe("ok");
       let assertion = assertFinalityResult0.output["assertion"];
       const thenResult0 = await optimisticOracleFinalityHandler.checkExpiry({ assertion: {"type":"variable","name":"oo"} }, storage);
       expect(thenResult0.variant).toBe("finalized");
@@ -255,7 +248,7 @@ describe('OptimisticOracleFinality imperative handler', () => {
       }
     });
 
-    it('assertFinality ensures on asserted: ', async () => {
+    it('assertFinality ensures on ok: ', async () => {
       if (typeof optimisticOracleFinalityHandler.assertFinality !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -264,7 +257,7 @@ describe('OptimisticOracleFinality imperative handler', () => {
           async (input) => {
             const storage = createInMemoryStorage();
             const result = await safeInvoke(() => optimisticOracleFinalityHandler.assertFinality(input as Record<string, unknown>, storage));
-            if (result?.variant === "asserted") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

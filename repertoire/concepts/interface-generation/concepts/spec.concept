@@ -26,7 +26,7 @@ concept Spec [D] {
         Specification document generated covering all concepts
         in the projections list. Single document per suite per format.
       }
-      -> formatError(format: String, reason: String) {
+      -> ok(format: String, reason: String) {
         Provider-specific spec generation failure.
       }
 

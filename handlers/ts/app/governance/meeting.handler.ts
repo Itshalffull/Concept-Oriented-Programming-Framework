@@ -19,7 +19,7 @@ const _meetingHandler: FunctionalConceptHandler = {
       id, title: input.title, scheduledAt: input.scheduledAt,
       circle: input.circle ?? null, status: 'Scheduled', agenda: [], minutes: [],
     });
-    return complete(p, 'scheduled', { meeting: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { meeting: id }) as StorageProgram<Result>;
   },
 
   callToOrder(input: Record<string, unknown>) {
@@ -34,7 +34,7 @@ const _meetingHandler: FunctionalConceptHandler = {
           return { ...rec, status: 'InSession', chair, startedAt: new Date().toISOString() };
         }, 'updated');
         b2 = putFrom(b2, 'meeting', meeting as string, (bindings) => bindings.updated as Record<string, unknown>);
-        return complete(b2, 'called_to_order', { meeting });
+        return complete(b2, 'ok', { meeting });
       },
       (b) => complete(b, 'not_found', { meeting }),
     );
@@ -49,7 +49,7 @@ const _meetingHandler: FunctionalConceptHandler = {
     p = put(p, 'motion', id, {
       id, meeting, mover, motion, status: 'Moved', movedAt: new Date().toISOString(),
     });
-    return complete(p, 'motion_made', { motion: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { motion: id }) as StorageProgram<Result>;
   },
 
   secondMotion(input: Record<string, unknown>) {
@@ -64,7 +64,7 @@ const _meetingHandler: FunctionalConceptHandler = {
           return { ...rec, status: 'Seconded', seconder };
         }, 'updated');
         b2 = putFrom(b2, 'motion', motion as string, (bindings) => bindings.updated as Record<string, unknown>);
-        return complete(b2, 'seconded', { motion });
+        return complete(b2, 'ok', { motion });
       },
       (b) => complete(b, 'not_found', { motion }),
     );
@@ -84,7 +84,7 @@ const _meetingHandler: FunctionalConceptHandler = {
           return { ...rec, status: 'Voting' };
         }, 'updated');
         b2 = putFrom(b2, 'motion', motion as string, (bindings) => bindings.updated as Record<string, unknown>);
-        return complete(b2, 'question_called', { motion });
+        return complete(b2, 'ok', { motion });
       },
       (b) => complete(b, 'not_found', { motion }),
     );
@@ -126,7 +126,7 @@ const _meetingHandler: FunctionalConceptHandler = {
           return { ...rec, status: 'Adjourned', adjournedAt: new Date().toISOString() };
         }, 'updated');
         b2 = putFrom(b2, 'meeting', meeting as string, (bindings) => bindings.updated as Record<string, unknown>);
-        return complete(b2, 'adjourned', { meeting });
+        return complete(b2, 'ok', { meeting });
       },
       (b) => complete(b, 'not_found', { meeting }),
     );

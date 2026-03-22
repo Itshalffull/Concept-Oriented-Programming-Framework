@@ -88,8 +88,7 @@ describe('GlickoRating functional handler', () => {
       if (typeof glickoRatingHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(glickoRatingHandler.configure({ initialRating: "1500.0", initialDeviation: "350.0", initialVolatility: "0.06", inactivityGrowthRate: "30.0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_zero_deviation" -> error', async () => {
@@ -158,8 +157,7 @@ describe('GlickoRating functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_standard = await interpret(glickoRatingHandler.configure({ initialRating: "1500.0", initialDeviation: "350.0", initialVolatility: "0.06", inactivityGrowthRate: "30.0" }), storage);
       const result = await interpret(glickoRatingHandler.recordOutcome({ config: afterResult_configure_standard?.output?.["id"], participant: "alice", opponent: "bob", outcome: "1.0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "outcome_invalid" -> error', async () => {
@@ -228,8 +226,7 @@ describe('GlickoRating functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_standard = await interpret(glickoRatingHandler.configure({ initialRating: "1500.0", initialDeviation: "350.0", initialVolatility: "0.06", inactivityGrowthRate: "30.0" }), storage);
       const result = await interpret(glickoRatingHandler.applyInactivityDecay({ config: afterResult_configure_standard?.output?.["id"], participant: "alice", daysSinceActive: "30.0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "decay_nonexistent" -> error', async () => {
@@ -298,8 +295,7 @@ describe('GlickoRating functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_standard = await interpret(glickoRatingHandler.configure({ initialRating: "1500.0", initialDeviation: "350.0", initialVolatility: "0.06", inactivityGrowthRate: "30.0" }), storage);
       const result = await interpret(glickoRatingHandler.getReliableWeight({ config: afterResult_configure_standard?.output?.["id"], participant: "alice" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "weight_unknown" -> error', async () => {
@@ -331,10 +327,10 @@ describe('GlickoRating functional handler', () => {
     it("configure-then-recordOutcome", async () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(glickoRatingHandler.configure({ initialRating: {"type":"literal","value":1500}, initialDeviation: {"type":"literal","value":350}, initialVolatility: {"type":"literal","value":0.06}, inactivityGrowthRate: {"type":"variable","name":"_"} }), storage);
-      expect(configureResult0.variant).toBe("configured");
+      expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
       const thenResult0 = await interpret(glickoRatingHandler.recordOutcome({ config: {"type":"variable","name":"gl"}, participant: {"type":"variable","name":"p"}, opponent: {"type":"variable","name":"_"}, outcome: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("updated");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });
@@ -421,7 +417,7 @@ describe('GlickoRating functional handler', () => {
       }
     });
 
-    it('configure ensures on configured: ', async () => {
+    it('configure ensures on ok: ', async () => {
       if (typeof glickoRatingHandler.configure !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -433,7 +429,7 @@ describe('GlickoRating functional handler', () => {
               const program = glickoRatingHandler.configure(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "configured") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

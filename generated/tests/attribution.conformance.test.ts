@@ -88,16 +88,14 @@ describe('Attribution functional handler', () => {
       if (typeof attributionHandler.attribute !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(attributionHandler.attribute({ contentRef: "doc-main-ts", region: "lines:10-25", agent: "alice@example.com", changeRef: "commit-abc123" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "attribute_empty_ref" -> ok', async () => {
       if (typeof attributionHandler.attribute !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(attributionHandler.attribute({ contentRef: "", region: "lines:1-5", agent: "bob", changeRef: "commit-def" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -164,8 +162,7 @@ describe('Attribution functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(attributionHandler.blame({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "blame_unknown_doc" -> ok', async () => {
@@ -178,8 +175,7 @@ describe('Attribution functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(attributionHandler.blame({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -246,8 +242,7 @@ describe('Attribution functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(attributionHandler.history({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "history_unknown_region" -> error', async () => {
@@ -321,8 +316,7 @@ describe('Attribution functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(attributionHandler.setOwnership({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "set_ownership_empty_owners" -> ok', async () => {
@@ -335,8 +329,7 @@ describe('Attribution functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(attributionHandler.setOwnership({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -403,8 +396,7 @@ describe('Attribution functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(attributionHandler.queryOwners({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "query_unmatched_path" -> error', async () => {
@@ -436,12 +428,10 @@ describe('Attribution functional handler', () => {
     it("attribute-then-blame", async () => {
       const storage = createInMemoryStorage();
       const attributeResult0 = await interpret(attributionHandler.attribute({ contentRef: {"type":"variable","name":"c"}, region: {"type":"variable","name":"r"}, agent: {"type":"variable","name":"a"}, changeRef: {"type":"variable","name":"ch"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(attributeResult0.variant), `step 0: expected success but got '${attributeResult0.variant}'`).toBe(false);
+      expect(attributeResult0.variant).toBe("ok");
       let attributionId = attributeResult0.output["attributionId"];
       const thenResult0 = await interpret(attributionHandler.blame({ contentRef: {"type":"variable","name":"c"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

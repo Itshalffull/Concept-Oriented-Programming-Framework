@@ -19,7 +19,7 @@ concept ReputationWeight [RW] {
 
   actions {
     action configure(scalingFunction: option String, cap: option Float) {
-      -> configured(config: RW) {
+      -> ok(config: RW) {
         Weight = f(reputation) where f is the configured scaling function.
         Cap sets maximum weight. Defaults to linear scaling with no cap.
       }
@@ -29,11 +29,11 @@ concept ReputationWeight [RW] {
     }
 
     action compute(config: RW, participant: String, reputationScore: Float) {
-      -> weight(participant: String, weight: Float, rawScore: Float) {
+      -> ok(participant: String, weight: Float, rawScore: Float) {
         The reputation score is transformed through the scaling function,
         clamped by cap.
       }
-      -> no_reputation() {
+      -> ok() {
         The participant has zero or negative reputation. Weight is zero.
       }
 
@@ -44,9 +44,9 @@ concept ReputationWeight [RW] {
 
   example "configure-then-compute": {
 
-    after configure(scalingFunction: "linear", cap: 100.0) -> configured(config: rw)
+    after configure(scalingFunction: "linear", cap: 100.0) -> ok(config: rw)
 
-        then compute(config: rw, participant: p, reputationScore: 50.0) -> weight(participant: p, weight: 50.0, rawScore: 50.0)
+        then compute(config: rw, participant: p, reputationScore: 50.0) -> ok(participant: p, weight: 50.0, rawScore: 50.0)
 
   }
 
@@ -55,7 +55,7 @@ concept ReputationWeight [RW] {
 
     requires: scalingFunction != ""
 
-    ensures configured: scalingFunction != none
+    ensures ok: scalingFunction != none
 
   }
 }

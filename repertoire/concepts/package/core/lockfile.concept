@@ -66,7 +66,7 @@ concept Lockfile [L] {
       -> notfound() {
         The lockfile does not exist or cannot be read.
       }
-      -> corrupt(message: String) {
+      -> ok(message: String) {
         The lockfile exists but cannot be parsed or has been tampered with.
       }
 
@@ -80,11 +80,11 @@ concept Lockfile [L] {
         hashes and integrity digests against the actual artifacts. Confirms
         the project_hash still matches the current manifest.
       }
-      -> stale(reason: String) {
+      -> ok(reason: String) {
         The project_hash no longer matches the current manifest, indicating
         the lockfile needs to be regenerated.
       }
-      -> tampered(entries: list String) {
+      -> ok(entries: list String) {
         One or more entries have content hashes or integrity digests that
         do not match the downloaded artifacts.
       }

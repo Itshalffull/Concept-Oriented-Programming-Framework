@@ -88,8 +88,7 @@ describe('GovernanceAutomationProvider functional handler', () => {
       if (typeof governanceAutomationProviderHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(governanceAutomationProviderHandler.register({  }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_duplicate" -> error', async () => {
@@ -163,8 +162,7 @@ describe('GovernanceAutomationProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(governanceAutomationProviderHandler.execute({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "execute_quorum_pass" -> ok', async () => {
@@ -177,8 +175,7 @@ describe('GovernanceAutomationProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(governanceAutomationProviderHandler.execute({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "execute_guard_deny" -> error', async () => {
@@ -229,12 +226,10 @@ describe('GovernanceAutomationProvider functional handler', () => {
     it("register-then-execute", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(governanceAutomationProviderHandler.register({  }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let provider_name = registerResult0.output["provider_name"];
       const thenResult0 = await interpret(governanceAutomationProviderHandler.execute({ action_payload: {"type":"literal","value":"{\"action\":\"transfer\"}"}, gate_config: {"type":"literal","value":"{\"gate\":\"timelock\",\"delay\":3600}"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

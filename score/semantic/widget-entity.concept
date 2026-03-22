@@ -39,7 +39,7 @@ concept WidgetEntity [W] {
         Extracts anatomy, states, props, slots, accessibility,
         affordances, and composition from the AST.
       }
-      -> alreadyRegistered(existing: W) {
+      -> ok(existing: W) {
         A widget entity with this name is already registered.
       }
       fixture register_dialog { name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }
@@ -103,7 +103,7 @@ concept WidgetEntity [W] {
         Audit accessibility completeness: role, keyboard bindings,
         ARIA attributes, focus management. Report as serialized JSON.
       }
-      -> incomplete(missing: String) {
+      -> ok(missing: String) {
         Accessibility declaration is incomplete. Missing items
         as serialized JSON array.
       }
@@ -118,7 +118,7 @@ concept WidgetEntity [W] {
         affordance matching and connect bindings. Results as
         serialized JSON array of { concept, via }.
       }
-      -> noConceptBinding() {
+      -> ok() {
         This widget has no bindings to any concept.
       }
       fixture trace_valid { widget: $register_dialog.entity } after register_dialog
@@ -134,7 +134,7 @@ concept WidgetEntity [W] {
 
   example "duplicate registration returns existing": {
     after register(name: "dialog", source: "widgets/dialog.widget", ast: "{}") -> ok(entity: w)
-    then register(name: "dialog", source: "widgets/dialog.widget", ast: "{}") -> alreadyRegistered(existing: w)
+    then register(name: "dialog", source: "widgets/dialog.widget", ast: "{}") -> ok(existing: w)
   }
 
   always "every widgets entry has name": {

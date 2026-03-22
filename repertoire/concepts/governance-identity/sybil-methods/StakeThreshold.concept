@@ -25,7 +25,7 @@ concept StakeThreshold [ST] {
 
   actions {
     action configure(minimumStake: Float, token: String, lockPeriodDays: option Int) {
-      -> configured(config: ST) {
+      -> ok(config: ST) {
         Sets the minimum stake for participation and the token type.
       }
 
@@ -34,7 +34,7 @@ concept StakeThreshold [ST] {
     }
 
     action deposit(config: ST, candidate: String, amount: Float) {
-      -> deposited(candidate: String, balance: Float) {
+      -> ok(candidate: String, balance: Float) {
         The deposit has been recorded and the new balance returned.
       }
 
@@ -43,10 +43,10 @@ concept StakeThreshold [ST] {
     }
 
     action check(config: ST, candidate: String) {
-      -> qualified(candidate: String, balance: Float, minimumStake: Float) {
+      -> ok(candidate: String, balance: Float, minimumStake: Float) {
         The candidate meets the stake threshold.
       }
-      -> insufficient(candidate: String, balance: Float, minimumStake: Float, shortfall: Float) {
+      -> ok(candidate: String, balance: Float, minimumStake: Float, shortfall: Float) {
         The deposit does not meet the minimum.
       }
       -> not_found(config: ST) {
@@ -58,10 +58,10 @@ concept StakeThreshold [ST] {
     }
 
     action slash(config: ST, candidate: String, amount: Float) {
-      -> slashed(candidate: String, slashedAmount: Float, remainingBalance: Float) {
+      -> ok(candidate: String, slashedAmount: Float, remainingBalance: Float) {
         The candidate's deposit is partially or fully forfeited.
       }
-      -> no_balance(candidate: String) {
+      -> ok(candidate: String) {
         The candidate has no balance to slash.
       }
 
@@ -72,9 +72,9 @@ concept StakeThreshold [ST] {
 
   example "configure-then-checkEligibility": {
 
-    after configure(minimumStake: 100.0, slashOnViolation: true) -> configured(config: st)
+    after configure(minimumStake: 100.0, slashOnViolation: true) -> ok(config: st)
 
-        then deposit(config: st, participant: p, amount: 100.0) -> deposited(participant: p)
+        then deposit(config: st, participant: p, amount: 100.0) -> ok(participant: p)
 
         and  checkEligibility(config: st, participant: p) -> eligible(participant: p, stakedAmount: 100.0)
 
@@ -101,7 +101,7 @@ concept StakeThreshold [ST] {
 
     requires: minimumStake != ""
 
-    ensures configured: minimumStake != none
+    ensures ok: minimumStake != none
 
   }
 }

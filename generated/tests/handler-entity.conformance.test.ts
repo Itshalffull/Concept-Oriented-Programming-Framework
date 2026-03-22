@@ -88,8 +88,7 @@ describe('HandlerEntity functional handler', () => {
       if (typeof handlerEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_empty_concept" -> error', async () => {
@@ -163,8 +162,7 @@ describe('HandlerEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(handlerEntityHandler.get({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_nonexistent" -> error', async () => {
@@ -238,8 +236,7 @@ describe('HandlerEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(handlerEntityHandler.getByFile({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_by_unknown_file" -> error', async () => {
@@ -313,8 +310,7 @@ describe('HandlerEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(handlerEntityHandler.findByConcept({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_nonexistent_concept" -> ok', async () => {
@@ -327,8 +323,7 @@ describe('HandlerEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(handlerEntityHandler.findByConcept({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -395,8 +390,7 @@ describe('HandlerEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(handlerEntityHandler.findByLanguage({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_unknown_language" -> ok', async () => {
@@ -409,8 +403,7 @@ describe('HandlerEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(handlerEntityHandler.findByLanguage({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -472,8 +465,7 @@ describe('HandlerEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
       const result = await interpret(handlerEntityHandler.getActionMethod({ handler: afterResult_register_article_handler?.output?.["handler"], actionName: "create" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_missing_method" -> error', async () => {
@@ -547,8 +539,7 @@ describe('HandlerEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(handlerEntityHandler.implementationGaps({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "gaps_no_handler" -> error', async () => {
@@ -617,8 +608,7 @@ describe('HandlerEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
       const result = await interpret(handlerEntityHandler.getDependencies({ handler: afterResult_register_article_handler?.output?.["handler"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "deps_nonexistent" -> ok', async () => {
@@ -631,8 +621,7 @@ describe('HandlerEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(handlerEntityHandler.getDependencies({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -694,8 +683,7 @@ describe('HandlerEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
       const result = await interpret(handlerEntityHandler.getStorageUsage({ handler: afterResult_register_article_handler?.output?.["handler"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "storage_nonexistent" -> ok', async () => {
@@ -708,8 +696,7 @@ describe('HandlerEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(handlerEntityHandler.getStorageUsage({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -776,8 +763,7 @@ describe('HandlerEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(handlerEntityHandler.resolveStackFrame({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_external_frame" -> error', async () => {
@@ -846,8 +832,7 @@ describe('HandlerEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
       const result = await interpret(handlerEntityHandler.resolveToAstNode({ handler: afterResult_register_article_handler?.output?.["handler"], line: "10", col: "5" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_ast_out_of_range" -> error', async () => {
@@ -921,8 +906,7 @@ describe('HandlerEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(handlerEntityHandler.resolveStackTrace({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_empty_trace" -> ok', async () => {
@@ -935,8 +919,7 @@ describe('HandlerEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(handlerEntityHandler.resolveStackTrace({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -998,8 +981,7 @@ describe('HandlerEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
       const result = await interpret(handlerEntityHandler.traceToVariantReturn({ handler: afterResult_register_article_handler?.output?.["handler"], actionName: "create" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "trace_missing_action" -> error', async () => {
@@ -1068,8 +1050,7 @@ describe('HandlerEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_article_handler = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
       const result = await interpret(handlerEntityHandler.traceToStorageCalls({ handler: afterResult_register_article_handler?.output?.["handler"], actionName: "create" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "trace_missing_storage" -> error', async () => {
@@ -1143,8 +1124,7 @@ describe('HandlerEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(handlerEntityHandler.diffFromSpec({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "diff_no_handler" -> error', async () => {
@@ -1218,8 +1198,7 @@ describe('HandlerEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(handlerEntityHandler.findByError({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_unknown_errors" -> ok', async () => {
@@ -1232,8 +1211,7 @@ describe('HandlerEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(handlerEntityHandler.findByError({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -1300,8 +1278,7 @@ describe('HandlerEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(handlerEntityHandler.sourceForAction({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "source_no_handler" -> error', async () => {
@@ -1318,33 +1295,28 @@ describe('HandlerEntity functional handler', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(handlerEntityHandler.register({ concept: {"type":"literal","value":"Article"}, sourceFile: {"type":"literal","value":"handlers/ts/article.handler.ts"}, language: {"type":"literal","value":"typescript"}, ast: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let handler = registerResult0.output["handler"];
       const thenResult0 = await interpret(handlerEntityHandler.get({ concept: {"type":"literal","value":"Article"}, language: {"type":"literal","value":"typescript"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("registered entity is retrievable by file", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(handlerEntityHandler.register({ concept: {"type":"literal","value":"Article"}, sourceFile: {"type":"literal","value":"handlers/ts/article.handler.ts"}, language: {"type":"literal","value":"typescript"}, ast: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let handler = registerResult0.output["handler"];
       const thenResult0 = await interpret(handlerEntityHandler.getByFile({ sourceFile: {"type":"literal","value":"handlers/ts/article.handler.ts"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("duplicate registration returns existing", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(handlerEntityHandler.register({ concept: {"type":"literal","value":"Article"}, sourceFile: {"type":"literal","value":"handlers/ts/article.handler.ts"}, language: {"type":"literal","value":"typescript"}, ast: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let handler = registerResult0.output["handler"];
       const thenResult0 = await interpret(handlerEntityHandler.register({ concept: {"type":"literal","value":"Article"}, sourceFile: {"type":"literal","value":"handlers/ts/article.handler.ts"}, language: {"type":"literal","value":"typescript"}, ast: {"type":"literal","value":"{}"} }), storage);
-      expect(thenResult0.variant).toBe("alreadyRegistered");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

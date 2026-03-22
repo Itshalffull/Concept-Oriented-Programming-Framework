@@ -41,7 +41,7 @@ concept UISchema [S, C] {
         Emits entityElement with concept name, suite, tags,
         and field summary for entity-level classification.
       }
-      -> parseError(message: String) { Spec could not be parsed. }
+      -> ok(message: String) { Spec could not be parsed. }
 
       fixture valid_inspect { schema: "S-1", conceptSpec: "{\"name\":\"Article\",\"fields\":[{\"name\":\"title\",\"type\":\"String\"},{\"name\":\"body\",\"type\":\"String\"}],\"actions\":[{\"name\":\"create\"}]}" }
       fixture inspect_with_annotations { schema: "S-2", conceptSpec: "{\"name\":\"Task\",\"suite\":\"project-mgmt\",\"annotations\":{\"surface\":{\"tags\":[\"kanban\"]}},\"fields\":[\"status\"],\"actions\":[\"update\"]}" }
@@ -76,7 +76,7 @@ concept UISchema [S, C] {
         been marked as resolved by entity-level resolution.
       }
       -> notfound(message: String) { No schema exists. }
-      -> resolved(message: String) {
+      -> ok(message: String) {
         Schema was resolved at entity level. Field-level
         element extraction is skipped.
       }
@@ -126,7 +126,7 @@ concept UISchema [S, C] {
   example "inspect then getElements": {
     after inspect(schema: s, conceptSpec: _) -> ok(schema: s)
     and markResolved(schema: s) -> ok(schema: s)
-    then getElements(schema: s) -> resolved(message: _)
+    then getElements(schema: s) -> ok(message: _)
   }
 
 

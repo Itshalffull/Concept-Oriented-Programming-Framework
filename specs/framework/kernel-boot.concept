@@ -31,10 +31,10 @@ concept KernelBoot [K] {
         Kernel booted: all concept handlers registered, routing syncs
         compiled, and kernel instance ready for action dispatch.
       }
-      -> noHandlers(projectRoot: String) {
+      -> ok(projectRoot: String) {
         No concept handler modules found under the project root.
       }
-      -> syncCompilationFailed(errors: list String) {
+      -> ok(errors: list String) {
         One or more sync files failed to compile. The kernel is still
         usable but sync-driven routing will be incomplete.
       }

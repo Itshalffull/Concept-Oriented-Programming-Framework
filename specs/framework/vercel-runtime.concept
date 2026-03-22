@@ -29,7 +29,7 @@ concept VercelRuntime [V] {
       -> ok(project: V, projectId: String, endpoint: String) {
         Vercel project created with specified framework.
       }
-      -> domainConflict(domain: String, existingProject: String) {
+      -> ok(domain: String, existingProject: String) {
         Domain already assigned to another project.
       }
 
@@ -49,7 +49,7 @@ concept VercelRuntime [V] {
       -> ok(project: V, deploymentId: String, deploymentUrl: String) {
         Build completed and deployment created.
       }
-      -> buildFailed(project: V, errors: list String) {
+      -> ok(project: V, errors: list String) {
         Vercel build step failed.
       }
 

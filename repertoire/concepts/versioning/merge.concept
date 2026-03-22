@@ -49,11 +49,11 @@ concept Merge [C] {
       -> clean(result: C) {
         All changes merged without conflicts.
       }
-      -> conflicts(mergeId: M, conflictCount: Int) {
+      -> ok(mergeId: M, conflictCount: Int) {
         Merge produced conflicts requiring resolution.
         Use resolveConflict to handle each, then finalize.
       }
-      -> noStrategy(message: String) {
+      -> ok(message: String) {
         No strategy registered for this content type.
       }
 
@@ -66,10 +66,10 @@ concept Merge [C] {
       -> ok(remaining: Int) {
         Conflict resolved. Returns count of remaining conflicts.
       }
-      -> invalidIndex(message: String) {
+      -> ok(message: String) {
         Conflict index out of range.
       }
-      -> alreadyResolved(message: String) {
+      -> ok(message: String) {
         This conflict was already resolved.
       }
 
@@ -81,7 +81,7 @@ concept Merge [C] {
       -> ok(result: C) {
         All conflicts resolved. Returns merged content.
       }
-      -> unresolvedConflicts(count: Int) {
+      -> ok(count: Int) {
         Cannot finalize — conflicts remain.
       }
 

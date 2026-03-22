@@ -86,7 +86,7 @@ const _handler: FunctionalConceptHandler = {
         const record = bindings.record as Record<string, unknown> | null;
         return !record || record.status !== 'running';
       },
-      (thenP) => complete(thenP, 'stopped', {}),
+      (thenP) => complete(thenP, 'ok', {}),
       (elseP) => completeFrom(elseP, 'running', (bindings) => {
         const record = bindings.record as Record<string, unknown>;
         const startedAt = new Date(record.startedAt as string);

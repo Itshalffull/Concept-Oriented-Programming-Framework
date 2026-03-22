@@ -103,7 +103,7 @@ const _handler: FunctionalConceptHandler = {
               const key = record._key as string;
               let sub = createProgram();
               sub = put(sub, 'ref', key, { ...record, target: newHash });
-              return complete(sub, 'updated', {});
+              return complete(sub, 'ok', {});
             }, '_updateResults', { writes: ['ref'], completionVariants: ['updated'] });
 
             // Write reflog entry
@@ -170,7 +170,7 @@ const _handler: FunctionalConceptHandler = {
             seq,
           });
 
-          return complete(sub, 'deleted', {});
+          return complete(sub, 'ok', {});
         }, '_deleteResults', { writes: ['ref', 'ref-log'], completionVariants: ['deleted'] });
 
         return complete(b2, 'ok', {});

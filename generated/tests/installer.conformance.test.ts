@@ -37,16 +37,14 @@ describe('Installer imperative handler', () => {
       if (typeof installerHandler.stage !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await installerHandler.stage({ lockfile_entries: [{"module_id":"auth","version":"1.0.0","content_hash":"sha256:abc123","target_path":"node_modules/auth","kind":"library"}], project_root: "/workspace/my-project" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "stage_empty_entries" -> ok', async () => {
       if (typeof installerHandler.stage !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await installerHandler.stage({ lockfile_entries: [], project_root: "" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -66,8 +64,7 @@ describe('Installer imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_stage_single_module = await installerHandler.stage({ lockfile_entries: [{"module_id":"auth","version":"1.0.0","content_hash":"sha256:abc123","target_path":"node_modules/auth","kind":"library"}], project_root: "/workspace/my-project" }, storage);
       const result = await installerHandler.activate({ installation: afterResult_stage_single_module?.output?.["installation"] }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "activate_missing" -> error', async () => {
@@ -94,8 +91,7 @@ describe('Installer imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_stage_single_module = await installerHandler.stage({ lockfile_entries: [{"module_id":"auth","version":"1.0.0","content_hash":"sha256:abc123","target_path":"node_modules/auth","kind":"library"}], project_root: "/workspace/my-project" }, storage);
       const result = await installerHandler.rollback({ installation: afterResult_stage_single_module?.output?.["installation"] }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "rollback_no_previous" -> error', async () => {
@@ -127,8 +123,7 @@ describe('Installer imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await installerHandler.clean({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "clean_keep_zero" -> ok', async () => {
@@ -141,8 +136,7 @@ describe('Installer imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await installerHandler.clean({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -163,8 +157,7 @@ describe('Installer imperative handler', () => {
     it("stage lifecycle", async () => {
       const storage = createInMemoryStorage();
       const stageResult0 = await installerHandler.stage({ lockfile_entries: {"type":"variable","name":"entries"}, project_root: {"type":"variable","name":"root"} }, storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(stageResult0.variant), `step 0: expected success but got '${stageResult0.variant}'`).toBe(false);
+      expect(stageResult0.variant).toBe("ok");
       let installation = stageResult0.output["installation"];
       expect(iResult.output["active"]).toBe({"type":"literal","value":false});
       expect(iResult.output["generation"]).toBeGreaterThan({"type":"literal","value":0});
@@ -173,16 +166,13 @@ describe('Installer imperative handler', () => {
     it("stage then activate", async () => {
       const storage = createInMemoryStorage();
       const stageResult0 = await installerHandler.stage({ lockfile_entries: {"type":"variable","name":"entries"}, project_root: {"type":"variable","name":"root"} }, storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(stageResult0.variant), `step 0: expected success but got '${stageResult0.variant}'`).toBe(false);
+      expect(stageResult0.variant).toBe("ok");
       let installation = stageResult0.output["installation"];
       const thenResult0 = await installerHandler.activate({ installation: {"type":"variable","name":"i"} }, storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
       expect(iResult.output["active"]).toBe({"type":"literal","value":true});
       const thenResult2 = await installerHandler.rollback({ installation: {"type":"variable","name":"i"} }, storage);
-      const _isErrA2 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA2(thenResult2.variant), `assertion 2: expected success but got '${thenResult2.variant}'`).toBe(false);
+      expect(thenResult2.variant).toBe("ok");
       expect(prevResult.output["active"]).toBe({"type":"literal","value":true});
       expect(iResult.output["active"]).toBe({"type":"literal","value":false});
     });

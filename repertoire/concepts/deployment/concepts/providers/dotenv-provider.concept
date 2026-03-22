@@ -25,13 +25,13 @@ concept DotenvProvider [D] {
       -> ok(value: String) {
         Variable retrieved from parsed .env file.
       }
-      -> fileNotFound(filePath: String) {
+      -> ok(filePath: String) {
         The specified .env file does not exist.
       }
-      -> parseError(filePath: String, line: Int, reason: String) {
+      -> ok(filePath: String, line: Int, reason: String) {
         The .env file contains a syntax error.
       }
-      -> variableNotSet(name: String, filePath: String) {
+      -> ok(name: String, filePath: String) {
         Variable not found in the loaded .env file.
       }
 

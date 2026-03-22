@@ -26,7 +26,7 @@ const _simpleAccumulatorHandler: FunctionalConceptHandler = {
       provider: 'SimpleAccumulator',
       instanceId: id,
     });
-    return complete(p, 'configured', { config: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { config: id }) as StorageProgram<Result>;
   },
 
   add(input: Record<string, unknown>) {

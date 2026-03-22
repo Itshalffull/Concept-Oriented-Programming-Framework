@@ -45,7 +45,7 @@ concept TestSelection [M] {
         Reason explains why each test was selected:
         "direct-coverage", "transitive-dep", "co-failure-history".
       }
-      -> noMappings(message: String) {
+      -> ok(message: String) {
         No coverage mappings available — first run or
         mappings expired. All tests should run.
       }
@@ -65,7 +65,7 @@ concept TestSelection [M] {
 
         If no budget specified, returns all affected tests.
       }
-      -> budgetInsufficient(selected: list { testId: String }, missedTests: Int, confidence: Float) {
+      -> ok(selected: list { testId: String }, missedTests: Int, confidence: Float) {
         Budget too small to achieve target confidence.
         Returns what fits, plus how many were dropped
         and the reduced confidence.

@@ -28,10 +28,10 @@ concept CodeActStrategy [S] {
         (4) If error or incomplete, revise code and re-run.
         (5) Extract final answer from output.
       }
-      -> max_iterations(partial: String, code_runs: Int) {
+      -> ok(partial: String, code_runs: Int) {
         Could not produce working code.
       }
-      -> sandbox_error(message: String) {
+      -> ok(message: String) {
         Sandbox unavailable or security violation.
       }
     }

@@ -17,7 +17,7 @@ concept Flag [F] {
   actions {
     action flag(flagging: F, flagType: String, entity: String, user: String) {
       -> ok() { Toggle recorded for the user-entity-type combination. }
-      -> exists(message: String) { User has already flagged this entity with this type. }
+      -> ok(message: String) { User has already flagged this entity with this type. }
       fixture flag_bookmark { flagging: "flag-1", flagType: "bookmark", entity: "article-42", user: "user-7" }
       fixture flag_empty_flagging { flagging: "", flagType: "bookmark", entity: "article-42", user: "user-7" }
     }

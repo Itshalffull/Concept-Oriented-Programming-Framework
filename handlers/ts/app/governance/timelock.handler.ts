@@ -22,7 +22,7 @@ const _timelockHandler: FunctionalConceptHandler = {
       delayHours: input.delayHours, gracePeriodHours: input.gracePeriodHours,
       eta, graceEnd: grace, status: 'Queued', queuedAt: new Date().toISOString(),
     });
-    return complete(p, 'queued', { lock: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { lock: id }) as StorageProgram<Result>;
   },
 
   execute(input: Record<string, unknown>) {

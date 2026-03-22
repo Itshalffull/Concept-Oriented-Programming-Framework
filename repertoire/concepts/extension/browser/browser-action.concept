@@ -24,7 +24,7 @@ concept BrowserAction [A] {
       -> ok(action: A) {
         Browser action configured with icon and optional popup.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         Action already configured for this extension.
       }
     }
@@ -73,7 +73,7 @@ concept BrowserAction [A] {
       -> notfound(message: String) {
         No browser action with the given identifier.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         Context menu entry with the same id already exists.
       }
     }

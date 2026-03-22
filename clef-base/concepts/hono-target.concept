@@ -47,7 +47,7 @@ concept HonoTarget [H] {
         (or a specific group). Produces TypeScript source with correct
         imports, middleware chains, and handler wiring.
       }
-      -> empty() {
+      -> ok() {
         No routes are registered (or the specified group has no routes).
       }
     }

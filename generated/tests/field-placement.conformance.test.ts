@@ -88,8 +88,7 @@ describe('FieldPlacement functional handler', () => {
       if (typeof fieldPlacementHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_empty_field" -> error', async () => {
@@ -158,8 +157,7 @@ describe('FieldPlacement functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_title = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
       const result = await interpret(fieldPlacementHandler.configure({ placement: afterResult_create_title?.output?.["placement"], formatter: "markdown", label_display: "inline" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_nonexistent" -> error', async () => {
@@ -228,8 +226,7 @@ describe('FieldPlacement functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_title = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
       const result = await interpret(fieldPlacementHandler.set_visibility({ placement: afterResult_create_title?.output?.["placement"], visible: "false", role_visibility: "admin" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "show_field" -> ok', async () => {
@@ -237,8 +234,7 @@ describe('FieldPlacement functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_title = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
       const result = await interpret(fieldPlacementHandler.set_visibility({ placement: afterResult_create_title?.output?.["placement"], visible: "true" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -300,8 +296,7 @@ describe('FieldPlacement functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_title = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
       const result = await interpret(fieldPlacementHandler.set_field_mapping({ placement: afterResult_create_title?.output?.["placement"], mapping: "rich-text-editor" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "set_mapping_empty" -> error', async () => {
@@ -370,8 +365,7 @@ describe('FieldPlacement functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_title = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
       const result = await interpret(fieldPlacementHandler.clear_field_mapping({ placement: afterResult_create_title?.output?.["placement"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "clear_nonexistent" -> error', async () => {
@@ -440,8 +434,7 @@ describe('FieldPlacement functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_title = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
       const result = await interpret(fieldPlacementHandler.get({ placement: afterResult_create_title?.output?.["placement"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_nonexistent" -> error', async () => {
@@ -510,8 +503,7 @@ describe('FieldPlacement functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_title = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
       const result = await interpret(fieldPlacementHandler.delete({ placement: afterResult_create_title?.output?.["placement"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "delete_nonexistent" -> error', async () => {
@@ -580,8 +572,7 @@ describe('FieldPlacement functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_title = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
       const result = await interpret(fieldPlacementHandler.duplicate({ placement: afterResult_create_title?.output?.["placement"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "duplicate_nonexistent" -> error', async () => {
@@ -652,8 +643,7 @@ describe('FieldPlacement functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_title?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(fieldPlacementHandler.list({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -678,31 +668,25 @@ describe('FieldPlacement functional handler', () => {
     it("create then get", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(fieldPlacementHandler.create({ source_field: {"type":"literal","value":"Article.title"}, formatter: {"type":"literal","value":"heading"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
+      expect(createResult0.variant).toBe("ok");
       let placement = createResult0.output["placement"];
       const configureResult1 = await interpret(fieldPlacementHandler.configure({ placement: {"type":"variable","name":"p"}, formatter_options: {"type":"literal","value":"{\"level\": 1}"} }), storage);
-      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr1(configureResult1.variant), `step 1: expected success but got '${configureResult1.variant}'`).toBe(false);
+      expect(configureResult1.variant).toBe("ok");
       placement = configureResult1.output["placement"];
       const thenResult0 = await interpret(fieldPlacementHandler.get({ placement: {"type":"variable","name":"p"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("create then get", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(fieldPlacementHandler.create({ source_field: {"type":"literal","value":"Article.title"}, formatter: {"type":"literal","value":"heading"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
+      expect(createResult0.variant).toBe("ok");
       let placement = createResult0.output["placement"];
       const duplicateResult1 = await interpret(fieldPlacementHandler.duplicate({ placement: {"type":"variable","name":"p"} }), storage);
-      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr1(duplicateResult1.variant), `step 1: expected success but got '${duplicateResult1.variant}'`).toBe(false);
+      expect(duplicateResult1.variant).toBe("ok");
       let new_placement = duplicateResult1.output["new_placement"];
       const thenResult0 = await interpret(fieldPlacementHandler.get({ placement: {"type":"variable","name":"p2"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

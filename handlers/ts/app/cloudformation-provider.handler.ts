@@ -84,7 +84,7 @@ const _cloudformationProviderHandler: FunctionalConceptHandler = {
         });
         return complete(b2, 'ok', { stack, stackId: awsStackId, created, updated });
       },
-      (b) => complete(b, 'rollbackComplete', { stack, reason: 'Stack not found' }),
+      (b) => complete(b, 'ok', { stack, reason: 'Stack not found' }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },

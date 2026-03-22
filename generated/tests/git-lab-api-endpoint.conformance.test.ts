@@ -88,16 +88,14 @@ describe('GitLabApiEndpoint functional handler', () => {
       if (typeof gitlabApiEndpointHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(gitlabApiEndpointHandler.register({ name: "gitlab-api", token: "glpat-abc123def456", projectId: "12345", baseUrl: "https://gitlab.com/api/v4" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "gitlab_selfhosted" -> ok', async () => {
       if (typeof gitlabApiEndpointHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(gitlabApiEndpointHandler.register({ name: "gitlab-internal", token: "glpat-internal-token", projectId: "99", baseUrl: "https://git.internal.corp/api/v4" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_name" -> error', async () => {
@@ -171,8 +169,7 @@ describe('GitLabApiEndpoint functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(gitlabApiEndpointHandler.resolve({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_missing" -> error', async () => {
@@ -243,8 +240,7 @@ describe('GitLabApiEndpoint functional handler', () => {
       const _pool = Object.assign({}, (afterResult_gitlab_default?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(gitlabApiEndpointHandler.list({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -254,12 +250,10 @@ describe('GitLabApiEndpoint functional handler', () => {
     it("resolve after register", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(gitlabApiEndpointHandler.register({ name: {"type":"literal","value":"gitlab-api"}, token: {"type":"literal","value":"glpat-test"}, projectId: {"type":"literal","value":"12345"}, baseUrl: {"type":"literal","value":"https://gitlab.com/api/v4"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let endpoint = registerResult0.output["endpoint"];
       const thenResult0 = await interpret(gitlabApiEndpointHandler.resolve({ name: {"type":"literal","value":"gitlab-api"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

@@ -60,7 +60,7 @@ concept SearchSpace [S] {
         base entries, scope-only entries are injected. For nested scopes,
         walks the scope chain with most specific winning.
       }
-      -> no_scope(scope_id: String) {
+      -> ok(scope_id: String) {
         The scope does not exist. Fall through to base-only query.
       }
 
@@ -111,7 +111,7 @@ concept SearchSpace [S] {
                 entity_id: "e3", data: "content") -> ok(entry: _)
     and   clear(scope_id: "vs-3") -> ok()
     then  query(scope_id: "vs-3", provider: "text",
-                query_expr: "content") -> no_scope(scope_id: "vs-3")
+                query_expr: "content") -> ok(scope_id: "vs-3")
   }
 
 

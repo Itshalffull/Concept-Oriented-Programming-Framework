@@ -88,16 +88,14 @@ describe('ExposedFilter functional handler', () => {
       if (typeof exposedFilterHandler.expose !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(exposedFilterHandler.expose({ filter: "status-filter", fieldName: "status", operator: "eq", defaultValue: "active" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_field_name" -> ok', async () => {
       if (typeof exposedFilterHandler.expose !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(exposedFilterHandler.expose({ filter: "bad-filter", fieldName: "", operator: "eq", defaultValue: "draft" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -164,8 +162,7 @@ describe('ExposedFilter functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(exposedFilterHandler.collectInput({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_value" -> error', async () => {
@@ -239,8 +236,7 @@ describe('ExposedFilter functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(exposedFilterHandler.applyToQuery({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "apply_nonexistent" -> error', async () => {
@@ -314,8 +310,7 @@ describe('ExposedFilter functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(exposedFilterHandler.resetToDefaults({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "reset_nonexistent" -> error', async () => {
@@ -347,15 +342,12 @@ describe('ExposedFilter functional handler', () => {
     it("expose then collectInput", async () => {
       const storage = createInMemoryStorage();
       const exposeResult0 = await interpret(exposedFilterHandler.expose({ filter: {"type":"variable","name":"f"}, fieldName: {"type":"literal","value":"status"}, operator: {"type":"literal","value":"eq"}, defaultValue: {"type":"literal","value":"active"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(exposeResult0.variant), `step 0: expected success but got '${exposeResult0.variant}'`).toBe(false);
+      expect(exposeResult0.variant).toBe("ok");
       let filter = exposeResult0.output["filter"];
       const thenResult0 = await interpret(exposedFilterHandler.collectInput({ filter: {"type":"variable","name":"f"}, value: {"type":"literal","value":"archived"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(exposedFilterHandler.applyToQuery({ filter: {"type":"variable","name":"f"} }), storage);
-      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
+      expect(thenResult1.variant).toBe("ok");
     });
 
   });

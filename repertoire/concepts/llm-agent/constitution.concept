@@ -40,7 +40,7 @@ concept Constitution [W] {
             explanation: String, severity: String}) {
         Evaluates response against principles.
       }
-      -> compliant(message: String) {
+      -> ok(message: String) {
         Response satisfies all principles.
       }
     }
@@ -61,7 +61,7 @@ concept Constitution [W] {
             history: list {critique: String, revision: String}) {
         Full Critique-Revision loop up to max_revisions.
       }
-      -> max_revisions(best: String, rounds: Int) {
+      -> ok(best: String, rounds: Int) {
         Could not achieve full compliance.
       }
     }
@@ -94,7 +94,7 @@ concept Constitution [W] {
 
         then critique(constitution: w, response: "safe response", prompt: "test")
 
-             -> compliant(message: _)
+             -> ok(message: _)
 
   }
 

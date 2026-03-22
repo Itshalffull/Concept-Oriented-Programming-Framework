@@ -88,16 +88,14 @@ describe('A11yAuditProvider functional handler', () => {
       if (typeof a11yAuditProviderHandler.audit !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(a11yAuditProviderHandler.audit({ audit: "aud-1", program: "dialog-widget", instructions: "[{\"tag\":\"element\",\"part\":\"root\",\"role\":\"container\"},{\"tag\":\"aria\",\"part\":\"root\",\"attr\":\"role\",\"value\":\"dialog\"},{\"tag\":\"aria\",\"part\":\"root\",\"attr\":\"label\",\"value\":\"Confirm\"},{\"tag\":\"focus\",\"strategy\":\"trap\"}]", parts: ["root"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_aria" -> ok', async () => {
       if (typeof a11yAuditProviderHandler.audit !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(a11yAuditProviderHandler.audit({ audit: "aud-2", program: "button-widget", instructions: "[{\"tag\":\"element\",\"part\":\"btn\",\"role\":\"interactive\"}]", parts: ["btn"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "malformed_instructions" -> error', async () => {
@@ -166,8 +164,7 @@ describe('A11yAuditProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_accessible_dialog = await interpret(a11yAuditProviderHandler.audit({ audit: "aud-1", program: "dialog-widget", instructions: "[{\"tag\":\"element\",\"part\":\"root\",\"role\":\"container\"},{\"tag\":\"aria\",\"part\":\"root\",\"attr\":\"role\",\"value\":\"dialog\"},{\"tag\":\"aria\",\"part\":\"root\",\"attr\":\"label\",\"value\":\"Confirm\"},{\"tag\":\"focus\",\"strategy\":\"trap\"}]", parts: ["root"] }), storage);
       const result = await interpret(a11yAuditProviderHandler.getFindings({ audit: afterResult_accessible_dialog?.output?.["audit"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "unknown_audit" -> notfound', async () => {
@@ -200,14 +197,12 @@ describe('A11yAuditProvider functional handler', () => {
     it("audit stores retrievable findings", async () => {
       const storage = createInMemoryStorage();
       const auditResult0 = await interpret(a11yAuditProviderHandler.audit({ audit: {"type":"variable","name":"a"}, program: {"type":"literal","value":"p1"}, instructions: {"type":"list","items":[{"type":"literal","value":"element:root:container"},{"type":"literal","value":"aria:root:role:dialog"},{"type":"literal","value":"keyboard:Escape:close"},{"type":"literal","value":"focus:trap:root"}]}, parts: {"type":"list","items":[{"type":"literal","value":"root"}]} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(auditResult0.variant), `step 0: expected success but got '${auditResult0.variant}'`).toBe(false);
+      expect(auditResult0.variant).toBe("ok");
       let audit = auditResult0.output["audit"];
       let findings = auditResult0.output["findings"];
       let passed = auditResult0.output["passed"];
       const thenResult0 = await interpret(a11yAuditProviderHandler.getFindings({ audit: {"type":"variable","name":"a"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

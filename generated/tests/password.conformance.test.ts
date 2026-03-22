@@ -88,8 +88,7 @@ describe('Password functional handler', () => {
       if (typeof passwordHandler.set !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(passwordHandler.set({ user: "alice", password: "Str0ngP@ssw0rd!" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "short_password" -> invalid', async () => {
@@ -164,8 +163,7 @@ describe('Password functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(passwordHandler.check({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "unknown_user" -> notfound', async () => {
@@ -240,8 +238,7 @@ describe('Password functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(passwordHandler.validate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "weak_password" -> ok', async () => {
@@ -254,8 +251,7 @@ describe('Password functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(passwordHandler.validate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -280,15 +276,12 @@ describe('Password functional handler', () => {
     it("set then check correct password", async () => {
       const storage = createInMemoryStorage();
       const setResult0 = await interpret(passwordHandler.set({ user: {"type":"variable","name":"x"}, password: {"type":"literal","value":"secret123"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(setResult0.variant), `step 0: expected success but got '${setResult0.variant}'`).toBe(false);
+      expect(setResult0.variant).toBe("ok");
       let user = setResult0.output["user"];
       const thenResult0 = await interpret(passwordHandler.check({ user: {"type":"variable","name":"x"}, password: {"type":"literal","value":"secret123"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(passwordHandler.check({ user: {"type":"variable","name":"x"}, password: {"type":"literal","value":"wrongpass"} }), storage);
-      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
+      expect(thenResult1.variant).toBe("ok");
     });
 
     it("check nonexistent user returns notfound", async () => {

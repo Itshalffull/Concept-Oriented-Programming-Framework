@@ -88,24 +88,21 @@ describe('Pathauto functional handler', () => {
       if (typeof pathautoHandler.generateAlias !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(pathautoHandler.generateAlias({ pattern: "blog", entity: "My Example Page" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "special_chars" -> ok', async () => {
       if (typeof pathautoHandler.generateAlias !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(pathautoHandler.generateAlias({ pattern: "products", entity: "Héllo & Wörld!" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_entity" -> ok', async () => {
       if (typeof pathautoHandler.generateAlias !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(pathautoHandler.generateAlias({ entity: "" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -172,8 +169,7 @@ describe('Pathauto functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(pathautoHandler.bulkGenerate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_json" -> error', async () => {
@@ -247,8 +243,7 @@ describe('Pathauto functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(pathautoHandler.cleanString({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "clean_empty" -> ok', async () => {
@@ -261,8 +256,7 @@ describe('Pathauto functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(pathautoHandler.cleanString({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -287,12 +281,10 @@ describe('Pathauto functional handler', () => {
     it("generateAlias-then-cleanString", async () => {
       const storage = createInMemoryStorage();
       const generateAliasResult0 = await interpret(pathautoHandler.generateAlias({ pattern: {"type":"variable","name":"p"}, entity: {"type":"literal","value":"My Example Page"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(generateAliasResult0.variant), `step 0: expected success but got '${generateAliasResult0.variant}'`).toBe(false);
+      expect(generateAliasResult0.variant).toBe("ok");
       let alias = generateAliasResult0.output["alias"];
       const thenResult0 = await interpret(pathautoHandler.cleanString({ input: {"type":"literal","value":"My Example Page"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

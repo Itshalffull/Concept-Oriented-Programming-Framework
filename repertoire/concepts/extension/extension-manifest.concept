@@ -26,7 +26,7 @@ concept ExtensionManifest [M] {
       -> ok(manifest: M) {
         Extension manifest registered successfully.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         A manifest with the same name and version already exists.
       }
     }

@@ -6,7 +6,7 @@ sync DisclosurePolicyAsConfigEntity [eager]
   purpose { Persist disclosure policy definitions as queryable config entities. }
 when {
   DisclosurePolicy/define: [ subject: ?subject; audience: ?audience; timing: ?timing; scope: ?scope ]
-    => defined(policy: ?policy)
+    => ok(policy: ?policy)
 }
 then {
   ContentStorage/save: [ record: ?policy; data: ?scope ]
@@ -17,7 +17,7 @@ sync DisclosurePolicyTagBundle [eager]
   purpose { Tag disclosure policies with their bundle type. }
 when {
   DisclosurePolicy/define: [ subject: ?subject; audience: ?audience; timing: ?timing; scope: ?scope ]
-    => defined(policy: ?policy)
+    => ok(policy: ?policy)
 }
 then {
   Property/set: [ entity: ?policy; key: "config_bundle"; value: "disclosure_policy" ]

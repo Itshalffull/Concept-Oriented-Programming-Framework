@@ -42,7 +42,7 @@ const _weightHandler: FunctionalConceptHandler = {
     const id = `snapshot-${snapshotRef ?? Date.now()}`;
     let p = createProgram();
     p = put(p, 'snapshot', id, { id, participants, takenAt: new Date().toISOString() });
-    return complete(p, 'snapped', { snapshot: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { snapshot: id }) as StorageProgram<Result>;
   },
 
   getWeight(input: Record<string, unknown>) {
@@ -63,7 +63,7 @@ const _weightHandler: FunctionalConceptHandler = {
     p = get(p, 'snapshot', snapshot as string, 'record');
 
     p = branch(p, 'record',
-      (b) => complete(b, 'weight', { participant, total: 0.0, snapshot }),
+      (b) => complete(b, 'ok', { participant, total: 0.0, snapshot }),
       (b) => complete(b, 'not_found', { snapshot }),
     );
 

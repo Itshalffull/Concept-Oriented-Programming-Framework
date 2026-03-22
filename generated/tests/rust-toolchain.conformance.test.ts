@@ -88,8 +88,7 @@ describe('RustToolchain functional handler', () => {
       if (typeof rustToolchainHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(rustToolchainHandler.resolve({ platform: "x86_64-linux", versionConstraint: ">=1.75" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_unsupported" -> error', async () => {
@@ -160,8 +159,7 @@ describe('RustToolchain functional handler', () => {
       const _pool = Object.assign({}, (afterResult_resolve_linux?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(rustToolchainHandler.register({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -186,15 +184,13 @@ describe('RustToolchain functional handler', () => {
     it("resolve-then-register", async () => {
       const storage = createInMemoryStorage();
       const resolveResult0 = await interpret(rustToolchainHandler.resolve({ platform: {"type":"literal","value":"linux-x86_64"}, versionConstraint: {"type":"literal","value":">=1.75"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(resolveResult0.variant), `step 0: expected success but got '${resolveResult0.variant}'`).toBe(false);
+      expect(resolveResult0.variant).toBe("ok");
       let toolchain = resolveResult0.output["toolchain"];
       let rustcPath = resolveResult0.output["rustcPath"];
       let version = resolveResult0.output["version"];
       let capabilities = resolveResult0.output["capabilities"];
       const thenResult0 = await interpret(rustToolchainHandler.register({  }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

@@ -24,7 +24,7 @@ concept ThemeDependenceProvider [I] {
         Register this provider with PluginRegistry for
         theme spec dependence analysis.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the theme dependence provider.
       }
 

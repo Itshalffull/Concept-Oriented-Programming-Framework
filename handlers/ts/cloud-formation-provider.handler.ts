@@ -144,7 +144,7 @@ const _handler: FunctionalConceptHandler = {
           },
         );
       },
-      (elseP) => complete(elseP, 'rollbackComplete', { stack, reason: `Stack '${stack}' not found` }),
+      (elseP) => complete(elseP, 'ok', { stack, reason: `Stack '${stack}' not found` }),
     ) as StorageProgram<Result>;
   },
 

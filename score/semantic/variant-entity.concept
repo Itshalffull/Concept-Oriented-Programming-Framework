@@ -48,7 +48,7 @@ concept VariantEntity [V] {
         This variant has no sync matching it and/or no runtime
         occurrences. Both values are "true" or "false".
       }
-      -> alive(syncCount: Int, runtimeCount: Int) {
+      -> ok(syncCount: Int, runtimeCount: Int) {
         This variant is actively matched by syncs and/or
         observed at runtime.
       }

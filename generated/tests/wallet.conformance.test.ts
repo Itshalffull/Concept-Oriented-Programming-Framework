@@ -94,8 +94,7 @@ describe('Wallet functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(walletHandler.verify({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "verify_mismatched_address" -> invalid', async () => {
@@ -170,8 +169,7 @@ describe('Wallet functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(walletHandler.verifyTypedData({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "verify_typed_data_mismatch" -> invalid', async () => {
@@ -246,8 +244,7 @@ describe('Wallet functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(walletHandler.getNonce({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_nonce_unknown" -> notFound', async () => {
@@ -322,8 +319,7 @@ describe('Wallet functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(walletHandler.incrementNonce({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -348,13 +344,11 @@ describe('Wallet functional handler', () => {
     it("verify then verify", async () => {
       const storage = createInMemoryStorage();
       const verifyResult0 = await interpret(walletHandler.verify({ address: {"type":"variable","name":"addr"}, message: {"type":"variable","name":"msg"}, signature: {"type":"variable","name":"sig"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(verifyResult0.variant), `step 0: expected success but got '${verifyResult0.variant}'`).toBe(false);
+      expect(verifyResult0.variant).toBe("ok");
       let address = verifyResult0.output["address"];
       let recoveredAddress = verifyResult0.output["recoveredAddress"];
       const thenResult0 = await interpret(walletHandler.verify({ address: {"type":"variable","name":"addr"}, message: {"type":"variable","name":"msg"}, signature: {"type":"variable","name":"sig"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

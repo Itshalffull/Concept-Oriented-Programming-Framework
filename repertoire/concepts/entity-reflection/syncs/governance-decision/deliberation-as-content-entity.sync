@@ -6,7 +6,7 @@ sync DeliberationAsContentEntity [eager]
   purpose { Persist deliberation threads as queryable content entities. }
 when {
   Deliberation/open: [ proposalRef: ?proposalRef ]
-    => opened(thread: ?thread)
+    => ok(thread: ?thread)
 }
 then {
   ContentStorage/save: [ record: ?thread; data: ?proposalRef ]
@@ -17,7 +17,7 @@ sync DeliberationTagEntity [eager]
   purpose { Tag deliberations with their entity type. }
 when {
   Deliberation/open: [ proposalRef: ?proposalRef ]
-    => opened(thread: ?thread)
+    => ok(thread: ?thread)
 }
 then {
   Tag/addTag: [ entity: ?thread; tag: "system:deliberation" ]
@@ -28,7 +28,7 @@ sync DeliberationProposalRelation [eager]
   purpose { Link deliberations to the proposal they discuss via Relation. }
 when {
   Deliberation/open: [ proposalRef: ?proposalRef ]
-    => opened(thread: ?thread)
+    => ok(thread: ?thread)
 }
 then {
   Relation/link: [ relation: "discusses"; source: ?thread; target: ?proposalRef ]

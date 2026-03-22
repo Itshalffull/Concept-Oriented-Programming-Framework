@@ -88,24 +88,21 @@ describe('DeployScaffoldGen functional handler', () => {
       if (typeof deployScaffoldGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(deployScaffoldGenHandler.generate({ appName: "inventory-service", runtimes: [{"name":"api","type":"node","transport":"http","storage":"sqlite"}], concepts: [{"name":"Product","runtime":"api"}] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "minimal_generate" -> ok', async () => {
       if (typeof deployScaffoldGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(deployScaffoldGenHandler.generate({ appName: "my-app", runtimes: [], concepts: [] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_app_name" -> ok', async () => {
       if (typeof deployScaffoldGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(deployScaffoldGenHandler.generate({ appName: "", runtimes: [], concepts: [] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -172,8 +169,7 @@ describe('DeployScaffoldGen functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(deployScaffoldGenHandler.preview({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_preview" -> error', async () => {
@@ -244,8 +240,7 @@ describe('DeployScaffoldGen functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_generate?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(deployScaffoldGenHandler.register({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -270,8 +265,7 @@ describe('DeployScaffoldGen functional handler', () => {
     it("generate produces deploy manifest", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(deployScaffoldGenHandler.generate({ appName: {"type":"literal","value":"my-app"}, runtimes: {"type":"list","items":[]}, concepts: {"type":"list","items":[]} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
+      expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
       let filesGenerated = generateResult0.output["filesGenerated"];
     });

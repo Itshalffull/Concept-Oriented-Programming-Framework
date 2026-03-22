@@ -141,7 +141,7 @@ const _authenticationHandler: FunctionalConceptHandler = {
           const tokenKey = item as string;
           let sub = createProgram();
           sub = del(sub, 'token', tokenKey);
-          return complete(sub, 'deleted', {});
+          return complete(sub, 'ok', {});
         }, '_deleteResults', { writes: ['token'], completionVariants: ['deleted'] });
 
         // Update account with new credentials

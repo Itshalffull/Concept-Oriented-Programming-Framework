@@ -88,8 +88,7 @@ describe('SeedData functional handler', () => {
       if (typeof seedDataHandler.discover !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(seedDataHandler.discover({ base_path: "/project/seeds" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "discover_empty_path" -> error', async () => {
@@ -163,8 +162,7 @@ describe('SeedData functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(seedDataHandler.register({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_interactor" -> ok', async () => {
@@ -177,8 +175,7 @@ describe('SeedData functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(seedDataHandler.register({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_duplicate" -> error', async () => {
@@ -253,8 +250,7 @@ describe('SeedData functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_discover = await interpret(seedDataHandler.discover({ base_path: "/project/seeds" }), storage);
       const result = await interpret(seedDataHandler.apply({ seed: afterResult_valid_discover?.output?.["found"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "apply_nonexistent" -> error', async () => {
@@ -325,8 +321,7 @@ describe('SeedData functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_discover?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(seedDataHandler.applyAll({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -390,8 +385,7 @@ describe('SeedData functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_discover?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(seedDataHandler.status({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -453,8 +447,7 @@ describe('SeedData functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_discover = await interpret(seedDataHandler.discover({ base_path: "/project/seeds" }), storage);
       const result = await interpret(seedDataHandler.reset({ seed: afterResult_valid_discover?.output?.["found"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "reset_nonexistent" -> error', async () => {
@@ -475,14 +468,12 @@ describe('SeedData functional handler', () => {
     it("register-then-apply", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(seedDataHandler.register({ source_path: {"type":"literal","value":"/test/schema.seeds.yaml"}, concept_uri: {"type":"literal","value":"urn:clef/Schema"}, action_name: {"type":"literal","value":"defineSchema"}, entries: {"type":"list","items":[{"type":"literal","value":"{ \"schema\": \"Shape\" }"}]} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let seed = registerResult0.output["seed"];
       const thenResult0 = await interpret(seedDataHandler.apply({ seed: {"type":"variable","name":"s"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(seedDataHandler.apply({ seed: {"type":"variable","name":"s"} }), storage);
-      expect(thenResult1.variant).toBe("already_applied");
+      expect(thenResult1.variant).toBe("ok");
     });
 
   });

@@ -39,7 +39,7 @@ concept DisplayMode [D] {
         list starts empty. No layout or component_mapping is set — the
         mode starts in flat-field-list mode.
       }
-      -> already_exists(schema: String, mode_id: String) {
+      -> ok(schema: String, mode_id: String) {
         A mode with this (schema, mode_id) pair already exists.
       }
 

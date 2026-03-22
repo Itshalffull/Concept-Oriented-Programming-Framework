@@ -37,8 +37,7 @@ describe('SyncCompiler imperative handler', () => {
       if (typeof syncCompilerHandler.compile !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await syncCompilerHandler.compile({ sync: "sync-001", ast: {"name":"OnUserCreate","annotations":["eager"],"when":[{"concept":"urn:clef/User","action":"create","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/Notification","action":"send","fields":[]}]} }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_name" -> error', async () => {
@@ -73,8 +72,7 @@ describe('SyncCompiler imperative handler', () => {
     it("compile valid then compile empty then-clause fails", async () => {
       const storage = createInMemoryStorage();
       const compileResult0 = await syncCompilerHandler.compile({ sync: {"type":"literal","value":"s1"}, ast: {"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"TestSync"}},{"name":"annotations","value":{"type":"list","items":[]}},{"name":"when","value":{"type":"list","items":[{"type":"record","fields":[{"name":"concept","value":{"type":"literal","value":"urn:clef/A"}},{"name":"action","value":{"type":"literal","value":"act"}},{"name":"inputFields","value":{"type":"list","items":[]}},{"name":"outputFields","value":{"type":"list","items":[]}}]}]}},{"name":"where","value":{"type":"list","items":[]}},{"name":"then","value":{"type":"list","items":[{"type":"record","fields":[{"name":"concept","value":{"type":"literal","value":"urn:clef/B"}},{"name":"action","value":{"type":"literal","value":"do"}},{"name":"fields","value":{"type":"list","items":[]}}]}]}}]} }, storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(compileResult0.variant), `step 0: expected success but got '${compileResult0.variant}'`).toBe(false);
+      expect(compileResult0.variant).toBe("ok");
       let compiled = compileResult0.output["compiled"];
       const thenResult0 = await syncCompilerHandler.compile({ sync: {"type":"literal","value":"s2"}, ast: {"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"Bad"}},{"name":"annotations","value":{"type":"list","items":[]}},{"name":"when","value":{"type":"list","items":[{"type":"record","fields":[{"name":"concept","value":{"type":"literal","value":"urn:clef/A"}},{"name":"action","value":{"type":"literal","value":"act"}},{"name":"inputFields","value":{"type":"list","items":[]}},{"name":"outputFields","value":{"type":"list","items":[]}}]}]}},{"name":"where","value":{"type":"list","items":[]}},{"name":"then","value":{"type":"list","items":[]}}]} }, storage);
       expect(thenResult0.variant).toBe("error");

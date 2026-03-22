@@ -38,10 +38,10 @@ concept ConflictResolution [V] {
     }
 
     action detect(base: option V, version1: V, version2: V, context: String) {
-      -> noConflict() {
+      -> ok() {
         Versions are compatible. No conflict detected.
       }
-      -> detected(conflictId: C, detail: Bytes) {
+      -> ok(conflictId: C, detail: Bytes) {
         Conflict detected. Detail describes the nature of the
         incompatibility — overlapping regions, type mismatch, etc.
       }
@@ -50,14 +50,14 @@ concept ConflictResolution [V] {
     }
 
     action resolve(conflictId: C, policyOverride: option String) {
-      -> resolved(result: V) {
+      -> ok(result: V) {
         Policy produced a resolution automatically.
       }
-      -> requiresHuman(conflictId: C, options: list Bytes) {
+      -> ok(conflictId: C, options: list Bytes) {
         No automatic policy could resolve. Returns candidate
         resolutions for human selection.
       }
-      -> noPolicy(message: String) {
+      -> ok(message: String) {
         No policy registered for this conflict type.
       }
       fixture resolve_with_policy { conflictId: $register_lww.policy, policyOverride: "last-writer-wins" } after register_lww
@@ -68,7 +68,7 @@ concept ConflictResolution [V] {
       -> ok(result: V) {
         Human-chosen resolution recorded.
       }
-      -> notPending(message: String) {
+      -> ok(message: String) {
         Conflict not found or already resolved.
       }
       fixture manual_resolve_valid { conflictId: $register_lww.policy, chosen: "v1-abc" } after register_lww
@@ -78,9 +78,9 @@ concept ConflictResolution [V] {
 
   example "detect-then-resolve": {
 
-    after detect(base: _, version1: _, version2: _, context: _) -> noConflict()
+    after detect(base: _, version1: _, version2: _, context: _) -> ok()
 
-        then resolve(conflictId: _, policyOverride: _) -> resolved(result: _)
+        then resolve(conflictId: _, policyOverride: _) -> ok(result: _)
 
   }
 

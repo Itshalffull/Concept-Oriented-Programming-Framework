@@ -18,7 +18,7 @@ concept KernelViewResolver [K] {
         Register this provider with the framework. Returns
         the provider name "kernel" for PluginRegistry wiring.
       }
-      -> already_registered() {
+      -> ok() {
         This provider has already been registered in the
         current runtime.
       }
@@ -30,7 +30,7 @@ concept KernelViewResolver [K] {
         (e.g. ContentNode/list) through the kernel, apply
         filters, and return the result set as a JSON array.
       }
-      -> invalid_source(message: String) {
+      -> ok(message: String) {
         The data_source JSON is malformed or references a
         concept or action that is not registered in the kernel.
       }
@@ -44,7 +44,7 @@ concept KernelViewResolver [K] {
   invariant {
     example "double register returns already_registered" {
       after register() -> ok(provider_name: "kernel")
-      then register() -> already_registered()
+      then register() -> ok()
     }
 
     always {

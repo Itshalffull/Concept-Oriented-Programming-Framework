@@ -24,7 +24,7 @@ concept ReactComponentSymbolExtractor [I] {
         Register this extractor with PluginRegistry for
         .tsx file extensions with React detection.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the React component extractor.
       }
     }

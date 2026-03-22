@@ -25,10 +25,10 @@ concept ADICOEvaluator [AE] {
 
   actions {
     action parse(ruleText: String) {
-      -> parsed(rule: AE) {
+      -> ok(rule: AE) {
         The ADICO statement is parsed into its five components.
       }
-      -> parse_error(text: String, error: String) {
+      -> ok(text: String, error: String) {
         The text does not conform to ADICO grammar.
       }
 
@@ -41,17 +41,17 @@ concept ADICOEvaluator [AE] {
     }
 
     action evaluate(rule: AE, context: String) {
-      -> permitted(rule: AE) {
+      -> ok(rule: AE) {
         The context matches the Attributes and Conditions, and the
         Deontic is May.
       }
-      -> required(rule: AE) {
+      -> ok(rule: AE) {
         Deontic is Must and conditions are met.
       }
       -> forbidden(rule: AE) {
         Deontic is MustNot and conditions are met.
       }
-      -> not_applicable(rule: AE) {
+      -> ok(rule: AE) {
         Attributes or Conditions do not match the context.
       }
 
@@ -68,9 +68,9 @@ concept ADICOEvaluator [AE] {
 
   example "parse-then-evaluate": {
 
-    after parse(ruleText: _) -> parsed(rule: ae)
+    after parse(ruleText: _) -> ok(rule: ae)
 
-        then evaluate(rule: ae, context: _) -> permitted(rule: ae)
+        then evaluate(rule: ae, context: _) -> ok(rule: ae)
 
   }
 
@@ -95,7 +95,7 @@ concept ADICOEvaluator [AE] {
 
     requires: ruleText != ""
 
-    ensures parsed: ruleText != none
+    ensures ok: ruleText != none
 
   }
 }

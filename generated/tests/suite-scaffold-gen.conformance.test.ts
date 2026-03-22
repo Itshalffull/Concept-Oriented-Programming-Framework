@@ -88,16 +88,14 @@ describe('SuiteScaffoldGen functional handler', () => {
       if (typeof suiteScaffoldGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(suiteScaffoldGenHandler.generate({ name: "auth-suite", description: "Authentication and authorization suite", concepts: ["User","Session","Role"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "minimal_generate" -> ok', async () => {
       if (typeof suiteScaffoldGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(suiteScaffoldGenHandler.generate({ name: "empty-suite", description: "A minimal suite", concepts: [] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -164,8 +162,7 @@ describe('SuiteScaffoldGen functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(suiteScaffoldGenHandler.preview({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -229,8 +226,7 @@ describe('SuiteScaffoldGen functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_generate?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(suiteScaffoldGenHandler.register({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -255,8 +251,7 @@ describe('SuiteScaffoldGen functional handler', () => {
     it("generate produces suite scaffold", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(suiteScaffoldGenHandler.generate({ name: {"type":"literal","value":"my-suite"}, description: {"type":"literal","value":"A test suite"}, concepts: {"type":"list","items":[{"type":"literal","value":"User"},{"type":"literal","value":"Session"}]} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
+      expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
       let filesGenerated = generateResult0.output["filesGenerated"];
     });

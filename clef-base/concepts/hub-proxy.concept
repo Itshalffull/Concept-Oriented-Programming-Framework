@@ -17,7 +17,7 @@ concept HubProxy [H] {
         Forwards a package search to ClefHub filtering by kind
         (suite, concept, widget, theme, or all).
       }
-      -> empty() {
+      -> ok() {
         No packages matched the search query.
       }
       -> unavailable(message: String) {

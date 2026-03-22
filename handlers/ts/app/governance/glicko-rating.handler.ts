@@ -105,7 +105,7 @@ const _glickoRatingHandler: FunctionalConceptHandler = {
       provider: 'GlickoRating',
       instanceId: id,
     });
-    return complete(p, 'configured', { config: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { config: id }) as StorageProgram<Result>;
   },
 
   recordOutcome(input: Record<string, unknown>) {

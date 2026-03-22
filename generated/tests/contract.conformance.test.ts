@@ -88,8 +88,7 @@ describe('Contract functional handler', () => {
       if (typeof contractHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(contractHandler.define({ name: "user-password-contract", source_concept: "clef/concept/User", target_concept: "clef/concept/Password", assumptions: "[\"user-exists-before-password\"]", guarantees: "[\"password-hash-nonzero\"]" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_name" -> invalid', async () => {
@@ -159,8 +158,7 @@ describe('Contract functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_define = await interpret(contractHandler.define({ name: "user-password-contract", source_concept: "clef/concept/User", target_concept: "clef/concept/Password", assumptions: "[\"user-exists-before-password\"]", guarantees: "[\"password-hash-nonzero\"]" }), storage);
       const result = await interpret(contractHandler.verify({ id: afterResult_valid_define?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "verify_missing" -> notfound', async () => {
@@ -235,8 +233,7 @@ describe('Contract functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(contractHandler.compose({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "compose_single" -> invalid', async () => {
@@ -306,8 +303,7 @@ describe('Contract functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_define = await interpret(contractHandler.define({ name: "user-password-contract", source_concept: "clef/concept/User", target_concept: "clef/concept/Password", assumptions: "[\"user-exists-before-password\"]", guarantees: "[\"password-hash-nonzero\"]" }), storage);
       const result = await interpret(contractHandler.discharge({ id: afterResult_valid_define?.output?.["id"], assumption_ref: "user-exists-before-password" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "discharge_missing" -> notfound', async () => {
@@ -379,8 +375,7 @@ describe('Contract functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(contractHandler.list({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "list_by_source" -> ok', async () => {
@@ -393,8 +388,7 @@ describe('Contract functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(contractHandler.list({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -419,12 +413,10 @@ describe('Contract functional handler', () => {
     it("define-then-verify", async () => {
       const storage = createInMemoryStorage();
       const defineResult0 = await interpret(contractHandler.define({ name: {"type":"literal","value":"user-password-contract"}, source_concept: {"type":"literal","value":"clef/concept/User"}, target_concept: {"type":"literal","value":"clef/concept/Password"}, assumptions: {"type":"list","items":[{"type":"literal","value":"user-exists-before-password"}]}, guarantees: {"type":"list","items":[{"type":"literal","value":"password-hash-nonzero"}]} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(defineResult0.variant), `step 0: expected success but got '${defineResult0.variant}'`).toBe(false);
+      expect(defineResult0.variant).toBe("ok");
       let contract = defineResult0.output["contract"];
       const thenResult0 = await interpret(contractHandler.verify({ contract: {"type":"variable","name":"c"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

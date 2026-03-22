@@ -88,16 +88,14 @@ describe('ClaudeMdTarget functional handler', () => {
       if (typeof claudeMdTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(claudeMdTargetHandler.generate({ projection: "{\"conceptName\":\"ScoreApi\",\"conceptManifest\":\"{\\\"name\\\":\\\"ScoreApi\\\",\\\"purpose\\\":\\\"Score management\\\",\\\"actions\\\":[]}\"}", config: "{\"projectName\":\"MyProject\",\"outputPath\":\"CLAUDE.md\"}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "generate_with_conventions" -> ok', async () => {
       if (typeof claudeMdTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(claudeMdTargetHandler.generate({ projection: "{\"conceptName\":\"Agent\",\"conceptManifest\":\"{\\\"name\\\":\\\"Agent\\\",\\\"purpose\\\":\\\"Agent management\\\",\\\"actions\\\":[]}\"}", config: "{\"projectName\":\"Test\",\"conventions\":[\"Use kebab-case\"]}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "generate_empty_projection" -> error', async () => {
@@ -171,8 +169,7 @@ describe('ClaudeMdTarget functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(claudeMdTargetHandler.validate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "validate_not_found" -> error', async () => {
@@ -246,8 +243,7 @@ describe('ClaudeMdTarget functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(claudeMdTargetHandler.preview({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "preview_empty" -> error', async () => {
@@ -279,13 +275,11 @@ describe('ClaudeMdTarget functional handler', () => {
     it("generate-then-validate", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(claudeMdTargetHandler.generate({ projection: {"type":"literal","value":"all-projections"}, config: {"type":"literal","value":"{\"projectName\":\"Test\"}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
+      expect(generateResult0.variant).toBe("ok");
       let document = generateResult0.output["document"];
       let files = generateResult0.output["files"];
       const thenResult0 = await interpret(claudeMdTargetHandler.validate({ document: {"type":"variable","name":"d"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

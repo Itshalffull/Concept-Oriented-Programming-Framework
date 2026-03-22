@@ -29,7 +29,7 @@ concept PlanAndExecuteStrategy [S] {
         reorder remaining steps.
         (4) Synthesize — combine step results into final answer.
       }
-      -> max_iterations(partial: String, completed_steps: Int) {
+      -> ok(partial: String, completed_steps: Int) {
         Hit limit mid-plan.
       }
       -> error(message: String) {
@@ -48,7 +48,7 @@ concept PlanAndExecuteStrategy [S] {
       -> ok(updated_plan: list {step_id: String, description: String}) {
         Revises plan based on execution so far.
       }
-      -> no_change() {
+      -> ok() {
         Plan still valid.
       }
     }

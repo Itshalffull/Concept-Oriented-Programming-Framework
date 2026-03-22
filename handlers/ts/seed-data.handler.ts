@@ -246,7 +246,7 @@ const _handler: FunctionalConceptHandler = {
       let sub = createProgram();
 
       if (seed.applied) {
-        return complete(sub, 'skipped', { entryCount: 0 });
+        return complete(sub, 'ok', { entryCount: 0 });
       }
 
       const entryCount = parseStoredEntries(seed.entries).length;
@@ -255,7 +255,7 @@ const _handler: FunctionalConceptHandler = {
         applied: true,
         applied_at: new Date().toISOString(),
       });
-      return complete(sub, 'applied', { entryCount });
+      return complete(sub, 'ok', { entryCount });
     }, '_traverseResults', { writes: ['seed-data'], completionVariants: ['applied', 'skipped'] });
 
     return completeFrom(p, 'ok', (bindings) => {

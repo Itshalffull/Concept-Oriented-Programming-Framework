@@ -28,7 +28,7 @@ concept Timer [T] {
       -> ok(timer: T, run_ref: String, next_fire_at: DateTime) {
         Creates a timer. Computes next fire time from specification.
       }
-      -> invalid_spec(specification: String) {
+      -> ok(specification: String) {
         Specification is not a valid time expression.
       }
     }
@@ -39,7 +39,7 @@ concept Timer [T] {
         For cycle timers, computes next_fire_at and remains active.
         For date/duration timers, transitions to fired.
       }
-      -> not_active(timer: T) {
+      -> ok(timer: T) {
         Timer is not in active status.
       }
     }
@@ -48,7 +48,7 @@ concept Timer [T] {
       -> ok(timer: T) {
         Cancels an active timer. Transitions to cancelled.
       }
-      -> not_active(timer: T) {
+      -> ok(timer: T) {
         Timer is not in active status.
       }
     }

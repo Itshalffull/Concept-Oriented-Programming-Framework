@@ -136,7 +136,7 @@ concept StateGraph [H] {
       -> error(node_id: String, message: String) {
         Execution failed at a specific node.
       }
-      -> waiting_for_human(node_id: String, state: String) {
+      -> ok(node_id: String, state: String) {
         Reached a human node. Execution paused.
       }
     }
@@ -145,7 +145,7 @@ concept StateGraph [H] {
       -> ok(checkpoint_id: String, state: String) {
         Captures current execution state. Enables pause/resume.
       }
-      -> not_executing(message: String) {
+      -> ok(message: String) {
         Graph is not currently executing.
       }
     }

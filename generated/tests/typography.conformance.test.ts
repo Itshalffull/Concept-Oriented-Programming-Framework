@@ -88,16 +88,14 @@ describe('Typography functional handler', () => {
       if (typeof typographyHandler.defineScale !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(typographyHandler.defineScale({ typography: "X-1", baseSize: "16.0", ratio: "1.25", steps: "6" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "scale_minor_third" -> ok', async () => {
       if (typeof typographyHandler.defineScale !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(typographyHandler.defineScale({ typography: "X-2", baseSize: "14.0", ratio: "1.2", steps: "4" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "scale_zero_base" -> invalid', async () => {
@@ -188,8 +186,7 @@ describe('Typography functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(typographyHandler.defineFontStack({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "fontstack_mono" -> ok', async () => {
@@ -202,8 +199,7 @@ describe('Typography functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(typographyHandler.defineFontStack({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "fontstack_invalid_category" -> invalid', async () => {
@@ -273,8 +269,7 @@ describe('Typography functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_scale_major_third = await interpret(typographyHandler.defineScale({ typography: "X-1", baseSize: "16.0", ratio: "1.25", steps: "6" }), storage);
       const result = await interpret(typographyHandler.defineStyle({ typography: "X-9", name: afterResult_scale_major_third?.output?.["typography"], config: "{ \"fontSize\": 32, \"fontWeight\": 700, \"lineHeight\": 1.2, \"letterSpacing\": \"-0.02em\" }" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "style_body" -> ok', async () => {
@@ -287,8 +282,7 @@ describe('Typography functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(typographyHandler.defineStyle({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "style_invalid_json" -> invalid', async () => {
@@ -335,13 +329,11 @@ describe('Typography functional handler', () => {
     it("defineScale then defineStyle", async () => {
       const storage = createInMemoryStorage();
       const defineScaleResult0 = await interpret(typographyHandler.defineScale({ typography: {"type":"variable","name":"x"}, baseSize: {"type":"literal","value":16}, ratio: {"type":"literal","value":1.25}, steps: {"type":"literal","value":6} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(defineScaleResult0.variant), `step 0: expected success but got '${defineScaleResult0.variant}'`).toBe(false);
+      expect(defineScaleResult0.variant).toBe("ok");
       let typography = defineScaleResult0.output["typography"];
       let scale = defineScaleResult0.output["scale"];
       const thenResult0 = await interpret(typographyHandler.defineStyle({ typography: {"type":"variable","name":"x"}, name: {"type":"literal","value":"heading-1"}, config: {"type":"literal","value":"{ \"scale\": \"3xl\", \"weight\": 700 }"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

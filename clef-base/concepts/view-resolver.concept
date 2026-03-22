@@ -22,7 +22,7 @@ concept ViewResolver [V] {
         provider name identifies the concept handler that will
         be invoked for resolution.
       }
-      -> already_registered(resolver_type: String) {
+      -> ok(resolver_type: String) {
         A provider is already registered for this resolver type.
       }
     }
@@ -33,11 +33,11 @@ concept ViewResolver [V] {
         data source configuration. Data is a JSON array of
         result entities; count is the total number of results.
       }
-      -> no_provider(resolver_type: String) {
+      -> ok(resolver_type: String) {
         No resolver provider is registered for the requested
         resolver type. Register a provider first.
       }
-      -> view_not_found(view: String) {
+      -> ok(view: String) {
         The view identifier does not match any known view
         configuration.
       }

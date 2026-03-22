@@ -88,16 +88,14 @@ describe('Namespace functional handler', () => {
       if (typeof namespaceHandler.createNamespacedPage !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(namespaceHandler.createNamespacedPage({ node: "ns-alpha-1", path: "projects/alpha/docs" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_root_page" -> ok', async () => {
       if (typeof namespaceHandler.createNamespacedPage !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(namespaceHandler.createNamespacedPage({ node: "ns-root-1", path: "home" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_empty_node" -> error', async () => {
@@ -166,8 +164,7 @@ describe('Namespace functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_nested_page = await interpret(namespaceHandler.createNamespacedPage({ node: "ns-alpha-1", path: "projects/alpha/docs" }), storage);
       const result = await interpret(namespaceHandler.getChildren({ node: afterResult_create_nested_page?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_children_missing_node" -> error', async () => {
@@ -236,8 +233,7 @@ describe('Namespace functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_nested_page = await interpret(namespaceHandler.createNamespacedPage({ node: "ns-alpha-1", path: "projects/alpha/docs" }), storage);
       const result = await interpret(namespaceHandler.getHierarchy({ node: afterResult_create_nested_page?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_hierarchy_missing_node" -> error', async () => {
@@ -306,8 +302,7 @@ describe('Namespace functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_nested_page = await interpret(namespaceHandler.createNamespacedPage({ node: "ns-alpha-1", path: "projects/alpha/docs" }), storage);
       const result = await interpret(namespaceHandler.move({ node: afterResult_create_nested_page?.output?.["id"], newPath: "archive/alpha/docs" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "move_missing_node" -> error', async () => {
@@ -339,11 +334,9 @@ describe('Namespace functional handler', () => {
     it("createNamespacedPage-then-getChildren", async () => {
       const storage = createInMemoryStorage();
       const createNamespacedPageResult0 = await interpret(namespaceHandler.createNamespacedPage({ node: {"type":"variable","name":"n"}, path: {"type":"literal","value":"projects/alpha"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(createNamespacedPageResult0.variant), `step 0: expected success but got '${createNamespacedPageResult0.variant}'`).toBe(false);
+      expect(createNamespacedPageResult0.variant).toBe("ok");
       const thenResult0 = await interpret(namespaceHandler.getChildren({ node: {"type":"variable","name":"n"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

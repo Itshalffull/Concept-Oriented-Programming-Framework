@@ -30,7 +30,7 @@ concept ProgramSlice [Z] {
         Direction is "forward" (what is affected) or "backward"
         (what contributes).
       }
-      -> noDependenceData(message: String) {
+      -> ok(message: String) {
         No dependence graph has been computed for files
         containing this symbol.
       }

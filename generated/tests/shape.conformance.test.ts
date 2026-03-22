@@ -88,16 +88,14 @@ describe('Shape functional handler', () => {
       if (typeof shapeHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_pill" -> ok', async () => {
       if (typeof shapeHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(shapeHandler.configure({ name: "pill", config: "{ \"cornerRadius\": 9999, \"smoothing\": 1.0 }" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -159,8 +157,7 @@ describe('Shape functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_rounded = await interpret(shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" }), storage);
       const result = await interpret(shapeHandler.resolve({ shapeId: afterResult_configure_rounded?.output?.["shapeId"], element: "button" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_card" -> ok', async () => {
@@ -168,8 +165,7 @@ describe('Shape functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_rounded = await interpret(shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" }), storage);
       const result = await interpret(shapeHandler.resolve({ shapeId: afterResult_configure_rounded?.output?.["shapeId"], element: "card" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -236,8 +232,7 @@ describe('Shape functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(shapeHandler.computeRadius({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "radius_dialog" -> ok', async () => {
@@ -250,8 +245,7 @@ describe('Shape functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(shapeHandler.computeRadius({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -318,8 +312,7 @@ describe('Shape functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(shapeHandler.computeClipPath({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "clip_badge" -> ok', async () => {
@@ -332,8 +325,7 @@ describe('Shape functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(shapeHandler.computeClipPath({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });

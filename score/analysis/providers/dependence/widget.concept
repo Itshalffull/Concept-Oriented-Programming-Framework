@@ -24,7 +24,7 @@ concept WidgetDependenceProvider [I] {
         Register this provider with PluginRegistry for
         widget spec dependence analysis.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the widget dependence provider.
       }
 

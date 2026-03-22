@@ -117,7 +117,7 @@ concept Conversation [C] {
         Applies context_strategy. Always includes system message.
         Uses only active branch lineage.
       }
-      -> empty(message: String) {
+      -> ok(message: String) {
         Conversation has no messages.
       }
     }

@@ -6,7 +6,7 @@ sync GlickoRatingAsConfigEntity [eager]
   purpose { Persist Glicko rating configuration as queryable config entity. }
 when {
   GlickoRating/configure: [ initialRating: ?initialRating; initialDeviation: ?initialDeviation; initialVolatility: ?initialVolatility; inactivityGrowthRate: ?inactivityGrowthRate ]
-    => configured(config: ?config)
+    => ok(config: ?config)
 }
 then {
   ContentStorage/save: [ record: ?config; data: ?initialRating ]
@@ -17,7 +17,7 @@ sync GlickoRatingTagBundle [eager]
   purpose { Tag Glicko rating with its bundle type. }
 when {
   GlickoRating/configure: [ initialRating: ?initialRating; initialDeviation: ?initialDeviation; initialVolatility: ?initialVolatility; inactivityGrowthRate: ?inactivityGrowthRate ]
-    => configured(config: ?config)
+    => ok(config: ?config)
 }
 then {
   Property/set: [ entity: ?config; key: "config_bundle"; value: "reputation_algo_glicko" ]

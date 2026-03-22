@@ -6,7 +6,7 @@ sync PeerAllocationAsConfigEntity [eager]
   purpose { Persist peer allocation rounds as queryable config entities. }
 when {
   PeerAllocation/openRound: [ budget: ?budget; deadlineDays: ?deadlineDays ]
-    => opened(round: ?round)
+    => ok(round: ?round)
 }
 then {
   ContentStorage/save: [ record: ?round; data: ?budget ]
@@ -17,7 +17,7 @@ sync PeerAllocationTagBundle [eager]
   purpose { Tag peer allocation with its bundle type. }
 when {
   PeerAllocation/openRound: [ budget: ?budget; deadlineDays: ?deadlineDays ]
-    => opened(round: ?round)
+    => ok(round: ?round)
 }
 then {
   Property/set: [ entity: ?round; key: "config_bundle"; value: "reputation_algo_peer_allocation" ]

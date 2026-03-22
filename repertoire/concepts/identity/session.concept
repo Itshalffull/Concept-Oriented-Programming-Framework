@@ -55,7 +55,7 @@ concept Session [S] {
       -> notfound(message: String) {
         No session exists with this identifier.
       }
-      -> expired(message: String) {
+      -> ok(message: String) {
         The session has already expired and cannot be refreshed.
         The user must re-authenticate.
       }

@@ -33,7 +33,7 @@ concept ManifestAutomationProvider [MA] {
         Parses the manifest file and populates entries. Replaces
         any previously loaded entries.
       }
-      -> parse_error(manifest_path: String, message: String) {
+      -> ok(manifest_path: String, message: String) {
         Manifest file could not be parsed.
       }
     }
@@ -43,10 +43,10 @@ concept ManifestAutomationProvider [MA] {
         Validates input against the entry's input_schema, invokes
         the concept action, and validates the output.
       }
-      -> validation_error(action_ref: String, message: String) {
+      -> ok(action_ref: String, message: String) {
         Input does not conform to the action's input schema.
       }
-      -> not_in_manifest(action_ref: String) {
+      -> ok(action_ref: String) {
         Action reference not found in the loaded manifest.
       }
     }

@@ -44,13 +44,13 @@ concept LLMCall [M] {
         Provider returned a response. Records raw output and token usage.
         Transitions to validating if output_schema is set, otherwise to accepted.
       }
-      -> provider_error(call: M, message: String) {
+      -> ok(call: M, message: String) {
         Provider returned an error.
       }
     }
 
     action validate(call: M) {
-      -> valid(call: M, step_ref: String, validated_output: Bytes) {
+      -> ok(call: M, step_ref: String, validated_output: Bytes) {
         Output matches schema. Transitions to accepted.
       }
       -> invalid(call: M, errors: String, attempt_count: Int, max_attempts: Int) {
@@ -63,7 +63,7 @@ concept LLMCall [M] {
         Increments attempt count. Transitions back to requesting.
         Sync chain feeds errors into next prompt for self-correction.
       }
-      -> max_attempts_reached(call: M, step_ref: String) {
+      -> ok(call: M, step_ref: String) {
         Cannot repair further. Transitions to rejected.
       }
     }
@@ -84,7 +84,7 @@ concept LLMCall [M] {
   example "request then record_response": {
     after request(step_ref: "draft", model: "claude-sonnet-4-5-20250929", prompt: p, output_schema: "Email:v1", max_attempts: 3) -> ok(call: m, step_ref: "draft", model: "claude-sonnet-4-5-20250929")
     then record_response(call: m, raw_output: o, input_tokens: 100, output_tokens: 200) -> ok(call: m)
-    and  validate(call: m) -> valid(call: m, step_ref: "draft", validated_output: o)
+    and  validate(call: m) -> ok(call: m, step_ref: "draft", validated_output: o)
   }
 
 

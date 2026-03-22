@@ -88,8 +88,7 @@ describe('ProcessAutomationProvider functional handler', () => {
       if (typeof processAutomationProviderHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(processAutomationProviderHandler.register({  }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "already_reg" -> already_registered', async () => {
@@ -159,8 +158,7 @@ describe('ProcessAutomationProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid = await interpret(processAutomationProviderHandler.register({  }), storage);
       const result = await interpret(processAutomationProviderHandler.execute({ action_payload: "{\"input\":\"data\"}", process_spec_id: afterResult_valid?.output?.["provider_name"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "execute_no_payload" -> error', async () => {
@@ -205,12 +203,10 @@ describe('ProcessAutomationProvider functional handler', () => {
     it("register then execute", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(processAutomationProviderHandler.register({  }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let provider_name = registerResult0.output["provider_name"];
       const thenResult0 = await interpret(processAutomationProviderHandler.execute({ action_payload: {"type":"literal","value":"{\"input\":\"data\"}"}, process_spec_id: {"type":"literal","value":"spec-001"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

@@ -88,8 +88,7 @@ describe('BindingDependenceProvider functional handler', () => {
       if (typeof bindingDependenceProviderHandler.initialize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(bindingDependenceProviderHandler.initialize({  }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "duplicate_init" -> loadError', async () => {

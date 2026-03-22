@@ -20,7 +20,7 @@ concept ExtensionMessaging [E] {
       -> ok(channel: E) {
         Channel registered and ready for subscriptions.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         A channel with the same name already exists.
       }
     }
@@ -74,7 +74,7 @@ concept ExtensionMessaging [E] {
       -> notfound(message: String) {
         No channel with the given identifier.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         Subscriber already registered on this channel.
       }
     }

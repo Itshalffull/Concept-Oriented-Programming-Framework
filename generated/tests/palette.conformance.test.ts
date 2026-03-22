@@ -88,16 +88,14 @@ describe('Palette functional handler', () => {
       if (typeof paletteHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(paletteHandler.generate({ palette: "C-1", name: "blue", seed: "#3b82f6" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "generate_emerald" -> ok', async () => {
       if (typeof paletteHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(paletteHandler.generate({ palette: "C-2", name: "emerald", seed: "#10b981" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "generate_empty_seed" -> invalid', async () => {
@@ -180,8 +178,7 @@ describe('Palette functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(paletteHandler.assignRole({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "assign_accent" -> ok', async () => {
@@ -194,8 +191,7 @@ describe('Palette functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(paletteHandler.assignRole({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "assign_unknown_palette" -> notfound', async () => {
@@ -270,8 +266,7 @@ describe('Palette functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(paletteHandler.checkContrast({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "contrast_unknown_fg" -> notfound', async () => {
@@ -304,13 +299,11 @@ describe('Palette functional handler', () => {
     it("generate then assignRole", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(paletteHandler.generate({ palette: {"type":"variable","name":"c"}, name: {"type":"literal","value":"blue"}, seed: {"type":"literal","value":"#3b82f6"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
+      expect(generateResult0.variant).toBe("ok");
       let palette = generateResult0.output["palette"];
       let scale = generateResult0.output["scale"];
       const thenResult0 = await interpret(paletteHandler.assignRole({ palette: {"type":"variable","name":"c"}, role: {"type":"literal","value":"primary"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

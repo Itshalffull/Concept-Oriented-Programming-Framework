@@ -19,7 +19,7 @@ concept Template [T] {
       -> ok() {
         Registers a new template with its body and variable declarations.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         A template with this identity already exists.
       }
 

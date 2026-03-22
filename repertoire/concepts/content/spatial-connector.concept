@@ -28,7 +28,7 @@ concept SpatialConnector [C] {
         Creates a new connector between source and target items on the canvas
         with the given type (visual, semantic, or surfaced).
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         The canvas, source item, or target item does not exist.
       }
 
@@ -41,7 +41,7 @@ concept SpatialConnector [C] {
         Promotes a visual-only connector to semantic, creating a backing
         Reference to persist the relationship beyond the canvas.
       }
-      -> already_semantic(message: String) {
+      -> ok(message: String) {
         The connector is already semantic or surfaced.
       }
 
@@ -54,7 +54,7 @@ concept SpatialConnector [C] {
         Demotes a semantic connector back to visual-only, removing the
         backing Reference while keeping the visual line on the canvas.
       }
-      -> not_semantic(message: String) {
+      -> ok(message: String) {
         The connector is not semantic and cannot be demoted.
       }
 
@@ -67,7 +67,7 @@ concept SpatialConnector [C] {
         Discovers an existing Reference between source and target and
         surfaces it as a visible connector on the canvas.
       }
-      -> no_reference(message: String) {
+      -> ok(message: String) {
         No existing Reference found between source and target.
       }
 
@@ -79,7 +79,7 @@ concept SpatialConnector [C] {
       -> ok() {
         Removes the connector from the canvas display.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         The connector does not exist.
       }
 

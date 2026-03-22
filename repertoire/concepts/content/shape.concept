@@ -32,7 +32,7 @@ concept Shape [S] {
       -> ok() {
         Updates the fill, stroke, and text properties of an existing shape.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         The shape does not exist.
       }
 
@@ -44,7 +44,7 @@ concept Shape [S] {
       -> ok() {
         Removes the shape permanently.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         The shape does not exist.
       }
 

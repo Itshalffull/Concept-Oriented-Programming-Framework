@@ -94,8 +94,7 @@ describe('DefinitionUnit functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(definitionUnitHandler.extract({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "extract_empty_tree" -> error', async () => {
@@ -169,8 +168,7 @@ describe('DefinitionUnit functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(definitionUnitHandler.findBySymbol({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_missing_symbol" -> error', async () => {
@@ -244,8 +242,7 @@ describe('DefinitionUnit functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(definitionUnitHandler.findByPattern({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_all" -> ok', async () => {
@@ -258,8 +255,7 @@ describe('DefinitionUnit functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(definitionUnitHandler.findByPattern({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -326,8 +322,7 @@ describe('DefinitionUnit functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(definitionUnitHandler.diff({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "diff_missing" -> error', async () => {
@@ -359,8 +354,7 @@ describe('DefinitionUnit functional handler', () => {
     it("extract-then-findBySymbol", async () => {
       const storage = createInMemoryStorage();
       const extractResult0 = await interpret(definitionUnitHandler.extract({ tree: {"type":"literal","value":"t1"}, startByte: {"type":"literal","value":0}, endByte: {"type":"literal","value":100} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(extractResult0.variant), `step 0: expected success but got '${extractResult0.variant}'`).toBe(false);
+      expect(extractResult0.variant).toBe("ok");
       let unit = extractResult0.output["unit"];
       const thenResult0 = await interpret(definitionUnitHandler.findBySymbol({ symbol: {"type":"literal","value":"sym-u"} }), storage);
       expect(thenResult0.variant).toBe("notfound");

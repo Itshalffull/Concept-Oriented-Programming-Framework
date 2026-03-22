@@ -19,7 +19,7 @@ concept BordaCount [BD] {
 
   actions {
     action configure(pointScheme: String) {
-      -> configured(config: BD) {
+      -> ok(config: BD) {
         Standard: first gets N-1, second N-2, ..., last gets 0.
         Modified: first gets N, last gets 1 (no zero).
         Dowdall: first gets 1, second gets 1/2, third 1/3, etc.
@@ -31,10 +31,10 @@ concept BordaCount [BD] {
     }
 
     action count(config: BD, rankedBallots: String, weights: String) {
-      -> winner(choice: String, totalPoints: Float, details: String) {
+      -> ok(choice: String, totalPoints: Float, details: String) {
         The candidate with the highest weighted Borda score wins.
       }
-      -> tie(choices: String, totalPoints: Float) {
+      -> ok(choices: String, totalPoints: Float) {
         Multiple candidates have identical Borda scores.
       }
 
@@ -45,9 +45,9 @@ concept BordaCount [BD] {
 
   example "configure-then-count": {
 
-    after configure(pointScheme: "Standard") -> configured(config: bd)
+    after configure(pointScheme: "Standard") -> ok(config: bd)
 
-        then count(config: bd, rankedBallots: _, weights: _) -> winner(choice: _, totalPoints: _, details: _)
+        then count(config: bd, rankedBallots: _, weights: _) -> ok(choice: _, totalPoints: _, details: _)
 
   }
 
@@ -56,7 +56,7 @@ concept BordaCount [BD] {
 
     requires: pointScheme != ""
 
-    ensures configured: pointScheme != none
+    ensures ok: pointScheme != none
 
   }
 }

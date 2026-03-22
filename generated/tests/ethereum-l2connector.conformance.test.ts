@@ -88,8 +88,7 @@ describe('EthereumL2Connector functional handler', () => {
       if (typeof ethereumL2ConnectorHandler.read !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(ethereumL2ConnectorHandler.read({ connector: "eth-l2-1", query: "{\"method\":\"getOwner\"}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "read_missing" -> notfound', async () => {
@@ -171,8 +170,7 @@ describe('EthereumL2Connector functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(ethereumL2ConnectorHandler.write({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "write_missing" -> notfound', async () => {
@@ -260,8 +258,7 @@ describe('EthereumL2Connector functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(ethereumL2ConnectorHandler.test({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "test_missing" -> unreachable', async () => {
@@ -336,8 +333,7 @@ describe('EthereumL2Connector functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(ethereumL2ConnectorHandler.discover({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "discover_missing" -> notfound', async () => {
@@ -370,13 +366,11 @@ describe('EthereumL2Connector functional handler', () => {
     it("test-then-read", async () => {
       const storage = createInMemoryStorage();
       const testResult0 = await interpret(ethereumL2ConnectorHandler.test({ connector: {"type":"variable","name":"c"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(testResult0.variant), `step 0: expected success but got '${testResult0.variant}'`).toBe(false);
+      expect(testResult0.variant).toBe("ok");
       let block_number = testResult0.output["block_number"];
       let latency_ms = testResult0.output["latency_ms"];
       const thenResult0 = await interpret(ethereumL2ConnectorHandler.read({ connector: {"type":"variable","name":"c"}, query: {"type":"literal","value":"{method: \"getOwner\"}"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("read-then-write", async () => {

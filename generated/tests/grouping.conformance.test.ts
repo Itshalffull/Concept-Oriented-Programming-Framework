@@ -88,16 +88,14 @@ describe('Grouping functional handler', () => {
       if (typeof groupingHandler.group !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(groupingHandler.group({ items: ["Order","Product","User"], config: "per-concept" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "by_crud_strategy" -> ok', async () => {
       if (typeof groupingHandler.group !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(groupingHandler.group({ items: ["createOrder","getUser","deleteProduct"], config: "by-crud" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_strategy" -> error', async () => {
@@ -178,8 +176,7 @@ describe('Grouping functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(groupingHandler.classify({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "classify_read" -> ok', async () => {
@@ -192,8 +189,7 @@ describe('Grouping functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(groupingHandler.classify({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_action" -> ok', async () => {
@@ -206,8 +202,7 @@ describe('Grouping functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(groupingHandler.classify({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -232,14 +227,12 @@ describe('Grouping functional handler', () => {
     it("group-then-classify", async () => {
       const storage = createInMemoryStorage();
       const groupResult0 = await interpret(groupingHandler.group({ items: {"type":"list","items":[{"type":"literal","value":"A"},{"type":"literal","value":"B"},{"type":"literal","value":"C"}]}, config: {"type":"literal","value":"per-concept"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(groupResult0.variant), `step 0: expected success but got '${groupResult0.variant}'`).toBe(false);
+      expect(groupResult0.variant).toBe("ok");
       let grouping = groupResult0.output["grouping"];
       let groups = groupResult0.output["groups"];
       let groupCount = groupResult0.output["groupCount"];
       const thenResult0 = await interpret(groupingHandler.classify({ actionName: {"type":"literal","value":"create"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

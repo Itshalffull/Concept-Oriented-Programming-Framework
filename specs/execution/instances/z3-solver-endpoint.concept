@@ -26,7 +26,7 @@ concept Z3SolverEndpoint [Z] {
         Create a named Z3 solver endpoint with binary path,
         default timeout in milliseconds, and solver options.
       }
-      -> exists(name: String) {
+      -> ok(name: String) {
         An endpoint with this name is already registered.
       }
 
@@ -57,7 +57,7 @@ concept Z3SolverEndpoint [Z] {
         Submit an SMT-LIB formula to the Z3 solver and return
         the result (sat/unsat/unknown) with timing.
       }
-      -> notFound(name: String) {
+      -> ok(name: String) {
         No endpoint is registered with this name.
       }
       -> timeout(name: String, timingMs: Int) {
@@ -85,7 +85,7 @@ concept Z3SolverEndpoint [Z] {
       -> ok(endpoint: Z, binaryPath: String, timeout: Int, options: String) {
         Look up the named endpoint for diagnostics.
       }
-      -> notFound(name: String) {
+      -> ok(name: String) {
         No endpoint is registered with this name.
       }
 

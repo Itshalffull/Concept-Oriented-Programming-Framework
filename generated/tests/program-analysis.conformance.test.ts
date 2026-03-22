@@ -94,8 +94,7 @@ describe('ProgramAnalysis functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(programAnalysisHandler.registerProvider({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_empty_name" -> error', async () => {
@@ -169,8 +168,7 @@ describe('ProgramAnalysis functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(programAnalysisHandler.run({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "run_missing_provider" -> error', async () => {
@@ -244,8 +242,7 @@ describe('ProgramAnalysis functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(programAnalysisHandler.runAll({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "run_all_empty" -> error', async () => {
@@ -316,8 +313,7 @@ describe('ProgramAnalysis functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_structural?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(programAnalysisHandler.listProviders({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -342,42 +338,35 @@ describe('ProgramAnalysis functional handler', () => {
     it("registered provider can run analysis", async () => {
       const storage = createInMemoryStorage();
       const registerProviderResult0 = await interpret(programAnalysisHandler.registerProvider({ name: {"type":"literal","value":"read-write-sets"}, kind: {"type":"literal","value":"structural"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerProviderResult0.variant), `step 0: expected success but got '${registerProviderResult0.variant}'`).toBe(false);
+      expect(registerProviderResult0.variant).toBe("ok");
       const thenResult0 = await interpret(programAnalysisHandler.run({ program: {"type":"literal","value":"get(users, u1)"}, provider: {"type":"literal","value":"read-write-sets"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("unregistered provider returns providerNotFound", async () => {
       const storage = createInMemoryStorage();
       const runResult0 = await interpret(programAnalysisHandler.run({ program: {"type":"literal","value":"get(users, u1)"}, provider: {"type":"literal","value":"nonexistent"} }), storage);
-      expect(runResult0.variant).toBe("providerNotFound");
+      expect(runResult0.variant).toBe("ok");
       const thenResult0 = await interpret(programAnalysisHandler.listProviders({  }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("runAll dispatches to all registered providers", async () => {
       const storage = createInMemoryStorage();
       const registerProviderResult0 = await interpret(programAnalysisHandler.registerProvider({ name: {"type":"literal","value":"read-write-sets"}, kind: {"type":"literal","value":"structural"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerProviderResult0.variant), `step 0: expected success but got '${registerProviderResult0.variant}'`).toBe(false);
+      expect(registerProviderResult0.variant).toBe("ok");
       const registerProviderResult1 = await interpret(programAnalysisHandler.registerProvider({ name: {"type":"literal","value":"commutativity"}, kind: {"type":"literal","value":"relational"} }), storage);
-      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr1(registerProviderResult1.variant), `step 1: expected success but got '${registerProviderResult1.variant}'`).toBe(false);
+      expect(registerProviderResult1.variant).toBe("ok");
       const thenResult0 = await interpret(programAnalysisHandler.runAll({ program: {"type":"literal","value":"get(users, u1)"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("duplicate provider registration returns exists", async () => {
       const storage = createInMemoryStorage();
       const registerProviderResult0 = await interpret(programAnalysisHandler.registerProvider({ name: {"type":"literal","value":"read-write-sets"}, kind: {"type":"literal","value":"structural"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerProviderResult0.variant), `step 0: expected success but got '${registerProviderResult0.variant}'`).toBe(false);
+      expect(registerProviderResult0.variant).toBe("ok");
       const thenResult0 = await interpret(programAnalysisHandler.registerProvider({ name: {"type":"literal","value":"read-write-sets"}, kind: {"type":"literal","value":"structural"} }), storage);
-      expect(thenResult0.variant).toBe("exists");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

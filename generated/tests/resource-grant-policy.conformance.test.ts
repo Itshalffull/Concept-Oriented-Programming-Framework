@@ -88,16 +88,14 @@ describe('ResourceGrantPolicy functional handler', () => {
       if (typeof resourceGrantPolicyHandler.setGrant !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(resourceGrantPolicyHandler.setGrant({ grant: "schema:*:view", scope: "schema", resourcePattern: "*", actionName: "view", roles: "[\"admin\",\"editor\",\"viewer\"]" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "set_empty_grant" -> ok', async () => {
       if (typeof resourceGrantPolicyHandler.setGrant !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(resourceGrantPolicyHandler.setGrant({ grant: "", scope: "schema", resourcePattern: "*", actionName: "view", roles: "[]" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -164,8 +162,7 @@ describe('ResourceGrantPolicy functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(resourceGrantPolicyHandler.getGrant({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_missing_grant" -> error', async () => {
@@ -239,8 +236,7 @@ describe('ResourceGrantPolicy functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(resourceGrantPolicyHandler.resolve({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_no_match" -> error', async () => {
@@ -314,8 +310,7 @@ describe('ResourceGrantPolicy functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(resourceGrantPolicyHandler.list({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "list_all" -> ok', async () => {
@@ -325,8 +320,7 @@ describe('ResourceGrantPolicy functional handler', () => {
       const _pool = Object.assign({}, (afterResult_set_wildcard_view?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(resourceGrantPolicyHandler.list({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -351,12 +345,10 @@ describe('ResourceGrantPolicy functional handler', () => {
     it("setGrant-then-resolve", async () => {
       const storage = createInMemoryStorage();
       const setGrantResult0 = await interpret(resourceGrantPolicyHandler.setGrant({ grant: {"type":"variable","name":"g"}, scope: {"type":"literal","value":"schema"}, resourcePattern: {"type":"literal","value":"*"}, actionName: {"type":"literal","value":"view"}, roles: {"type":"list","items":[{"type":"literal","value":"admin"},{"type":"literal","value":"editor"},{"type":"literal","value":"viewer"}]} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(setGrantResult0.variant), `step 0: expected success but got '${setGrantResult0.variant}'`).toBe(false);
+      expect(setGrantResult0.variant).toBe("ok");
       let grant = setGrantResult0.output["grant"];
       const thenResult0 = await interpret(resourceGrantPolicyHandler.resolve({ scope: {"type":"literal","value":"schema"}, resource: {"type":"literal","value":"Article"}, actionName: {"type":"literal","value":"view"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

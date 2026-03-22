@@ -23,7 +23,7 @@ concept DatalogAnalysisProvider [I] {
         Register this engine with PluginRegistry for
         Datalog analysis rule evaluation.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the Datalog analysis engine.
       }
     }

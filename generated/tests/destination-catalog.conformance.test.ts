@@ -88,16 +88,14 @@ describe('DestinationCatalog functional handler', () => {
       if (typeof destinationCatalogHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(destinationCatalogHandler.register({ destination: "dest-1", name: "dashboard", targetConcept: "AppShell", targetView: "dashboard", href: "/admin", icon: "home", group: "Content" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_articles" -> ok', async () => {
       if (typeof destinationCatalogHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(destinationCatalogHandler.register({ destination: "dest-2", name: "articles", targetConcept: "ArticleList", targetView: "list", href: "/articles", icon: "file-text", group: "Content" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -164,8 +162,7 @@ describe('DestinationCatalog functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(destinationCatalogHandler.resolveByName({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_unknown_name" -> notfound', async () => {
@@ -240,8 +237,7 @@ describe('DestinationCatalog functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(destinationCatalogHandler.resolveByHref({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_nested_href" -> ok', async () => {
@@ -254,8 +250,7 @@ describe('DestinationCatalog functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(destinationCatalogHandler.resolveByHref({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_unknown_href" -> notfound', async () => {
@@ -327,8 +322,7 @@ describe('DestinationCatalog functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_dashboard?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(destinationCatalogHandler.list({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -338,12 +332,10 @@ describe('DestinationCatalog functional handler', () => {
     it("register then resolveByName", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(destinationCatalogHandler.register({ destination: {"type":"variable","name":"d"}, name: {"type":"literal","value":"dashboard"}, targetConcept: {"type":"literal","value":"AppShell"}, targetView: {"type":"literal","value":"dashboard"}, href: {"type":"literal","value":"/admin"}, icon: {"type":"literal","value":"home"}, group: {"type":"literal","value":"Content"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let destination = registerResult0.output["destination"];
       const thenResult0 = await interpret(destinationCatalogHandler.resolveByName({ name: {"type":"literal","value":"dashboard"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

@@ -20,7 +20,7 @@ const _policyHandler: FunctionalConceptHandler = {
       aim: input.aim, conditions: input.conditions, orElse: input.orElse ?? null,
       status: 'Active', createdAt: new Date().toISOString(),
     });
-    return complete(p, 'created', { policy: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { policy: id }) as StorageProgram<Result>;
   },
 
   evaluate(input: Record<string, unknown>) {
@@ -66,7 +66,7 @@ const _policyHandler: FunctionalConceptHandler = {
     p = branch(p, 'record',
       (b) => {
         let b2 = put(b, 'policy', policy as string, { status: 'Repealed' });
-        return complete(b2, 'repealed', { policy });
+        return complete(b2, 'ok', { policy });
       },
       (b) => complete(b, 'not_found', { policy }),
     );
@@ -82,7 +82,7 @@ const _policyHandler: FunctionalConceptHandler = {
     p = branch(p, 'record',
       (b) => {
         let b2 = put(b, 'policy', policy as string, { ...input, updatedAt: new Date().toISOString() });
-        return complete(b2, 'modified', { policy });
+        return complete(b2, 'ok', { policy });
       },
       (b) => complete(b, 'not_found', { policy }),
     );

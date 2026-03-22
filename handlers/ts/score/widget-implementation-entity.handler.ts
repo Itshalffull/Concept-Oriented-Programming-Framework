@@ -137,9 +137,9 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => b.entry == null,
-      (tp) => complete(tp, 'inSync', {}),
+      (tp) => complete(tp, 'ok', {}),
       // TODO: Compare generated implementation against widget spec
-      (ep) => complete(ep, 'inSync', {}),
+      (ep) => complete(ep, 'ok', {}),
     ) as StorageProgram<Result>;
   },
 

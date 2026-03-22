@@ -69,7 +69,7 @@ concept Layout [Y] {
 
     action nest(parent: Y, child: Y) {
       -> ok(parent: Y) { Nest layout inside another. }
-      -> cycle(message: String) { Would create circular reference. }
+      -> ok(message: String) { Would create circular reference. }
 
       fixture nest_child {
         parent: "layout-1"

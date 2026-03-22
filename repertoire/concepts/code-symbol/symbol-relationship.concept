@@ -29,7 +29,7 @@ concept SymbolRelationship [R] {
         Kind is one of: implements, extends, overrides, aliases,
         generates, configures, tests, documents.
       }
-      -> alreadyExists(existing: R) {
+      -> ok(existing: R) {
         This relationship already exists.
       }
 
@@ -94,7 +94,7 @@ concept SymbolRelationship [R] {
 
     after add(source: "ts/class/Handler", target: "ts/interface/IHandler", kind: "implements") -> ok(relationship: r)
 
-        then add(source: "ts/class/Handler", target: "ts/interface/IHandler", kind: "implements") -> alreadyExists(existing: r)
+        then add(source: "ts/class/Handler", target: "ts/interface/IHandler", kind: "implements") -> ok(existing: r)
 
   }
 

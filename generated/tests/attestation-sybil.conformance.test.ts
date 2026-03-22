@@ -88,8 +88,7 @@ describe('AttestationSybil functional handler', () => {
       if (typeof attestationSybilHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(attestationSybilHandler.configure({ requiredSchema: "kyc-basic", requiredAttester: "civic-authority" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_empty_schema" -> error', async () => {
@@ -158,8 +157,7 @@ describe('AttestationSybil functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_kyc = await interpret(attestationSybilHandler.configure({ requiredSchema: "kyc-basic", requiredAttester: "civic-authority" }), storage);
       const result = await interpret(attestationSybilHandler.submitAttestation({ config: afterResult_configure_kyc?.output?.["id"], candidate: "alice", attestationRef: afterResult_configure_kyc?.output?.["id"], schema: "kyc-basic", attester: "civic-authority", expiresAt: "2027-12-31T00:00:00Z" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "submit_missing_candidate" -> error', async () => {
@@ -228,8 +226,7 @@ describe('AttestationSybil functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_kyc = await interpret(attestationSybilHandler.configure({ requiredSchema: "kyc-basic", requiredAttester: "civic-authority" }), storage);
       const result = await interpret(attestationSybilHandler.verify({ config: afterResult_configure_kyc?.output?.["id"], candidate: "alice" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "verify_missing_config" -> error', async () => {
@@ -261,10 +258,10 @@ describe('AttestationSybil functional handler', () => {
     it("configure-then-checkParticipant", async () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(attestationSybilHandler.configure({ requiredSchemas: {"type":"variable","name":"_"}, trustedAttesters: {"type":"variable","name":"_"} }), storage);
-      expect(configureResult0.variant).toBe("configured");
+      expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
       const thenResult0 = await interpret(attestationSybilHandler.checkParticipant({ config: {"type":"variable","name":"as"}, participant: {"type":"variable","name":"_"}, attestationRef: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("verified");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });
@@ -349,7 +346,7 @@ describe('AttestationSybil functional handler', () => {
       }
     });
 
-    it('configure ensures on configured: ', async () => {
+    it('configure ensures on ok: ', async () => {
       if (typeof attestationSybilHandler.configure !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -361,7 +358,7 @@ describe('AttestationSybil functional handler', () => {
               const program = attestationSybilHandler.configure(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "configured") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

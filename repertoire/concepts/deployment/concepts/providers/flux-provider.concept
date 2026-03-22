@@ -60,7 +60,7 @@ concept FluxProvider [F] {
       -> ok(kustomization: F, releaseName: String) {
         HelmRelease object created within the kustomization.
       }
-      -> chartNotFound(chart: String, sourceRef: String) {
+      -> ok(chart: String, sourceRef: String) {
         Helm chart not found in the configured source.
       }
 

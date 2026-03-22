@@ -19,7 +19,7 @@ const _circleHandler: FunctionalConceptHandler = {
       id, name: input.name, domain: input.domain, purpose: input.purpose,
       parent: input.parent ?? null, members: [], createdAt: new Date().toISOString(),
     });
-    return complete(p, 'created', { circle: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { circle: id }) as StorageProgram<Result>;
   },
 
   assignMember(input: Record<string, unknown>) {
@@ -35,7 +35,7 @@ const _circleHandler: FunctionalConceptHandler = {
           if (!members.includes(member as string)) members.push(member as string);
           return { ...record, members };
         });
-        return complete(thenP, 'member_assigned', { circle, member });
+        return complete(thenP, 'ok', { circle, member });
       },
       (elseP) => complete(elseP, 'not_found', { circle }),
     ) as StorageProgram<Result>;
@@ -53,7 +53,7 @@ const _circleHandler: FunctionalConceptHandler = {
           const members = (record.members as string[]).filter(m => m !== member);
           return { ...record, members };
         });
-        return complete(thenP, 'member_removed', { circle, member });
+        return complete(thenP, 'ok', { circle, member });
       },
       (elseP) => complete(elseP, 'not_found', { circle }),
     ) as StorageProgram<Result>;
@@ -70,7 +70,7 @@ const _circleHandler: FunctionalConceptHandler = {
           const record = bindings.record as Record<string, unknown>;
           return { ...record, leadLink, repLink };
         });
-        return complete(thenP, 'links_set', { circle });
+        return complete(thenP, 'ok', { circle });
       },
       (elseP) => complete(elseP, 'not_found', { circle }),
     ) as StorageProgram<Result>;
@@ -80,7 +80,7 @@ const _circleHandler: FunctionalConceptHandler = {
     const { circle } = input;
     let p = createProgram();
     p = del(p, 'circle', circle as string);
-    return complete(p, 'dissolved', { circle }) as StorageProgram<Result>;
+    return complete(p, 'ok', { circle }) as StorageProgram<Result>;
   },
 
   checkJurisdiction(input: Record<string, unknown>) {
@@ -89,7 +89,7 @@ const _circleHandler: FunctionalConceptHandler = {
     p = get(p, 'circle', circle as string, 'record');
 
     return branch(p, 'record',
-      (thenP) => complete(thenP, 'within_jurisdiction', { circle, action }),
+      (thenP) => complete(thenP, 'ok', { circle, action }),
       (elseP) => complete(elseP, 'not_found', { circle }),
     ) as StorageProgram<Result>;
   },

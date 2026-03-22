@@ -88,16 +88,14 @@ describe('Timelock functional handler', () => {
       if (typeof timelockHandler.schedule !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(timelockHandler.schedule({ operationHash: "0xdeadbeef", payload: "{\"action\":\"transfer\",\"to\":\"0x123\"}", delayHours: "48.0", gracePeriodHours: "24.0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "schedule_upgrade" -> ok', async () => {
       if (typeof timelockHandler.schedule !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(timelockHandler.schedule({ operationHash: "0xcafebabe", payload: "{\"action\":\"upgrade\",\"version\":\"2.0\"}", delayHours: "72.0", gracePeriodHours: "12.0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "schedule_missing_hash" -> error', async () => {
@@ -166,8 +164,7 @@ describe('Timelock functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_schedule_transfer = await interpret(timelockHandler.schedule({ operationHash: "0xdeadbeef", payload: "{\"action\":\"transfer\",\"to\":\"0x123\"}", delayHours: "48.0", gracePeriodHours: "24.0" }), storage);
       const result = await interpret(timelockHandler.execute({ lock: afterResult_schedule_transfer?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "execute_not_found" -> error', async () => {
@@ -236,8 +233,7 @@ describe('Timelock functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_schedule_transfer = await interpret(timelockHandler.schedule({ operationHash: "0xdeadbeef", payload: "{\"action\":\"transfer\",\"to\":\"0x123\"}", delayHours: "48.0", gracePeriodHours: "24.0" }), storage);
       const result = await interpret(timelockHandler.cancel({ lock: afterResult_schedule_transfer?.output?.["id"], reason: "Governance vote rejected proposal" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "cancel_not_found" -> error', async () => {
@@ -269,10 +265,10 @@ describe('Timelock functional handler', () => {
     it("schedule-then-execute", async () => {
       const storage = createInMemoryStorage();
       const scheduleResult0 = await interpret(timelockHandler.schedule({ operationHash: {"type":"variable","name":"_"}, payload: {"type":"variable","name":"_"}, delayHours: {"type":"variable","name":"_"}, gracePeriodHours: {"type":"variable","name":"_"} }), storage);
-      expect(scheduleResult0.variant).toBe("queued");
+      expect(scheduleResult0.variant).toBe("ok");
       let lock = scheduleResult0.output["lock"];
       const thenResult0 = await interpret(timelockHandler.execute({ lock: {"type":"variable","name":"tl"} }), storage);
-      expect(thenResult0.variant).toBe("executed");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

@@ -88,8 +88,7 @@ describe('Objective functional handler', () => {
       if (typeof objectiveHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(objectiveHandler.create({ title: "Increase Revenue", description: "Grow quarterly revenue by 20%", owner: "cfo@acme.com", metricRefs: ["metric-revenue"], targetDate: "2026-12-31" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_empty_title" -> error', async () => {
@@ -158,8 +157,7 @@ describe('Objective functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_revenue_goal = await interpret(objectiveHandler.create({ title: "Increase Revenue", description: "Grow quarterly revenue by 20%", owner: "cfo@acme.com", metricRefs: ["metric-revenue"], targetDate: "2026-12-31" }), storage);
       const result = await interpret(objectiveHandler.updateProgress({ objective: afterResult_create_revenue_goal?.output?.["id"], currentValue: "50.0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "update_nonexistent" -> error', async () => {
@@ -228,8 +226,7 @@ describe('Objective functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_revenue_goal = await interpret(objectiveHandler.create({ title: "Increase Revenue", description: "Grow quarterly revenue by 20%", owner: "cfo@acme.com", metricRefs: ["metric-revenue"], targetDate: "2026-12-31" }), storage);
       const result = await interpret(objectiveHandler.evaluate({ objective: afterResult_create_revenue_goal?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "evaluate_nonexistent" -> error', async () => {
@@ -298,8 +295,7 @@ describe('Objective functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_revenue_goal = await interpret(objectiveHandler.create({ title: "Increase Revenue", description: "Grow quarterly revenue by 20%", owner: "cfo@acme.com", metricRefs: ["metric-revenue"], targetDate: "2026-12-31" }), storage);
       const result = await interpret(objectiveHandler.cancel({ objective: afterResult_create_revenue_goal?.output?.["id"], reason: "Budget constraints" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "cancel_nonexistent" -> ok', async () => {
@@ -312,8 +308,7 @@ describe('Objective functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(objectiveHandler.cancel({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -338,10 +333,10 @@ describe('Objective functional handler', () => {
     it("create-then-updateProgress", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(objectiveHandler.create({ title: {"type":"variable","name":"_"}, description: {"type":"variable","name":"_"}, owner: {"type":"variable","name":"_"}, metricRefs: {"type":"variable","name":"_"}, targetDate: {"type":"variable","name":"_"} }), storage);
-      expect(createResult0.variant).toBe("created");
+      expect(createResult0.variant).toBe("ok");
       let objective = createResult0.output["objective"];
       const thenResult0 = await interpret(objectiveHandler.updateProgress({ objective: {"type":"variable","name":"ob"}, currentValue: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("progressed");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });
@@ -428,7 +423,7 @@ describe('Objective functional handler', () => {
       }
     });
 
-    it('create ensures on created: ', async () => {
+    it('create ensures on ok: ', async () => {
       if (typeof objectiveHandler.create !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -440,7 +435,7 @@ describe('Objective functional handler', () => {
               const program = objectiveHandler.create(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "created") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

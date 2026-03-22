@@ -88,24 +88,21 @@ describe('Outline functional handler', () => {
       if (typeof outlineHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_child" -> ok', async () => {
       if (typeof outlineHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(outlineHandler.create({ node: "section-1", parent: "chapter-1" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_empty_node" -> ok', async () => {
       if (typeof outlineHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(outlineHandler.create({ node: "", parent: "" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -167,8 +164,7 @@ describe('Outline functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_root = await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
       const result = await interpret(outlineHandler.indent({ node: afterResult_create_root?.output?.["node"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "indent_missing" -> error', async () => {
@@ -237,8 +233,7 @@ describe('Outline functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_root = await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
       const result = await interpret(outlineHandler.outdent({ node: afterResult_create_root?.output?.["node"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "outdent_missing" -> error', async () => {
@@ -307,8 +302,7 @@ describe('Outline functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_root = await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
       const result = await interpret(outlineHandler.moveUp({ node: afterResult_create_root?.output?.["node"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "move_up_missing" -> error', async () => {
@@ -377,8 +371,7 @@ describe('Outline functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_root = await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
       const result = await interpret(outlineHandler.moveDown({ node: afterResult_create_root?.output?.["node"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "move_down_missing" -> error', async () => {
@@ -447,8 +440,7 @@ describe('Outline functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_root = await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
       const result = await interpret(outlineHandler.collapse({ node: afterResult_create_root?.output?.["node"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "collapse_missing" -> error', async () => {
@@ -517,8 +509,7 @@ describe('Outline functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_root = await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
       const result = await interpret(outlineHandler.expand({ node: afterResult_create_root?.output?.["node"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "expand_missing" -> error', async () => {
@@ -587,8 +578,7 @@ describe('Outline functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_root = await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
       const result = await interpret(outlineHandler.reparent({ node: afterResult_create_root?.output?.["node"], newParent: afterResult_create_root?.output?.["node"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "reparent_missing" -> error', async () => {
@@ -657,8 +647,7 @@ describe('Outline functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_root = await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
       const result = await interpret(outlineHandler.getChildren({ node: afterResult_create_root?.output?.["node"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_children_missing" -> error', async () => {
@@ -690,16 +679,13 @@ describe('Outline functional handler', () => {
     it("create-then-expand", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(outlineHandler.create({ node: {"type":"variable","name":"x"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
+      expect(createResult0.variant).toBe("ok");
       let node = createResult0.output["node"];
       const collapseResult1 = await interpret(outlineHandler.collapse({ node: {"type":"variable","name":"x"} }), storage);
-      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr1(collapseResult1.variant), `step 1: expected success but got '${collapseResult1.variant}'`).toBe(false);
+      expect(collapseResult1.variant).toBe("ok");
       node = collapseResult1.output["node"];
       const thenResult0 = await interpret(outlineHandler.expand({ node: {"type":"variable","name":"x"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

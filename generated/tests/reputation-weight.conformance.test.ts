@@ -88,8 +88,7 @@ describe('ReputationWeight functional handler', () => {
       if (typeof reputationWeightHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(reputationWeightHandler.configure({ scalingFunction: "linear", cap: "100.0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_empty" -> error', async () => {
@@ -163,8 +162,7 @@ describe('ReputationWeight functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(reputationWeightHandler.compute({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "compute_negative" -> error', async () => {
@@ -196,10 +194,10 @@ describe('ReputationWeight functional handler', () => {
     it("configure-then-compute", async () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(reputationWeightHandler.configure({ scalingFunction: {"type":"literal","value":"linear"}, cap: {"type":"literal","value":100} }), storage);
-      expect(configureResult0.variant).toBe("configured");
+      expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
       const thenResult0 = await interpret(reputationWeightHandler.compute({ config: {"type":"variable","name":"rw"}, participant: {"type":"variable","name":"p"}, reputationScore: {"type":"literal","value":50} }), storage);
-      expect(thenResult0.variant).toBe("weight");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });
@@ -216,7 +214,7 @@ describe('ReputationWeight functional handler', () => {
       }
     });
 
-    it('configure ensures on configured: ', async () => {
+    it('configure ensures on ok: ', async () => {
       if (typeof reputationWeightHandler.configure !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -228,7 +226,7 @@ describe('ReputationWeight functional handler', () => {
               const program = reputationWeightHandler.configure(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "configured") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

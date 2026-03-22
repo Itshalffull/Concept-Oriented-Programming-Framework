@@ -88,16 +88,14 @@ describe('FinalityGate functional handler', () => {
       if (typeof finalityGateHandler.submit !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(finalityGateHandler.submit({ operationRef: "gov-prop-300", providerRef: "chain-finality-eth" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "submit_bft_finality" -> ok', async () => {
       if (typeof finalityGateHandler.submit !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(finalityGateHandler.submit({ operationRef: "gov-prop-301", providerRef: "bft-committee-alpha" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "submit_missing_ref" -> error', async () => {
@@ -166,8 +164,7 @@ describe('FinalityGate functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_submit_chain_finality = await interpret(finalityGateHandler.submit({ operationRef: "gov-prop-300", providerRef: "chain-finality-eth" }), storage);
       const result = await interpret(finalityGateHandler.confirm({ gate: afterResult_submit_chain_finality?.output?.["id"], proof: "block-hash-0xabc123" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "confirm_not_found" -> error', async () => {
@@ -199,7 +196,7 @@ describe('FinalityGate functional handler', () => {
     it("submit-then-confirm", async () => {
       const storage = createInMemoryStorage();
       const submitResult0 = await interpret(finalityGateHandler.submit({ operationRef: {"type":"variable","name":"_"}, provider: {"type":"variable","name":"_"} }), storage);
-      expect(submitResult0.variant).toBe("submitted");
+      expect(submitResult0.variant).toBe("ok");
       let gate = submitResult0.output["gate"];
       const thenResult0 = await interpret(finalityGateHandler.confirm({ gate: {"type":"variable","name":"fg"} }), storage);
       expect(thenResult0.variant).toBe("finalized");

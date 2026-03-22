@@ -25,7 +25,7 @@ concept ContentNode [N] {
       -> ok(node: N) {
         Creates a new content node.
       }
-      -> exists() {
+      -> ok() {
         A node with this slug already exists.
       }
     }

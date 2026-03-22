@@ -88,8 +88,7 @@ describe('SocialGraphVerification functional handler', () => {
       if (typeof socialGraphVerificationHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(socialGraphVerificationHandler.configure({ minimumVouchers: "3", trustAlgorithm: "count" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_empty" -> error', async () => {
@@ -158,8 +157,7 @@ describe('SocialGraphVerification functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_default = await interpret(socialGraphVerificationHandler.configure({ minimumVouchers: "3", trustAlgorithm: "count" }), storage);
       const result = await interpret(socialGraphVerificationHandler.addVouch({ config: afterResult_configure_default?.output?.["id"], voucher: "alice", candidate: "bob" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "vouch_self" -> error', async () => {
@@ -228,8 +226,7 @@ describe('SocialGraphVerification functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_default = await interpret(socialGraphVerificationHandler.configure({ minimumVouchers: "3", trustAlgorithm: "count" }), storage);
       const result = await interpret(socialGraphVerificationHandler.revokeVouch({ config: afterResult_configure_default?.output?.["id"], voucher: "alice", candidate: "bob" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "revoke_nonexistent" -> error', async () => {
@@ -298,8 +295,7 @@ describe('SocialGraphVerification functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_default = await interpret(socialGraphVerificationHandler.configure({ minimumVouchers: "3", trustAlgorithm: "count" }), storage);
       const result = await interpret(socialGraphVerificationHandler.verify({ config: afterResult_configure_default?.output?.["id"], candidate: "bob" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "verify_no_vouches" -> error', async () => {
@@ -331,10 +327,10 @@ describe('SocialGraphVerification functional handler', () => {
     it("configure-then-analyze", async () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(socialGraphVerificationHandler.configure({ minVouches: {"type":"literal","value":3}, trustAnchors: {"type":"variable","name":"_"}, clusterThreshold: {"type":"variable","name":"_"} }), storage);
-      expect(configureResult0.variant).toBe("configured");
+      expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
       const thenResult0 = await interpret(socialGraphVerificationHandler.vouch({ voucher: {"type":"variable","name":"_"}, vouchee: {"type":"variable","name":"p"} }), storage);
-      expect(thenResult0.variant).toBe("vouched");
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(socialGraphVerificationHandler.analyze({ participant: {"type":"variable","name":"p"} }), storage);
       expect(thenResult1.variant).toBe("trusted");
     });
@@ -423,7 +419,7 @@ describe('SocialGraphVerification functional handler', () => {
       }
     });
 
-    it('configure ensures on configured: ', async () => {
+    it('configure ensures on ok: ', async () => {
       if (typeof socialGraphVerificationHandler.configure !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -435,7 +431,7 @@ describe('SocialGraphVerification functional handler', () => {
               const program = socialGraphVerificationHandler.configure(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "configured") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

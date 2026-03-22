@@ -88,8 +88,7 @@ describe('Policy functional handler', () => {
       if (typeof policyHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(policyHandler.create({ attributes: "committee_member", deontic: "Must", aim: "submit_quarterly_report", conditions: "end_of_quarter", orElse: "escalate_to_board", domain: "finance" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_missing_attributes" -> error', async () => {
@@ -163,8 +162,7 @@ describe('Policy functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(policyHandler.evaluate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "evaluate_unknown_policy" -> not_applicable', async () => {
@@ -239,8 +237,7 @@ describe('Policy functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(policyHandler.suspend({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "suspend_unknown_policy" -> error', async () => {
@@ -314,8 +311,7 @@ describe('Policy functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(policyHandler.repeal({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "repeal_unknown_policy" -> error', async () => {
@@ -389,8 +385,7 @@ describe('Policy functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(policyHandler.modify({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "modify_unknown_policy" -> not_found', async () => {
@@ -423,10 +418,10 @@ describe('Policy functional handler', () => {
     it("create-then-evaluate", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(policyHandler.create({ attributes: {"type":"variable","name":"_"}, deontic: {"type":"literal","value":"Must"}, aim: {"type":"variable","name":"_"}, conditions: {"type":"variable","name":"_"}, orElse: {"type":"variable","name":"_"}, domain: {"type":"variable","name":"_"} }), storage);
-      expect(createResult0.variant).toBe("created");
+      expect(createResult0.variant).toBe("ok");
       let policy = createResult0.output["policy"];
       const thenResult0 = await interpret(policyHandler.evaluate({ policy: {"type":"variable","name":"pl"}, context: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("required");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });
@@ -515,7 +510,7 @@ describe('Policy functional handler', () => {
       }
     });
 
-    it('create ensures on created: ', async () => {
+    it('create ensures on ok: ', async () => {
       if (typeof policyHandler.create !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -527,7 +522,7 @@ describe('Policy functional handler', () => {
               const program = policyHandler.create(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "created") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

@@ -27,7 +27,7 @@ concept AlloySolverEndpoint [A] {
         Create a named Alloy solver endpoint with JAR path,
         default scope bound, timeout, and solver options.
       }
-      -> exists(name: String) {
+      -> ok(name: String) {
         An endpoint with this name is already registered.
       }
 
@@ -62,7 +62,7 @@ concept AlloySolverEndpoint [A] {
         Returns the result (satisfiable/unsatisfiable) and
         any counterexample found.
       }
-      -> notFound(name: String) {
+      -> ok(name: String) {
         No endpoint is registered with this name.
       }
       -> timeout(name: String, timingMs: Int) {
@@ -90,7 +90,7 @@ concept AlloySolverEndpoint [A] {
       -> ok(endpoint: A, jarPath: String, scope: Int, timeout: Int) {
         Look up the named endpoint for diagnostics.
       }
-      -> notFound(name: String) {
+      -> ok(name: String) {
         No endpoint is registered with this name.
       }
 

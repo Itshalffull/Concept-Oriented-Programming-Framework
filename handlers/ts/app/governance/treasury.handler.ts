@@ -72,7 +72,7 @@ const _treasuryHandler: FunctionalConceptHandler = {
       id, vault: input.vault, token: input.token, amount: input.amount,
       purpose: input.purpose, expiresAt: input.expiresAt ?? null, status: 'Active',
     });
-    return complete(p, 'allocated', { allocation: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { allocation: id }) as StorageProgram<Result>;
   },
 
   releaseAllocation(input: Record<string, unknown>) {
@@ -83,7 +83,7 @@ const _treasuryHandler: FunctionalConceptHandler = {
     p = branch(p, 'record',
       (b) => {
         let b2 = put(b, 'allocation', allocation as string, { status: 'Released', releasedAt: new Date().toISOString() });
-        return complete(b2, 'released', { allocation });
+        return complete(b2, 'ok', { allocation });
       },
       (b) => complete(b, 'not_found', { allocation }),
     );

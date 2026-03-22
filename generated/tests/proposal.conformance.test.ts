@@ -88,8 +88,7 @@ describe('Proposal functional handler', () => {
       if (typeof proposalHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_empty_title" -> error', async () => {
@@ -158,8 +157,7 @@ describe('Proposal functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_budget_proposal = await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage);
       const result = await interpret(proposalHandler.sponsor({ proposal: afterResult_create_budget_proposal?.output?.["id"], sponsorId: "bob" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "sponsor_missing" -> error', async () => {
@@ -228,8 +226,7 @@ describe('Proposal functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_budget_proposal = await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage);
       const result = await interpret(proposalHandler.activate({ proposal: afterResult_create_budget_proposal?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "activate_missing" -> error', async () => {
@@ -298,8 +295,7 @@ describe('Proposal functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_budget_proposal = await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage);
       const result = await interpret(proposalHandler.advance({ proposal: afterResult_create_budget_proposal?.output?.["id"], newStatus: "Passed" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "advance_missing" -> error', async () => {
@@ -368,8 +364,7 @@ describe('Proposal functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_budget_proposal = await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage);
       const result = await interpret(proposalHandler.cancel({ proposal: afterResult_create_budget_proposal?.output?.["id"], canceller: "alice" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "cancel_missing" -> error', async () => {
@@ -401,14 +396,14 @@ describe('Proposal functional handler', () => {
     it("create-then-advance", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(proposalHandler.create({ proposer: {"type":"variable","name":"_"}, title: {"type":"variable","name":"_"}, description: {"type":"variable","name":"_"}, actions: {"type":"variable","name":"_"} }), storage);
-      expect(createResult0.variant).toBe("created");
+      expect(createResult0.variant).toBe("ok");
       let proposal = createResult0.output["proposal"];
       const thenResult0 = await interpret(proposalHandler.sponsor({ proposal: {"type":"variable","name":"p"}, sponsorId: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("sponsored");
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(proposalHandler.activate({ proposal: {"type":"variable","name":"p"} }), storage);
-      expect(thenResult1.variant).toBe("activated");
+      expect(thenResult1.variant).toBe("ok");
       const thenResult2 = await interpret(proposalHandler.advance({ proposal: {"type":"variable","name":"p"}, newStatus: {"type":"literal","value":"Passed"} }), storage);
-      expect(thenResult2.variant).toBe("advanced");
+      expect(thenResult2.variant).toBe("ok");
     });
 
   });
@@ -497,7 +492,7 @@ describe('Proposal functional handler', () => {
       }
     });
 
-    it('create ensures on created: ', async () => {
+    it('create ensures on ok: ', async () => {
       if (typeof proposalHandler.create !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -509,7 +504,7 @@ describe('Proposal functional handler', () => {
               const program = proposalHandler.create(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "created") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

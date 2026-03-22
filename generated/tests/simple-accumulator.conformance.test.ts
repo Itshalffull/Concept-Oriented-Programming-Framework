@@ -88,16 +88,14 @@ describe('SimpleAccumulator functional handler', () => {
       if (typeof simpleAccumulatorHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(simpleAccumulatorHandler.configure({ decayRate: "0.1", cap: "1000.0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_no_limits" -> ok', async () => {
       if (typeof simpleAccumulatorHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(simpleAccumulatorHandler.configure({  }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -159,8 +157,7 @@ describe('SimpleAccumulator functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_with_decay = await interpret(simpleAccumulatorHandler.configure({ decayRate: "0.1", cap: "1000.0" }), storage);
       const result = await interpret(simpleAccumulatorHandler.add({ config: afterResult_configure_with_decay?.output?.["id"], participant: "alice", amount: "25.0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "add_negative" -> error', async () => {
@@ -229,8 +226,7 @@ describe('SimpleAccumulator functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_with_decay = await interpret(simpleAccumulatorHandler.configure({ decayRate: "0.1", cap: "1000.0" }), storage);
       const result = await interpret(simpleAccumulatorHandler.applyDecay({ config: afterResult_configure_with_decay?.output?.["id"], participant: "alice" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "apply_decay_no_config" -> error', async () => {
@@ -299,8 +295,7 @@ describe('SimpleAccumulator functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_with_decay = await interpret(simpleAccumulatorHandler.configure({ decayRate: "0.1", cap: "1000.0" }), storage);
       const result = await interpret(simpleAccumulatorHandler.getScore({ config: afterResult_configure_with_decay?.output?.["id"], participant: "alice" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_unknown_score" -> error', async () => {
@@ -332,10 +327,10 @@ describe('SimpleAccumulator functional handler', () => {
     it("configure-then-add", async () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(simpleAccumulatorHandler.configure({ decayRate: {"type":"variable","name":"_"}, cap: {"type":"variable","name":"_"} }), storage);
-      expect(configureResult0.variant).toBe("configured");
+      expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
       const thenResult0 = await interpret(simpleAccumulatorHandler.add({ config: {"type":"variable","name":"sa"}, participant: {"type":"literal","value":"alice"}, amount: {"type":"literal","value":10} }), storage);
-      expect(thenResult0.variant).toBe("added");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });
@@ -422,7 +417,7 @@ describe('SimpleAccumulator functional handler', () => {
       }
     });
 
-    it('configure ensures on configured: ', async () => {
+    it('configure ensures on ok: ', async () => {
       if (typeof simpleAccumulatorHandler.configure !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -434,7 +429,7 @@ describe('SimpleAccumulator functional handler', () => {
               const program = simpleAccumulatorHandler.configure(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "configured") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

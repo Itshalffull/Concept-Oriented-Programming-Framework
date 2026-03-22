@@ -22,7 +22,7 @@ const _membershipHandler: FunctionalConceptHandler = {
       (b) => complete(b, 'already_member', { member }),
       (b) => {
         let b2 = put(b, 'member', member, { member, polity, status: 'Active', joinedAt: new Date().toISOString() });
-        return complete(b2, 'joined', { membership: member });
+        return complete(b2, 'ok', { membership: member });
       },
     );
 
@@ -37,7 +37,7 @@ const _membershipHandler: FunctionalConceptHandler = {
     p = branch(p, 'record',
       (b) => {
         let b2 = del(b, 'member', member);
-        return complete(b2, 'left', { member });
+        return complete(b2, 'ok', { member });
       },
       (b) => complete(b, 'not_found', { member }),
     );
@@ -69,7 +69,7 @@ const _membershipHandler: FunctionalConceptHandler = {
     p = branch(p, 'record',
       (b) => {
         let b2 = put(b, 'member', member, { status: 'Active', suspendedUntil: null });
-        return complete(b2, 'reinstated', { member });
+        return complete(b2, 'ok', { member });
       },
       (b) => complete(b, 'not_found', { member }),
     );
@@ -85,7 +85,7 @@ const _membershipHandler: FunctionalConceptHandler = {
     p = branch(p, 'record',
       (b) => {
         let b2 = del(b, 'member', member);
-        return complete(b2, 'kicked', { member });
+        return complete(b2, 'ok', { member });
       },
       (b) => complete(b, 'not_found', { member }),
     );
@@ -97,7 +97,7 @@ const _membershipHandler: FunctionalConceptHandler = {
     const polity = input.polity as string;
     let p = createProgram();
     p = put(p, 'rules', polity, { joinConditions: input.joinConditions, exitConditions: input.exitConditions });
-    return complete(p, 'updated', { polity }) as StorageProgram<Result>;
+    return complete(p, 'ok', { polity }) as StorageProgram<Result>;
   },
 };
 

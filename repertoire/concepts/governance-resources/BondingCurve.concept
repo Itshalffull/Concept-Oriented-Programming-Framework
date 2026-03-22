@@ -25,7 +25,7 @@ concept BondingCurve [BC] {
 
   actions {
     action create(curveType: String, params: String, reserveToken: String, bondedToken: String) {
-      -> created(curve: BC) {
+      -> ok(curve: BC) {
         A new bonding curve is created with zero supply and zero reserve.
       }
 
@@ -34,7 +34,7 @@ concept BondingCurve [BC] {
     }
 
     action buy(curve: BC, buyer: String, reserveAmount: Float) {
-      -> bought(tokensReceived: Float, newPrice: Float) {
+      -> ok(tokensReceived: Float, newPrice: Float) {
         Reserve is deposited. Tokens are minted per the curve formula.
       }
       -> not_found(curve: BC) {
@@ -46,7 +46,7 @@ concept BondingCurve [BC] {
     }
 
     action sell(curve: BC, seller: String, tokenAmount: Float) {
-      -> sold(reserveReceived: Float, newPrice: Float) {
+      -> ok(reserveReceived: Float, newPrice: Float) {
         Tokens are burned. Reserve is returned per the curve formula.
       }
       -> not_found(curve: BC) {
@@ -58,7 +58,7 @@ concept BondingCurve [BC] {
     }
 
     action getPrice(curve: BC, amount: Float) {
-      -> price(spotPrice: Float, purchaseCost: Float) {
+      -> ok(spotPrice: Float, purchaseCost: Float) {
         Returns the current spot price and cost to purchase the given amount.
       }
       -> not_found(curve: BC) {
@@ -72,11 +72,11 @@ concept BondingCurve [BC] {
 
   example "create-then-sell": {
 
-    after create(curveType: _, params: _, reserveToken: _, bondedToken: _) -> created(curve: bc)
+    after create(curveType: _, params: _, reserveToken: _, bondedToken: _) -> ok(curve: bc)
 
-        then buy(curve: bc, buyer: _, reserveAmount: 100.0) -> bought(tokensReceived: _, newPrice: _)
+        then buy(curve: bc, buyer: _, reserveAmount: 100.0) -> ok(tokensReceived: _, newPrice: _)
 
-        and  sell(curve: bc, seller: _, tokenAmount: _) -> sold(reserveReceived: _, newPrice: _)
+        and  sell(curve: bc, seller: _, tokenAmount: _) -> ok(reserveReceived: _, newPrice: _)
 
   }
 
@@ -101,7 +101,7 @@ concept BondingCurve [BC] {
 
     requires: name != ""
 
-    ensures created: name != none
+    ensures ok: name != none
 
   }
 }

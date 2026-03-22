@@ -65,7 +65,7 @@ concept ConnectorPort [P] {
 
     action incrementConnection(port: P) {
       -> ok(port: P, count: Int) { Increments count. }
-      -> exceeded(port: P, max: Int) { At max_connections. }
+      -> ok(port: P, max: Int) { At max_connections. }
 
       fixture increment_ok { port: $add_data_output.port } after add_data_output
       fixture increment_missing { port: "port-999" } -> error

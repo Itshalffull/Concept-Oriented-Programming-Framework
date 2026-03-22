@@ -37,16 +37,14 @@ describe('SpatialConnector imperative handler', () => {
       if (typeof spatialConnectorHandler.draw !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await spatialConnectorHandler.draw({ canvas: "c1", source: "node-a", target: "node-b", type: "visual" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "semantic_draw" -> ok', async () => {
       if (typeof spatialConnectorHandler.draw !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await spatialConnectorHandler.draw({ canvas: "c1", source: "node-a", target: "node-c", type: "semantic" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -66,8 +64,7 @@ describe('SpatialConnector imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_draw = await spatialConnectorHandler.draw({ canvas: "c1", source: "node-a", target: "node-b", type: "visual" }, storage);
       const result = await spatialConnectorHandler.promote({ connector: afterResult_valid_draw?.output?.["connector"] }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "already_promoted" -> already_semantic', async () => {
@@ -95,8 +92,7 @@ describe('SpatialConnector imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_draw = await spatialConnectorHandler.draw({ canvas: "c1", source: "node-a", target: "node-b", type: "visual" }, storage);
       const result = await spatialConnectorHandler.demote({ connector: afterResult_valid_draw?.output?.["connector"] }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "demote_visual" -> not_semantic', async () => {
@@ -129,8 +125,7 @@ describe('SpatialConnector imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await spatialConnectorHandler.surface({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "surface_no_ref" -> no_reference', async () => {
@@ -158,8 +153,7 @@ describe('SpatialConnector imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_draw = await spatialConnectorHandler.draw({ canvas: "c1", source: "node-a", target: "node-b", type: "visual" }, storage);
       const result = await spatialConnectorHandler.hide({ connector: afterResult_valid_draw?.output?.["connector"] }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "hide_missing" -> notFound', async () => {
@@ -188,12 +182,10 @@ describe('SpatialConnector imperative handler', () => {
     it("draw-then-promote", async () => {
       const storage = createInMemoryStorage();
       const drawResult0 = await spatialConnectorHandler.draw({ canvas: {"type":"literal","value":"c1"}, source: {"type":"literal","value":"a"}, target: {"type":"literal","value":"b"}, type: {"type":"literal","value":"visual"} }, storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(drawResult0.variant), `step 0: expected success but got '${drawResult0.variant}'`).toBe(false);
+      expect(drawResult0.variant).toBe("ok");
       let connector = drawResult0.output["connector"];
       const thenResult0 = await spatialConnectorHandler.promote({ connector: {"type":"variable","name":"conn"} }, storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

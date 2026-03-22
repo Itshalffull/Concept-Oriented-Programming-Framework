@@ -88,8 +88,7 @@ describe('GrpcProvider functional handler', () => {
       if (typeof grpcProviderHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(grpcProviderHandler.register({  }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -156,8 +155,7 @@ describe('GrpcProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(grpcProviderHandler.configure({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_with_tls" -> ok', async () => {
@@ -170,8 +168,7 @@ describe('GrpcProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(grpcProviderHandler.configure({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -238,8 +235,7 @@ describe('GrpcProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(grpcProviderHandler.execute({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "execute_unknown_channel" -> notFound', async () => {
@@ -317,8 +313,7 @@ describe('GrpcProvider functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(grpcProviderHandler.list({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -343,11 +338,10 @@ describe('GrpcProvider functional handler', () => {
     it("execute fails for unknown channel", async () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(grpcProviderHandler.configure({ name: {"type":"literal","value":"user-service"}, target: {"type":"literal","value":"localhost:50051"}, protoRef: {"type":"literal","value":"user.proto"}, options: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(configureResult0.variant), `step 0: expected success but got '${configureResult0.variant}'`).toBe(false);
+      expect(configureResult0.variant).toBe("ok");
       let channel = configureResult0.output["channel"];
       const thenResult0 = await interpret(grpcProviderHandler.execute({ channel: {"type":"literal","value":"unknown-service"}, service: {"type":"literal","value":"UserService"}, method: {"type":"literal","value":"GetUser"}, payload: {"type":"literal","value":"{}"} }), storage);
-      expect(thenResult0.variant).toBe("notFound");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

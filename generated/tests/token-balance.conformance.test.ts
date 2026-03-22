@@ -37,8 +37,7 @@ describe('TokenBalance imperative handler', () => {
       if (typeof tokenBalanceHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await tokenBalanceHandler.configure({ tokenContract: "0xGOV", snapshotBlock: "18000000" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_no_contract" -> error', async () => {
@@ -65,8 +64,7 @@ describe('TokenBalance imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_gov_token = await tokenBalanceHandler.configure({ tokenContract: "0xGOV", snapshotBlock: "18000000" }, storage);
       const result = await tokenBalanceHandler.takeSnapshot({ config: afterResult_configure_gov_token?.output?.["id"], blockRef: "18000000" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "snapshot_empty_ref" -> error', async () => {
@@ -93,8 +91,7 @@ describe('TokenBalance imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_gov_token = await tokenBalanceHandler.configure({ tokenContract: "0xGOV", snapshotBlock: "18000000" }, storage);
       const result = await tokenBalanceHandler.setBalance({ config: afterResult_configure_gov_token?.output?.["id"], participant: "alice", balance: "500.0" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "set_balance_zero" -> error', async () => {
@@ -121,8 +118,7 @@ describe('TokenBalance imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_gov_token = await tokenBalanceHandler.configure({ tokenContract: "0xGOV", snapshotBlock: "18000000" }, storage);
       const result = await tokenBalanceHandler.getBalance({ config: afterResult_configure_gov_token?.output?.["id"], participant: "alice" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_snapshot_balance" -> ok', async () => {
@@ -130,8 +126,7 @@ describe('TokenBalance imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_gov_token = await tokenBalanceHandler.configure({ tokenContract: "0xGOV", snapshotBlock: "18000000" }, storage);
       const result = await tokenBalanceHandler.getBalance({ config: afterResult_configure_gov_token?.output?.["id"], participant: "alice", snapshot: afterResult_configure_gov_token?.output?.["id"] }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -152,14 +147,14 @@ describe('TokenBalance imperative handler', () => {
     it("configure-then-getBalance", async () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await tokenBalanceHandler.configure({ tokenContract: {"type":"literal","value":"0xGOV"} }, storage);
-      expect(configureResult0.variant).toBe("configured");
+      expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
       const setBalanceResult1 = await tokenBalanceHandler.setBalance({ config: {"type":"variable","name":"tb"}, participant: {"type":"variable","name":"p"}, balance: {"type":"literal","value":500} }, storage);
-      expect(setBalanceResult1.variant).toBe("updated");
+      expect(setBalanceResult1.variant).toBe("ok");
       let participant = setBalanceResult1.output["participant"];
       let balance = setBalanceResult1.output["balance"];
       const thenResult0 = await tokenBalanceHandler.getBalance({ config: {"type":"variable","name":"tb"}, participant: {"type":"variable","name":"p"} }, storage);
-      expect(thenResult0.variant).toBe("balance");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });
@@ -240,7 +235,7 @@ describe('TokenBalance imperative handler', () => {
       }
     });
 
-    it('configure ensures on configured: ', async () => {
+    it('configure ensures on ok: ', async () => {
       if (typeof tokenBalanceHandler.configure !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -249,7 +244,7 @@ describe('TokenBalance imperative handler', () => {
           async (input) => {
             const storage = createInMemoryStorage();
             const result = await safeInvoke(() => tokenBalanceHandler.configure(input as Record<string, unknown>, storage));
-            if (result?.variant === "configured") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

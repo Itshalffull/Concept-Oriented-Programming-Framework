@@ -25,7 +25,7 @@ const _equalWeightHandler: FunctionalConceptHandler = {
       provider: 'EqualWeight',
       instanceId: id,
     });
-    return complete(p, 'configured', { config: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { config: id }) as StorageProgram<Result>;
   },
 
   getWeight(input: Record<string, unknown>) {

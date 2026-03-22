@@ -88,16 +88,14 @@ describe('CloudflareRuntime functional handler', () => {
       if (typeof cloudflareRuntimeHandler.provision !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "provision_empty_concept" -> ok', async () => {
       if (typeof cloudflareRuntimeHandler.provision !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(cloudflareRuntimeHandler.provision({ concept: "", accountId: "acc-12345", routes: [] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -159,8 +157,7 @@ describe('CloudflareRuntime functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_provision_worker = await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
       const result = await interpret(cloudflareRuntimeHandler.deploy({ worker: afterResult_provision_worker?.output?.["worker"], scriptContent: "export default { fetch() { return new Response('OK') } }" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "deploy_empty_worker" -> error', async () => {
@@ -229,8 +226,7 @@ describe('CloudflareRuntime functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_provision_worker = await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
       const result = await interpret(cloudflareRuntimeHandler.setTrafficWeight({ worker: afterResult_provision_worker?.output?.["worker"], weight: "50" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "set_weight_negative" -> ok', async () => {
@@ -238,8 +234,7 @@ describe('CloudflareRuntime functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_provision_worker = await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
       const result = await interpret(cloudflareRuntimeHandler.setTrafficWeight({ worker: afterResult_provision_worker?.output?.["worker"], weight: "-1" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -301,8 +296,7 @@ describe('CloudflareRuntime functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_provision_worker = await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
       const result = await interpret(cloudflareRuntimeHandler.rollback({ worker: afterResult_provision_worker?.output?.["worker"], targetVersion: "1" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "rollback_empty_version" -> ok', async () => {
@@ -310,8 +304,7 @@ describe('CloudflareRuntime functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_provision_worker = await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
       const result = await interpret(cloudflareRuntimeHandler.rollback({ worker: afterResult_provision_worker?.output?.["worker"], targetVersion: "" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -373,8 +366,7 @@ describe('CloudflareRuntime functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_provision_worker = await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
       const result = await interpret(cloudflareRuntimeHandler.destroy({ worker: afterResult_provision_worker?.output?.["worker"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "destroy_empty" -> ok', async () => {
@@ -387,8 +379,7 @@ describe('CloudflareRuntime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(cloudflareRuntimeHandler.destroy({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -413,14 +404,12 @@ describe('CloudflareRuntime functional handler', () => {
     it("provision-then-deploy", async () => {
       const storage = createInMemoryStorage();
       const provisionResult0 = await interpret(cloudflareRuntimeHandler.provision({ concept: {"type":"literal","value":"User"}, accountId: {"type":"literal","value":"abc123"}, routes: {"type":"variable","name":"r"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(provisionResult0.variant), `step 0: expected success but got '${provisionResult0.variant}'`).toBe(false);
+      expect(provisionResult0.variant).toBe("ok");
       let worker = provisionResult0.output["worker"];
       let scriptName = provisionResult0.output["scriptName"];
       let endpoint = provisionResult0.output["endpoint"];
       const thenResult0 = await interpret(cloudflareRuntimeHandler.deploy({ worker: {"type":"variable","name":"w"}, scriptContent: {"type":"literal","value":"export default { fetch() {} }"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

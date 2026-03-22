@@ -24,7 +24,7 @@ concept TypeScriptSymbolExtractor [I] {
         Register this extractor with PluginRegistry for
         .ts and .tsx file extensions.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the TypeScript compiler API.
       }
     }

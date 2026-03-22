@@ -88,16 +88,14 @@ describe('EqualWeight functional handler', () => {
       if (typeof equalWeightHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(equalWeightHandler.configure({ weightPerPerson: "1.0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_custom" -> ok', async () => {
       if (typeof equalWeightHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(equalWeightHandler.configure({ weightPerPerson: "5.0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -159,8 +157,7 @@ describe('EqualWeight functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_default = await interpret(equalWeightHandler.configure({ weightPerPerson: "1.0" }), storage);
       const result = await interpret(equalWeightHandler.getWeight({ config: afterResult_configure_default?.output?.["id"], participant: "alice" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_empty_participant" -> error', async () => {
@@ -192,10 +189,10 @@ describe('EqualWeight functional handler', () => {
     it("configure-then-getWeight", async () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(equalWeightHandler.configure({ weightPerPerson: {"type":"literal","value":1} }), storage);
-      expect(configureResult0.variant).toBe("configured");
+      expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
       const thenResult0 = await interpret(equalWeightHandler.getWeight({ config: {"type":"variable","name":"ew"}, participant: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("weight");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });
@@ -278,7 +275,7 @@ describe('EqualWeight functional handler', () => {
       }
     });
 
-    it('configure ensures on configured: ', async () => {
+    it('configure ensures on ok: ', async () => {
       if (typeof equalWeightHandler.configure !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -290,7 +287,7 @@ describe('EqualWeight functional handler', () => {
               const program = equalWeightHandler.configure(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "configured") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

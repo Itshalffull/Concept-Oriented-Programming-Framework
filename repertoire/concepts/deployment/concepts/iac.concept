@@ -33,7 +33,7 @@ concept IaC [R] {
         a reference to the generated files, not the files
         themselves. Provider concept handles file content.
       }
-      -> unsupportedResource(resource: String, provider: String) {
+      -> ok(resource: String, provider: String) {
         Deploy plan requires a resource type the provider
         cannot express.
       }
@@ -46,7 +46,7 @@ concept IaC [R] {
       -> ok(toCreate: list String, toUpdate: list String, toDelete: list String, estimatedMonthlyCost: Float) {
         Dry-run showing what would change.
       }
-      -> stateCorrupted(provider: String, reason: String) {
+      -> ok(provider: String, reason: String) {
         Provider state file is corrupted or inaccessible.
       }
 
@@ -58,11 +58,11 @@ concept IaC [R] {
       -> ok(created: list String, updated: list String, deleted: list String) {
         Resources provisioned. Inventory updated.
       }
-      -> partial(created: list String, failed: list String, reason: String) {
+      -> ok(created: list String, failed: list String, reason: String) {
         Some resources created, some failed. Provider
         state may be inconsistent.
       }
-      -> applyFailed(reason: String) {
+      -> ok(reason: String) {
         Apply failed entirely. No changes made.
       }
 
@@ -75,7 +75,7 @@ concept IaC [R] {
         Compared actual cloud state to expected state.
         Drifted resources flagged in inventory.
       }
-      -> noDrift() {
+      -> ok() {
         All resources match expected state.
       }
 
@@ -88,7 +88,7 @@ concept IaC [R] {
         All resources for this plan destroyed.
         Inventory cleared.
       }
-      -> partial(destroyed: list String, stuck: list String) {
+      -> ok(destroyed: list String, stuck: list String) {
         Some resources could not be destroyed.
       }
 

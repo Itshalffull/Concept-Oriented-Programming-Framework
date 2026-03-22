@@ -88,16 +88,14 @@ describe('RankedChoice functional handler', () => {
       if (typeof rankedChoiceHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(rankedChoiceHandler.configure({ eliminationMethod: "InstantRunoff", seats: "1" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "stv_multi_seat" -> ok', async () => {
       if (typeof rankedChoiceHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(rankedChoiceHandler.configure({ eliminationMethod: "SingleTransferable", seats: "3" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_method" -> error', async () => {
@@ -166,8 +164,7 @@ describe('RankedChoice functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_irv_single_seat = await interpret(rankedChoiceHandler.configure({ eliminationMethod: "InstantRunoff", seats: "1" }), storage);
       const result = await interpret(rankedChoiceHandler.count({ config: afterResult_irv_single_seat?.output?.["id"], rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]}]", weights: "{}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "count_empty_ballots" -> error', async () => {
@@ -237,8 +234,7 @@ describe('RankedChoice functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_irv_single_seat = await interpret(rankedChoiceHandler.configure({ eliminationMethod: "InstantRunoff", seats: "1" }), storage);
       const result = await interpret(rankedChoiceHandler.getRoundDetail({ config: afterResult_irv_single_seat?.output?.["id"], roundNumber: "1" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_invalid_round" -> error', async () => {
@@ -270,10 +266,10 @@ describe('RankedChoice functional handler', () => {
     it("configure-then-count", async () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(rankedChoiceHandler.configure({ eliminationMethod: {"type":"literal","value":"InstantRunoff"}, seats: {"type":"literal","value":1} }), storage);
-      expect(configureResult0.variant).toBe("configured");
+      expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
       const thenResult0 = await interpret(rankedChoiceHandler.count({ config: {"type":"variable","name":"rc"}, rankedBallots: {"type":"variable","name":"_"}, weights: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("winner");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });
@@ -290,7 +286,7 @@ describe('RankedChoice functional handler', () => {
       }
     });
 
-    it('configure ensures on configured: ', async () => {
+    it('configure ensures on ok: ', async () => {
       if (typeof rankedChoiceHandler.configure !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -302,7 +298,7 @@ describe('RankedChoice functional handler', () => {
               const program = rankedChoiceHandler.configure(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "configured") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

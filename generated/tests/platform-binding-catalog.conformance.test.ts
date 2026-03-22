@@ -88,16 +88,14 @@ describe('PlatformBindingCatalog functional handler', () => {
       if (typeof platformBindingCatalogHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(platformBindingCatalogHandler.register({ binding: "nav-browser-1", platform: "browser", destinationPattern: "/articles/*", bindingKind: "navigation", payload: "{ \"pushState\": true }" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_mobile_gesture" -> ok', async () => {
       if (typeof platformBindingCatalogHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(platformBindingCatalogHandler.register({ binding: "gesture-mobile-1", platform: "mobile", destinationPattern: "*", bindingKind: "gesture", payload: "{ \"swipeBack\": true }" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -164,8 +162,7 @@ describe('PlatformBindingCatalog functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(platformBindingCatalogHandler.resolve({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_missing" -> notfound', async () => {
@@ -237,8 +234,7 @@ describe('PlatformBindingCatalog functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_browser_nav?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(platformBindingCatalogHandler.list({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "list_by_platform" -> ok', async () => {
@@ -251,8 +247,7 @@ describe('PlatformBindingCatalog functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(platformBindingCatalogHandler.list({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });

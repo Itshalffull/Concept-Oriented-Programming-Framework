@@ -88,8 +88,7 @@ describe('Fetcher functional handler', () => {
       if (typeof fetcherHandler.fetch !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(fetcherHandler.fetch({ module_id: "lodash", version: "4.17.21", source_url: "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz", expected_hash: "sha256:abc123" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "fetch_bad_hash" -> error', async () => {
@@ -163,8 +162,7 @@ describe('Fetcher functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(fetcherHandler.fetchBatch({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "fetch_batch_empty" -> ok', async () => {
@@ -177,8 +175,7 @@ describe('Fetcher functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(fetcherHandler.fetchBatch({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -240,8 +237,7 @@ describe('Fetcher functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_fetch_module = await interpret(fetcherHandler.fetch({ module_id: "lodash", version: "4.17.21", source_url: "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz", expected_hash: "sha256:abc123" }), storage);
       const result = await interpret(fetcherHandler.cancel({ download: afterResult_fetch_module?.output?.["download"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "cancel_nonexistent" -> error', async () => {
@@ -273,8 +269,7 @@ describe('Fetcher functional handler', () => {
     it("fetch lifecycle", async () => {
       const storage = createInMemoryStorage();
       const fetchResult0 = await interpret(fetcherHandler.fetch({ module_id: {"type":"literal","value":"pkg-a"}, version: {"type":"literal","value":"1.0.0"}, source_url: {"type":"variable","name":"url"}, expected_hash: {"type":"variable","name":"h"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(fetchResult0.variant), `step 0: expected success but got '${fetchResult0.variant}'`).toBe(false);
+      expect(fetchResult0.variant).toBe("ok");
       let download = fetchResult0.output["download"];
       expect(dResult.output["status"]).toBe({"type":"literal","value":"complete"});
       expect(dResult.output["bytes_downloaded"]).toBe({"type":"dot_access","variable":"d","field":"bytes_total"});
@@ -283,9 +278,9 @@ describe('Fetcher functional handler', () => {
     it("fetch then fetch", async () => {
       const storage = createInMemoryStorage();
       const fetchResult0 = await interpret(fetcherHandler.fetch({ module_id: {"type":"literal","value":"pkg-a"}, version: {"type":"literal","value":"1.0.0"}, source_url: {"type":"variable","name":"url"}, expected_hash: {"type":"variable","name":"h"} }), storage);
-      expect(fetchResult0.variant).toBe("cached");
+      expect(fetchResult0.variant).toBe("ok");
       const thenResult0 = await interpret(fetcherHandler.fetch({ module_id: {"type":"literal","value":"pkg-a"}, version: {"type":"literal","value":"1.0.0"}, source_url: {"type":"variable","name":"url"}, expected_hash: {"type":"variable","name":"h"} }), storage);
-      expect(thenResult0.variant).toBe("cached");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

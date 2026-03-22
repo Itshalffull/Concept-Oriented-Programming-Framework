@@ -88,16 +88,14 @@ describe('DataSource functional handler', () => {
       if (typeof dataSourceHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(dataSourceHandler.register({ name: "blog_api", uri: "https://blog.example.com/api", credentials: "token:abc123" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_db" -> ok', async () => {
       if (typeof dataSourceHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(dataSourceHandler.register({ name: "analytics_db", uri: "postgres://db.internal:5432/analytics", credentials: "user:pass" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_duplicate" -> exists', async () => {
@@ -167,8 +165,7 @@ describe('DataSource functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_api = await interpret(dataSourceHandler.register({ name: "blog_api", uri: "https://blog.example.com/api", credentials: "token:abc123" }), storage);
       const result = await interpret(dataSourceHandler.connect({ sourceId: afterResult_register_api?.output?.["sourceId"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "connect_missing" -> notfound', async () => {
@@ -238,8 +235,7 @@ describe('DataSource functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_api = await interpret(dataSourceHandler.register({ name: "blog_api", uri: "https://blog.example.com/api", credentials: "token:abc123" }), storage);
       const result = await interpret(dataSourceHandler.discover({ sourceId: afterResult_register_api?.output?.["sourceId"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "discover_missing" -> notfound', async () => {
@@ -309,8 +305,7 @@ describe('DataSource functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_api = await interpret(dataSourceHandler.register({ name: "blog_api", uri: "https://blog.example.com/api", credentials: "token:abc123" }), storage);
       const result = await interpret(dataSourceHandler.healthCheck({ sourceId: afterResult_register_api?.output?.["sourceId"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "health_missing" -> notfound', async () => {
@@ -380,8 +375,7 @@ describe('DataSource functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_api = await interpret(dataSourceHandler.register({ name: "blog_api", uri: "https://blog.example.com/api", credentials: "token:abc123" }), storage);
       const result = await interpret(dataSourceHandler.deactivate({ sourceId: afterResult_register_api?.output?.["sourceId"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "deactivate_missing" -> notfound', async () => {
@@ -399,15 +393,12 @@ describe('DataSource functional handler', () => {
     it("register-then-discover", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(dataSourceHandler.register({ name: {"type":"literal","value":"blog_api"}, uri: {"type":"literal","value":"https://blog.example.com/api"}, credentials: {"type":"literal","value":"token:abc"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let sourceId = registerResult0.output["sourceId"];
       const thenResult0 = await interpret(dataSourceHandler.connect({ sourceId: {"type":"literal","value":"src-1"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(dataSourceHandler.discover({ sourceId: {"type":"literal","value":"src-1"} }), storage);
-      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
+      expect(thenResult1.variant).toBe("ok");
     });
 
   });

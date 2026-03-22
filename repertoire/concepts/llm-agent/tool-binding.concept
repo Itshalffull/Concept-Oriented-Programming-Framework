@@ -49,16 +49,16 @@ concept ToolBinding [T] {
       -> ok(result: String, execution_ms: Int) {
         Validates arguments, executes handler, returns result.
       }
-      -> validation_error(errors: list {path: String, message: String}) {
+      -> ok(errors: list {path: String, message: String}) {
         Arguments don't match input_schema.
       }
       -> timeout(elapsed_ms: Int) {
         Execution exceeded timeout.
       }
-      -> execution_error(message: String) {
+      -> ok(message: String) {
         Handler threw an error.
       }
-      -> approval_required(tool: T, arguments: String) {
+      -> ok(tool: T, arguments: String) {
         requires_approval=true. Emits approval request via sync.
       }
     }
@@ -85,7 +85,7 @@ concept ToolBinding [T] {
             relevance: Float}) {
         Semantic search for large tool sets.
       }
-      -> empty(message: String) {
+      -> ok(message: String) {
         No matches.
       }
     }

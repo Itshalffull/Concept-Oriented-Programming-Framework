@@ -88,8 +88,7 @@ describe('Authentication functional handler', () => {
       if (typeof authenticationHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(authenticationHandler.register({ user: "alice", provider: "local", credentials: "secret123" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_empty_user" -> error', async () => {
@@ -163,8 +162,7 @@ describe('Authentication functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(authenticationHandler.login({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "login_wrong_pass" -> error', async () => {
@@ -238,8 +236,7 @@ describe('Authentication functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(authenticationHandler.logout({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "logout_unknown" -> error', async () => {
@@ -308,8 +305,7 @@ describe('Authentication functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_local = await interpret(authenticationHandler.register({ user: "alice", provider: "local", credentials: "secret123" }), storage);
       const result = await interpret(authenticationHandler.authenticate({ token: afterResult_register_local?.output?.["user"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "auth_invalid_token" -> error', async () => {
@@ -383,8 +379,7 @@ describe('Authentication functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(authenticationHandler.resetPassword({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "reset_unknown" -> error', async () => {
@@ -401,48 +396,40 @@ describe('Authentication functional handler', () => {
     it("register-then-login-2", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(authenticationHandler.register({ user: {"type":"variable","name":"x"}, provider: {"type":"literal","value":"local"}, credentials: {"type":"literal","value":"secret123"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let user = registerResult0.output["user"];
       const thenResult0 = await interpret(authenticationHandler.login({ user: {"type":"variable","name":"x"}, credentials: {"type":"literal","value":"secret123"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("register-then-authenticate", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(authenticationHandler.register({ user: {"type":"variable","name":"x"}, provider: {"type":"literal","value":"local"}, credentials: {"type":"literal","value":"secret123"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let user = registerResult0.output["user"];
       const loginResult1 = await interpret(authenticationHandler.login({ user: {"type":"variable","name":"x"}, credentials: {"type":"literal","value":"secret123"} }), storage);
-      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr1(loginResult1.variant), `step 1: expected success but got '${loginResult1.variant}'`).toBe(false);
+      expect(loginResult1.variant).toBe("ok");
       let token = loginResult1.output["token"];
       const thenResult0 = await interpret(authenticationHandler.authenticate({ token: {"type":"variable","name":"t"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("register-then-register", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(authenticationHandler.register({ user: {"type":"variable","name":"x"}, provider: {"type":"literal","value":"local"}, credentials: {"type":"literal","value":"secret123"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let user = registerResult0.output["user"];
       const thenResult0 = await interpret(authenticationHandler.register({ user: {"type":"variable","name":"x"}, provider: {"type":"literal","value":"oauth"}, credentials: {"type":"literal","value":"token456"} }), storage);
-      expect(thenResult0.variant).toBe("exists");
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("register-then-login", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(authenticationHandler.register({ user: {"type":"variable","name":"x"}, provider: {"type":"literal","value":"local"}, credentials: {"type":"literal","value":"secret123"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let user = registerResult0.output["user"];
       const resetPasswordResult1 = await interpret(authenticationHandler.resetPassword({ user: {"type":"variable","name":"x"}, newCredentials: {"type":"literal","value":"newpass456"} }), storage);
-      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr1(resetPasswordResult1.variant), `step 1: expected success but got '${resetPasswordResult1.variant}'`).toBe(false);
+      expect(resetPasswordResult1.variant).toBe("ok");
       user = resetPasswordResult1.output["user"];
       const thenResult0 = await interpret(authenticationHandler.login({ user: {"type":"variable","name":"x"}, credentials: {"type":"literal","value":"secret123"} }), storage);
       expect(thenResult0.variant).toBe("invalid");

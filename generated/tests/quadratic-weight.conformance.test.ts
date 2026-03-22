@@ -88,8 +88,7 @@ describe('QuadraticWeight functional handler', () => {
       if (typeof quadraticWeightHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(quadraticWeightHandler.configure({ baseSource: "token-balance" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_empty" -> error', async () => {
@@ -163,8 +162,7 @@ describe('QuadraticWeight functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(quadraticWeightHandler.compute({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "compute_zero" -> error', async () => {
@@ -196,10 +194,10 @@ describe('QuadraticWeight functional handler', () => {
     it("configure-then-compute", async () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(quadraticWeightHandler.configure({ baseSource: {"type":"literal","value":"token-balance"} }), storage);
-      expect(configureResult0.variant).toBe("configured");
+      expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
       const thenResult0 = await interpret(quadraticWeightHandler.compute({ participant: {"type":"variable","name":"p"}, balance: {"type":"literal","value":100} }), storage);
-      expect(thenResult0.variant).toBe("weight");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });
@@ -282,7 +280,7 @@ describe('QuadraticWeight functional handler', () => {
       }
     });
 
-    it('configure ensures on configured: ', async () => {
+    it('configure ensures on ok: ', async () => {
       if (typeof quadraticWeightHandler.configure !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -294,7 +292,7 @@ describe('QuadraticWeight functional handler', () => {
               const program = quadraticWeightHandler.configure(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "configured") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

@@ -164,7 +164,7 @@ const _handler: FunctionalConceptHandler = {
 
     // TODO: Compare generated implementation against theme spec
     // Currently always returns inSync regardless of whether entry is found
-    return complete(p, 'inSync', {}) as StorageProgram<Result>;
+    return complete(p, 'ok', {}) as StorageProgram<Result>;
   },
 };
 

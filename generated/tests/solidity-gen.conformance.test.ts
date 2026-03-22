@@ -88,8 +88,7 @@ describe('SolidityGen functional handler', () => {
       if (typeof solidityGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(solidityGenHandler.generate({ spec: "spec-001", manifest: {"name":"Order","uri":"urn:clef/Order","typeParams":[],"relations":[],"actions":[{"name":"create","params":[{"name":"title","type":{"kind":"primitive","primitive":"String"}}],"variants":[{"tag":"ok","fields":[{"name":"id","type":{"kind":"primitive","primitive":"String"}}],"prose":"Created."}]}],"invariants":[],"graphqlSchema":"","jsonSchemas":{"invocations":{},"completions":{}},"capabilities":[],"purpose":"Manage orders."} }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_name" -> error', async () => {
@@ -160,8 +159,7 @@ describe('SolidityGen functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_manifest?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(solidityGenHandler.register({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -186,8 +184,7 @@ describe('SolidityGen functional handler', () => {
     it("generate valid manifest then invalid fails", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(solidityGenHandler.generate({ spec: {"type":"literal","value":"s1"}, manifest: {"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"Ping"}},{"name":"uri","value":{"type":"literal","value":"urn:clef/Ping"}},{"name":"typeParams","value":{"type":"list","items":[]}},{"name":"relations","value":{"type":"list","items":[]}},{"name":"actions","value":{"type":"list","items":[{"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"ping"}},{"name":"params","value":{"type":"list","items":[]}},{"name":"variants","value":{"type":"list","items":[{"type":"record","fields":[{"name":"tag","value":{"type":"literal","value":"ok"}},{"name":"fields","value":{"type":"list","items":[]}},{"name":"prose","value":{"type":"literal","value":"Pong."}}]}]}}]}]}},{"name":"invariants","value":{"type":"list","items":[]}},{"name":"graphqlSchema","value":{"type":"literal","value":""}},{"name":"jsonSchemas","value":{"type":"record","fields":[{"name":"invocations","value":{"type":"record","fields":[]}},{"name":"completions","value":{"type":"record","fields":[]}}]}},{"name":"capabilities","value":{"type":"list","items":[]}},{"name":"purpose","value":{"type":"literal","value":"A test."}}]} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
+      expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
       const thenResult0 = await interpret(solidityGenHandler.generate({ spec: {"type":"literal","value":"s2"}, manifest: {"type":"record","fields":[{"name":"name","value":{"type":"literal","value":""}}]} }), storage);
       expect(thenResult0.variant).toBe("error");

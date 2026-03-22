@@ -34,7 +34,7 @@ const _bftFinalityHandler: FunctionalConceptHandler = {
       instanceId: id,
     });
 
-    return complete(p, 'configured', { committee: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { committee: id }) as StorageProgram<Result>;
   },
 
   proposeFinality(input: Record<string, unknown>) {
@@ -54,7 +54,7 @@ const _bftFinalityHandler: FunctionalConceptHandler = {
           votes: '{}',
           status: 'proposed',
         });
-        return complete(thenP, 'proposed', { committee, roundNumber });
+        return complete(thenP, 'ok', { committee, roundNumber });
       },
       (elseP) => complete(elseP, 'not_found', { committee }),
     ) as StorageProgram<Result>;
@@ -88,7 +88,7 @@ const _bftFinalityHandler: FunctionalConceptHandler = {
                   votes[validator as string] = approve as boolean;
                   return { ...round, votes: JSON.stringify(votes) };
                 });
-                return complete(validP, 'voted', { committee, roundNumber, validator });
+                return complete(validP, 'ok', { committee, roundNumber, validator });
               },
               (invalidP) => complete(invalidP, 'not_a_validator', { validator }),
             );

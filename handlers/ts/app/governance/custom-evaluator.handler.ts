@@ -75,7 +75,7 @@ const _customEvaluatorHandler: FunctionalConceptHandler = {
       provider: 'CustomEvaluator',
       instanceId: id,
     });
-    return complete(p, 'registered', { evaluator: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { evaluator: id }) as StorageProgram<Result>;
   },
 
   evaluate(input: Record<string, unknown>) {
@@ -103,7 +103,7 @@ const _customEvaluatorHandler: FunctionalConceptHandler = {
     const { evaluator } = input;
     let p = createProgram();
     p = del(p, 'custom_eval', evaluator as string);
-    return complete(p, 'deregistered', { evaluator }) as StorageProgram<Result>;
+    return complete(p, 'ok', { evaluator }) as StorageProgram<Result>;
   },
 };
 

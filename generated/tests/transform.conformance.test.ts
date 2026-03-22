@@ -94,8 +94,7 @@ describe('Transform functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(transformHandler.apply({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "apply_strip_tags" -> ok', async () => {
@@ -108,8 +107,7 @@ describe('Transform functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(transformHandler.apply({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "apply_missing" -> notfound', async () => {
@@ -184,8 +182,7 @@ describe('Transform functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(transformHandler.chain({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "chain_empty" -> ok', async () => {
@@ -198,8 +195,7 @@ describe('Transform functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(transformHandler.chain({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -266,8 +262,7 @@ describe('Transform functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(transformHandler.preview({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "preview_missing" -> notfound', async () => {
@@ -300,23 +295,19 @@ describe('Transform functional handler', () => {
     it("apply-then-preview", async () => {
       const storage = createInMemoryStorage();
       const applyResult0 = await interpret(transformHandler.apply({ value: {"type":"literal","value":"<p>Hello World</p>"}, transformId: {"type":"literal","value":"html_to_markdown"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(applyResult0.variant), `step 0: expected success but got '${applyResult0.variant}'`).toBe(false);
+      expect(applyResult0.variant).toBe("ok");
       let result = applyResult0.output["result"];
       const thenResult0 = await interpret(transformHandler.preview({ value: {"type":"literal","value":"test"}, transformId: {"type":"literal","value":"html_to_markdown"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("chain-then-preview", async () => {
       const storage = createInMemoryStorage();
       const chainResult0 = await interpret(transformHandler.chain({ value: {"type":"literal","value":"Hello World!"}, transformIds: {"type":"literal","value":"slugify,truncate"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(chainResult0.variant), `step 0: expected success but got '${chainResult0.variant}'`).toBe(false);
+      expect(chainResult0.variant).toBe("ok");
       let result = chainResult0.output["result"];
       const thenResult0 = await interpret(transformHandler.preview({ value: {"type":"literal","value":"hello-world"}, transformId: {"type":"literal","value":"slugify"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

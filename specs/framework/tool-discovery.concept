@@ -47,7 +47,7 @@ concept ToolDiscovery [T] {
         — call describeTools to load full schemas. Limit defaults
         to 10 if not specified.
       }
-      -> empty(query: String) {
+      -> ok(query: String) {
         No tools matched the search query.
       }
 

@@ -27,7 +27,7 @@ concept Execution [EX] {
 
   actions {
     action schedule(sourceRef: String, actions: list String, executor: String) {
-      -> scheduled(execution: EX) {
+      -> ok(execution: EX) {
         An execution is created in Pending status with the given actions.
       }
 
@@ -37,7 +37,7 @@ concept Execution [EX] {
     }
 
     action execute(execution: EX) {
-      -> completed(execution: EX, result: String) {
+      -> ok(execution: EX, result: String) {
         All actions are performed atomically. Status moves to Completed.
       }
       -> failed(execution: EX, error: String) {
@@ -52,10 +52,10 @@ concept Execution [EX] {
     }
 
     action rollback(execution: EX) {
-      -> rolled_back(execution: EX) {
+      -> ok(execution: EX) {
         Compensating actions are performed. Status moves to Rolled_Back.
       }
-      -> not_reversible(execution: EX) {
+      -> ok(execution: EX) {
         The execution cannot be rolled back.
       }
 
@@ -66,9 +66,9 @@ concept Execution [EX] {
 
   example "schedule-then-execute": {
 
-    after schedule(sourceRef: _, actions: _, executor: _) -> scheduled(execution: ex)
+    after schedule(sourceRef: _, actions: _, executor: _) -> ok(execution: ex)
 
-        then execute(execution: ex) -> completed(execution: ex, result: _)
+        then execute(execution: ex) -> ok(execution: ex, result: _)
 
   }
 
@@ -93,7 +93,7 @@ concept Execution [EX] {
 
     requires: sourceRef != ""
 
-    ensures scheduled: sourceRef != none
+    ensures ok: sourceRef != none
 
   }
 }

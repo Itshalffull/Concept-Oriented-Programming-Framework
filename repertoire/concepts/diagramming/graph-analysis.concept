@@ -40,10 +40,10 @@ concept GraphAnalysis [A] {
         - structural: { components: { id: string, nodes: string[] }[] }
         - clustering: { nodeMetrics: { nodeId: string, coefficient: number }[], graphMetric: number }
       }
-      -> unknown_algorithm(message: String) {
+      -> ok(message: String) {
         No provider is registered for the requested algorithm.
       }
-      -> analysis_failed(message: String) {
+      -> ok(message: String) {
         The provider encountered an error during analysis.
       }
 
@@ -58,7 +58,7 @@ concept GraphAnalysis [A] {
         Registers an analysis provider for the given algorithm name
         within the specified category.
       }
-      -> already_registered(message: String) {
+      -> ok(message: String) {
         A provider is already registered for this algorithm.
       }
 

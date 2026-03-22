@@ -21,11 +21,11 @@ concept ScoreVoting [SV] {
 
   actions {
     action configure(minScore: Float, maxScore: Float, aggregation: String) {
-      -> configured(config: SV) {
+      -> ok(config: SV) {
         A score voting configuration with the given range and aggregation
         method.
       }
-      -> invalid_range(minScore: Float, maxScore: Float) {
+      -> ok(minScore: Float, maxScore: Float) {
         MinScore must be less than maxScore.
       }
 
@@ -35,10 +35,10 @@ concept ScoreVoting [SV] {
     }
 
     action count(config: SV, scoreBallots: String, weights: String) {
-      -> winner(choice: String, aggregateScore: Float, details: String) {
+      -> ok(choice: String, aggregateScore: Float, details: String) {
         The candidate with the highest aggregate score wins.
       }
-      -> tie(choices: String, aggregateScore: Float) {
+      -> ok(choices: String, aggregateScore: Float) {
         Multiple candidates have identical aggregate scores.
       }
 
@@ -49,9 +49,9 @@ concept ScoreVoting [SV] {
 
   example "configure-then-count": {
 
-    after configure(minScore: 0.0, maxScore: 5.0, aggregation: "Average") -> configured(config: sv)
+    after configure(minScore: 0.0, maxScore: 5.0, aggregation: "Average") -> ok(config: sv)
 
-        then count(config: sv, scoreBallots: _, weights: _) -> winner(choice: _, aggregateScore: _, details: _)
+        then count(config: sv, scoreBallots: _, weights: _) -> ok(choice: _, aggregateScore: _, details: _)
 
   }
 
@@ -76,7 +76,7 @@ concept ScoreVoting [SV] {
 
     requires: minScore != ""
 
-    ensures configured: minScore != none
+    ensures ok: minScore != none
 
   }
 }

@@ -17,7 +17,7 @@ concept ExpressionLanguage [E] {
   actions {
     action registerLanguage(name: String, grammar: String) {
       -> ok() { Grammar added to the set of available parsing languages. }
-      -> exists() { Language with this name already registered. }
+      -> ok() { Language with this name already registered. }
 
       fixture register_math { name: "math", grammar: "arithmetic" }
       fixture missing_name { name: "", grammar: "arithmetic" } -> error
@@ -25,7 +25,7 @@ concept ExpressionLanguage [E] {
 
     action registerFunction(name: String, implementation: String) {
       -> ok() { Function available for use in expressions. }
-      -> exists() { Function with this name already registered. }
+      -> ok() { Function with this name already registered. }
 
       fixture register_abs { name: "abs", implementation: "Math.abs" } after register_math
       fixture missing_impl { name: "", implementation: "" } after register_math
@@ -33,7 +33,7 @@ concept ExpressionLanguage [E] {
 
     action registerOperator(name: String, implementation: String) {
       -> ok() { Operator available for use in expressions. }
-      -> exists() { Operator with this name already registered. }
+      -> ok() { Operator with this name already registered. }
 
       fixture register_plus { name: "plus", implementation: "a + b" } after register_math
       fixture missing_op_name { name: "", implementation: "a + b" } after register_math

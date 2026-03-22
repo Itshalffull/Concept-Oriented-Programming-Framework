@@ -28,7 +28,7 @@ concept Objective [OB] {
 
   actions {
     action create(title: String, description: String, owner: String, metricRefs: list String, targetDate: String) {
-      -> created(objective: OB) {
+      -> ok(objective: OB) {
         A new objective is created in Active status with 0% progress.
       }
 
@@ -37,7 +37,7 @@ concept Objective [OB] {
     }
 
     action updateProgress(objective: OB, currentValue: Float) {
-      -> progressed(objective: OB, newProgress: Float) {
+      -> ok(objective: OB, newProgress: Float) {
         Progress is recalculated based on current metric values vs targets.
       }
       -> achieved(objective: OB) {
@@ -49,13 +49,13 @@ concept Objective [OB] {
     }
 
     action evaluate(objective: OB) {
-      -> on_track(objective: OB, progress: Float) {
+      -> ok(objective: OB, progress: Float) {
         Progress is sufficient given time remaining.
       }
-      -> at_risk(objective: OB, progress: Float) {
+      -> ok(objective: OB, progress: Float) {
         Progress is behind schedule.
       }
-      -> missed(objective: OB) {
+      -> ok(objective: OB) {
         The deadline has passed without achieving targets.
       }
 
@@ -64,7 +64,7 @@ concept Objective [OB] {
     }
 
     action cancel(objective: OB, reason: String) {
-      -> cancelled(objective: OB) {
+      -> ok(objective: OB) {
         The objective is cancelled.
       }
 
@@ -75,9 +75,9 @@ concept Objective [OB] {
 
   example "create-then-updateProgress": {
 
-    after create(title: _, description: _, owner: _, metricRefs: _, targetDate: _) -> created(objective: ob)
+    after create(title: _, description: _, owner: _, metricRefs: _, targetDate: _) -> ok(objective: ob)
 
-        then updateProgress(objective: ob, currentValue: _) -> progressed(objective: ob, newProgress: _)
+        then updateProgress(objective: ob, currentValue: _) -> ok(objective: ob, newProgress: _)
 
   }
 
@@ -102,7 +102,7 @@ concept Objective [OB] {
 
     requires: title != ""
 
-    ensures created: title != none
+    ensures ok: title != none
 
   }
 }

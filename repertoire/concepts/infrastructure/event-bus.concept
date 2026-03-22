@@ -19,7 +19,7 @@ concept EventBus [E] {
       -> ok() {
         Register a new event type with the given schema definition.
       }
-      -> exists() {
+      -> ok() {
         An event type with this name is already registered.
       }
 

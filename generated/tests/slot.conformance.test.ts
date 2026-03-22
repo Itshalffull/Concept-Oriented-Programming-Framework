@@ -88,16 +88,14 @@ describe('Slot functional handler', () => {
       if (typeof slotHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(slotHandler.define({ name: "header", host: "dialog", position: "before-title", fallback: "Default Header" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "no_fallback" -> ok', async () => {
       if (typeof slotHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(slotHandler.define({ name: "footer", host: "dialog", position: "after-body" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "duplicate_slot" -> duplicate', async () => {
@@ -172,8 +170,7 @@ describe('Slot functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(slotHandler.fill({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_slot" -> notfound', async () => {
@@ -245,8 +242,7 @@ describe('Slot functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(slotHandler.clear({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_clear" -> notfound', async () => {
@@ -279,12 +275,10 @@ describe('Slot functional handler', () => {
     it("define then fill", async () => {
       const storage = createInMemoryStorage();
       const defineResult0 = await interpret(slotHandler.define({ slot: {"type":"variable","name":"l"}, name: {"type":"literal","value":"header"}, host: {"type":"literal","value":"dialog"}, position: {"type":"literal","value":"before-title"}, fallback: {"type":"variable","name":"_"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(defineResult0.variant), `step 0: expected success but got '${defineResult0.variant}'`).toBe(false);
+      expect(defineResult0.variant).toBe("ok");
       let slot = defineResult0.output["slot"];
       const thenResult0 = await interpret(slotHandler.fill({ slot: {"type":"variable","name":"l"}, content: {"type":"literal","value":"Custom Header"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

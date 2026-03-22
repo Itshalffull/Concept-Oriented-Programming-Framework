@@ -88,16 +88,14 @@ describe('VoyageEndpoint functional handler', () => {
       if (typeof voyageEndpointHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(voyageEndpointHandler.register({ name: "code-search", apiKey: "vk-prod-abc123", model: "voyage-code-3", inputType: "document" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "voyage_query" -> ok', async () => {
       if (typeof voyageEndpointHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(voyageEndpointHandler.register({ name: "code-query", apiKey: "vk-dev-xyz789", model: "voyage-code-3", inputType: "query" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_name" -> error', async () => {
@@ -171,8 +169,7 @@ describe('VoyageEndpoint functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(voyageEndpointHandler.resolve({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_missing" -> error', async () => {
@@ -243,8 +240,7 @@ describe('VoyageEndpoint functional handler', () => {
       const _pool = Object.assign({}, (afterResult_voyage_document?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(voyageEndpointHandler.list({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -254,12 +250,10 @@ describe('VoyageEndpoint functional handler', () => {
     it("resolve after register", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(voyageEndpointHandler.register({ name: {"type":"literal","value":"code-search"}, apiKey: {"type":"literal","value":"vk-test"}, model: {"type":"literal","value":"voyage-code-3"}, inputType: {"type":"literal","value":"document"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let endpoint = registerResult0.output["endpoint"];
       const thenResult0 = await interpret(voyageEndpointHandler.resolve({ name: {"type":"literal","value":"code-search"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

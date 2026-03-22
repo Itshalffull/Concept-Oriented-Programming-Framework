@@ -25,7 +25,7 @@ concept ReflectionStrategy [S] {
         (3) Revise — generate improved version addressing critique.
         (4) Repeat until critique finds no issues or max_rounds reached.
       }
-      -> max_rounds(best_draft: String, rounds: Int) {
+      -> ok(best_draft: String, rounds: Int) {
         Could not achieve satisfactory quality.
       }
     }

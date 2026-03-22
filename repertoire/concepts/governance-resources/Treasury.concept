@@ -28,7 +28,7 @@ concept Treasury [TR] {
 
   actions {
     action deposit(vault: TR, token: String, amount: Float) {
-      -> deposited(vault: TR, newBalance: Float) {
+      -> ok(vault: TR, newBalance: Float) {
         The amount is added to the vault's balance for the given token.
       }
 
@@ -37,10 +37,10 @@ concept Treasury [TR] {
     }
 
     action withdraw(vault: TR, token: String, amount: Float) {
-      -> withdrawn(vault: TR, newBalance: Float) {
+      -> ok(vault: TR, newBalance: Float) {
         The amount is deducted from the vault's balance for the given token.
       }
-      -> insufficient(vault: TR, available: Float, requested: Float) {
+      -> ok(vault: TR, available: Float, requested: Float) {
         The vault does not hold enough of the token.
       }
 
@@ -49,7 +49,7 @@ concept Treasury [TR] {
     }
 
     action allocate(vault: TR, token: String, amount: Float, purpose: String) {
-      -> allocated(allocation: String) {
+      -> ok(allocation: String) {
         The amount is earmarked for a purpose but not yet withdrawn.
       }
 
@@ -58,7 +58,7 @@ concept Treasury [TR] {
     }
 
     action releaseAllocation(allocation: String) {
-      -> released(allocation: String) {
+      -> ok(allocation: String) {
         The earmarked allocation is released back to available balance.
       }
       -> not_found(allocation: String) {
@@ -72,9 +72,9 @@ concept Treasury [TR] {
 
   example "deposit-then-withdraw": {
 
-    after deposit(vault: v, token: t, amount: 100.0) -> deposited(vault: v, newBalance: _)
+    after deposit(vault: v, token: t, amount: 100.0) -> ok(vault: v, newBalance: _)
 
-        then withdraw(vault: v, token: t, amount: 50.0) -> withdrawn(vault: v, newBalance: _)
+        then withdraw(vault: v, token: t, amount: 50.0) -> ok(vault: v, newBalance: _)
 
   }
 

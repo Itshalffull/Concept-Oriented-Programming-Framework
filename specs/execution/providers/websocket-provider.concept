@@ -37,7 +37,7 @@ concept WebSocketProvider [W] {
         URL and sub-protocol list. Does not open the connection
         until a send or receive is attempted.
       }
-      -> exists(name: String) {
+      -> ok(name: String) {
         A connection with this name is already configured.
       }
 
@@ -50,7 +50,7 @@ concept WebSocketProvider [W] {
         Send a message over the named WebSocket connection,
         opening it first if not already connected.
       }
-      -> notConnected(connection: String) {
+      -> ok(connection: String) {
         The connection could not be established or was closed
         and reconnection failed.
       }
@@ -68,10 +68,10 @@ concept WebSocketProvider [W] {
         Return the next message from the named WebSocket
         connection's receive buffer.
       }
-      -> notConnected(connection: String) {
+      -> ok(connection: String) {
         The connection is not open and could not be established.
       }
-      -> closed() {
+      -> ok() {
         The remote end closed the connection gracefully.
       }
 
@@ -83,7 +83,7 @@ concept WebSocketProvider [W] {
       -> ok() {
         Close the named WebSocket connection gracefully.
       }
-      -> notFound(connection: String) {
+      -> ok(connection: String) {
         No connection is configured with this name.
       }
 
@@ -103,7 +103,7 @@ concept WebSocketProvider [W] {
 
   example "close fails for unknown connection": {
     after configure(name: "events", url: "wss://events.example.com", protocols: "[]") -> ok(connection: w)
-    then close(connection: "unknown") -> notFound(connection: "unknown")
+    then close(connection: "unknown") -> ok(connection: "unknown")
   }
 
   always "connections have valid name": {

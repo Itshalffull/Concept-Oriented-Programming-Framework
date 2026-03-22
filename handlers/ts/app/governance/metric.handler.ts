@@ -19,7 +19,7 @@ const _metricHandler: FunctionalConceptHandler = {
       id, name: input.name, unit: input.unit,
       aggregation: input.aggregation, value: null, history: [],
     });
-    return complete(p, 'defined', { metric: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { metric: id }) as StorageProgram<Result>;
   },
 
   update(input: Record<string, unknown>) {
@@ -84,7 +84,7 @@ const _metricHandler: FunctionalConceptHandler = {
     p = branch(p, 'record',
       (b) => {
         let b2 = merge(b, 'metric', metric as string, { threshold, alertOnBreach });
-        return complete(b2, 'threshold_set', { metric });
+        return complete(b2, 'ok', { metric });
       },
       (b) => complete(b, 'not_found', { metric }),
     );

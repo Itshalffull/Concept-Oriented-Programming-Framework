@@ -41,7 +41,7 @@ concept Attribution [A] {
       -> ok(chain: list A) {
         Full attribution chain for a specific region in chronological order.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         No attributions found for this content and region.
       }
 
@@ -62,7 +62,7 @@ concept Attribution [A] {
       -> ok(owners: list String) {
         Returns owners matching the path against ownership patterns.
       }
-      -> noMatch(message: String) {
+      -> ok(message: String) {
         No ownership pattern matches this path.
       }
 

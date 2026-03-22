@@ -38,11 +38,11 @@ concept Middleware [M] {
         after-auth, validation, business-logic, serialization).
         Return ordered middleware chain.
       }
-      -> missingImplementation(trait: String, target: String) {
+      -> ok(trait: String, target: String) {
         No implementation registered for this trait and target pair.
         Non-fatal, trait is skipped with warning.
       }
-      -> incompatibleTraits(trait1: String, trait2: String, reason: String) {
+      -> ok(trait1: String, trait2: String, reason: String) {
         Two requested traits conflict (e.g. @streaming and
         @paginated on the same action).
       }
@@ -71,7 +71,7 @@ concept Middleware [M] {
         Register a new trait-to-target implementation.
         Used by custom suites to extend middleware for their domains.
       }
-      -> duplicateRegistration(trait: String, target: String) {
+      -> ok(trait: String, target: String) {
         Implementation already registered. Use replace instead.
       }
 

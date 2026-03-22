@@ -29,7 +29,7 @@ concept SchemaEvolution [S] {
       -> incompatible(reasons: list String) {
         New schema violates the compatibility mode of the subject.
       }
-      -> invalidCompatibility(message: String) {
+      -> ok(message: String) {
         Compatibility mode is not one of the allowed values.
       }
 
@@ -53,10 +53,10 @@ concept SchemaEvolution [S] {
       -> ok(transformed: Bytes) {
         Data transformed from fromVersion schema to toVersion schema.
       }
-      -> noPath(message: String) {
+      -> ok(message: String) {
         No upcast path exists between these versions.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         Subject or version not found.
       }
 
@@ -80,7 +80,7 @@ concept SchemaEvolution [S] {
       -> ok(schema: Bytes, compatibility: String) {
         Returns the schema at the specified version.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         Subject or version not found.
       }
 

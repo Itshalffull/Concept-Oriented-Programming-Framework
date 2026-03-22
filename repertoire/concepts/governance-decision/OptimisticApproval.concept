@@ -27,7 +27,7 @@ concept OptimisticApproval [O] {
 
   actions {
     action assert(asserter: String, payload: String, bond: Float, challengePeriodHours: Float) {
-      -> asserted(assertion: O) {
+      -> ok(assertion: O) {
         A new assertion is created in Pending status.
         ExpiresAt is set to now + challengePeriod.
       }
@@ -37,14 +37,14 @@ concept OptimisticApproval [O] {
     }
 
     action challenge(assertion: O, challenger: String, bond: Float, evidence: String) {
-      -> challenged(assertion: O) {
+      -> ok(assertion: O) {
         The assertion is moved to Challenged status.
         The challenge is forwarded to a dispute resolution process.
       }
-      -> expired(assertion: O) {
+      -> ok(assertion: O) {
         The challenge period has already passed.
       }
-      -> already_challenged(assertion: O) {
+      -> ok(assertion: O) {
         The assertion is already being challenged.
       }
 
@@ -53,14 +53,14 @@ concept OptimisticApproval [O] {
     }
 
     action finalize(assertion: O) {
-      -> approved(assertion: O) {
+      -> ok(assertion: O) {
         The challenge period has expired without challenge.
         The assertion is approved and can be executed.
       }
-      -> still_pending(assertion: O) {
+      -> ok(assertion: O) {
         The challenge period has not yet expired.
       }
-      -> is_challenged(assertion: O) {
+      -> ok(assertion: O) {
         The assertion is currently being challenged and cannot finalize.
       }
 
@@ -69,7 +69,7 @@ concept OptimisticApproval [O] {
     }
 
     action resolve(assertion: O, outcome: String) {
-      -> approved(assertion: O) {
+      -> ok(assertion: O) {
         The dispute was resolved in favor of the asserter.
         Challenger's bond is forfeited.
       }
@@ -85,9 +85,9 @@ concept OptimisticApproval [O] {
 
   example "assert-then-finalize": {
 
-    after assert(asserter: _, payload: _, bond: _, challengePeriodHours: _) -> asserted(assertion: o)
+    after assert(asserter: _, payload: _, bond: _, challengePeriodHours: _) -> ok(assertion: o)
 
-        then finalize(assertion: o) -> approved(assertion: o)
+        then finalize(assertion: o) -> ok(assertion: o)
 
         // Only if challenge period expires without challenge
 
@@ -114,7 +114,7 @@ concept OptimisticApproval [O] {
 
     requires: asserter != ""
 
-    ensures asserted: asserter != none
+    ensures ok: asserter != none
 
   }
 }

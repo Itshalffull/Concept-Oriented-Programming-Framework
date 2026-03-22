@@ -24,7 +24,7 @@ concept GraphTraversalAnalysisProvider [I] {
         Register this engine with PluginRegistry for
         graph traversal analysis rule evaluation.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the graph traversal engine.
       }
     }

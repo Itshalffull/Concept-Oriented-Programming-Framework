@@ -88,16 +88,14 @@ describe('Branch functional handler', () => {
       if (typeof branchHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_branch_name" -> ok', async () => {
       if (typeof branchHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(branchHandler.create({ name: "", fromNode: "dag-history-1" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -159,8 +157,7 @@ describe('Branch functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_feature = await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage);
       const result = await interpret(branchHandler.advance({ branch: afterResult_create_feature?.output?.["branch"], newNode: afterResult_create_feature?.output?.["branch"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "advance_empty_node" -> error', async () => {
@@ -229,8 +226,7 @@ describe('Branch functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_feature = await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage);
       const result = await interpret(branchHandler.delete({ branch: afterResult_create_feature?.output?.["branch"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "delete_missing" -> error', async () => {
@@ -299,8 +295,7 @@ describe('Branch functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_feature = await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage);
       const result = await interpret(branchHandler.protect({ branch: afterResult_create_feature?.output?.["branch"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "protect_missing" -> error', async () => {
@@ -369,8 +364,7 @@ describe('Branch functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_feature = await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage);
       const result = await interpret(branchHandler.setUpstream({ branch: afterResult_create_feature?.output?.["branch"], upstream: afterResult_create_feature?.output?.["branch"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "upstream_missing" -> error', async () => {
@@ -439,8 +433,7 @@ describe('Branch functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_feature = await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage);
       const result = await interpret(branchHandler.divergencePoint({ b1: afterResult_create_feature?.output?.["branch"], b2: afterResult_create_feature?.output?.["branch"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "divergence_missing" -> error', async () => {
@@ -509,8 +502,7 @@ describe('Branch functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_feature = await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage);
       const result = await interpret(branchHandler.archive({ branch: afterResult_create_feature?.output?.["branch"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "archive_missing" -> error', async () => {
@@ -542,21 +534,18 @@ describe('Branch functional handler', () => {
     it("create then advance", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(branchHandler.create({ name: {"type":"variable","name":"n"}, fromNode: {"type":"variable","name":"f"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
+      expect(createResult0.variant).toBe("ok");
       let branch = createResult0.output["branch"];
       const thenResult0 = await interpret(branchHandler.advance({ branch: {"type":"variable","name":"b"}, newNode: {"type":"variable","name":"n2"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("protect then advance", async () => {
       const storage = createInMemoryStorage();
       const protectResult0 = await interpret(branchHandler.protect({ branch: {"type":"variable","name":"b"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(protectResult0.variant), `step 0: expected success but got '${protectResult0.variant}'`).toBe(false);
+      expect(protectResult0.variant).toBe("ok");
       const thenResult0 = await interpret(branchHandler.advance({ branch: {"type":"variable","name":"b"}, newNode: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("protected");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

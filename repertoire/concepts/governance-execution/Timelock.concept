@@ -24,7 +24,7 @@ concept Timelock [TL] {
 
   actions {
     action schedule(operationHash: String, payload: String, delayHours: Float, gracePeriodHours: Float) {
-      -> queued(lock: TL) {
+      -> ok(lock: TL) {
         An operation is queued. ETA = now + delay. Grace = ETA + gracePeriod.
       }
 
@@ -34,16 +34,16 @@ concept Timelock [TL] {
     }
 
     action execute(lock: TL) {
-      -> executed(lock: TL, payload: String) {
+      -> ok(lock: TL, payload: String) {
         The operation has reached its ETA and is executed.
       }
-      -> too_early(lock: TL, eta: DateTime) {
+      -> ok(lock: TL, eta: DateTime) {
         Current time is before the ETA.
       }
-      -> expired(lock: TL) {
+      -> ok(lock: TL) {
         The grace period has passed. The operation can no longer execute.
       }
-      -> already_executed(lock: TL) {
+      -> ok(lock: TL) {
         The operation has already been executed.
       }
 
@@ -52,10 +52,10 @@ concept Timelock [TL] {
     }
 
     action cancel(lock: TL, reason: String) {
-      -> cancelled(lock: TL) {
+      -> ok(lock: TL) {
         The queued operation is cancelled before execution.
       }
-      -> not_cancellable(lock: TL) {
+      -> ok(lock: TL) {
         The operation has already been executed or expired.
       }
 
@@ -66,11 +66,11 @@ concept Timelock [TL] {
 
   example "schedule-then-execute": {
 
-    after schedule(operationHash: _, payload: _, delayHours: _, gracePeriodHours: _) -> queued(lock: tl)
+    after schedule(operationHash: _, payload: _, delayHours: _, gracePeriodHours: _) -> ok(lock: tl)
 
         // After delay elapses:
 
-        then execute(lock: tl) -> executed(lock: tl, payload: _)
+        then execute(lock: tl) -> ok(lock: tl, payload: _)
 
   }
 

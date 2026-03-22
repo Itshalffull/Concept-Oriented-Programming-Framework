@@ -88,8 +88,7 @@ describe('Role functional handler', () => {
       if (typeof roleHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_empty_name" -> error', async () => {
@@ -158,8 +157,7 @@ describe('Role functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_admin = await interpret(roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" }), storage);
       const result = await interpret(roleHandler.assign({ role: afterResult_create_admin?.output?.["id"], member: "alice", assignedBy: "system" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "assign_empty_member" -> error', async () => {
@@ -228,8 +226,7 @@ describe('Role functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_admin = await interpret(roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" }), storage);
       const result = await interpret(roleHandler.revoke({ role: afterResult_create_admin?.output?.["id"], member: "alice" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "revoke_unassigned" -> error', async () => {
@@ -298,8 +295,7 @@ describe('Role functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_admin = await interpret(roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" }), storage);
       const result = await interpret(roleHandler.check({ role: afterResult_create_admin?.output?.["id"], member: "alice" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "check_nonmember" -> error', async () => {
@@ -368,8 +364,7 @@ describe('Role functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_admin = await interpret(roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" }), storage);
       const result = await interpret(roleHandler.dissolve({ role: afterResult_create_admin?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "dissolve_nonexistent" -> error', async () => {
@@ -401,10 +396,10 @@ describe('Role functional handler', () => {
     it("create-then-check", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(roleHandler.create({ role: {"type":"variable","name":"r"}, name: {"type":"variable","name":"_"}, purpose: {"type":"variable","name":"_"}, permissions: {"type":"variable","name":"_"} }), storage);
-      expect(createResult0.variant).toBe("created");
+      expect(createResult0.variant).toBe("ok");
       let role = createResult0.output["role"];
       const thenResult0 = await interpret(roleHandler.assign({ role: {"type":"variable","name":"r"}, holder: {"type":"variable","name":"h"} }), storage);
-      expect(thenResult0.variant).toBe("assigned");
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(roleHandler.check({ holder: {"type":"variable","name":"h"}, permission: {"type":"variable","name":"p"} }), storage);
       expect(thenResult1.variant).toBe("allowed");
     });
@@ -495,7 +490,7 @@ describe('Role functional handler', () => {
       }
     });
 
-    it('create ensures on created: ', async () => {
+    it('create ensures on ok: ', async () => {
       if (typeof roleHandler.create !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -507,7 +502,7 @@ describe('Role functional handler', () => {
               const program = roleHandler.create(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "created") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

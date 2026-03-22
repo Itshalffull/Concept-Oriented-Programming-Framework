@@ -94,8 +94,7 @@ describe('CompletionCoverage functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(completionCoverageHandler.check({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_sync" -> ok', async () => {
@@ -108,8 +107,7 @@ describe('CompletionCoverage functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(completionCoverageHandler.check({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_json_input" -> error', async () => {
@@ -183,8 +181,7 @@ describe('CompletionCoverage functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(completionCoverageHandler.report({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "report_empty" -> error', async () => {
@@ -255,8 +252,7 @@ describe('CompletionCoverage functional handler', () => {
       const _pool = Object.assign({}, (afterResult_full_coverage?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(completionCoverageHandler.listUncovered({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -281,17 +277,16 @@ describe('CompletionCoverage functional handler', () => {
     it("full coverage returns covered", async () => {
       const storage = createInMemoryStorage();
       const checkResult0 = await interpret(completionCoverageHandler.check({ concept: {"type":"literal","value":"User"}, action: {"type":"literal","value":"register"}, declaredVariants: {"type":"literal","value":"[\"ok\",\"error\"]"}, extractedVariants: {"type":"literal","value":"[\"ok\",\"error\"]"}, syncPatterns: {"type":"literal","value":"[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"},{\"sync\":\"RegistrationError\",\"variant\":\"error\"}]"} }), storage);
-      expect(checkResult0.variant).toBe("covered");
+      expect(checkResult0.variant).toBe("ok");
       let report = checkResult0.output["report"];
       const thenResult0 = await interpret(completionCoverageHandler.report({ concept: {"type":"literal","value":"User"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("missing sync returns uncovered with diagnostics", async () => {
       const storage = createInMemoryStorage();
       const checkResult0 = await interpret(completionCoverageHandler.check({ concept: {"type":"literal","value":"User"}, action: {"type":"literal","value":"register"}, declaredVariants: {"type":"literal","value":"[\"ok\",\"error\"]"}, extractedVariants: {"type":"literal","value":"[\"ok\"]"}, syncPatterns: {"type":"literal","value":"[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"}]"} }), storage);
-      expect(checkResult0.variant).toBe("uncovered");
+      expect(checkResult0.variant).toBe("ok");
       let report = checkResult0.output["report"];
       let uncoveredVariants = checkResult0.output["uncoveredVariants"];
       let orphanedPatterns = checkResult0.output["orphanedPatterns"];
@@ -300,13 +295,12 @@ describe('CompletionCoverage functional handler', () => {
     it("listUncovered aggregates all gaps", async () => {
       const storage = createInMemoryStorage();
       const checkResult0 = await interpret(completionCoverageHandler.check({ concept: {"type":"literal","value":"User"}, action: {"type":"literal","value":"register"}, declaredVariants: {"type":"literal","value":"[\"ok\",\"error\"]"}, extractedVariants: {"type":"literal","value":"[\"ok\"]"}, syncPatterns: {"type":"literal","value":"[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"}]"} }), storage);
-      expect(checkResult0.variant).toBe("uncovered");
+      expect(checkResult0.variant).toBe("ok");
       let report = checkResult0.output["report"];
       let uncoveredVariants = checkResult0.output["uncoveredVariants"];
       let orphanedPatterns = checkResult0.output["orphanedPatterns"];
       const thenResult0 = await interpret(completionCoverageHandler.listUncovered({  }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

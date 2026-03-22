@@ -28,7 +28,7 @@ concept Registry [M] {
       -> ok(module: M) {
         Indexes a new module version in the registry.
       }
-      -> exists() {
+      -> ok() {
         This exact name, namespace, and version combination already exists.
       }
       -> invalid(message: String) {
@@ -49,7 +49,7 @@ concept Registry [M] {
       -> ok(results: list { name: String, namespace: String, latest_version: String, description: String }) {
         Returns modules matching the search query.
       }
-      -> empty() {
+      -> ok() {
         No modules match the query.
       }
     }

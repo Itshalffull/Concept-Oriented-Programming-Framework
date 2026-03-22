@@ -88,16 +88,14 @@ describe('ComposeAdapter functional handler', () => {
       if (typeof composeAdapterHandler.normalize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(composeAdapterHandler.normalize({ adapter: "compose-main", props: "{ \"onclick\": \"handleClick\", \"class\": \"filled-button\" }" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "with_drag_and_layout" -> ok', async () => {
       if (typeof composeAdapterHandler.normalize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(composeAdapterHandler.normalize({ adapter: "compose-canvas", props: "{ \"ondrag\": \"handleDrag\", \"layout\": { \"kind\": \"overlay\" } }" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_props" -> error', async () => {
@@ -136,8 +134,7 @@ describe('ComposeAdapter functional handler', () => {
     it("normalize then normalize", async () => {
       const storage = createInMemoryStorage();
       const normalizeResult0 = await interpret(composeAdapterHandler.normalize({ adapter: {"type":"variable","name":"a"}, props: {"type":"literal","value":"{ \"onclick\": \"handler_1\", \"class\": \"btn\" }"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(normalizeResult0.variant), `step 0: expected success but got '${normalizeResult0.variant}'`).toBe(false);
+      expect(normalizeResult0.variant).toBe("ok");
       let adapter = normalizeResult0.output["adapter"];
       let normalized = normalizeResult0.output["normalized"];
       const thenResult0 = await interpret(composeAdapterHandler.normalize({ adapter: {"type":"variable","name":"a"}, props: {"type":"literal","value":""} }), storage);

@@ -23,7 +23,7 @@ concept TreeSitterWidgetSpec [I] {
         Load the widget spec WASM parser and register it with
         LanguageGrammar for .widget extensions.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to load the WASM parser binary.
       }
     }

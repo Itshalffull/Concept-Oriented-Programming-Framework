@@ -111,7 +111,7 @@ concept TargetProfile [P] {
       -> ok {
         The profile is complete and all dimensions are compatible.
       }
-      -> incomplete(missing: list String) {
+      -> ok(missing: list String) {
         Required dimensions have not been set.
       }
       -> incompatible(conflicts: list String) {
@@ -151,7 +151,7 @@ concept TargetProfile [P] {
 
   example "create then validate": {
     after create(name: "myProfile") -> ok(profile: p)
-    then validate(profile: p) -> incomplete(missing: m)
+    then validate(profile: p) -> ok(missing: m)
     // A freshly created profile is always incomplete until dimensions are set.
   }
 

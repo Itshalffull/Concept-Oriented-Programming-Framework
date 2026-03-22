@@ -20,7 +20,7 @@ concept Majority [MJ] {
 
   actions {
     action configure(threshold: Float, binaryOnly: Bool, tieBreaker: option String) {
-      -> configured(config: MJ) {
+      -> ok(config: MJ) {
         A majority counting configuration is created. Default threshold
         is 0.5 (strict majority). BinaryOnly enforces exactly two choices.
       }
@@ -31,14 +31,14 @@ concept Majority [MJ] {
     }
 
     action count(config: MJ, ballots: String, weights: String) {
-      -> winner(choice: String, voteShare: Float, totalWeight: Float) {
+      -> ok(choice: String, voteShare: Float, totalWeight: Float) {
         One choice exceeds the threshold of total weighted votes cast.
       }
-      -> tie(choices: String, voteShare: Float) {
+      -> ok(choices: String, voteShare: Float) {
         Two or more choices have equal weighted support at or above threshold.
         If tieBreaker is configured, it is applied.
       }
-      -> no_majority(leadingChoice: String, voteShare: Float, threshold: Float) {
+      -> ok(leadingChoice: String, voteShare: Float, threshold: Float) {
         No choice meets the threshold.
       }
 
@@ -49,9 +49,9 @@ concept Majority [MJ] {
 
   example "configure-then-count": {
 
-    after configure(threshold: 0.5, binaryOnly: true, tieBreaker: _) -> configured(config: mj)
+    after configure(threshold: 0.5, binaryOnly: true, tieBreaker: _) -> ok(config: mj)
 
-        then count(config: mj, ballots: _, weights: _) -> winner(choice: _, voteShare: _, totalWeight: _)
+        then count(config: mj, ballots: _, weights: _) -> ok(choice: _, voteShare: _, totalWeight: _)
 
         // When one of two choices has > 50% of weight
 
@@ -78,7 +78,7 @@ concept Majority [MJ] {
 
     requires: threshold != ""
 
-    ensures configured: threshold != none
+    ensures ok: threshold != none
 
   }
 }

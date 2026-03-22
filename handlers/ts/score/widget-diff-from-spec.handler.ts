@@ -39,7 +39,7 @@ export const widgetDiffFromSpecHandler: FunctionalConceptHandler = {
         const impls = bindings.allImpls as Record<string, unknown>[];
         return !impls || !impls.find(i => i.id === implId);
       },
-      complete(createProgram(), 'inSync', {}),
+      complete(createProgram(), 'ok', {}),
       (() => {
         // Implementation found — now look up the widget entity
         let inner = createProgram();

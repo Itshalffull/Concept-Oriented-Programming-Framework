@@ -88,16 +88,14 @@ describe('FileArtifact functional handler', () => {
       if (typeof fileArtifactHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(fileArtifactHandler.register({ node: "src/handler.ts", role: "source", language: "typescript" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_empty_node" -> ok', async () => {
       if (typeof fileArtifactHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(fileArtifactHandler.register({ node: "", role: "source", language: "typescript" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -159,8 +157,7 @@ describe('FileArtifact functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_source = await interpret(fileArtifactHandler.register({ node: "src/handler.ts", role: "source", language: "typescript" }), storage);
       const result = await interpret(fileArtifactHandler.setProvenance({ artifact: afterResult_register_source?.output?.["artifact"], spec: "user.concept", generator: "clef-gen" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "set_provenance_missing" -> error', async () => {
@@ -234,8 +231,7 @@ describe('FileArtifact functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(fileArtifactHandler.findByRole({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_empty_role" -> ok', async () => {
@@ -248,8 +244,7 @@ describe('FileArtifact functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(fileArtifactHandler.findByRole({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -316,8 +311,7 @@ describe('FileArtifact functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(fileArtifactHandler.findGeneratedFrom({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_generated_empty" -> error', async () => {
@@ -386,8 +380,7 @@ describe('FileArtifact functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_source = await interpret(fileArtifactHandler.register({ node: "src/handler.ts", role: "source", language: "typescript" }), storage);
       const result = await interpret(fileArtifactHandler.get({ artifact: afterResult_register_source?.output?.["artifact"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_missing" -> error', async () => {
@@ -404,22 +397,19 @@ describe('FileArtifact functional handler', () => {
     it("register-then-get", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(fileArtifactHandler.register({ node: {"type":"literal","value":"src/handler.ts"}, role: {"type":"literal","value":"source"}, language: {"type":"literal","value":"typescript"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let artifact = registerResult0.output["artifact"];
       const thenResult0 = await interpret(fileArtifactHandler.get({ artifact: {"type":"variable","name":"a"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("register-then-register", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(fileArtifactHandler.register({ node: {"type":"literal","value":"specs/app/user.concept"}, role: {"type":"literal","value":"spec"}, language: {"type":"literal","value":"concept-spec"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let artifact = registerResult0.output["artifact"];
       const thenResult0 = await interpret(fileArtifactHandler.register({ node: {"type":"literal","value":"specs/app/user.concept"}, role: {"type":"literal","value":"spec"}, language: {"type":"literal","value":"concept-spec"} }), storage);
-      expect(thenResult0.variant).toBe("alreadyRegistered");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

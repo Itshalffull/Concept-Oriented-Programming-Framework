@@ -88,16 +88,14 @@ describe('WidgetResolver functional handler', () => {
       if (typeof widgetResolverHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(widgetResolverHandler.resolve({ element: "single-choice", context: "{\"platform\":\"browser\",\"viewport\":\"desktop\"}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "entity_resolve" -> ok', async () => {
       if (typeof widgetResolverHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(widgetResolverHandler.resolve({ element: "entity-detail", context: "{\"concept\":\"Approval\",\"fields\":[{\"name\":\"status\",\"type\":\"String\"}]}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "no_match_resolve" -> none', async () => {
@@ -172,8 +170,7 @@ describe('WidgetResolver functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(widgetResolverHandler.resolveAll({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_elements" -> ok', async () => {
@@ -186,8 +183,7 @@ describe('WidgetResolver functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(widgetResolverHandler.resolveAll({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -254,8 +250,7 @@ describe('WidgetResolver functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(widgetResolverHandler.override({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_params" -> invalid', async () => {
@@ -330,8 +325,7 @@ describe('WidgetResolver functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(widgetResolverHandler.setWeights({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "bad_sum" -> invalid', async () => {
@@ -420,8 +414,7 @@ describe('WidgetResolver functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(widgetResolverHandler.explain({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_resolver" -> notfound', async () => {
@@ -460,27 +453,23 @@ describe('WidgetResolver functional handler', () => {
     it("resolve then explain", async () => {
       const storage = createInMemoryStorage();
       const resolveResult0 = await interpret(widgetResolverHandler.resolve({ resolver: {"type":"variable","name":"r"}, element: {"type":"literal","value":"{ \"interactorType\": \"single-choice\", \"optionCount\": 4 }"}, context: {"type":"literal","value":"{ \"platform\": \"browser\", \"viewport\": \"desktop\" }"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(resolveResult0.variant), `step 0: expected success but got '${resolveResult0.variant}'`).toBe(false);
+      expect(resolveResult0.variant).toBe("ok");
       let resolver = resolveResult0.output["resolver"];
       let widget = resolveResult0.output["widget"];
       let score = resolveResult0.output["score"];
       let reason = resolveResult0.output["reason"];
       let bindingMap = resolveResult0.output["bindingMap"];
       const thenResult0 = await interpret(widgetResolverHandler.explain({ resolver: {"type":"variable","name":"r"}, element: {"type":"literal","value":"{ \"interactorType\": \"single-choice\", \"optionCount\": 4 }"}, context: {"type":"literal","value":"{ \"platform\": \"browser\", \"viewport\": \"desktop\" }"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("override then resolve", async () => {
       const storage = createInMemoryStorage();
       const overrideResult0 = await interpret(widgetResolverHandler.override({ resolver: {"type":"variable","name":"r"}, element: {"type":"literal","value":"{ \"kind\": \"selection-single\" }"}, widget: {"type":"literal","value":"custom-picker"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(overrideResult0.variant), `step 0: expected success but got '${overrideResult0.variant}'`).toBe(false);
+      expect(overrideResult0.variant).toBe("ok");
       let resolver = overrideResult0.output["resolver"];
       const thenResult0 = await interpret(widgetResolverHandler.resolve({ resolver: {"type":"variable","name":"r"}, element: {"type":"literal","value":"{ \"kind\": \"selection-single\" }"}, context: {"type":"variable","name":"_"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

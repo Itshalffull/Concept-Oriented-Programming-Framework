@@ -25,7 +25,7 @@ concept Monitor [MN] {
 
   actions {
     action watch(subject: String, policyRef: String) {
-      -> watching(observer: MN) {
+      -> ok(observer: MN) {
         A new monitoring session begins for the subject against the
         referenced rule.
       }
@@ -41,10 +41,10 @@ concept Monitor [MN] {
     }
 
     action observe(observer: MN, behavior: String) {
-      -> compliant(observer: MN) {
+      -> ok(observer: MN) {
         The observed behavior complies with the monitored rule.
       }
-      -> violation(observer: MN, severity: String) {
+      -> ok(observer: MN, severity: String) {
         The behavior violates the rule. Severity is assessed.
       }
 
@@ -59,7 +59,7 @@ concept Monitor [MN] {
     }
 
     action resolve(observer: MN) {
-      -> resolved(observer: MN) {
+      -> ok(observer: MN) {
         The monitoring session is concluded.
       }
 
@@ -74,9 +74,9 @@ concept Monitor [MN] {
 
   example "watch-then-observe": {
 
-    after watch(subject: _, policyRef: _) -> watching(observer: mn)
+    after watch(subject: _, policyRef: _) -> ok(observer: mn)
 
-        then observe(observer: mn, behavior: _) -> compliant(observer: mn)
+        then observe(observer: mn, behavior: _) -> ok(observer: mn)
 
   }
 

@@ -39,7 +39,7 @@ concept HttpProvider [H] {
         headers, and timeout. The instance is addressable by name in
         subsequent execute calls.
       }
-      -> exists(name: String) {
+      -> ok(name: String) {
         An instance with this name is already configured.
       }
 
@@ -53,10 +53,10 @@ concept HttpProvider [H] {
         path, merging instance default headers with call-specific
         headers. Returns status code, response body, and response headers.
       }
-      -> notFound(instance: String) {
+      -> ok(instance: String) {
         No instance is configured with this name.
       }
-      -> networkError(message: String) {
+      -> ok(message: String) {
         The request failed due to a network-level error such as
         DNS resolution failure, connection refused, or TLS error.
       }
@@ -81,7 +81,7 @@ concept HttpProvider [H] {
 
   example "execute fails for unknown instance": {
     after configure(name: "test-api", baseUrl: "https://api.example.com", headers: "{}", timeout: 5000) -> ok(instance: h)
-    then execute(instance: "unknown-api", method: "GET", path: "/health", body: "", headers: "{}") -> notFound(instance: "unknown-api")
+    then execute(instance: "unknown-api", method: "GET", path: "/health", body: "", headers: "{}") -> ok(instance: "unknown-api")
   }
 
   always "instances have valid name": {

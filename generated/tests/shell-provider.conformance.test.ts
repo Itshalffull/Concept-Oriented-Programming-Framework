@@ -88,8 +88,7 @@ describe('ShellProvider functional handler', () => {
       if (typeof shellProviderHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(shellProviderHandler.register({  }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -156,8 +155,7 @@ describe('ShellProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(shellProviderHandler.execute({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "ls_home" -> ok', async () => {
@@ -170,8 +168,7 @@ describe('ShellProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(shellProviderHandler.execute({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_executable" -> error', async () => {
@@ -248,8 +245,7 @@ describe('ShellProvider functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(shellProviderHandler.list({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -274,8 +270,7 @@ describe('ShellProvider functional handler', () => {
     it("echo exits with zero", async () => {
       const storage = createInMemoryStorage();
       const executeResult0 = await interpret(shellProviderHandler.execute({ command: {"type":"literal","value":"echo"}, args: {"type":"literal","value":"hello"}, env: {"type":"literal","value":"{}"}, cwd: {"type":"literal","value":"/tmp"}, timeout: {"type":"literal","value":5000} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(executeResult0.variant), `step 0: expected success but got '${executeResult0.variant}'`).toBe(false);
+      expect(executeResult0.variant).toBe("ok");
       let execution = executeResult0.output["execution"];
       let stdout = executeResult0.output["stdout"];
       let stderr = executeResult0.output["stderr"];

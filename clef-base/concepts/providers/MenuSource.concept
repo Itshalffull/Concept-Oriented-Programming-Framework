@@ -26,7 +26,7 @@ concept MenuSource [MS] {
         Registers this provider with PluginRegistry under type
         "slot_source_provider" and name "menu".
       }
-      -> already_registered() {
+      -> ok() {
         Provider is already registered with the PluginRegistry.
       }
     }
@@ -37,7 +37,7 @@ concept MenuSource [MS] {
         Loads the menu definition, annotates active state based
         on the current path, and returns the serialised tree.
       }
-      -> menu_not_found(menu_id: String) {
+      -> ok(menu_id: String) {
         The referenced menu definition does not exist.
       }
       -> error(message: String) {

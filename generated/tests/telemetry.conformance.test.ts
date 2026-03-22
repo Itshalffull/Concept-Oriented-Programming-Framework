@@ -88,24 +88,21 @@ describe('Telemetry functional handler', () => {
       if (typeof telemetryHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(telemetryHandler.configure({ concept: "UserService", endpoint: "http://otel-collector:4317", samplingRate: "0.5" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_full_sampling" -> ok', async () => {
       if (typeof telemetryHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(telemetryHandler.configure({ concept: "PaymentService", endpoint: "https://telemetry.internal:4317", samplingRate: "1.0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_empty_concept" -> ok', async () => {
       if (typeof telemetryHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(telemetryHandler.configure({ concept: "", endpoint: "http://otel:4317", samplingRate: "0.1" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -172,8 +169,7 @@ describe('Telemetry functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(telemetryHandler.deployMarker({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "marker_production" -> ok', async () => {
@@ -186,8 +182,7 @@ describe('Telemetry functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(telemetryHandler.deployMarker({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "marker_empty_suite" -> error', async () => {
@@ -261,8 +256,7 @@ describe('Telemetry functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(telemetryHandler.analyze({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "analyze_1hr" -> ok', async () => {
@@ -275,8 +269,7 @@ describe('Telemetry functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(telemetryHandler.analyze({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "analyze_empty_concept" -> error', async () => {
@@ -308,12 +301,10 @@ describe('Telemetry functional handler', () => {
     it("configure-then-deployMarker", async () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(telemetryHandler.configure({ concept: {"type":"literal","value":"User"}, endpoint: {"type":"literal","value":"http://otel:4317"}, samplingRate: {"type":"literal","value":0.5} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(configureResult0.variant), `step 0: expected success but got '${configureResult0.variant}'`).toBe(false);
+      expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
       const thenResult0 = await interpret(telemetryHandler.deployMarker({ suite: {"type":"literal","value":"auth"}, version: {"type":"literal","value":"1.0.0"}, environment: {"type":"literal","value":"staging"}, status: {"type":"literal","value":"started"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

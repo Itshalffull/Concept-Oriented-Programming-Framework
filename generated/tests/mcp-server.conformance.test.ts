@@ -88,16 +88,14 @@ describe('McpServer functional handler', () => {
       if (typeof mcpServerHandler.start !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(mcpServerHandler.start({ manifestPath: "examples/devtools/devtools.interface.yaml", transport: "stdio" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "sse_start" -> ok', async () => {
       if (typeof mcpServerHandler.start !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(mcpServerHandler.start({ manifestPath: "examples/devtools/devtools.interface.yaml", transport: "sse" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_transport" -> error', async () => {
@@ -171,8 +169,7 @@ describe('McpServer functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(mcpServerHandler.registerTool({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "duplicate_tool" -> duplicate', async () => {
@@ -253,8 +250,7 @@ describe('McpServer functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(mcpServerHandler.handleCall({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "unknown_tool" -> notfound', async () => {
@@ -332,8 +328,7 @@ describe('McpServer functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(mcpServerHandler.stop({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -397,8 +392,7 @@ describe('McpServer functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(mcpServerHandler.listTools({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -423,26 +417,22 @@ describe('McpServer functional handler', () => {
     it("register tool then list includes it", async () => {
       const storage = createInMemoryStorage();
       const registerToolResult0 = await interpret(mcpServerHandler.registerTool({ name: {"type":"literal","value":"score_query"}, concept: {"type":"literal","value":"ScoreQuery"}, action: {"type":"literal","value":"query"}, description: {"type":"literal","value":"Run a GraphQL query"}, schema: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerToolResult0.variant), `step 0: expected success but got '${registerToolResult0.variant}'`).toBe(false);
+      expect(registerToolResult0.variant).toBe("ok");
       let tool = registerToolResult0.output["tool"];
       const thenResult0 = await interpret(mcpServerHandler.listTools({  }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("duplicate registration rejected", async () => {
       const storage = createInMemoryStorage();
       const registerToolResult0 = await interpret(mcpServerHandler.registerTool({ name: {"type":"literal","value":"score_query"}, concept: {"type":"literal","value":"ScoreQuery"}, action: {"type":"literal","value":"query"}, description: {"type":"literal","value":"Run a GraphQL query"}, schema: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerToolResult0.variant), `step 0: expected success but got '${registerToolResult0.variant}'`).toBe(false);
+      expect(registerToolResult0.variant).toBe("ok");
       let tool = registerToolResult0.output["tool"];
       const registerToolResult1 = await interpret(mcpServerHandler.registerTool({ name: {"type":"literal","value":"score_query"}, concept: {"type":"literal","value":"ScoreQuery"}, action: {"type":"literal","value":"query"}, description: {"type":"literal","value":"duplicate"}, schema: {"type":"literal","value":"{}"} }), storage);
       expect(registerToolResult1.variant).toBe("duplicate");
       let name = registerToolResult1.output["name"];
       const thenResult0 = await interpret(mcpServerHandler.listTools({  }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("handle call for unregistered tool", async () => {

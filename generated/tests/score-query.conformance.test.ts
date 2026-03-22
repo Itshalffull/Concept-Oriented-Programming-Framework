@@ -88,8 +88,7 @@ describe('ScoreQuery functional handler', () => {
       if (typeof scoreQueryHandler.query !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreQueryHandler.query({ graphql: "{ concepts { conceptName } }" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "malformed_query" -> error', async () => {
@@ -128,8 +127,7 @@ describe('ScoreQuery functional handler', () => {
     it("valid query then invalid query", async () => {
       const storage = createInMemoryStorage();
       const queryResult0 = await interpret(scoreQueryHandler.query({ graphql: {"type":"literal","value":"{ concepts { name } }"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(queryResult0.variant), `step 0: expected success but got '${queryResult0.variant}'`).toBe(false);
+      expect(queryResult0.variant).toBe("ok");
       let id = queryResult0.output["id"];
       let data = queryResult0.output["data"];
       const thenResult0 = await interpret(scoreQueryHandler.query({ graphql: {"type":"literal","value":"invalid {{{}}}"} }), storage);

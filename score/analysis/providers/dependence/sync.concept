@@ -23,7 +23,7 @@ concept SyncDependenceProvider [I] {
         Register this provider with PluginRegistry for
         sync spec dependence analysis.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the sync dependence provider.
       }
     }

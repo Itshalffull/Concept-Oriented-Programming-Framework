@@ -25,7 +25,7 @@ concept PageAsRecord [P] {
       -> ok(page: P) {
         Create a page with the given schema definition.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         A page with this identifier already exists.
       }
 

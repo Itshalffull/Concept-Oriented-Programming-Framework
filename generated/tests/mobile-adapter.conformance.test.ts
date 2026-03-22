@@ -88,16 +88,14 @@ describe('MobileAdapter functional handler', () => {
       if (typeof mobileAdapterHandler.normalize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(mobileAdapterHandler.normalize({ adapter: "mobile-1", props: "{ \"onclick\": \"handleTap\", \"onswipeleft\": \"goBack\", \"class\": \"card\" }" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "normalize_a11y" -> ok', async () => {
       if (typeof mobileAdapterHandler.normalize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(mobileAdapterHandler.normalize({ adapter: "mobile-1", props: "{ \"aria-label\": \"Submit\", \"data-testid\": \"btn-submit\" }" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "normalize_empty_props" -> error', async () => {
@@ -136,8 +134,7 @@ describe('MobileAdapter functional handler', () => {
     it("normalize then normalize", async () => {
       const storage = createInMemoryStorage();
       const normalizeResult0 = await interpret(mobileAdapterHandler.normalize({ adapter: {"type":"variable","name":"a"}, props: {"type":"literal","value":"{ \"type\": \"navigation\", \"destination\": \"detail\", \"stackBehavior\": \"push\" }"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(normalizeResult0.variant), `step 0: expected success but got '${normalizeResult0.variant}'`).toBe(false);
+      expect(normalizeResult0.variant).toBe("ok");
       let adapter = normalizeResult0.output["adapter"];
       let normalized = normalizeResult0.output["normalized"];
       const thenResult0 = await interpret(mobileAdapterHandler.normalize({ adapter: {"type":"variable","name":"a"}, props: {"type":"literal","value":""} }), storage);

@@ -25,7 +25,7 @@ concept StakeWeight [SW] {
 
   actions {
     action configure(token: String, cooldownDays: option Float) {
-      -> configured(config: SW) {
+      -> ok(config: SW) {
         A staking weight source with token and cooldown period in days.
       }
 
@@ -34,10 +34,10 @@ concept StakeWeight [SW] {
     }
 
     action stake(config: SW, staker: String, amount: Float) {
-      -> staked(stake: SW, lockedUntil: String) {
+      -> ok(stake: SW, lockedUntil: String) {
         Tokens are locked. Weight is active immediately.
       }
-      -> below_minimum(staker: String, amount: Float, minimum: Float) {
+      -> ok(staker: String, amount: Float, minimum: Float) {
         The stake is below the minimum.
       }
 
@@ -46,7 +46,7 @@ concept StakeWeight [SW] {
     }
 
     action unstake(stake: SW) {
-      -> unstaked(stake: SW, amount: Float) {
+      -> ok(stake: SW, amount: Float) {
         Cooldown period begins. Weight is removed immediately.
         Tokens available after cooldown.
       }
@@ -59,10 +59,10 @@ concept StakeWeight [SW] {
     }
 
     action getWeight(config: SW, participant: String) {
-      -> weight(participant: String, stakedAmount: Float) {
+      -> ok(participant: String, stakedAmount: Float) {
         Returns the participant's staked amount as weight.
       }
-      -> not_staked(participant: String) {
+      -> ok(participant: String) {
         The participant has no active stake.
       }
 
@@ -73,11 +73,11 @@ concept StakeWeight [SW] {
 
   example "configure-then-getWeight": {
 
-    after configure(token: "GOV", cooldownDays: 7.0) -> configured(config: sw)
+    after configure(token: "GOV", cooldownDays: 7.0) -> ok(config: sw)
 
-        then stake(config: sw, staker: p, amount: 100.0) -> staked(stake: _, lockedUntil: _)
+        then stake(config: sw, staker: p, amount: 100.0) -> ok(stake: _, lockedUntil: _)
 
-        and  getWeight(config: sw, participant: p) -> weight(participant: p, stakedAmount: 100.0)
+        and  getWeight(config: sw, participant: p) -> ok(participant: p, stakedAmount: 100.0)
 
   }
 
@@ -94,7 +94,7 @@ concept StakeWeight [SW] {
 
     requires: token != ""
 
-    ensures configured: token != none
+    ensures ok: token != none
 
   }
 }

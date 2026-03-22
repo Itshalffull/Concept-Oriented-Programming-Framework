@@ -88,8 +88,7 @@ describe('ConceptScaffoldGen functional handler', () => {
       if (typeof conceptScaffoldGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(conceptScaffoldGenHandler.generate({ name: "UserAccount", typeParam: "U", purpose: "Manage user accounts and authentication", stateFields: [{"name":"users","type":"set U"}], actions: [{"name":"create","params":[{"name":"email","type":"String"}],"variants":[{"name":"ok","params":[{"name":"user","type":"U"}],"description":"User created."}]}], version: "1", gate: "false", capabilities: ["persistent-storage"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_name" -> error', async () => {
@@ -163,8 +162,7 @@ describe('ConceptScaffoldGen functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(conceptScaffoldGenHandler.preview({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "preview_no_name" -> ok', async () => {
@@ -177,8 +175,7 @@ describe('ConceptScaffoldGen functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(conceptScaffoldGenHandler.preview({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -242,8 +239,7 @@ describe('ConceptScaffoldGen functional handler', () => {
       const _pool = Object.assign({}, (afterResult_user_concept?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(conceptScaffoldGenHandler.register({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -268,8 +264,7 @@ describe('ConceptScaffoldGen functional handler', () => {
     it("generate produces concept spec files", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(conceptScaffoldGenHandler.generate({ name: {"type":"literal","value":"User"}, typeParam: {"type":"literal","value":"U"}, purpose: {"type":"literal","value":"Manage users"}, stateFields: {"type":"list","items":[]}, actions: {"type":"list","items":[]}, version: {"type":"literal","value":1}, gate: {"type":"literal","value":false}, capabilities: {"type":"list","items":[]} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
+      expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
       let filesGenerated = generateResult0.output["filesGenerated"];
     });

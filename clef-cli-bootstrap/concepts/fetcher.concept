@@ -18,10 +18,10 @@ concept Fetcher [D] {
       -> ok(download: D) {
         Downloads and verifies the artifact.
       }
-      -> integrity_error(expected: String, actual: String) {
+      -> ok(expected: String, actual: String) {
         Downloaded content does not match expected hash.
       }
-      -> network_error(message: String) {
+      -> ok(message: String) {
         Download failed due to network error.
       }
     }

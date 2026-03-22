@@ -88,16 +88,14 @@ describe('Generator functional handler', () => {
       if (typeof generatorHandler.plan !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(generatorHandler.plan({ suite: "commerce", interfaceManifest: "{\"targets\":[\"rest\",\"graphql\"],\"concepts\":[\"Order\",\"Product\"],\"outputDir\":\"generated/commerce\"}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "no_targets" -> ok', async () => {
       if (typeof generatorHandler.plan !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(generatorHandler.plan({ suite: "empty-suite", interfaceManifest: "{\"targets\":[]}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_suite" -> error', async () => {
@@ -111,8 +109,7 @@ describe('Generator functional handler', () => {
       if (typeof generatorHandler.plan !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(generatorHandler.plan({ suite: "analytics", interfaceManifest: "{\"targets\":[\"custom-unknown\"]}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -174,8 +171,7 @@ describe('Generator functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_with_valid_manifest = await interpret(generatorHandler.plan({ suite: "commerce", interfaceManifest: "{\"targets\":[\"rest\",\"graphql\"],\"concepts\":[\"Order\",\"Product\"],\"outputDir\":\"generated/commerce\"}" }), storage);
       const result = await interpret(generatorHandler.generate({ plan: afterResult_with_valid_manifest?.output?.["plan"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_plan" -> error', async () => {
@@ -244,8 +240,7 @@ describe('Generator functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_with_valid_manifest = await interpret(generatorHandler.plan({ suite: "commerce", interfaceManifest: "{\"targets\":[\"rest\",\"graphql\"],\"concepts\":[\"Order\",\"Product\"],\"outputDir\":\"generated/commerce\"}" }), storage);
       const result = await interpret(generatorHandler.regenerate({ plan: afterResult_with_valid_manifest?.output?.["plan"], targets: ["rest"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_plan_regen" -> error', async () => {
@@ -277,15 +272,13 @@ describe('Generator functional handler', () => {
     it("plan-then-generate", async () => {
       const storage = createInMemoryStorage();
       const planResult0 = await interpret(generatorHandler.plan({ suite: {"type":"literal","value":"test-suite"}, interfaceManifest: {"type":"literal","value":"valid-manifest"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(planResult0.variant), `step 0: expected success but got '${planResult0.variant}'`).toBe(false);
+      expect(planResult0.variant).toBe("ok");
       let plan = planResult0.output["plan"];
       let targets = planResult0.output["targets"];
       let concepts = planResult0.output["concepts"];
       let estimatedFiles = planResult0.output["estimatedFiles"];
       const thenResult0 = await interpret(generatorHandler.generate({ plan: {"type":"variable","name":"g"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

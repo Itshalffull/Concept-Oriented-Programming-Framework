@@ -19,7 +19,7 @@ const _deliberationHandler: FunctionalConceptHandler = {
       id, topic: input.topic, proposalRef: input.proposalRef ?? null,
       status: 'Open', entries: [], openedAt: new Date().toISOString(),
     });
-    return complete(p, 'opened', { thread: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { thread: id }) as StorageProgram<Result>;
   },
 
   addEntry(input: Record<string, unknown>) {
@@ -31,7 +31,7 @@ const _deliberationHandler: FunctionalConceptHandler = {
       (b) => {
         return branch(b,
           (bindings) => (bindings.record as Record<string, unknown>).status !== 'Open',
-          (b2) => complete(b2, 'closed', { thread }),
+          (b2) => complete(b2, 'ok', { thread }),
           (b2) => {
             const entryId = `entry-${Date.now()}`;
             let b3 = mapBindings(b2, (bindings) => {
@@ -41,7 +41,7 @@ const _deliberationHandler: FunctionalConceptHandler = {
               return { ...rec, entries };
             }, 'updated');
             b3 = putFrom(b3, 'thread', thread as string, (bindings) => bindings.updated as Record<string, unknown>);
-            return complete(b3, 'added', { entry: entryId });
+            return complete(b3, 'ok', { entry: entryId });
           },
         );
       },
@@ -54,7 +54,7 @@ const _deliberationHandler: FunctionalConceptHandler = {
   signal(input: Record<string, unknown>) {
     const { thread, participant, signal } = input;
     let p = createProgram();
-    return complete(p, 'signaled', { thread, participant, signal }) as StorageProgram<Result>;
+    return complete(p, 'ok', { thread, participant, signal }) as StorageProgram<Result>;
   },
 
   close(input: Record<string, unknown>) {
@@ -69,7 +69,7 @@ const _deliberationHandler: FunctionalConceptHandler = {
           return { ...rec, status: 'Closed', summary, closedAt: new Date().toISOString() };
         }, 'updated');
         b2 = putFrom(b2, 'thread', thread as string, (bindings) => bindings.updated as Record<string, unknown>);
-        return complete(b2, 'closed', { thread });
+        return complete(b2, 'ok', { thread });
       },
       (b) => complete(b, 'not_found', { thread }),
     );

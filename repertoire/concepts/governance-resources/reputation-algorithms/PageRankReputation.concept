@@ -32,26 +32,26 @@ concept PageRankReputation [PR] {
 
   actions {
     action configure(dampingFactor: Float, maxIterations: Int, convergenceThreshold: Float, preTrusted: set String) {
-      -> configured(graph: PR) {
+      -> ok(graph: PR) {
         Standard damping factor is 0.85. PreTrusted nodes serve as
         trust anchors to prevent manipulation by isolated clusters.
       }
     }
 
     action addEdge(graph: PR, source: String, target: String, weight: Float) {
-      -> added(graph: PR) {
+      -> ok(graph: PR) {
         A directed edge is added to the contribution graph.
       }
     }
 
     action removeEdge(graph: PR, source: String, target: String) {
-      -> removed(graph: PR) {
+      -> ok(graph: PR) {
         The edge is removed.
       }
     }
 
     action compute(graph: PR) {
-      -> computed(graph: PR, iterations: Int, converged: Bool) {
+      -> ok(graph: PR, iterations: Int, converged: Bool) {
         PageRank is computed over the current graph. Scores are stored
         for each participant. Teleport probability distributes to
         preTrusted nodes rather than uniformly.
@@ -59,10 +59,10 @@ concept PageRankReputation [PR] {
     }
 
     action getScore(graph: PR, participant: String) {
-      -> score(participant: String, value: Float, rank: Int) {
+      -> ok(participant: String, value: Float, rank: Int) {
         Returns the participant's PageRank score and ordinal rank.
       }
-      -> not_in_graph(participant: String) {
+      -> ok(participant: String) {
         The participant has no edges in the graph.
       }
     }
@@ -70,11 +70,11 @@ concept PageRankReputation [PR] {
 
   example "configure-then-compute": {
 
-    after configure(dampingFactor: 0.85, maxIterations: 100, convergenceThreshold: 0.0001, preTrusted: _) -> configured(graph: pr)
+    after configure(dampingFactor: 0.85, maxIterations: 100, convergenceThreshold: 0.0001, preTrusted: _) -> ok(graph: pr)
 
-        then addEdge(graph: pr, source: _, target: _, weight: _) -> added(graph: pr)
+        then addEdge(graph: pr, source: _, target: _, weight: _) -> ok(graph: pr)
 
-        and  compute(graph: pr) -> computed(graph: pr, iterations: _, converged: _)
+        and  compute(graph: pr) -> ok(graph: pr, iterations: _, converged: _)
 
   }
 

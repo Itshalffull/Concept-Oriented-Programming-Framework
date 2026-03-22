@@ -20,7 +20,7 @@ const _sanctionHandler: FunctionalConceptHandler = {
       consequence: input.consequence, reason: input.reason,
       status: 'Active', imposedAt: new Date().toISOString(),
     });
-    return complete(p, 'imposed', { sanction: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { sanction: id }) as StorageProgram<Result>;
   },
 
   escalate(input: Record<string, unknown>) {
@@ -52,7 +52,7 @@ const _sanctionHandler: FunctionalConceptHandler = {
     const { sanction, appellant, grounds } = input;
     let p = createProgram();
     p = put(p, 'appeal', `appeal-${sanction}`, { sanction, appellant, grounds, status: 'Pending', appealedAt: new Date().toISOString() });
-    return complete(p, 'appealed', { sanction }) as StorageProgram<Result>;
+    return complete(p, 'ok', { sanction }) as StorageProgram<Result>;
   },
 
   pardon(input: Record<string, unknown>) {
@@ -63,7 +63,7 @@ const _sanctionHandler: FunctionalConceptHandler = {
     p = branch(p, 'record',
       (b) => {
         let b2 = put(b, 'sanction', sanction as string, { status: 'Pardoned', pardonReason: reason });
-        return complete(b2, 'pardoned', { sanction });
+        return complete(b2, 'ok', { sanction });
       },
       (b) => complete(b, 'not_found', { sanction }),
     );
@@ -79,7 +79,7 @@ const _sanctionHandler: FunctionalConceptHandler = {
       amount: input.amount, reason: input.reason,
       status: 'Active', isReward: true, awardedAt: new Date().toISOString(),
     });
-    return complete(p, 'rewarded', { sanction: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { sanction: id }) as StorageProgram<Result>;
   },
 };
 

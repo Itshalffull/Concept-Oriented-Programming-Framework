@@ -24,10 +24,10 @@ concept Branch [B] {
       -> ok(branch: B) {
         Branch created with head pointing at fromNode.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         Branch name already in use.
       }
-      -> unknownNode(message: String) {
+      -> ok(message: String) {
         fromNode not found in DAGHistory.
       }
 
@@ -39,13 +39,13 @@ concept Branch [B] {
       -> ok() {
         Branch head moved forward to newNode.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         Branch not found.
       }
-      -> protected(message: String) {
+      -> ok(message: String) {
         Branch is protected. Direct advance rejected.
       }
-      -> unknownNode(message: String) {
+      -> ok(message: String) {
         newNode not found in DAGHistory.
       }
 
@@ -57,10 +57,10 @@ concept Branch [B] {
       -> ok() {
         Branch removed.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         Branch not found.
       }
-      -> protected(message: String) {
+      -> ok(message: String) {
         Protected branch cannot be deleted.
       }
 
@@ -72,7 +72,7 @@ concept Branch [B] {
       -> ok() {
         Branch marked as protected.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         Branch not found.
       }
 
@@ -84,7 +84,7 @@ concept Branch [B] {
       -> ok() {
         Upstream tracking branch set.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         Branch or upstream not found.
       }
 
@@ -96,10 +96,10 @@ concept Branch [B] {
       -> ok(nodeId: String) {
         Returns the DAGHistory node where the two branches diverged.
       }
-      -> noDivergence(message: String) {
+      -> ok(message: String) {
         One is a direct ancestor of the other. No divergence point.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         b1 or b2 not found.
       }
 
@@ -111,7 +111,7 @@ concept Branch [B] {
       -> ok() {
         Branch archived. Remains queryable but excluded from active listings.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         Branch not found.
       }
 
@@ -127,7 +127,7 @@ concept Branch [B] {
 
   example "protect then advance": {
     after protect(branch: b) -> ok()
-    then advance(branch: b, newNode: _) -> protected(message: _)
+    then advance(branch: b, newNode: _) -> ok(message: _)
   }
 
 

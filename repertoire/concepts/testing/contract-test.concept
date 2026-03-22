@@ -39,7 +39,7 @@ concept ContractTest [P] {
         Language-independent — the same contract applies to
         every target implementation.
       }
-      -> specError(concept: String, message: String) {
+      -> ok(concept: String, message: String) {
         Spec couldn't be parsed or has no cross-target actions.
       }
 
@@ -59,10 +59,10 @@ concept ContractTest [P] {
         Contract verification failed. Returns per-action
         incompatibilities with what each side produced/expected.
       }
-      -> producerUnavailable(language: String, reason: String) {
+      -> ok(language: String, reason: String) {
         Producer artifact couldn't be loaded or started.
       }
-      -> consumerUnavailable(language: String, reason: String) {
+      -> ok(language: String, reason: String) {
         Consumer artifact couldn't be loaded or started.
       }
 
@@ -91,7 +91,7 @@ concept ContractTest [P] {
         safe — all contract pairs involving this language have
         been verified for the current spec version.
       }
-      -> unverified(missingPairs: list { counterpart: String, lastVerified: option DateTime }) {
+      -> ok(missingPairs: list { counterpart: String, lastVerified: option DateTime }) {
         Some contract pairs are unverified or stale.
         Deployment may be unsafe.
       }

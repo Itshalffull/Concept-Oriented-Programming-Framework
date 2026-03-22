@@ -88,8 +88,7 @@ describe('Relation functional handler', () => {
       if (typeof relationHandler.defineRelation !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(relationHandler.defineRelation({ relation: "parent-child", schema: "{\"forward_label\":\"parent of\",\"reverse_label\":\"child of\",\"cardinality\":\"one-to-many\"}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "duplicate_define" -> exists', async () => {
@@ -170,8 +169,7 @@ describe('Relation functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(relationHandler.link({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_relation" -> invalid', async () => {
@@ -246,8 +244,7 @@ describe('Relation functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(relationHandler.unlink({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_link" -> notfound', async () => {
@@ -322,8 +319,7 @@ describe('Relation functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(relationHandler.getRelated({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_relation_get" -> notfound', async () => {
@@ -356,15 +352,12 @@ describe('Relation functional handler', () => {
     it("defineRelation-then-getRelated", async () => {
       const storage = createInMemoryStorage();
       const defineRelationResult0 = await interpret(relationHandler.defineRelation({ relation: {"type":"variable","name":"r"}, schema: {"type":"literal","value":"parent-child"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(defineRelationResult0.variant), `step 0: expected success but got '${defineRelationResult0.variant}'`).toBe(false);
+      expect(defineRelationResult0.variant).toBe("ok");
       let relation = defineRelationResult0.output["relation"];
       const thenResult0 = await interpret(relationHandler.link({ relation: {"type":"variable","name":"r"}, source: {"type":"literal","value":"alice"}, target: {"type":"literal","value":"bob"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(relationHandler.getRelated({ relation: {"type":"variable","name":"r"}, entity: {"type":"literal","value":"alice"} }), storage);
-      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
+      expect(thenResult1.variant).toBe("ok");
     });
 
   });

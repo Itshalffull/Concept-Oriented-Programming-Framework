@@ -26,7 +26,7 @@ const _socialGraphVerificationHandler: FunctionalConceptHandler = {
       provider: 'SocialGraphVerification',
       instanceId: id,
     });
-    return complete(p, 'configured', { config: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { config: id }) as StorageProgram<Result>;
   },
 
   addVouch(input: Record<string, unknown>) {
@@ -49,7 +49,7 @@ const _socialGraphVerificationHandler: FunctionalConceptHandler = {
           candidate,
           vouchedAt: new Date().toISOString(),
         });
-        return complete(b2, 'vouched', { voucher, candidate });
+        return complete(b2, 'ok', { voucher, candidate });
       },
     );
 
@@ -65,7 +65,7 @@ const _socialGraphVerificationHandler: FunctionalConceptHandler = {
     p = branch(p, 'existing',
       (b) => {
         let b2 = del(b, 'sg_vouch', edgeKey);
-        return complete(b2, 'revoked', { voucher, candidate });
+        return complete(b2, 'ok', { voucher, candidate });
       },
       (b) => complete(b, 'not_found', { voucher, candidate }),
     );

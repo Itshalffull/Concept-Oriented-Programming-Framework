@@ -88,16 +88,14 @@ describe('Capture functional handler', () => {
       if (typeof captureHandler.clip !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(captureHandler.clip({ url: "https://example.com/article", mode: "web_article", metadata: "{}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "clip_bookmark" -> ok', async () => {
       if (typeof captureHandler.clip !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(captureHandler.clip({ url: "https://news.example.com/story/42", mode: "bookmark", metadata: "{\"tags\":[\"tech\"]}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "clip_empty_url" -> error', async () => {
@@ -171,8 +169,7 @@ describe('Capture functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(captureHandler.import({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "import_pdf" -> ok', async () => {
@@ -185,8 +182,7 @@ describe('Capture functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(captureHandler.import({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "import_empty" -> error', async () => {
@@ -261,8 +257,7 @@ describe('Capture functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_clip_article = await interpret(captureHandler.clip({ url: "https://example.com/article", mode: "web_article", metadata: "{}" }), storage);
       const result = await interpret(captureHandler.subscribe({ sourceId: afterResult_clip_article?.output?.["itemId"], schedule: "*/30 * * * *", mode: "api_poll" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "subscribe_rss" -> ok', async () => {
@@ -275,8 +270,7 @@ describe('Capture functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(captureHandler.subscribe({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "subscribe_bad_schedule" -> ok', async () => {
@@ -284,8 +278,7 @@ describe('Capture functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_clip_article = await interpret(captureHandler.clip({ url: "https://example.com/article", mode: "web_article", metadata: "{}" }), storage);
       const result = await interpret(captureHandler.subscribe({ sourceId: afterResult_clip_article?.output?.["itemId"], schedule: "invalid", mode: "api_poll" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -347,8 +340,7 @@ describe('Capture functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_clip_article = await interpret(captureHandler.clip({ url: "https://example.com/article", mode: "web_article", metadata: "{}" }), storage);
       const result = await interpret(captureHandler.detectChanges({ subscriptionId: afterResult_clip_article?.output?.["itemId"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "detect_missing" -> notfound', async () => {
@@ -418,8 +410,7 @@ describe('Capture functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_clip_article = await interpret(captureHandler.clip({ url: "https://example.com/article", mode: "web_article", metadata: "{}" }), storage);
       const result = await interpret(captureHandler.markReady({ itemId: afterResult_clip_article?.output?.["itemId"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "mark_missing" -> notfound', async () => {
@@ -452,24 +443,20 @@ describe('Capture functional handler', () => {
     it("clip-then-markReady", async () => {
       const storage = createInMemoryStorage();
       const clipResult0 = await interpret(captureHandler.clip({ url: {"type":"literal","value":"https://example.com/article"}, mode: {"type":"literal","value":"web_article"}, metadata: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(clipResult0.variant), `step 0: expected success but got '${clipResult0.variant}'`).toBe(false);
+      expect(clipResult0.variant).toBe("ok");
       let itemId = clipResult0.output["itemId"];
       let content = clipResult0.output["content"];
       const thenResult0 = await interpret(captureHandler.markReady({ itemId: {"type":"literal","value":"cap-1"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("subscribe-then-detectChanges", async () => {
       const storage = createInMemoryStorage();
       const subscribeResult0 = await interpret(captureHandler.subscribe({ sourceId: {"type":"literal","value":"src-1"}, schedule: {"type":"literal","value":"*/30 * * * *"}, mode: {"type":"literal","value":"api_poll"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(subscribeResult0.variant), `step 0: expected success but got '${subscribeResult0.variant}'`).toBe(false);
+      expect(subscribeResult0.variant).toBe("ok");
       let subscriptionId = subscribeResult0.output["subscriptionId"];
       const thenResult0 = await interpret(captureHandler.detectChanges({ subscriptionId: {"type":"literal","value":"sub-1"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

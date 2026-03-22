@@ -19,7 +19,7 @@ const _rageQuitHandler: FunctionalConceptHandler = {
       id, member: input.member, shares: input.shares, loot: input.loot,
       status: 'Initiated', initiatedAt: new Date().toISOString(),
     });
-    return complete(p, 'initiated', { exit: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { exit: id }) as StorageProgram<Result>;
   },
 
   calculateClaim(input: Record<string, unknown>) {
@@ -31,7 +31,7 @@ const _rageQuitHandler: FunctionalConceptHandler = {
       (b) => {
         const claims: Record<string, number> = {};
         let b2 = put(b, 'ragequit', exit as string, { claims, status: 'Calculated' });
-        return complete(b2, 'calculated', { exit, claims: JSON.stringify(claims) });
+        return complete(b2, 'ok', { exit, claims: JSON.stringify(claims) });
       },
       (b) => complete(b, 'not_found', { exit }),
     );

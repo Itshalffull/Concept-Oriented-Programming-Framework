@@ -40,7 +40,7 @@ concept PromptOptimizer [O] {
       -> ok(best_prompt: String, score: Float, iterations: Int) {
         Runs optimization loop. Records all candidates in history.
       }
-      -> budget_exceeded(best_so_far: String, score: Float) {
+      -> ok(best_so_far: String, score: Float) {
         Hit max_llm_calls before convergence.
       }
       -> error(message: String) {

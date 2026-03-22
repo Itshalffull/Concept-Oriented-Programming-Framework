@@ -20,7 +20,7 @@ const _guardHandler: FunctionalConceptHandler = {
       checkType: input.checkType, condition: input.condition,
       enabled: true, registeredAt: new Date().toISOString(),
     });
-    return complete(p, 'registered', { guard: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { guard: id }) as StorageProgram<Result>;
   },
 
   checkPre(input: Record<string, unknown>) {
@@ -50,7 +50,7 @@ const _guardHandler: FunctionalConceptHandler = {
         const rec = bindings.record as Record<string, unknown> | null;
         return !!rec && !!rec.enabled;
       },
-      (b) => complete(b, 'passed', { guard }),
+      (b) => complete(b, 'ok', { guard }),
       (b) => complete(b, 'guard_disabled', { guard }),
     );
 
@@ -69,7 +69,7 @@ const _guardHandler: FunctionalConceptHandler = {
           return { ...rec, enabled: true };
         }, 'updated');
         b2 = putFrom(b2, 'guard', guard as string, (bindings) => bindings.updated as Record<string, unknown>);
-        return complete(b2, 'enabled', { guard });
+        return complete(b2, 'ok', { guard });
       },
       (b) => complete(b, 'not_found', { guard }),
     );
@@ -89,7 +89,7 @@ const _guardHandler: FunctionalConceptHandler = {
           return { ...rec, enabled: false };
         }, 'updated');
         b2 = putFrom(b2, 'guard', guard as string, (bindings) => bindings.updated as Record<string, unknown>);
-        return complete(b2, 'disabled', { guard });
+        return complete(b2, 'ok', { guard });
       },
       (b) => complete(b, 'not_found', { guard }),
     );

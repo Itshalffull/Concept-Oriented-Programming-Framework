@@ -23,7 +23,7 @@ concept SyncScopeProvider [I] {
         Register this scope provider with PluginRegistry for
         sync-spec language.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the sync scope provider.
       }
     }

@@ -32,7 +32,7 @@ concept Symbol [S] {
         Kind is one of: function, class, type, variable, concept,
         action, variant, state-field, sync, config-key.
       }
-      -> alreadyExists(existing: S) {
+      -> ok(existing: S) {
         A symbol with this symbol string is already registered.
       }
 
@@ -48,7 +48,7 @@ concept Symbol [S] {
       -> notfound() {
         No symbol with this string exists.
       }
-      -> ambiguous(candidates: String) {
+      -> ok(candidates: String) {
         Multiple symbols match this string. Candidates
         returned as serialized JSON array of symbol strings.
       }
@@ -125,7 +125,7 @@ concept Symbol [S] {
 
     after register(symbolString: "clef/concept/Article", kind: "concept", displayName: "Article", definingFile: "specs/article.concept") -> ok(symbol: s)
 
-        then register(symbolString: "clef/concept/Article", kind: "concept", displayName: "Article", definingFile: "specs/article.concept") -> alreadyExists(existing: s)
+        then register(symbolString: "clef/concept/Article", kind: "concept", displayName: "Article", definingFile: "specs/article.concept") -> ok(existing: s)
 
   }
 

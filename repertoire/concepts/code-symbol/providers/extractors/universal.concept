@@ -23,7 +23,7 @@ concept UniversalTreeSitterExtractor [I] {
         Register this universal extractor as a fallback
         with PluginRegistry.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the Tree-sitter query engine.
       }
     }

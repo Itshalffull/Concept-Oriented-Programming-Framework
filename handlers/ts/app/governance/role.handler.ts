@@ -16,14 +16,14 @@ const _roleHandler: FunctionalConceptHandler = {
     const id = `role-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'role', id, { id, name: input.name, permissions: input.permissions, polity: input.polity });
-    return complete(p, 'created', { role: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { role: id }) as StorageProgram<Result>;
   },
 
   assign(input: Record<string, unknown>) {
     const { role, member, assignedBy } = input;
     let p = createProgram();
     p = put(p, 'assignment', `${role}:${member}`, { role, member, assignedBy, assignedAt: new Date().toISOString() });
-    return complete(p, 'assigned', { assignment: `${role}:${member}` }) as StorageProgram<Result>;
+    return complete(p, 'ok', { assignment: `${role}:${member}` }) as StorageProgram<Result>;
   },
 
   revoke(input: Record<string, unknown>) {
@@ -35,7 +35,7 @@ const _roleHandler: FunctionalConceptHandler = {
     p = branch(p, 'record',
       (b) => {
         let b2 = del(b, 'assignment', key);
-        return complete(b2, 'revoked', { role, member });
+        return complete(b2, 'ok', { role, member });
       },
       (b) => complete(b, 'not_assigned', { role, member }),
     );
@@ -60,7 +60,7 @@ const _roleHandler: FunctionalConceptHandler = {
     const { role } = input;
     let p = createProgram();
     p = del(p, 'role', role as string);
-    return complete(p, 'dissolved', { role }) as StorageProgram<Result>;
+    return complete(p, 'ok', { role }) as StorageProgram<Result>;
   },
 };
 

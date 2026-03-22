@@ -63,7 +63,7 @@ const _handler: FunctionalConceptHandler = {
           diffSummary: null,
           comparedAt: new Date().toISOString(),
         });
-        return complete(b2, 'new', { path: outputPath, contentHash: currentHash });
+        return complete(b2, 'ok', { path: outputPath, contentHash: currentHash });
       },
       (b) => {
         // Baseline exists — check if changed

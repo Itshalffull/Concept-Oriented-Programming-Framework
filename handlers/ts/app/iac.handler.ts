@@ -87,7 +87,7 @@ const _iacHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'resource', {}, 'allResources');
-    return complete(p, 'noDrift', {}) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return complete(p, 'ok', {}) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   teardown(input: Record<string, unknown>) {

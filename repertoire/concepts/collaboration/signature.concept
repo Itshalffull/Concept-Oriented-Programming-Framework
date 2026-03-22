@@ -28,10 +28,10 @@ concept Signature [G] {
       -> ok(signatureId: G) {
         Signature created with certificate and timestamp attached.
       }
-      -> unknownIdentity(message: String) {
+      -> ok(message: String) {
         Identity not in trusted signers set.
       }
-      -> hashNotFound(message: String) {
+      -> ok(message: String) {
         contentHash not found in ContentHash store.
       }
 
@@ -46,10 +46,10 @@ concept Signature [G] {
       -> invalid(message: String) {
         Signature does not match content hash.
       }
-      -> expired(message: String) {
+      -> ok(message: String) {
         Certificate has expired.
       }
-      -> untrustedSigner(signer: String) {
+      -> ok(signer: String) {
         Signer not in the trusted set.
       }
 
@@ -73,7 +73,7 @@ concept Signature [G] {
       -> ok() {
         Identity added to trusted signer set.
       }
-      -> alreadyTrusted(message: String) {
+      -> ok(message: String) {
         Already in the trusted set.
       }
 

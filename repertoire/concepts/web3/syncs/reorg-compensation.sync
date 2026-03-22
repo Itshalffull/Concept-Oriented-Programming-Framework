@@ -14,7 +14,7 @@
 sync ReorgCompensation [recommended]
 when {
   ChainMonitor/onBlock: [ chainId: ?chain ]
-    => reorg(chainId: ?chain; depth: ?depth; fromBlock: ?from)
+    => ok(chainId: ?chain; depth: ?depth; fromBlock: ?from)
 }
 then {
   ActionLog/append: [

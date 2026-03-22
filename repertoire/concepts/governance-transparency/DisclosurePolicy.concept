@@ -23,7 +23,7 @@ concept DisclosurePolicy [DP] {
 
   actions {
     action define(subject: String, audience: String, timing: String, scope: list String) {
-      -> defined(policy: DP) {
+      -> ok(policy: DP) {
         A new disclosure policy is created in Active status.
       }
 
@@ -45,10 +45,10 @@ concept DisclosurePolicy [DP] {
       -> disclose(details: String) {
         The requestor is entitled to see this information now.
       }
-      -> delayed(availableAt: DateTime) {
+      -> ok(availableAt: DateTime) {
         The information is subject to a delay period.
       }
-      -> restricted(reason: String) {
+      -> ok(reason: String) {
         The requestor is not authorized to access this information.
       }
 
@@ -65,7 +65,7 @@ concept DisclosurePolicy [DP] {
     }
 
     action suspend(policy: DP) {
-      -> suspended(policy: DP) {
+      -> ok(policy: DP) {
         The policy is temporarily deactivated.
       }
 
@@ -80,7 +80,7 @@ concept DisclosurePolicy [DP] {
 
   example "define-then-evaluate": {
 
-    after define(subject: _, audience: "public", timing: "Immediate", scope: _) -> defined(policy: dp)
+    after define(subject: _, audience: "public", timing: "Immediate", scope: _) -> ok(policy: dp)
 
         then evaluate(subject: _, requester: _) -> disclose(details: _)
 
@@ -107,7 +107,7 @@ concept DisclosurePolicy [DP] {
 
     requires: subject != ""
 
-    ensures defined: subject != none
+    ensures ok: subject != none
 
   }
 }

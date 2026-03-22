@@ -371,7 +371,7 @@ const _handler: FunctionalConceptHandler = {
             flowIds: JSON.stringify(prevFlowIds),
             lastExercised: now,
           });
-          return complete(sub, 'updated', { entry: id });
+          return complete(sub, 'ok', { entry: id });
         }, '_updateResults', { writes: ['runtime-coverage'], completionVariants: ['updated'] });
 
         return completeFrom(thenP, 'ok', (bindings) => {
@@ -391,7 +391,7 @@ const _handler: FunctionalConceptHandler = {
           flowIds: JSON.stringify([flowId]),
           lastExercised: now,
         });
-        return complete(elseP, 'created', { entry: id });
+        return complete(elseP, 'ok', { entry: id });
       },
     ) as StorageProgram<Result>;
   },

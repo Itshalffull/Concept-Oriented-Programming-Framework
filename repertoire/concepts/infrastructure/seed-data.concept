@@ -61,7 +61,7 @@ concept SeedData [S] {
         Marks the seed as applied with a timestamp. Entries that
         fail are logged but do not halt the remaining entries.
       }
-      -> already_applied(seed: S) {
+      -> ok(seed: S) {
         This seed set has already been applied.
       }
       -> notfound(message: String) {
@@ -146,7 +146,7 @@ concept SeedData [S] {
 
         then apply(seed: s)
 
-          -> already_applied(seed: s)
+          -> ok(seed: s)
 
   }
 

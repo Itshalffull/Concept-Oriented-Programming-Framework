@@ -166,7 +166,7 @@ export const themeEntityHandler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => (b.differences as unknown[]).length === 0,
-      complete(createProgram(), 'same', {}),
+      complete(createProgram(), 'ok', {}),
       completeFrom(createProgram(), 'ok', (b) => ({
         differences: JSON.stringify(b.differences),
       })),

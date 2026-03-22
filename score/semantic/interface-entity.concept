@@ -38,7 +38,7 @@ concept InterfaceEntity [I] {
         languages, concept overrides, and indexes all generated
         endpoints/commands/tools.
       }
-      -> alreadyRegistered(existing: I) {
+      -> ok(existing: I) {
         An interface with this name is already registered.
       }
       fixture register_conduit_api { name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }

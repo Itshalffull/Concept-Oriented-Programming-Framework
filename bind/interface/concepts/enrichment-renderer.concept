@@ -42,10 +42,10 @@ concept EnrichmentRenderer [R] {
       -> ok(handler: R) {
         Handler registered.
       }
-      -> unknownPattern(pattern: String) {
+      -> ok(pattern: String) {
         The named pattern does not exist.
       }
-      -> invalidTemplate(template: String, reason: String) {
+      -> ok(template: String, reason: String) {
         Template config is malformed JSON.
       }
 
@@ -92,10 +92,10 @@ concept EnrichmentRenderer [R] {
         unhandledKeys lists content keys that had no registered
         handler for this format — not an error, just transparency.
       }
-      -> invalidContent(reason: String) {
+      -> ok(reason: String) {
         Content string is not valid JSON.
       }
-      -> unknownFormat(format: String) {
+      -> ok(format: String) {
         No handlers registered for this format.
       }
 

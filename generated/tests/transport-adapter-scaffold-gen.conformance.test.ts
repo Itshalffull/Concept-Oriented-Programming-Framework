@@ -88,16 +88,14 @@ describe('TransportAdapterScaffoldGen functional handler', () => {
       if (typeof transportAdapterScaffoldGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(transportAdapterScaffoldGenHandler.generate({ name: "ApiTransport", protocol: "http" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "websocket_adapter" -> ok', async () => {
       if (typeof transportAdapterScaffoldGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(transportAdapterScaffoldGenHandler.generate({ name: "RealtimeTransport", protocol: "websocket" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_name" -> error', async () => {
@@ -171,8 +169,7 @@ describe('TransportAdapterScaffoldGen functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(transportAdapterScaffoldGenHandler.preview({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "preview_empty_name" -> error', async () => {
@@ -240,8 +237,7 @@ describe('TransportAdapterScaffoldGen functional handler', () => {
       if (typeof transportAdapterScaffoldGenHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(transportAdapterScaffoldGenHandler.register({  }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -266,8 +262,7 @@ describe('TransportAdapterScaffoldGen functional handler', () => {
     it("generate produces transport adapter files", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(transportAdapterScaffoldGenHandler.generate({ name: {"type":"literal","value":"ApiTransport"}, protocol: {"type":"literal","value":"http"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
+      expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
       let filesGenerated = generateResult0.output["filesGenerated"];
     });

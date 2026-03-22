@@ -27,7 +27,7 @@ concept StructuralPattern [P] {
         Create and optionally compile a structural pattern.
         Syntax can be tree-sitter-query, ast-grep, comby, or regex.
       }
-      -> invalidSyntax(message: String, position: Int) {
+      -> ok(message: String, position: Int) {
         The pattern source has a syntax error.
       }
       fixture create_ts_query { syntax: "tree-sitter-query", source: "(function_declaration) @fn", language: "typescript" }
@@ -39,10 +39,10 @@ concept StructuralPattern [P] {
         Run the pattern against a syntax tree. Returns matches
         as serialized JSON with byte ranges and captures.
       }
-      -> noMatches() {
+      -> ok() {
         The pattern found no matches in the tree.
       }
-      -> incompatibleLanguage(patternLang: String, treeLang: String) {
+      -> ok(patternLang: String, treeLang: String) {
         The pattern's language constraint doesn't match the tree's language.
       }
       fixture match_pattern { pattern: $create_ts_query.pattern, tree: $create_ts_query.pattern } after create_ts_query
@@ -54,7 +54,7 @@ concept StructuralPattern [P] {
         Search all project files matching the pattern.
         Results as serialized JSON with file paths and match ranges.
       }
-      -> noMatches() {
+      -> ok() {
         No matches found across the project.
       }
       fixture match_project { pattern: $create_ts_query.pattern } after create_ts_query

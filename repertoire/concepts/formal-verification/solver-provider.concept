@@ -44,7 +44,7 @@ concept SolverProvider [S] {
         Selects provider with matching language+kind and lowest priority
         number. Creates VerificationRun. Returns provider and run ref.
       }
-      -> no_provider(formal_language: String, kind: String) {
+      -> ok(formal_language: String, kind: String) {
         No registered provider supports this combination.
       }
 

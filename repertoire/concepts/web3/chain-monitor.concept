@@ -29,7 +29,7 @@ concept ChainMonitor [B] {
         proof accepted). Downstream syncs can safely proceed with
         cross-chain actions.
       }
-      -> reorged(txHash: String, depth: Int) {
+      -> ok(txHash: String, depth: Int) {
         Chain reorganization invalidated the transaction. The reorg depth
         indicates how many blocks were reverted. Triggers compensating
         sync chains (freeze, unlock, flag).
@@ -74,7 +74,7 @@ concept ChainMonitor [B] {
         New block received. Confirmation counts updated for all
         pending subscriptions on this chain.
       }
-      -> reorg(chainId: Int, depth: Int, fromBlock: Int) {
+      -> ok(chainId: Int, depth: Int, fromBlock: Int) {
         Reorg detected. Blocks from fromBlock onward are no longer
         canonical. All pending finality requests for affected transactions
         receive reorged completions.
@@ -99,7 +99,7 @@ concept ChainMonitor [B] {
   }
 
   example "awaitFinality then status": {
-    after awaitFinality(txHash: tx, level: "confirmations") -> reorged(txHash: tx, depth: 3)
+    after awaitFinality(txHash: tx, level: "confirmations") -> ok(txHash: tx, depth: 3)
     then status(txHash: tx) -> ok(chain: "ethereum", block: 100, confirmations: 0)
   }
 

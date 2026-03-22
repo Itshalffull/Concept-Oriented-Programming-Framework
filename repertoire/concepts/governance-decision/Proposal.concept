@@ -26,7 +26,7 @@ concept Proposal [P] {
 
   actions {
     action create(proposer: String, title: String, description: String, actions: list String) {
-      -> created(proposal: P) {
+      -> ok(proposal: P) {
         A new proposal is created in Pending status.
       }
       -> invalid(reason: String) {
@@ -38,10 +38,10 @@ concept Proposal [P] {
     }
 
     action sponsor(proposal: P, sponsorId: String) {
-      -> sponsored(proposal: P) {
+      -> ok(proposal: P) {
         The proposal moves to Sponsored status.
       }
-      -> not_pending(proposal: P) {
+      -> ok(proposal: P) {
         The proposal is not in Pending status.
       }
 
@@ -50,7 +50,7 @@ concept Proposal [P] {
     }
 
     action activate(proposal: P) {
-      -> activated(proposal: P) {
+      -> ok(proposal: P) {
         The proposal moves to Active status, indicating voting or
         decision-making has begun.
       }
@@ -60,11 +60,11 @@ concept Proposal [P] {
     }
 
     action advance(proposal: P, newStatus: String) {
-      -> advanced(proposal: P, status: String) {
+      -> ok(proposal: P, status: String) {
         The proposal moves to the specified status. Valid transitions
         are enforced.
       }
-      -> invalid_transition(proposal: P, from: String, to: String) {
+      -> ok(proposal: P, from: String, to: String) {
         The requested status transition is not valid.
       }
 
@@ -73,14 +73,14 @@ concept Proposal [P] {
     }
 
     action cancel(proposal: P, canceller: String) {
-      -> cancelled(proposal: P) {
+      -> ok(proposal: P) {
         The proposal is cancelled. Only the original proposer or
         authorized roles can cancel.
       }
       -> unauthorized(canceller: String) {
         The canceller does not have permission to cancel.
       }
-      -> not_cancellable(proposal: P) {
+      -> ok(proposal: P) {
         The proposal is in a terminal state and cannot be cancelled.
       }
 
@@ -91,13 +91,13 @@ concept Proposal [P] {
 
   example "create-then-advance": {
 
-    after create(proposer: _, title: _, description: _, actions: _) -> created(proposal: p)
+    after create(proposer: _, title: _, description: _, actions: _) -> ok(proposal: p)
 
-        then sponsor(proposal: p, sponsorId: _) -> sponsored(proposal: p)
+        then sponsor(proposal: p, sponsorId: _) -> ok(proposal: p)
 
-        and  activate(proposal: p) -> activated(proposal: p)
+        and  activate(proposal: p) -> ok(proposal: p)
 
-        and  advance(proposal: p, newStatus: "Passed") -> advanced(proposal: p, status: "Passed")
+        and  advance(proposal: p, newStatus: "Passed") -> ok(proposal: p, status: "Passed")
 
   }
 
@@ -122,7 +122,7 @@ concept Proposal [P] {
 
     requires: proposer != ""
 
-    ensures created: proposer != none
+    ensures ok: proposer != none
 
   }
 }

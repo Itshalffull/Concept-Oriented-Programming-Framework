@@ -38,7 +38,7 @@ concept StatusGate [G] {
         and dispatch the status to the configured provider. If provider is empty,
         uses the default_provider from config, falling back to "exit-code".
       }
-      -> provider_error(provider: String, message: String) {
+      -> ok(provider: String, message: String) {
         The provider failed to accept the status report. The gate entry is still
         created locally with status "error" so it can be retried.
       }
@@ -56,7 +56,7 @@ concept StatusGate [G] {
       -> not_found(gate: G) {
         No gate exists with this identifier.
       }
-      -> already_completed(gate: G) {
+      -> ok(gate: G) {
         The gate has already been marked complete and cannot be updated.
       }
 
@@ -73,7 +73,7 @@ concept StatusGate [G] {
       -> not_found(gate: G) {
         No gate exists with this identifier.
       }
-      -> already_completed(gate: G) {
+      -> ok(gate: G) {
         The gate was already completed previously.
       }
 
@@ -133,7 +133,7 @@ concept StatusGate [G] {
     after complete(gate: g, final_status: "passing", details: "done")
       -> ok(gate: g, accepted: true)
     then update(gate: g, status: "failing", details: "late failure")
-      -> already_completed(gate: g)
+      -> ok(gate: g)
   }
 
   always "gates have a target and context": {

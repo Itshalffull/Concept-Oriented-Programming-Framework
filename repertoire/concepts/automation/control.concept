@@ -20,7 +20,7 @@ concept Control [K] {
       -> ok() {
         Control created and bound to the specified data source.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         A control with this identity already exists.
       }
 

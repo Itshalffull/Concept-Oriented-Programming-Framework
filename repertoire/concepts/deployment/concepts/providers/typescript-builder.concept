@@ -40,10 +40,10 @@ concept TypeScriptBuilder [N] {
         "remote" -> send source to remote build endpoint
         "container" -> run build in Docker container
       }
-      -> typeError(errors: list { file: String, line: Int, message: String }) {
+      -> ok(errors: list { file: String, line: Int, message: String }) {
         tsc reported type errors.
       }
-      -> bundleError(reason: String) {
+      -> ok(reason: String) {
         Bundler (esbuild/webpack) failed.
       }
 
@@ -61,7 +61,7 @@ concept TypeScriptBuilder [N] {
         testType indicates which runner category was used
         (e.g., "unit", "e2e", "integration").
       }
-      -> testFailure(passed: Int, failed: Int, failures: list { test: String, message: String }, testType: String) {
+      -> ok(passed: Int, failed: Int, failures: list { test: String, message: String }, testType: String) {
         Some tests failed.
       }
 
@@ -77,7 +77,7 @@ concept TypeScriptBuilder [N] {
         "bundle" -> single-file bundle for deployment
         "docker" -> Dockerfile + built output
       }
-      -> formatUnsupported(format: String) {
+      -> ok(format: String) {
         Requested format not available.
       }
 

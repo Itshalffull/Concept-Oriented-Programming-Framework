@@ -33,7 +33,7 @@ concept LocalModelInstance [I] {
         The instance becomes addressable by name for runtime
         provider loading via sync wiring.
       }
-      -> exists(name: String) {
+      -> ok(name: String) {
         An instance with this name is already registered.
       }
 
@@ -74,7 +74,7 @@ concept LocalModelInstance [I] {
         path, and full configuration as a JSON string including
         tokenizer path, device, and dimension metadata.
       }
-      -> notFound(name: String) {
+      -> ok(name: String) {
         No instance is registered with this name.
       }
 

@@ -27,7 +27,7 @@ concept EntityReferenceDisplaySource [ERD] {
         Registers this provider with PluginRegistry under type
         "slot_source_provider" and name "entity_reference_display".
       }
-      -> already_registered() {
+      -> ok() {
         Provider is already registered with the PluginRegistry.
       }
     }
@@ -38,13 +38,13 @@ concept EntityReferenceDisplaySource [ERD] {
         Follows the reference field on the source entity, loads
         the target entity, and returns its display rendering.
       }
-      -> source_not_found(entity_id: String) {
+      -> ok(entity_id: String) {
         The source entity does not exist.
       }
-      -> reference_broken(entity_id: String, reference_field: String) {
+      -> ok(entity_id: String, reference_field: String) {
         The reference field points to an entity that no longer exists.
       }
-      -> invalid_display_mode(display_mode: String) {
+      -> ok(display_mode: String) {
         The requested display mode is not supported.
       }
       -> error(message: String) {

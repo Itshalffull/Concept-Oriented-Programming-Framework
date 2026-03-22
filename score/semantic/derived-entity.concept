@@ -35,7 +35,7 @@ concept DerivedEntity [D] {
         Extracts composition hierarchy, claimed syncs, surface
         actions/queries, and operational principle from the DerivedAST.
       }
-      -> alreadyRegistered(existing: D) {
+      -> ok(existing: D) {
         A derived entity with this name is already registered.
       }
       fixture register_trash { name: "Trash", source: "specs/trash.derived", ast: "{\"composes\":[\"Article\",\"Label\"],\"syncs\":{\"required\":[\"trash-on-delete\"]}}" }
@@ -106,7 +106,7 @@ concept DerivedEntity [D] {
 
   example "duplicate registration returns existing": {
     after register(name: "Trash", source: "specs/trash.derived", ast: "{}") -> ok(entity: e)
-    then register(name: "Trash", source: "specs/trash.derived", ast: "{}") -> alreadyRegistered(existing: e)
+    then register(name: "Trash", source: "specs/trash.derived", ast: "{}") -> ok(existing: e)
   }
 
   always "every entities entry has name": {

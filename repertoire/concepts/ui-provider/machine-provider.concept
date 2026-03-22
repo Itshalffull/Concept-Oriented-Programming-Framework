@@ -29,7 +29,7 @@ concept MachineProvider [P] {
         surface-provider/machine. Idempotent — returns existing
         instance if pluginRef already registered.
       }
-      -> configError(message: String) {
+      -> ok(message: String) {
         Configuration invalid.
       }
       fixture init_default { config: "{}" }
@@ -55,7 +55,7 @@ concept MachineProvider [P] {
         new state name.
       }
       -> invalid(message: String) { Event not handled in current state. }
-      -> guarded(machine: String, guard: String) { Guard blocked transition. }
+      -> ok(machine: String, guard: String) { Guard blocked transition. }
       fixture send_open { provider: $init_default.provider, machine: $init_default.provider, event: "OPEN" } after init_default
       fixture send_missing_machine { provider: "mp-1", machine: "nonexistent", event: "OPEN" } -> error
     }

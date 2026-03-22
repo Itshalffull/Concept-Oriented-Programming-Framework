@@ -6,7 +6,7 @@ sync CheckQuarantineOnFailure [eager]
   purpose { Don't block build for quarantined (flaky) tests. }
 when {
   Builder/test: [ concept: ?concept; language: ?lang ]
-    => testFailure(failures: ?failures)
+    => ok(failures: ?failures)
 }
 then {
   FlakyTest/isQuarantined: [ testId: ?failures.test ]

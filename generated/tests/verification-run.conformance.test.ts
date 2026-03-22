@@ -88,16 +88,14 @@ describe('VerificationRun functional handler', () => {
       if (typeof verificationRunHandler.start !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(verificationRunHandler.start({ target_symbol: "clef/concept/Password", properties: ["prop-1","prop-2"], solver: "z3", timeout_ms: "30000" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "auto_solver" -> ok', async () => {
       if (typeof verificationRunHandler.start !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(verificationRunHandler.start({ target_symbol: "clef/concept/Token", properties: ["invariant-1"], solver: "auto", timeout_ms: "60000" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_properties" -> invalid', async () => {
@@ -172,8 +170,7 @@ describe('VerificationRun functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(verificationRunHandler.complete({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_run" -> notfound', async () => {
@@ -254,8 +251,7 @@ describe('VerificationRun functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(verificationRunHandler.timeout({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_partial" -> ok', async () => {
@@ -268,8 +264,7 @@ describe('VerificationRun functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(verificationRunHandler.timeout({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -333,8 +328,7 @@ describe('VerificationRun functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(verificationRunHandler.cancel({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_cancel" -> notfound', async () => {
@@ -406,8 +400,7 @@ describe('VerificationRun functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_start?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(verificationRunHandler.get_status({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_status" -> notfound', async () => {
@@ -482,8 +475,7 @@ describe('VerificationRun functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(verificationRunHandler.compare({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_run_a" -> notfound', async () => {
@@ -516,12 +508,10 @@ describe('VerificationRun functional handler', () => {
     it("start-then-complete", async () => {
       const storage = createInMemoryStorage();
       const startResult0 = await interpret(verificationRunHandler.start({ target_symbol: {"type":"literal","value":"clef/concept/Password"}, properties: {"type":"list","items":[{"type":"literal","value":"p1"},{"type":"literal","value":"p2"}]}, solver: {"type":"literal","value":"z3"}, timeout_ms: {"type":"literal","value":10000} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(startResult0.variant), `step 0: expected success but got '${startResult0.variant}'`).toBe(false);
+      expect(startResult0.variant).toBe("ok");
       let run = startResult0.output["run"];
       const thenResult0 = await interpret(verificationRunHandler.complete({ run: {"type":"variable","name":"r"}, results: {"type":"variable","name":"res"}, resource_usage: {"type":"variable","name":"usage"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

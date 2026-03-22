@@ -22,7 +22,7 @@ concept Intent [I] {
       -> ok(intent: I) {
         Define the semantic intent for a target entity.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         An intent for this target already exists.
       }
 

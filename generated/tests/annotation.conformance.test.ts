@@ -88,16 +88,14 @@ describe('Annotation functional handler', () => {
       if (typeof annotationHandler.annotate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(annotationHandler.annotate({ concept: "ScoreApi", scope: "concept", metadata: "{\"tool-permissions\":[\"Read\",\"Bash\"],\"examples\":[\"score create MyScore\"]}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "annotate_action_level" -> ok', async () => {
       if (typeof annotationHandler.annotate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(annotationHandler.annotate({ concept: "ScoreApi", scope: "listConcepts", metadata: "{\"examples\":[\"score list\"]}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "annotate_invalid_metadata" -> error', async () => {
@@ -178,8 +176,7 @@ describe('Annotation functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(annotationHandler.resolve({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_unknown" -> error', async () => {
@@ -211,13 +208,11 @@ describe('Annotation functional handler', () => {
     it("annotate-then-resolve", async () => {
       const storage = createInMemoryStorage();
       const annotateResult0 = await interpret(annotationHandler.annotate({ concept: {"type":"literal","value":"SpecParser"}, scope: {"type":"literal","value":"concept"}, content: {"type":"literal","value":"{\"tool-permissions\":[\"Read\",\"Bash\"],\"custom-field\":\"anything\"}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(annotateResult0.variant), `step 0: expected success but got '${annotateResult0.variant}'`).toBe(false);
+      expect(annotateResult0.variant).toBe("ok");
       let annotation = annotateResult0.output["annotation"];
       let keyCount = annotateResult0.output["keyCount"];
       const thenResult0 = await interpret(annotationHandler.resolve({ concept: {"type":"literal","value":"SpecParser"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

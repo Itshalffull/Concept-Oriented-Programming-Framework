@@ -20,7 +20,7 @@ const _agenticDelegateHandler: FunctionalConceptHandler = {
       autonomyLevel: input.autonomyLevel, allowedActions: input.allowedActions,
       registeredAt: new Date().toISOString(), active: true,
     });
-    return complete(p, 'registered', { delegate: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { delegate: id }) as StorageProgram<Result>;
   },
 
   assumeRole(input: Record<string, unknown>) {
@@ -34,7 +34,7 @@ const _agenticDelegateHandler: FunctionalConceptHandler = {
           const record = bindings.record as Record<string, unknown>;
           return { ...record, currentRole: role };
         });
-        return complete(thenP, 'role_assumed', { delegate, role });
+        return complete(thenP, 'ok', { delegate, role });
       },
       (elseP) => complete(elseP, 'not_found', { delegate }),
     ) as StorageProgram<Result>;
@@ -51,7 +51,7 @@ const _agenticDelegateHandler: FunctionalConceptHandler = {
           const record = bindings.record as Record<string, unknown>;
           return { ...record, currentRole: null };
         });
-        return complete(thenP, 'role_released', { delegate });
+        return complete(thenP, 'ok', { delegate });
       },
       (elseP) => complete(elseP, 'not_found', { delegate }),
     ) as StorageProgram<Result>;
@@ -77,7 +77,7 @@ const _agenticDelegateHandler: FunctionalConceptHandler = {
 
   escalate(input: Record<string, unknown>) {
     const { delegate, action, reason } = input;
-    return complete(createProgram(), 'escalated', { delegate, action, reason }) as StorageProgram<Result>;
+    return complete(createProgram(), 'ok', { delegate, action, reason }) as StorageProgram<Result>;
   },
 
   updateAutonomy(input: Record<string, unknown>) {
@@ -91,7 +91,7 @@ const _agenticDelegateHandler: FunctionalConceptHandler = {
           const record = bindings.record as Record<string, unknown>;
           return { ...record, autonomyLevel };
         });
-        return complete(thenP, 'updated', { delegate });
+        return complete(thenP, 'ok', { delegate });
       },
       (elseP) => complete(elseP, 'not_found', { delegate }),
     ) as StorageProgram<Result>;

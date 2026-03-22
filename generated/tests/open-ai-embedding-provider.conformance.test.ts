@@ -160,12 +160,10 @@ describe('OpenAIEmbeddingProvider functional handler', () => {
     it("initialize-then-embed", async () => {
       const storage = createInMemoryStorage();
       const initializeResult0 = await interpret(openAIEmbeddingProviderHandler.initialize({ apiKey: {"type":"literal","value":"sk-test"}, apiModel: {"type":"literal","value":"text-embedding-3-small"}, dimensions: {"type":"literal","value":1536} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(initializeResult0.variant), `step 0: expected success but got '${initializeResult0.variant}'`).toBe(false);
+      expect(initializeResult0.variant).toBe("ok");
       let instance = initializeResult0.output["instance"];
       const thenResult0 = await interpret(openAIEmbeddingProviderHandler.embed({ text: {"type":"literal","value":"function add(a, b) { return a + b; }"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

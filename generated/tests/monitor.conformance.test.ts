@@ -94,8 +94,7 @@ describe('Monitor functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(monitorHandler.watch({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "watch_missing_subject" -> error', async () => {
@@ -169,8 +168,7 @@ describe('Monitor functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(monitorHandler.observe({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "observe_unknown_observer" -> violation', async () => {
@@ -245,8 +243,7 @@ describe('Monitor functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(monitorHandler.resolve({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_unknown_observer" -> error', async () => {
@@ -278,10 +275,10 @@ describe('Monitor functional handler', () => {
     it("watch-then-observe", async () => {
       const storage = createInMemoryStorage();
       const watchResult0 = await interpret(monitorHandler.watch({ subject: {"type":"variable","name":"_"}, policyRef: {"type":"variable","name":"_"} }), storage);
-      expect(watchResult0.variant).toBe("watching");
+      expect(watchResult0.variant).toBe("ok");
       let observer = watchResult0.output["observer"];
       const thenResult0 = await interpret(monitorHandler.observe({ observer: {"type":"variable","name":"mn"}, behavior: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("compliant");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

@@ -88,16 +88,14 @@ describe('WebhookEndpoint functional handler', () => {
       if (typeof webhookEndpointHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(webhookEndpointHandler.register({ name: "deploy-webhook", url: "https://hooks.example.com/deploy", headers: "{\"X-Secret\":\"s3cret\"}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_slack_hook" -> ok', async () => {
       if (typeof webhookEndpointHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(webhookEndpointHandler.register({ name: "slack-notify", url: "https://hooks.slack.com/services/T00/B00/xxx", headers: "{}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -164,8 +162,7 @@ describe('WebhookEndpoint functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(webhookEndpointHandler.resolve({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_unknown" -> notFound', async () => {
@@ -237,8 +234,7 @@ describe('WebhookEndpoint functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_deploy_hook?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(webhookEndpointHandler.list({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -248,12 +244,10 @@ describe('WebhookEndpoint functional handler', () => {
     it("resolve after register", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(webhookEndpointHandler.register({ name: {"type":"literal","value":"deploy-webhook"}, url: {"type":"literal","value":"https://hooks.example.com/deploy"}, headers: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let endpoint = registerResult0.output["endpoint"];
       const thenResult0 = await interpret(webhookEndpointHandler.resolve({ name: {"type":"literal","value":"deploy-webhook"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

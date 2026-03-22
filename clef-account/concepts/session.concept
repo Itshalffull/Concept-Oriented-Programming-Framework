@@ -29,7 +29,7 @@ concept Session [S] {
       -> ok(userId: String) {
         The session is active and not expired.
       }
-      -> expired() {
+      -> ok() {
         The session has passed its expiration time.
       }
       -> invalid() {
@@ -41,7 +41,7 @@ concept Session [S] {
       -> ok(expiresAt: String) {
         Extends the session expiration.
       }
-      -> expired() {
+      -> ok() {
         Cannot refresh an expired session.
       }
     }

@@ -88,16 +88,14 @@ describe('Layout functional handler', () => {
       if (typeof layoutHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(layoutHandler.create({ layout: "layout-1", name: "main-sidebar", kind: "sidebar" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "grid_layout" -> ok', async () => {
       if (typeof layoutHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(layoutHandler.create({ layout: "layout-2", name: "dashboard-grid", kind: "grid" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_kind" -> invalid', async () => {
@@ -166,8 +164,7 @@ describe('Layout functional handler', () => {
       if (typeof layoutHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(layoutHandler.configure({ layout: "layout-1", config: "{\"direction\":\"row\",\"gap\":\"space-4\",\"columns\":\"1fr 2fr\"}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_nonexistent" -> notfound', async () => {
@@ -242,8 +239,7 @@ describe('Layout functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(layoutHandler.nest({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "nest_missing_parent" -> cycle', async () => {
@@ -318,8 +314,7 @@ describe('Layout functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(layoutHandler.setResponsive({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "responsive_nonexistent" -> notfound', async () => {
@@ -394,8 +389,7 @@ describe('Layout functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(layoutHandler.remove({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "remove_nonexistent" -> notfound', async () => {
@@ -428,12 +422,10 @@ describe('Layout functional handler', () => {
     it("created layout can be configured and invalid kind is rejected", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(layoutHandler.create({ layout: {"type":"variable","name":"y"}, name: {"type":"literal","value":"main"}, kind: {"type":"literal","value":"sidebar"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
+      expect(createResult0.variant).toBe("ok");
       let layout = createResult0.output["layout"];
       const thenResult0 = await interpret(layoutHandler.configure({ layout: {"type":"variable","name":"y"}, config: {"type":"literal","value":"{ \"direction\": \"row\", \"gap\": \"space-4\" }"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(layoutHandler.create({ layout: {"type":"variable","name":"y2"}, name: {"type":"literal","value":"bad"}, kind: {"type":"literal","value":"nonexistent"} }), storage);
       expect(thenResult1.variant).toBe("invalid");
     });

@@ -32,7 +32,7 @@ concept FlowToken [K] {
         Transitions token from active to consumed. A consumed token has been
         processed by the step at its position.
       }
-      -> not_active(token: K) {
+      -> ok(token: K) {
         Token is not in active status.
       }
     }
@@ -42,7 +42,7 @@ concept FlowToken [K] {
         Transitions token from active to dead. Used for dead-path elimination
         when a cancellation region or discriminator pattern fires.
       }
-      -> not_active(token: K) {
+      -> ok(token: K) {
         Token is not in active status.
       }
     }

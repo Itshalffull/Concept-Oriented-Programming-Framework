@@ -36,7 +36,7 @@ concept Sanction [SN] {
 
   actions {
     action impose(subject: String, severity: String, consequence: String, reason: String) {
-      -> imposed(sanction: SN) {
+      -> ok(sanction: SN) {
         A sanction is recorded against the subject.
       }
 
@@ -55,10 +55,10 @@ concept Sanction [SN] {
     }
 
     action escalate(sanction: SN) {
-      -> escalated(sanction: SN, newSeverity: String) {
+      -> ok(sanction: SN, newSeverity: String) {
         The sanction severity is increased per the escalation schedule.
       }
-      -> max_severity(sanction: SN) {
+      -> ok(sanction: SN) {
         The sanction is already at maximum severity.
       }
 
@@ -71,7 +71,7 @@ concept Sanction [SN] {
     }
 
     action appeal(sanction: SN) {
-      -> appeal_opened(sanction: SN) {
+      -> ok(sanction: SN) {
         The sanction is marked as appealed. Resolution deferred to Dispute.
       }
 
@@ -84,7 +84,7 @@ concept Sanction [SN] {
     }
 
     action pardon(sanction: SN) {
-      -> pardoned(sanction: SN) {
+      -> ok(sanction: SN) {
         The sanction is cleared from the subject's record.
       }
 
@@ -97,7 +97,7 @@ concept Sanction [SN] {
     }
 
     action reward(subject: String, type: String, amount: Float, reason: String) {
-      -> rewarded(reward: SN) {
+      -> ok(reward: SN) {
         A positive reward is recorded for the subject.
       }
 
@@ -118,11 +118,11 @@ concept Sanction [SN] {
 
   example "impose-then-appeal": {
 
-    after impose(subject: _, severity: "Warning", consequence: _, reason: _) -> imposed(sanction: sn)
+    after impose(subject: _, severity: "Warning", consequence: _, reason: _) -> ok(sanction: sn)
 
-        then escalate(sanction: sn) -> escalated(sanction: sn, newSeverity: "Minor")
+        then escalate(sanction: sn) -> ok(sanction: sn, newSeverity: "Minor")
 
-        and  appeal(sanction: sn) -> appeal_opened(sanction: sn)
+        and  appeal(sanction: sn) -> ok(sanction: sn)
 
   }
 

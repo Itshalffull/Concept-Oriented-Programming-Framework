@@ -94,8 +94,7 @@ describe('IaC functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(iaCHandler.emit({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "emit_empty_plan" -> ok', async () => {
@@ -108,8 +107,7 @@ describe('IaC functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(iaCHandler.emit({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -176,8 +174,7 @@ describe('IaC functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(iaCHandler.preview({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "preview_empty" -> ok', async () => {
@@ -190,8 +187,7 @@ describe('IaC functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(iaCHandler.preview({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -253,8 +249,7 @@ describe('IaC functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_emit_pulumi = await interpret(iaCHandler.emit({ plan: "dp-001", provider: "pulumi" }), storage);
       const result = await interpret(iaCHandler.apply({ plan: afterResult_emit_pulumi?.output?.["output"], provider: "pulumi" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "apply_empty_plan" -> ok', async () => {
@@ -267,8 +262,7 @@ describe('IaC functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(iaCHandler.apply({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -335,8 +329,7 @@ describe('IaC functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(iaCHandler.detectDrift({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "detect_drift_empty" -> error', async () => {
@@ -405,8 +398,7 @@ describe('IaC functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_emit_pulumi = await interpret(iaCHandler.emit({ plan: "dp-001", provider: "pulumi" }), storage);
       const result = await interpret(iaCHandler.teardown({ plan: afterResult_emit_pulumi?.output?.["output"], provider: "pulumi" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "teardown_empty" -> ok', async () => {
@@ -419,8 +411,7 @@ describe('IaC functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(iaCHandler.teardown({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -445,13 +436,11 @@ describe('IaC functional handler', () => {
     it("emit-then-apply", async () => {
       const storage = createInMemoryStorage();
       const emitResult0 = await interpret(iaCHandler.emit({ plan: {"type":"literal","value":"dp-001"}, provider: {"type":"literal","value":"pulumi"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(emitResult0.variant), `step 0: expected success but got '${emitResult0.variant}'`).toBe(false);
+      expect(emitResult0.variant).toBe("ok");
       let output = emitResult0.output["output"];
       let fileCount = emitResult0.output["fileCount"];
       const thenResult0 = await interpret(iaCHandler.apply({ plan: {"type":"literal","value":"dp-001"}, provider: {"type":"literal","value":"pulumi"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

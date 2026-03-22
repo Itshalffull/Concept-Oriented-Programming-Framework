@@ -88,8 +88,7 @@ describe('BindRewriteProvider functional handler', () => {
       if (typeof bindRewriteProviderHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(bindRewriteProviderHandler.register({  }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -156,8 +155,7 @@ describe('BindRewriteProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(bindRewriteProviderHandler.apply({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_rewrites" -> ok', async () => {
@@ -170,8 +168,7 @@ describe('BindRewriteProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(bindRewriteProviderHandler.apply({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_program_json" -> error', async () => {
@@ -209,14 +206,12 @@ describe('BindRewriteProvider functional handler', () => {
     it("apply rewrites bind expressions and handles empty rewrites", async () => {
       const storage = createInMemoryStorage();
       const applyResult0 = await interpret(bindRewriteProviderHandler.apply({ program: {"type":"literal","value":"{\"instructions\":[{\"tag\":\"bind\",\"expr\":\"?variant\"}]}"}, spec: {"type":"literal","value":"{\"rewrites\":{\"?variant\":\"?custom\"}}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(applyResult0.variant), `step 0: expected success but got '${applyResult0.variant}'`).toBe(false);
+      expect(applyResult0.variant).toBe("ok");
       let result = applyResult0.output["result"];
       let transformed = applyResult0.output["transformed"];
       let appliedTransforms = applyResult0.output["appliedTransforms"];
       const thenResult0 = await interpret(bindRewriteProviderHandler.apply({ program: {"type":"literal","value":"{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}"}, spec: {"type":"literal","value":"{\"rewrites\":{}}"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

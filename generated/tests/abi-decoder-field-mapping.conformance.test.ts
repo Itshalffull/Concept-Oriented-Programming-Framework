@@ -88,8 +88,7 @@ describe('AbiDecoderFieldMapping functional handler', () => {
       if (typeof abiDecoderFieldMappingHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(abiDecoderFieldMappingHandler.apply({ data: "0x00000001", mapper: "abi-map-1", contract: "0xAbC123" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "apply_missing_mapper" -> notfound', async () => {
@@ -166,8 +165,7 @@ describe('AbiDecoderFieldMapping functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_apply_valid = await interpret(abiDecoderFieldMappingHandler.apply({ data: "0x00000001", mapper: "abi-map-1", contract: "0xAbC123" }), storage);
       const result = await interpret(abiDecoderFieldMappingHandler.reverse({ data: "{\"owner\":\"0xAbC123\",\"amount\":100}", mapper: afterResult_apply_valid?.output?.["mapped"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "reverse_missing_mapper" -> notfound', async () => {
@@ -255,8 +253,7 @@ describe('AbiDecoderFieldMapping functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(abiDecoderFieldMappingHandler.register({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_no_abi" -> invalid', async () => {
@@ -294,12 +291,10 @@ describe('AbiDecoderFieldMapping functional handler', () => {
     it("register-then-apply", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(abiDecoderFieldMappingHandler.register({ contract_abi: {"type":"literal","value":"{}"}, entity_schema: {"type":"literal","value":"Article"}, field_rules: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let mapper = registerResult0.output["mapper"];
       const thenResult0 = await interpret(abiDecoderFieldMappingHandler.apply({ data: {"type":"literal","value":"0x00"}, mapper: {"type":"variable","name":"m"}, contract: {"type":"literal","value":"0xabc"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("apply-then-reverse", async () => {

@@ -25,7 +25,7 @@ concept ContentDigest [H] {
         Compute a structural hash for the definition unit
         using the specified algorithm.
       }
-      -> unsupportedAlgorithm(algorithm: String) {
+      -> ok(algorithm: String) {
         The requested hashing algorithm is not supported.
       }
       fixture compute_sha { unit: "def-unit-1", algorithm: "structural-normalized" }

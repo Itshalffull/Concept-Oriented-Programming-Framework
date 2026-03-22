@@ -114,7 +114,7 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p,
       (bindings) => !bindings.eventA || !bindings.eventB,
-      (thenP) => complete(thenP, 'concurrent', {}),
+      (thenP) => complete(thenP, 'ok', {}),
       (elseP) => {
         return completeFrom(elseP, 'dynamic', (bindings) => {
           const eventA = bindings.eventA as Record<string, unknown>;

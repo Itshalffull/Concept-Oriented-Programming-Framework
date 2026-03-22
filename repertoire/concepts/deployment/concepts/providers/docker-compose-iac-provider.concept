@@ -44,7 +44,7 @@ concept DockerComposeIacProvider [I] {
       -> ok(composeFile: I, created: list String, updated: list String) {
         Docker Compose up completed successfully.
       }
-      -> portConflict(port: Int, existingService: String) {
+      -> ok(port: Int, existingService: String) {
         A port required by the compose file is already in use.
       }
 

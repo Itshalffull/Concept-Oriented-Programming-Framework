@@ -88,8 +88,7 @@ describe('OptimisticApproval functional handler', () => {
       if (typeof optimisticApprovalHandler.assert !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(optimisticApprovalHandler.assert({ asserter: "alice", payload: "Transfer 1000 tokens to treasury", bond: "100.0", challengePeriodHours: "48.0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "assert_zero_bond" -> error', async () => {
@@ -158,8 +157,7 @@ describe('OptimisticApproval functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_assert_valid = await interpret(optimisticApprovalHandler.assert({ asserter: "alice", payload: "Transfer 1000 tokens to treasury", bond: "100.0", challengePeriodHours: "48.0" }), storage);
       const result = await interpret(optimisticApprovalHandler.challenge({ assertion: afterResult_assert_valid?.output?.["id"], challenger: "bob", bond: "100.0", evidence: "Transaction exceeds approved limit" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "challenge_expired" -> error', async () => {
@@ -228,8 +226,7 @@ describe('OptimisticApproval functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_assert_valid = await interpret(optimisticApprovalHandler.assert({ asserter: "alice", payload: "Transfer 1000 tokens to treasury", bond: "100.0", challengePeriodHours: "48.0" }), storage);
       const result = await interpret(optimisticApprovalHandler.finalize({ assertion: afterResult_assert_valid?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "finalize_missing" -> error', async () => {
@@ -298,8 +295,7 @@ describe('OptimisticApproval functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_assert_valid = await interpret(optimisticApprovalHandler.assert({ asserter: "alice", payload: "Transfer 1000 tokens to treasury", bond: "100.0", challengePeriodHours: "48.0" }), storage);
       const result = await interpret(optimisticApprovalHandler.resolve({ assertion: afterResult_assert_valid?.output?.["id"], outcome: "approved" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_missing" -> error', async () => {
@@ -331,10 +327,10 @@ describe('OptimisticApproval functional handler', () => {
     it("assert-then-finalize", async () => {
       const storage = createInMemoryStorage();
       const assertResult0 = await interpret(optimisticApprovalHandler.assert({ asserter: {"type":"variable","name":"_"}, payload: {"type":"variable","name":"_"}, bond: {"type":"variable","name":"_"}, challengePeriodHours: {"type":"variable","name":"_"} }), storage);
-      expect(assertResult0.variant).toBe("asserted");
+      expect(assertResult0.variant).toBe("ok");
       let assertion = assertResult0.output["assertion"];
       const thenResult0 = await interpret(optimisticApprovalHandler.finalize({ assertion: {"type":"variable","name":"o"} }), storage);
-      expect(thenResult0.variant).toBe("approved");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });
@@ -421,7 +417,7 @@ describe('OptimisticApproval functional handler', () => {
       }
     });
 
-    it('assert ensures on asserted: ', async () => {
+    it('assert ensures on ok: ', async () => {
       if (typeof optimisticApprovalHandler.assert !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -433,7 +429,7 @@ describe('OptimisticApproval functional handler', () => {
               const program = optimisticApprovalHandler.assert(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "asserted") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

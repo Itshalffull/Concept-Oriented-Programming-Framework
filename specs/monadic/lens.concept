@@ -25,7 +25,7 @@ concept Lens [L] {
         focus on a field within that record). The kind is inferred from
         which segments are provided: relation-only, record, or field.
       }
-      -> exists() { A lens with this identifier has already been created. }
+      -> ok() { A lens with this identifier has already been created. }
 
       fixture create_field_lens {
         lens: "lens-user-email",
@@ -53,7 +53,7 @@ concept Lens [L] {
         storage relation (a set or map of records). This is the
         broadest focus — composing with at() or field() narrows it.
       }
-      -> exists() { A lens with this identifier has already been created. }
+      -> ok() { A lens with this identifier has already been created. }
 
       fixture from_users_relation {
         lens: "lens-users-rel",
@@ -121,7 +121,7 @@ concept Lens [L] {
     }
 
     action validate(lens: L, conceptSpec: String) {
-      -> valid(lens: L) {
+      -> ok(lens: L) {
         The lens path segments reference valid state declarations
         in the given concept specification. The relation exists,
         the key type is compatible, and the field is declared.
@@ -178,7 +178,7 @@ concept Lens [L] {
 
   example "validate against matching spec returns valid": {
     after create(lens: l, relation: "users", key: "u1", field: "email") -> ok(lens: l)
-    then validate(lens: l, conceptSpec: "User { state { users: set U; email: U -> String } }") -> valid(lens: l)
+    then validate(lens: l, conceptSpec: "User { state { users: set U; email: U -> String } }") -> ok(lens: l)
   }
 
   always "lenses have at least one segment": {

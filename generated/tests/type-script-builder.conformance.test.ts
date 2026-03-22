@@ -88,16 +88,14 @@ describe('TypeScriptBuilder functional handler', () => {
       if (typeof typeScriptBuilderHandler.build !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(typeScriptBuilderHandler.build({ source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: {"mode":"release"} }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "build_browser_debug" -> ok', async () => {
       if (typeof typeScriptBuilderHandler.build !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(typeScriptBuilderHandler.build({ source: "./generated/typescript/ui", toolchainPath: "/usr/local/bin/tsc", platform: "browser", config: {"mode":"debug","features":["tree-shaking"]} }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "build_missing_source" -> error', async () => {
@@ -166,8 +164,7 @@ describe('TypeScriptBuilder functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_build_node_release = await interpret(typeScriptBuilderHandler.build({ source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: {"mode":"release"} }), storage);
       const result = await interpret(typeScriptBuilderHandler.test({ build: afterResult_build_node_release?.output?.["build"], toolchainPath: "/usr/local/bin/tsc", testType: "unit" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "test_with_invocation" -> ok', async () => {
@@ -175,8 +172,7 @@ describe('TypeScriptBuilder functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_build_node_release = await interpret(typeScriptBuilderHandler.build({ source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: {"mode":"release"} }), storage);
       const result = await interpret(typeScriptBuilderHandler.test({ build: afterResult_build_node_release?.output?.["build"], toolchainPath: "/usr/local/bin/tsc", invocation: {"command":"npx vitest run","args":["--reporter=json"],"outputFormat":"vitest-json"}, testType: "unit" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "test_missing_build" -> error', async () => {
@@ -245,8 +241,7 @@ describe('TypeScriptBuilder functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_build_node_release = await interpret(typeScriptBuilderHandler.build({ source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: {"mode":"release"} }), storage);
       const result = await interpret(typeScriptBuilderHandler.package({ build: afterResult_build_node_release?.output?.["build"], format: "npm" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "package_bundle" -> ok', async () => {
@@ -254,8 +249,7 @@ describe('TypeScriptBuilder functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_build_node_release = await interpret(typeScriptBuilderHandler.build({ source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: {"mode":"release"} }), storage);
       const result = await interpret(typeScriptBuilderHandler.package({ build: afterResult_build_node_release?.output?.["build"], format: "bundle" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "package_invalid_format" -> error', async () => {
@@ -326,8 +320,7 @@ describe('TypeScriptBuilder functional handler', () => {
       const _pool = Object.assign({}, (afterResult_build_node_release?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(typeScriptBuilderHandler.register({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -352,14 +345,12 @@ describe('TypeScriptBuilder functional handler', () => {
     it("build-then-test", async () => {
       const storage = createInMemoryStorage();
       const buildResult0 = await interpret(typeScriptBuilderHandler.build({ source: {"type":"literal","value":"./generated/typescript/password"}, toolchainPath: {"type":"literal","value":"/usr/local/bin/tsc"}, platform: {"type":"literal","value":"node-20"}, config: {"type":"record","fields":[{"name":"mode","value":{"type":"literal","value":"release"}}]} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(buildResult0.variant), `step 0: expected success but got '${buildResult0.variant}'`).toBe(false);
+      expect(buildResult0.variant).toBe("ok");
       let build = buildResult0.output["build"];
       let artifactPath = buildResult0.output["artifactPath"];
       let artifactHash = buildResult0.output["artifactHash"];
       const thenResult0 = await interpret(typeScriptBuilderHandler.test({ build: {"type":"variable","name":"n"}, toolchainPath: {"type":"literal","value":"/usr/local/bin/tsc"}, invocation: {"type":"record","fields":[{"name":"command","value":{"type":"literal","value":"npx vitest run"}},{"name":"args","value":{"type":"list","items":[{"type":"literal","value":"--reporter=json"}]}},{"name":"outputFormat","value":{"type":"literal","value":"vitest-json"}},{"name":"configFile","value":{"type":"literal","value":"vitest.config.ts"}},{"name":"env","value":{"type":"variable","name":"null"}}]}, testType: {"type":"literal","value":"unit"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

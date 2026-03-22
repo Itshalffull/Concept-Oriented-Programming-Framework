@@ -35,11 +35,11 @@ concept ApiSurface [S] {
         Create shared entrypoint (router, schema, command root, etc.).
         Deduplicate shared types. Apply suite-level middleware.
       }
-      -> conflictingRoutes(target: String, conflicts: list String) {
+      -> ok(target: String, conflicts: list String) {
         Two concepts generate the same route, command, or tool name.
         Requires explicit disambiguation in interface manifest.
       }
-      -> cyclicDependency(target: String, cycle: list String) {
+      -> ok(target: String, cycle: list String) {
         Shared type resolution found a cycle.
       }
 

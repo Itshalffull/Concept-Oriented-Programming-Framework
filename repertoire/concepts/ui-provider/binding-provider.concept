@@ -31,7 +31,7 @@ concept BindingProvider [P, C] {
         surface-provider/binding. Idempotent — returns existing
         instance if pluginRef already registered.
       }
-      -> configError(message: String) {
+      -> ok(message: String) {
         Configuration invalid or missing required fields.
       }
       fixture init_default { config: "{}" }

@@ -28,7 +28,7 @@ concept LocalRuntime [L] {
       -> ok(process: L, pid: Int, endpoint: String) {
         Local process started on specified port.
       }
-      -> portInUse(port: Int, existingPid: Int) {
+      -> ok(port: Int, existingPid: Int) {
         Requested port is already in use.
       }
 

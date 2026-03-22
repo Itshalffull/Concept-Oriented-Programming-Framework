@@ -88,16 +88,14 @@ describe('ScopeGraph functional handler', () => {
       if (typeof scopeGraphHandler.build !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scopeGraphHandler.build({ file: "src/handlers/article.ts", tree: "{\"language\":\"typescript\",\"nodes\":[{\"type\":\"declaration\",\"name\":\"createArticle\",\"declKind\":\"function\"}]}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "build_empty_tree" -> ok', async () => {
       if (typeof scopeGraphHandler.build !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scopeGraphHandler.build({ file: "src/empty.ts", tree: "{}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "build_missing_file" -> error', async () => {
@@ -166,8 +164,7 @@ describe('ScopeGraph functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_build = await interpret(scopeGraphHandler.build({ file: "src/handlers/article.ts", tree: "{\"language\":\"typescript\",\"nodes\":[{\"type\":\"declaration\",\"name\":\"createArticle\",\"declKind\":\"function\"}]}" }), storage);
       const result = await interpret(scopeGraphHandler.resolveReference({ graph: afterResult_valid_build?.output?.["graph"], scope: afterResult_valid_build?.output?.["graph"], name: "createArticle" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_ref_unknown" -> error', async () => {
@@ -236,8 +233,7 @@ describe('ScopeGraph functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_build = await interpret(scopeGraphHandler.build({ file: "src/handlers/article.ts", tree: "{\"language\":\"typescript\",\"nodes\":[{\"type\":\"declaration\",\"name\":\"createArticle\",\"declKind\":\"function\"}]}" }), storage);
       const result = await interpret(scopeGraphHandler.visibleSymbols({ graph: afterResult_valid_build?.output?.["graph"], scope: afterResult_valid_build?.output?.["graph"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "visible_no_graph" -> ok', async () => {
@@ -245,8 +241,7 @@ describe('ScopeGraph functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_build = await interpret(scopeGraphHandler.build({ file: "src/handlers/article.ts", tree: "{\"language\":\"typescript\",\"nodes\":[{\"type\":\"declaration\",\"name\":\"createArticle\",\"declKind\":\"function\"}]}" }), storage);
       const result = await interpret(scopeGraphHandler.visibleSymbols({ graph: afterResult_valid_build?.output?.["graph"], scope: afterResult_valid_build?.output?.["graph"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -308,8 +303,7 @@ describe('ScopeGraph functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_build = await interpret(scopeGraphHandler.build({ file: "src/handlers/article.ts", tree: "{\"language\":\"typescript\",\"nodes\":[{\"type\":\"declaration\",\"name\":\"createArticle\",\"declKind\":\"function\"}]}" }), storage);
       const result = await interpret(scopeGraphHandler.resolveCrossFile({ graph: afterResult_valid_build?.output?.["graph"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "cross_file_no_graph" -> error', async () => {
@@ -378,8 +372,7 @@ describe('ScopeGraph functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_build = await interpret(scopeGraphHandler.build({ file: "src/handlers/article.ts", tree: "{\"language\":\"typescript\",\"nodes\":[{\"type\":\"declaration\",\"name\":\"createArticle\",\"declKind\":\"function\"}]}" }), storage);
       const result = await interpret(scopeGraphHandler.get({ graph: afterResult_valid_build?.output?.["graph"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_nonexistent" -> error', async () => {
@@ -411,12 +404,10 @@ describe('ScopeGraph functional handler', () => {
     it("build-then-get", async () => {
       const storage = createInMemoryStorage();
       const buildResult0 = await interpret(scopeGraphHandler.build({ file: {"type":"literal","value":"src/handler.ts"}, tree: {"type":"literal","value":"tree-123"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(buildResult0.variant), `step 0: expected success but got '${buildResult0.variant}'`).toBe(false);
+      expect(buildResult0.variant).toBe("ok");
       let graph = buildResult0.output["graph"];
       const thenResult0 = await interpret(scopeGraphHandler.get({ graph: {"type":"variable","name":"g"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

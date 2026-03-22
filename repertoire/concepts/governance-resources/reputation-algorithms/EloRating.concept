@@ -26,7 +26,7 @@ concept EloRating [EL] {
 
   actions {
     action configure(kFactor: Float, initialRating: Float, kFactorDecay: option String) {
-      -> configured(config: EL) {
+      -> ok(config: EL) {
         K-factor controls update magnitude. InitialRating for new
         participants. KFactorDecay optionally reduces K as games increase.
       }
@@ -36,7 +36,7 @@ concept EloRating [EL] {
     }
 
     action recordOutcome(config: EL, winner: String, loser: String) {
-      -> updated(winnerNewRating: Float, loserNewRating: Float, winnerDelta: Float, loserDelta: Float) {
+      -> ok(winnerNewRating: Float, loserNewRating: Float, winnerDelta: Float, loserDelta: Float) {
         Expected scores computed from rating difference. Actual outcome
         (1 for winner, 0 for loser) drives update:
         newRating = oldRating + K × (actual - expected).
@@ -47,7 +47,7 @@ concept EloRating [EL] {
     }
 
     action recordDraw(config: EL, participantA: String, participantB: String) {
-      -> updated(aNewRating: Float, bNewRating: Float) {
+      -> ok(aNewRating: Float, bNewRating: Float) {
         Both participants scored 0.5. Updates apply symmetrically.
       }
 
@@ -56,10 +56,10 @@ concept EloRating [EL] {
     }
 
     action getRating(config: EL, participant: String) {
-      -> rating(participant: String, value: Float, gamesPlayed: Int) {
+      -> ok(participant: String, value: Float, gamesPlayed: Int) {
         Returns current Elo rating.
       }
-      -> unrated(participant: String) {
+      -> ok(participant: String) {
         No rating exists. Would receive initialRating.
       }
 
@@ -70,9 +70,9 @@ concept EloRating [EL] {
 
   example "configure-then-recordOutcome": {
 
-    after configure(kFactor: 32.0, initialRating: 1500.0, kFactorDecay: _) -> configured(config: el)
+    after configure(kFactor: 32.0, initialRating: 1500.0, kFactorDecay: _) -> ok(config: el)
 
-        then recordOutcome(config: el, winner: w, loser: l) -> updated(winnerNewRating: _, loserNewRating: _, winnerDelta: _, loserDelta: _)
+        then recordOutcome(config: el, winner: w, loser: l) -> ok(winnerNewRating: _, loserNewRating: _, winnerDelta: _, loserDelta: _)
 
   }
 
@@ -97,7 +97,7 @@ concept EloRating [EL] {
 
     requires: kFactor != ""
 
-    ensures configured: kFactor != none
+    ensures ok: kFactor != none
 
   }
 }

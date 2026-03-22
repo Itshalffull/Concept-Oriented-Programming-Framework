@@ -88,8 +88,7 @@ describe('LanguageGrammar functional handler', () => {
       if (typeof languageGrammarHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(languageGrammarHandler.register({ name: "typescript", extensions: "[\".ts\",\".tsx\"]", parserWasmPath: "tree-sitter-typescript.wasm", nodeTypes: "{}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_empty_name" -> error', async () => {
@@ -163,8 +162,7 @@ describe('LanguageGrammar functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(languageGrammarHandler.resolve({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_unknown" -> error', async () => {
@@ -238,8 +236,7 @@ describe('LanguageGrammar functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(languageGrammarHandler.resolveByMime({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_mime_unknown" -> error', async () => {
@@ -308,8 +305,7 @@ describe('LanguageGrammar functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_typescript = await interpret(languageGrammarHandler.register({ name: "typescript", extensions: "[\".ts\",\".tsx\"]", parserWasmPath: "tree-sitter-typescript.wasm", nodeTypes: "{}" }), storage);
       const result = await interpret(languageGrammarHandler.get({ grammar: afterResult_register_typescript?.output?.["grammar"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_missing" -> error', async () => {
@@ -380,8 +376,7 @@ describe('LanguageGrammar functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_typescript?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(languageGrammarHandler.list({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -391,22 +386,19 @@ describe('LanguageGrammar functional handler', () => {
     it("register-then-resolve", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(languageGrammarHandler.register({ name: {"type":"literal","value":"typescript"}, extensions: {"type":"literal","value":"[\".ts\",\".tsx\"]"}, parserWasmPath: {"type":"literal","value":"tree-sitter-typescript.wasm"}, nodeTypes: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let grammar = registerResult0.output["grammar"];
       const thenResult0 = await interpret(languageGrammarHandler.resolve({ fileExtension: {"type":"literal","value":".ts"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("register-then-register", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(languageGrammarHandler.register({ name: {"type":"literal","value":"typescript"}, extensions: {"type":"literal","value":"[\".ts\"]"}, parserWasmPath: {"type":"literal","value":"ts.wasm"}, nodeTypes: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let grammar = registerResult0.output["grammar"];
       const thenResult0 = await interpret(languageGrammarHandler.register({ name: {"type":"literal","value":"typescript"}, extensions: {"type":"literal","value":"[\".ts\"]"}, parserWasmPath: {"type":"literal","value":"ts.wasm"}, nodeTypes: {"type":"literal","value":"{}"} }), storage);
-      expect(thenResult0.variant).toBe("alreadyRegistered");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

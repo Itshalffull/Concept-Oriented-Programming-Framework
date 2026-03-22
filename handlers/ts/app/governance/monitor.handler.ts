@@ -19,7 +19,7 @@ const _monitorHandler: FunctionalConceptHandler = {
       id, subject: input.subject, policyRef: input.policyRef,
       interval: input.interval, status: 'Active', startedAt: new Date().toISOString(),
     });
-    return complete(p, 'watching', { observer: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { observer: id }) as StorageProgram<Result>;
   },
 
   observe(input: Record<string, unknown>) {
@@ -28,7 +28,7 @@ const _monitorHandler: FunctionalConceptHandler = {
     p = get(p, 'monitor', observer as string, 'record');
 
     p = branch(p, 'record',
-      (b) => complete(b, 'compliant', { observer }),
+      (b) => complete(b, 'ok', { observer }),
       (b) => complete(b, 'not_found', { observer }),
     );
 
@@ -43,7 +43,7 @@ const _monitorHandler: FunctionalConceptHandler = {
     p = branch(p, 'record',
       (b) => {
         let b2 = put(b, 'monitor', observer as string, { lastOutcome: outcome, lastResolvedAt: new Date().toISOString() });
-        return complete(b2, 'resolved', { observer, outcome });
+        return complete(b2, 'ok', { observer, outcome });
       },
       (b) => complete(b, 'not_found', { observer }),
     );

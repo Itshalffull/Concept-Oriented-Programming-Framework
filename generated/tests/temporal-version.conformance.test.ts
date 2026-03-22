@@ -37,16 +37,14 @@ describe('TemporalVersion imperative handler', () => {
       if (typeof temporalVersionHandler.record !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await temporalVersionHandler.record({ contentHash: "sha256:abc123def456", validFrom: "2025-01-01T00:00:00Z", validTo: null, metadata: "{\"author\":\"alice\"}" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "record_empty_hash" -> ok', async () => {
       if (typeof temporalVersionHandler.record !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await temporalVersionHandler.record({ contentHash: "", validFrom: null, validTo: null, metadata: "" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -71,8 +69,7 @@ describe('TemporalVersion imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await temporalVersionHandler.asOf({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "query_both_times" -> ok', async () => {
@@ -85,8 +82,7 @@ describe('TemporalVersion imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await temporalVersionHandler.asOf({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "query_far_future" -> error', async () => {
@@ -118,8 +114,7 @@ describe('TemporalVersion imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await temporalVersionHandler.between({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "between_invalid_dim" -> error', async () => {
@@ -148,8 +143,7 @@ describe('TemporalVersion imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_record_version?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await temporalVersionHandler.current({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -169,8 +163,7 @@ describe('TemporalVersion imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_record_version = await temporalVersionHandler.record({ contentHash: "sha256:abc123def456", validFrom: "2025-01-01T00:00:00Z", validTo: null, metadata: "{\"author\":\"alice\"}" }, storage);
       const result = await temporalVersionHandler.supersede({ versionId: afterResult_record_version?.output?.["versionId"], contentHash: "sha256:newcontent789" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "supersede_empty_hash" -> error', async () => {
@@ -198,23 +191,19 @@ describe('TemporalVersion imperative handler', () => {
     it("record then asOf", async () => {
       const storage = createInMemoryStorage();
       const recordResult0 = await temporalVersionHandler.record({ contentHash: {"type":"variable","name":"h"}, validFrom: {"type":"variable","name":"vf"}, validTo: {"type":"variable","name":"_"}, metadata: {"type":"variable","name":"_"} }, storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(recordResult0.variant), `step 0: expected success but got '${recordResult0.variant}'`).toBe(false);
+      expect(recordResult0.variant).toBe("ok");
       let versionId = recordResult0.output["versionId"];
       const thenResult0 = await temporalVersionHandler.asOf({ systemTime: {"type":"variable","name":"_"}, validTime: {"type":"variable","name":"vf"} }, storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("record then current", async () => {
       const storage = createInMemoryStorage();
       const recordResult0 = await temporalVersionHandler.record({ contentHash: {"type":"variable","name":"h"}, validFrom: {"type":"variable","name":"_"}, validTo: {"type":"variable","name":"_"}, metadata: {"type":"variable","name":"_"} }, storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(recordResult0.variant), `step 0: expected success but got '${recordResult0.variant}'`).toBe(false);
+      expect(recordResult0.variant).toBe("ok");
       let versionId = recordResult0.output["versionId"];
       const thenResult0 = await temporalVersionHandler.current({  }, storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

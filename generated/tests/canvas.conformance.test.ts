@@ -37,16 +37,14 @@ describe('Canvas imperative handler', () => {
       if (typeof canvasHandler.addNode !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await canvasHandler.addNode({ canvas: "board-1", node: "card-a", x: "100", y: "200" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "add_to_new_canvas" -> ok', async () => {
       if (typeof canvasHandler.addNode !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await canvasHandler.addNode({ canvas: "board-2", node: "card-b", x: "0", y: "0" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -66,8 +64,7 @@ describe('Canvas imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_add = await canvasHandler.addNode({ canvas: "board-1", node: "card-a", x: "100", y: "200" }, storage);
       const result = await canvasHandler.moveNode({ canvas: afterResult_valid_add?.output?.["id"], node: "card-a", x: "300", y: "400" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "move_missing_canvas" -> notfound', async () => {
@@ -95,8 +92,7 @@ describe('Canvas imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_add = await canvasHandler.addNode({ canvas: "board-1", node: "card-a", x: "100", y: "200" }, storage);
       const result = await canvasHandler.groupNodes({ canvas: afterResult_valid_add?.output?.["id"], nodes: "[\"card-a\",\"card-b\"]", group: afterResult_valid_add?.output?.["id"] }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "group_missing_canvas" -> notfound', async () => {
@@ -124,8 +120,7 @@ describe('Canvas imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_add = await canvasHandler.addNode({ canvas: "board-1", node: "card-a", x: "100", y: "200" }, storage);
       const result = await canvasHandler.removeItem({ canvas: afterResult_valid_add?.output?.["id"], node: "card-a" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "remove_missing" -> notfound', async () => {
@@ -153,8 +148,7 @@ describe('Canvas imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_add = await canvasHandler.addNode({ canvas: "board-1", node: "card-a", x: "100", y: "200" }, storage);
       const result = await canvasHandler.resizeItem({ canvas: afterResult_valid_add?.output?.["id"], node: "card-a", width: "200", height: "150" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resize_missing" -> notfound', async () => {
@@ -183,11 +177,9 @@ describe('Canvas imperative handler', () => {
     it("addNode-then-moveNode", async () => {
       const storage = createInMemoryStorage();
       const addNodeResult0 = await canvasHandler.addNode({ canvas: {"type":"variable","name":"v"}, node: {"type":"literal","value":"a"}, x: {"type":"literal","value":0}, y: {"type":"literal","value":0} }, storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(addNodeResult0.variant), `step 0: expected success but got '${addNodeResult0.variant}'`).toBe(false);
+      expect(addNodeResult0.variant).toBe("ok");
       const thenResult0 = await canvasHandler.moveNode({ canvas: {"type":"variable","name":"v"}, node: {"type":"literal","value":"a"}, x: {"type":"literal","value":100}, y: {"type":"literal","value":200} }, storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

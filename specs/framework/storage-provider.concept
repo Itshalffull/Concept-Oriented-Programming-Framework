@@ -24,10 +24,10 @@ concept StorageProvider [S] {
         Create a new storage backend of the given type, returning
         connection credentials the concept needs to connect.
       }
-      -> alreadyProvisioned(store: S, credentials: String) {
+      -> ok(store: S, credentials: String) {
         A store with this name already exists; return its existing credentials.
       }
-      -> provisionFailed(store: S, reason: String) {
+      -> ok(store: S, reason: String) {
         The storage backend could not be created, e.g. quota exceeded,
         invalid configuration, or provider API error.
       }

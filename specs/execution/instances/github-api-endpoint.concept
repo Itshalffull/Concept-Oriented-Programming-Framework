@@ -29,7 +29,7 @@ concept GitHubApiEndpoint [G] {
         https://api.github.com. The endpoint becomes addressable
         by name for HttpProvider instance configuration via sync.
       }
-      -> exists(name: String) {
+      -> ok(name: String) {
         An endpoint with this name is already registered.
       }
 
@@ -57,7 +57,7 @@ concept GitHubApiEndpoint [G] {
         Look up the named endpoint and return its base URL,
         repository path, and pre-built authorization headers.
       }
-      -> notFound(name: String) {
+      -> ok(name: String) {
         No endpoint is registered with this name.
       }
 

@@ -27,7 +27,7 @@ concept MyersDiff [C] {
       -> ok(editScript: Bytes, distance: Int) {
         Myers edit script and edit distance.
       }
-      -> unsupportedContent(message: String) {
+      -> ok(message: String) {
         Content type not supported by this provider.
       }
 

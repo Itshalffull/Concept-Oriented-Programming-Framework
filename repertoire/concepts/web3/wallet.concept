@@ -80,7 +80,7 @@ concept Wallet [W] {
       -> ok(address: String, nonce: Int) {
         Returns the current nonce for replay protection.
       }
-      -> notFound(address: String) {
+      -> ok(address: String) {
         No nonce record for this address. First interaction.
       }
 

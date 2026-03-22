@@ -28,7 +28,7 @@ const _peerAllocationHandler: FunctionalConceptHandler = {
       provider: 'PeerAllocation',
       instanceId: id,
     });
-    return complete(p, 'opened', { round: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { round: id }) as StorageProgram<Result>;
   },
 
   allocate(input: Record<string, unknown>) {

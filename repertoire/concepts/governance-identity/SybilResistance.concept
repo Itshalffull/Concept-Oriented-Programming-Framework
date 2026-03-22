@@ -24,14 +24,14 @@ concept SybilResistance [S] {
 
   actions {
     action verify(candidate: String, method: String, evidence: String) {
-      -> verified(id: S) {
+      -> ok(id: S) {
         The candidate is verified as unique via the specified method.
         Added to the verified set.
       }
       -> rejected(candidate: String, reason: String) {
         Verification failed. Candidate not added.
       }
-      -> already_verified(candidate: String) {
+      -> ok(candidate: String) {
         Candidate is already in the verified set.
       }
 
@@ -40,10 +40,10 @@ concept SybilResistance [S] {
     }
 
     action challenge(targetId: S, challenger: String, evidence: String) {
-      -> challenge_opened(challengeId: S) {
+      -> ok(challengeId: S) {
         A challenge is opened against the target's uniqueness claim.
       }
-      -> invalid_target(targetId: S) {
+      -> ok(targetId: S) {
         The target is not in the verified set.
       }
 
@@ -52,10 +52,10 @@ concept SybilResistance [S] {
     }
 
     action resolveChallenge(challengeId: S, outcome: String) {
-      -> upheld(challengeId: S, removedId: S) {
+      -> ok(challengeId: S, removedId: S) {
         The challenge is upheld; the target is removed from the verified set.
       }
-      -> overturned(challengeId: S) {
+      -> ok(challengeId: S) {
         The challenge is overturned; the target remains verified.
       }
       -> not_found(challengeId: S) {
@@ -69,11 +69,11 @@ concept SybilResistance [S] {
 
   example "verify-then-resolveChallenge": {
 
-    after verify(candidate: c, method: _, evidence: _) -> verified(id: s)
+    after verify(candidate: c, method: _, evidence: _) -> ok(id: s)
 
-        then challenge(targetId: s, challenger: _, evidence: _) -> challenge_opened(challengeId: ch)
+        then challenge(targetId: s, challenger: _, evidence: _) -> ok(challengeId: ch)
 
-        and  resolveChallenge(challengeId: ch, outcome: "upheld") -> upheld(challengeId: ch, removedId: s)
+        and  resolveChallenge(challengeId: ch, outcome: "upheld") -> ok(challengeId: ch, removedId: s)
 
   }
 

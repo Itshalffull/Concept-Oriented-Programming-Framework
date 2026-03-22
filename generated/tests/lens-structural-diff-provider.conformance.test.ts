@@ -88,24 +88,21 @@ describe('LensStructuralDiffProvider functional handler', () => {
       if (typeof lensStructuralDiffProviderHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(lensStructuralDiffProviderHandler.analyze({ oldSchema: "[{\"name\":\"email\",\"type\":\"String\"}]", newSchema: "[{\"name\":\"emailAddress\",\"type\":\"String\"}]" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "identical_schemas" -> ok', async () => {
       if (typeof lensStructuralDiffProviderHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(lensStructuralDiffProviderHandler.analyze({ oldSchema: "[{\"name\":\"email\",\"type\":\"String\"}]", newSchema: "[{\"name\":\"email\",\"type\":\"String\"}]" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "added_field" -> ok', async () => {
       if (typeof lensStructuralDiffProviderHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(lensStructuralDiffProviderHandler.analyze({ oldSchema: "[{\"name\":\"name\",\"type\":\"String\"}]", newSchema: "[{\"name\":\"name\",\"type\":\"String\"},{\"name\":\"age\",\"type\":\"Int\"}]" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_schema" -> error', async () => {
@@ -137,8 +134,7 @@ describe('LensStructuralDiffProvider functional handler', () => {
     it("renamed field produces diff operations", async () => {
       const storage = createInMemoryStorage();
       const analyzeResult0 = await interpret(lensStructuralDiffProviderHandler.analyze({ oldSchema: {"type":"literal","value":"[{\"name\":\"email\",\"type\":\"String\"}]"}, newSchema: {"type":"literal","value":"[{\"name\":\"emailAddress\",\"type\":\"String\"}]"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(analyzeResult0.variant), `step 0: expected success but got '${analyzeResult0.variant}'`).toBe(false);
+      expect(analyzeResult0.variant).toBe("ok");
       let result = analyzeResult0.output["result"];
       let operations = analyzeResult0.output["operations"];
       let editScript = analyzeResult0.output["editScript"];

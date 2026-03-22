@@ -26,7 +26,7 @@ const _pageRankReputationHandler: FunctionalConceptHandler = {
       provider: 'PageRankReputation',
       instanceId: id,
     });
-    return complete(p, 'configured', { config: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { config: id }) as StorageProgram<Result>;
   },
 
   addContribution(input: Record<string, unknown>) {
@@ -36,7 +36,7 @@ const _pageRankReputationHandler: FunctionalConceptHandler = {
     p = put(p, 'pr_edge', edgeKey, {
       config, from, to, weight: weight ?? 1,
     });
-    return complete(p, 'added', { edge: `${from}:${to}` }) as StorageProgram<Result>;
+    return complete(p, 'ok', { edge: `${from}:${to}` }) as StorageProgram<Result>;
   },
 
   compute(input: Record<string, unknown>) {

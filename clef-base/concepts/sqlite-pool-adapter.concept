@@ -35,10 +35,10 @@ concept SqlitePoolAdapter [C] {
         WAL mode if requested, sets PRAGMA settings for performance,
         and verifies the database is accessible.
       }
-      -> connection_failed(path: String, reason: String) {
+      -> ok(path: String, reason: String) {
         Could not open or create the SQLite database at the given path.
       }
-      -> already_connected(connection: C) {
+      -> ok(connection: C) {
         A connection is already established for this database path.
       }
     }
@@ -48,10 +48,10 @@ concept SqlitePoolAdapter [C] {
         Executes a parameterized SQL query against the database and
         returns the result rows serialized as JSON strings.
       }
-      -> not_connected(reason: String) {
+      -> ok(reason: String) {
         No active database connection exists.
       }
-      -> query_error(sql: String, reason: String) {
+      -> ok(sql: String, reason: String) {
         The query failed. Returns the SQL statement and error detail.
       }
     }
@@ -62,10 +62,10 @@ concept SqlitePoolAdapter [C] {
         Upserts a record into the specified table. If the key exists
         the row is updated; otherwise a new row is inserted.
       }
-      -> not_connected(reason: String) {
+      -> ok(reason: String) {
         No active database connection exists.
       }
-      -> write_error(table: String, key: String, reason: String) {
+      -> ok(table: String, key: String, reason: String) {
         The write operation failed.
       }
     }
@@ -77,10 +77,10 @@ concept SqlitePoolAdapter [C] {
       -> not_found(table: String, key: String) {
         No record exists for the given key.
       }
-      -> not_connected(reason: String) {
+      -> ok(reason: String) {
         No active database connection exists.
       }
-      -> delete_error(table: String, key: String, reason: String) {
+      -> ok(table: String, key: String, reason: String) {
         The delete operation failed.
       }
     }
@@ -91,14 +91,14 @@ concept SqlitePoolAdapter [C] {
         executing each within a transaction. Records the new version
         in the migrations table.
       }
-      -> not_connected(reason: String) {
+      -> ok(reason: String) {
         No active database connection exists.
       }
-      -> migration_failed(at_version: Int, reason: String) {
+      -> ok(at_version: Int, reason: String) {
         A migration step failed. All changes from this step are rolled
         back. The database remains at the last successfully applied version.
       }
-      -> already_at_version(current_version: Int) {
+      -> ok(current_version: Int) {
         The database is already at or beyond the target version.
       }
     }
@@ -108,7 +108,7 @@ concept SqlitePoolAdapter [C] {
         Registers this adapter with PluginRegistry under type
         "content_storage_provider" and name "sqlite".
       }
-      -> already_registered() {
+      -> ok() {
         Provider is already registered with the PluginRegistry.
       }
     }

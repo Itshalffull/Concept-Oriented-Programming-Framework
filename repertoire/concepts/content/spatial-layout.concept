@@ -27,7 +27,7 @@ concept SpatialLayout [L] {
         Dispatches the layout algorithm to the registered provider,
         which computes and applies positions for all items on the canvas.
       }
-      -> unknown_algorithm(message: String) {
+      -> ok(message: String) {
         No provider is registered for the requested algorithm.
       }
 
@@ -39,7 +39,7 @@ concept SpatialLayout [L] {
       -> ok() {
         Registers a layout provider for the given algorithm name.
       }
-      -> already_registered(message: String) {
+      -> ok(message: String) {
         A provider is already registered for this algorithm.
       }
 

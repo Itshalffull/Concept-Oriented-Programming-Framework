@@ -88,8 +88,7 @@ describe('ContentDigest functional handler', () => {
       if (typeof contentDigestHandler.compute !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(contentDigestHandler.compute({ unit: "def-unit-1", algorithm: "structural-normalized" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "compute_empty_unit" -> error', async () => {
@@ -163,8 +162,7 @@ describe('ContentDigest functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(contentDigestHandler.lookup({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "lookup_empty" -> error', async () => {
@@ -233,8 +231,7 @@ describe('ContentDigest functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_compute_sha = await interpret(contentDigestHandler.compute({ unit: "def-unit-1", algorithm: "structural-normalized" }), storage);
       const result = await interpret(contentDigestHandler.equivalent({ a: afterResult_compute_sha?.output?.["digest"], b: afterResult_compute_sha?.output?.["digest"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "equiv_empty" -> error', async () => {
@@ -266,12 +263,10 @@ describe('ContentDigest functional handler', () => {
     it("compute-then-lookup", async () => {
       const storage = createInMemoryStorage();
       const computeResult0 = await interpret(contentDigestHandler.compute({ unit: {"type":"literal","value":"u1"}, algorithm: {"type":"literal","value":"structural-normalized"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(computeResult0.variant), `step 0: expected success but got '${computeResult0.variant}'`).toBe(false);
+      expect(computeResult0.variant).toBe("ok");
       let digest = computeResult0.output["digest"];
       const thenResult0 = await interpret(contentDigestHandler.lookup({ hash: {"type":"literal","value":"h"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

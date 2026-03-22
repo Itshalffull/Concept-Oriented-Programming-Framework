@@ -44,10 +44,10 @@ concept ProjectInit [J] {
         Create a new project initialization record and set
         status to pending.
       }
-      -> already_exists(message: String) {
+      -> ok(message: String) {
         A project already exists at the given path.
       }
-      -> invalid_path(message: String) {
+      -> ok(message: String) {
         The project path is not valid or not writable.
       }
 

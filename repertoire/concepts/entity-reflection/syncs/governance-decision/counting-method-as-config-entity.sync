@@ -6,7 +6,7 @@ sync CountingMethodAsConfigEntity [eager]
   purpose { Persist counting method registrations as queryable config entities. }
 when {
   CountingMethod/register: [ name: ?name; provider: ?provider; parameters: ?parameters ]
-    => registered(method: ?method)
+    => ok(method: ?method)
 }
 then {
   ContentStorage/save: [ record: ?method; data: ?parameters ]
@@ -17,7 +17,7 @@ sync CountingMethodTagBundle [eager]
   purpose { Tag counting methods with their bundle type. }
 when {
   CountingMethod/register: [ name: ?name; provider: ?provider; parameters: ?parameters ]
-    => registered(method: ?method)
+    => ok(method: ?method)
 }
 then {
   Property/set: [ entity: ?method; key: "config_bundle"; value: "counting_method" ]

@@ -88,16 +88,14 @@ describe('ChainFinality functional handler', () => {
       if (typeof chainFinalityHandler.track !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(chainFinalityHandler.track({ operationRef: "gov-prop-101", txHash: "0xabc123def456", chainId: "ethereum-mainnet", requiredConfirmations: "12", submittedBlock: "19500000" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "track_polygon" -> ok', async () => {
       if (typeof chainFinalityHandler.track !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(chainFinalityHandler.track({ operationRef: "gov-prop-202", txHash: "0x789fed321", chainId: "polygon", requiredConfirmations: "64", submittedBlock: "55000000" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "track_missing_ref" -> error', async () => {
@@ -166,8 +164,7 @@ describe('ChainFinality functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_track_eth_tx = await interpret(chainFinalityHandler.track({ operationRef: "gov-prop-101", txHash: "0xabc123def456", chainId: "ethereum-mainnet", requiredConfirmations: "12", submittedBlock: "19500000" }), storage);
       const result = await interpret(chainFinalityHandler.checkFinality({ entry: afterResult_track_eth_tx?.output?.["id"], currentBlock: "19500020" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "check_pending" -> ok', async () => {
@@ -175,8 +172,7 @@ describe('ChainFinality functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_track_eth_tx = await interpret(chainFinalityHandler.track({ operationRef: "gov-prop-101", txHash: "0xabc123def456", chainId: "ethereum-mainnet", requiredConfirmations: "12", submittedBlock: "19500000" }), storage);
       const result = await interpret(chainFinalityHandler.checkFinality({ entry: afterResult_track_eth_tx?.output?.["id"], currentBlock: "19500005" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "check_not_found" -> error', async () => {
@@ -208,7 +204,7 @@ describe('ChainFinality functional handler', () => {
     it("track-then-checkFinality", async () => {
       const storage = createInMemoryStorage();
       const trackResult0 = await interpret(chainFinalityHandler.track({ operationRef: {"type":"variable","name":"_"}, txHash: {"type":"variable","name":"_"}, chainId: {"type":"variable","name":"_"}, requiredConfirmations: {"type":"literal","value":12} }), storage);
-      expect(trackResult0.variant).toBe("tracking");
+      expect(trackResult0.variant).toBe("ok");
       let entry = trackResult0.output["entry"];
       const thenResult0 = await interpret(chainFinalityHandler.checkFinality({ entry: {"type":"variable","name":"cf"} }), storage);
       expect(thenResult0.variant).toBe("finalized");

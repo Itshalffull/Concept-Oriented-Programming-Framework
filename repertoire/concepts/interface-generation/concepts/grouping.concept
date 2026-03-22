@@ -30,10 +30,10 @@ concept Grouping [G] {
         Structural: per-concept, per-suite, single, custom.
         Behavioral: by-crud, by-intent, by-event, by-mcp-type.
       }
-      -> invalidStrategy(strategy: String) {
+      -> ok(strategy: String) {
         The config references an unknown grouping strategy.
       }
-      -> emptyInput() {
+      -> ok() {
         No items were provided to group.
       }
 

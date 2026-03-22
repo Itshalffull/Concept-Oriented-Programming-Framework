@@ -88,16 +88,14 @@ describe('Tag functional handler', () => {
       if (typeof tagHandler.addTag !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(tagHandler.addTag({ entity: "page-42", tag: "important" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "add_tag_empty_entity" -> ok', async () => {
       if (typeof tagHandler.addTag !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(tagHandler.addTag({ entity: "", tag: "label" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -159,8 +157,7 @@ describe('Tag functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_add_tag_to_page = await interpret(tagHandler.addTag({ entity: "page-42", tag: "important" }), storage);
       const result = await interpret(tagHandler.removeTag({ entity: afterResult_add_tag_to_page?.output?.["id"], tag: "important" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "remove_nonexistent_tag" -> error', async () => {
@@ -234,8 +231,7 @@ describe('Tag functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(tagHandler.getByTag({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_by_empty_tag" -> ok', async () => {
@@ -248,8 +244,7 @@ describe('Tag functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(tagHandler.getByTag({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -316,8 +311,7 @@ describe('Tag functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(tagHandler.getChildren({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_children_missing_tag" -> error', async () => {
@@ -391,8 +385,7 @@ describe('Tag functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(tagHandler.rename({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "rename_missing_tag" -> error', async () => {
@@ -424,11 +417,9 @@ describe('Tag functional handler', () => {
     it("addTag-then-getByTag", async () => {
       const storage = createInMemoryStorage();
       const addTagResult0 = await interpret(tagHandler.addTag({ entity: {"type":"literal","value":"page-1"}, tag: {"type":"variable","name":"t"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(addTagResult0.variant), `step 0: expected success but got '${addTagResult0.variant}'`).toBe(false);
+      expect(addTagResult0.variant).toBe("ok");
       const thenResult0 = await interpret(tagHandler.getByTag({ tag: {"type":"variable","name":"t"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

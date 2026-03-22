@@ -19,7 +19,7 @@ const _convictionHandler: FunctionalConceptHandler = {
       id, proposalRef: input.proposalRef, threshold: input.threshold,
       halfLifeDays: input.halfLifeDays, totalStaked: 0, stakes: [], status: 'Active',
     });
-    return complete(p, 'registered', { proposal: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { proposal: id }) as StorageProgram<Result>;
   },
 
   stake(input: Record<string, unknown>) {

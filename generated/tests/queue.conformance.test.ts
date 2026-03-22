@@ -94,8 +94,7 @@ describe('Queue functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(queueHandler.enqueue({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "enqueue_empty_queue" -> notfound', async () => {
@@ -170,8 +169,7 @@ describe('Queue functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(queueHandler.claim({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "claim_from_empty_queue" -> empty', async () => {
@@ -246,8 +244,7 @@ describe('Queue functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(queueHandler.process({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "process_missing_item" -> notfound', async () => {
@@ -322,8 +319,7 @@ describe('Queue functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(queueHandler.release({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "release_missing_item" -> notfound', async () => {
@@ -398,8 +394,7 @@ describe('Queue functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(queueHandler.delete({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "delete_missing_item" -> notfound', async () => {
@@ -432,15 +427,12 @@ describe('Queue functional handler', () => {
     it("enqueue-then-process", async () => {
       const storage = createInMemoryStorage();
       const enqueueResult0 = await interpret(queueHandler.enqueue({ queue: {"type":"variable","name":"q"}, item: {"type":"literal","value":"send_email"}, priority: {"type":"literal","value":1} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(enqueueResult0.variant), `step 0: expected success but got '${enqueueResult0.variant}'`).toBe(false);
+      expect(enqueueResult0.variant).toBe("ok");
       let itemId = enqueueResult0.output["itemId"];
       const thenResult0 = await interpret(queueHandler.claim({ queue: {"type":"variable","name":"q"}, worker: {"type":"literal","value":"worker-a"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(queueHandler.process({ queue: {"type":"variable","name":"q"}, itemId: {"type":"literal","value":"item-1"}, result: {"type":"literal","value":"sent"} }), storage);
-      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
+      expect(thenResult1.variant).toBe("ok");
     });
 
   });

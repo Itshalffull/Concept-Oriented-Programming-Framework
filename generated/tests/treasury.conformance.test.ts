@@ -88,8 +88,7 @@ describe('Treasury functional handler', () => {
       if (typeof treasuryHandler.deposit !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(treasuryHandler.deposit({ vault: "dao-treasury", token: "ETH", amount: "100.0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "deposit_zero" -> error', async () => {
@@ -163,8 +162,7 @@ describe('Treasury functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(treasuryHandler.withdraw({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "withdraw_too_much" -> error', async () => {
@@ -238,8 +236,7 @@ describe('Treasury functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(treasuryHandler.allocate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "allocate_empty_purpose" -> error', async () => {
@@ -308,8 +305,7 @@ describe('Treasury functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_deposit_eth = await interpret(treasuryHandler.deposit({ vault: "dao-treasury", token: "ETH", amount: "100.0" }), storage);
       const result = await interpret(treasuryHandler.releaseAllocation({ allocation: afterResult_deposit_eth?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "release_nonexistent" -> error', async () => {
@@ -341,11 +337,11 @@ describe('Treasury functional handler', () => {
     it("deposit-then-withdraw", async () => {
       const storage = createInMemoryStorage();
       const depositResult0 = await interpret(treasuryHandler.deposit({ vault: {"type":"variable","name":"v"}, token: {"type":"variable","name":"t"}, amount: {"type":"literal","value":100} }), storage);
-      expect(depositResult0.variant).toBe("deposited");
+      expect(depositResult0.variant).toBe("ok");
       let vault = depositResult0.output["vault"];
       let newBalance = depositResult0.output["newBalance"];
       const thenResult0 = await interpret(treasuryHandler.withdraw({ vault: {"type":"variable","name":"v"}, token: {"type":"variable","name":"t"}, amount: {"type":"literal","value":50} }), storage);
-      expect(thenResult0.variant).toBe("withdrawn");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

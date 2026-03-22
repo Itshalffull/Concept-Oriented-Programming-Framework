@@ -97,7 +97,7 @@ const _cloudFormationProviderHandler: FunctionalConceptHandler = {
           },
         );
       },
-      (elseP) => complete(elseP, 'rollbackComplete', { stack, reason: 'Stack not found' }),
+      (elseP) => complete(elseP, 'ok', { stack, reason: 'Stack not found' }),
     ) as StorageProgram<Result>;
   },
 

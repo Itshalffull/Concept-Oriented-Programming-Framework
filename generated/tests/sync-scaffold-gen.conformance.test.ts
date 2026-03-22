@@ -88,16 +88,14 @@ describe('SyncScaffoldGen functional handler', () => {
       if (typeof syncScaffoldGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(syncScaffoldGenHandler.generate({ name: "OnUserCreate", trigger: {"concept":"User","action":"create"}, conditions: [], effects: [{"concept":"Notification","action":"send","params":[{"field":"userId","value":"?userId"}]}], thenBlocks: [] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "minimal_sync" -> ok', async () => {
       if (typeof syncScaffoldGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(syncScaffoldGenHandler.generate({ name: "SimpleSync", trigger: {"concept":"Order","action":"place"}, conditions: [], effects: [], thenBlocks: [] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -164,8 +162,7 @@ describe('SyncScaffoldGen functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(syncScaffoldGenHandler.preview({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -229,8 +226,7 @@ describe('SyncScaffoldGen functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_sync?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(syncScaffoldGenHandler.register({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -255,8 +251,7 @@ describe('SyncScaffoldGen functional handler', () => {
     it("generate produces sync file", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(syncScaffoldGenHandler.generate({ name: {"type":"literal","value":"OnUserCreate"}, trigger: {"type":"record","fields":[{"name":"concept","value":{"type":"literal","value":"User"}},{"name":"action","value":{"type":"literal","value":"create"}}]}, conditions: {"type":"list","items":[]}, effects: {"type":"list","items":[{"type":"record","fields":[{"name":"concept","value":{"type":"literal","value":"Notification"}},{"name":"action","value":{"type":"literal","value":"send"}}]}]}, thenBlocks: {"type":"list","items":[]} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
+      expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
       let filesGenerated = generateResult0.output["filesGenerated"];
     });

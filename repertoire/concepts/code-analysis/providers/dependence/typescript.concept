@@ -23,7 +23,7 @@ concept TypeScriptDependenceProvider [I] {
         Register this provider with PluginRegistry for
         TypeScript dependence analysis.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the TypeScript dependence provider.
       }
     }

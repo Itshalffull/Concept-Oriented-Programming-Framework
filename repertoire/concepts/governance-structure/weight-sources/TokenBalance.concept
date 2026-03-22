@@ -25,7 +25,7 @@ concept TokenBalance [TB] {
 
   actions {
     action configure(tokenContract: String, snapshotBlock: option String) {
-      -> configured(config: TB) {
+      -> ok(config: TB) {
         A token balance weight source is configured for the given token contract.
       }
 
@@ -34,7 +34,7 @@ concept TokenBalance [TB] {
     }
 
     action takeSnapshot(config: TB, blockRef: String) {
-      -> snapped(snapshot: TB, participantCount: Int) {
+      -> ok(snapshot: TB, participantCount: Int) {
         All token balances are cached at the given block reference.
       }
 
@@ -43,7 +43,7 @@ concept TokenBalance [TB] {
     }
 
     action setBalance(config: TB, participant: String, balance: Float) {
-      -> updated(participant: String, balance: Float) {
+      -> ok(participant: String, balance: Float) {
         Sets the participant's token balance for the given config.
       }
 
@@ -52,7 +52,7 @@ concept TokenBalance [TB] {
     }
 
     action getBalance(config: TB, participant: String, snapshot: option TB) {
-      -> balance(participant: String, balance: Float) {
+      -> ok(participant: String, balance: Float) {
         Returns the participant's token balance (from snapshot if specified,
         live if not).
       }
@@ -67,11 +67,11 @@ concept TokenBalance [TB] {
 
   example "configure-then-getBalance": {
 
-    after configure(tokenContract: "0xGOV") -> configured(config: tb)
+    after configure(tokenContract: "0xGOV") -> ok(config: tb)
 
-        and setBalance(config: tb, participant: p, balance: 500.0) -> updated(participant: p, balance: 500.0)
+        and setBalance(config: tb, participant: p, balance: 500.0) -> ok(participant: p, balance: 500.0)
 
-        then getBalance(config: tb, participant: p) -> balance(participant: p, balance: 500.0)
+        then getBalance(config: tb, participant: p) -> ok(participant: p, balance: 500.0)
 
   }
 
@@ -96,7 +96,7 @@ concept TokenBalance [TB] {
 
     requires: tokenContract != ""
 
-    ensures configured: tokenContract != none
+    ensures ok: tokenContract != none
 
   }
 }

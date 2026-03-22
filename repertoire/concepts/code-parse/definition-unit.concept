@@ -30,7 +30,7 @@ concept DefinitionUnit [D] {
         Extract a definition-level node from a syntax tree at
         the given byte range.
       }
-      -> notADefinition(nodeType: String) {
+      -> ok(nodeType: String) {
         The node at this range is not a definition-level construct.
       }
       fixture extract_function { tree: "tree-1", startByte: 0, endByte: 100 }
@@ -61,7 +61,7 @@ concept DefinitionUnit [D] {
       -> ok(changes: String) {
         Structural diff between two definitions as serialized JSON.
       }
-      -> same() {
+      -> ok() {
         The two definitions are structurally identical.
       }
       fixture diff_units { a: "def-unit-1", b: "def-unit-2" }

@@ -20,7 +20,7 @@ concept ExposedFilter [F] {
         Register a new exposed filter bound to the given
         field, operator, and default value for UI presentation.
       }
-      -> exists(filter: F) {
+      -> ok(filter: F) {
         A filter with this identifier is already exposed.
       }
 

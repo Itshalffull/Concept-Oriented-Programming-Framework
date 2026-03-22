@@ -37,7 +37,7 @@ concept ThemeImplementationEntity [I] {
         implements. Platform is one of: css, react-native, dtcg-json,
         scss, tailwind, android-xml, ios-swift.
       }
-      -> alreadyRegistered(existing: I) {
+      -> ok(existing: I) {
         An implementation for this theme and platform already exists.
       }
 
@@ -109,7 +109,7 @@ concept ThemeImplementationEntity [I] {
         to find drift — missing tokens, stale values, etc.
         Result as serialized JSON array of { token, specValue, implValue }.
       }
-      -> inSync() {
+      -> ok() {
         Implementation matches the theme spec exactly.
       }
 
@@ -126,7 +126,7 @@ concept ThemeImplementationEntity [I] {
 
   example "duplicate registration returns existing": {
     after register(theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}") -> ok(impl: i)
-    then register(theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}") -> alreadyRegistered(existing: i)
+    then register(theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}") -> ok(existing: i)
   }
 
   always "every implementations entry has theme": {

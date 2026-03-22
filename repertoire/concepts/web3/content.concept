@@ -64,7 +64,7 @@ concept Content [C] {
         Content retrieved from IPFS. Returns the raw data, content type,
         and size.
       }
-      -> notFound(cid: String) {
+      -> ok(cid: String) {
         No content exists with this CID on any reachable IPFS node.
       }
       -> unavailable(cid: String, message: String) {

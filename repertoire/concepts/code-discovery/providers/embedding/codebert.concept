@@ -26,7 +26,7 @@ concept CodeBERTEmbeddingProvider [I] {
         Store provider config and mark ready. Default dimensions
         is 128. CodeBERT runs locally with deterministic output.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Initialization failed due to invalid configuration.
       }
     }
@@ -39,7 +39,7 @@ concept CodeBERTEmbeddingProvider [I] {
       -> error(message: String) {
         Embedding generation failed unexpectedly.
       }
-      -> notReady(message: String) {
+      -> ok(message: String) {
         Provider has not been initialized yet.
       }
     }

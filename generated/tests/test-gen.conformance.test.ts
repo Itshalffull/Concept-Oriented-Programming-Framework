@@ -88,16 +88,14 @@ describe('TestGen functional handler', () => {
       if (typeof testGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "generate_rust" -> ok', async () => {
       if (typeof testGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(testGenHandler.generate({ concept_ref: "clef/concept/Auth", language: "rust", invariant_version: "v2" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_language" -> invalid', async () => {
@@ -180,8 +178,7 @@ describe('TestGen functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(testGenHandler.buildTestPlan({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "build_plan_missing_ref" -> invalid', async () => {
@@ -262,8 +259,7 @@ describe('TestGen functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(testGenHandler.regenerate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "regenerate_missing" -> ok', async () => {
@@ -276,8 +272,7 @@ describe('TestGen functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(testGenHandler.regenerate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -341,8 +336,7 @@ describe('TestGen functional handler', () => {
       const _pool = Object.assign({}, (afterResult_generate_typescript?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(testGenHandler.list({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "list_by_concept" -> ok', async () => {
@@ -355,8 +349,7 @@ describe('TestGen functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(testGenHandler.list({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -423,8 +416,7 @@ describe('TestGen functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(testGenHandler.configure({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_fuzz" -> ok', async () => {
@@ -437,8 +429,7 @@ describe('TestGen functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(testGenHandler.configure({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -505,8 +496,7 @@ describe('TestGen functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(testGenHandler.coverage({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "coverage_missing" -> ok', async () => {
@@ -519,8 +509,7 @@ describe('TestGen functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(testGenHandler.coverage({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -545,22 +534,19 @@ describe('TestGen functional handler', () => {
     it("generate produces strategies for all constructs", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(testGenHandler.generate({ concept_ref: {"type":"literal","value":"clef/concept/Password"}, language: {"type":"literal","value":"typescript"}, invariant_version: {"type":"literal","value":"v1"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
+      expect(generateResult0.variant).toBe("ok");
       let generation = generateResult0.output["generation"];
       let generated_files = generateResult0.output["generated_files"];
       let provider_used = generateResult0.output["provider_used"];
       let strategies = generateResult0.output["strategies"];
       const thenResult0 = await interpret(testGenHandler.list({ concept_ref: {"type":"literal","value":"clef/concept/Password"}, language: {"type":"literal","value":"typescript"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("buildTestPlan returns structured plan", async () => {
       const storage = createInMemoryStorage();
       const buildTestPlanResult0 = await interpret(testGenHandler.buildTestPlan({ concept_ref: {"type":"literal","value":"clef/concept/User"}, concept_data: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(buildTestPlanResult0.variant), `step 0: expected success but got '${buildTestPlanResult0.variant}'`).toBe(false);
+      expect(buildTestPlanResult0.variant).toBe("ok");
       let test_plan = buildTestPlanResult0.output["test_plan"];
       let provider = buildTestPlanResult0.output["provider"];
       let language = buildTestPlanResult0.output["language"];

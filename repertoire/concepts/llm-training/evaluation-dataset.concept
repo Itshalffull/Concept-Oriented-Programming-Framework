@@ -70,7 +70,7 @@ concept EvaluationDataset [V] {
         drift_magnitude is the absolute score difference.
         Lists examples that degraded most.
       }
-      -> no_baseline(message: String) {
+      -> ok(message: String) {
         No drift baseline set. Call setBaseline first.
       }
     }
@@ -101,7 +101,7 @@ concept EvaluationDataset [V] {
             count: Int) {
         Filters dataset by tags. Returns subset for focused evaluation.
       }
-      -> empty(message: String) {
+      -> ok(message: String) {
         No examples match tags.
       }
     }

@@ -88,8 +88,7 @@ describe('ProjectScaffold functional handler', () => {
       if (typeof projectScaffoldHandler.scaffold !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(projectScaffoldHandler.scaffold({ name: "inventory-app" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "another_project" -> ok', async () => {
@@ -102,8 +101,7 @@ describe('ProjectScaffold functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(projectScaffoldHandler.scaffold({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "duplicate_scaffold" -> alreadyExists', async () => {
@@ -136,12 +134,11 @@ describe('ProjectScaffold functional handler', () => {
     it("scaffold then duplicate fails", async () => {
       const storage = createInMemoryStorage();
       const scaffoldResult0 = await interpret(projectScaffoldHandler.scaffold({ name: {"type":"literal","value":"my-app"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(scaffoldResult0.variant), `step 0: expected success but got '${scaffoldResult0.variant}'`).toBe(false);
+      expect(scaffoldResult0.variant).toBe("ok");
       let project = scaffoldResult0.output["project"];
       let path = scaffoldResult0.output["path"];
       const thenResult0 = await interpret(projectScaffoldHandler.scaffold({ name: {"type":"literal","value":"my-app"} }), storage);
-      expect(thenResult0.variant).toBe("alreadyExists");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

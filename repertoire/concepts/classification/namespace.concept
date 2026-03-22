@@ -11,7 +11,7 @@ concept Namespace [N] {
   actions {
     action createNamespacedPage(node: N, path: String) {
       -> ok() { Create a new node at the given hierarchical path. }
-      -> exists(message: String) { A node already exists at this path. }
+      -> ok(message: String) { A node already exists at this path. }
 
       fixture create_nested_page { node: "ns-alpha-1", path: "projects/alpha/docs" }
       fixture create_root_page { node: "ns-root-1", path: "home" }

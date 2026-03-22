@@ -20,7 +20,7 @@ concept CondorcetSchulze [CS] {
 
   actions {
     action configure() {
-      -> configured(config: CS) {
+      -> ok(config: CS) {
         A Condorcet-Schulze configuration is created.
       }
 
@@ -28,14 +28,14 @@ concept CondorcetSchulze [CS] {
     }
 
     action count(config: CS, rankedBallots: String, weights: String) {
-      -> condorcet_winner(choice: String, pairwiseRecord: String) {
+      -> ok(choice: String, pairwiseRecord: String) {
         A Condorcet winner exists — one candidate beats all others head-to-head.
       }
-      -> schulze_winner(choice: String, strongestPaths: String) {
+      -> ok(choice: String, strongestPaths: String) {
         No Condorcet winner exists. Schulze method resolves cycles by
         computing widest paths in the pairwise graph.
       }
-      -> unresolvable(smithSet: String) {
+      -> ok(smithSet: String) {
         The Smith set contains candidates that Schulze cannot further
         distinguish. Rare with real ballots.
       }
@@ -45,7 +45,7 @@ concept CondorcetSchulze [CS] {
     }
 
     action getPairwiseMatrix(config: CS) {
-      -> matrix(data: String) {
+      -> ok(data: String) {
         Returns the full pairwise comparison matrix from the last count.
       }
 
@@ -56,9 +56,9 @@ concept CondorcetSchulze [CS] {
 
   example "configure-then-count": {
 
-    after configure() -> configured(config: cs)
+    after configure() -> ok(config: cs)
 
-        then count(config: cs, rankedBallots: _, weights: _) -> condorcet_winner(choice: _, pairwiseRecord: _)
+        then count(config: cs, rankedBallots: _, weights: _) -> ok(choice: _, pairwiseRecord: _)
 
         // When a Condorcet winner exists
 

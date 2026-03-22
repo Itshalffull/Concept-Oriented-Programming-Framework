@@ -22,7 +22,7 @@ concept AccessControl [A] {
       -> forbidden(reason: String) {
         Access is explicitly denied by a matching policy.
       }
-      -> neutral() {
+      -> ok() {
         No policy matches the request. The caller should apply
         a default decision.
       }

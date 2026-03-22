@@ -88,16 +88,14 @@ describe('Majority functional handler', () => {
       if (typeof majorityCountHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(majorityCountHandler.configure({ threshold: "0.5", binaryOnly: "true", tieBreaker: null }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "with_tiebreaker" -> ok', async () => {
       if (typeof majorityCountHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(majorityCountHandler.configure({ threshold: "0.5", binaryOnly: "false", tieBreaker: "chair-decides" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_threshold" -> error', async () => {
@@ -166,8 +164,7 @@ describe('Majority functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_standard_majority = await interpret(majorityCountHandler.configure({ threshold: "0.5", binaryOnly: "true", tieBreaker: null }), storage);
       const result = await interpret(majorityCountHandler.count({ config: afterResult_standard_majority?.output?.["id"], ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "no_ballots" -> error', async () => {
@@ -200,10 +197,10 @@ describe('Majority functional handler', () => {
     it("configure-then-count", async () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(majorityCountHandler.configure({ threshold: {"type":"literal","value":0.5}, binaryOnly: {"type":"literal","value":true}, tieBreaker: {"type":"variable","name":"_"} }), storage);
-      expect(configureResult0.variant).toBe("configured");
+      expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
       const thenResult0 = await interpret(majorityCountHandler.count({ config: {"type":"variable","name":"mj"}, ballots: {"type":"variable","name":"_"}, weights: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("winner");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });
@@ -286,7 +283,7 @@ describe('Majority functional handler', () => {
       }
     });
 
-    it('configure ensures on configured: ', async () => {
+    it('configure ensures on ok: ', async () => {
       if (typeof majorityCountHandler.configure !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -298,7 +295,7 @@ describe('Majority functional handler', () => {
               const program = majorityCountHandler.configure(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "configured") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

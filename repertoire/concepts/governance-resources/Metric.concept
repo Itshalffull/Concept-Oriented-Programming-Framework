@@ -31,7 +31,7 @@ concept Metric [ME] {
 
   actions {
     action define(name: String, unit: option String, aggregation: String) {
-      -> defined(metric: ME) {
+      -> ok(metric: ME) {
         A new metric is created with initial value 0.
       }
 
@@ -40,10 +40,10 @@ concept Metric [ME] {
     }
 
     action update(metric: ME, value: Float, source: String) {
-      -> updated(metric: ME, previousValue: Float) {
+      -> ok(metric: ME, previousValue: Float) {
         The metric value is updated and history is appended.
       }
-      -> threshold_crossed(metric: ME, threshold: String, direction: String) {
+      -> ok(metric: ME, threshold: String, direction: String) {
         The update caused a threshold to be crossed.
       }
 
@@ -52,7 +52,7 @@ concept Metric [ME] {
     }
 
     action setThreshold(metric: ME, threshold: Float, alertOnBreach: Bool) {
-      -> threshold_set(metric: ME) {
+      -> ok(metric: ME) {
         A threshold is added or updated.
       }
 
@@ -61,10 +61,10 @@ concept Metric [ME] {
     }
 
     action evaluate(metric: ME) {
-      -> within_bounds(metric: ME) {
+      -> ok(metric: ME) {
         All thresholds are satisfied.
       }
-      -> threshold_breached(metric: ME, breachedThresholds: String) {
+      -> ok(metric: ME, breachedThresholds: String) {
         One or more thresholds are breached.
       }
 
@@ -75,9 +75,9 @@ concept Metric [ME] {
 
   example "define-then-update": {
 
-    after define(name: _, unit: _, aggregation: _) -> defined(metric: me)
+    after define(name: _, unit: _, aggregation: _) -> ok(metric: me)
 
-        then update(metric: me, value: 50.0, source: _) -> updated(metric: me, previousValue: _)
+        then update(metric: me, value: 50.0, source: _) -> ok(metric: me, previousValue: _)
 
   }
 
@@ -102,7 +102,7 @@ concept Metric [ME] {
 
     requires: name != ""
 
-    ensures defined: name != none
+    ensures ok: name != none
 
   }
 }

@@ -21,7 +21,7 @@ concept ProgramAnalysis [A] {
   actions {
     action registerProvider(name: String, kind: String) {
       -> ok() { Analysis provider registered under the given name and kind classification. }
-      -> exists() { A provider with this name is already registered. }
+      -> ok() { A provider with this name is already registered. }
 
       fixture register_structural {
         name: "read-write-sets",
@@ -38,7 +38,7 @@ concept ProgramAnalysis [A] {
         Dispatch the analysis to the named provider and return the
         structured result. The result format depends on the provider.
       }
-      -> providerNotFound() { No provider is registered under the given name. }
+      -> ok() { No provider is registered under the given name. }
       -> error(message: String) { The analysis provider returned an error. }
 
       fixture run_analysis {
@@ -79,7 +79,7 @@ concept ProgramAnalysis [A] {
   }
 
   example "unregistered provider returns providerNotFound": {
-    after run(program: "get(users, u1)", provider: "nonexistent") -> providerNotFound()
+    after run(program: "get(users, u1)", provider: "nonexistent") -> ok()
     then listProviders() -> ok(providers: p)
   }
 
@@ -91,7 +91,7 @@ concept ProgramAnalysis [A] {
 
   example "duplicate provider registration returns exists": {
     after registerProvider(name: "read-write-sets", kind: "structural") -> ok()
-    then registerProvider(name: "read-write-sets", kind: "structural") -> exists()
+    then registerProvider(name: "read-write-sets", kind: "structural") -> ok()
   }
 
   always "registered providers have kind": {

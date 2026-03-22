@@ -63,7 +63,7 @@ concept ModelRouter [R] {
         Skips circuit-broken routes. For cascade: starts cheapest,
         escalates on quality check failure.
       }
-      -> no_route(message: String) {
+      -> ok(message: String) {
         No route matches or all are circuit-broken.
       }
     }
@@ -73,7 +73,7 @@ concept ModelRouter [R] {
         Returns next model in fallback chain. Increments failure_count.
         Activates circuit breaker if threshold exceeded.
       }
-      -> exhausted(message: String) {
+      -> ok(message: String) {
         All fallback models tried or circuit-broken.
       }
     }

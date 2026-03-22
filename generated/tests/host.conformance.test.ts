@@ -88,16 +88,14 @@ describe('Host functional handler', () => {
       if (typeof hostHandler.mount !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(hostHandler.mount({ host: "W-1", concept: "urn:app/Article", view: "list", level: "page", zone: "primary" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "mount_settings" -> ok', async () => {
       if (typeof hostHandler.mount !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(hostHandler.mount({ host: "W-2", concept: "urn:app/Settings", view: "form", level: "modal", zone: "overlay" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "mount_missing_concept" -> invalid', async () => {
@@ -180,8 +178,7 @@ describe('Host functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(hostHandler.ready({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "ready_unknown" -> invalid', async () => {
@@ -251,8 +248,7 @@ describe('Host functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_mount_article_list = await interpret(hostHandler.mount({ host: "W-1", concept: "urn:app/Article", view: "list", level: "page", zone: "primary" }), storage);
       const result = await interpret(hostHandler.trackResource({ host: "W-1", kind: "binding", ref: afterResult_mount_article_list?.output?.["host"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "track_machine" -> ok', async () => {
@@ -260,8 +256,7 @@ describe('Host functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_mount_article_list = await interpret(hostHandler.mount({ host: "W-1", concept: "urn:app/Article", view: "list", level: "page", zone: "primary" }), storage);
       const result = await interpret(hostHandler.trackResource({ host: "W-1", kind: "machine", ref: afterResult_mount_article_list?.output?.["host"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "track_unknown_host" -> notfound', async () => {
@@ -336,8 +331,7 @@ describe('Host functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(hostHandler.unmount({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "unmount_unknown" -> notfound', async () => {
@@ -412,8 +406,7 @@ describe('Host functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(hostHandler.refresh({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "refresh_unknown" -> notfound', async () => {
@@ -488,8 +481,7 @@ describe('Host functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(hostHandler.setError({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "set_error_unknown_host" -> notfound', async () => {
@@ -522,12 +514,10 @@ describe('Host functional handler', () => {
     it("mount then unmount", async () => {
       const storage = createInMemoryStorage();
       const mountResult0 = await interpret(hostHandler.mount({ host: {"type":"variable","name":"w"}, concept: {"type":"literal","value":"urn:app/Article"}, view: {"type":"literal","value":"list"}, level: {"type":"literal","value":"page"}, zone: {"type":"literal","value":"primary"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(mountResult0.variant), `step 0: expected success but got '${mountResult0.variant}'`).toBe(false);
+      expect(mountResult0.variant).toBe("ok");
       let host = mountResult0.output["host"];
       const thenResult0 = await interpret(hostHandler.unmount({ host: {"type":"variable","name":"w"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

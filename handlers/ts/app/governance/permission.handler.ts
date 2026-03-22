@@ -22,7 +22,7 @@ const _permissionHandler: FunctionalConceptHandler = {
       (b) => complete(b, 'already_granted', { permission: key }),
       (b) => {
         let b2 = put(b, 'grant', key, { who, where, what, condition, grantedBy, grantedAt: new Date().toISOString(), granted: true });
-        return complete(b2, 'granted', { permission: key });
+        return complete(b2, 'ok', { permission: key });
       },
     );
 
@@ -37,7 +37,7 @@ const _permissionHandler: FunctionalConceptHandler = {
     p = branch(p, 'record',
       (b) => {
         let b2 = del(b, 'grant', permission as string);
-        return complete(b2, 'revoked', { permission });
+        return complete(b2, 'ok', { permission });
       },
       (b) => complete(b, 'not_found', { permission }),
     );

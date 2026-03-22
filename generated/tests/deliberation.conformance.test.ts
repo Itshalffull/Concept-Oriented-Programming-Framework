@@ -88,8 +88,7 @@ describe('Deliberation functional handler', () => {
       if (typeof deliberationHandler.open !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(deliberationHandler.open({ proposalRef: "proposal-budget-2026" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "open_empty_ref" -> error', async () => {
@@ -158,8 +157,7 @@ describe('Deliberation functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_open_budget_thread = await interpret(deliberationHandler.open({ proposalRef: "proposal-budget-2026" }), storage);
       const result = await interpret(deliberationHandler.addEntry({ thread: afterResult_open_budget_thread?.output?.["id"], author: "alice", content: "The budget increase is justified by projected revenue growth", entryType: "argument", parentEntry: null }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "add_reply" -> ok', async () => {
@@ -167,8 +165,7 @@ describe('Deliberation functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_open_budget_thread = await interpret(deliberationHandler.open({ proposalRef: "proposal-budget-2026" }), storage);
       const result = await interpret(deliberationHandler.addEntry({ thread: afterResult_open_budget_thread?.output?.["id"], author: "bob", content: "Revenue projections may be overly optimistic", entryType: "response", parentEntry: afterResult_open_budget_thread?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "add_to_missing_thread" -> error', async () => {
@@ -237,8 +234,7 @@ describe('Deliberation functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_open_budget_thread = await interpret(deliberationHandler.open({ proposalRef: "proposal-budget-2026" }), storage);
       const result = await interpret(deliberationHandler.signal({ thread: afterResult_open_budget_thread?.output?.["id"], signaller: "carol", signal: "agree" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "signal_block" -> error', async () => {
@@ -307,8 +303,7 @@ describe('Deliberation functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_open_budget_thread = await interpret(deliberationHandler.open({ proposalRef: "proposal-budget-2026" }), storage);
       const result = await interpret(deliberationHandler.close({ thread: afterResult_open_budget_thread?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "close_missing_thread" -> error', async () => {
@@ -340,12 +335,12 @@ describe('Deliberation functional handler', () => {
     it("open-then-close", async () => {
       const storage = createInMemoryStorage();
       const openResult0 = await interpret(deliberationHandler.open({ proposalRef: {"type":"variable","name":"_"} }), storage);
-      expect(openResult0.variant).toBe("opened");
+      expect(openResult0.variant).toBe("ok");
       let thread = openResult0.output["thread"];
       const thenResult0 = await interpret(deliberationHandler.addEntry({ thread: {"type":"variable","name":"dl"}, author: {"type":"variable","name":"_"}, content: {"type":"variable","name":"_"}, entryType: {"type":"variable","name":"_"}, parentEntry: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("added");
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(deliberationHandler.close({ thread: {"type":"variable","name":"dl"} }), storage);
-      expect(thenResult1.variant).toBe("closed");
+      expect(thenResult1.variant).toBe("ok");
     });
 
   });

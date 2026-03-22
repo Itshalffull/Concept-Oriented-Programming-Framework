@@ -37,7 +37,7 @@ concept Snapshot [S] {
         Returns unified diff. Requires approval before
         the change is accepted.
       }
-      -> new(path: String, contentHash: String) {
+      -> ok(path: String, contentHash: String) {
         No baseline exists for this output path.
         First generation — requires initial approval.
       }
@@ -52,7 +52,7 @@ concept Snapshot [S] {
         Records approval timestamp and optional approver.
         Future comparisons use this as the reference.
       }
-      -> noChange(snapshot: S) {
+      -> ok(snapshot: S) {
         Nothing to approve — current output already
         matches baseline.
       }
@@ -78,7 +78,7 @@ concept Snapshot [S] {
         should be reverted to match the baseline. Signals
         that the generator change was unintentional.
       }
-      -> noChange(snapshot: S) {
+      -> ok(snapshot: S) {
         Nothing to reject.
       }
 
@@ -106,7 +106,7 @@ concept Snapshot [S] {
         Return detailed unified diff between baseline and
         current output.
       }
-      -> noBaseline(path: String) {
+      -> ok(path: String) {
         No baseline exists for this path.
       }
       -> unchanged(path: String) {

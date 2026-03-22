@@ -19,7 +19,7 @@ const _executionHandler: FunctionalConceptHandler = {
       id, sourceRef: input.sourceRef, actions: input.actions,
       executor: input.executor, status: 'Pending', scheduledAt: new Date().toISOString(),
     });
-    return complete(p, 'scheduled', { execution: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { execution: id }) as StorageProgram<Result>;
   },
 
   execute(input: Record<string, unknown>) {
@@ -34,7 +34,7 @@ const _executionHandler: FunctionalConceptHandler = {
           return { ...rec, status: 'Completed', completedAt: new Date().toISOString() };
         }, 'updated');
         b2 = putFrom(b2, 'execution', execution as string, (bindings) => bindings.updated as Record<string, unknown>);
-        return complete(b2, 'completed', { execution, result: 'success' });
+        return complete(b2, 'ok', { execution, result: 'success' });
       },
       (b) => complete(b, 'not_found', { execution }),
     );
@@ -54,7 +54,7 @@ const _executionHandler: FunctionalConceptHandler = {
           return { ...rec, status: 'Rolled_Back', rollbackReason: reason };
         }, 'updated');
         b2 = putFrom(b2, 'execution', execution as string, (bindings) => bindings.updated as Record<string, unknown>);
-        return complete(b2, 'rolled_back', { execution });
+        return complete(b2, 'ok', { execution });
       },
       (b) => complete(b, 'not_found', { execution }),
     );

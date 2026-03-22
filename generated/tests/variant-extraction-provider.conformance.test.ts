@@ -88,16 +88,14 @@ describe('VariantExtractionProvider functional handler', () => {
       if (typeof variantExtractionProviderHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(variantExtractionProviderHandler.analyze({ program: "{\"instructions\":[{\"tag\":\"pure\",\"value\":{\"variant\":\"ok\"}}],\"terminated\":true,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[\"ok\"]}}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "branched_variants" -> ok', async () => {
       if (typeof variantExtractionProviderHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(variantExtractionProviderHandler.analyze({ program: "{\"instructions\":[{\"tag\":\"branch\",\"condition\":true,\"thenBranch\":{\"instructions\":[{\"tag\":\"pure\",\"value\":{\"variant\":\"ok\"}}]},\"elseBranch\":{\"instructions\":[{\"tag\":\"pure\",\"value\":{\"variant\":\"error\"}}]}}],\"terminated\":false,\"effects\":{\"completionVariants\":[\"ok\",\"error\"]}}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_json" -> error', async () => {
@@ -129,8 +127,7 @@ describe('VariantExtractionProvider functional handler', () => {
     it("single pure terminal has zero branches", async () => {
       const storage = createInMemoryStorage();
       const analyzeResult0 = await interpret(variantExtractionProviderHandler.analyze({ program: {"type":"literal","value":"{\"instructions\":[{\"tag\":\"pure\",\"value\":{\"variant\":\"ok\"}}],\"terminated\":true,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[\"ok\"]}}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(analyzeResult0.variant), `step 0: expected success but got '${analyzeResult0.variant}'`).toBe(false);
+      expect(analyzeResult0.variant).toBe("ok");
       let result = analyzeResult0.output["result"];
       let variants = analyzeResult0.output["variants"];
       let branchCount = analyzeResult0.output["branchCount"];

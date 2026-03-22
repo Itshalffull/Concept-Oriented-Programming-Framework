@@ -88,8 +88,7 @@ describe('SolverProvider functional handler', () => {
       if (typeof solverProviderHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(solverProviderHandler.register({ provider_id: "z3", name: "Z3 SMT Solver", supported_languages: "[\"smtlib\"]", supported_kinds: "[\"invariant\",\"precondition\",\"postcondition\",\"safety\"]", priority: "1" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_name" -> invalid', async () => {
@@ -159,8 +158,7 @@ describe('SolverProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_register = await interpret(solverProviderHandler.register({ provider_id: "z3", name: "Z3 SMT Solver", supported_languages: "[\"smtlib\"]", supported_kinds: "[\"invariant\",\"precondition\",\"postcondition\",\"safety\"]", priority: "1" }), storage);
       const result = await interpret(solverProviderHandler.dispatch({ property_ref: afterResult_valid_register?.output?.["id"], formal_language: "smtlib", kind: "invariant" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "no_matching_provider" -> no_provider', async () => {
@@ -235,8 +233,7 @@ describe('SolverProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(solverProviderHandler.dispatch_batch({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_batch" -> invalid', async () => {
@@ -311,8 +308,7 @@ describe('SolverProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(solverProviderHandler.health_check({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "health_missing" -> notfound', async () => {
@@ -384,8 +380,7 @@ describe('SolverProvider functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(solverProviderHandler.list({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -452,8 +447,7 @@ describe('SolverProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(solverProviderHandler.unregister({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "unregister_missing" -> notfound', async () => {
@@ -471,12 +465,10 @@ describe('SolverProvider functional handler', () => {
     it("register-then-dispatch", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(solverProviderHandler.register({ provider_id: {"type":"literal","value":"z3"}, supported_languages: {"type":"list","items":[{"type":"literal","value":"smtlib"}]}, supported_kinds: {"type":"list","items":[{"type":"literal","value":"invariant"},{"type":"literal","value":"precondition"},{"type":"literal","value":"postcondition"},{"type":"literal","value":"safety"}]}, capabilities: {"type":"list","items":[{"type":"literal","value":"smt"},{"type":"literal","value":"quantifiers"},{"type":"literal","value":"theories"}]}, priority: {"type":"literal","value":1} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let provider = registerResult0.output["provider"];
       const thenResult0 = await interpret(solverProviderHandler.dispatch({ property_ref: {"type":"literal","value":"prop-1"}, formal_language: {"type":"literal","value":"smtlib"}, kind: {"type":"literal","value":"invariant"}, timeout_ms: {"type":"literal","value":5000} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

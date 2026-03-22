@@ -21,7 +21,7 @@ const _optimisticApprovalHandler: FunctionalConceptHandler = {
       challengePeriodHours: input.challengePeriodHours,
       assertedAt: new Date().toISOString(), expiresAt, status: 'Pending',
     });
-    return complete(p, 'asserted', { assertion: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { assertion: id }) as StorageProgram<Result>;
   },
 
   challenge(input: Record<string, unknown>) {
@@ -78,7 +78,7 @@ const _optimisticApprovalHandler: FunctionalConceptHandler = {
         if (upheld) {
           return complete(b2, 'rejected', { assertion });
         }
-        return complete(b2, 'approved', { assertion });
+        return complete(b2, 'ok', { assertion });
       },
       (b) => complete(b, 'not_found', { assertion }),
     );

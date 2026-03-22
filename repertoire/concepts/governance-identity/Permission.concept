@@ -24,11 +24,11 @@ concept Permission [P] {
 
   actions {
     action grant(who: String, where: String, what: String, condition: option String, grantedBy: String) {
-      -> granted(permission: P) {
+      -> ok(permission: P) {
         A new permission grant is recorded. If an identical grant exists,
         returns already_granted.
       }
-      -> already_granted(permission: P) {
+      -> ok(permission: P) {
         This exact permission already exists.
       }
 
@@ -37,7 +37,7 @@ concept Permission [P] {
     }
 
     action revoke(permission: P) {
-      -> revoked(permission: P) {
+      -> ok(permission: P) {
         The permission grant is removed.
       }
       -> not_found(permission: P) {
@@ -63,11 +63,11 @@ concept Permission [P] {
 
   example "grant-then-check": {
 
-    after grant(who: w, where: t, what: a, condition: _, grantedBy: _) -> granted(permission: p)
+    after grant(who: w, where: t, what: a, condition: _, grantedBy: _) -> ok(permission: p)
 
         then check(who: w, where: t, what: a) -> allowed(permission: p)
 
-        and  revoke(permission: p) -> revoked(permission: p)
+        and  revoke(permission: p) -> ok(permission: p)
 
         and  check(who: w, where: t, what: a) -> denied(who: w, where: t, what: a)
 

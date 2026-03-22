@@ -44,7 +44,7 @@ concept ArgoCDProvider [A] {
       -> pending(application: A, waitingOn: list String) {
         ArgoCD sync is in progress.
       }
-      -> degraded(application: A, unhealthyResources: list String) {
+      -> ok(application: A, unhealthyResources: list String) {
         Application synced but some resources are degraded.
       }
       -> failed(application: A, reason: String) {

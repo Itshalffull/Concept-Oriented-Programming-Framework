@@ -67,7 +67,7 @@ concept WidgetStateEntity [S] {
         the widget. Results as serialized JSON array of
         { from, to, guard }.
       }
-      -> unhandled(inStates: String) {
+      -> ok(inStates: String) {
         States where this event has no transition.
         Results as serialized JSON array.
       }

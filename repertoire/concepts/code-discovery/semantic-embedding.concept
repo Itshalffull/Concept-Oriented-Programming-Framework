@@ -29,7 +29,7 @@ concept SemanticEmbedding [B] {
         the specified model (codeBERT, unixcoder, openai-code,
         voyage-code).
       }
-      -> modelUnavailable(model: String) {
+      -> ok(model: String) {
         The requested embedding model is not available.
       }
 

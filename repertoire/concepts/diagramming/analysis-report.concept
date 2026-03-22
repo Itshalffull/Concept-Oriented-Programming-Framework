@@ -33,10 +33,10 @@ concept AnalysisReport [R] {
         - summary: markdown prose summary with key findings
         - dashboard: composite with metrics, top-N, and distribution
       }
-      -> unsupported_format(message: String) {
+      -> ok(message: String) {
         The requested format is not supported.
       }
-      -> invalid_result(message: String) {
+      -> ok(message: String) {
         The analysis result reference is invalid or has been cleared.
       }
 
@@ -53,7 +53,7 @@ concept AnalysisReport [R] {
         highlighting changes in rankings, community shifts, or metric
         deltas between runs.
       }
-      -> insufficient_results(message: String) {
+      -> ok(message: String) {
         Fewer than two valid results were provided for comparison.
       }
 
@@ -91,7 +91,7 @@ concept AnalysisReport [R] {
       -> notfound() {
         No report exists with the given identifier.
       }
-      -> unsupported_output(message: String) {
+      -> ok(message: String) {
         The requested output format is not supported.
       }
 

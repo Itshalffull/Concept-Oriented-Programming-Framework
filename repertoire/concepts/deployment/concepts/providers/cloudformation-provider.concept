@@ -38,7 +38,7 @@ concept CloudFormationProvider [C] {
       -> ok(stack: C, changeSetId: String, toCreate: Int, toUpdate: Int, toDelete: Int) {
         Change set created for review.
       }
-      -> changeSetEmpty(stack: C) {
+      -> ok(stack: C) {
         No changes detected between template and current stack.
       }
 
@@ -50,13 +50,13 @@ concept CloudFormationProvider [C] {
       -> ok(stack: C, stackId: String, created: list String, updated: list String) {
         Stack create or update completed successfully.
       }
-      -> rollbackComplete(stack: C, reason: String) {
+      -> ok(stack: C, reason: String) {
         Stack update failed and rolled back to previous state.
       }
-      -> partial(stack: C, created: list String, failed: list String) {
+      -> ok(stack: C, created: list String, failed: list String) {
         Stack update failed midway. Stack in UPDATE_ROLLBACK_COMPLETE.
       }
-      -> insufficientCapabilities(stack: C, required: list String) {
+      -> ok(stack: C, required: list String) {
         Stack requires IAM capabilities not specified in the request.
       }
 
@@ -68,7 +68,7 @@ concept CloudFormationProvider [C] {
       -> ok(stack: C, destroyed: list String) {
         Stack deleted and all resources cleaned up.
       }
-      -> deletionFailed(stack: C, resource: String, reason: String) {
+      -> ok(stack: C, resource: String, reason: String) {
         Stack deletion failed on a specific resource.
       }
 

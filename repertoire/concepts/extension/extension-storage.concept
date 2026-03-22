@@ -25,7 +25,7 @@ concept ExtensionStorage [S] {
       -> ok(store: S) {
         Storage provisioned for the extension with the given quota.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         Storage already provisioned for this extension.
       }
     }
@@ -37,7 +37,7 @@ concept ExtensionStorage [S] {
       -> notfound(message: String) {
         No store with the given identifier.
       }
-      -> quotaExceeded(used: Int, limit: Int) {
+      -> ok(used: Int, limit: Int) {
         Write rejected — quota would be exceeded.
       }
     }
@@ -86,7 +86,7 @@ concept ExtensionStorage [S] {
       -> notfound(message: String) {
         No store with the given identifier.
       }
-      -> disabled(message: String) {
+      -> ok(message: String) {
         Sync is not enabled for this store.
       }
     }

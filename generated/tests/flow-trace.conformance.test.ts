@@ -88,8 +88,7 @@ describe('FlowTrace functional handler', () => {
       if (typeof flowTraceHandler.build !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(flowTraceHandler.build({ flowId: "flow-abc-20260301-x7k9" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_flow" -> error', async () => {
@@ -163,8 +162,7 @@ describe('FlowTrace functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(flowTraceHandler.render({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_trace" -> ok', async () => {
@@ -177,8 +175,7 @@ describe('FlowTrace functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(flowTraceHandler.render({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "json_render" -> ok', async () => {
@@ -191,8 +188,7 @@ describe('FlowTrace functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(flowTraceHandler.render({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -217,8 +213,7 @@ describe('FlowTrace functional handler', () => {
     it("render existing trace then build missing flow", async () => {
       const storage = createInMemoryStorage();
       const renderResult0 = await interpret(flowTraceHandler.render({ trace: {"type":"record","fields":[{"name":"flowId","value":{"type":"literal","value":"f1"}},{"name":"status","value":{"type":"literal","value":"ok"}},{"name":"durationMs","value":{"type":"literal","value":100}},{"name":"root","value":{"type":"record","fields":[{"name":"action","value":{"type":"literal","value":"Test/ping"}},{"name":"variant","value":{"type":"literal","value":"ok"}},{"name":"durationMs","value":{"type":"literal","value":50}},{"name":"fields","value":{"type":"record","fields":[]}},{"name":"children","value":{"type":"list","items":[]}}]}}]}, options: {"type":"record","fields":[]} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(renderResult0.variant), `step 0: expected success but got '${renderResult0.variant}'`).toBe(false);
+      expect(renderResult0.variant).toBe("ok");
       let output = renderResult0.output["output"];
       const thenResult0 = await interpret(flowTraceHandler.build({ flowId: {"type":"literal","value":"f1"} }), storage);
       expect(thenResult0.variant).toBe("error");
@@ -227,13 +222,11 @@ describe('FlowTrace functional handler', () => {
     it("build produces a flow tree", async () => {
       const storage = createInMemoryStorage();
       const buildResult0 = await interpret(flowTraceHandler.build({ flowId: {"type":"literal","value":"existing-flow"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(buildResult0.variant), `step 0: expected success but got '${buildResult0.variant}'`).toBe(false);
+      expect(buildResult0.variant).toBe("ok");
       let trace = buildResult0.output["trace"];
       let tree = buildResult0.output["tree"];
       const thenResult0 = await interpret(flowTraceHandler.render({ trace: {"type":"variable","name":"t"}, options: {"type":"record","fields":[]} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

@@ -36,7 +36,7 @@ concept InfrastructureEntity [I] {
         (postgresql, redis, sqlite, http, websocket, grpc, etc.).
         config is serialized JSON of adapter-specific settings.
       }
-      -> alreadyRegistered(existing: I) {
+      -> ok(existing: I) {
         An adapter with this name and kind already exists.
       }
 

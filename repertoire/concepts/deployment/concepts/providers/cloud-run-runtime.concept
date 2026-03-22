@@ -33,10 +33,10 @@ concept CloudRunRuntime [C] {
         Cloud Run service created in specified project and region.
         IAM bindings configured for ingress.
       }
-      -> billingDisabled(projectId: String) {
+      -> ok(projectId: String) {
         Billing is not enabled for this GCP project.
       }
-      -> regionUnavailable(region: String) {
+      -> ok(region: String) {
         Cloud Run is not available in the requested region.
       }
 
@@ -50,7 +50,7 @@ concept CloudRunRuntime [C] {
         New revision deployed with container image.
         Traffic shifted to new revision.
       }
-      -> imageNotFound(imageUri: String) {
+      -> ok(imageUri: String) {
         Container image not found in registry.
       }
 

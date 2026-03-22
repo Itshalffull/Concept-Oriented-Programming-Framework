@@ -37,8 +37,7 @@ describe('Reputation imperative handler', () => {
       if (typeof reputationHandler.earn !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await reputationHandler.earn({ participant: "alice", amount: "10.0", reason: "code-review" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "earn_zero" -> error', async () => {
@@ -70,8 +69,7 @@ describe('Reputation imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await reputationHandler.burn({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "burn_excessive" -> error', async () => {
@@ -103,8 +101,7 @@ describe('Reputation imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await reputationHandler.decay({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "decay_invalid_factor" -> error', async () => {
@@ -136,8 +133,7 @@ describe('Reputation imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await reputationHandler.getScore({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_unknown_score" -> error', async () => {
@@ -169,8 +165,7 @@ describe('Reputation imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await reputationHandler.recalculate({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "recalculate_unknown" -> error', async () => {
@@ -198,10 +193,10 @@ describe('Reputation imperative handler', () => {
     it("earn-then-getScore", async () => {
       const storage = createInMemoryStorage();
       const earnResult0 = await reputationHandler.earn({ participant: {"type":"variable","name":"p"}, amount: {"type":"literal","value":10}, reason: {"type":"variable","name":"_"} }, storage);
-      expect(earnResult0.variant).toBe("earned");
+      expect(earnResult0.variant).toBe("ok");
       let entry = earnResult0.output["entry"];
       const thenResult0 = await reputationHandler.getScore({ participant: {"type":"variable","name":"p"} }, storage);
-      expect(thenResult0.variant).toBe("score");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

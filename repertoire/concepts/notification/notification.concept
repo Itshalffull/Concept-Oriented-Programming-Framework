@@ -21,7 +21,7 @@ concept Notification [N] {
         Delivery channel registered with the given transport configuration
         (email, SMS, push, in-app, webhook, etc.).
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         A channel with this name is already registered.
       }
 
@@ -40,7 +40,7 @@ concept Notification [N] {
         Notification template defined with placeholders for dynamic data
         interpolation during delivery.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         A template already exists for this notification type.
       }
 
@@ -59,7 +59,7 @@ concept Notification [N] {
         User subscribed to receive notifications for the given event
         type through the specified channel.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         This user-event-channel subscription already exists.
       }
 

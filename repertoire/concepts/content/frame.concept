@@ -40,7 +40,7 @@ concept Frame [F] {
       -> ok() {
         Updates the width and height of the frame.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         The frame does not exist.
       }
 
@@ -52,10 +52,10 @@ concept Frame [F] {
       -> ok() {
         Adds an item to the frame's contained items list.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         The frame does not exist.
       }
-      -> already_present(message: String) {
+      -> ok(message: String) {
         The item is already in the frame.
       }
 
@@ -67,10 +67,10 @@ concept Frame [F] {
       -> ok() {
         Removes an item from the frame's contained items list.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         The frame does not exist.
       }
-      -> not_present(message: String) {
+      -> ok(message: String) {
         The item is not in the frame.
       }
 
@@ -82,7 +82,7 @@ concept Frame [F] {
       -> ok() {
         Sets the background color of the frame.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         The frame does not exist.
       }
 

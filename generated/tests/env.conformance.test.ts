@@ -94,8 +94,7 @@ describe('Env functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(envHandler.resolve({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_production" -> ok', async () => {
@@ -108,8 +107,7 @@ describe('Env functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(envHandler.resolve({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_empty" -> ok', async () => {
@@ -122,8 +120,7 @@ describe('Env functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(envHandler.resolve({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -185,8 +182,7 @@ describe('Env functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_resolve_staging = await interpret(envHandler.resolve({ environment: "staging" }), storage);
       const result = await interpret(envHandler.promote({ fromEnv: afterResult_resolve_staging?.output?.["environment"], toEnv: afterResult_resolve_staging?.output?.["environment"], suiteName: "auth-suite" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "promote_missing_from" -> error', async () => {
@@ -260,8 +256,7 @@ describe('Env functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(envHandler.diff({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "diff_missing_env" -> ok', async () => {
@@ -274,8 +269,7 @@ describe('Env functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(envHandler.diff({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -300,13 +294,11 @@ describe('Env functional handler', () => {
     it("resolve-then-promote", async () => {
       const storage = createInMemoryStorage();
       const resolveResult0 = await interpret(envHandler.resolve({ environment: {"type":"variable","name":"e"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(resolveResult0.variant), `step 0: expected success but got '${resolveResult0.variant}'`).toBe(false);
+      expect(resolveResult0.variant).toBe("ok");
       let environment = resolveResult0.output["environment"];
       let resolved = resolveResult0.output["resolved"];
       const thenResult0 = await interpret(envHandler.promote({ fromEnv: {"type":"variable","name":"e"}, toEnv: {"type":"variable","name":"e2"}, suiteName: {"type":"literal","value":"auth"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

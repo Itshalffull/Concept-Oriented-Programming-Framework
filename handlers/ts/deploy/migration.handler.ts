@@ -22,7 +22,7 @@ const _handler: FunctionalConceptHandler = {
 
     if (fromVersion === toVersion) {
       let p = createProgram();
-      return complete(p, 'noMigrationNeeded', { concept }) as StorageProgram<Result>;
+      return complete(p, 'ok', { concept }) as StorageProgram<Result>;
     }
 
     if (toVersion < fromVersion) {

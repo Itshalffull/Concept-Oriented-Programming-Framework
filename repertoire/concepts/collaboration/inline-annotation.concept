@@ -25,10 +25,10 @@ concept InlineAnnotation [A] {
       -> ok(annotationId: A) {
         Annotation embedded in content with status "pending".
       }
-      -> trackingDisabled(message: String) {
+      -> ok(message: String) {
         Tracking is disabled for this document.
       }
-      -> invalidChangeType(message: String) {
+      -> ok(message: String) {
         changeType not one of "insertion", "deletion", "formatting", "move".
       }
 
@@ -40,10 +40,10 @@ concept InlineAnnotation [A] {
       -> ok(cleanContent: Bytes) {
         Annotation wrapper removed. Change content kept.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         Annotation not found.
       }
-      -> alreadyResolved(message: String) {
+      -> ok(message: String) {
         Annotation was already accepted or rejected.
       }
 
@@ -55,10 +55,10 @@ concept InlineAnnotation [A] {
       -> ok(cleanContent: Bytes) {
         Annotation wrapper and change content removed.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         Annotation not found.
       }
-      -> alreadyResolved(message: String) {
+      -> ok(message: String) {
         Annotation was already accepted or rejected.
       }
 
@@ -115,7 +115,7 @@ concept InlineAnnotation [A] {
 
     after toggleTracking(contentRef: c, enabled: false) -> ok()
 
-        then annotate(contentRef: c, changeType: "insertion", scope: _, author: _) -> trackingDisabled(message: _)
+        then annotate(contentRef: c, changeType: "insertion", scope: _, author: _) -> ok(message: _)
 
   }
 

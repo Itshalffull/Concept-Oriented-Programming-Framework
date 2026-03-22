@@ -43,7 +43,7 @@ concept PathAnalysisProvider [C] {
           O(V+E). Returns error if graph contains cycles. Source/target
           optional — finds the global critical path if omitted.
       }
-      -> no_path(message: String) {
+      -> ok(message: String) {
         No path exists between the specified source and target.
       }
       -> error(message: String) {

@@ -4,7 +4,7 @@
 sync LLMRepairExhausted [eager]
 when {
   LLMCall/repair: [ call: ?m; step_ref: ?s ]
-    => [ variant: "max_attempts_reached" ]
+    => [ variant: "ok" ]
 }
 then {
   StepRun/fail: [ step: ?s; error: "LLM validation failed after max repair attempts" ]

@@ -51,7 +51,7 @@ export const runtimeCoverageHandler: FunctionalConceptHandler = {
           executionCount: 1,
           flowIds: JSON.stringify([flowId]),
         });
-        return complete(q, 'created', { entry: id });
+        return complete(q, 'ok', { entry: id });
       })(),
     );
   },

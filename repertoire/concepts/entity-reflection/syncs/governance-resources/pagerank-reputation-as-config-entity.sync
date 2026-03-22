@@ -6,7 +6,7 @@ sync PageRankReputationAsConfigEntity [eager]
   purpose { Persist PageRank reputation configuration as queryable config entity. }
 when {
   PageRankReputation/configure: [ dampingFactor: ?dampingFactor; maxIterations: ?maxIterations; convergenceThreshold: ?convergenceThreshold; preTrusted: ?preTrusted ]
-    => configured(graph: ?graph)
+    => ok(graph: ?graph)
 }
 then {
   ContentStorage/save: [ record: ?graph; data: ?preTrusted ]
@@ -17,7 +17,7 @@ sync PageRankReputationTagBundle [eager]
   purpose { Tag PageRank reputation with its bundle type. }
 when {
   PageRankReputation/configure: [ dampingFactor: ?dampingFactor; maxIterations: ?maxIterations; convergenceThreshold: ?convergenceThreshold; preTrusted: ?preTrusted ]
-    => configured(graph: ?graph)
+    => ok(graph: ?graph)
 }
 then {
   Property/set: [ entity: ?graph; key: "config_bundle"; value: "reputation_algo_pagerank" ]

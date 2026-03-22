@@ -88,8 +88,7 @@ describe('SuiteManager functional handler', () => {
       if (typeof suiteManagerHandler.init !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(suiteManagerHandler.init({ name: "payment-suite" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_name" -> alreadyExists', async () => {
@@ -164,8 +163,7 @@ describe('SuiteManager functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(suiteManagerHandler.validate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_path" -> ok', async () => {
@@ -178,8 +176,7 @@ describe('SuiteManager functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(suiteManagerHandler.validate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -246,8 +243,7 @@ describe('SuiteManager functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(suiteManagerHandler.test({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_test_path" -> ok', async () => {
@@ -260,8 +256,7 @@ describe('SuiteManager functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(suiteManagerHandler.test({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -325,8 +320,7 @@ describe('SuiteManager functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_init?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(suiteManagerHandler.list({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -393,8 +387,7 @@ describe('SuiteManager functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(suiteManagerHandler.checkOverrides({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "nonexistent_suite" -> invalidOverride', async () => {
@@ -427,24 +420,21 @@ describe('SuiteManager functional handler', () => {
     it("init then validate succeeds", async () => {
       const storage = createInMemoryStorage();
       const initResult0 = await interpret(suiteManagerHandler.init({ name: {"type":"literal","value":"my-suite"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(initResult0.variant), `step 0: expected success but got '${initResult0.variant}'`).toBe(false);
+      expect(initResult0.variant).toBe("ok");
       let suite = initResult0.output["suite"];
       let path = initResult0.output["path"];
       const thenResult0 = await interpret(suiteManagerHandler.validate({ path: {"type":"literal","value":"./suites/my-suite/"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("init duplicate fails", async () => {
       const storage = createInMemoryStorage();
       const initResult0 = await interpret(suiteManagerHandler.init({ name: {"type":"literal","value":"my-suite"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(initResult0.variant), `step 0: expected success but got '${initResult0.variant}'`).toBe(false);
+      expect(initResult0.variant).toBe("ok");
       let suite = initResult0.output["suite"];
       let path = initResult0.output["path"];
       const thenResult0 = await interpret(suiteManagerHandler.init({ name: {"type":"literal","value":"my-suite"} }), storage);
-      expect(thenResult0.variant).toBe("alreadyExists");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

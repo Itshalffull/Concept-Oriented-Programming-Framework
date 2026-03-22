@@ -48,10 +48,10 @@ concept WidgetResolver [R] {
         bindingMap contains the resolved field mappings for
         entity widgets (contract slot -> concept field).
       }
-      -> ambiguous(resolver: R, candidates: String) {
+      -> ok(resolver: R, candidates: String) {
         Multiple widgets scored equally.
       }
-      -> none(resolver: R, element: String) {
+      -> ok(resolver: R, element: String) {
         No widget matches. For entity elements, this triggers
         fallback to the field-level pipeline.
       }
@@ -66,7 +66,7 @@ concept WidgetResolver [R] {
       -> ok(resolver: R, resolutions: String) {
         Batch-resolve all elements in a tree.
       }
-      -> partial(resolver: R, resolved: String,
+      -> ok(resolver: R, resolved: String,
                  unresolved: String) { Some unresolved. }
 
       fixture valid_resolveAll { elements: "[\"single-choice\",\"text-edit\"]", context: "{\"platform\":\"browser\"}" } after valid_resolve

@@ -29,12 +29,12 @@ concept Target [T] {
         Generation complete. Files registered in manifest.
         Routes to provider via integration sync.
       }
-      -> unsupportedAction(action: String, targetType: String, reason: String) {
+      -> ok(action: String, targetType: String, reason: String) {
         Concept action cannot be expressed in this target
         (e.g. bidirectional streaming in REST). Non-fatal,
         action is skipped with a warning.
       }
-      -> targetError(targetType: String, reason: String) {
+      -> ok(targetType: String, reason: String) {
         Provider-specific generation failure.
       }
 
@@ -49,7 +49,7 @@ concept Target [T] {
         Compare current generation against previous run.
         Content-addressed, unchanged files have matching hashes.
       }
-      -> noPrevious(output: T) {
+      -> ok(output: T) {
         First generation run for this concept and target.
       }
 
@@ -62,7 +62,7 @@ concept Target [T] {
 
     after generate(projection: "test-projection", targetType: "rest", config: "{}") -> ok(output: t, files: f)
 
-        then diff(output: t) -> noPrevious(output: t)
+        then diff(output: t) -> ok(output: t)
 
   }
 

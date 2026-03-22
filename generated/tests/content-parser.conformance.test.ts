@@ -94,8 +94,7 @@ describe('ContentParser functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(contentParserHandler.registerFormat({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_empty_name" -> error', async () => {
@@ -169,8 +168,7 @@ describe('ContentParser functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(contentParserHandler.registerExtractor({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_empty_extractor" -> ok', async () => {
@@ -183,8 +181,7 @@ describe('ContentParser functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(contentParserHandler.registerExtractor({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -251,8 +248,7 @@ describe('ContentParser functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(contentParserHandler.parse({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "parse_unknown_format" -> error', async () => {
@@ -321,8 +317,7 @@ describe('ContentParser functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_markdown = await interpret(contentParserHandler.registerFormat({ name: "markdown", grammar: "{\"block\":\"paragraph\"}" }), storage);
       const result = await interpret(contentParserHandler.extractRefs({ content: afterResult_register_markdown?.output?.["name"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "extract_refs_missing" -> error', async () => {
@@ -391,8 +386,7 @@ describe('ContentParser functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_markdown = await interpret(contentParserHandler.registerFormat({ name: "markdown", grammar: "{\"block\":\"paragraph\"}" }), storage);
       const result = await interpret(contentParserHandler.extractTags({ content: afterResult_register_markdown?.output?.["name"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "extract_tags_missing" -> error', async () => {
@@ -461,8 +455,7 @@ describe('ContentParser functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_markdown = await interpret(contentParserHandler.registerFormat({ name: "markdown", grammar: "{\"block\":\"paragraph\"}" }), storage);
       const result = await interpret(contentParserHandler.extractProperties({ content: afterResult_register_markdown?.output?.["name"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "extract_props_missing" -> error', async () => {
@@ -536,8 +529,7 @@ describe('ContentParser functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(contentParserHandler.serialize({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "serialize_missing" -> error', async () => {
@@ -569,16 +561,13 @@ describe('ContentParser functional handler', () => {
     it("registerFormat-then-extractTags", async () => {
       const storage = createInMemoryStorage();
       const registerFormatResult0 = await interpret(contentParserHandler.registerFormat({ name: {"type":"literal","value":"markdown"}, grammar: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerFormatResult0.variant), `step 0: expected success but got '${registerFormatResult0.variant}'`).toBe(false);
+      expect(registerFormatResult0.variant).toBe("ok");
       let name = registerFormatResult0.output["name"];
       const parseResult1 = await interpret(contentParserHandler.parse({ content: {"type":"variable","name":"c"}, text: {"type":"literal","value":"Hello #tag [[ref]]"}, format: {"type":"literal","value":"markdown"} }), storage);
-      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr1(parseResult1.variant), `step 1: expected success but got '${parseResult1.variant}'`).toBe(false);
+      expect(parseResult1.variant).toBe("ok");
       let ast = parseResult1.output["ast"];
       const thenResult0 = await interpret(contentParserHandler.extractTags({ content: {"type":"variable","name":"c"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

@@ -88,16 +88,14 @@ describe('Lens functional handler', () => {
       if (typeof lensHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(lensHandler.create({ lens: "lens-user-email", relation: "users", key: "u1", field: "email" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_relation_lens" -> ok', async () => {
       if (typeof lensHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(lensHandler.create({ lens: "lens-users", relation: "users", key: "", field: "" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_empty_relation" -> error', async () => {
@@ -171,8 +169,7 @@ describe('Lens functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(lensHandler.fromRelation({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "from_empty_relation" -> error', async () => {
@@ -246,8 +243,7 @@ describe('Lens functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(lensHandler.compose({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "compose_missing" -> error', async () => {
@@ -321,8 +317,7 @@ describe('Lens functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(lensHandler.get({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_missing" -> error', async () => {
@@ -396,8 +391,7 @@ describe('Lens functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(lensHandler.decompose({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "decompose_missing" -> error', async () => {
@@ -471,8 +465,7 @@ describe('Lens functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(lensHandler.validate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "validate_missing_lens" -> error', async () => {
@@ -543,8 +536,7 @@ describe('Lens functional handler', () => {
       const _pool = Object.assign({}, (afterResult_create_field_lens?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(lensHandler.list({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -569,66 +561,54 @@ describe('Lens functional handler', () => {
     it("create field lens then get returns field kind", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(lensHandler.create({ lens: {"type":"variable","name":"l"}, relation: {"type":"literal","value":"users"}, key: {"type":"literal","value":"u1"}, field: {"type":"literal","value":"email"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
+      expect(createResult0.variant).toBe("ok");
       let lens = createResult0.output["lens"];
       const thenResult0 = await interpret(lensHandler.get({ lens: {"type":"variable","name":"l"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("fromRelation then decompose returns segments", async () => {
       const storage = createInMemoryStorage();
       const fromRelationResult0 = await interpret(lensHandler.fromRelation({ lens: {"type":"variable","name":"r"}, relation: {"type":"literal","value":"users"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(fromRelationResult0.variant), `step 0: expected success but got '${fromRelationResult0.variant}'`).toBe(false);
+      expect(fromRelationResult0.variant).toBe("ok");
       let lens = fromRelationResult0.output["lens"];
       const thenResult0 = await interpret(lensHandler.decompose({ lens: {"type":"variable","name":"r"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("relation-only vs field lens have different kinds", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(lensHandler.create({ lens: {"type":"variable","name":"a"}, relation: {"type":"literal","value":"users"}, key: {"type":"literal","value":""}, field: {"type":"literal","value":""} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
+      expect(createResult0.variant).toBe("ok");
       let lens = createResult0.output["lens"];
       const createResult1 = await interpret(lensHandler.create({ lens: {"type":"variable","name":"b"}, relation: {"type":"literal","value":"users"}, key: {"type":"literal","value":"u1"}, field: {"type":"literal","value":"email"} }), storage);
-      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr1(createResult1.variant), `step 1: expected success but got '${createResult1.variant}'`).toBe(false);
+      expect(createResult1.variant).toBe("ok");
       lens = createResult1.output["lens"];
       const thenResult0 = await interpret(lensHandler.get({ lens: {"type":"variable","name":"a"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(lensHandler.get({ lens: {"type":"variable","name":"b"} }), storage);
-      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
+      expect(thenResult1.variant).toBe("ok");
     });
 
     it("compose two lenses narrows focus", async () => {
       const storage = createInMemoryStorage();
       const fromRelationResult0 = await interpret(lensHandler.fromRelation({ lens: {"type":"variable","name":"outer"}, relation: {"type":"literal","value":"users"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(fromRelationResult0.variant), `step 0: expected success but got '${fromRelationResult0.variant}'`).toBe(false);
+      expect(fromRelationResult0.variant).toBe("ok");
       let lens = fromRelationResult0.output["lens"];
       const createResult1 = await interpret(lensHandler.create({ lens: {"type":"variable","name":"inner"}, relation: {"type":"literal","value":"users"}, key: {"type":"literal","value":"u1"}, field: {"type":"literal","value":"email"} }), storage);
-      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr1(createResult1.variant), `step 1: expected success but got '${createResult1.variant}'`).toBe(false);
+      expect(createResult1.variant).toBe("ok");
       lens = createResult1.output["lens"];
       const thenResult0 = await interpret(lensHandler.compose({ outer: {"type":"variable","name":"outer"}, inner: {"type":"variable","name":"inner"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("validate against matching spec returns valid", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(lensHandler.create({ lens: {"type":"variable","name":"l"}, relation: {"type":"literal","value":"users"}, key: {"type":"literal","value":"u1"}, field: {"type":"literal","value":"email"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
+      expect(createResult0.variant).toBe("ok");
       let lens = createResult0.output["lens"];
       const thenResult0 = await interpret(lensHandler.validate({ lens: {"type":"variable","name":"l"}, conceptSpec: {"type":"literal","value":"User { state { users: set U; email: U -> String } }"} }), storage);
-      expect(thenResult0.variant).toBe("valid");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

@@ -21,7 +21,7 @@ const _objectiveHandler: FunctionalConceptHandler = {
       targetDate: input.targetDate, owner: input.owner,
       status: 'Active', progress: 0, createdAt: new Date().toISOString(),
     });
-    return complete(p, 'created', { objective: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { objective: id }) as StorageProgram<Result>;
   },
 
   updateProgress(input: Record<string, unknown>) {
@@ -32,7 +32,7 @@ const _objectiveHandler: FunctionalConceptHandler = {
     p = branch(p, 'record',
       (b) => {
         let b2 = put(b, 'objective', objective as string, { progress: currentValue, updatedAt: new Date().toISOString() });
-        return complete(b2, 'updated', { objective, progress: currentValue });
+        return complete(b2, 'ok', { objective, progress: currentValue });
       },
       (b) => complete(b, 'not_found', { objective }),
     );

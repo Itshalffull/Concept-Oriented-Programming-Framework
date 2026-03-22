@@ -29,7 +29,7 @@ concept SlotProvider [P] {
         surface-provider/slot. Idempotent — returns existing
         instance if pluginRef already registered.
       }
-      -> configError(message: String) {
+      -> ok(message: String) {
         Configuration invalid.
       }
       fixture init_default { config: "{}" }

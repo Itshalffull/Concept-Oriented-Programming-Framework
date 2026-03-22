@@ -88,16 +88,14 @@ describe('Graph functional handler', () => {
       if (typeof graphHandler.addNode !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(graphHandler.addNode({ graph: "social-network", node: "alice" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "add_node_empty" -> ok', async () => {
       if (typeof graphHandler.addNode !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(graphHandler.addNode({ graph: "", node: "" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -164,8 +162,7 @@ describe('Graph functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(graphHandler.removeNode({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "remove_nonexistent_node" -> error', async () => {
@@ -239,8 +236,7 @@ describe('Graph functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(graphHandler.addEdge({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "add_edge_no_graph" -> error', async () => {
@@ -314,8 +310,7 @@ describe('Graph functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(graphHandler.removeEdge({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "remove_nonexistent_edge" -> error', async () => {
@@ -389,8 +384,7 @@ describe('Graph functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(graphHandler.getNeighbors({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "neighbors_no_graph" -> error', async () => {
@@ -464,8 +458,7 @@ describe('Graph functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(graphHandler.filterNodes({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "filter_no_graph" -> error', async () => {
@@ -497,17 +490,13 @@ describe('Graph functional handler', () => {
     it("addNode-then-getNeighbors", async () => {
       const storage = createInMemoryStorage();
       const addNodeResult0 = await interpret(graphHandler.addNode({ graph: {"type":"variable","name":"g"}, node: {"type":"literal","value":"A"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(addNodeResult0.variant), `step 0: expected success but got '${addNodeResult0.variant}'`).toBe(false);
+      expect(addNodeResult0.variant).toBe("ok");
       const thenResult0 = await interpret(graphHandler.addNode({ graph: {"type":"variable","name":"g"}, node: {"type":"literal","value":"B"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(graphHandler.addEdge({ graph: {"type":"variable","name":"g"}, source: {"type":"literal","value":"A"}, target: {"type":"literal","value":"B"} }), storage);
-      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
+      expect(thenResult1.variant).toBe("ok");
       const thenResult2 = await interpret(graphHandler.getNeighbors({ graph: {"type":"variable","name":"g"}, node: {"type":"literal","value":"A"}, depth: {"type":"literal","value":1} }), storage);
-      const _isErrA2 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA2(thenResult2.variant), `assertion 2: expected success but got '${thenResult2.variant}'`).toBe(false);
+      expect(thenResult2.variant).toBe("ok");
     });
 
   });

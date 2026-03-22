@@ -88,8 +88,7 @@ describe('BondingCurve functional handler', () => {
       if (typeof bondingCurveHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(bondingCurveHandler.create({ curveType: "linear", params: "{\"slope\":0.01}", reserveToken: "ETH", bondedToken: "GOV" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_missing_type" -> error', async () => {
@@ -158,8 +157,7 @@ describe('BondingCurve functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_linear = await interpret(bondingCurveHandler.create({ curveType: "linear", params: "{\"slope\":0.01}", reserveToken: "ETH", bondedToken: "GOV" }), storage);
       const result = await interpret(bondingCurveHandler.buy({ curve: afterResult_create_linear?.output?.["id"], buyer: "alice", reserveAmount: "100.0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "buy_nonexistent_curve" -> error', async () => {
@@ -228,8 +226,7 @@ describe('BondingCurve functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_linear = await interpret(bondingCurveHandler.create({ curveType: "linear", params: "{\"slope\":0.01}", reserveToken: "ETH", bondedToken: "GOV" }), storage);
       const result = await interpret(bondingCurveHandler.sell({ curve: afterResult_create_linear?.output?.["id"], seller: "alice", tokenAmount: "50.0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "sell_nonexistent_curve" -> error', async () => {
@@ -298,8 +295,7 @@ describe('BondingCurve functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_linear = await interpret(bondingCurveHandler.create({ curveType: "linear", params: "{\"slope\":0.01}", reserveToken: "ETH", bondedToken: "GOV" }), storage);
       const result = await interpret(bondingCurveHandler.getPrice({ curve: afterResult_create_linear?.output?.["id"], amount: "10.0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_price_nonexistent" -> error', async () => {
@@ -331,12 +327,12 @@ describe('BondingCurve functional handler', () => {
     it("create-then-sell", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(bondingCurveHandler.create({ curveType: {"type":"variable","name":"_"}, params: {"type":"variable","name":"_"}, reserveToken: {"type":"variable","name":"_"}, bondedToken: {"type":"variable","name":"_"} }), storage);
-      expect(createResult0.variant).toBe("created");
+      expect(createResult0.variant).toBe("ok");
       let curve = createResult0.output["curve"];
       const thenResult0 = await interpret(bondingCurveHandler.buy({ curve: {"type":"variable","name":"bc"}, buyer: {"type":"variable","name":"_"}, reserveAmount: {"type":"literal","value":100} }), storage);
-      expect(thenResult0.variant).toBe("bought");
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(bondingCurveHandler.sell({ curve: {"type":"variable","name":"bc"}, seller: {"type":"variable","name":"_"}, tokenAmount: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult1.variant).toBe("sold");
+      expect(thenResult1.variant).toBe("ok");
     });
 
   });
@@ -423,7 +419,7 @@ describe('BondingCurve functional handler', () => {
       }
     });
 
-    it('create ensures on created: ', async () => {
+    it('create ensures on ok: ', async () => {
       if (typeof bondingCurveHandler.create !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -435,7 +431,7 @@ describe('BondingCurve functional handler', () => {
               const program = bondingCurveHandler.create(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "created") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

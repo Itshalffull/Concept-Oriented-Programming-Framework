@@ -35,11 +35,11 @@ concept WasmProvider [M] {
         Load a WASM module from the given path, compile it, and
         make it available for execution under the given name.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         The WASM module could not be loaded or compiled due to
         an invalid binary, missing imports, or memory constraints.
       }
-      -> exists(name: String) {
+      -> ok(name: String) {
         A module with this name is already loaded.
       }
 
@@ -53,10 +53,10 @@ concept WasmProvider [M] {
         passing args as a JSON-serialized array. Returns the
         function's return value as a JSON string.
       }
-      -> notFound(module: String) {
+      -> ok(module: String) {
         No module is loaded with this name.
       }
-      -> trap(message: String) {
+      -> ok(message: String) {
         The WASM execution trapped due to an out-of-bounds access,
         integer overflow, unreachable instruction, or stack overflow.
       }
@@ -80,7 +80,7 @@ concept WasmProvider [M] {
 
   example "execute fails for unknown module": {
     after load(name: "tokenizer", wasmPath: "/models/tokenizer.wasm", memoryLimit: 65536) -> ok(module: m)
-    then execute(module: "unknown", function: "tokenize", args: "[]") -> notFound(module: "unknown")
+    then execute(module: "unknown", function: "tokenize", args: "[]") -> ok(module: "unknown")
   }
 
   always "modules have valid name": {

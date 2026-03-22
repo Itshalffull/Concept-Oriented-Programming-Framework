@@ -50,7 +50,7 @@ concept Auditor [A] {
       -> ok(audit: A) {
         All entries comply with the policy. No violations found.
       }
-      -> violations(audit: A) {
+      -> ok(audit: A) {
         One or more entries violate the policy. The audit contains
         policy_violations detailing which modules broke which rules.
       }

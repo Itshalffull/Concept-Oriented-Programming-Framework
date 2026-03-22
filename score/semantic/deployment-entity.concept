@@ -40,7 +40,7 @@ concept DeploymentEntity [D] {
         configurations, environment overlays, and IaC provider from
         the manifest.
       }
-      -> alreadyRegistered(existing: D) {
+      -> ok(existing: D) {
         A deployment with this name is already registered.
       }
 
@@ -77,7 +77,7 @@ concept DeploymentEntity [D] {
         Find which runtime a concept is assigned to and what
         transport/storage it uses.
       }
-      -> notAssigned(concept: String) {
+      -> ok(concept: String) {
         Concept is not assigned to any runtime in this deployment.
       }
 
@@ -89,7 +89,7 @@ concept DeploymentEntity [D] {
       -> ok(engine: String, runtime: String) {
         Find which sync engine and runtime a sync is assigned to.
       }
-      -> notAssigned(sync: String) {
+      -> ok(sync: String) {
         Sync is not assigned to any engine in this deployment.
       }
 
@@ -116,10 +116,10 @@ concept DeploymentEntity [D] {
         Result as serialized JSON array of { hop, runtime,
         transport, latencyEstimate }.
       }
-      -> sameRuntime() {
+      -> ok() {
         Both concepts are on the same runtime — no transport needed.
       }
-      -> noRoute() {
+      -> ok() {
         No transport route exists between these concepts.
       }
 
@@ -142,7 +142,7 @@ concept DeploymentEntity [D] {
         Compare two deployments (e.g., staging vs production).
         Result as serialized JSON array of { path, aValue, bValue }.
       }
-      -> same() {
+      -> ok() {
         The deployments are identical.
       }
 

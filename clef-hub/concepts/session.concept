@@ -26,7 +26,7 @@ concept Session [S] {
       -> ok(userId: String) {
         The session is active.
       }
-      -> expired() {
+      -> ok() {
         The session has expired.
       }
       -> invalid() {

@@ -88,8 +88,7 @@ describe('AgenticDelegate functional handler', () => {
       if (typeof agenticDelegateHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(agenticDelegateHandler.register({ name: "governance-bot", principal: "alice", autonomyLevel: "Supervised", allowedActions: ["vote","propose"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_empty_name" -> error', async () => {
@@ -158,8 +157,7 @@ describe('AgenticDelegate functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_assistant = await interpret(agenticDelegateHandler.register({ name: "governance-bot", principal: "alice", autonomyLevel: "Supervised", allowedActions: ["vote","propose"] }), storage);
       const result = await interpret(agenticDelegateHandler.assumeRole({ delegate: afterResult_register_assistant?.output?.["id"], role: "voter" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "assume_role_missing_delegate" -> error', async () => {
@@ -228,8 +226,7 @@ describe('AgenticDelegate functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_assistant = await interpret(agenticDelegateHandler.register({ name: "governance-bot", principal: "alice", autonomyLevel: "Supervised", allowedActions: ["vote","propose"] }), storage);
       const result = await interpret(agenticDelegateHandler.releaseRole({ delegate: afterResult_register_assistant?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "release_missing_delegate" -> error', async () => {
@@ -298,8 +295,7 @@ describe('AgenticDelegate functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_assistant = await interpret(agenticDelegateHandler.register({ name: "governance-bot", principal: "alice", autonomyLevel: "Supervised", allowedActions: ["vote","propose"] }), storage);
       const result = await interpret(agenticDelegateHandler.proposeAction({ delegate: afterResult_register_assistant?.output?.["id"], action: "vote", rationale: "Community consensus needed" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "propose_unauthorized" -> error', async () => {
@@ -368,8 +364,7 @@ describe('AgenticDelegate functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_assistant = await interpret(agenticDelegateHandler.register({ name: "governance-bot", principal: "alice", autonomyLevel: "Supervised", allowedActions: ["vote","propose"] }), storage);
       const result = await interpret(agenticDelegateHandler.escalate({ delegate: afterResult_register_assistant?.output?.["id"], action: "budget-approval", reason: "Exceeds autonomy threshold" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "escalate_empty_reason" -> error', async () => {
@@ -438,8 +433,7 @@ describe('AgenticDelegate functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_assistant = await interpret(agenticDelegateHandler.register({ name: "governance-bot", principal: "alice", autonomyLevel: "Supervised", allowedActions: ["vote","propose"] }), storage);
       const result = await interpret(agenticDelegateHandler.updateAutonomy({ delegate: afterResult_register_assistant?.output?.["id"], autonomyLevel: "Autonomous" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "update_missing_delegate" -> error', async () => {
@@ -456,12 +450,12 @@ describe('AgenticDelegate functional handler', () => {
     it("register-then-proposeAction", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(agenticDelegateHandler.register({ agentType: {"type":"variable","name":"_"}, principal: {"type":"variable","name":"p"}, systemPrompt: {"type":"variable","name":"_"}, boundaries: {"type":"variable","name":"_"} }), storage);
-      expect(registerResult0.variant).toBe("registered");
+      expect(registerResult0.variant).toBe("ok");
       let delegate = registerResult0.output["delegate"];
       const thenResult0 = await interpret(agenticDelegateHandler.assumeRole({ delegate: {"type":"variable","name":"d"}, roleId: {"type":"variable","name":"r"} }), storage);
-      expect(thenResult0.variant).toBe("role_assumed");
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(agenticDelegateHandler.proposeAction({ delegate: {"type":"variable","name":"d"}, action: {"type":"variable","name":"a"}, justification: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult1.variant).toBe("proposed");
+      expect(thenResult1.variant).toBe("ok");
     });
 
   });
@@ -552,7 +546,7 @@ describe('AgenticDelegate functional handler', () => {
       }
     });
 
-    it('register ensures on registered: ', async () => {
+    it('register ensures on ok: ', async () => {
       if (typeof agenticDelegateHandler.register !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -564,7 +558,7 @@ describe('AgenticDelegate functional handler', () => {
               const program = agenticDelegateHandler.register(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "registered") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

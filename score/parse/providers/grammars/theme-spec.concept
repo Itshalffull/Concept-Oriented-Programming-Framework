@@ -24,7 +24,7 @@ concept TreeSitterThemeSpec [I] {
         Load the theme spec WASM parser and register it with
         LanguageGrammar for .theme extensions.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to load the WASM parser binary.
       }
     }

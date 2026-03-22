@@ -88,8 +88,7 @@ describe('CondorcetSchulze functional handler', () => {
       if (typeof condorcetSchulzeHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(condorcetSchulzeHandler.configure({  }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -151,8 +150,7 @@ describe('CondorcetSchulze functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_default_config = await interpret(condorcetSchulzeHandler.configure({  }), storage);
       const result = await interpret(condorcetSchulzeHandler.count({ config: afterResult_default_config?.output?.["id"], rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"A\",\"C\",\"B\"]},{\"voter\":\"carol\",\"ranking\":[\"B\",\"A\",\"C\"]}]", weights: "{}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "condorcet_empty_ballots" -> error', async () => {
@@ -222,8 +220,7 @@ describe('CondorcetSchulze functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_default_config = await interpret(condorcetSchulzeHandler.configure({  }), storage);
       const result = await interpret(condorcetSchulzeHandler.getPairwiseMatrix({ config: afterResult_default_config?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_matrix_missing" -> error', async () => {
@@ -255,10 +252,10 @@ describe('CondorcetSchulze functional handler', () => {
     it("configure-then-count", async () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(condorcetSchulzeHandler.configure({  }), storage);
-      expect(configureResult0.variant).toBe("configured");
+      expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
       const thenResult0 = await interpret(condorcetSchulzeHandler.count({ config: {"type":"variable","name":"cs"}, rankedBallots: {"type":"variable","name":"_"}, weights: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("condorcet_winner");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

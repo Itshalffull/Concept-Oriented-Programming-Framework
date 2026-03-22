@@ -33,7 +33,7 @@ concept Artifact [A] {
         artifact. Hash computed from all inputs. If artifact with
         same hash already exists, return it without rebuilding.
       }
-      -> compilationError(concept: String, errors: list String) {
+      -> ok(concept: String, errors: list String) {
         The concept spec or implementation contains syntax or type errors preventing compilation.
       }
 
@@ -48,7 +48,7 @@ concept Artifact [A] {
         (deduplication). Records language, platform, and build
         metadata for provenance.
       }
-      -> alreadyExists(artifact: A) {
+      -> ok(artifact: A) {
         Artifact with this hash already stored. Idempotent.
       }
 

@@ -23,7 +23,7 @@ concept ThemeSpecSymbolExtractor [I] {
         Register this extractor with PluginRegistry for
         theme spec file extensions.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the theme spec extractor.
       }
     }

@@ -50,7 +50,7 @@ const _approvalCountingHandler: FunctionalConceptHandler = {
       instanceId: id,
     });
 
-    return complete(p, 'configured', { config: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { config: id }) as StorageProgram<Result>;
   },
 
   count(input: Record<string, unknown>) {

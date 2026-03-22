@@ -88,16 +88,14 @@ describe('Taxonomy functional handler', () => {
       if (typeof taxonomyHandler.createVocabulary !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_empty_vocab" -> ok', async () => {
       if (typeof taxonomyHandler.createVocabulary !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(taxonomyHandler.createVocabulary({ vocab: "", name: "unnamed" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -159,8 +157,7 @@ describe('Taxonomy functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_topics_vocab = await interpret(taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" }), storage);
       const result = await interpret(taxonomyHandler.addTerm({ vocab: afterResult_create_topics_vocab?.output?.["id"], term: "science", parent: "" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "add_child_term" -> ok', async () => {
@@ -168,8 +165,7 @@ describe('Taxonomy functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_topics_vocab = await interpret(taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" }), storage);
       const result = await interpret(taxonomyHandler.addTerm({ vocab: afterResult_create_topics_vocab?.output?.["id"], term: "physics", parent: "science" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "add_term_missing_vocab" -> error', async () => {
@@ -238,8 +234,7 @@ describe('Taxonomy functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_topics_vocab = await interpret(taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" }), storage);
       const result = await interpret(taxonomyHandler.setParent({ vocab: afterResult_create_topics_vocab?.output?.["id"], term: "physics", parent: "natural-science" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "set_parent_missing_vocab" -> error', async () => {
@@ -308,8 +303,7 @@ describe('Taxonomy functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_topics_vocab = await interpret(taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" }), storage);
       const result = await interpret(taxonomyHandler.tagEntity({ entity: afterResult_create_topics_vocab?.output?.["id"], vocab: afterResult_create_topics_vocab?.output?.["id"], term: "science" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "tag_missing_vocab" -> error', async () => {
@@ -378,8 +372,7 @@ describe('Taxonomy functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_topics_vocab = await interpret(taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" }), storage);
       const result = await interpret(taxonomyHandler.untagEntity({ entity: afterResult_create_topics_vocab?.output?.["id"], vocab: afterResult_create_topics_vocab?.output?.["id"], term: "science" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "untag_missing_vocab" -> error', async () => {
@@ -411,17 +404,13 @@ describe('Taxonomy functional handler', () => {
     it("createVocabulary-then-untagEntity", async () => {
       const storage = createInMemoryStorage();
       const createVocabularyResult0 = await interpret(taxonomyHandler.createVocabulary({ vocab: {"type":"variable","name":"v"}, name: {"type":"literal","value":"topics"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(createVocabularyResult0.variant), `step 0: expected success but got '${createVocabularyResult0.variant}'`).toBe(false);
+      expect(createVocabularyResult0.variant).toBe("ok");
       const thenResult0 = await interpret(taxonomyHandler.addTerm({ vocab: {"type":"variable","name":"v"}, term: {"type":"literal","value":"science"}, parent: {"type":"literal","value":false} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(taxonomyHandler.tagEntity({ entity: {"type":"literal","value":"page-1"}, vocab: {"type":"variable","name":"v"}, term: {"type":"literal","value":"science"} }), storage);
-      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
+      expect(thenResult1.variant).toBe("ok");
       const thenResult2 = await interpret(taxonomyHandler.untagEntity({ entity: {"type":"literal","value":"page-1"}, vocab: {"type":"variable","name":"v"}, term: {"type":"literal","value":"science"} }), storage);
-      const _isErrA2 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA2(thenResult2.variant), `assertion 2: expected success but got '${thenResult2.variant}'`).toBe(false);
+      expect(thenResult2.variant).toBe("ok");
     });
 
   });

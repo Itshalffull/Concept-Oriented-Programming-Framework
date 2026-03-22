@@ -43,7 +43,7 @@ concept EffectHandler [E] {
         Return the registered handler for this protocol:operation
         pair, confirming the effect can be interpreted.
       }
-      -> unresolved(protocol: String, operation: String) {
+      -> ok(protocol: String, operation: String) {
         No handler is registered for this protocol:operation pair.
         The perform instruction cannot be executed.
       }
@@ -98,14 +98,14 @@ concept EffectHandler [E] {
   }
 
   example "resolve unregistered pair returns unresolved": {
-    after resolve(protocol: "grpc", operation: "invoke") -> unresolved(protocol: p, operation: o)
+    after resolve(protocol: "grpc", operation: "invoke") -> ok(protocol: p, operation: o)
     then p = "grpc"
   }
 
   example "deregister removes handler": {
     after register(protocol: "http", operation: "GET") -> ok(handler: h)
     and deregister(protocol: "http", operation: "GET") -> ok(handler: h)
-    then resolve(protocol: "http", operation: "GET") -> unresolved(protocol: p, operation: o)
+    then resolve(protocol: "http", operation: "GET") -> ok(protocol: p, operation: o)
   }
 
   example "duplicate register returns existing handler": {

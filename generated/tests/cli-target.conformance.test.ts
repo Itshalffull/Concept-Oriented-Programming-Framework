@@ -88,16 +88,14 @@ describe('CliTarget functional handler', () => {
       if (typeof cliTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(cliTargetHandler.generate({ projection: "task-projection", config: "{}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "with_custom_binary" -> ok', async () => {
       if (typeof cliTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(cliTargetHandler.generate({ projection: "workflow-projection", config: "{\"binaryName\":\"wf\",\"shell\":\"zsh\",\"outputFormats\":[\"json\",\"yaml\"]}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_projection" -> error', async () => {
@@ -111,8 +109,7 @@ describe('CliTarget functional handler', () => {
       if (typeof cliTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(cliTargetHandler.generate({ projection: "data-projection", config: "{\"actionPositionals\":{\"import\":5}}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -179,8 +176,7 @@ describe('CliTarget functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(cliTargetHandler.validate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_command" -> error', async () => {
@@ -254,8 +250,7 @@ describe('CliTarget functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(cliTargetHandler.listCommands({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_concept" -> error', async () => {
@@ -287,13 +282,11 @@ describe('CliTarget functional handler', () => {
     it("generate-then-listCommands", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(cliTargetHandler.generate({ projection: {"type":"literal","value":"task-projection"}, config: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
+      expect(generateResult0.variant).toBe("ok");
       let commands = generateResult0.output["commands"];
       let files = generateResult0.output["files"];
       const thenResult0 = await interpret(cliTargetHandler.listCommands({ concept: {"type":"literal","value":"Task"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

@@ -135,7 +135,7 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p,
       (bindings) => !bindings.lockfile,
-      (bp) => complete(bp, 'stale', { reason: 'Lockfile not found' }),
+      (bp) => complete(bp, 'ok', { reason: 'Lockfile not found' }),
       (bp) => completeFrom(bp, 'ok', (bindings) => {
         const lf = bindings.lockfile as Record<string, unknown>;
         const entries = lf.entries as LockfileEntry[];

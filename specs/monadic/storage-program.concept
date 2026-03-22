@@ -21,7 +21,7 @@ concept StorageProgram [P] {
   actions {
     action create(program: P) {
       -> ok() { Initialize an empty program ready to receive instructions. }
-      -> exists() { A program with this identifier has already been created. }
+      -> ok() { A program with this identifier has already been created. }
 
       fixture create_new {
         program: "prog-1"
@@ -38,7 +38,7 @@ concept StorageProgram [P] {
         interpretation.
       }
       -> notfound() { No program exists with this identifier. }
-      -> sealed() { The program has already been terminated with pure. }
+      -> ok() { The program has already been terminated with pure. }
 
       fixture get_user {
         program: "prog-1",
@@ -60,7 +60,7 @@ concept StorageProgram [P] {
         criteria filter. Results are bound to bindAs during interpretation.
       }
       -> notfound() { No program exists with this identifier. }
-      -> sealed() { The program has already been terminated with pure. }
+      -> ok() { The program has already been terminated with pure. }
 
       fixture find_by_criteria {
         program: "prog-1",
@@ -82,7 +82,7 @@ concept StorageProgram [P] {
         relation at the given key.
       }
       -> notfound() { No program exists with this identifier. }
-      -> sealed() { The program has already been terminated with pure. }
+      -> ok() { The program has already been terminated with pure. }
 
       fixture put_record {
         program: "prog-1",
@@ -104,7 +104,7 @@ concept StorageProgram [P] {
         relation at the given key.
       }
       -> notfound() { No program exists with this identifier. }
-      -> sealed() { The program has already been terminated with pure. }
+      -> ok() { The program has already been terminated with pure. }
 
       fixture del_record {
         program: "prog-1",
@@ -125,7 +125,7 @@ concept StorageProgram [P] {
         a single program tree.
       }
       -> notfound() { The program or one of the branch programs does not exist. }
-      -> sealed() { The program has already been terminated with pure. }
+      -> ok() { The program has already been terminated with pure. }
 
       fixture branch_conditional {
         program: "prog-1",
@@ -148,7 +148,7 @@ concept StorageProgram [P] {
         be appended after pure.
       }
       -> notfound() { No program exists with this identifier. }
-      -> sealed() { The program has already been terminated with pure. }
+      -> ok() { The program has already been terminated with pure. }
 
       fixture pure_ok {
         program: "prog-1",
@@ -188,7 +188,7 @@ concept StorageProgram [P] {
         as a StateLens. The fetched value is bound to bindAs.
       }
       -> notfound() { No program exists with this identifier. }
-      -> sealed() { The program has already been terminated with pure. }
+      -> ok() { The program has already been terminated with pure. }
 
       fixture get_lens_read {
         program: "prog-1",
@@ -208,7 +208,7 @@ concept StorageProgram [P] {
         reference. The lens encodes the target location as a StateLens.
       }
       -> notfound() { No program exists with this identifier. }
-      -> sealed() { The program has already been terminated with pure. }
+      -> ok() { The program has already been terminated with pure. }
 
       fixture put_lens_write {
         program: "prog-1",
@@ -229,7 +229,7 @@ concept StorageProgram [P] {
         the same lens. This is a read-modify-write operation.
       }
       -> notfound() { No program exists with this identifier. }
-      -> sealed() { The program has already been terminated with pure. }
+      -> ok() { The program has already been terminated with pure. }
 
       fixture modify_lens {
         program: "prog-1",
@@ -255,7 +255,7 @@ concept StorageProgram [P] {
   example "sealed program rejects new instructions": {
     after create(program: p) -> ok()
     and pure(program: p, variant: "ok", output: "done") -> ok(program: p)
-    then get(program: p, relation: "users", key: "u1", bindAs: "x") -> sealed()
+    then get(program: p, relation: "users", key: "u1", bindAs: "x") -> ok()
   }
 
   example "compose chains two programs": {

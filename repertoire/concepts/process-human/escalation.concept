@@ -34,7 +34,7 @@ concept Escalation [L] {
       -> ok(escalation: L) {
         An actor accepts responsibility for resolving the escalation.
       }
-      -> not_escalated(escalation: L) {
+      -> ok(escalation: L) {
         Escalation is not in escalated status.
       }
     }
@@ -43,7 +43,7 @@ concept Escalation [L] {
       -> ok(escalation: L, source_ref: String, resolution: String) {
         Marks the escalation resolved. Records resolution and timestamp.
       }
-      -> not_accepted(escalation: L) {
+      -> ok(escalation: L) {
         Escalation must be accepted before it can be resolved.
       }
     }

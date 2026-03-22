@@ -28,7 +28,7 @@ concept Download [D] {
         Registers a new downloadable artifact for a given platform and version.
         The content_hash is used for integrity verification after download.
       }
-      -> exists() {
+      -> ok() {
         An artifact with this artifact_id, platform, and version already exists.
       }
       -> invalid(message: String) {
@@ -44,7 +44,7 @@ concept Download [D] {
       -> notfound() {
         No artifact matches the given criteria.
       }
-      -> yanked(download: D) {
+      -> ok(download: D) {
         The only matching artifact has been yanked. Returned for
         informational purposes but should not be used for new installs.
       }
@@ -58,7 +58,7 @@ concept Download [D] {
       -> notfound() {
         The specified download does not exist.
       }
-      -> already_yanked() {
+      -> ok() {
         The artifact is already yanked.
       }
     }
@@ -84,7 +84,7 @@ concept Download [D] {
   example "register then yank": {
     after register(...) -> ok(download: d)
     then yank(download: d) -> ok()
-    and  resolve(artifact_id: "cli", platform: "darwin-arm64", version_range: "^1.0.0") -> yanked(download: d)
+    and  resolve(artifact_id: "cli", platform: "darwin-arm64", version_range: "^1.0.0") -> ok(download: d)
   }
 
 

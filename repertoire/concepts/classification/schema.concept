@@ -11,7 +11,7 @@ concept Schema [S] {
   actions {
     action defineSchema(schema: S, fields: String) {
       -> ok() { Create a new schema with the given fields. }
-      -> exists(message: String) { Schema already exists. }
+      -> ok(message: String) { Schema already exists. }
 
       fixture create_article { schema: "article", fields: "title,body,author" }
       fixture missing_fields { schema: "empty", fields: "" } -> error

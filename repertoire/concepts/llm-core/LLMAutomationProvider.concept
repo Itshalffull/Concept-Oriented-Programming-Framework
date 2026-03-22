@@ -28,7 +28,7 @@ concept LLMAutomationProvider [LA] {
         Registers this provider with PluginRegistry under type
         "automation-provider" and name "llm".
       }
-      -> already_registered() {
+      -> ok() {
         Provider is already registered with PluginRegistry.
       }
 

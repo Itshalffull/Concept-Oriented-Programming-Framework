@@ -51,7 +51,7 @@ concept Layout [Y] {
 
     action nest(parent: Y, child: Y) {
       -> ok(parent: Y) { Nest layout inside another. }
-      -> cycle(message: String) { Would create circular reference. }
+      -> ok(message: String) { Would create circular reference. }
 
       fixture nest_child { parent: $sidebar_layout.layout, child: $sidebar_layout.layout } after sidebar_layout
       fixture parent_not_found { parent: "layout-missing", child: "layout-2" } -> cycle

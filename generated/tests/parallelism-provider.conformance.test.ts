@@ -88,16 +88,14 @@ describe('ParallelismProvider functional handler', () => {
       if (typeof parallelismProviderHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(parallelismProviderHandler.analyze({ program: "{\"instructions\":[{\"tag\":\"get\",\"relation\":\"users\",\"key\":\"u1\",\"bindAs\":\"userResult\"},{\"tag\":\"get\",\"relation\":\"orders\",\"key\":\"o1\",\"bindAs\":\"orderResult\"},{\"tag\":\"pure\",\"value\":{\"variant\":\"ok\"}}]}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "linear_chain" -> ok', async () => {
       if (typeof parallelismProviderHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(parallelismProviderHandler.analyze({ program: "{\"instructions\":[{\"tag\":\"get\",\"relation\":\"users\",\"key\":\"u1\",\"bindAs\":\"userResult\"},{\"tag\":\"pureFrom\",\"fn\":\"identity\"}]}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_json" -> error', async () => {
@@ -129,8 +127,7 @@ describe('ParallelismProvider functional handler', () => {
     it("independent gets yield parallelism >= 2", async () => {
       const storage = createInMemoryStorage();
       const analyzeResult0 = await interpret(parallelismProviderHandler.analyze({ program: {"type":"literal","value":"get(users, u1, userResult); get(orders, o1, orderResult)"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(analyzeResult0.variant), `step 0: expected success but got '${analyzeResult0.variant}'`).toBe(false);
+      expect(analyzeResult0.variant).toBe("ok");
       let result = analyzeResult0.output["result"];
       let layers = analyzeResult0.output["layers"];
       let dependencyEdges = analyzeResult0.output["dependencyEdges"];
@@ -142,8 +139,7 @@ describe('ParallelismProvider functional handler', () => {
     it("dependent chain has critical path length 2", async () => {
       const storage = createInMemoryStorage();
       const analyzeResult0 = await interpret(parallelismProviderHandler.analyze({ program: {"type":"literal","value":"get(users, u1, userResult); pureFrom(fn)"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(analyzeResult0.variant), `step 0: expected success but got '${analyzeResult0.variant}'`).toBe(false);
+      expect(analyzeResult0.variant).toBe("ok");
       let result = analyzeResult0.output["result"];
       let layers = analyzeResult0.output["layers"];
       let dependencyEdges = analyzeResult0.output["dependencyEdges"];

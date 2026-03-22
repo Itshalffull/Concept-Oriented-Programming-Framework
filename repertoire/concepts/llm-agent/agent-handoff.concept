@@ -50,7 +50,7 @@ concept AgentHandoff [D] {
         Special case: agent admits it can't handle the task and
         escalates to a more capable agent or human.
       }
-      -> no_target(message: String) {
+      -> ok(message: String) {
         No suitable escalation target.
       }
     }
@@ -60,7 +60,7 @@ concept AgentHandoff [D] {
             timestamp: DateTime}) {
         Full handoff chain for a task.
       }
-      -> empty(message: String) {
+      -> ok(message: String) {
         No handoff history for this task.
       }
     }

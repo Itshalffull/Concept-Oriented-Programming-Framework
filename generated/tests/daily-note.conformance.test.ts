@@ -88,8 +88,7 @@ describe('DailyNote functional handler', () => {
       if (typeof dailyNoteHandler.getOrCreateToday !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(dailyNoteHandler.getOrCreateToday({ note: "daily-2026-03-20" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "today_existing" -> ok', async () => {
@@ -102,8 +101,7 @@ describe('DailyNote functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(dailyNoteHandler.getOrCreateToday({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -170,8 +168,7 @@ describe('DailyNote functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(dailyNoteHandler.navigateToDate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "navigate_missing" -> notfound', async () => {
@@ -246,8 +243,7 @@ describe('DailyNote functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(dailyNoteHandler.listRecent({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "list_one" -> ok', async () => {
@@ -260,8 +256,7 @@ describe('DailyNote functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(dailyNoteHandler.listRecent({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -286,13 +281,11 @@ describe('DailyNote functional handler', () => {
     it("getOrCreateToday-then-getOrCreateToday", async () => {
       const storage = createInMemoryStorage();
       const getOrCreateTodayResult0 = await interpret(dailyNoteHandler.getOrCreateToday({ note: {"type":"variable","name":"n"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(getOrCreateTodayResult0.variant), `step 0: expected success but got '${getOrCreateTodayResult0.variant}'`).toBe(false);
+      expect(getOrCreateTodayResult0.variant).toBe("ok");
       let note = getOrCreateTodayResult0.output["note"];
       let created = getOrCreateTodayResult0.output["created"];
       const thenResult0 = await interpret(dailyNoteHandler.getOrCreateToday({ note: {"type":"variable","name":"n"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

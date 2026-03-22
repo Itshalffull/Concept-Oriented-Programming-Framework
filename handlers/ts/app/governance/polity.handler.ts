@@ -20,7 +20,7 @@ const _polityHandler: FunctionalConceptHandler = {
       values: input.values, amendmentThreshold: input.amendmentThreshold,
       status: 'Active', establishedAt: new Date().toISOString(),
     });
-    return complete(p, 'established', { polity: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { polity: id }) as StorageProgram<Result>;
   },
 
   amend(input: Record<string, unknown>) {
@@ -31,7 +31,7 @@ const _polityHandler: FunctionalConceptHandler = {
     p = branch(p, 'record',
       (b) => {
         let b2 = put(b, 'polity', polity as string, { [field as string]: newValue, lastAmendedAt: new Date().toISOString() });
-        return complete(b2, 'amended', { polity });
+        return complete(b2, 'ok', { polity });
       },
       (b) => complete(b, 'not_found', { polity }),
     );
@@ -47,7 +47,7 @@ const _polityHandler: FunctionalConceptHandler = {
     p = branch(p, 'record',
       (b) => {
         let b2 = put(b, 'polity', polity as string, { status: 'Dissolved', dissolvedAt: new Date().toISOString(), reason });
-        return complete(b2, 'dissolved', { polity });
+        return complete(b2, 'ok', { polity });
       },
       (b) => complete(b, 'not_found', { polity }),
     );

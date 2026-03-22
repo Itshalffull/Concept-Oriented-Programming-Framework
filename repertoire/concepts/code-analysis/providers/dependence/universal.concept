@@ -22,7 +22,7 @@ concept UniversalTreeSitterDependenceProvider [I] {
         Register this provider as a fallback with PluginRegistry
         for universal dependence analysis.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the Tree-sitter dependence provider.
       }
     }

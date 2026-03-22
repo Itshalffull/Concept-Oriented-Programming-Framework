@@ -88,16 +88,14 @@ describe('EnrichmentRenderer functional handler', () => {
       if (typeof enrichmentRendererHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(enrichmentRendererHandler.register({ key: "migration-guide", format: "skill-md", order: "75", pattern: "heading-body", template: "{\"heading\":\"Migration Guide\"}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "list_handler" -> ok', async () => {
       if (typeof enrichmentRendererHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(enrichmentRendererHandler.register({ key: "references", format: "skill-md", order: "10", pattern: "list", template: "{\"title\":\"References\"}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "unknown_pattern" -> unknownPattern', async () => {
@@ -180,8 +178,7 @@ describe('EnrichmentRenderer functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(enrichmentRendererHandler.render({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_json_content" -> invalidContent', async () => {
@@ -264,8 +261,7 @@ describe('EnrichmentRenderer functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(enrichmentRendererHandler.listHandlers({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "list_empty_format" -> ok', async () => {
@@ -278,8 +274,7 @@ describe('EnrichmentRenderer functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(enrichmentRendererHandler.listHandlers({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -343,8 +338,7 @@ describe('EnrichmentRenderer functional handler', () => {
       const _pool = Object.assign({}, (afterResult_checklist_handler?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(enrichmentRendererHandler.listPatterns({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -354,12 +348,10 @@ describe('EnrichmentRenderer functional handler', () => {
     it("register handler then render succeeds", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(enrichmentRendererHandler.register({ key: {"type":"literal","value":"migration-guide"}, format: {"type":"literal","value":"skill-md"}, order: {"type":"literal","value":75}, pattern: {"type":"literal","value":"heading-body"}, template: {"type":"literal","value":"{\"heading\":\"Migration Guide\"}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let handler = registerResult0.output["handler"];
       const thenResult0 = await interpret(enrichmentRendererHandler.render({ content: {"type":"literal","value":"{\"migration-guide\":{\"heading\":\"Migration Guide\",\"body\":\"Follow these steps...\"}}"}, format: {"type":"literal","value":"skill-md"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

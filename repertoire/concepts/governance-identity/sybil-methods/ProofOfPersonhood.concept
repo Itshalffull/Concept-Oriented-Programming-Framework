@@ -24,7 +24,7 @@ concept ProofOfPersonhood [PP] {
 
   actions {
     action requestVerification(candidate: String, method: String, expiryDays: option Float) {
-      -> verification_requested(verification: PP) {
+      -> ok(verification: PP) {
         A verification request is created for the candidate.
       }
 
@@ -33,10 +33,10 @@ concept ProofOfPersonhood [PP] {
     }
 
     action confirmVerification(verification: PP) {
-      -> verified(verification: PP, candidate: String) {
+      -> ok(verification: PP, candidate: String) {
         The verification is confirmed; the candidate is verified as a unique human.
       }
-      -> already_verified(verification: PP) {
+      -> ok(verification: PP) {
         The verification has already been confirmed.
       }
       -> not_found(verification: PP) {
@@ -48,7 +48,7 @@ concept ProofOfPersonhood [PP] {
     }
 
     action rejectVerification(verification: PP, reason: String) {
-      -> rejected(verification: PP, reason: String) {
+      -> ok(verification: PP, reason: String) {
         The verification is rejected with a reason.
       }
       -> not_found(verification: PP) {
@@ -60,10 +60,10 @@ concept ProofOfPersonhood [PP] {
     }
 
     action checkStatus(verification: PP) {
-      -> status(verification: PP, candidate: String) {
+      -> ok(verification: PP, candidate: String) {
         Returns the current status of the verification.
       }
-      -> expired(verification: PP, candidate: String) {
+      -> ok(verification: PP, candidate: String) {
         The verification has expired and must be renewed.
       }
       -> not_found(verification: PP) {
@@ -77,7 +77,7 @@ concept ProofOfPersonhood [PP] {
 
   example "verify-then-checkStatus": {
 
-    after verify(participant: p, method: _, proofHash: _, verifier: _, expiryDays: _) -> verified(verification: _)
+    after verify(participant: p, method: _, proofHash: _, verifier: _, expiryDays: _) -> ok(verification: _)
 
         then checkStatus(participant: p) -> valid(expiresAt: _)
 

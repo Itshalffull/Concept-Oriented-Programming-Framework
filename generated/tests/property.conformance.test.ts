@@ -88,8 +88,7 @@ describe('Property functional handler', () => {
       if (typeof propertyHandler.set !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(propertyHandler.set({ entity: "page-1", key: "title", value: "Hello World" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "set_empty_entity" -> error', async () => {
@@ -158,8 +157,7 @@ describe('Property functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_set_title = await interpret(propertyHandler.set({ entity: "page-1", key: "title", value: "Hello World" }), storage);
       const result = await interpret(propertyHandler.get({ entity: afterResult_set_title?.output?.["entity"], key: "title" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_missing" -> error', async () => {
@@ -228,8 +226,7 @@ describe('Property functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_set_title = await interpret(propertyHandler.set({ entity: "page-1", key: "title", value: "Hello World" }), storage);
       const result = await interpret(propertyHandler.delete({ entity: afterResult_set_title?.output?.["entity"], key: "title" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "delete_missing" -> error', async () => {
@@ -298,8 +295,7 @@ describe('Property functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_set_title = await interpret(propertyHandler.set({ entity: "page-1", key: "title", value: "Hello World" }), storage);
       const result = await interpret(propertyHandler.listAll({ entity: afterResult_set_title?.output?.["entity"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "list_empty_entity" -> error', async () => {
@@ -331,23 +327,19 @@ describe('Property functional handler', () => {
     it("set-then-get-2", async () => {
       const storage = createInMemoryStorage();
       const setResult0 = await interpret(propertyHandler.set({ entity: {"type":"variable","name":"e"}, key: {"type":"literal","value":"title"}, value: {"type":"literal","value":"Hello World"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(setResult0.variant), `step 0: expected success but got '${setResult0.variant}'`).toBe(false);
+      expect(setResult0.variant).toBe("ok");
       let entity = setResult0.output["entity"];
       const thenResult0 = await interpret(propertyHandler.get({ entity: {"type":"variable","name":"e"}, key: {"type":"literal","value":"title"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("set-then-get", async () => {
       const storage = createInMemoryStorage();
       const setResult0 = await interpret(propertyHandler.set({ entity: {"type":"variable","name":"e"}, key: {"type":"literal","value":"title"}, value: {"type":"literal","value":"Hello"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(setResult0.variant), `step 0: expected success but got '${setResult0.variant}'`).toBe(false);
+      expect(setResult0.variant).toBe("ok");
       let entity = setResult0.output["entity"];
       const deleteResult1 = await interpret(propertyHandler.delete({ entity: {"type":"variable","name":"e"}, key: {"type":"literal","value":"title"} }), storage);
-      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr1(deleteResult1.variant), `step 1: expected success but got '${deleteResult1.variant}'`).toBe(false);
+      expect(deleteResult1.variant).toBe("ok");
       entity = deleteResult1.output["entity"];
       const thenResult0 = await interpret(propertyHandler.get({ entity: {"type":"variable","name":"e"}, key: {"type":"literal","value":"title"} }), storage);
       expect(thenResult0.variant).toBe("notfound");

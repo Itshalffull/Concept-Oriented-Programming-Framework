@@ -40,7 +40,7 @@ const _consentProcessHandler: FunctionalConceptHandler = {
       instanceId: id,
     });
 
-    return complete(p, 'opened', { round: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { round: id }) as StorageProgram<Result>;
   },
 
   advancePhase(input: Record<string, unknown>) {
@@ -120,7 +120,7 @@ const _consentProcessHandler: FunctionalConceptHandler = {
                 objections: JSON.stringify(objections),
               };
             });
-            return complete(validP, 'objection_raised', { round, objectionId: objId });
+            return complete(validP, 'ok', { round, objectionId: objId });
           },
           (invalidP) => {
             return completeFrom(invalidP, 'wrong_phase', (bindings) => {
@@ -166,7 +166,7 @@ const _consentProcessHandler: FunctionalConceptHandler = {
                 amendments: JSON.stringify(amendments),
               };
             });
-            return complete(foundP, 'objection_resolved', { round });
+            return complete(foundP, 'ok', { round });
           },
           (notFoundP) => complete(notFoundP, 'objection_not_found', { round, objection }),
         );

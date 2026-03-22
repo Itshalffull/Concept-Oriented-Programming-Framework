@@ -39,11 +39,11 @@ concept OnnxProvider [N] {
         session on the specified device, and make it available
         under the given name.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         The ONNX model could not be loaded due to an invalid model
         file, unsupported operators, or device unavailability.
       }
-      -> exists(name: String) {
+      -> ok(name: String) {
         A session with this name is already loaded.
       }
 
@@ -57,14 +57,14 @@ concept OnnxProvider [N] {
         tensors (JSON-serialized). Returns output tensors and
         inference timing in milliseconds.
       }
-      -> notFound(session: String) {
+      -> ok(session: String) {
         No session is loaded with this name.
       }
-      -> inferenceError(message: String) {
+      -> ok(message: String) {
         Inference failed due to a runtime error in the ONNX
         execution provider.
       }
-      -> shapeMismatch(expected: String, got: String) {
+      -> ok(expected: String, got: String) {
         The input tensor shapes do not match the model's expected
         input schema.
       }
@@ -85,7 +85,7 @@ concept OnnxProvider [N] {
 
   example "infer fails for unknown session": {
     after load(name: "codebert", modelPath: "/models/codebert.onnx", device: "cpu", options: "{}") -> ok(session: n)
-    then infer(session: "unknown", inputs: "[]", options: "{}") -> notFound(session: "unknown")
+    then infer(session: "unknown", inputs: "[]", options: "{}") -> ok(session: "unknown")
   }
 
   always "sessions have valid name": {

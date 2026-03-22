@@ -10,6 +10,7 @@ Scaffold a TypeScript handler for concept **{input}** with typed actions, storag
 
 - **One Handler per Action:** Each action in the concept spec maps to exactly one async method in the handler.
 - **Variant Completeness:** Every return variant declared in the spec must have a corresponding code path — no missing branches.
+- **Success is ok:** The happy-path variant must always be named `ok`. Do not use domain-specific success names like `configured`, `created`, `registered`. Domain context belongs in the output fields. Exception: actions with multiple distinct success outcomes that syncs need to distinguish (e.g., `ok`/`miss` for cache lookup).
 - **Storage Sovereignty:** Each concept owns its storage exclusively — no shared databases, no cross-concept state access.
 - **Input Extraction:** Extract inputs with `as` casts at the top of each method. Validate required fields before processing.
 - **Functional First:** Default to FunctionalConceptHandler returning StorageProgram. Use imperative ConceptHandler only when direct filesystem or FFI access is unavoidable.

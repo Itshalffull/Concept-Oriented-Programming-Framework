@@ -31,7 +31,7 @@ concept AnalysisRule [U] {
         error, warning, info. Category classifies the rule
         (dead-code, security, architecture, convention).
       }
-      -> invalidSyntax(message: String) {
+      -> ok(message: String) {
         The rule source has syntax errors for the given engine.
       }
 
@@ -47,10 +47,10 @@ concept AnalysisRule [U] {
         Findings as serialized JSON array of { message, symbol,
         file, location }.
       }
-      -> noFindings() {
+      -> ok() {
         Rule evaluation produced no findings.
       }
-      -> evaluationError(message: String) {
+      -> ok(message: String) {
         Rule evaluation failed.
       }
 

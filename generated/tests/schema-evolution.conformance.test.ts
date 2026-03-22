@@ -88,8 +88,7 @@ describe('SchemaEvolution functional handler', () => {
       if (typeof schemaEvolutionHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(schemaEvolutionHandler.register({ subject: "user-profile", schema: "[{\"name\":\"email\",\"type\":\"string\",\"required\":true}]", compatibility: "backward" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_compat_mode" -> error', async () => {
@@ -163,8 +162,7 @@ describe('SchemaEvolution functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(schemaEvolutionHandler.check({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_mode" -> error', async () => {
@@ -238,8 +236,7 @@ describe('SchemaEvolution functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(schemaEvolutionHandler.upcast({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "upcast_missing_subject" -> error', async () => {
@@ -319,8 +316,7 @@ describe('SchemaEvolution functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(schemaEvolutionHandler.resolve({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_unparseable" -> error', async () => {
@@ -394,8 +390,7 @@ describe('SchemaEvolution functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(schemaEvolutionHandler.getSchema({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_missing" -> error', async () => {
@@ -412,8 +407,7 @@ describe('SchemaEvolution functional handler', () => {
     it("register then check", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(schemaEvolutionHandler.register({ subject: {"type":"variable","name":"s"}, schema: {"type":"variable","name":"sc"}, compatibility: {"type":"literal","value":"full"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let version = registerResult0.output["version"];
       let schemaId = registerResult0.output["schemaId"];
       const thenResult0 = await interpret(schemaEvolutionHandler.check({ oldSchema: {"type":"variable","name":"prev"}, newSchema: {"type":"variable","name":"sc"}, mode: {"type":"literal","value":"full"} }), storage);

@@ -374,7 +374,7 @@ const _handler: FunctionalConceptHandler = {
           return { resolvedCount };
         });
       },
-      (elseP) => complete(elseP, 'noUnresolved', {}),
+      (elseP) => complete(elseP, 'ok', {}),
     ) as StorageProgram<Result>;
   },
 

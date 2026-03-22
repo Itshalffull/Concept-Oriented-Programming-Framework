@@ -88,16 +88,14 @@ describe('GitHubApiEndpoint functional handler', () => {
       if (typeof githubApiEndpointHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(githubApiEndpointHandler.register({ name: "github-api", token: "ghp_abc123def456", repository: "acme/webapp" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "github_ci" -> ok', async () => {
       if (typeof githubApiEndpointHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(githubApiEndpointHandler.register({ name: "ci-status", token: "ghp_ci_token_789", repository: "acme/infra" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_name" -> error', async () => {
@@ -171,8 +169,7 @@ describe('GitHubApiEndpoint functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(githubApiEndpointHandler.resolve({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_missing" -> error', async () => {
@@ -243,8 +240,7 @@ describe('GitHubApiEndpoint functional handler', () => {
       const _pool = Object.assign({}, (afterResult_github_primary?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(githubApiEndpointHandler.list({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -254,12 +250,10 @@ describe('GitHubApiEndpoint functional handler', () => {
     it("resolve after register", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(githubApiEndpointHandler.register({ name: {"type":"literal","value":"github-api"}, token: {"type":"literal","value":"ghp-test"}, repository: {"type":"literal","value":"owner/repo"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let endpoint = registerResult0.output["endpoint"];
       const thenResult0 = await interpret(githubApiEndpointHandler.resolve({ name: {"type":"literal","value":"github-api"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

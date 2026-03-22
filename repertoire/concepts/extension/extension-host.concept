@@ -23,7 +23,7 @@ concept ExtensionHost [H] {
         Extension installed and registered. Status set to "installed".
         Routes to host-specific provider for platform setup.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         An extension with the same identity is already installed.
       }
       -> invalid(message: String) {

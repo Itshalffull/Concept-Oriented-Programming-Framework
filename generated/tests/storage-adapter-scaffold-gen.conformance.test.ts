@@ -88,16 +88,14 @@ describe('StorageAdapterScaffoldGen functional handler', () => {
       if (typeof storageAdapterScaffoldGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(storageAdapterScaffoldGenHandler.generate({ name: "AppStorage", backend: "sqlite" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "valid_postgresql" -> ok', async () => {
       if (typeof storageAdapterScaffoldGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(storageAdapterScaffoldGenHandler.generate({ name: "AppStorage", backend: "postgresql" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_backend" -> error', async () => {
@@ -171,8 +169,7 @@ describe('StorageAdapterScaffoldGen functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(storageAdapterScaffoldGenHandler.preview({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_preview_backend" -> error', async () => {
@@ -243,8 +240,7 @@ describe('StorageAdapterScaffoldGen functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_sqlite?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(storageAdapterScaffoldGenHandler.register({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -269,8 +265,7 @@ describe('StorageAdapterScaffoldGen functional handler', () => {
     it("generate produces storage adapter files", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(storageAdapterScaffoldGenHandler.generate({ name: {"type":"literal","value":"AppStorage"}, backend: {"type":"literal","value":"postgresql"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
+      expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
       let filesGenerated = generateResult0.output["filesGenerated"];
     });

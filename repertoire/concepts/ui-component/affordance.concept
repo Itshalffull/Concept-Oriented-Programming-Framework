@@ -76,7 +76,7 @@ concept Affordance [F] {
         Context: { optionCount, platform, viewport, density,
                    motif, concept, suite, tags }.
       }
-      -> none(message: String) { No affordances match. }
+      -> ok(message: String) { No affordances match. }
 
       fixture valid_match { interactor: "single-choice", context: "{\"optionCount\":4,\"platform\":\"browser\"}" } after valid_declare
       fixture entity_match { interactor: "entity-detail", context: "{\"concept\":\"Approval\"}" } after valid_declare

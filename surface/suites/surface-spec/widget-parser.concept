@@ -50,7 +50,7 @@ concept WidgetParser [W] {
 
     action validate(widget: W) {
       -> ok(widget: W) { Deep validation: connect completeness, a11y coverage. }
-      -> incomplete(widget: W, warnings: list String) { Valid but has gaps. }
+      -> ok(widget: W, warnings: list String) { Valid but has gaps. }
 
       fixture validate_complete {
         widget: "w-1"

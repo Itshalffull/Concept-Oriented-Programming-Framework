@@ -50,7 +50,7 @@ concept RestTarget [R] {
         Enrichment content is read from projection for API
         documentation generation.
       }
-      -> ambiguousMapping(action: String, reason: String) {
+      -> ok(action: String, reason: String) {
         Action cannot be unambiguously mapped to an HTTP method
         and path. Manual annotation required in the interface
         manifest.
@@ -68,7 +68,7 @@ concept RestTarget [R] {
         are consistent with concept state and action signatures.
         Hierarchical routes have no path conflicts.
       }
-      -> pathConflict(route: R, conflicting: String, reason: String) {
+      -> ok(route: R, conflicting: String, reason: String) {
         Two actions map to the same HTTP method and path.
       }
 

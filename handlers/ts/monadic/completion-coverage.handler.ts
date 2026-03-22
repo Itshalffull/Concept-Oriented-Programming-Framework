@@ -81,7 +81,7 @@ export const completionCoverageHandler: FunctionalConceptHandler = {
       });
 
       if (status === 'covered') {
-        p = complete(p, 'covered', { report: reportId });
+        p = complete(p, 'ok', { report: reportId });
       } else {
         p = complete(p, 'uncovered', {
           report: reportId,

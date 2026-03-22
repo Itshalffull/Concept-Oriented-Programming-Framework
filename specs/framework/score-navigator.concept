@@ -52,7 +52,7 @@ concept ScoreNavigator [N] {
         Pop the most recent item from the history stack and
         navigate back to it, restoring the cursor.
       }
-      -> empty() {
+      -> ok() {
         The history stack is empty — there is nowhere to go back to.
       }
 
@@ -77,7 +77,7 @@ concept ScoreNavigator [N] {
 
   example "show then back is empty": {
     after show(kind: "concept", name: "User") -> ok(item: i, related: r, cursor: c)
-    then back() -> empty()
+    then back() -> ok()
   }
 
   example "show then traverse then back returns to original": {

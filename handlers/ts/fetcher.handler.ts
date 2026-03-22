@@ -43,7 +43,7 @@ const _handler: FunctionalConceptHandler = {
         const existingDownloads = bindings.existingDownloads as unknown[];
         return cached.length > 0 || existingDownloads.length > 0;
       },
-      (thenP) => complete(thenP, 'cached', {}),
+      (thenP) => complete(thenP, 'ok', {}),
       (elseP) => {
         const id = `dl-${nextId++}`;
         const startedAt = new Date().toISOString();

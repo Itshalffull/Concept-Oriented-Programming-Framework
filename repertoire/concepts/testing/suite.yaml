@@ -111,7 +111,7 @@ syncs:
 
     - path: ./syncs/check-quarantine-on-failure.sync
       name: CheckQuarantineOnFailure
-      description: "Builder/test -> testFailure -> FlakyTest/isQuarantined"
+      description: "Builder/test -> ok (failure) -> FlakyTest/isQuarantined"
 
     - path: ./syncs/run-selected-tests.sync
       name: RunSelectedTests

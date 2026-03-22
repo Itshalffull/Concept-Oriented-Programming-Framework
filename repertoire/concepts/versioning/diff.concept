@@ -44,7 +44,7 @@ concept Diff [C] {
         and the edit distance. Provider selected by algorithm
         param, content type, or default.
       }
-      -> noProvider(message: String) {
+      -> ok(message: String) {
         No registered provider handles this content type.
       }
 

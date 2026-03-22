@@ -28,7 +28,7 @@ concept GovernanceAutomationProvider [GA] {
         Registers this provider with PluginRegistry under type
         "automation-provider" and name "governance".
       }
-      -> already_registered() {
+      -> ok() {
         Provider is already registered with PluginRegistry.
       }
 
@@ -41,7 +41,7 @@ concept GovernanceAutomationProvider [GA] {
         Action passed all governance gates. Returns the execution result
         after governance approval.
       }
-      -> blocked(reason: String) {
+      -> ok(reason: String) {
         Action was blocked by a governance gate. Returns the reason
         for the block (e.g., timelock pending, quorum not met, guard
         condition failed).

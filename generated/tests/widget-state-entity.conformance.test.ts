@@ -88,16 +88,14 @@ describe('WidgetStateEntity functional handler', () => {
       if (typeof widgetStateEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "closed", initial: "true" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_open" -> ok', async () => {
       if (typeof widgetStateEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "open", initial: "false" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_empty_widget" -> error', async () => {
@@ -171,8 +169,7 @@ describe('WidgetStateEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(widgetStateEntityHandler.findByWidget({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_empty" -> error', async () => {
@@ -241,8 +238,7 @@ describe('WidgetStateEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_closed = await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "closed", initial: "true" }), storage);
       const result = await interpret(widgetStateEntityHandler.reachableFrom({ widgetState: afterResult_register_closed?.output?.["widgetState"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "reachable_missing" -> ok', async () => {
@@ -255,8 +251,7 @@ describe('WidgetStateEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(widgetStateEntityHandler.reachableFrom({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -323,8 +318,7 @@ describe('WidgetStateEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(widgetStateEntityHandler.unreachableStates({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "unreachable_empty" -> ok', async () => {
@@ -337,8 +331,7 @@ describe('WidgetStateEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(widgetStateEntityHandler.unreachableStates({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -405,8 +398,7 @@ describe('WidgetStateEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(widgetStateEntityHandler.traceEvent({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "trace_empty_widget" -> error', async () => {
@@ -475,8 +467,7 @@ describe('WidgetStateEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_closed = await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "closed", initial: "true" }), storage);
       const result = await interpret(widgetStateEntityHandler.get({ widgetState: afterResult_register_closed?.output?.["widgetState"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_missing" -> error', async () => {
@@ -493,12 +484,10 @@ describe('WidgetStateEntity functional handler', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(widgetStateEntityHandler.register({ widget: {"type":"literal","value":"dialog"}, name: {"type":"literal","value":"closed"}, initial: {"type":"literal","value":"true"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let widgetState = registerResult0.output["widgetState"];
       const thenResult0 = await interpret(widgetStateEntityHandler.get({ widgetState: {"type":"variable","name":"s"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

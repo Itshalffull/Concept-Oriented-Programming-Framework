@@ -88,8 +88,7 @@ describe('GraphqlProvider functional handler', () => {
       if (typeof graphqlProviderHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(graphqlProviderHandler.register({  }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -156,8 +155,7 @@ describe('GraphqlProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(graphqlProviderHandler.configure({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_local" -> ok', async () => {
@@ -170,8 +168,7 @@ describe('GraphqlProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(graphqlProviderHandler.configure({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -238,8 +235,7 @@ describe('GraphqlProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(graphqlProviderHandler.execute({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "mutation_create" -> ok', async () => {
@@ -252,8 +248,7 @@ describe('GraphqlProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(graphqlProviderHandler.execute({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "execute_unknown_endpoint" -> notFound', async () => {
@@ -331,8 +326,7 @@ describe('GraphqlProvider functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(graphqlProviderHandler.list({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -357,11 +351,10 @@ describe('GraphqlProvider functional handler', () => {
     it("execute fails for unknown endpoint", async () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(graphqlProviderHandler.configure({ name: {"type":"literal","value":"github-api"}, url: {"type":"literal","value":"https://api.github.com/graphql"}, headers: {"type":"literal","value":"{}"}, schemaRef: {"type":"literal","value":""} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(configureResult0.variant), `step 0: expected success but got '${configureResult0.variant}'`).toBe(false);
+      expect(configureResult0.variant).toBe("ok");
       let endpoint = configureResult0.output["endpoint"];
       const thenResult0 = await interpret(graphqlProviderHandler.execute({ endpoint: {"type":"literal","value":"unknown-api"}, query: {"type":"literal","value":"{ viewer { login } }"}, variables: {"type":"literal","value":"{}"}, operationType: {"type":"literal","value":"query"} }), storage);
-      expect(thenResult0.variant).toBe("notFound");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

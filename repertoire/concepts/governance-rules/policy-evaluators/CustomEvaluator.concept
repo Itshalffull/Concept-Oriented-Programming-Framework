@@ -23,11 +23,11 @@ concept CustomEvaluator [CU] {
 
   actions {
     action register(name: String, source: String, language: String, sandbox: Bool) {
-      -> registered(evaluator: CU) {
+      -> ok(evaluator: CU) {
         A custom predicate function is registered. If sandbox is true,
         the function runs in an isolated execution context.
       }
-      -> syntax_error(name: String, error: String) {
+      -> ok(name: String, error: String) {
         The source code has syntax errors.
       }
 
@@ -46,10 +46,10 @@ concept CustomEvaluator [CU] {
     }
 
     action evaluate(evaluator: CU, context: String) {
-      -> result(evaluator: CU, output: String) {
+      -> ok(evaluator: CU, output: String) {
         The predicate is executed against the context and returns a result.
       }
-      -> runtime_error(evaluator: CU, error: String) {
+      -> ok(evaluator: CU, error: String) {
         Execution failed.
       }
       -> timeout(evaluator: CU) {
@@ -67,7 +67,7 @@ concept CustomEvaluator [CU] {
     }
 
     action deregister(evaluator: CU) {
-      -> deregistered(evaluator: CU) {
+      -> ok(evaluator: CU) {
         The custom evaluator is removed.
       }
 
@@ -82,9 +82,9 @@ concept CustomEvaluator [CU] {
 
   example "register-then-evaluate": {
 
-    after register(name: _, source: _, language: _, sandbox: true) -> registered(evaluator: cu)
+    after register(name: _, source: _, language: _, sandbox: true) -> ok(evaluator: cu)
 
-        then evaluate(evaluator: cu, context: _) -> result(evaluator: cu, output: _)
+        then evaluate(evaluator: cu, context: _) -> ok(evaluator: cu, output: _)
 
   }
 
@@ -109,7 +109,7 @@ concept CustomEvaluator [CU] {
 
     requires: name != ""
 
-    ensures registered: name != none
+    ensures ok: name != none
 
   }
 }

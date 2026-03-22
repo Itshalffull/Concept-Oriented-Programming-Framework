@@ -94,8 +94,7 @@ describe('ExpressionLanguage functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(expressionLanguageHandler.registerLanguage({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_name" -> error', async () => {
@@ -169,8 +168,7 @@ describe('ExpressionLanguage functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(expressionLanguageHandler.registerFunction({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_impl" -> ok', async () => {
@@ -183,8 +181,7 @@ describe('ExpressionLanguage functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(expressionLanguageHandler.registerFunction({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -251,8 +248,7 @@ describe('ExpressionLanguage functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(expressionLanguageHandler.registerOperator({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_op_name" -> ok', async () => {
@@ -265,8 +261,7 @@ describe('ExpressionLanguage functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(expressionLanguageHandler.registerOperator({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -333,8 +328,7 @@ describe('ExpressionLanguage functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(expressionLanguageHandler.parse({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "parse_unknown_lang" -> error', async () => {
@@ -403,8 +397,7 @@ describe('ExpressionLanguage functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_math = await interpret(expressionLanguageHandler.registerLanguage({ name: "math", grammar: "arithmetic" }), storage);
       const result = await interpret(expressionLanguageHandler.evaluate({ expression: afterResult_register_math?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "eval_missing" -> error', async () => {
@@ -473,8 +466,7 @@ describe('ExpressionLanguage functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_math = await interpret(expressionLanguageHandler.registerLanguage({ name: "math", grammar: "arithmetic" }), storage);
       const result = await interpret(expressionLanguageHandler.typeCheck({ expression: afterResult_register_math?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "typecheck_missing" -> error', async () => {
@@ -543,8 +535,7 @@ describe('ExpressionLanguage functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_math = await interpret(expressionLanguageHandler.registerLanguage({ name: "math", grammar: "arithmetic" }), storage);
       const result = await interpret(expressionLanguageHandler.getCompletions({ expression: afterResult_register_math?.output?.["id"], cursor: "3" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "completions_missing" -> error', async () => {
@@ -576,14 +567,11 @@ describe('ExpressionLanguage functional handler', () => {
     it("registerLanguage-then-evaluate", async () => {
       const storage = createInMemoryStorage();
       const registerLanguageResult0 = await interpret(expressionLanguageHandler.registerLanguage({ name: {"type":"literal","value":"math"}, grammar: {"type":"literal","value":"arithmetic"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerLanguageResult0.variant), `step 0: expected success but got '${registerLanguageResult0.variant}'`).toBe(false);
+      expect(registerLanguageResult0.variant).toBe("ok");
       const thenResult0 = await interpret(expressionLanguageHandler.parse({ expression: {"type":"variable","name":"e"}, text: {"type":"literal","value":"2 + 3"}, language: {"type":"literal","value":"math"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(expressionLanguageHandler.evaluate({ expression: {"type":"variable","name":"e"} }), storage);
-      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
+      expect(thenResult1.variant).toBe("ok");
     });
 
   });

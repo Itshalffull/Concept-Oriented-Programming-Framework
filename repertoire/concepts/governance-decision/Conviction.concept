@@ -34,7 +34,7 @@ concept Conviction [K] {
 
   actions {
     action registerProposal(proposalRef: String, requestedFunds: Float, totalFunds: Float) {
-      -> registered(proposal: K) {
+      -> ok(proposal: K) {
         A conviction-eligible proposal is registered. Threshold is
         calculated based on requestedFunds / totalFunds ratio.
       }
@@ -44,11 +44,11 @@ concept Conviction [K] {
     }
 
     action stake(proposal: K, staker: String, amount: Float) {
-      -> staked(proposal: K, staker: String, amount: Float) {
+      -> ok(proposal: K, staker: String, amount: Float) {
         The staker's tokens are locked on this proposal.
         Conviction begins accumulating.
       }
-      -> below_minimum(proposal: K, amount: Float) {
+      -> ok(proposal: K, amount: Float) {
         The stake is below the minimum threshold.
       }
 
@@ -57,7 +57,7 @@ concept Conviction [K] {
     }
 
     action unstake(proposal: K, staker: String) {
-      -> unstaked(proposal: K, staker: String, amount: Float) {
+      -> ok(proposal: K, staker: String, amount: Float) {
         The staker's tokens are released. Conviction is recalculated.
       }
 
@@ -66,11 +66,11 @@ concept Conviction [K] {
     }
 
     action updateConviction(proposal: K) {
-      -> accumulating(proposal: K, currentConviction: Float, threshold: Float) {
+      -> ok(proposal: K, currentConviction: Float, threshold: Float) {
         Conviction has been recalculated (exponential charge based on
         half-life) but has not yet reached the threshold.
       }
-      -> triggered(proposal: K, conviction: Float) {
+      -> ok(proposal: K, conviction: Float) {
         Conviction has exceeded the threshold. The proposal should proceed
         to execution.
       }
@@ -82,9 +82,9 @@ concept Conviction [K] {
 
   example "registerProposal-then-stake": {
 
-    after registerProposal(proposalRef: _, requestedFunds: _, totalFunds: _) -> registered(proposal: k)
+    after registerProposal(proposalRef: _, requestedFunds: _, totalFunds: _) -> ok(proposal: k)
 
-        then stake(proposal: k, staker: _, amount: _) -> staked(proposal: k, staker: _, amount: _)
+        then stake(proposal: k, staker: _, amount: _) -> ok(proposal: k, staker: _, amount: _)
 
         // After sufficient time and staking, conviction exceeds threshold
 
@@ -111,7 +111,7 @@ concept Conviction [K] {
 
     requires: proposalRef != ""
 
-    ensures registered: proposalRef != none
+    ensures ok: proposalRef != none
 
   }
 }

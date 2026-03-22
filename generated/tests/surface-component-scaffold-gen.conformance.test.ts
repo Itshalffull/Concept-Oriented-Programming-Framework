@@ -88,16 +88,14 @@ describe('SurfaceComponentScaffoldGen functional handler', () => {
       if (typeof surfaceComponentScaffoldGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(surfaceComponentScaffoldGenHandler.generate({ name: "Accordion", parts: ["root","item","trigger","content"], states: ["closed","open"], events: ["toggle"], role: "region", requires: null, affordance: null, props: [], compose: [] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "minimal_component" -> ok', async () => {
       if (typeof surfaceComponentScaffoldGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(surfaceComponentScaffoldGenHandler.generate({ name: "Badge", parts: ["root"], states: ["idle"], events: [], role: "status", requires: null, affordance: null, props: [], compose: [] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -164,8 +162,7 @@ describe('SurfaceComponentScaffoldGen functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(surfaceComponentScaffoldGenHandler.preview({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -229,8 +226,7 @@ describe('SurfaceComponentScaffoldGen functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_component?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(surfaceComponentScaffoldGenHandler.register({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -255,8 +251,7 @@ describe('SurfaceComponentScaffoldGen functional handler', () => {
     it("generate produces widget scaffold", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(surfaceComponentScaffoldGenHandler.generate({ name: {"type":"literal","value":"Button"}, parts: {"type":"list","items":[{"type":"literal","value":"root"},{"type":"literal","value":"label"}]}, states: {"type":"list","items":[{"type":"literal","value":"idle"},{"type":"literal","value":"pressed"}]}, events: {"type":"list","items":[{"type":"literal","value":"click"}]}, role: {"type":"literal","value":"button"}, requires: {"type":"literal","value":false}, affordance: {"type":"literal","value":false}, props: {"type":"list","items":[]}, compose: {"type":"list","items":[]} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
+      expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
       let filesGenerated = generateResult0.output["filesGenerated"];
     });

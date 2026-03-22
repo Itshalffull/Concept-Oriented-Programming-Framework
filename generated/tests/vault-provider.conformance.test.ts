@@ -88,16 +88,14 @@ describe('VaultProvider functional handler', () => {
       if (typeof vaultProviderHandler.fetch !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(vaultProviderHandler.fetch({ path: "secret/data/db-password" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "fetch_api_credentials" -> ok', async () => {
       if (typeof vaultProviderHandler.fetch !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(vaultProviderHandler.fetch({ path: "secret/data/api/credentials" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "fetch_empty_path" -> error', async () => {
@@ -166,8 +164,7 @@ describe('VaultProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_fetch_db_password = await interpret(vaultProviderHandler.fetch({ path: "secret/data/db-password" }), storage);
       const result = await interpret(vaultProviderHandler.renewLease({ leaseId: afterResult_fetch_db_password?.output?.["value"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "renew_empty_lease" -> error', async () => {
@@ -241,8 +238,7 @@ describe('VaultProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(vaultProviderHandler.rotate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "rotate_empty_path" -> ok', async () => {
@@ -255,8 +251,7 @@ describe('VaultProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(vaultProviderHandler.rotate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -281,14 +276,12 @@ describe('VaultProvider functional handler', () => {
     it("fetch-then-renewLease", async () => {
       const storage = createInMemoryStorage();
       const fetchResult0 = await interpret(vaultProviderHandler.fetch({ path: {"type":"literal","value":"secret/data/db-password"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(fetchResult0.variant), `step 0: expected success but got '${fetchResult0.variant}'`).toBe(false);
+      expect(fetchResult0.variant).toBe("ok");
       let value = fetchResult0.output["value"];
       let leaseId = fetchResult0.output["leaseId"];
       let leaseDuration = fetchResult0.output["leaseDuration"];
       const thenResult0 = await interpret(vaultProviderHandler.renewLease({ leaseId: {"type":"variable","name":"lid"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

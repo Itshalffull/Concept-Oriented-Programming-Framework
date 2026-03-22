@@ -38,7 +38,7 @@ concept SuiteManifestEntity [S] {
         concepts, type parameter bindings, and infrastructure
         section from the manifest.
       }
-      -> alreadyRegistered(existing: S) {
+      -> ok(existing: S) {
         A suite with this name is already registered.
       }
       fixture register_identity { name: "identity", source: "repertoire/concepts/identity/suite.yaml", manifest: "{\"version\":\"1.0.0\",\"concepts\":[\"User\",\"Session\"],\"syncs\":[\"auth-on-login\"]}" }
@@ -142,7 +142,7 @@ concept SuiteManifestEntity [S] {
         No conflicting concept names or type parameter mismatches
         across suites.
       }
-      -> conflicts(issues: String) {
+      -> ok(issues: String) {
         Conflicts found. Result as serialized JSON array of
         { kind, suiteA, suiteB, entity, message }.
       }

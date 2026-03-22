@@ -32,7 +32,7 @@ concept ParallelismProvider [P] {
         into parallel layers via topological sort. Report layers, critical
         path length, max parallelism, and speedup ratio.
       }
-      -> sequential(result: P, reason: String) {
+      -> ok(result: P, reason: String) {
         All instructions are dependent — no parallelism possible.
         Reason explains why (e.g., linear binding chain).
       }

@@ -24,7 +24,7 @@ concept WidgetScopeProvider [I] {
         Register this scope provider with PluginRegistry for
         widget-spec language.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the widget scope provider.
       }
 

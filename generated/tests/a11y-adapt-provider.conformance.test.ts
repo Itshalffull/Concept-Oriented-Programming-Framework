@@ -88,8 +88,7 @@ describe('A11yAdaptProvider functional handler', () => {
       if (typeof a11yAdaptProviderHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(a11yAdaptProviderHandler.register({  }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -156,8 +155,7 @@ describe('A11yAdaptProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(a11yAdaptProviderHandler.apply({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "inject_aria_live" -> ok', async () => {
@@ -170,8 +168,7 @@ describe('A11yAdaptProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(a11yAdaptProviderHandler.apply({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_spec_json" -> error', async () => {
@@ -209,14 +206,12 @@ describe('A11yAdaptProvider functional handler', () => {
     it("apply modifies matching ARIA and injects additions", async () => {
       const storage = createInMemoryStorage();
       const applyResult0 = await interpret(a11yAdaptProviderHandler.apply({ program: {"type":"literal","value":"{\"instructions\":[{\"tag\":\"aria\",\"attr\":\"aria-label\",\"value\":\"Card\"},{\"tag\":\"pure\",\"output\":\"W\"}]}"}, spec: {"type":"literal","value":"{\"modifications\":[{\"match\":{\"tag\":\"aria\",\"attr\":\"aria-label\"},\"set\":{\"value\":\"Accessible Card\"}}]}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(applyResult0.variant), `step 0: expected success but got '${applyResult0.variant}'`).toBe(false);
+      expect(applyResult0.variant).toBe("ok");
       let result = applyResult0.output["result"];
       let transformed = applyResult0.output["transformed"];
       let appliedTransforms = applyResult0.output["appliedTransforms"];
       const thenResult0 = await interpret(a11yAdaptProviderHandler.apply({ program: {"type":"literal","value":"{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}"}, spec: {"type":"literal","value":"{\"additions\":[{\"tag\":\"aria\",\"attr\":\"aria-live\",\"value\":\"polite\"}]}"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

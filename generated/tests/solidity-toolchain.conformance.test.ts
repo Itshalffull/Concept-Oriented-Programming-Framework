@@ -88,16 +88,14 @@ describe('SolidityToolchain functional handler', () => {
       if (typeof solidityToolchainHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(solidityToolchainHandler.resolve({ platform: "shanghai", versionConstraint: ">=0.8.20" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_cancun" -> ok', async () => {
       if (typeof solidityToolchainHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(solidityToolchainHandler.resolve({ platform: "cancun" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_unsupported_evm" -> error', async () => {
@@ -175,8 +173,7 @@ describe('SolidityToolchain functional handler', () => {
       const _pool = Object.assign({}, (afterResult_resolve_shanghai?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(solidityToolchainHandler.register({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -201,15 +198,13 @@ describe('SolidityToolchain functional handler', () => {
     it("resolve-then-register", async () => {
       const storage = createInMemoryStorage();
       const resolveResult0 = await interpret(solidityToolchainHandler.resolve({ platform: {"type":"literal","value":"evm-shanghai"}, versionConstraint: {"type":"literal","value":">=0.8.20"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(resolveResult0.variant), `step 0: expected success but got '${resolveResult0.variant}'`).toBe(false);
+      expect(resolveResult0.variant).toBe("ok");
       let toolchain = resolveResult0.output["toolchain"];
       let solcPath = resolveResult0.output["solcPath"];
       let version = resolveResult0.output["version"];
       let capabilities = resolveResult0.output["capabilities"];
       const thenResult0 = await interpret(solidityToolchainHandler.register({  }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

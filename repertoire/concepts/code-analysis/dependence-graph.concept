@@ -28,7 +28,7 @@ concept DependenceGraph [N] {
         provider-dispatched analysis (TypeScript, Rust, concept,
         sync, or universal Tree-sitter).
       }
-      -> unsupportedLanguage(language: String) {
+      -> ok(language: String) {
         No dependence provider available for this language.
       }
 

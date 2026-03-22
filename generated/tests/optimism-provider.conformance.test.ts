@@ -88,8 +88,7 @@ describe('OptimismProvider functional handler', () => {
       if (typeof optimismProviderHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(optimismProviderHandler.register({ rpc_url: "https://mainnet.optimism.io", l1_bridge_address: "0x99C9fc46f92E8a1c0deC1b1747d010903E884bE1" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_missing_rpc" -> error', async () => {
@@ -158,8 +157,7 @@ describe('OptimismProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_mainnet = await interpret(optimismProviderHandler.register({ rpc_url: "https://mainnet.optimism.io", l1_bridge_address: "0x99C9fc46f92E8a1c0deC1b1747d010903E884bE1" }), storage);
       const result = await interpret(optimismProviderHandler.poll({ provider: afterResult_register_mainnet?.output?.["provider"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "poll_missing" -> error', async () => {
@@ -228,8 +226,7 @@ describe('OptimismProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_mainnet = await interpret(optimismProviderHandler.register({ rpc_url: "https://mainnet.optimism.io", l1_bridge_address: "0x99C9fc46f92E8a1c0deC1b1747d010903E884bE1" }), storage);
       const result = await interpret(optimismProviderHandler.checkFinality({ provider: afterResult_register_mainnet?.output?.["provider"], tx_hash: "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "check_missing_provider" -> error', async () => {
@@ -298,8 +295,7 @@ describe('OptimismProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_mainnet = await interpret(optimismProviderHandler.register({ rpc_url: "https://mainnet.optimism.io", l1_bridge_address: "0x99C9fc46f92E8a1c0deC1b1747d010903E884bE1" }), storage);
       const result = await interpret(optimismProviderHandler.relayMessage({ provider: afterResult_register_mainnet?.output?.["provider"], message_hash: "0xdeadbeef1234567890abcdef1234567890abcdef1234567890abcdef12345678" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "relay_missing_provider" -> error', async () => {
@@ -316,12 +312,10 @@ describe('OptimismProvider functional handler', () => {
     it("register then poll", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(optimismProviderHandler.register({ rpc_url: {"type":"literal","value":"https://mainnet.optimism.io"}, l1_bridge_address: {"type":"literal","value":"0x1234"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let provider = registerResult0.output["provider"];
       const thenResult0 = await interpret(optimismProviderHandler.poll({ provider: {"type":"variable","name":"p"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("poll then checkFinality", async () => {

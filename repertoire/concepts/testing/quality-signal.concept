@@ -35,7 +35,7 @@ concept QualitySignal [Q] {
         status: pass | fail | warn | unknown | skipped
         severity: gate | warn | info
       }
-      -> validationError(message: String) {
+      -> ok(message: String) {
         Invalid dimension, status, or severity value.
       }
 
@@ -50,10 +50,10 @@ concept QualitySignal [Q] {
       -> ok(signal: Q, status: String, severity: String, summary: option String, observed_at: DateTime) {
         Most recent signal for target+dimension.
       }
-      -> notFound(target_symbol: String, dimension: String) {
+      -> ok(target_symbol: String, dimension: String) {
         No signal recorded.
       }
-      -> validationError(message: String) {
+      -> ok(message: String) {
         Invalid target_symbol or dimension.
       }
 
@@ -68,7 +68,7 @@ concept QualitySignal [Q] {
         blocking=true iff any gate-severity signal has fail or unknown.
         Status ordering: fail > unknown > warn > pass > skipped.
       }
-      -> validationError(message: String) {
+      -> ok(message: String) {
         Invalid target_symbols or dimensions.
       }
 
@@ -81,7 +81,7 @@ concept QualitySignal [Q] {
       -> ok(contributors: list { dimension: String, status: String, severity: String, observed_at: DateTime, summary: option String, artifact_path: option String, artifact_hash: option String, run_ref: option String }) {
         Leaf signals for drilldown UI.
       }
-      -> validationError(message: String) {
+      -> ok(message: String) {
         Invalid target_symbol or dimensions.
       }
 

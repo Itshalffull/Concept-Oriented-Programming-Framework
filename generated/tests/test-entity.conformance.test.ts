@@ -88,8 +88,7 @@ describe('TestEntity functional handler', () => {
       if (typeof testEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_empty_name" -> error', async () => {
@@ -163,8 +162,7 @@ describe('TestEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(testEntityHandler.get({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_nonexistent" -> error', async () => {
@@ -238,8 +236,7 @@ describe('TestEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(testEntityHandler.findByEntity({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_untested_entity" -> ok', async () => {
@@ -252,8 +249,7 @@ describe('TestEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(testEntityHandler.findByEntity({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -320,8 +316,7 @@ describe('TestEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(testEntityHandler.findByAction({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_untested_action" -> ok', async () => {
@@ -334,8 +329,7 @@ describe('TestEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(testEntityHandler.findByAction({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -402,8 +396,7 @@ describe('TestEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(testEntityHandler.findByKind({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_unknown_kind" -> ok', async () => {
@@ -416,8 +409,7 @@ describe('TestEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(testEntityHandler.findByKind({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -481,8 +473,7 @@ describe('TestEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_conformance_test?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(testEntityHandler.findFailing({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "failing_check_error" -> error', async () => {
@@ -556,8 +547,7 @@ describe('TestEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(testEntityHandler.coverageReport({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "coverage_nonexistent" -> ok', async () => {
@@ -570,8 +560,7 @@ describe('TestEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(testEntityHandler.coverageReport({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -635,8 +624,7 @@ describe('TestEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_conformance_test?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(testEntityHandler.untestedActions({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "untested_check_error" -> error', async () => {
@@ -707,8 +695,7 @@ describe('TestEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_conformance_test?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(testEntityHandler.untestedInvariants({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "untested_invariants_error" -> error', async () => {
@@ -777,8 +764,7 @@ describe('TestEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_conformance_test = await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
       const result = await interpret(testEntityHandler.recordResult({ test: afterResult_register_conformance_test?.output?.["test"], result: "pass", duration: "150" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "record_empty_result" -> ok', async () => {
@@ -786,8 +772,7 @@ describe('TestEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_conformance_test = await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
       const result = await interpret(testEntityHandler.recordResult({ test: afterResult_register_conformance_test?.output?.["test"], result: "", duration: "0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -797,12 +782,10 @@ describe('TestEntity functional handler', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(testEntityHandler.register({ name: {"type":"literal","value":"User/create conformance"}, sourceFile: {"type":"literal","value":"tests/user.conformance.test.ts"}, kind: {"type":"literal","value":"conformance"}, targetEntity: {"type":"literal","value":"User"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let test = registerResult0.output["test"];
       const thenResult0 = await interpret(testEntityHandler.get({ name: {"type":"literal","value":"User/create conformance"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

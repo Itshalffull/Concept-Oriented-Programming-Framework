@@ -88,16 +88,14 @@ describe('VercelRuntime functional handler', () => {
       if (typeof vercelRuntimeHandler.provision !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "provision_remix" -> ok', async () => {
       if (typeof vercelRuntimeHandler.provision !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(vercelRuntimeHandler.provision({ concept: "PaymentGateway", teamId: "team_xyz", framework: "remix" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "provision_empty_concept" -> error', async () => {
@@ -171,8 +169,7 @@ describe('VercelRuntime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(vercelRuntimeHandler.deploy({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "deploy_src" -> ok', async () => {
@@ -185,8 +182,7 @@ describe('VercelRuntime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(vercelRuntimeHandler.deploy({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "deploy_missing_project" -> error', async () => {
@@ -260,8 +256,7 @@ describe('VercelRuntime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(vercelRuntimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "traffic_negative" -> ok', async () => {
@@ -274,8 +269,7 @@ describe('VercelRuntime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(vercelRuntimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -342,8 +336,7 @@ describe('VercelRuntime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(vercelRuntimeHandler.rollback({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "rollback_missing_deployment" -> ok', async () => {
@@ -356,8 +349,7 @@ describe('VercelRuntime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(vercelRuntimeHandler.rollback({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -424,8 +416,7 @@ describe('VercelRuntime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(vercelRuntimeHandler.configureEnv({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "env_vars_empty_project" -> ok', async () => {
@@ -438,8 +429,7 @@ describe('VercelRuntime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(vercelRuntimeHandler.configureEnv({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -506,8 +496,7 @@ describe('VercelRuntime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(vercelRuntimeHandler.destroy({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "destroy_missing" -> error', async () => {
@@ -539,14 +528,12 @@ describe('VercelRuntime functional handler', () => {
     it("provision-then-deploy", async () => {
       const storage = createInMemoryStorage();
       const provisionResult0 = await interpret(vercelRuntimeHandler.provision({ concept: {"type":"literal","value":"User"}, teamId: {"type":"literal","value":"team-1"}, framework: {"type":"literal","value":"nextjs"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(provisionResult0.variant), `step 0: expected success but got '${provisionResult0.variant}'`).toBe(false);
+      expect(provisionResult0.variant).toBe("ok");
       let project = provisionResult0.output["project"];
       let projectId = provisionResult0.output["projectId"];
       let endpoint = provisionResult0.output["endpoint"];
       const thenResult0 = await interpret(vercelRuntimeHandler.deploy({ project: {"type":"variable","name":"p"}, sourceDirectory: {"type":"literal","value":"./dist"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

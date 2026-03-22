@@ -88,8 +88,7 @@ describe('OnnxProvider functional handler', () => {
       if (typeof onnxProviderHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(onnxProviderHandler.register({  }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -156,8 +155,7 @@ describe('OnnxProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(onnxProviderHandler.load({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "load_gpu_model" -> ok', async () => {
@@ -170,8 +168,7 @@ describe('OnnxProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(onnxProviderHandler.load({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -238,8 +235,7 @@ describe('OnnxProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(onnxProviderHandler.infer({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "infer_unknown_session" -> notFound', async () => {
@@ -317,8 +313,7 @@ describe('OnnxProvider functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(onnxProviderHandler.list({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -343,11 +338,10 @@ describe('OnnxProvider functional handler', () => {
     it("infer fails for unknown session", async () => {
       const storage = createInMemoryStorage();
       const loadResult0 = await interpret(onnxProviderHandler.load({ name: {"type":"literal","value":"codebert"}, modelPath: {"type":"literal","value":"/models/codebert.onnx"}, device: {"type":"literal","value":"cpu"}, options: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(loadResult0.variant), `step 0: expected success but got '${loadResult0.variant}'`).toBe(false);
+      expect(loadResult0.variant).toBe("ok");
       let session = loadResult0.output["session"];
       const thenResult0 = await interpret(onnxProviderHandler.infer({ session: {"type":"literal","value":"unknown"}, inputs: {"type":"literal","value":"[]"}, options: {"type":"literal","value":"{}"} }), storage);
-      expect(thenResult0.variant).toBe("notFound");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

@@ -88,16 +88,14 @@ describe('Delegation functional handler', () => {
       if (typeof delegationHandler.delegate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(delegationHandler.delegate({ from: "alice", to: "bob", scope: "budgets", expiresAt: "2026-12-31T23:59:59Z" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "delegate_no_expiry" -> ok', async () => {
       if (typeof delegationHandler.delegate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(delegationHandler.delegate({ from: "carol", to: "dave", scope: "hiring", expiresAt: null }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "delegate_cycle" -> error', async () => {
@@ -171,8 +169,7 @@ describe('Delegation functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(delegationHandler.undelegate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "undelegate_nonexistent" -> error', async () => {
@@ -246,8 +243,7 @@ describe('Delegation functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(delegationHandler.getEffectiveWeight({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "weight_scoped" -> ok', async () => {
@@ -260,8 +256,7 @@ describe('Delegation functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(delegationHandler.getEffectiveWeight({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -286,14 +281,14 @@ describe('Delegation functional handler', () => {
     it("delegate-then-getEffectiveWeight", async () => {
       const storage = createInMemoryStorage();
       const delegateResult0 = await interpret(delegationHandler.delegate({ from: {"type":"variable","name":"a"}, to: {"type":"variable","name":"b"}, domain: {"type":"variable","name":"_"}, transitive: {"type":"variable","name":"_"} }), storage);
-      expect(delegateResult0.variant).toBe("delegated");
+      expect(delegateResult0.variant).toBe("ok");
       let delegation = delegateResult0.output["delegation"];
       const thenResult0 = await interpret(delegationHandler.getEffectiveWeight({ participant: {"type":"variable","name":"b"}, domain: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("weight");
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(delegationHandler.undelegate({ delegation: {"type":"variable","name":"e"} }), storage);
-      expect(thenResult1.variant).toBe("revoked");
+      expect(thenResult1.variant).toBe("ok");
       const thenResult2 = await interpret(delegationHandler.getEffectiveWeight({ participant: {"type":"variable","name":"b"}, domain: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult2.variant).toBe("weight");
+      expect(thenResult2.variant).toBe("ok");
     });
 
   });
@@ -378,7 +373,7 @@ describe('Delegation functional handler', () => {
       }
     });
 
-    it('delegate ensures on delegated: ', async () => {
+    it('delegate ensures on ok: ', async () => {
       if (typeof delegationHandler.delegate !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -390,7 +385,7 @@ describe('Delegation functional handler', () => {
               const program = delegationHandler.delegate(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "delegated") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

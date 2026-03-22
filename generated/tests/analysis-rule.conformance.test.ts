@@ -88,16 +88,14 @@ describe('AnalysisRule functional handler', () => {
       if (typeof analysisRuleHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(analysisRuleHandler.create({ name: "dead-variants", engine: "graph-traversal", source: "[{\"match\":\"unused\",\"message\":\"Dead variant detected\"}]", severity: "warning", category: "dead-code" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "pattern_match" -> ok', async () => {
       if (typeof analysisRuleHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(analysisRuleHandler.create({ name: "no-any-type", engine: "pattern-match", source: "[{\"match\":\"any\",\"message\":\"Avoid any type\"}]", severity: "error", category: "convention" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "bad_engine" -> invalidSyntax', async () => {
@@ -177,8 +175,7 @@ describe('AnalysisRule functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(analysisRuleHandler.evaluate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_rule" -> evaluationError', async () => {
@@ -253,8 +250,7 @@ describe('AnalysisRule functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(analysisRuleHandler.evaluateAll({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "by_category" -> ok', async () => {
@@ -267,8 +263,7 @@ describe('AnalysisRule functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(analysisRuleHandler.evaluateAll({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -332,8 +327,7 @@ describe('AnalysisRule functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_create?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(analysisRuleHandler.get({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_get" -> notfound', async () => {
@@ -366,12 +360,10 @@ describe('AnalysisRule functional handler', () => {
     it("create-then-get", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(analysisRuleHandler.create({ name: {"type":"literal","value":"dead-variants"}, engine: {"type":"literal","value":"graph-traversal"}, source: {"type":"literal","value":"..."}, severity: {"type":"literal","value":"warning"}, category: {"type":"literal","value":"dead-code"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
+      expect(createResult0.variant).toBe("ok");
       let rule = createResult0.output["rule"];
       const thenResult0 = await interpret(analysisRuleHandler.get({ rule: {"type":"variable","name":"u"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

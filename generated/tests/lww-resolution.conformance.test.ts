@@ -88,8 +88,7 @@ describe('LWWResolution functional handler', () => {
       if (typeof lWWResolutionHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(lWWResolutionHandler.register({  }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -156,8 +155,7 @@ describe('LWWResolution functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(lWWResolutionHandler.attemptResolve({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_identical_timestamps" -> error', async () => {
@@ -195,10 +193,10 @@ describe('LWWResolution functional handler', () => {
     it("attemptResolve-then-attemptResolve", async () => {
       const storage = createInMemoryStorage();
       const attemptResolveResult0 = await interpret(lWWResolutionHandler.attemptResolve({ base: {"type":"variable","name":"_"}, v1: {"type":"variable","name":"a"}, v2: {"type":"variable","name":"b"}, context: {"type":"variable","name":"_"} }), storage);
-      expect(attemptResolveResult0.variant).toBe("resolved");
+      expect(attemptResolveResult0.variant).toBe("ok");
       let result = attemptResolveResult0.output["result"];
       const thenResult0 = await interpret(lWWResolutionHandler.attemptResolve({ base: {"type":"variable","name":"_"}, v1: {"type":"variable","name":"b"}, v2: {"type":"variable","name":"a"}, context: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("resolved");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

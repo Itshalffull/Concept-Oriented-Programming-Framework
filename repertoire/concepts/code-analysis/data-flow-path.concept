@@ -26,7 +26,7 @@ concept DataFlowPath [W] {
         Find all data flow paths between a source and sink
         symbol. Results as serialized JSON array of paths.
       }
-      -> noPath() {
+      -> ok() {
         No data flow path exists between source and sink.
       }
 

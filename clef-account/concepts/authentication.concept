@@ -21,7 +21,7 @@ concept Authentication [U] {
         and credentials. Add the user to the accounts set and
         record the active provider.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         The user already has a registered account.
       }
     }

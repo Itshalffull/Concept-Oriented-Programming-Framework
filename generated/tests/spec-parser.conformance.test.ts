@@ -37,8 +37,7 @@ describe('SpecParser imperative handler', () => {
       if (typeof specParserHandler.parse !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await specParserHandler.parse({ source: "concept Tiny [X] { purpose { A test. } state { items: set X } actions { action get(x: X) { -> ok(item: X) { Return. } } } }" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_source" -> error', async () => {
@@ -73,8 +72,7 @@ describe('SpecParser imperative handler', () => {
     it("parse valid then parse empty fails", async () => {
       const storage = createInMemoryStorage();
       const parseResult0 = await specParserHandler.parse({ source: {"type":"literal","value":"concept Tiny [X] { purpose { A test. } state { items: set X } actions { action get(x: X) { -> ok(item: X) { Return. } } } }"} }, storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(parseResult0.variant), `step 0: expected success but got '${parseResult0.variant}'`).toBe(false);
+      expect(parseResult0.variant).toBe("ok");
       let spec = parseResult0.output["spec"];
       let ast = parseResult0.output["ast"];
       const thenResult0 = await specParserHandler.parse({ source: {"type":"literal","value":""} }, storage);

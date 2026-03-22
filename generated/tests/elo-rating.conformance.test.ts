@@ -88,8 +88,7 @@ describe('EloRating functional handler', () => {
       if (typeof eloRatingHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(eloRatingHandler.configure({ kFactor: "32.0", initialRating: "1500.0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_zero_k" -> error', async () => {
@@ -158,8 +157,7 @@ describe('EloRating functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_standard = await interpret(eloRatingHandler.configure({ kFactor: "32.0", initialRating: "1500.0" }), storage);
       const result = await interpret(eloRatingHandler.recordOutcome({ config: afterResult_configure_standard?.output?.["id"], winner: "alice", loser: "bob" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "outcome_same_player" -> error', async () => {
@@ -228,8 +226,7 @@ describe('EloRating functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_standard = await interpret(eloRatingHandler.configure({ kFactor: "32.0", initialRating: "1500.0" }), storage);
       const result = await interpret(eloRatingHandler.recordDraw({ config: afterResult_configure_standard?.output?.["id"], participantA: "alice", participantB: "bob" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "draw_same_player" -> error', async () => {
@@ -298,8 +295,7 @@ describe('EloRating functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_standard = await interpret(eloRatingHandler.configure({ kFactor: "32.0", initialRating: "1500.0" }), storage);
       const result = await interpret(eloRatingHandler.getRating({ config: afterResult_configure_standard?.output?.["id"], participant: "alice" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_unknown_rating" -> error', async () => {
@@ -331,10 +327,10 @@ describe('EloRating functional handler', () => {
     it("configure-then-recordOutcome", async () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(eloRatingHandler.configure({ kFactor: {"type":"literal","value":32}, initialRating: {"type":"literal","value":1500}, kFactorDecay: {"type":"variable","name":"_"} }), storage);
-      expect(configureResult0.variant).toBe("configured");
+      expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
       const thenResult0 = await interpret(eloRatingHandler.recordOutcome({ config: {"type":"variable","name":"el"}, winner: {"type":"variable","name":"w"}, loser: {"type":"variable","name":"l"} }), storage);
-      expect(thenResult0.variant).toBe("updated");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });
@@ -421,7 +417,7 @@ describe('EloRating functional handler', () => {
       }
     });
 
-    it('configure ensures on configured: ', async () => {
+    it('configure ensures on ok: ', async () => {
       if (typeof eloRatingHandler.configure !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -433,7 +429,7 @@ describe('EloRating functional handler', () => {
               const program = eloRatingHandler.configure(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "configured") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

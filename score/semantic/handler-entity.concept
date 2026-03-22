@@ -42,7 +42,7 @@ concept HandlerEntity [H] {
         full AST for structural queries. The concept field links to
         the ConceptEntity this handler implements.
       }
-      -> alreadyRegistered(existing: H) {
+      -> ok(existing: H) {
         A handler for this concept and language is already registered.
       }
 
@@ -115,10 +115,10 @@ concept HandlerEntity [H] {
         are declared but not implemented. Result as serialized JSON
         array of { action, declaredIn, missingFrom }.
       }
-      -> fullyImplemented(actionCount: Int) {
+      -> ok(actionCount: Int) {
         All declared actions have handler implementations.
       }
-      -> noHandler() {
+      -> ok() {
         No handler is registered for this concept.
       }
 
@@ -160,7 +160,7 @@ concept HandlerEntity [H] {
         raw stack frame to the precise code construct — which if-branch,
         which storage call, which variant return.
       }
-      -> notInHandler() {
+      -> ok() {
         The given location is not within any registered handler file.
       }
 
@@ -178,7 +178,7 @@ concept HandlerEntity [H] {
         mapping: "the error occurred in the `await storage.put()` call
         inside the `if (!existing)` branch of the `create` method."
       }
-      -> outOfRange(line: Int, maxLine: Int) {
+      -> ok(line: Int, maxLine: Int) {
         The given position is outside the handler's line range.
       }
 
@@ -244,13 +244,13 @@ concept HandlerEntity [H] {
         kind is one of: missing_action, extra_action, missing_variant,
         extra_variant, storage_mismatch.
       }
-      -> inSync(actionCount: Int) {
+      -> ok(actionCount: Int) {
         Implementation matches the concept spec exactly.
       }
-      -> noHandler() {
+      -> ok() {
         No handler is registered for this concept.
       }
-      -> noSpec() {
+      -> ok() {
         No concept entity is registered for this concept name.
       }
 
@@ -276,10 +276,10 @@ concept HandlerEntity [H] {
         the handler source code for that action method with file
         location. Combines get + getActionMethod into one query.
       }
-      -> noHandler() {
+      -> ok() {
         No handler registered for this concept.
       }
-      -> actionNotImplemented() {
+      -> ok() {
         Handler exists but does not implement this action.
       }
 
@@ -301,7 +301,7 @@ concept HandlerEntity [H] {
 
   example "duplicate registration returns existing": {
     after register(concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}") -> ok(handler: h)
-    then register(concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}") -> alreadyRegistered(existing: h)
+    then register(concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}") -> ok(existing: h)
   }
 
   always "every handlers entry has concept": {

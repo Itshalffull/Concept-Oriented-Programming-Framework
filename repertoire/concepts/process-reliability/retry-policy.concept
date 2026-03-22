@@ -37,7 +37,7 @@ concept RetryPolicy [Y] {
       -> retry(policy: Y, delay_ms: Int, attempt: Int) {
         Error is retryable and attempts remain. Returns the backoff delay.
       }
-      -> exhausted(policy: Y, step_ref: String, run_ref: String, last_error: String) {
+      -> ok(policy: Y, step_ref: String, run_ref: String, last_error: String) {
         Max attempts reached or error is non-retryable. Transitions to exhausted.
       }
     }

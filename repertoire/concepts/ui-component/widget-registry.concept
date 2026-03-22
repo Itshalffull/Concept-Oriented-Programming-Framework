@@ -52,7 +52,7 @@ concept WidgetRegistry [W] {
         Any filter left empty is a wildcard. Results ranked
         by specificity descending.
       }
-      -> none(message: String) { No matching entries. }
+      -> ok(message: String) { No matching entries. }
 
       fixture query_by_concept { concept: "Approval" } after valid_register
       fixture query_by_suite { suite: "governance" } after valid_register

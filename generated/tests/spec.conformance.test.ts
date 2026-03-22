@@ -94,8 +94,7 @@ describe('Spec functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(specHandler.emit({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "asyncapi_spec" -> ok', async () => {
@@ -108,8 +107,7 @@ describe('Spec functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(specHandler.emit({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "unknown_format" -> error', async () => {
@@ -183,8 +181,7 @@ describe('Spec functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(specHandler.validate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_document" -> error', async () => {
@@ -216,13 +213,11 @@ describe('Spec functional handler', () => {
     it("emit-then-validate", async () => {
       const storage = createInMemoryStorage();
       const emitResult0 = await interpret(specHandler.emit({ projections: {"type":"list","items":[{"type":"literal","value":"proj-1"}]}, format: {"type":"literal","value":"openapi"}, config: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(emitResult0.variant), `step 0: expected success but got '${emitResult0.variant}'`).toBe(false);
+      expect(emitResult0.variant).toBe("ok");
       let document = emitResult0.output["document"];
       let content = emitResult0.output["content"];
       const thenResult0 = await interpret(specHandler.validate({ document: {"type":"variable","name":"d"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

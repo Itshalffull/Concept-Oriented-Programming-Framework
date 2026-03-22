@@ -46,7 +46,7 @@ concept Signal [G] {
         Update value, increment version, notify subscribers.
         Notifications batched within a microtask.
       }
-      -> readonly(message: String) { Cannot write to computed signal. }
+      -> ok(message: String) { Cannot write to computed signal. }
       -> notfound(message: String) { Signal does not exist. }
 
       fixture valid_write { signal: "G-1", value: "world" } after valid_create_state
@@ -58,7 +58,7 @@ concept Signal [G] {
         Update multiple signals atomically. Subscribers notified
         once after all updates, not per-signal.
       }
-      -> partial(message: String, succeeded: Int, failed: Int) {
+      -> ok(message: String, succeeded: Int, failed: Int) {
         Some updates failed.
       }
 

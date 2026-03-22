@@ -50,7 +50,7 @@ concept GraphqlTarget [Q] {
         depth (Int) fields. Resolver stubs include tree
         traversal delegating to the kernel.
       }
-      -> federationConflict(type: String, reason: String) {
+      -> ok(type: String, reason: String) {
         Type cannot be federated due to conflicting key
         directives or ownership boundaries across subgraphs.
       }
@@ -68,7 +68,7 @@ concept GraphqlTarget [Q] {
         to the Relay spec if enabled. Recursive types have no
         unbounded nesting.
       }
-      -> cyclicType(type: Q, cycle: list String) {
+      -> ok(type: Q, cycle: list String) {
         Type graph contains a cycle that would cause infinite
         nesting in the schema.
       }

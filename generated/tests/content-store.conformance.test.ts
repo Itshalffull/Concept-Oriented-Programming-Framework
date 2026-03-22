@@ -37,16 +37,14 @@ describe('ContentStore imperative handler', () => {
       if (typeof contentStoreHandler.store !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await contentStoreHandler.store({ data: "package-contents-v1", media_type: "application/tar+gzip" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "store_empty_media_type" -> ok', async () => {
       if (typeof contentStoreHandler.store !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await contentStoreHandler.store({ data: "some-data", media_type: "" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -71,8 +69,7 @@ describe('ContentStore imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await contentStoreHandler.retrieve({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "retrieve_missing" -> error', async () => {
@@ -104,8 +101,7 @@ describe('ContentStore imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await contentStoreHandler.verify({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "verify_nonexistent" -> error', async () => {
@@ -137,8 +133,7 @@ describe('ContentStore imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await contentStoreHandler.gc({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "gc_empty_lockfile" -> ok', async () => {
@@ -151,8 +146,7 @@ describe('ContentStore imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await contentStoreHandler.gc({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -174,8 +168,7 @@ describe('ContentStore imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_store_tarball?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await contentStoreHandler.stats({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -196,26 +189,21 @@ describe('ContentStore imperative handler', () => {
     it("store then retrieve", async () => {
       const storage = createInMemoryStorage();
       const storeResult0 = await contentStoreHandler.store({ data: {"type":"variable","name":"d"}, media_type: {"type":"literal","value":"application/tar+gzip"} }, storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(storeResult0.variant), `step 0: expected success but got '${storeResult0.variant}'`).toBe(false);
+      expect(storeResult0.variant).toBe("ok");
       let blob = storeResult0.output["blob"];
       const thenResult0 = await contentStoreHandler.retrieve({ hash: {"type":"dot_access","variable":"b","field":"hash"} }, storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await contentStoreHandler.verify({ hash: {"type":"dot_access","variable":"b","field":"hash"} }, storage);
-      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
+      expect(thenResult1.variant).toBe("ok");
     });
 
     it("store then gc", async () => {
       const storage = createInMemoryStorage();
       const storeResult0 = await contentStoreHandler.store({ data: {"type":"variable","name":"d"}, media_type: {"type":"literal","value":"application/tar+gzip"} }, storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(storeResult0.variant), `step 0: expected success but got '${storeResult0.variant}'`).toBe(false);
+      expect(storeResult0.variant).toBe("ok");
       let blob = storeResult0.output["blob"];
       const thenResult0 = await contentStoreHandler.gc({ lockfile_hashes: {"type":"list","items":[{"type":"dot_access","variable":"b","field":"hash"}]} }, storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

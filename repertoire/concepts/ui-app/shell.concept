@@ -79,7 +79,7 @@ concept Shell [S] {
 
     action popOverlay(shell: S) {
       -> ok(shell: S, overlay: String) { Remove top overlay. }
-      -> empty(message: String) { No overlays. }
+      -> ok(message: String) { No overlays. }
 
       fixture pop_existing { shell: "S-1" } after init_two_zones
       fixture pop_unknown_shell { shell: "S-nonexistent" } -> empty

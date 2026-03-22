@@ -88,8 +88,7 @@ describe('BindingProvider functional handler', () => {
       if (typeof bindingProviderHandler.initialize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(bindingProviderHandler.initialize({ config: "{}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "init_invalid_json" -> error', async () => {
@@ -158,8 +157,7 @@ describe('BindingProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_init_default = await interpret(bindingProviderHandler.initialize({ config: "{}" }), storage);
       const result = await interpret(bindingProviderHandler.bind({ provider: afterResult_init_default?.output?.["provider"], concept: "Article", mode: "static" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "bind_invalid_mode" -> error', async () => {
@@ -228,8 +226,7 @@ describe('BindingProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_init_default = await interpret(bindingProviderHandler.initialize({ config: "{}" }), storage);
       const result = await interpret(bindingProviderHandler.sync({ provider: afterResult_init_default?.output?.["provider"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "sync_missing" -> error', async () => {
@@ -298,8 +295,7 @@ describe('BindingProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_init_default = await interpret(bindingProviderHandler.initialize({ config: "{}" }), storage);
       const result = await interpret(bindingProviderHandler.invoke({ provider: afterResult_init_default?.output?.["provider"], action: "create", input: "test-input" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invoke_missing" -> error', async () => {
@@ -374,8 +370,7 @@ describe('BindingProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_init_default = await interpret(bindingProviderHandler.initialize({ config: "{}" }), storage);
       const result = await interpret(bindingProviderHandler.unbind({ provider: afterResult_init_default?.output?.["provider"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "unbind_missing" -> error', async () => {
@@ -407,13 +402,11 @@ describe('BindingProvider functional handler', () => {
     it("initialize then bind", async () => {
       const storage = createInMemoryStorage();
       const initializeResult0 = await interpret(bindingProviderHandler.initialize({ provider: {"type":"variable","name":"p"}, config: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(initializeResult0.variant), `step 0: expected success but got '${initializeResult0.variant}'`).toBe(false);
+      expect(initializeResult0.variant).toBe("ok");
       let provider = initializeResult0.output["provider"];
       let pluginRef = initializeResult0.output["pluginRef"];
       const thenResult0 = await interpret(bindingProviderHandler.bind({ provider: {"type":"variable","name":"p"}, concept: {"type":"variable","name":"c"}, mode: {"type":"literal","value":"static"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

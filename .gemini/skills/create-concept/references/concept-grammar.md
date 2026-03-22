@@ -175,6 +175,18 @@ action <name>(<param>: <Type>, ...) {
 | `invalid` | Validation failed | `message: String` |
 | `warning` | Success with issues | Result + `issues: list String` |
 
+**Convention: success is always `ok`.** Domain context comes from the output
+fields, not the variant name. Do NOT use domain-specific success names like
+`created`, `configured`, `registered`, `updated` — these must all be `ok`.
+
+**Exception — multiple distinct success outcomes.** When an action genuinely
+has two or more success branches that syncs need to distinguish, use
+domain-specific variant names. Examples:
+- Cache lookup: `ok` (hit) vs `miss` (not cached, not an error)
+- Merge: `clean` (no conflicts) vs `conflicts` (needs resolution)
+- Diff: `identical` (no changes) vs `diffed` (changes found)
+- Verification: `valid` vs `invalid` (both are expected outcomes)
+
 ### Fixtures
 
 Fixtures are named input examples that serve as test seeds and documentation. They appear inside the action block, after variants:

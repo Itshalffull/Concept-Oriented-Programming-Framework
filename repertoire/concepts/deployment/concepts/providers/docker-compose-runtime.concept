@@ -28,7 +28,7 @@ concept DockerComposeRuntime [D] {
       -> ok(service: D, serviceName: String, endpoint: String) {
         Docker Compose service defined and started.
       }
-      -> portConflict(port: Int, existingService: String) {
+      -> ok(port: Int, existingService: String) {
         Port already in use by another container.
       }
 

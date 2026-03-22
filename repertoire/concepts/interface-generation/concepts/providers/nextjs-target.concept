@@ -38,7 +38,7 @@ concept NextjsTarget [R] {
         modules. Server Actions generated for mutation operations.
         All code is purely functional with pipe composition.
       }
-      -> ambiguousMapping(action: String, reason: String) {
+      -> ok(action: String, reason: String) {
         Action cannot be unambiguously mapped to an HTTP method.
         Manual annotation required in the interface manifest.
       }
@@ -53,7 +53,7 @@ concept NextjsTarget [R] {
         Route handler compiles. Request and response types are
         consistent. No route path conflicts detected.
       }
-      -> pathConflict(route: R, conflicting: String, reason: String) {
+      -> ok(route: R, conflicting: String, reason: String) {
         Two actions map to the same HTTP method and path.
       }
 

@@ -88,8 +88,7 @@ describe('Dispute functional handler', () => {
       if (typeof disputeHandler.open !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(disputeHandler.open({ challenger: "alice", respondent: "bob", subject: "Unauthorized budget allocation", evidence: "Transaction log entry 2026-01-15", bond: "100.0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "open_dispute_missing_challenger" -> error', async () => {
@@ -163,8 +162,7 @@ describe('Dispute functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(disputeHandler.submitEvidence({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "submit_evidence_unknown_dispute" -> not_open', async () => {
@@ -239,8 +237,7 @@ describe('Dispute functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(disputeHandler.arbitrate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "arbitrate_unknown_dispute" -> error', async () => {
@@ -314,8 +311,7 @@ describe('Dispute functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(disputeHandler.appeal({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "appeal_unresolved_dispute" -> not_resolved', async () => {
@@ -348,12 +344,12 @@ describe('Dispute functional handler', () => {
     it("open-then-arbitrate", async () => {
       const storage = createInMemoryStorage();
       const openResult0 = await interpret(disputeHandler.open({ challenger: {"type":"variable","name":"_"}, respondent: {"type":"variable","name":"_"}, subject: {"type":"variable","name":"_"}, evidence: {"type":"variable","name":"_"}, bond: {"type":"variable","name":"_"} }), storage);
-      expect(openResult0.variant).toBe("opened");
+      expect(openResult0.variant).toBe("ok");
       let dispute = openResult0.output["dispute"];
       const thenResult0 = await interpret(disputeHandler.submitEvidence({ dispute: {"type":"variable","name":"ds"}, party: {"type":"variable","name":"_"}, evidence: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("submitted");
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(disputeHandler.arbitrate({ dispute: {"type":"variable","name":"ds"}, arbitrator: {"type":"variable","name":"_"}, decision: {"type":"variable","name":"_"}, reasoning: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult1.variant).toBe("resolved");
+      expect(thenResult1.variant).toBe("ok");
     });
 
   });
@@ -440,7 +436,7 @@ describe('Dispute functional handler', () => {
       }
     });
 
-    it('open ensures on opened: ', async () => {
+    it('open ensures on ok: ', async () => {
       if (typeof disputeHandler.open !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -452,7 +448,7 @@ describe('Dispute functional handler', () => {
               const program = disputeHandler.open(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "opened") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

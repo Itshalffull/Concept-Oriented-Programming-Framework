@@ -88,16 +88,14 @@ describe('Z3SolverEndpoint functional handler', () => {
       if (typeof z3SolverEndpointHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(z3SolverEndpointHandler.register({ name: "z3-local", binaryPath: "/usr/bin/z3", timeout: "30000", options: "-smt2" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "z3_custom_path" -> ok', async () => {
       if (typeof z3SolverEndpointHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(z3SolverEndpointHandler.register({ name: "z3-custom", binaryPath: "/opt/z3/bin/z3", timeout: "60000", options: "-smt2 -T:60" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_name" -> error', async () => {
@@ -171,8 +169,7 @@ describe('Z3SolverEndpoint functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(z3SolverEndpointHandler.solve({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "solve_missing_endpoint" -> error', async () => {
@@ -246,8 +243,7 @@ describe('Z3SolverEndpoint functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(z3SolverEndpointHandler.resolve({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_missing" -> error', async () => {
@@ -264,12 +260,10 @@ describe('Z3SolverEndpoint functional handler', () => {
     it("solve after register", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(z3SolverEndpointHandler.register({ name: {"type":"literal","value":"z3-local"}, binaryPath: {"type":"literal","value":"/usr/bin/z3"}, timeout: {"type":"literal","value":30000}, options: {"type":"literal","value":"-smt2"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let endpoint = registerResult0.output["endpoint"];
       const thenResult0 = await interpret(z3SolverEndpointHandler.resolve({ name: {"type":"literal","value":"z3-local"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

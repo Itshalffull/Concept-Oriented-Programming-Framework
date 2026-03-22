@@ -22,8 +22,8 @@ concept ProgramInterpreter [I] {
         Register an interpreter bound to the named storage backend
         operating in the given mode (live, dry-run, or replay).
       }
-      -> exists() { An interpreter with this identifier is already registered. }
-      -> invalidMode() { The mode must be one of: live, dry-run, replay. }
+      -> ok() { An interpreter with this identifier is already registered. }
+      -> ok() { The mode must be one of: live, dry-run, replay. }
 
       fixture register_live {
         interpreter: "interp-1",

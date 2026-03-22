@@ -37,8 +37,7 @@ describe('VoteEscrow imperative handler', () => {
       if (typeof voteEscrowHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await voteEscrowHandler.configure({ token: "GOV", maxLockYears: "4.0" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_no_token" -> error', async () => {
@@ -65,8 +64,7 @@ describe('VoteEscrow imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_default = await voteEscrowHandler.configure({ token: "GOV", maxLockYears: "4.0" }, storage);
       const result = await voteEscrowHandler.lock({ config: afterResult_configure_default?.output?.["id"], locker: "alice", amount: "1000.0", lockYears: "4.0" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "lock_zero_amount" -> error', async () => {
@@ -93,8 +91,7 @@ describe('VoteEscrow imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_default = await voteEscrowHandler.configure({ token: "GOV", maxLockYears: "4.0" }, storage);
       const result = await voteEscrowHandler.extendLock({ lock: afterResult_configure_default?.output?.["id"], additionalYears: "1.0" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "extend_missing_lock" -> error', async () => {
@@ -121,8 +118,7 @@ describe('VoteEscrow imperative handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_configure_default = await voteEscrowHandler.configure({ token: "GOV", maxLockYears: "4.0" }, storage);
       const result = await voteEscrowHandler.getWeight({ config: afterResult_configure_default?.output?.["id"], participant: "alice" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_weight_unknown" -> error', async () => {
@@ -154,8 +150,7 @@ describe('VoteEscrow imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await voteEscrowHandler.withdraw({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "withdraw_still_locked" -> error', async () => {
@@ -183,12 +178,12 @@ describe('VoteEscrow imperative handler', () => {
     it("configure-then-getWeight", async () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await voteEscrowHandler.configure({ token: {"type":"literal","value":"GOV"}, maxLockYears: {"type":"literal","value":4} }, storage);
-      expect(configureResult0.variant).toBe("configured");
+      expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
       const thenResult0 = await voteEscrowHandler.lock({ config: {"type":"variable","name":"cfg"}, locker: {"type":"variable","name":"p"}, amount: {"type":"literal","value":100}, lockYears: {"type":"literal","value":4} }, storage);
-      expect(thenResult0.variant).toBe("locked");
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await voteEscrowHandler.getWeight({ config: {"type":"variable","name":"cfg"}, participant: {"type":"variable","name":"p"} }, storage);
-      expect(thenResult1.variant).toBe("weight");
+      expect(thenResult1.variant).toBe("ok");
     });
 
   });
@@ -271,7 +266,7 @@ describe('VoteEscrow imperative handler', () => {
       }
     });
 
-    it('configure ensures on configured: ', async () => {
+    it('configure ensures on ok: ', async () => {
       if (typeof voteEscrowHandler.configure !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -280,7 +275,7 @@ describe('VoteEscrow imperative handler', () => {
           async (input) => {
             const storage = createInMemoryStorage();
             const result = await safeInvoke(() => voteEscrowHandler.configure(input as Record<string, unknown>, storage));
-            if (result?.variant === "configured") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

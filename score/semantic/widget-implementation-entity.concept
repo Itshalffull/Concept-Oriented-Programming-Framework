@@ -42,7 +42,7 @@ concept WidgetImplementationEntity [I] {
         and accessibility attributes. The widget field links to the
         WidgetEntity this implements.
       }
-      -> alreadyRegistered(existing: I) {
+      -> ok(existing: I) {
         An implementation for this widget and framework already exists.
       }
       fixture register_react_dialog { widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{\"componentName\":\"Dialog\",\"renderedParts\":[{\"name\":\"overlay\"},{\"name\":\"content\"}]}" }
@@ -108,7 +108,7 @@ concept WidgetImplementationEntity [I] {
         to find drift — missing parts, extra props, state mismatches.
         Result as serialized JSON array of { kind, specValue, implValue }.
       }
-      -> inSync() {
+      -> ok() {
         Implementation matches the widget spec exactly.
       }
       fixture diff_valid { impl: "impl-uuid-1" }
@@ -125,7 +125,7 @@ concept WidgetImplementationEntity [I] {
         endCol }. astAncestors as serialized JSON array of { kind,
         startLine, endLine } from innermost to component root.
       }
-      -> notInWidgetImpl() {
+      -> ok() {
         The given location is not within any registered widget implementation.
       }
       fixture resolve_frame { file: "generated/surface/dialog/Dialog.tsx", line: 42, col: 8 } after register_react_dialog
@@ -142,7 +142,7 @@ concept WidgetImplementationEntity [I] {
         part is the widget anatomy part name (e.g., "root",
         "trigger", "content") or null if outside a part renderer.
       }
-      -> outOfRange(line: Int, maxLine: Int) {
+      -> ok(line: Int, maxLine: Int) {
         The given position is outside the implementation's line range.
       }
       fixture resolve_node { impl: $register_react_dialog.impl, line: 15, col: 4 } after register_react_dialog
@@ -158,7 +158,7 @@ concept WidgetImplementationEntity [I] {
 
   example "duplicate registration returns existing": {
     after register(widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{}") -> ok(impl: i)
-    then register(widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{}") -> alreadyRegistered(existing: i)
+    then register(widget: "dialog", framework: "react", sourceFile: "generated/surface/dialog/Dialog.tsx", ast: "{}") -> ok(existing: i)
   }
 
   always "every implementations entry has widget": {

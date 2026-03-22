@@ -46,7 +46,7 @@ concept GrpcTarget [G] {
         with hierarchical resource name patterns
         (e.g. "categories/{id}").
       }
-      -> protoIncompatible(type: String, reason: String) {
+      -> ok(type: String, reason: String) {
         Concept type cannot be represented in Protocol Buffers.
         Typical causes include recursive types without
         indirection or unsupported collection nesting.
@@ -65,7 +65,7 @@ concept GrpcTarget [G] {
         action semantics. Hierarchical resource names conform
         to AIP-122.
       }
-      -> fieldNumberConflict(service: G, message: String, field: String) {
+      -> ok(service: G, message: String, field: String) {
         Proto field number assignment conflicts with a
         previously generated version.
       }

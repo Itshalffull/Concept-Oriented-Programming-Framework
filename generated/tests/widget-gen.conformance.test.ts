@@ -88,16 +88,14 @@ describe('WidgetGen functional handler', () => {
       if (typeof widgetGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(widgetGenHandler.generate({ gen: "wg-1", target: "react", widgetAst: "{\"name\":\"Button\",\"props\":[{\"name\":\"label\",\"type\":\"string\"}],\"anatomy\":[{\"name\":\"root\",\"role\":\"container\"}]}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "vue_widget" -> ok', async () => {
       if (typeof widgetGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(widgetGenHandler.generate({ gen: "wg-2", target: "vue", widgetAst: "{\"name\":\"Card\",\"props\":[{\"name\":\"title\",\"type\":\"string\"},{\"name\":\"elevation\",\"type\":\"number\"}]}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "unsupported_target" -> error', async () => {
@@ -136,13 +134,11 @@ describe('WidgetGen functional handler', () => {
     it("generate is idempotent for same target", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(widgetGenHandler.generate({ gen: {"type":"variable","name":"g"}, target: {"type":"literal","value":"react"}, widgetAst: {"type":"variable","name":"_"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
+      expect(generateResult0.variant).toBe("ok");
       let gen = generateResult0.output["gen"];
       let output = generateResult0.output["output"];
       const thenResult0 = await interpret(widgetGenHandler.generate({ gen: {"type":"variable","name":"g"}, target: {"type":"literal","value":"react"}, widgetAst: {"type":"variable","name":"_"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

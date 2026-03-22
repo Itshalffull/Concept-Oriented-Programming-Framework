@@ -48,7 +48,7 @@ concept McpTarget [M] {
         (e.g. "concept://root/sub1/sub2") and list_children
         / get_ancestors tools are generated.
       }
-      -> tooManyTools(count: Int, limit: Int) {
+      -> ok(count: Int, limit: Int) {
         Generated tool count exceeds the configured limit.
         Consider grouping related actions or using resource
         types to reduce tool count.
@@ -66,7 +66,7 @@ concept McpTarget [M] {
         within length limits. Transport configuration is
         consistent. Hierarchical resource URIs are well-formed.
       }
-      -> missingDescription(tool: M, toolName: String) {
+      -> ok(tool: M, toolName: String) {
         Tool lacks a description. MCP tools require
         descriptions for LLM discoverability.
       }

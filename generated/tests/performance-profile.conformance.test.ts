@@ -94,8 +94,7 @@ describe('PerformanceProfile functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(performanceProfileHandler.aggregate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "aggregate_empty_symbol" -> error', async () => {
@@ -169,8 +168,7 @@ describe('PerformanceProfile functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(performanceProfileHandler.hotspots({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "hotspots_invalid_metric" -> error', async () => {
@@ -244,8 +242,7 @@ describe('PerformanceProfile functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(performanceProfileHandler.slowChains({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "slow_chains_zero" -> error', async () => {
@@ -319,8 +316,7 @@ describe('PerformanceProfile functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(performanceProfileHandler.compareWindows({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "compare_empty_symbol" -> error', async () => {
@@ -389,8 +385,7 @@ describe('PerformanceProfile functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_aggregate_article_create = await interpret(performanceProfileHandler.aggregate({ symbol: "clef/action/Article/create", window: "{}" }), storage);
       const result = await interpret(performanceProfileHandler.get({ profile: afterResult_aggregate_article_create?.output?.["profile"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_nonexistent" -> error', async () => {
@@ -422,12 +417,10 @@ describe('PerformanceProfile functional handler', () => {
     it("aggregated profile is retrievable", async () => {
       const storage = createInMemoryStorage();
       const aggregateResult0 = await interpret(performanceProfileHandler.aggregate({ symbol: {"type":"literal","value":"clef/action/Article/create"}, window: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(aggregateResult0.variant), `step 0: expected success but got '${aggregateResult0.variant}'`).toBe(false);
+      expect(aggregateResult0.variant).toBe("ok");
       let profile = aggregateResult0.output["profile"];
       const thenResult0 = await interpret(performanceProfileHandler.get({ profile: {"type":"variable","name":"p"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

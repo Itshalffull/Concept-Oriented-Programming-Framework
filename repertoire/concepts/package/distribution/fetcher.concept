@@ -30,13 +30,13 @@ concept Fetcher [D] {
         "queued" -> "downloading" -> "verifying" -> "complete". Verifies
         the downloaded content hash matches expected_hash.
       }
-      -> cached() {
+      -> ok() {
         Artifact already exists locally with matching hash; no download needed.
       }
-      -> integrity_failure(expected: String, actual: String) {
+      -> ok(expected: String, actual: String) {
         Downloaded content hash does not match expected_hash.
       }
-      -> network_error(message: String) {
+      -> ok(message: String) {
         Network-level failure: timeout, DNS resolution, connection refused, etc.
       }
 
@@ -49,7 +49,7 @@ concept Fetcher [D] {
       -> ok(results: list D) {
         Downloads all items concurrently. All items completed successfully.
       }
-      -> partial(completed: list D, failed: list D) {
+      -> ok(completed: list D, failed: list D) {
         Some items succeeded and some failed. Each failed download has
         status "failed" and its error field populated.
       }
@@ -80,9 +80,9 @@ concept Fetcher [D] {
   example "fetch then fetch": {
     after fetch(module_id: "pkg-a", version: "1.0.0",
                 source_url: url, expected_hash: h)
-      -> cached()
+      -> ok()
     then fetch(module_id: "pkg-a", version: "1.0.0",
-               source_url: url, expected_hash: h) -> cached()
+               source_url: url, expected_hash: h) -> ok()
   }
 
 

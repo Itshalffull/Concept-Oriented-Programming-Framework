@@ -46,7 +46,7 @@ concept EvaluationRun [N] {
     }
 
     action fail(eval: N, score: Float, feedback: String) {
-      -> failed(eval: N, step_ref: String, feedback: String) {
+      -> ok(eval: N, step_ref: String, feedback: String) {
         Evaluation did not meet threshold. Transitions to failed.
       }
     }

@@ -23,7 +23,7 @@ concept DataSource [D] {
       -> ok(sourceId: String) {
         Source registered and addressable by name.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         A source with this name is already registered.
       }
 

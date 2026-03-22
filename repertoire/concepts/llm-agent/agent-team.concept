@@ -50,7 +50,7 @@ concept AgentTeam [M] {
         - Hub-and-Spoke: routes to best-fit specialist.
         - Blackboard: posts task to board, agents self-select.
       }
-      -> no_capable_agent(message: String) {
+      -> ok(message: String) {
         No team member can handle this task.
       }
     }
@@ -61,7 +61,7 @@ concept AgentTeam [M] {
         For pipeline: returns final agent's output.
         For others: merges partial results.
       }
-      -> incomplete(pending_agents: list String) {
+      -> ok(pending_agents: list String) {
         Some agents haven't completed yet.
       }
     }
@@ -71,7 +71,7 @@ concept AgentTeam [M] {
         Escalates to Consensus when agents produce contradictory results.
         Returns resolved answer and the method used.
       }
-      -> deadlock(message: String) {
+      -> ok(message: String) {
         Consensus could not be reached.
       }
     }

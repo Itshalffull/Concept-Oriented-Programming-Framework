@@ -23,7 +23,7 @@ concept TreeSitterJson [I] {
         Load the JSON WASM parser and register it with
         LanguageGrammar for .json extensions.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to load the WASM parser binary.
       }
     }

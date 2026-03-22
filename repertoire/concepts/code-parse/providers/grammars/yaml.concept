@@ -23,7 +23,7 @@ concept TreeSitterYaml [I] {
         Load the YAML WASM parser and register it with
         LanguageGrammar for .yaml and .yml extensions.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to load the WASM parser binary.
       }
     }

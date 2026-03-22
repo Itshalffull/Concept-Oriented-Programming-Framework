@@ -35,7 +35,7 @@ concept SlotSource [S] {
       -> ok() {
         Registers a provider for a source type.
       }
-      -> already_registered(source_type: String) {
+      -> ok(source_type: String) {
         A provider is already registered for this source type.
       }
     }

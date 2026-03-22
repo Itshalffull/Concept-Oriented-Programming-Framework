@@ -88,16 +88,14 @@ describe('Supermajority functional handler', () => {
       if (typeof supermajorityHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(supermajorityHandler.configure({ threshold: "0.6667", roundingMode: "floor", abstentionsCount: "false" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "three_quarters_with_abstentions" -> ok', async () => {
       if (typeof supermajorityHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(supermajorityHandler.configure({ threshold: "0.75", roundingMode: "ceil", abstentionsCount: "true" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_low_threshold" -> error', async () => {
@@ -166,8 +164,7 @@ describe('Supermajority functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_two_thirds = await interpret(supermajorityHandler.configure({ threshold: "0.6667", roundingMode: "floor", abstentionsCount: "false" }), storage);
       const result = await interpret(supermajorityHandler.count({ config: afterResult_two_thirds?.output?.["id"], ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "no_ballots" -> error', async () => {
@@ -200,10 +197,10 @@ describe('Supermajority functional handler', () => {
     it("configure-then-count", async () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(supermajorityHandler.configure({ threshold: {"type":"literal","value":0.6667}, roundingMode: {"type":"literal","value":"Ceil"}, abstentionsCount: {"type":"literal","value":false} }), storage);
-      expect(configureResult0.variant).toBe("configured");
+      expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
       const thenResult0 = await interpret(supermajorityHandler.count({ config: {"type":"variable","name":"sm"}, ballots: {"type":"variable","name":"_"}, weights: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("winner");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });
@@ -286,7 +283,7 @@ describe('Supermajority functional handler', () => {
       }
     });
 
-    it('configure ensures on configured: ', async () => {
+    it('configure ensures on ok: ', async () => {
       if (typeof supermajorityHandler.configure !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -298,7 +295,7 @@ describe('Supermajority functional handler', () => {
               const program = supermajorityHandler.configure(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "configured") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

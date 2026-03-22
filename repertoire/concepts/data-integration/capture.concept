@@ -65,7 +65,7 @@ concept Capture [C] {
       -> notfound(message: String) {
         Subscription does not exist.
       }
-      -> empty() {
+      -> ok() {
         No changes detected since last run.
       }
 

@@ -30,7 +30,7 @@ concept Dispute [DS] {
 
   actions {
     action open(challenger: String, respondent: String, subject: String, evidence: String, bond: option Float) {
-      -> opened(dispute: DS) {
+      -> ok(dispute: DS) {
         A new dispute is created in Open status.
       }
 
@@ -50,10 +50,10 @@ concept Dispute [DS] {
     }
 
     action submitEvidence(dispute: DS, party: String, evidence: String) {
-      -> submitted(dispute: DS) {
+      -> ok(dispute: DS) {
         Evidence is added to the dispute record.
       }
-      -> not_open(dispute: DS) {
+      -> ok(dispute: DS) {
         The dispute is not in a phase that accepts evidence.
       }
 
@@ -70,7 +70,7 @@ concept Dispute [DS] {
     }
 
     action arbitrate(dispute: DS, arbitrator: String, decision: String, reasoning: String) {
-      -> resolved(dispute: DS, decision: String) {
+      -> ok(dispute: DS, decision: String) {
         The dispute is resolved with the given decision.
       }
 
@@ -89,13 +89,13 @@ concept Dispute [DS] {
     }
 
     action appeal(dispute: DS, appellant: String, grounds: String) {
-      -> appealed(dispute: DS) {
+      -> ok(dispute: DS) {
         The dispute is escalated. A new round of review begins.
       }
-      -> not_resolved(dispute: DS) {
+      -> ok(dispute: DS) {
         Cannot appeal a dispute that hasn't been resolved.
       }
-      -> appeal_limit_reached(dispute: DS) {
+      -> ok(dispute: DS) {
         Maximum number of appeals has been reached.
       }
 
@@ -114,11 +114,11 @@ concept Dispute [DS] {
 
   example "open-then-arbitrate": {
 
-    after open(challenger: _, respondent: _, subject: _, evidence: _, bond: _) -> opened(dispute: ds)
+    after open(challenger: _, respondent: _, subject: _, evidence: _, bond: _) -> ok(dispute: ds)
 
-        then submitEvidence(dispute: ds, party: _, evidence: _) -> submitted(dispute: ds)
+        then submitEvidence(dispute: ds, party: _, evidence: _) -> ok(dispute: ds)
 
-        and  arbitrate(dispute: ds, arbitrator: _, decision: _, reasoning: _) -> resolved(dispute: ds, decision: _)
+        and  arbitrate(dispute: ds, arbitrator: _, decision: _, reasoning: _) -> ok(dispute: ds, decision: _)
 
   }
 
@@ -143,7 +143,7 @@ concept Dispute [DS] {
 
     requires: challenger != ""
 
-    ensures opened: challenger != none
+    ensures ok: challenger != none
 
   }
 }

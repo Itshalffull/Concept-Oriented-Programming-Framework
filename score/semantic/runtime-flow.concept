@@ -33,7 +33,7 @@ concept RuntimeFlow [F] {
         for this flow ID to their static semantic entities
         (ConceptEntity, ActionEntity, VariantEntity, SyncEntity).
       }
-      -> partial(flow: F, unresolved: String) {
+      -> ok(flow: F, unresolved: String) {
         Flow built but some events could not be resolved to
         static entities. Unresolved items as serialized JSON array.
       }
@@ -90,7 +90,7 @@ concept RuntimeFlow [F] {
         Deviations as serialized JSON array of
         { step, expected, actual }.
       }
-      -> noStaticPath() {
+      -> ok() {
         No FlowGraph path exists for this flow's trigger action.
       }
       fixture compare_flow { flow: "runtime-flow-1" }

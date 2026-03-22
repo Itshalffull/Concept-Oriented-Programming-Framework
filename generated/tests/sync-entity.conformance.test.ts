@@ -88,16 +88,14 @@ describe('SyncEntity functional handler', () => {
       if (typeof syncEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_minimal" -> ok', async () => {
       if (typeof syncEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(syncEntityHandler.register({ name: "NotificationSync", source: "syncs/notify.sync", compiled: "{}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_empty_name" -> error', async () => {
@@ -171,8 +169,7 @@ describe('SyncEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(syncEntityHandler.findByConcept({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_nonexistent" -> ok', async () => {
@@ -185,8 +182,7 @@ describe('SyncEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(syncEntityHandler.findByConcept({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -253,8 +249,7 @@ describe('SyncEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(syncEntityHandler.findTriggerableBy({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_create_any" -> ok', async () => {
@@ -267,8 +262,7 @@ describe('SyncEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(syncEntityHandler.findTriggerableBy({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -335,8 +329,7 @@ describe('SyncEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(syncEntityHandler.chainFrom({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "chain_no_match" -> error', async () => {
@@ -407,8 +400,7 @@ describe('SyncEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_publish_sync?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(syncEntityHandler.findDeadEnds({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -472,8 +464,7 @@ describe('SyncEntity functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_publish_sync?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(syncEntityHandler.findOrphanVariants({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -535,8 +526,7 @@ describe('SyncEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_publish_sync = await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage);
       const result = await interpret(syncEntityHandler.get({ sync: afterResult_register_publish_sync?.output?.["sync"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_nonexistent" -> error', async () => {
@@ -553,22 +543,19 @@ describe('SyncEntity functional handler', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(syncEntityHandler.register({ name: {"type":"literal","value":"ArticlePublishSync"}, source: {"type":"literal","value":"syncs/article-publish.sync"}, compiled: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let sync = registerResult0.output["sync"];
       const thenResult0 = await interpret(syncEntityHandler.get({ sync: {"type":"variable","name":"y"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("duplicate registration returns existing", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(syncEntityHandler.register({ name: {"type":"literal","value":"ArticlePublishSync"}, source: {"type":"literal","value":"syncs/article-publish.sync"}, compiled: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let sync = registerResult0.output["sync"];
       const thenResult0 = await interpret(syncEntityHandler.register({ name: {"type":"literal","value":"ArticlePublishSync"}, source: {"type":"literal","value":"syncs/article-publish.sync"}, compiled: {"type":"literal","value":"{}"} }), storage);
-      expect(thenResult0.variant).toBe("alreadyRegistered");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

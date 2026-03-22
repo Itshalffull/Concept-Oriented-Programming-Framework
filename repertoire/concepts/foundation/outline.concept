@@ -21,7 +21,7 @@ concept Outline [O] {
       -> ok(node: O) {
         Add node to the outline. If parent given, set as child.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         The node already exists.
       }
 

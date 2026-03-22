@@ -94,8 +94,7 @@ describe('Auditor functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(auditorHandler.audit({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "audit_empty_entries" -> ok', async () => {
@@ -108,8 +107,7 @@ describe('Auditor functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(auditorHandler.audit({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -176,8 +174,7 @@ describe('Auditor functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(auditorHandler.checkPolicy({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "check_restrictive_policy" -> error', async () => {
@@ -257,8 +254,7 @@ describe('Auditor functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(auditorHandler.diff({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "diff_missing_old" -> ok', async () => {
@@ -271,8 +267,7 @@ describe('Auditor functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(auditorHandler.diff({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -297,19 +292,16 @@ describe('Auditor functional handler', () => {
     it("audit then diff", async () => {
       const storage = createInMemoryStorage();
       const auditResult0 = await interpret(auditorHandler.audit({ lockfile_entries: {"type":"variable","name":"entries"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(auditResult0.variant), `step 0: expected success but got '${auditResult0.variant}'`).toBe(false);
+      expect(auditResult0.variant).toBe("ok");
       let audit = auditResult0.output["audit"];
       const thenResult0 = await interpret(auditorHandler.diff({ old_audit: {"type":"variable","name":"a"}, new_audit: {"type":"variable","name":"a"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("checkPolicy lifecycle", async () => {
       const storage = createInMemoryStorage();
       const checkPolicyResult0 = await interpret(auditorHandler.checkPolicy({ lockfile_entries: {"type":"variable","name":"entries"}, policy: {"type":"record","fields":[{"name":"allowed_licenses","value":{"type":"list","items":[{"type":"literal","value":"MIT"},{"type":"literal","value":"Apache-2.0"}]}},{"name":"denied_namespaces","value":{"type":"list","items":[]}},{"name":"max_severity","value":{"type":"literal","value":"critical"}}]} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(checkPolicyResult0.variant), `step 0: expected success but got '${checkPolicyResult0.variant}'`).toBe(false);
+      expect(checkPolicyResult0.variant).toBe("ok");
       let audit = checkPolicyResult0.output["audit"];
       expect(aResult.output["policy_violations"]).toBe({"type":"list","items":[]});
     });

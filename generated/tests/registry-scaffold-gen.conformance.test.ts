@@ -88,8 +88,7 @@ describe('RegistryScaffoldGen functional handler', () => {
       if (typeof registryScaffoldGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(registryScaffoldGenHandler.generate({ deployManifest: "deploys/production.deploy.yaml", outputPath: "generated/kernel-registry.ts", language: "typescript" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_manifest" -> error', async () => {
@@ -170,8 +169,7 @@ describe('RegistryScaffoldGen functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(registryScaffoldGenHandler.preview({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_manifest_preview" -> error', async () => {
@@ -242,8 +240,7 @@ describe('RegistryScaffoldGen functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_generate?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(registryScaffoldGenHandler.register({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -268,8 +265,7 @@ describe('RegistryScaffoldGen functional handler', () => {
     it("generate produces registry boot code", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(registryScaffoldGenHandler.generate({ deployManifest: {"type":"literal","value":"deploy.yaml"}, outputPath: {"type":"literal","value":"./generated/"}, language: {"type":"literal","value":"typescript"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
+      expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
       let filesGenerated = generateResult0.output["filesGenerated"];
     });

@@ -88,16 +88,14 @@ describe('AwsSmProvider functional handler', () => {
       if (typeof awsSmProviderHandler.fetch !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(awsSmProviderHandler.fetch({ secretId: "prod/db-password", versionStage: "AWSCURRENT" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "fetch_api_key" -> ok', async () => {
       if (typeof awsSmProviderHandler.fetch !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(awsSmProviderHandler.fetch({ secretId: "prod/api-key", versionStage: "AWSPREVIOUS" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "fetch_empty_id" -> error', async () => {
@@ -171,8 +169,7 @@ describe('AwsSmProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(awsSmProviderHandler.rotate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "rotate_empty_id" -> ok', async () => {
@@ -185,8 +182,7 @@ describe('AwsSmProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(awsSmProviderHandler.rotate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -211,14 +207,12 @@ describe('AwsSmProvider functional handler', () => {
     it("fetch-then-rotate", async () => {
       const storage = createInMemoryStorage();
       const fetchResult0 = await interpret(awsSmProviderHandler.fetch({ secretId: {"type":"literal","value":"prod/db-password"}, versionStage: {"type":"literal","value":"AWSCURRENT"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(fetchResult0.variant), `step 0: expected success but got '${fetchResult0.variant}'`).toBe(false);
+      expect(fetchResult0.variant).toBe("ok");
       let value = fetchResult0.output["value"];
       let versionId = fetchResult0.output["versionId"];
       let arn = fetchResult0.output["arn"];
       const thenResult0 = await interpret(awsSmProviderHandler.rotate({ secretId: {"type":"literal","value":"prod/db-password"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

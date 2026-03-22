@@ -88,8 +88,7 @@ describe('RenderTransform functional handler', () => {
       if (typeof renderTransformHandler.registerKind !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(renderTransformHandler.registerKind({ kind: "token-remap" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_kind" -> error', async () => {
@@ -163,8 +162,7 @@ describe('RenderTransform functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(renderTransformHandler.register({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_spec" -> error', async () => {
@@ -238,8 +236,7 @@ describe('RenderTransform functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(renderTransformHandler.apply({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_program" -> error', async () => {
@@ -319,8 +316,7 @@ describe('RenderTransform functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(renderTransformHandler.compose({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "compose_empty" -> error', async () => {
@@ -391,8 +387,7 @@ describe('RenderTransform functional handler', () => {
       const _pool = Object.assign({}, (afterResult_token_remap_kind?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(renderTransformHandler.list({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -459,8 +454,7 @@ describe('RenderTransform functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(renderTransformHandler.get({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "unknown_transform" -> notfound', async () => {
@@ -478,19 +472,16 @@ describe('RenderTransform functional handler', () => {
     it("register then get returns transform", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(renderTransformHandler.register({ name: {"type":"literal","value":"dark-theme"}, kind: {"type":"literal","value":"token-remap"}, spec: {"type":"literal","value":"{\"mappings\":{\"palette.primary\":\"palette.primary-dark\"}}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let transform = registerResult0.output["transform"];
       const thenResult0 = await interpret(renderTransformHandler.get({ name: {"type":"literal","value":"dark-theme"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("duplicate register returns existing transform", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(renderTransformHandler.register({ name: {"type":"literal","value":"dark-theme"}, kind: {"type":"literal","value":"token-remap"}, spec: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let transform = registerResult0.output["transform"];
       const thenResult0 = await interpret(renderTransformHandler.register({ name: {"type":"literal","value":"dark-theme"}, kind: {"type":"literal","value":"token-remap"}, spec: {"type":"literal","value":"{}"} }), storage);
       expect(thenResult0.variant).toBe("duplicate");
@@ -499,8 +490,7 @@ describe('RenderTransform functional handler', () => {
     it("duplicate registerKind returns duplicate", async () => {
       const storage = createInMemoryStorage();
       const registerKindResult0 = await interpret(renderTransformHandler.registerKind({ kind: {"type":"literal","value":"token-remap"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerKindResult0.variant), `step 0: expected success but got '${registerKindResult0.variant}'`).toBe(false);
+      expect(registerKindResult0.variant).toBe("ok");
       let kind = registerKindResult0.output["kind"];
       const thenResult0 = await interpret(renderTransformHandler.registerKind({ kind: {"type":"literal","value":"token-remap"} }), storage);
       expect(thenResult0.variant).toBe("duplicate");
@@ -509,38 +499,31 @@ describe('RenderTransform functional handler', () => {
     it("apply with identity spec preserves program", async () => {
       const storage = createInMemoryStorage();
       const registerKindResult0 = await interpret(renderTransformHandler.registerKind({ kind: {"type":"literal","value":"token-remap"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerKindResult0.variant), `step 0: expected success but got '${registerKindResult0.variant}'`).toBe(false);
+      expect(registerKindResult0.variant).toBe("ok");
       let kind = registerKindResult0.output["kind"];
       const thenResult0 = await interpret(renderTransformHandler.apply({ program: {"type":"literal","value":"p1"}, kind: {"type":"literal","value":"token-remap"}, spec: {"type":"literal","value":"{}"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("compose two transforms succeeds", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(renderTransformHandler.register({ name: {"type":"literal","value":"t1"}, kind: {"type":"literal","value":"token-remap"}, spec: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let transform = registerResult0.output["transform"];
       const registerResult1 = await interpret(renderTransformHandler.register({ name: {"type":"literal","value":"t2"}, kind: {"type":"literal","value":"a11y-adapt"}, spec: {"type":"literal","value":"{}"} }), storage);
-      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr1(registerResult1.variant), `step 1: expected success but got '${registerResult1.variant}'`).toBe(false);
+      expect(registerResult1.variant).toBe("ok");
       transform = registerResult1.output["transform"];
       const thenResult0 = await interpret(renderTransformHandler.compose({ transforms: {"type":"literal","value":"[\"t1\",\"t2\"]"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("list returns registered transforms", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(renderTransformHandler.register({ name: {"type":"literal","value":"dark-theme"}, kind: {"type":"literal","value":"token-remap"}, spec: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let transform = registerResult0.output["transform"];
       const thenResult0 = await interpret(renderTransformHandler.list({  }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("get unknown transform returns notfound", async () => {

@@ -88,16 +88,14 @@ describe('DiagramNotation functional handler', () => {
       if (typeof diagramNotationHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(diagramNotationHandler.create({ name: "Flowchart", description: "Standard flowchart notation" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "erd" -> ok', async () => {
       if (typeof diagramNotationHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(diagramNotationHandler.create({ name: "ERD", description: null }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_name" -> error', async () => {
@@ -166,8 +164,7 @@ describe('DiagramNotation functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_flowchart = await interpret(diagramNotationHandler.create({ name: "Flowchart", description: "Standard flowchart notation" }), storage);
       const result = await interpret(diagramNotationHandler.addNodeType({ notation: afterResult_flowchart?.output?.["notation"], type_key: "decision", label: "Decision", shape: "diamond", default_fill: "#F3E5F5", default_stroke: null, icon: null, schema_id: null }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "task_node" -> ok', async () => {
@@ -175,8 +172,7 @@ describe('DiagramNotation functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_flowchart = await interpret(diagramNotationHandler.create({ name: "Flowchart", description: "Standard flowchart notation" }), storage);
       const result = await interpret(diagramNotationHandler.addNodeType({ notation: afterResult_flowchart?.output?.["notation"], type_key: "task", label: "Task", shape: "rectangle", default_fill: "#E3F2FD", default_stroke: "#90CAF9", icon: null, schema_id: null }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "duplicate_key" -> duplicate', async () => {
@@ -246,8 +242,7 @@ describe('DiagramNotation functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_flowchart = await interpret(diagramNotationHandler.create({ name: "Flowchart", description: "Standard flowchart notation" }), storage);
       const result = await interpret(diagramNotationHandler.addEdgeType({ notation: afterResult_flowchart?.output?.["notation"], type_key: "flow", label: "Flow", line_style: "solid", arrow_type: "forward", default_color: null, requires_label: "false" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "dependency_edge" -> ok', async () => {
@@ -255,8 +250,7 @@ describe('DiagramNotation functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_flowchart = await interpret(diagramNotationHandler.create({ name: "Flowchart", description: "Standard flowchart notation" }), storage);
       const result = await interpret(diagramNotationHandler.addEdgeType({ notation: afterResult_flowchart?.output?.["notation"], type_key: "dependency", label: "Depends On", line_style: "dashed", arrow_type: "forward", default_color: "#FF5722", requires_label: "true" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "duplicate_edge" -> duplicate', async () => {
@@ -326,8 +320,7 @@ describe('DiagramNotation functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_flowchart = await interpret(diagramNotationHandler.create({ name: "Flowchart", description: "Standard flowchart notation" }), storage);
       const result = await interpret(diagramNotationHandler.addConnectionRule({ notation: afterResult_flowchart?.output?.["notation"], source_type: "task", target_type: "decision", allowed_edge_types: ["flow"], min_outgoing: null, max_outgoing: null, min_incoming: null, max_incoming: null }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_source" -> invalid', async () => {
@@ -402,8 +395,7 @@ describe('DiagramNotation functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(diagramNotationHandler.validateDiagram({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_notation" -> violations', async () => {
@@ -473,8 +465,7 @@ describe('DiagramNotation functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_flowchart = await interpret(diagramNotationHandler.create({ name: "Flowchart", description: "Standard flowchart notation" }), storage);
       const result = await interpret(diagramNotationHandler.getNodePalette({ notation: afterResult_flowchart?.output?.["notation"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -536,8 +527,7 @@ describe('DiagramNotation functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_flowchart = await interpret(diagramNotationHandler.create({ name: "Flowchart", description: "Standard flowchart notation" }), storage);
       const result = await interpret(diagramNotationHandler.getEdgePalette({ notation: afterResult_flowchart?.output?.["notation"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -599,8 +589,7 @@ describe('DiagramNotation functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_flowchart = await interpret(diagramNotationHandler.create({ name: "Flowchart", description: "Standard flowchart notation" }), storage);
       const result = await interpret(diagramNotationHandler.applyToCanvas({ canvas_id: afterResult_flowchart?.output?.["notation"], notation: afterResult_flowchart?.output?.["notation"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_notation" -> notfound', async () => {

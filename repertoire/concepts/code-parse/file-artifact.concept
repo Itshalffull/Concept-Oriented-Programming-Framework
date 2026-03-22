@@ -29,7 +29,7 @@ concept FileArtifact [F] {
         Register a file as a project artifact with inferred
         or explicit role and language metadata.
       }
-      -> alreadyRegistered(existing: F) {
+      -> ok(existing: F) {
         This file path already has a FileArtifact entry.
       }
       fixture register_source { node: "src/handler.ts", role: "source", language: "typescript" }
@@ -61,7 +61,7 @@ concept FileArtifact [F] {
       -> ok(artifacts: String) {
         Return all artifacts generated from this spec.
       }
-      -> noGeneratedFiles() {
+      -> ok() {
         No files were generated from this spec.
       }
       fixture find_generated { spec: "user.concept" } after register_source
@@ -92,7 +92,7 @@ concept FileArtifact [F] {
 
     after register(node: "specs/app/user.concept", role: "spec", language: "concept-spec") -> ok(artifact: a)
 
-        then register(node: "specs/app/user.concept", role: "spec", language: "concept-spec") -> alreadyRegistered(existing: a)
+        then register(node: "specs/app/user.concept", role: "spec", language: "concept-spec") -> ok(existing: a)
 
   }
 

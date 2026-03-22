@@ -32,10 +32,10 @@ concept EcsRuntime [S] {
         ECS service created. Task definition registered.
         ALB target group configured.
       }
-      -> capacityUnavailable(cluster: String, requested: String) {
+      -> ok(cluster: String, requested: String) {
         Cluster lacks capacity for the requested CPU and memory.
       }
-      -> clusterNotFound(cluster: String) {
+      -> ok(cluster: String) {
         Named cluster does not exist.
       }
 
@@ -49,10 +49,10 @@ concept EcsRuntime [S] {
         New task definition registered. Service updated.
         Rolling deployment initiated.
       }
-      -> imageNotFound(imageUri: String) {
+      -> ok(imageUri: String) {
         Container image not found in registry.
       }
-      -> healthCheckFailed(service: S, failedTasks: Int) {
+      -> ok(service: S, failedTasks: Int) {
         New tasks failed health checks. ECS rolled back
         to previous task definition automatically.
       }
@@ -83,7 +83,7 @@ concept EcsRuntime [S] {
       -> ok(service: S) {
         Service scaled to zero then deleted. Target group removed.
       }
-      -> drainTimeout(service: S, activeConnections: Int) {
+      -> ok(service: S, activeConnections: Int) {
         Connections still draining after timeout.
       }
 

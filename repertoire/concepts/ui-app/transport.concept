@@ -65,7 +65,7 @@ concept Transport [P] {
 
     action fetch(transport: P, query: String) {
       -> ok(transport: P, data: String) { Execute read. Return data. }
-      -> cached(transport: P, data: String, age: Int) { Returned from cache. }
+      -> ok(transport: P, data: String, age: Int) { Returned from cache. }
       -> error(transport: P, status: Int, message: String) { Request failed. }
 
       fixture fetch_articles { transport: "P-1", query: "{ \"path\": \"/articles\" }" } after configure_rest
@@ -74,7 +74,7 @@ concept Transport [P] {
 
     action mutate(transport: P, action: String, input: String) {
       -> ok(transport: P, result: String) { Execute write. Return result. }
-      -> queued(transport: P, queuePosition: Int) { Queued for offline. }
+      -> ok(transport: P, queuePosition: Int) { Queued for offline. }
       -> error(transport: P, status: Int, message: String) { Write failed. }
 
       fixture mutate_create { transport: "P-1", action: "createArticle", input: "{ \"title\": \"Hello World\" }" } after configure_rest
@@ -83,7 +83,7 @@ concept Transport [P] {
 
     action flushQueue(transport: P) {
       -> ok(transport: P, flushed: Int) { Send all queued mutations. }
-      -> partial(transport: P, sent: Int, failed: Int) { Some failed. }
+      -> ok(transport: P, sent: Int, failed: Int) { Some failed. }
 
       fixture flush_existing { transport: "P-1" } after configure_rest
       fixture flush_missing_transport { transport: "P-nonexistent" } -> error

@@ -25,7 +25,7 @@ concept SelfUpdate [U] {
                    content_hash: String, size_bytes: Int) {
         A newer version is available.
       }
-      -> current() {
+      -> ok() {
         Already at the latest version.
       }
       -> error(message: String) {
@@ -37,7 +37,7 @@ concept SelfUpdate [U] {
       -> ok(previous_path: String) {
         Downloads and atomically swaps the binary.
       }
-      -> hash_mismatch(expected: String, actual: String) {
+      -> ok(expected: String, actual: String) {
         Integrity verification failed.
       }
       -> error(message: String) {
@@ -49,7 +49,7 @@ concept SelfUpdate [U] {
       -> ok() {
         Restores the previous binary.
       }
-      -> no_backup() {
+      -> ok() {
         No previous binary available.
       }
       -> error(message: String) {

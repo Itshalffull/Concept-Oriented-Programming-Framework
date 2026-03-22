@@ -28,7 +28,7 @@ concept ContentEmbedding [E] {
         The entity's latest content is embedded and stored as the active
         semantic projection used by similarity views.
       }
-      -> modelUnavailable(model: String) {
+      -> ok(model: String) {
         The requested embedding model is not available to this deployment.
       }
 
@@ -69,7 +69,7 @@ concept ContentEmbedding [E] {
       -> notfound(entity_id: String) {
         The source entity does not currently have an embedding projection.
       }
-      -> empty(message: String) {
+      -> ok(message: String) {
         No similar entities matched the current scope.
       }
 

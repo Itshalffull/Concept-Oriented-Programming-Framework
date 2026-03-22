@@ -88,16 +88,14 @@ describe('Backlink functional handler', () => {
       if (typeof backlinkHandler.getBacklinks !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(backlinkHandler.getBacklinks({ entity: "doc-1" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "no_backlinks" -> ok', async () => {
       if (typeof backlinkHandler.getBacklinks !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(backlinkHandler.getBacklinks({ entity: "orphaned-doc" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -159,8 +157,7 @@ describe('Backlink functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_backlinks = await interpret(backlinkHandler.getBacklinks({ entity: "doc-1" }), storage);
       const result = await interpret(backlinkHandler.getUnlinkedMentions({ entity: afterResult_valid_backlinks?.output?.["sources"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "no_mentions" -> ok', async () => {
@@ -173,8 +170,7 @@ describe('Backlink functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(backlinkHandler.getUnlinkedMentions({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -238,8 +234,7 @@ describe('Backlink functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_backlinks?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(backlinkHandler.reindex({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -264,12 +259,10 @@ describe('Backlink functional handler', () => {
     it("reindex-then-getBacklinks", async () => {
       const storage = createInMemoryStorage();
       const reindexResult0 = await interpret(backlinkHandler.reindex({  }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(reindexResult0.variant), `step 0: expected success but got '${reindexResult0.variant}'`).toBe(false);
+      expect(reindexResult0.variant).toBe("ok");
       let count = reindexResult0.output["count"];
       const thenResult0 = await interpret(backlinkHandler.getBacklinks({ entity: {"type":"variable","name":"x"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

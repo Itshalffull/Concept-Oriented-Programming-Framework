@@ -88,16 +88,14 @@ describe('Navigator functional handler', () => {
       if (typeof navigatorHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(navigatorHandler.register({ name: "detail", targetConcept: "Article", targetView: "detail", paramsSchema: "", meta: "" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "with_schema" -> ok', async () => {
       if (typeof navigatorHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(navigatorHandler.register({ name: "list", targetConcept: "Article", targetView: "list", paramsSchema: "{\"page\":\"Int\"}", meta: "{\"icon\":\"list\"}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "duplicate_name" -> duplicate', async () => {
@@ -172,8 +170,7 @@ describe('Navigator functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(navigatorHandler.go({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "no_params" -> ok', async () => {
@@ -186,8 +183,7 @@ describe('Navigator functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(navigatorHandler.go({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_nav" -> notfound', async () => {
@@ -259,8 +255,7 @@ describe('Navigator functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(navigatorHandler.back({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_history" -> empty', async () => {
@@ -332,8 +327,7 @@ describe('Navigator functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(navigatorHandler.forward({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_stack" -> empty', async () => {
@@ -408,8 +402,7 @@ describe('Navigator functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(navigatorHandler.replace({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_nav_replace" -> notfound', async () => {
@@ -484,8 +477,7 @@ describe('Navigator functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(navigatorHandler.addGuard({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_guard" -> invalid', async () => {
@@ -560,8 +552,7 @@ describe('Navigator functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(navigatorHandler.removeGuard({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_guard" -> notfound', async () => {
@@ -579,24 +570,20 @@ describe('Navigator functional handler', () => {
     it("register then go", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(navigatorHandler.register({ nav: {"type":"variable","name":"n"}, name: {"type":"literal","value":"detail"}, targetConcept: {"type":"literal","value":"Article"}, targetView: {"type":"literal","value":"detail"}, paramsSchema: {"type":"variable","name":"_"}, meta: {"type":"variable","name":"_"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let nav = registerResult0.output["nav"];
       const thenResult0 = await interpret(navigatorHandler.go({ nav: {"type":"variable","name":"n"}, params: {"type":"variable","name":"_"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("go then back", async () => {
       const storage = createInMemoryStorage();
       const goResult0 = await interpret(navigatorHandler.go({ nav: {"type":"variable","name":"a"}, params: {"type":"variable","name":"_"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(goResult0.variant), `step 0: expected success but got '${goResult0.variant}'`).toBe(false);
+      expect(goResult0.variant).toBe("ok");
       let nav = goResult0.output["nav"];
       let previous = goResult0.output["previous"];
       const thenResult0 = await interpret(navigatorHandler.back({ nav: {"type":"variable","name":"b"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

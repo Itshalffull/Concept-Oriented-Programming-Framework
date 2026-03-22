@@ -88,16 +88,14 @@ describe('QualitySignal functional handler', () => {
       if (typeof qualitySignalHandler.record !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(qualitySignalHandler.record({ target_symbol: "clef/concept/Password", dimension: "unit", status: "pass", severity: "gate", summary: "All 42 unit tests passed" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "record_with_artifact" -> ok', async () => {
       if (typeof qualitySignalHandler.record !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(qualitySignalHandler.record({ target_symbol: "clef/concept/Auth", dimension: "formal", status: "pass", severity: "gate", artifact_path: "/reports/auth-proof.json", artifact_hash: "sha256-abc123", run_ref: "run-77" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_dimension" -> validationError', async () => {
@@ -188,8 +186,7 @@ describe('QualitySignal functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(qualitySignalHandler.latest({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "latest_invalid_dimension" -> validationError', async () => {
@@ -272,8 +269,7 @@ describe('QualitySignal functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(qualitySignalHandler.rollup({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "rollup_multiple" -> ok', async () => {
@@ -286,8 +282,7 @@ describe('QualitySignal functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(qualitySignalHandler.rollup({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "rollup_empty_targets" -> validationError', async () => {
@@ -362,8 +357,7 @@ describe('QualitySignal functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(qualitySignalHandler.explain({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "explain_filtered" -> ok', async () => {
@@ -376,8 +370,7 @@ describe('QualitySignal functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(qualitySignalHandler.explain({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "explain_missing_target" -> validationError', async () => {
@@ -410,12 +403,10 @@ describe('QualitySignal functional handler', () => {
     it("record then latest", async () => {
       const storage = createInMemoryStorage();
       const recordResult0 = await interpret(qualitySignalHandler.record({ target_symbol: {"type":"literal","value":"clef/concept/Password"}, dimension: {"type":"literal","value":"formal"}, status: {"type":"literal","value":"pass"}, severity: {"type":"literal","value":"gate"}, summary: {"type":"literal","value":"Proved 3 properties"}, artifact_path: {"type":"variable","name":"null"}, artifact_hash: {"type":"variable","name":"null"}, run_ref: {"type":"literal","value":"run-1"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(recordResult0.variant), `step 0: expected success but got '${recordResult0.variant}'`).toBe(false);
+      expect(recordResult0.variant).toBe("ok");
       let signal = recordResult0.output["signal"];
       const thenResult0 = await interpret(qualitySignalHandler.latest({ target_symbol: {"type":"literal","value":"clef/concept/Password"}, dimension: {"type":"literal","value":"formal"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

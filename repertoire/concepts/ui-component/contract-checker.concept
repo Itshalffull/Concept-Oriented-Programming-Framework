@@ -78,7 +78,7 @@ concept ContractChecker [C] {
         fields by type compatibility. Output is advisory —
         the developer writes the bind mapping.
       }
-      -> resolved(message: String) { All slots already resolved, no suggestions needed. }
+      -> ok(message: String) { All slots already resolved, no suggestions needed. }
       -> notfound(message: String) { Widget or concept not registered. }
 
       fixture valid_suggest { widget: "approval-detail", concept: "Approval" } after valid_check

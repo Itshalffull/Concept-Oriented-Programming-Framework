@@ -29,7 +29,7 @@ concept ChangeStream [E] {
       -> ok(offset: Int, eventId: E) {
         Event appended with monotonically increasing offset.
       }
-      -> invalidType(message: String) {
+      -> ok(message: String) {
         Event type not recognized.
       }
 
@@ -51,10 +51,10 @@ concept ChangeStream [E] {
       -> ok(events: list E) {
         Returns up to maxCount events from current subscription position.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         Subscription not found.
       }
-      -> endOfStream() {
+      -> ok() {
         No more events available at this time.
       }
 
@@ -66,7 +66,7 @@ concept ChangeStream [E] {
       -> ok() {
         Consumer's acknowledged offset recorded.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         Consumer not found.
       }
 
@@ -79,7 +79,7 @@ concept ChangeStream [E] {
         Returns all events in the offset range.
         Immutable replay — always returns the same events.
       }
-      -> invalidRange(message: String) {
+      -> ok(message: String) {
         from offset exceeds available range.
       }
 

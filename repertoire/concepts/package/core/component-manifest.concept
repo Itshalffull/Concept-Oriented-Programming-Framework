@@ -73,7 +73,7 @@ concept ComponentManifest [C] {
         Searches component manifests for modules that expose a matching
         concept, sync, derived, widget, or handler by name or pattern.
       }
-      -> empty() {
+      -> ok() {
         No modules match the given capability query.
       }
     }

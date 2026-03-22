@@ -6,7 +6,7 @@ sync QuadraticWeightAsConfigEntity [eager]
   purpose { Persist quadratic weight source as queryable config entity. }
 when {
   QuadraticWeight/configure: [ tokenSource: ?tokenSource; scalingFactor: ?scalingFactor ]
-    => configured(config: ?config)
+    => ok(config: ?config)
 }
 then {
   ContentStorage/save: [ record: ?config; data: ?scalingFactor ]
@@ -17,7 +17,7 @@ sync QuadraticWeightTagBundle [eager]
   purpose { Tag quadratic weight with its bundle type. }
 when {
   QuadraticWeight/configure: [ tokenSource: ?tokenSource; scalingFactor: ?scalingFactor ]
-    => configured(config: ?config)
+    => ok(config: ?config)
 }
 then {
   Property/set: [ entity: ?config; key: "config_bundle"; value: "weight_source_quadratic" ]

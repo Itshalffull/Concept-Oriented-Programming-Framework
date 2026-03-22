@@ -37,7 +37,7 @@ concept Annotation [N] {
         Metadata attached. keyCount is the number of top-level
         keys in the content JSON.
       }
-      -> invalidScope(scope: String) {
+      -> ok(scope: String) {
         The scope references an action not found in the concept.
       }
 
@@ -57,7 +57,7 @@ concept Annotation [N] {
         All annotations for the concept, serialized as JSON
         with scope keys preserved.
       }
-      -> notFound(concept: String) {
+      -> ok(concept: String) {
         No annotations exist for the specified concept.
       }
 

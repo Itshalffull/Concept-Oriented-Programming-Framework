@@ -26,7 +26,7 @@ concept BackgroundWorker [W] {
       -> ok(worker: W) {
         Service worker registered for the extension.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         Worker already registered for this extension.
       }
     }

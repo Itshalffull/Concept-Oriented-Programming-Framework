@@ -94,8 +94,7 @@ describe('RegoEvaluator functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(regoEvaluatorHandler.loadBundle({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "load_empty_source" -> compile_error', async () => {
@@ -170,8 +169,7 @@ describe('RegoEvaluator functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(regoEvaluatorHandler.evaluate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "evaluate_unknown_bundle" -> runtime_error', async () => {
@@ -246,8 +244,7 @@ describe('RegoEvaluator functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(regoEvaluatorHandler.updateData({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "update_data_unknown_bundle" -> error', async () => {
@@ -279,10 +276,10 @@ describe('RegoEvaluator functional handler', () => {
     it("loadBundle-then-evaluate", async () => {
       const storage = createInMemoryStorage();
       const loadBundleResult0 = await interpret(regoEvaluatorHandler.loadBundle({ policySource: {"type":"variable","name":"_"}, dataSource: {"type":"variable","name":"_"}, packageName: {"type":"variable","name":"_"} }), storage);
-      expect(loadBundleResult0.variant).toBe("loaded");
+      expect(loadBundleResult0.variant).toBe("ok");
       let bundle = loadBundleResult0.output["bundle"];
       const thenResult0 = await interpret(regoEvaluatorHandler.evaluate({ bundle: {"type":"variable","name":"re"}, input: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("result");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

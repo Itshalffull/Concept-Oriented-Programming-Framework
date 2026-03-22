@@ -15,7 +15,7 @@ concept QuadraticWeight [QW] {
 
   actions {
     action configure(baseSource: String) {
-      -> configured(config: QW) {
+      -> ok(config: QW) {
         Weight = sqrt(balance). The base source identifies the
         upstream balance provider.
       }
@@ -25,10 +25,10 @@ concept QuadraticWeight [QW] {
     }
 
     action compute(participant: String, balance: Float) {
-      -> weight(participant: String, balance: Float, sqrtWeight: Float) {
+      -> ok(participant: String, balance: Float, sqrtWeight: Float) {
         Returns sqrt(balance) as the quadratic weight.
       }
-      -> zero_balance() {
+      -> ok() {
         Balance is zero. Weight is zero.
       }
 
@@ -39,9 +39,9 @@ concept QuadraticWeight [QW] {
 
   example "configure-then-compute": {
 
-    after configure(baseSource: "token-balance") -> configured(config: qw)
+    after configure(baseSource: "token-balance") -> ok(config: qw)
 
-        then compute(participant: p, balance: 100.0) -> weight(participant: p, balance: 100.0, sqrtWeight: 10.0)
+        then compute(participant: p, balance: 100.0) -> ok(participant: p, balance: 100.0, sqrtWeight: 10.0)
 
         // sqrt(100) = 10
 
@@ -68,7 +68,7 @@ concept QuadraticWeight [QW] {
 
     requires: baseSource != ""
 
-    ensures configured: baseSource != none
+    ensures ok: baseSource != none
 
   }
 }

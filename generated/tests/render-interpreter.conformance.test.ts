@@ -37,16 +37,14 @@ describe('RenderInterpreter imperative handler', () => {
       if (typeof renderInterpreterHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await renderInterpreterHandler.register({ interpreter: "interp-react", target: "react", template: "jsx" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "svelte_interpreter" -> ok', async () => {
       if (typeof renderInterpreterHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await renderInterpreterHandler.register({ interpreter: "interp-svelte", target: "svelte", template: "tmpl" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -71,8 +69,7 @@ describe('RenderInterpreter imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await renderInterpreterHandler.execute({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "execute_unknown" -> notfound', async () => {
@@ -111,8 +108,7 @@ describe('RenderInterpreter imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await renderInterpreterHandler.dryRun({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "dry_run_unknown" -> notfound', async () => {
@@ -148,8 +144,7 @@ describe('RenderInterpreter imperative handler', () => {
       const _pool = Object.assign({}, (afterResult_react_interpreter?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await renderInterpreterHandler.listTargets({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -159,44 +154,37 @@ describe('RenderInterpreter imperative handler', () => {
     it("register then execute succeeds", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await renderInterpreterHandler.register({ interpreter: {"type":"variable","name":"i"}, target: {"type":"literal","value":"react"}, template: {"type":"literal","value":"jsx"} }, storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let interpreter = registerResult0.output["interpreter"];
       const thenResult0 = await renderInterpreterHandler.execute({ interpreter: {"type":"variable","name":"i"}, program: {"type":"literal","value":"p1"}, snapshot: {"type":"literal","value":"current"} }, storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("duplicate register returns exists", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await renderInterpreterHandler.register({ interpreter: {"type":"variable","name":"i"}, target: {"type":"literal","value":"react"}, template: {"type":"literal","value":"jsx"} }, storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let interpreter = registerResult0.output["interpreter"];
       const thenResult0 = await renderInterpreterHandler.register({ interpreter: {"type":"variable","name":"i"}, target: {"type":"literal","value":"svelte"}, template: {"type":"literal","value":"tmpl"} }, storage);
-      expect(thenResult0.variant).toBe("exists");
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("dryRun after register succeeds", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await renderInterpreterHandler.register({ interpreter: {"type":"variable","name":"i"}, target: {"type":"literal","value":"svelte"}, template: {"type":"literal","value":"tmpl"} }, storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let interpreter = registerResult0.output["interpreter"];
       const thenResult0 = await renderInterpreterHandler.dryRun({ interpreter: {"type":"variable","name":"i"}, program: {"type":"literal","value":"p1"} }, storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("listTargets includes registered target", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await renderInterpreterHandler.register({ interpreter: {"type":"variable","name":"i"}, target: {"type":"literal","value":"react"}, template: {"type":"literal","value":"jsx"} }, storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let interpreter = registerResult0.output["interpreter"];
       const thenResult0 = await renderInterpreterHandler.listTargets({  }, storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("execute without register returns notfound", async () => {

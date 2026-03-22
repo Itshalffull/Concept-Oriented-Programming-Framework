@@ -27,10 +27,10 @@ concept SemanticMerge [C] {
       -> clean(result: Bytes) {
         AST-aware merge resolved all changes without conflict.
       }
-      -> conflicts(regions: list Bytes) {
+      -> ok(regions: list Bytes) {
         Structural conflicts that cannot be resolved at AST level.
       }
-      -> unsupportedContent(message: String) {
+      -> ok(message: String) {
         Language not supported or content is not valid source code.
       }
 

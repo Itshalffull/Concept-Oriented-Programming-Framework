@@ -23,7 +23,7 @@ concept SyncSpecSymbolExtractor [I] {
         Register this extractor with PluginRegistry for
         .sync file extensions.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the extractor.
       }
     }

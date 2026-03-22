@@ -92,7 +92,7 @@ const _regoEvaluatorHandler: FunctionalConceptHandler = {
       provider: 'RegoEvaluator',
       instanceId: id,
     });
-    return complete(p, 'loaded', { bundle: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { bundle: id }) as StorageProgram<Result>;
   },
 
   evaluate(input: Record<string, unknown>) {
@@ -146,7 +146,7 @@ const _regoEvaluatorHandler: FunctionalConceptHandler = {
           const mergedData = bindings.mergedData as string;
           return { ...record, data: mergedData };
         });
-        return complete(b2, 'updated', { bundle });
+        return complete(b2, 'ok', { bundle });
       },
       (b) => complete(b, 'not_found', { bundle }),
     );

@@ -88,16 +88,14 @@ describe('Shell functional handler', () => {
       if (typeof shellHandler.initialize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(shellHandler.initialize({ shell: "S-1", zones: "{ \"zones\": [{ \"name\": \"primary\", \"role\": \"navigated\" }, { \"name\": \"sidebar\", \"role\": \"persistent\" }] }" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "init_single_zone" -> ok', async () => {
       if (typeof shellHandler.initialize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(shellHandler.initialize({ shell: "S-2", zones: "[\"main\"]" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "init_invalid_json" -> invalid', async () => {
@@ -175,8 +173,7 @@ describe('Shell functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_init_two_zones = await interpret(shellHandler.initialize({ shell: "S-1", zones: "{ \"zones\": [{ \"name\": \"primary\", \"role\": \"navigated\" }, { \"name\": \"sidebar\", \"role\": \"persistent\" }] }" }), storage);
       const result = await interpret(shellHandler.assignToZone({ shell: "S-1", zone: "primary", ref: afterResult_init_two_zones?.output?.["shell"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "assign_unknown_shell" -> notfound', async () => {
@@ -251,8 +248,7 @@ describe('Shell functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(shellHandler.adapt({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "adapt_unknown_shell" -> notfound', async () => {
@@ -341,8 +337,7 @@ describe('Shell functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(shellHandler.clearZone({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "clear_unknown_shell" -> notfound', async () => {
@@ -417,8 +412,7 @@ describe('Shell functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(shellHandler.pushOverlay({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "push_no_ref" -> invalid', async () => {
@@ -493,8 +487,7 @@ describe('Shell functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(shellHandler.popOverlay({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "pop_unknown_shell" -> empty', async () => {
@@ -527,12 +520,10 @@ describe('Shell functional handler', () => {
     it("initialize then assignToZone", async () => {
       const storage = createInMemoryStorage();
       const initializeResult0 = await interpret(shellHandler.initialize({ shell: {"type":"variable","name":"s"}, zones: {"type":"literal","value":"{ \"zones\": [{ \"name\": \"primary\", \"role\": \"navigated\" }] }"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(initializeResult0.variant), `step 0: expected success but got '${initializeResult0.variant}'`).toBe(false);
+      expect(initializeResult0.variant).toBe("ok");
       let shell = initializeResult0.output["shell"];
       const thenResult0 = await interpret(shellHandler.assignToZone({ shell: {"type":"variable","name":"s"}, zone: {"type":"literal","value":"primary"}, ref: {"type":"literal","value":"host-1"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

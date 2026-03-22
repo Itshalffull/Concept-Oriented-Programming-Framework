@@ -84,9 +84,9 @@ const _cacheHandler: FunctionalConceptHandler = {
       if (hasMatch) {
         const compositeKey = `${entry.bin}:${entry.key}`;
         sub = del(sub, 'cacheEntry', compositeKey);
-        return complete(sub, 'deleted', {});
+        return complete(sub, 'ok', {});
       }
-      return complete(sub, 'skipped', {});
+      return complete(sub, 'ok', {});
     }, '_traverseResults', { writes: ['cacheEntry'], completionVariants: ['deleted', 'skipped'] });
 
     return completeFrom(p, 'ok', (bindings) => {

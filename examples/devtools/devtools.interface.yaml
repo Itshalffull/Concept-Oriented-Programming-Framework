@@ -2737,6 +2737,8 @@ workflows:
         rule: "Every state field is needed by at least one action. Every action serves the concept's purpose. No dead state."
       - title: "Invariant Completeness"
         rule: "Use all six invariant constructs comprehensively: example (named tests), forall (quantified properties), always (state predicates), never (safety), eventually (liveness), action requires/ensures (contracts). Cover core purpose, error paths, constraints, state transitions, and boundary conditions. Aim for 2-5 invariants per concept."
+      - title: "Success is ok"
+        rule: "The happy-path variant must always be named `ok`. Do not use domain-specific success names like `created`, `configured`, `registered`, `updated`. Domain context belongs in the output fields. Exception: actions with multiple distinct success outcomes that syncs need to distinguish (e.g., `ok`/`miss` for cache lookup, `clean`/`conflicts` for merge)."
       - title: "Description Quality"
         rule: "Every variant description must explain the outcome in domain terms — never echo the variant name ('Created.') or use vague text ('Failed.'). Error variants explain what went wrong; ok variants explain what is now true."
     references:
@@ -2820,7 +2822,8 @@ workflows:
           - Every parameter must have a type
           - At least one variant per action
           - Variant names are lowercase
-          - `ok` is the conventional success variant
+          - **Success is always `ok`.** Do not use domain-specific names like `created`, `configured`, `registered`, `updated`. Domain context belongs in the output fields, not the variant name
+          - **Exception — multiple distinct success branches.** When an action has two or more success outcomes that syncs need to distinguish (e.g., `ok`/`miss` for cache lookup, `clean`/`conflicts` for merge, `valid`/`invalid` for verification), use domain-specific variant names. This should be rare
 
           ## Register Action
 
@@ -3331,6 +3334,8 @@ workflows:
         rule: "Each action in the concept spec maps to exactly one async method in the handler."
       - title: "Variant Completeness"
         rule: "Every return variant declared in the spec must have a corresponding code path — no missing branches."
+      - title: "Success is ok"
+        rule: "The happy-path variant must always be named `ok`. Do not use domain-specific success names like `configured`, `created`, `registered`. Domain context belongs in the output fields. Exception: actions with multiple distinct success outcomes that syncs need to distinguish (e.g., `ok`/`miss` for cache lookup)."
       - title: "Storage Sovereignty"
         rule: "Each concept owns its storage exclusively — no shared databases, no cross-concept state access."
       - title: "Input Extraction"
@@ -7496,10 +7501,9 @@ project-instructions:
     npx tsx scripts/generate-all-tests.ts
 
     # Regenerate interface bindings (MCP tools, CLI commands, skills, CLAUDE.md)
-    npx tsx --tsconfig tsconfig.json -e "
-      const { interfaceCommand } = await import('./cli/src/commands/interface.ts');
-      await interfaceCommand(['generate'], { manifest: 'examples/devtools/devtools.interface.yaml' });
-    "
+    # NOTE: --tsconfig tsconfig.json is REQUIRED for top-level await support,
+    # but it suppresses stdout. Use the script file for visible output:
+    npx tsx --tsconfig tsconfig.json scripts/regen-interface.ts
     ```
 
     ---

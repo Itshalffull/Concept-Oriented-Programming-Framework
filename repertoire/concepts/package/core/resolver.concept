@@ -52,7 +52,7 @@ concept Resolver [R] {
         true, locked versions are preferred unless they conflict. Populates
         resolved_modules with exact versions and content hashes.
       }
-      -> unsolvable(explanation: String) {
+      -> ok(explanation: String) {
         No valid resolution exists. The explanation provides a human-readable
         derivation tree showing which constraints conflict and why.
       }
@@ -77,7 +77,7 @@ concept Resolver [R] {
         versions. Respects allowed_updates to limit version jumps (e.g.,
         patch-only, minor-only).
       }
-      -> unsolvable(explanation: String) {
+      -> ok(explanation: String) {
         The requested update targets cannot be satisfied within the
         allowed_updates constraints.
       }

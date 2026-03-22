@@ -88,16 +88,14 @@ describe('DevServer functional handler', () => {
       if (typeof devServerHandler.start !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(devServerHandler.start({ port: "3000", watchDirs: ["./specs","./syncs"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "custom_port" -> ok', async () => {
       if (typeof devServerHandler.start !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(devServerHandler.start({ port: "8080", watchDirs: ["./handlers"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "port_conflict" -> portInUse', async () => {
@@ -167,8 +165,7 @@ describe('DevServer functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_start = await interpret(devServerHandler.start({ port: "3000", watchDirs: ["./specs","./syncs"] }), storage);
       const result = await interpret(devServerHandler.stop({ session: afterResult_valid_start?.output?.["session"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "nonexistent_stop" -> ok', async () => {
@@ -176,8 +173,7 @@ describe('DevServer functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_start = await interpret(devServerHandler.start({ port: "3000", watchDirs: ["./specs","./syncs"] }), storage);
       const result = await interpret(devServerHandler.stop({ session: afterResult_valid_start?.output?.["session"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -239,8 +235,7 @@ describe('DevServer functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_start = await interpret(devServerHandler.start({ port: "3000", watchDirs: ["./specs","./syncs"] }), storage);
       const result = await interpret(devServerHandler.status({ session: afterResult_valid_start?.output?.["session"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "stopped_status" -> stopped', async () => {
@@ -273,26 +268,23 @@ describe('DevServer functional handler', () => {
     it("start then stop lifecycle", async () => {
       const storage = createInMemoryStorage();
       const startResult0 = await interpret(devServerHandler.start({ port: {"type":"literal","value":3000}, watchDirs: {"type":"list","items":[{"type":"literal","value":"./specs"},{"type":"literal","value":"./syncs"}]} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(startResult0.variant), `step 0: expected success but got '${startResult0.variant}'`).toBe(false);
+      expect(startResult0.variant).toBe("ok");
       let session = startResult0.output["session"];
       let port = startResult0.output["port"];
       let url = startResult0.output["url"];
       const thenResult0 = await interpret(devServerHandler.stop({ session: {"type":"variable","name":"d"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("start then status shows running", async () => {
       const storage = createInMemoryStorage();
       const startResult0 = await interpret(devServerHandler.start({ port: {"type":"literal","value":3000}, watchDirs: {"type":"list","items":[{"type":"literal","value":"./specs"},{"type":"literal","value":"./syncs"}]} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(startResult0.variant), `step 0: expected success but got '${startResult0.variant}'`).toBe(false);
+      expect(startResult0.variant).toBe("ok");
       let session = startResult0.output["session"];
       let port = startResult0.output["port"];
       let url = startResult0.output["url"];
       const thenResult0 = await interpret(devServerHandler.status({ session: {"type":"variable","name":"d"} }), storage);
-      expect(thenResult0.variant).toBe("running");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

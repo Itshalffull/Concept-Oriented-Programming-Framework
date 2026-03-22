@@ -43,7 +43,7 @@ concept SymbolOccurrence [O] {
         Return all definition-role occurrences for this symbol.
         Results as serialized JSON array.
       }
-      -> noDefinitions() {
+      -> ok() {
         No definition occurrences found for this symbol.
       }
 
@@ -56,7 +56,7 @@ concept SymbolOccurrence [O] {
         Return all occurrences for this symbol, optionally filtered
         by role. Results as serialized JSON array.
       }
-      -> noReferences() {
+      -> ok() {
         No references found for this symbol.
       }
 
@@ -69,7 +69,7 @@ concept SymbolOccurrence [O] {
       -> ok(occurrence: O, symbol: String) {
         Find the symbol occurrence at a specific file position.
       }
-      -> noSymbolAtPosition() {
+      -> ok() {
         No symbol found at this position.
       }
 

@@ -27,7 +27,7 @@ sync FuzzFailPublishesQualitySignal [eager]
   purpose { Publish fuzz finding to the quality signal stream. }
 when {
   Builder/test: [ concept: ?concept; language: ?lang; mode: "fuzz"; duration_s: ?dur ]
-    => testFailure(crash_input: ?input; crash_trace: ?trace)
+    => ok(crash_input: ?input; crash_trace: ?trace)
 }
 then {
   QualitySignal/record: [

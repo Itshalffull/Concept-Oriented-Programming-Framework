@@ -88,8 +88,7 @@ describe('MachineProvider functional handler', () => {
       if (typeof machineProviderHandler.initialize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(machineProviderHandler.initialize({ config: "{}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "init_invalid_json" -> error', async () => {
@@ -158,8 +157,7 @@ describe('MachineProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_init_default = await interpret(machineProviderHandler.initialize({ config: "{}" }), storage);
       const result = await interpret(machineProviderHandler.spawn({ provider: afterResult_init_default?.output?.["provider"], widget: "dialog", context: "{}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "spawn_empty_widget" -> error', async () => {
@@ -229,8 +227,7 @@ describe('MachineProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_init_default = await interpret(machineProviderHandler.initialize({ config: "{}" }), storage);
       const result = await interpret(machineProviderHandler.send({ provider: afterResult_init_default?.output?.["provider"], machine: afterResult_init_default?.output?.["provider"], event: "OPEN" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "send_missing_machine" -> error', async () => {
@@ -299,8 +296,7 @@ describe('MachineProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_init_default = await interpret(machineProviderHandler.initialize({ config: "{}" }), storage);
       const result = await interpret(machineProviderHandler.connect({ provider: afterResult_init_default?.output?.["provider"], machine: afterResult_init_default?.output?.["provider"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "connect_missing" -> error', async () => {
@@ -369,8 +365,7 @@ describe('MachineProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_init_default = await interpret(machineProviderHandler.initialize({ config: "{}" }), storage);
       const result = await interpret(machineProviderHandler.destroy({ provider: afterResult_init_default?.output?.["provider"], machine: afterResult_init_default?.output?.["provider"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "destroy_missing" -> error', async () => {
@@ -402,13 +397,11 @@ describe('MachineProvider functional handler', () => {
     it("initialize then spawn", async () => {
       const storage = createInMemoryStorage();
       const initializeResult0 = await interpret(machineProviderHandler.initialize({ provider: {"type":"variable","name":"p"}, config: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(initializeResult0.variant), `step 0: expected success but got '${initializeResult0.variant}'`).toBe(false);
+      expect(initializeResult0.variant).toBe("ok");
       let provider = initializeResult0.output["provider"];
       let pluginRef = initializeResult0.output["pluginRef"];
       const thenResult0 = await interpret(machineProviderHandler.spawn({ provider: {"type":"variable","name":"p"}, widget: {"type":"literal","value":"dialog"}, context: {"type":"literal","value":"{}"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

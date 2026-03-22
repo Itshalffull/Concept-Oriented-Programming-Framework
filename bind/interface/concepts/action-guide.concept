@@ -42,10 +42,10 @@ concept ActionGuide [W] {
         Action guide created with ordered steps. Content JSON
         attached as opaque decoration.
       }
-      -> invalidAction(action: String) {
+      -> ok(action: String) {
         A step references an action not found in the concept.
       }
-      -> emptySteps() {
+      -> ok() {
         No steps were provided.
       }
 
@@ -77,7 +77,7 @@ concept ActionGuide [W] {
       -> ok(content: String) {
         Rendered action guide content in the requested format.
       }
-      -> unknownFormat(format: String) {
+      -> ok(format: String) {
         The requested format is not recognized.
       }
 

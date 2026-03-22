@@ -32,7 +32,7 @@ concept Migration [M] {
         Analyze schema diff. Determine migration steps.
         Estimate record count for progress tracking.
       }
-      -> noMigrationNeeded(concept: String) {
+      -> ok(concept: String) {
         Versions are compatible with additive changes only.
       }
       -> incompatible(concept: String, reason: String) {
@@ -63,7 +63,7 @@ concept Migration [M] {
         All existing data transformed to new schema.
         Dual-write continues for safety.
       }
-      -> partial(migration: M, migrated: Int, failed: Int, errors: list String) {
+      -> ok(migration: M, migrated: Int, failed: Int, errors: list String) {
         Some records failed migration. Manual review needed.
       }
 
@@ -76,7 +76,7 @@ concept Migration [M] {
         Old schema elements removed. Migration complete.
         Dual-write disabled.
       }
-      -> rollback(migration: M) {
+      -> ok(migration: M) {
         Contraction failed. Reverted to expanded state.
         Both schemas still present.
       }

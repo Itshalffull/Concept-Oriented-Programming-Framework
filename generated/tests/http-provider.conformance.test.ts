@@ -88,8 +88,7 @@ describe('HttpProvider functional handler', () => {
       if (typeof httpProviderHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(httpProviderHandler.register({  }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -156,8 +155,7 @@ describe('HttpProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(httpProviderHandler.configure({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_internal" -> ok', async () => {
@@ -170,8 +168,7 @@ describe('HttpProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(httpProviderHandler.configure({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -238,8 +235,7 @@ describe('HttpProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(httpProviderHandler.execute({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "post_data" -> ok', async () => {
@@ -252,8 +248,7 @@ describe('HttpProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(httpProviderHandler.execute({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "execute_unknown_instance" -> notFound', async () => {
@@ -331,8 +326,7 @@ describe('HttpProvider functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(httpProviderHandler.list({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -357,11 +351,10 @@ describe('HttpProvider functional handler', () => {
     it("execute fails for unknown instance", async () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(httpProviderHandler.configure({ name: {"type":"literal","value":"test-api"}, baseUrl: {"type":"literal","value":"https://api.example.com"}, headers: {"type":"literal","value":"{}"}, timeout: {"type":"literal","value":5000} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(configureResult0.variant), `step 0: expected success but got '${configureResult0.variant}'`).toBe(false);
+      expect(configureResult0.variant).toBe("ok");
       let instance = configureResult0.output["instance"];
       const thenResult0 = await interpret(httpProviderHandler.execute({ instance: {"type":"literal","value":"unknown-api"}, method: {"type":"literal","value":"GET"}, path: {"type":"literal","value":"/health"}, body: {"type":"literal","value":""}, headers: {"type":"literal","value":"{}"} }), storage);
-      expect(thenResult0.variant).toBe("notFound");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

@@ -88,16 +88,14 @@ describe('Signature functional handler', () => {
       if (typeof signatureHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_fields" -> ok', async () => {
       if (typeof signatureHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(signatureHandler.define({ name: "Empty", input_fields: [], output_fields: [], instruction: "", module_type: "predict" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -159,8 +157,7 @@ describe('Signature functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_define_qa_signature = await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage);
       const result = await interpret(signatureHandler.compile({ signature: afterResult_define_qa_signature?.output?.["signature"], model_id: "gpt-4o", examples: [{"input":"What is AI?","output":"Artificial Intelligence"}] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "compile_no_examples" -> ok', async () => {
@@ -168,8 +165,7 @@ describe('Signature functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_define_qa_signature = await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage);
       const result = await interpret(signatureHandler.compile({ signature: afterResult_define_qa_signature?.output?.["signature"], model_id: afterResult_define_qa_signature?.output?.["signature"], examples: [] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "compile_invalid_sig" -> error', async () => {
@@ -238,8 +234,7 @@ describe('Signature functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_define_qa_signature = await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage);
       const result = await interpret(signatureHandler.execute({ signature: afterResult_define_qa_signature?.output?.["signature"], model_id: "gpt-4o", inputs: [{"field":"context","value":"The sky is blue."},{"field":"question","value":"What color is the sky?"}] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "execute_not_compiled" -> error', async () => {
@@ -309,8 +304,7 @@ describe('Signature functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_define_qa_signature = await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage);
       const result = await interpret(signatureHandler.recompile({ signature: afterResult_define_qa_signature?.output?.["signature"], target_model: "claude-3-opus" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "recompile_invalid_sig" -> error', async () => {
@@ -342,12 +336,10 @@ describe('Signature functional handler', () => {
     it("define-then-compile", async () => {
       const storage = createInMemoryStorage();
       const defineResult0 = await interpret(signatureHandler.define({ name: {"type":"literal","value":"QA"}, input_fields: {"type":"list","items":[{"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"context"}},{"name":"type","value":{"type":"literal","value":"String"}},{"name":"description","value":{"type":"variable","name":"_"}}]},{"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"question"}},{"name":"type","value":{"type":"literal","value":"String"}},{"name":"description","value":{"type":"variable","name":"_"}}]}]}, output_fields: {"type":"list","items":[{"type":"record","fields":[{"name":"name","value":{"type":"literal","value":"answer"}},{"name":"type","value":{"type":"literal","value":"String"}},{"name":"description","value":{"type":"variable","name":"_"}}]}]}, instruction: {"type":"variable","name":"_"}, module_type: {"type":"literal","value":"chain_of_thought"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(defineResult0.variant), `step 0: expected success but got '${defineResult0.variant}'`).toBe(false);
+      expect(defineResult0.variant).toBe("ok");
       let signature = defineResult0.output["signature"];
       const thenResult0 = await interpret(signatureHandler.compile({ signature: {"type":"variable","name":"g"}, model_id: {"type":"literal","value":"gpt-4o"}, examples: {"type":"variable","name":"_"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

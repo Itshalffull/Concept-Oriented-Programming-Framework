@@ -26,14 +26,14 @@ concept AwsSmProvider [A] {
       -> ok(value: String, versionId: String, arn: String) {
         Secret retrieved from AWS Secrets Manager.
       }
-      -> kmsKeyInaccessible(secretId: String, kmsKeyId: String) {
+      -> ok(secretId: String, kmsKeyId: String) {
         KMS key used to encrypt this secret is not accessible.
         IAM or key policy issue.
       }
-      -> resourceNotFound(secretId: String) {
+      -> ok(secretId: String) {
         Secret does not exist in Secrets Manager.
       }
-      -> decryptionFailed(secretId: String, reason: String) {
+      -> ok(secretId: String, reason: String) {
         Secret exists but decryption failed.
       }
 
@@ -46,7 +46,7 @@ concept AwsSmProvider [A] {
       -> ok(secretId: String, newVersionId: String) {
         Rotation Lambda triggered. New version staged.
       }
-      -> rotationInProgress(secretId: String) {
+      -> ok(secretId: String) {
         Rotation already running.
       }
 

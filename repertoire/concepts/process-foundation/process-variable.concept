@@ -45,7 +45,7 @@ concept ProcessVariable [V] {
       -> not_found(run_ref: String, name: String) {
         No variable with this name exists.
       }
-      -> merge_error(message: String) {
+      -> ok(message: String) {
         Merge strategy failed (e.g., sum on non-numeric data).
       }
     }

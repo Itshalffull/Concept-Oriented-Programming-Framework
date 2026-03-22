@@ -62,7 +62,7 @@ concept Installer [I] {
         Deactivates the current installation and reactivates the previous
         generation. Returns the now-active previous installation.
       }
-      -> no_previous() {
+      -> ok() {
         No previous generation exists to roll back to.
       }
 

@@ -88,16 +88,14 @@ describe('SurfaceThemeScaffoldGen functional handler', () => {
       if (typeof surfaceThemeScaffoldGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(surfaceThemeScaffoldGenHandler.generate({ name: "corporate", primaryColor: "220", fontFamily: "Inter", baseSize: "16", scale: "1.25", secondaryColor: "180", borderRadius: "md", mode: "both", extends: null }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "light_only" -> ok', async () => {
       if (typeof surfaceThemeScaffoldGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(surfaceThemeScaffoldGenHandler.generate({ name: "minimal", primaryColor: "200", fontFamily: "system-ui", baseSize: "14", scale: "1.2", secondaryColor: null, borderRadius: "sm", mode: "light", extends: null }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -164,8 +162,7 @@ describe('SurfaceThemeScaffoldGen functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(surfaceThemeScaffoldGenHandler.preview({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -229,8 +226,7 @@ describe('SurfaceThemeScaffoldGen functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_theme?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(surfaceThemeScaffoldGenHandler.register({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -255,8 +251,7 @@ describe('SurfaceThemeScaffoldGen functional handler', () => {
     it("generate produces theme scaffold", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(surfaceThemeScaffoldGenHandler.generate({ name: {"type":"literal","value":"my-theme"}, primaryColor: {"type":"literal","value":"220"}, fontFamily: {"type":"literal","value":"Inter"}, baseSize: {"type":"literal","value":16}, scale: {"type":"literal","value":1.25}, secondaryColor: {"type":"literal","value":"180"}, borderRadius: {"type":"literal","value":"md"}, mode: {"type":"literal","value":"light"}, extends: {"type":"literal","value":false} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
+      expect(generateResult0.variant).toBe("ok");
       let files = generateResult0.output["files"];
       let filesGenerated = generateResult0.output["filesGenerated"];
     });

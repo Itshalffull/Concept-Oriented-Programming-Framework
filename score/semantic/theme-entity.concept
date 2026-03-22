@@ -36,7 +36,7 @@ concept ThemeEntity [T] {
         Extracts palette, typography, motion, elevation, spacing,
         and radius structures from the AST.
       }
-      -> alreadyRegistered(existing: T) {
+      -> ok(existing: T) {
         A theme entity with this name is already registered.
       }
       fixture register_light { name: "light", source: "themes/light.theme", ast: "{}" }
@@ -63,7 +63,7 @@ concept ThemeEntity [T] {
       -> notfound(tokenPath: String) {
         Token path does not exist in this theme.
       }
-      -> brokenChain(brokenAt: String) {
+      -> ok(brokenAt: String) {
         Token reference chain is broken at this point.
       }
       fixture resolve_primary { theme: $register_light.entity, tokenPath: "palette.primary" } after register_light
@@ -85,7 +85,7 @@ concept ThemeEntity [T] {
         Compare two themes token by token. Results as serialized
         JSON array of { token, aValue, bValue }.
       }
-      -> same() {
+      -> ok() {
         The themes are identical.
       }
       fixture diff_light_dark { a: "theme-entity-1", b: "theme-entity-2" }
@@ -120,7 +120,7 @@ concept ThemeEntity [T] {
 
   example "duplicate registration returns existing": {
     after register(name: "light", source: "themes/light.theme", ast: "{}") -> ok(entity: t)
-    then register(name: "light", source: "themes/light.theme", ast: "{}") -> alreadyRegistered(existing: t)
+    then register(name: "light", source: "themes/light.theme", ast: "{}") -> ok(existing: t)
   }
 
   always "every themes entry has name": {

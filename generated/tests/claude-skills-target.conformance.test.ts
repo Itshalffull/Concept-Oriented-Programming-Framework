@@ -88,16 +88,14 @@ describe('ClaudeSkillsTarget functional handler', () => {
       if (typeof claudeSkillsTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(claudeSkillsTargetHandler.generate({ projection: "{\"conceptName\":\"SpecParser\",\"conceptManifest\":\"{\\\"name\\\":\\\"SpecParser\\\",\\\"purpose\\\":\\\"Parse concept specs\\\",\\\"actions\\\":[]}\"}", config: "{\"progressive\":true}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "generate_flat" -> ok', async () => {
       if (typeof claudeSkillsTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(claudeSkillsTargetHandler.generate({ projection: "{\"conceptName\":\"ScoreApi\",\"conceptManifest\":\"{\\\"name\\\":\\\"ScoreApi\\\",\\\"purpose\\\":\\\"Score management\\\",\\\"actions\\\":[]}\"}", config: "{}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "generate_empty_projection" -> error', async () => {
@@ -171,8 +169,7 @@ describe('ClaudeSkillsTarget functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(claudeSkillsTargetHandler.validate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "validate_broken" -> error', async () => {
@@ -246,8 +243,7 @@ describe('ClaudeSkillsTarget functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(claudeSkillsTargetHandler.listSkills({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "list_skills_empty" -> error', async () => {
@@ -279,13 +275,11 @@ describe('ClaudeSkillsTarget functional handler', () => {
     it("generate-then-listSkills", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(claudeSkillsTargetHandler.generate({ projection: {"type":"literal","value":"spec-parser-projection"}, config: {"type":"literal","value":"{\"progressive\":true}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
+      expect(generateResult0.variant).toBe("ok");
       let skills = generateResult0.output["skills"];
       let files = generateResult0.output["files"];
       const thenResult0 = await interpret(claudeSkillsTargetHandler.listSkills({ suite: {"type":"literal","value":"test-suite"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

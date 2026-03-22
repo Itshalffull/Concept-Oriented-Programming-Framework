@@ -44,7 +44,7 @@ concept ThemeParser [H] {
 
     action checkContrast(theme: H) {
       -> ok(theme: H) { All role pairings meet WCAG ratios. }
-      -> violations(theme: H, failures: list String) { Failures. }
+      -> ok(theme: H, failures: list String) { Failures. }
 
       fixture passing_contrast {
         theme: "h-1"

@@ -20,7 +20,7 @@ concept Workflow [W] {
       -> ok() {
         Register a new named state in the workflow's state graph.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         A state with this name already exists in the workflow.
       }
 

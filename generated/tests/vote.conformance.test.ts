@@ -88,16 +88,14 @@ describe('Vote functional handler', () => {
       if (typeof voteHandler.openSession !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(voteHandler.openSession({ proposalRef: "proposal-001", deadline: "2026-04-15T23:59:59Z", snapshotRef: "snapshot-abc" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "open_without_snapshot" -> ok', async () => {
       if (typeof voteHandler.openSession !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(voteHandler.openSession({ proposalRef: "proposal-002", deadline: "2026-05-01T12:00:00Z", snapshotRef: null }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "open_empty_ref" -> error', async () => {
@@ -166,8 +164,7 @@ describe('Vote functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_open_with_snapshot = await interpret(voteHandler.openSession({ proposalRef: "proposal-001", deadline: "2026-04-15T23:59:59Z", snapshotRef: "snapshot-abc" }), storage);
       const result = await interpret(voteHandler.castVote({ session: afterResult_open_with_snapshot?.output?.["id"], voter: "alice", choice: "yes", weight: "1.0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "cast_weighted" -> ok', async () => {
@@ -175,8 +172,7 @@ describe('Vote functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_open_with_snapshot = await interpret(voteHandler.openSession({ proposalRef: "proposal-001", deadline: "2026-04-15T23:59:59Z", snapshotRef: "snapshot-abc" }), storage);
       const result = await interpret(voteHandler.castVote({ session: afterResult_open_with_snapshot?.output?.["id"], voter: "bob", choice: "no", weight: "2.5" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "cast_duplicate" -> error', async () => {
@@ -245,8 +241,7 @@ describe('Vote functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_open_with_snapshot = await interpret(voteHandler.openSession({ proposalRef: "proposal-001", deadline: "2026-04-15T23:59:59Z", snapshotRef: "snapshot-abc" }), storage);
       const result = await interpret(voteHandler.close({ session: afterResult_open_with_snapshot?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "close_missing_session" -> error', async () => {
@@ -315,8 +310,7 @@ describe('Vote functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_open_with_snapshot = await interpret(voteHandler.openSession({ proposalRef: "proposal-001", deadline: "2026-04-15T23:59:59Z", snapshotRef: "snapshot-abc" }), storage);
       const result = await interpret(voteHandler.tally({ session: afterResult_open_with_snapshot?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "tally_missing_session" -> error', async () => {
@@ -348,14 +342,14 @@ describe('Vote functional handler', () => {
     it("openSession-then-tally", async () => {
       const storage = createInMemoryStorage();
       const openSessionResult0 = await interpret(voteHandler.openSession({ proposalRef: {"type":"variable","name":"_"}, deadline: {"type":"variable","name":"_"}, snapshotRef: {"type":"variable","name":"_"} }), storage);
-      expect(openSessionResult0.variant).toBe("opened");
+      expect(openSessionResult0.variant).toBe("ok");
       let session = openSessionResult0.output["session"];
       const thenResult0 = await interpret(voteHandler.castVote({ session: {"type":"variable","name":"s"}, voter: {"type":"variable","name":"v"}, choice: {"type":"variable","name":"_"}, weight: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("recorded");
       const thenResult1 = await interpret(voteHandler.close({ session: {"type":"variable","name":"s"} }), storage);
-      expect(thenResult1.variant).toBe("closed");
+      expect(thenResult1.variant).toBe("ok");
       const thenResult2 = await interpret(voteHandler.tally({ session: {"type":"variable","name":"s"} }), storage);
-      expect(thenResult2.variant).toBe("result");
+      expect(thenResult2.variant).toBe("ok");
     });
 
   });
@@ -442,7 +436,7 @@ describe('Vote functional handler', () => {
       }
     });
 
-    it('openSession ensures on opened: ', async () => {
+    it('openSession ensures on ok: ', async () => {
       if (typeof voteHandler.openSession !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -454,7 +448,7 @@ describe('Vote functional handler', () => {
               const program = voteHandler.openSession(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "opened") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

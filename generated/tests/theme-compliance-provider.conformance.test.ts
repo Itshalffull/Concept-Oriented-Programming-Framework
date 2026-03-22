@@ -88,32 +88,28 @@ describe('ThemeComplianceProvider functional handler', () => {
       if (typeof themeComplianceProviderHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(themeComplianceProviderHandler.verify({ check: "chk-1", program: "card-widget", tokens: ["color.primary","spacing.md"], manifest: "default-theme" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "all_valid_json_manifest" -> ok', async () => {
       if (typeof themeComplianceProviderHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(themeComplianceProviderHandler.verify({ check: "chk-2", program: "button-widget", tokens: ["bg","fg"], manifest: "{\"bg\":\"#fff\",\"fg\":\"#000\"}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "deprecated_token" -> ok', async () => {
       if (typeof themeComplianceProviderHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(themeComplianceProviderHandler.verify({ check: "chk-3", program: "legacy-widget", tokens: ["legacy.color.red"], manifest: "default-theme" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_token" -> ok', async () => {
       if (typeof themeComplianceProviderHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(themeComplianceProviderHandler.verify({ check: "chk-4", program: "broken-widget", tokens: ["nonexistent.foo"], manifest: "{\"color.primary\":\"#000\"}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -175,8 +171,7 @@ describe('ThemeComplianceProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_tokens = await interpret(themeComplianceProviderHandler.verify({ check: "chk-1", program: "card-widget", tokens: ["color.primary","spacing.md"], manifest: "default-theme" }), storage);
       const result = await interpret(themeComplianceProviderHandler.getResults({ check: afterResult_valid_tokens?.output?.["check"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "unknown_check" -> notfound', async () => {
@@ -209,15 +204,13 @@ describe('ThemeComplianceProvider functional handler', () => {
     it("verify stores retrievable results", async () => {
       const storage = createInMemoryStorage();
       const verifyResult0 = await interpret(themeComplianceProviderHandler.verify({ check: {"type":"variable","name":"c"}, program: {"type":"literal","value":"p1"}, tokens: {"type":"list","items":[{"type":"literal","value":"color.primary"},{"type":"literal","value":"spacing.md"}]}, manifest: {"type":"literal","value":"default-theme"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(verifyResult0.variant), `step 0: expected success but got '${verifyResult0.variant}'`).toBe(false);
+      expect(verifyResult0.variant).toBe("ok");
       let check = verifyResult0.output["check"];
       let missingTokens = verifyResult0.output["missingTokens"];
       let deprecatedTokens = verifyResult0.output["deprecatedTokens"];
       let passed = verifyResult0.output["passed"];
       const thenResult0 = await interpret(themeComplianceProviderHandler.getResults({ check: {"type":"variable","name":"c"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

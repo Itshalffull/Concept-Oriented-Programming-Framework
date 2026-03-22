@@ -44,7 +44,7 @@ concept AgentMemory [E] {
         Retrieves k most relevant memories. Episodic: content + date search.
         Semantic: vector similarity. Procedural: pattern matching.
       }
-      -> empty(message: String) {
+      -> ok(message: String) {
         No matching memories.
       }
     }
@@ -76,7 +76,7 @@ concept AgentMemory [E] {
         prune stale entries. Compresses repeated episodic patterns into
         procedural memory. "Sleep-time compute" during idle periods.
       }
-      -> empty(message: String) {
+      -> ok(message: String) {
         Nothing to consolidate.
       }
     }
@@ -88,7 +88,7 @@ concept AgentMemory [E] {
             memory_type: String, relevance: Float}) {
         Cross-tier search.
       }
-      -> empty(message: String) {
+      -> ok(message: String) {
         No results.
       }
     }

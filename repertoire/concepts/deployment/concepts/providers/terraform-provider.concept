@@ -38,10 +38,10 @@ concept TerraformProvider [T] {
       -> ok(workspace: T, toCreate: Int, toUpdate: Int, toDelete: Int) {
         Terraform plan executed.
       }
-      -> stateLocked(workspace: T, lockId: String, lockedBy: String) {
+      -> ok(workspace: T, lockId: String, lockedBy: String) {
         State file is locked by another process.
       }
-      -> backendInitRequired(workspace: T) {
+      -> ok(workspace: T) {
         Terraform init has not been run for this backend.
       }
 
@@ -53,10 +53,10 @@ concept TerraformProvider [T] {
       -> ok(workspace: T, created: list String, updated: list String) {
         Terraform apply completed.
       }
-      -> stateLocked(workspace: T, lockId: String) {
+      -> ok(workspace: T, lockId: String) {
         Cannot acquire state lock.
       }
-      -> partial(workspace: T, created: list String, failed: list String) {
+      -> ok(workspace: T, created: list String, failed: list String) {
         Apply failed midway. State partially updated.
         Manual terraform state inspection may be needed.
       }

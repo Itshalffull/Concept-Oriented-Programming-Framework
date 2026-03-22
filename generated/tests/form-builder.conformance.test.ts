@@ -88,8 +88,7 @@ describe('FormBuilder functional handler', () => {
       if (typeof formBuilderHandler.buildForm !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(formBuilderHandler.buildForm({ form: "user-form", schema: "user-profile" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "build_no_schema" -> error', async () => {
@@ -121,12 +120,10 @@ describe('FormBuilder functional handler', () => {
     it("buildForm then buildForm", async () => {
       const storage = createInMemoryStorage();
       const buildFormResult0 = await interpret(formBuilderHandler.buildForm({ form: {"type":"variable","name":"f"}, schema: {"type":"literal","value":"user-profile"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(buildFormResult0.variant), `step 0: expected success but got '${buildFormResult0.variant}'`).toBe(false);
+      expect(buildFormResult0.variant).toBe("ok");
       let definition = buildFormResult0.output["definition"];
       const thenResult0 = await interpret(formBuilderHandler.buildForm({ form: {"type":"variable","name":"f"}, schema: {"type":"literal","value":"user-profile"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

@@ -15,7 +15,7 @@ concept SimpleAccumulator [SA] {
 
   actions {
     action configure(decayRate: option Float, cap: option Float) {
-      -> configured(config: SA) {
+      -> ok(config: SA) {
         Simple additive reputation with optional decay rate and configurable cap.
       }
 
@@ -24,7 +24,7 @@ concept SimpleAccumulator [SA] {
     }
 
     action add(config: SA, participant: String, amount: Float) {
-      -> added(participant: String, newScore: Float) {
+      -> ok(participant: String, newScore: Float) {
         The participant's score increases by the given amount, clamped to cap if set.
       }
 
@@ -33,10 +33,10 @@ concept SimpleAccumulator [SA] {
     }
 
     action applyDecay(config: SA, participant: String) {
-      -> decayed(participant: String, newScore: Float, previousScore: Float) {
+      -> ok(participant: String, newScore: Float, previousScore: Float) {
         The participant's score is reduced by the configured decay rate.
       }
-      -> no_decay(participant: String) {
+      -> ok(participant: String) {
         No decay rate is configured.
       }
 
@@ -45,7 +45,7 @@ concept SimpleAccumulator [SA] {
     }
 
     action getScore(config: SA, participant: String) {
-      -> score(participant: String, score: Float) {
+      -> ok(participant: String, score: Float) {
         Returns the participant's current accumulated score.
       }
 
@@ -56,9 +56,9 @@ concept SimpleAccumulator [SA] {
 
   example "configure-then-add": {
 
-    after configure(decayRate: _, cap: _) -> configured(config: sa)
+    after configure(decayRate: _, cap: _) -> ok(config: sa)
 
-        then add(config: sa, participant: "alice", amount: 10.0) -> added(participant: "alice", newScore: _)
+        then add(config: sa, participant: "alice", amount: 10.0) -> ok(participant: "alice", newScore: _)
 
   }
 
@@ -83,7 +83,7 @@ concept SimpleAccumulator [SA] {
 
     requires: decayRate != ""
 
-    ensures configured: decayRate != none
+    ensures ok: decayRate != none
 
   }
 }

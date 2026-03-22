@@ -41,10 +41,10 @@ concept Approval [A] {
       -> ok(approval: A, step_ref: String) {
         Records an approve decision. If policy threshold is met, transitions to approved.
       }
-      -> already_resolved(approval: A) {
+      -> ok(approval: A) {
         Approval is no longer pending.
       }
-      -> not_authorized(actor: String) {
+      -> ok(actor: String) {
         Actor does not have an authorized role.
       }
       -> pending(approval: A, decisions_so_far: Int, required: Int) {
@@ -56,10 +56,10 @@ concept Approval [A] {
       -> ok(approval: A, step_ref: String, reason: String) {
         Records a deny decision. Transitions to denied.
       }
-      -> already_resolved(approval: A) {
+      -> ok(approval: A) {
         Approval is no longer pending.
       }
-      -> not_authorized(actor: String) {
+      -> ok(actor: String) {
         Actor does not have an authorized role.
       }
     }
@@ -68,7 +68,7 @@ concept Approval [A] {
       -> ok(approval: A, step_ref: String, feedback: String) {
         Records a changes-requested decision. Transitions to changes_requested.
       }
-      -> already_resolved(approval: A) {
+      -> ok(approval: A) {
         Approval is no longer pending.
       }
     }
@@ -77,7 +77,7 @@ concept Approval [A] {
       -> ok(approval: A, step_ref: String) {
         Transitions to timed_out. Triggered by Timer sync.
       }
-      -> already_resolved(approval: A) {
+      -> ok(approval: A) {
         Approval is no longer pending.
       }
     }

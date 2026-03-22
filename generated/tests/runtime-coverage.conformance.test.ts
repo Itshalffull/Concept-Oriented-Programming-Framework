@@ -88,16 +88,14 @@ describe('RuntimeCoverage functional handler', () => {
       if (typeof runtimeCoverageHandler.record !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(runtimeCoverageHandler.record({ symbol: "clef/action/Article/create", kind: "action", flowId: "flow-001" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "record_variant" -> ok', async () => {
       if (typeof runtimeCoverageHandler.record !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(runtimeCoverageHandler.record({ symbol: "clef/variant/Article/create/ok", kind: "variant", flowId: "flow-002" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "record_empty_symbol" -> error', async () => {
@@ -171,8 +169,7 @@ describe('RuntimeCoverage functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(runtimeCoverageHandler.coverageReport({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "coverage_variants_since" -> ok', async () => {
@@ -185,8 +182,7 @@ describe('RuntimeCoverage functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(runtimeCoverageHandler.coverageReport({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "coverage_empty_kind" -> error', async () => {
@@ -260,8 +256,7 @@ describe('RuntimeCoverage functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(runtimeCoverageHandler.variantCoverage({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "variant_coverage_empty" -> error', async () => {
@@ -335,8 +330,7 @@ describe('RuntimeCoverage functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(runtimeCoverageHandler.syncCoverage({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "sync_coverage_recent" -> ok', async () => {
@@ -349,8 +343,7 @@ describe('RuntimeCoverage functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(runtimeCoverageHandler.syncCoverage({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -417,8 +410,7 @@ describe('RuntimeCoverage functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(runtimeCoverageHandler.widgetStateCoverage({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "widget_state_coverage_empty" -> error', async () => {
@@ -492,8 +484,7 @@ describe('RuntimeCoverage functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(runtimeCoverageHandler.widgetLifecycleReport({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "lifecycle_since" -> ok', async () => {
@@ -506,8 +497,7 @@ describe('RuntimeCoverage functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(runtimeCoverageHandler.widgetLifecycleReport({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "lifecycle_empty_widget" -> error', async () => {
@@ -576,8 +566,7 @@ describe('RuntimeCoverage functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_record_action = await interpret(runtimeCoverageHandler.record({ symbol: "clef/action/Article/create", kind: "action", flowId: "flow-001" }), storage);
       const result = await interpret(runtimeCoverageHandler.widgetRenderTrace({ widgetInstance: afterResult_record_action?.output?.["entry"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "render_trace_empty" -> error', async () => {
@@ -651,8 +640,7 @@ describe('RuntimeCoverage functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(runtimeCoverageHandler.widgetComparison({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "comparison_recent" -> ok', async () => {
@@ -665,8 +653,7 @@ describe('RuntimeCoverage functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(runtimeCoverageHandler.widgetComparison({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -733,8 +720,7 @@ describe('RuntimeCoverage functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(runtimeCoverageHandler.deadAtRuntime({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "dead_syncs" -> ok', async () => {
@@ -747,8 +733,7 @@ describe('RuntimeCoverage functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(runtimeCoverageHandler.deadAtRuntime({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "dead_empty_kind" -> error', async () => {
@@ -780,12 +765,10 @@ describe('RuntimeCoverage functional handler', () => {
     it("recorded coverage is queryable", async () => {
       const storage = createInMemoryStorage();
       const recordResult0 = await interpret(runtimeCoverageHandler.record({ symbol: {"type":"literal","value":"clef/action/Article/create"}, kind: {"type":"literal","value":"action"}, flowId: {"type":"literal","value":"f-123"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(recordResult0.variant), `step 0: expected success but got '${recordResult0.variant}'`).toBe(false);
+      expect(recordResult0.variant).toBe("ok");
       let entry = recordResult0.output["entry"];
       const thenResult0 = await interpret(runtimeCoverageHandler.coverageReport({ kind: {"type":"literal","value":"action"}, since: {"type":"literal","value":""} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

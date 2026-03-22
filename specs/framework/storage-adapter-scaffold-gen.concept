@@ -39,7 +39,7 @@ concept StorageAdapterScaffoldGen [A] {
         Emitter content-addressing to classify each file as
         new, changed, or unchanged.
       }
-      -> cached() {
+      -> ok() {
         BuildCache reports inputs unchanged since the last
         successful run. No generation needed.
       }

@@ -55,10 +55,10 @@ concept ModuleSelection [S] {
         Start a new module selection, optionally seeded from
         a template and/or target profile.
       }
-      -> template_notfound(message: String) {
+      -> ok(message: String) {
         The specified template name does not exist.
       }
-      -> profile_notfound(message: String) {
+      -> ok(message: String) {
         The specified profile name does not exist.
       }
 
@@ -72,7 +72,7 @@ concept ModuleSelection [S] {
       -> ok {
         Add a concept module to the selection with the given features.
       }
-      -> already_selected(message: String) {
+      -> ok(message: String) {
         This concept module is already in the selection.
       }
 
@@ -84,10 +84,10 @@ concept ModuleSelection [S] {
       -> ok {
         Remove a concept module from the selection.
       }
-      -> required(message: String) {
+      -> ok(message: String) {
         This concept is required by the template and cannot be removed.
       }
-      -> has_dependents(dependents: list String) {
+      -> ok(dependents: list String) {
         Other selected modules depend on this concept.
       }
 
@@ -103,7 +103,7 @@ concept ModuleSelection [S] {
       -> incompatible(message: String) {
         The handler is not compatible with the concept.
       }
-      -> language_mismatch(message: String) {
+      -> ok(message: String) {
         The handler language does not match the target profile.
       }
 
@@ -133,7 +133,7 @@ concept ModuleSelection [S] {
       -> ok {
         Add a derived concept that composes existing concepts.
       }
-      -> missing_concepts(missing: list String) {
+      -> ok(missing: list String) {
         One or more composed concepts are not in the selection.
       }
 
@@ -151,7 +151,7 @@ concept ModuleSelection [S] {
       }) {
         Flatten all selections into the final deduplicated module list.
       }
-      -> incomplete(issues: list String) {
+      -> ok(issues: list String) {
         The selection cannot be finalized due to unresolved issues.
       }
 
@@ -178,7 +178,7 @@ concept ModuleSelection [S] {
 
   example "begin lifecycle": {
     after begin(template_name: "social", profile_name: none) -> ok(selection: s)
-    and addDerived(selection: s, name: "d", composes: ["missing-concept"]) -> missing_concepts(missing: m)
+    and addDerived(selection: s, name: "d", composes: ["missing-concept"]) -> ok(missing: m)
     // Adding a derived concept that references a concept not in the selection always fails.
   }
 

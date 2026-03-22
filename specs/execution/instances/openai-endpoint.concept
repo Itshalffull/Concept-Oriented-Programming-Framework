@@ -32,7 +32,7 @@ concept OpenAiEndpoint [O] {
         becomes addressable by name for HttpProvider instance
         configuration via sync wiring.
       }
-      -> exists(name: String) {
+      -> ok(name: String) {
         An endpoint with this name is already registered.
       }
 
@@ -66,7 +66,7 @@ concept OpenAiEndpoint [O] {
         Look up the named endpoint and return its base URL, model,
         and pre-built authorization headers ready for HTTP calls.
       }
-      -> notFound(name: String) {
+      -> ok(name: String) {
         No endpoint is registered with this name.
       }
 
@@ -95,7 +95,7 @@ concept OpenAiEndpoint [O] {
   }
 
   example "resolve notFound then register succeeds": {
-    after resolve(name: "nonexistent") -> notFound(name: "nonexistent")
+    after resolve(name: "nonexistent") -> ok(name: "nonexistent")
     then register(name: "test", apiKey: "sk-x", model: "gpt-4", baseUrl: "https://api.openai.com/v1", dimensions: 0) -> ok(endpoint: _)
   }
 

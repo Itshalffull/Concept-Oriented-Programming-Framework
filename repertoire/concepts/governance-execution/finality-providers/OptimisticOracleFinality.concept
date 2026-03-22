@@ -27,7 +27,7 @@ concept OptimisticOracleFinality [OO] {
 
   actions {
     action assertFinality(operationRef: String, asserter: String, bond: Float, challengeWindowHours: Float) {
-      -> asserted(assertion: OO) {
+      -> ok(assertion: OO) {
         An optimistic finality assertion is created. If unchallenged
         before expiry, the operation achieves finality.
       }
@@ -38,10 +38,10 @@ concept OptimisticOracleFinality [OO] {
     }
 
     action challenge(assertion: OO, challenger: String, bond: Float, evidence: String) {
-      -> challenged(assertion: OO) {
+      -> ok(assertion: OO) {
         The assertion is challenged. Dispute resolution determines outcome.
       }
-      -> expired(assertion: OO) {
+      -> ok(assertion: OO) {
         Challenge window has closed.
       }
 
@@ -67,7 +67,7 @@ concept OptimisticOracleFinality [OO] {
       -> finalized(assertion: OO) {
         Challenge window expired without challenge. Operation is final.
       }
-      -> still_pending(assertion: OO, remainingHours: Float) {
+      -> ok(assertion: OO, remainingHours: Float) {
         Challenge window is still open.
       }
 
@@ -78,7 +78,7 @@ concept OptimisticOracleFinality [OO] {
 
   example "assertFinality-then-checkExpiry": {
 
-    after assertFinality(operationRef: _, asserter: _, bond: _, challengeWindowHours: 48.0) -> asserted(assertion: oo)
+    after assertFinality(operationRef: _, asserter: _, bond: _, challengeWindowHours: 48.0) -> ok(assertion: oo)
 
         then checkExpiry(assertion: oo) -> finalized(assertion: oo)
 
@@ -105,7 +105,7 @@ concept OptimisticOracleFinality [OO] {
 
     requires: operationRef != ""
 
-    ensures asserted: operationRef != none
+    ensures ok: operationRef != none
 
   }
 }

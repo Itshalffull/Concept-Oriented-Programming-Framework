@@ -65,7 +65,7 @@ concept BuildCache [E] {
       -> ok() {
         Force a step to re-run next time by clearing its entry.
       }
-      -> notFound() {
+      -> ok() {
         No entry exists for this step key.
       }
 

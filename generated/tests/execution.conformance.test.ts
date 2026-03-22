@@ -88,24 +88,21 @@ describe('Execution functional handler', () => {
       if (typeof executionHandler.schedule !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(executionHandler.schedule({ sourceRef: "proposal-001", actions: ["transfer(from: treasury, to: alice, amount: 100)"], executor: "governance-bot" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "schedule_multi_action" -> ok', async () => {
       if (typeof executionHandler.schedule !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(executionHandler.schedule({ sourceRef: "proposal-002", actions: ["updateRole(user: bob, role: admin)","grantAccess(user: bob, resource: vault)"], executor: "admin-bot" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "schedule_single" -> ok', async () => {
       if (typeof executionHandler.schedule !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(executionHandler.schedule({ sourceRef: "proposal-003", actions: ["noop()"], executor: "bot" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -167,8 +164,7 @@ describe('Execution functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_schedule_transfer = await interpret(executionHandler.schedule({ sourceRef: "proposal-001", actions: ["transfer(from: treasury, to: alice, amount: 100)"], executor: "governance-bot" }), storage);
       const result = await interpret(executionHandler.execute({ execution: afterResult_schedule_transfer?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "execute_nonexistent" -> failed', async () => {
@@ -238,8 +234,7 @@ describe('Execution functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_schedule_transfer = await interpret(executionHandler.schedule({ sourceRef: "proposal-001", actions: ["transfer(from: treasury, to: alice, amount: 100)"], executor: "governance-bot" }), storage);
       const result = await interpret(executionHandler.rollback({ execution: afterResult_schedule_transfer?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "rollback_nonexistent" -> not_reversible', async () => {
@@ -272,10 +267,10 @@ describe('Execution functional handler', () => {
     it("schedule-then-execute", async () => {
       const storage = createInMemoryStorage();
       const scheduleResult0 = await interpret(executionHandler.schedule({ sourceRef: {"type":"variable","name":"_"}, actions: {"type":"variable","name":"_"}, executor: {"type":"variable","name":"_"} }), storage);
-      expect(scheduleResult0.variant).toBe("scheduled");
+      expect(scheduleResult0.variant).toBe("ok");
       let execution = scheduleResult0.output["execution"];
       const thenResult0 = await interpret(executionHandler.execute({ execution: {"type":"variable","name":"ex"} }), storage);
-      expect(thenResult0.variant).toBe("completed");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });
@@ -360,7 +355,7 @@ describe('Execution functional handler', () => {
       }
     });
 
-    it('schedule ensures on scheduled: ', async () => {
+    it('schedule ensures on ok: ', async () => {
       if (typeof executionHandler.schedule !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -372,7 +367,7 @@ describe('Execution functional handler', () => {
               const program = executionHandler.schedule(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "scheduled") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

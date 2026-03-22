@@ -88,7 +88,7 @@ const _handler: FunctionalConceptHandler = {
                     status: 'complete',
                   };
                 });
-                return complete(b5, 'complete', { rollout });
+                return complete(b5, 'ok', { rollout });
               },
               (b4) => {
                 b4 = putFrom(b4, RELATION, rollout, (bindings) => {

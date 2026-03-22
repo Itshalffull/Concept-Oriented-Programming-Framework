@@ -67,7 +67,7 @@ const _iacHandler: FunctionalConceptHandler = {
 
   detectDrift(input: Record<string, unknown>) {
     const p = createProgram();
-    return complete(p, 'noDrift', {}) as StorageProgram<Result>;
+    return complete(p, 'ok', {}) as StorageProgram<Result>;
   },
 
   teardown(input: Record<string, unknown>) {

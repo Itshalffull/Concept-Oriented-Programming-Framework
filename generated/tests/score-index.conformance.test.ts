@@ -88,8 +88,7 @@ describe('ScoreIndex functional handler', () => {
       if (typeof scoreIndexHandler.upsertConcept !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "upsert_empty" -> error', async () => {
@@ -163,8 +162,7 @@ describe('ScoreIndex functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(scoreIndexHandler.upsertSync({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "upsert_sync_empty" -> error', async () => {
@@ -238,8 +236,7 @@ describe('ScoreIndex functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(scoreIndexHandler.upsertSymbol({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "upsert_sym_empty" -> error', async () => {
@@ -313,8 +310,7 @@ describe('ScoreIndex functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(scoreIndexHandler.upsertFile({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "upsert_file_empty" -> error', async () => {
@@ -388,8 +384,7 @@ describe('ScoreIndex functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(scoreIndexHandler.upsertHandler({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "upsert_handler_empty" -> error', async () => {
@@ -463,8 +458,7 @@ describe('ScoreIndex functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(scoreIndexHandler.upsertWidgetImpl({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "upsert_widget_empty" -> error', async () => {
@@ -538,8 +532,7 @@ describe('ScoreIndex functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(scoreIndexHandler.upsertThemeImpl({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "upsert_theme_empty" -> error', async () => {
@@ -613,8 +606,7 @@ describe('ScoreIndex functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(scoreIndexHandler.upsertDeployment({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "upsert_deploy_empty" -> error', async () => {
@@ -688,8 +680,7 @@ describe('ScoreIndex functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(scoreIndexHandler.upsertSuiteManifest({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "upsert_suite_empty" -> error', async () => {
@@ -763,8 +754,7 @@ describe('ScoreIndex functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(scoreIndexHandler.upsertInterface({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "upsert_iface_empty" -> error', async () => {
@@ -838,8 +828,7 @@ describe('ScoreIndex functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(scoreIndexHandler.removeByFile({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "remove_empty" -> ok', async () => {
@@ -852,8 +841,7 @@ describe('ScoreIndex functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(scoreIndexHandler.removeByFile({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -917,8 +905,7 @@ describe('ScoreIndex functional handler', () => {
       const _pool = Object.assign({}, (afterResult_upsert_user?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(scoreIndexHandler.clear({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -982,8 +969,7 @@ describe('ScoreIndex functional handler', () => {
       const _pool = Object.assign({}, (afterResult_upsert_user?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(scoreIndexHandler.stats({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -1008,12 +994,10 @@ describe('ScoreIndex functional handler', () => {
     it("operational principle 1", async () => {
       const storage = createInMemoryStorage();
       const upsertConceptResult0 = await interpret(scoreIndexHandler.upsertConcept({ name: {"type":"literal","value":"Test"}, purpose: {"type":"literal","value":"A test concept"}, actions: {"type":"variable","name":"a"}, stateFields: {"type":"variable","name":"f"}, file: {"type":"literal","value":"/test.concept"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(upsertConceptResult0.variant), `step 0: expected success but got '${upsertConceptResult0.variant}'`).toBe(false);
+      expect(upsertConceptResult0.variant).toBe("ok");
       let index = upsertConceptResult0.output["index"];
       const thenResult0 = await interpret(scoreIndexHandler.stats({  }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

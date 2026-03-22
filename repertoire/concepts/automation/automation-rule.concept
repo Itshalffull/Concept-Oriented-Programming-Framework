@@ -22,7 +22,7 @@ concept AutomationRule [R] {
       -> ok() {
         Event-condition-action rule registered and ready to be enabled.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         A rule with this identity already exists.
       }
 

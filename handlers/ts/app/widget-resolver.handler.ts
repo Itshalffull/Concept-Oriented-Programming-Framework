@@ -147,7 +147,7 @@ const _widgetResolverHandler: FunctionalConceptHandler = {
       const diagElement = diag.element as string;
       let sub = createProgram();
       sub = put(sub, 'diagnostics', `diag:${diagElement}`, diag);
-      return complete(sub, 'stored', {});
+      return complete(sub, 'ok', {});
     }, '_diagResults', { writes: ['diagnostics'], completionVariants: ['stored'] });
 
     return completeFrom(p, 'ok', (bindings) => {

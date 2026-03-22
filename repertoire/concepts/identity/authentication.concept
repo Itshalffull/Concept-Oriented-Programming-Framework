@@ -22,7 +22,7 @@ concept Authentication [U] {
         and credentials. Add the user to the accounts set and
         record the active provider.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         The user already has a registered account.
       }
 
@@ -105,7 +105,7 @@ concept Authentication [U] {
 
     after register(user: x, provider: "local", credentials: "secret123") -> ok(user: x)
 
-        then register(user: x, provider: "oauth", credentials: "token456") -> exists(message: m)
+        then register(user: x, provider: "oauth", credentials: "token456") -> ok(message: m)
 
   }
 

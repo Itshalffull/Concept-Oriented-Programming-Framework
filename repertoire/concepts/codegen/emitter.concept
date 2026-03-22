@@ -102,7 +102,7 @@ concept Emitter [F] {
         output file. Enables "which spec produced this generated
         code?" queries.
       }
-      -> notFound(path: String) {
+      -> ok(path: String) {
         Output path not in manifest.
       }
 

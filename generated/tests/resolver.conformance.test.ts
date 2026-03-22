@@ -88,8 +88,7 @@ describe('Resolver functional handler', () => {
       if (typeof resolverHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(resolverHandler.resolve({ constraints: [{"module_id":"auth","version_range":"^1.0.0","edge_type":"normal","environment":"all","features":[]}], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"false","allowed_updates":"minor"}, locked_versions: null }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_empty_constraints" -> error', async () => {
@@ -158,8 +157,7 @@ describe('Resolver functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_resolve_simple = await interpret(resolverHandler.resolve({ constraints: [{"module_id":"auth","version_range":"^1.0.0","edge_type":"normal","environment":"all","features":[]}], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"false","allowed_updates":"minor"}, locked_versions: null }), storage);
       const result = await interpret(resolverHandler.update({ resolution: afterResult_resolve_simple?.output?.["resolution"], targets: ["auth"], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"true","allowed_updates":"minor"} }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "update_missing_resolution" -> error', async () => {
@@ -234,8 +232,7 @@ describe('Resolver functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_resolve_simple = await interpret(resolverHandler.resolve({ constraints: [{"module_id":"auth","version_range":"^1.0.0","edge_type":"normal","environment":"all","features":[]}], policy: {"unification_strategy":"highest","feature_unification":"union","prefer_locked":"false","allowed_updates":"minor"}, locked_versions: null }), storage);
       const result = await interpret(resolverHandler.explain({ resolution: afterResult_resolve_simple?.output?.["resolution"], module_id: "auth" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "explain_missing_module" -> error', async () => {
@@ -267,26 +264,21 @@ describe('Resolver functional handler', () => {
     it("resolve then explain", async () => {
       const storage = createInMemoryStorage();
       const resolveResult0 = await interpret(resolverHandler.resolve({ constraints: {"type":"variable","name":"cs"}, policy: {"type":"variable","name":"p"}, locked_versions: {"type":"literal","value":false} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(resolveResult0.variant), `step 0: expected success but got '${resolveResult0.variant}'`).toBe(false);
+      expect(resolveResult0.variant).toBe("ok");
       let resolution = resolveResult0.output["resolution"];
       const thenResult0 = await interpret(resolverHandler.explain({ resolution: {"type":"variable","name":"r"}, module_id: {"type":"variable","name":"mid"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("resolve then update", async () => {
       const storage = createInMemoryStorage();
       const resolveResult0 = await interpret(resolverHandler.resolve({ constraints: {"type":"variable","name":"cs"}, policy: {"type":"variable","name":"p"}, locked_versions: {"type":"literal","value":false} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(resolveResult0.variant), `step 0: expected success but got '${resolveResult0.variant}'`).toBe(false);
+      expect(resolveResult0.variant).toBe("ok");
       let resolution = resolveResult0.output["resolution"];
       const thenResult0 = await interpret(resolverHandler.update({ resolution: {"type":"variable","name":"r"}, targets: {"type":"variable","name":"ts"}, policy: {"type":"variable","name":"p2"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(resolverHandler.explain({ resolution: {"type":"variable","name":"r2"}, module_id: {"type":"variable","name":"mid"} }), storage);
-      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
+      expect(thenResult1.variant).toBe("ok");
     });
 
   });

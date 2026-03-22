@@ -19,7 +19,7 @@ concept Attribution [A] {
       -> ok(attribution: A) {
         Records a contribution attribution.
       }
-      -> exists() {
+      -> ok() {
         This contributor is already attributed for this module.
       }
     }

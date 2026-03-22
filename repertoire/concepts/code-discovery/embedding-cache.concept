@@ -33,11 +33,11 @@ concept EmbeddingCache [E] {
         entries. Loaded counts entries successfully restored,
         skipped counts entries with corrupt or unparseable vectors.
       }
-      -> fileNotFound(path: String) {
+      -> ok(path: String) {
         No cache manifest exists at the given path. Expected
         on first boot before any embeddings have been computed.
       }
-      -> corrupt(reason: String) {
+      -> ok(reason: String) {
         The manifest file exists but is not valid JSON or has
         a schema the cache cannot interpret.
       }
@@ -61,10 +61,10 @@ concept EmbeddingCache [E] {
     }
 
     action put(digest: String, vector: String, model: String, dimensions: Int, sourceKind: String, sourceKey: String) {
-      -> stored(entry: E) {
+      -> ok(entry: E) {
         A new cache entry was created for this digest.
       }
-      -> alreadyExists(entry: E) {
+      -> ok(entry: E) {
         An entry with this digest already exists. The existing
         entry is returned unchanged.
       }
@@ -79,7 +79,7 @@ concept EmbeddingCache [E] {
         file at the given path. Count is the number of entries
         written.
       }
-      -> writeError(reason: String) {
+      -> ok(reason: String) {
         The file could not be written, e.g. due to permission
         or disk space issues.
       }
@@ -92,7 +92,7 @@ concept EmbeddingCache [E] {
       -> ok() {
         The entry with this digest was removed from the cache.
       }
-      -> notFound() {
+      -> ok() {
         No entry exists for this digest.
       }
 
@@ -127,11 +127,11 @@ concept EmbeddingCache [E] {
     }
 
     action putWithConfig(digest: String, model: String, dimensions: Int, vector: String, sourceKind: String, sourceKey: String) {
-      -> stored(entry: E) {
+      -> ok(entry: E) {
         A new cache entry was created for this digest+model+dimensions
         combination.
       }
-      -> alreadyExists(entry: E) {
+      -> ok(entry: E) {
         An entry with this digest+model+dimensions combination already
         exists. The existing entry is returned unchanged.
       }
@@ -143,7 +143,7 @@ concept EmbeddingCache [E] {
 
   example "put-then-lookup-2": {
 
-    after put(digest: "abc123", vector: "[0.1,0.2,0.3]", model: "openai-code", dimensions: 3, sourceKind: "concept", sourceKey: "User") -> stored(entry: e)
+    after put(digest: "abc123", vector: "[0.1,0.2,0.3]", model: "openai-code", dimensions: 3, sourceKind: "concept", sourceKey: "User") -> ok(entry: e)
 
         then lookup(digest: "abc123") -> hit(vector: "[0.1,0.2,0.3]", model: "openai-code", dimensions: 3, sourceKind: "concept", sourceKey: "User")
 
@@ -151,15 +151,15 @@ concept EmbeddingCache [E] {
 
   example "put-then-put": {
 
-    after put(digest: "abc123", vector: "[0.1,0.2]", model: "codeBERT", dimensions: 2, sourceKind: "sync", sourceKey: "AuthSync") -> stored(entry: e)
+    after put(digest: "abc123", vector: "[0.1,0.2]", model: "codeBERT", dimensions: 2, sourceKind: "sync", sourceKey: "AuthSync") -> ok(entry: e)
 
-        then put(digest: "abc123", vector: "[0.9,0.8]", model: "codeBERT", dimensions: 2, sourceKind: "sync", sourceKey: "AuthSync") -> alreadyExists(entry: e)
+        then put(digest: "abc123", vector: "[0.9,0.8]", model: "codeBERT", dimensions: 2, sourceKind: "sync", sourceKey: "AuthSync") -> ok(entry: e)
 
   }
 
   example "put-then-lookup": {
 
-    after put(digest: "def456", vector: "[0.5]", model: "codeBERT", dimensions: 1, sourceKind: "widget", sourceKey: "TaskCard") -> stored(entry: e)
+    after put(digest: "def456", vector: "[0.5]", model: "codeBERT", dimensions: 1, sourceKind: "widget", sourceKey: "TaskCard") -> ok(entry: e)
 
         and  evict(digest: "def456") -> ok()
 
@@ -169,7 +169,7 @@ concept EmbeddingCache [E] {
 
   example "putWithConfig-then-lookupWithConfig-2": {
 
-    after putWithConfig(digest: "abc123", model: "openai-code", dimensions: 1536, vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User") -> stored(entry: e)
+    after putWithConfig(digest: "abc123", model: "openai-code", dimensions: 1536, vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User") -> ok(entry: e)
 
         then lookupWithConfig(digest: "abc123", model: "openai-code", dimensions: 1536) -> hit(vector: "[0.1,0.2]", model: "openai-code", dimensions: 1536, sourceKind: "concept", sourceKey: "User")
 
@@ -177,7 +177,7 @@ concept EmbeddingCache [E] {
 
   example "putWithConfig-then-lookupWithConfig": {
 
-    after putWithConfig(digest: "abc123", model: "openai-code", dimensions: 1536, vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User") -> stored(entry: e1)
+    after putWithConfig(digest: "abc123", model: "openai-code", dimensions: 1536, vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User") -> ok(entry: e1)
 
         then lookupWithConfig(digest: "abc123", model: "codeBERT", dimensions: 768) -> miss()
 

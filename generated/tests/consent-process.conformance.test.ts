@@ -88,8 +88,7 @@ describe('ConsentProcess functional handler', () => {
       if (typeof consentProcessHandler.initiate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(consentProcessHandler.initiate({ proposalRef: "proposal-budget-2026" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "initiate_empty_ref" -> error', async () => {
@@ -158,8 +157,7 @@ describe('ConsentProcess functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_initiate_budget_proposal = await interpret(consentProcessHandler.initiate({ proposalRef: "proposal-budget-2026" }), storage);
       const result = await interpret(consentProcessHandler.advancePhase({ process: afterResult_initiate_budget_proposal?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "advance_missing_process" -> error', async () => {
@@ -228,8 +226,7 @@ describe('ConsentProcess functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_initiate_budget_proposal = await interpret(consentProcessHandler.initiate({ proposalRef: "proposal-budget-2026" }), storage);
       const result = await interpret(consentProcessHandler.raiseObjection({ process: afterResult_initiate_budget_proposal?.output?.["id"], objector: "alice", reason: "Exceeds annual budget limit", isParamount: "true" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "raise_during_wrong_phase" -> error', async () => {
@@ -298,8 +295,7 @@ describe('ConsentProcess functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_initiate_budget_proposal = await interpret(consentProcessHandler.initiate({ proposalRef: "proposal-budget-2026" }), storage);
       const result = await interpret(consentProcessHandler.integrateObjection({ process: afterResult_initiate_budget_proposal?.output?.["id"], objectionIndex: "0", amendment: "Cap budget at 80% of original request" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "integrate_missing_objection" -> error', async () => {
@@ -368,8 +364,7 @@ describe('ConsentProcess functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_initiate_budget_proposal = await interpret(consentProcessHandler.initiate({ proposalRef: "proposal-budget-2026" }), storage);
       const result = await interpret(consentProcessHandler.resolve({ process: afterResult_initiate_budget_proposal?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_missing_process" -> error', async () => {
@@ -401,12 +396,12 @@ describe('ConsentProcess functional handler', () => {
     it("initiate-then-resolve", async () => {
       const storage = createInMemoryStorage();
       const initiateResult0 = await interpret(consentProcessHandler.initiate({ proposalRef: {"type":"variable","name":"_"} }), storage);
-      expect(initiateResult0.variant).toBe("initiated");
+      expect(initiateResult0.variant).toBe("ok");
       let process = initiateResult0.output["process"];
       const thenResult0 = await interpret(consentProcessHandler.advancePhase({ process: {"type":"variable","name":"cp"} }), storage);
-      expect(thenResult0.variant).toBe("advanced");
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(consentProcessHandler.resolve({ process: {"type":"variable","name":"cp"} }), storage);
-      expect(thenResult1.variant).toBe("consented");
+      expect(thenResult1.variant).toBe("ok");
     });
 
   });

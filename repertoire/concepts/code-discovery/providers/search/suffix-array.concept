@@ -22,7 +22,7 @@ concept SuffixArrayIndexProvider [I] {
         Register this index provider with PluginRegistry
         for suffix array search.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the suffix array index.
       }
     }

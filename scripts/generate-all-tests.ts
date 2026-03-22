@@ -234,6 +234,22 @@ async function main() {
         invariants: ast.invariants || [],
       };
 
+      // Warn about non-ok success variants (convention: success is always 'ok')
+      // Heuristic: if the action has exactly one non-error variant and it isn't
+      // 'ok', it should probably be renamed. Actions with multiple non-error
+      // variants are legitimate multi-outcome branches (no warning).
+      // Suppress with @suppress-variant-warning annotation on the concept.
+      const ERROR_VARIANTS = new Set(['error', 'notfound', 'not_found', 'invalid', 'unauthorized', 'forbidden', 'unavailable', 'unsupported', 'conflict', 'timeout', 'duplicate']);
+      const suppressWarning = source.includes('@suppress-variant-warning');
+      if (!suppressWarning) {
+        for (const action of conceptData.actions) {
+          const nonErrorVariants = action.variants.filter((v: any) => !ERROR_VARIANTS.has(v.name));
+          if (nonErrorVariants.length === 1 && nonErrorVariants[0].name !== 'ok') {
+            console.warn(`  ⚠ ${ast.name}/${action.name}: single success variant '${nonErrorVariants[0].name}' should be 'ok' (variant convention). Use @suppress-variant-warning to silence.`);
+          }
+        }
+      }
+
       // Build test plan
       const plan = buildTestPlan(conceptRef, conceptData);
       const handlerPath = await findHandlerPath(ast.name);

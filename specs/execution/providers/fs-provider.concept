@@ -37,7 +37,7 @@ concept FsProvider [F] {
         Read the file at the given path and return its contents
         as a UTF-8 string.
       }
-      -> notFound(path: String) {
+      -> ok(path: String) {
         No file exists at the given path.
       }
       -> error(message: String) {
@@ -77,7 +77,7 @@ concept FsProvider [F] {
       -> ok() {
         Delete the file at the given path.
       }
-      -> notFound(path: String) {
+      -> ok(path: String) {
         No file exists at the given path.
       }
 
@@ -100,7 +100,7 @@ concept FsProvider [F] {
   }
 
   example "not found on missing file": {
-    after read(path: "/tmp/nonexistent-file") -> notFound(path: "/tmp/nonexistent-file")
+    after read(path: "/tmp/nonexistent-file") -> ok(path: "/tmp/nonexistent-file")
     then exists(path: "/tmp/nonexistent-file") -> ok(exists: false)
   }
 

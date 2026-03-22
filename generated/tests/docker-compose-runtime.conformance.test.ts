@@ -88,8 +88,7 @@ describe('DockerComposeRuntime functional handler', () => {
       if (typeof dockerComposeRuntimeHandler.provision !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(dockerComposeRuntimeHandler.provision({ concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "provision_empty_concept" -> error', async () => {
@@ -158,8 +157,7 @@ describe('DockerComposeRuntime functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_provision_service = await interpret(dockerComposeRuntimeHandler.provision({ concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }), storage);
       const result = await interpret(dockerComposeRuntimeHandler.deploy({ service: afterResult_provision_service?.output?.["service"], imageUri: "user-service:latest" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "deploy_empty_image" -> error', async () => {
@@ -228,8 +226,7 @@ describe('DockerComposeRuntime functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_provision_service = await interpret(dockerComposeRuntimeHandler.provision({ concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }), storage);
       const result = await interpret(dockerComposeRuntimeHandler.setTrafficWeight({ service: afterResult_provision_service?.output?.["service"], weight: "100" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "set_traffic_negative" -> ok', async () => {
@@ -237,8 +234,7 @@ describe('DockerComposeRuntime functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_provision_service = await interpret(dockerComposeRuntimeHandler.provision({ concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }), storage);
       const result = await interpret(dockerComposeRuntimeHandler.setTrafficWeight({ service: afterResult_provision_service?.output?.["service"], weight: "-1" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -300,8 +296,7 @@ describe('DockerComposeRuntime functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_provision_service = await interpret(dockerComposeRuntimeHandler.provision({ concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }), storage);
       const result = await interpret(dockerComposeRuntimeHandler.rollback({ service: afterResult_provision_service?.output?.["service"], targetImage: "user-service:v1.0.0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "rollback_empty" -> ok', async () => {
@@ -309,8 +304,7 @@ describe('DockerComposeRuntime functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_provision_service = await interpret(dockerComposeRuntimeHandler.provision({ concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }), storage);
       const result = await interpret(dockerComposeRuntimeHandler.rollback({ service: afterResult_provision_service?.output?.["service"], targetImage: "" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -372,8 +366,7 @@ describe('DockerComposeRuntime functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_provision_service = await interpret(dockerComposeRuntimeHandler.provision({ concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }), storage);
       const result = await interpret(dockerComposeRuntimeHandler.destroy({ service: afterResult_provision_service?.output?.["service"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "destroy_empty" -> error', async () => {
@@ -405,14 +398,12 @@ describe('DockerComposeRuntime functional handler', () => {
     it("provision-then-deploy", async () => {
       const storage = createInMemoryStorage();
       const provisionResult0 = await interpret(dockerComposeRuntimeHandler.provision({ concept: {"type":"literal","value":"User"}, composePath: {"type":"literal","value":"./docker-compose.yml"}, ports: {"type":"variable","name":"p"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(provisionResult0.variant), `step 0: expected success but got '${provisionResult0.variant}'`).toBe(false);
+      expect(provisionResult0.variant).toBe("ok");
       let service = provisionResult0.output["service"];
       let serviceName = provisionResult0.output["serviceName"];
       let endpoint = provisionResult0.output["endpoint"];
       const thenResult0 = await interpret(dockerComposeRuntimeHandler.deploy({ service: {"type":"variable","name":"s"}, imageUri: {"type":"literal","value":"user:latest"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

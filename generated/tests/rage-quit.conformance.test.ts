@@ -94,8 +94,7 @@ describe('RageQuit functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(rageQuitHandler.initiate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "initiate_whale" -> ok', async () => {
@@ -108,8 +107,7 @@ describe('RageQuit functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(rageQuitHandler.initiate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "initiate_empty_member" -> error', async () => {
@@ -183,8 +181,7 @@ describe('RageQuit functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(rageQuitHandler.calculateClaim({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "calculate_not_found" -> error', async () => {
@@ -253,8 +250,7 @@ describe('RageQuit functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_initiate_exit = await interpret(rageQuitHandler.initiate({ member: "0xAliceDaoMember", shares: "150.0", loot: "50.0" }), storage);
       const result = await interpret(rageQuitHandler.claim({ exit: afterResult_initiate_exit?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "claim_not_found" -> error', async () => {
@@ -286,12 +282,12 @@ describe('RageQuit functional handler', () => {
     it("initiate-then-claim", async () => {
       const storage = createInMemoryStorage();
       const initiateResult0 = await interpret(rageQuitHandler.initiate({ member: {"type":"variable","name":"_"}, sharesToBurn: {"type":"variable","name":"_"} }), storage);
-      expect(initiateResult0.variant).toBe("initiated");
+      expect(initiateResult0.variant).toBe("ok");
       let exit = initiateResult0.output["exit"];
       const thenResult0 = await interpret(rageQuitHandler.calculateClaim({ exit: {"type":"variable","name":"rq"}, treasuryBalances: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("calculated");
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(rageQuitHandler.claim({ exit: {"type":"variable","name":"rq"} }), storage);
-      expect(thenResult1.variant).toBe("claimed");
+      expect(thenResult1.variant).toBe("ok");
     });
 
   });

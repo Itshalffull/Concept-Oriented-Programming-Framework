@@ -94,8 +94,7 @@ describe('Notification functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(notificationHandler.registerChannel({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_empty_name" -> error', async () => {
@@ -169,8 +168,7 @@ describe('Notification functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(notificationHandler.defineTemplate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "define_empty_template" -> error', async () => {
@@ -238,8 +236,7 @@ describe('Notification functional handler', () => {
       if (typeof notificationHandler.subscribe !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(notificationHandler.subscribe({ user: "user-42", eventType: "order_shipped", channel: "email" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "subscribe_empty_user" -> error', async () => {
@@ -313,8 +310,7 @@ describe('Notification functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(notificationHandler.unsubscribe({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "unsubscribe_nonexistent" -> notfound', async () => {
@@ -389,8 +385,7 @@ describe('Notification functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(notificationHandler.notify({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "notify_missing_template" -> error', async () => {
@@ -464,8 +459,7 @@ describe('Notification functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(notificationHandler.markRead({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "mark_read_nonexistent" -> notfound', async () => {
@@ -540,8 +534,7 @@ describe('Notification functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(notificationHandler.getUnread({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_unread_empty_user" -> error', async () => {
@@ -573,33 +566,25 @@ describe('Notification functional handler', () => {
     it("registerChannel then defineTemplate", async () => {
       const storage = createInMemoryStorage();
       const registerChannelResult0 = await interpret(notificationHandler.registerChannel({ name: {"type":"variable","name":"c"}, config: {"type":"variable","name":"cfg"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerChannelResult0.variant), `step 0: expected success but got '${registerChannelResult0.variant}'`).toBe(false);
+      expect(registerChannelResult0.variant).toBe("ok");
       const thenResult0 = await interpret(notificationHandler.defineTemplate({ notification: {"type":"variable","name":"n"}, template: {"type":"variable","name":"t"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(notificationHandler.subscribe({ user: {"type":"variable","name":"u"}, eventType: {"type":"variable","name":"e"}, channel: {"type":"variable","name":"c"} }), storage);
-      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
+      expect(thenResult1.variant).toBe("ok");
       const thenResult2 = await interpret(notificationHandler.notify({ notification: {"type":"variable","name":"n"}, user: {"type":"variable","name":"u"}, template: {"type":"variable","name":"t"}, data: {"type":"variable","name":"d"} }), storage);
-      const _isErrA2 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA2(thenResult2.variant), `assertion 2: expected success but got '${thenResult2.variant}'`).toBe(false);
+      expect(thenResult2.variant).toBe("ok");
       const thenResult3 = await interpret(notificationHandler.getUnread({ user: {"type":"variable","name":"u"} }), storage);
-      const _isErrA3 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA3(thenResult3.variant), `assertion 3: expected success but got '${thenResult3.variant}'`).toBe(false);
+      expect(thenResult3.variant).toBe("ok");
     });
 
     it("notify then markRead", async () => {
       const storage = createInMemoryStorage();
       const notifyResult0 = await interpret(notificationHandler.notify({ notification: {"type":"variable","name":"n"}, user: {"type":"variable","name":"u"}, template: {"type":"variable","name":"t"}, data: {"type":"variable","name":"d"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(notifyResult0.variant), `step 0: expected success but got '${notifyResult0.variant}'`).toBe(false);
+      expect(notifyResult0.variant).toBe("ok");
       const thenResult0 = await interpret(notificationHandler.markRead({ notification: {"type":"variable","name":"n"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(notificationHandler.getUnread({ user: {"type":"variable","name":"u"} }), storage);
-      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
+      expect(thenResult1.variant).toBe("ok");
     });
 
   });

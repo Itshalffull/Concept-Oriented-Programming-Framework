@@ -88,8 +88,7 @@ describe('Reference functional handler', () => {
       if (typeof referenceHandler.addRef !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(referenceHandler.addRef({ source: "page-1", target: "doc-1" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "another_ref" -> ok', async () => {
@@ -97,8 +96,7 @@ describe('Reference functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_add = await interpret(referenceHandler.addRef({ source: "page-1", target: "doc-1" }), storage);
       const result = await interpret(referenceHandler.addRef({ source: afterResult_valid_add?.output?.["source"], target: afterResult_valid_add?.output?.["source"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "duplicate_ref" -> exists', async () => {
@@ -168,8 +166,7 @@ describe('Reference functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_add = await interpret(referenceHandler.addRef({ source: "page-1", target: "doc-1" }), storage);
       const result = await interpret(referenceHandler.removeRef({ source: afterResult_valid_add?.output?.["source"], target: afterResult_valid_add?.output?.["source"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_ref" -> notfound', async () => {
@@ -239,8 +236,7 @@ describe('Reference functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_add = await interpret(referenceHandler.addRef({ source: "page-1", target: "doc-1" }), storage);
       const result = await interpret(referenceHandler.getRefs({ source: afterResult_valid_add?.output?.["source"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_source" -> notfound', async () => {
@@ -310,8 +306,7 @@ describe('Reference functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_add = await interpret(referenceHandler.addRef({ source: "page-1", target: "doc-1" }), storage);
       const result = await interpret(referenceHandler.resolveTarget({ target: afterResult_valid_add?.output?.["source"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "broken_link" -> ok', async () => {
@@ -324,8 +319,7 @@ describe('Reference functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(referenceHandler.resolveTarget({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -350,13 +344,11 @@ describe('Reference functional handler', () => {
     it("addRef-then-getRefs", async () => {
       const storage = createInMemoryStorage();
       const addRefResult0 = await interpret(referenceHandler.addRef({ source: {"type":"variable","name":"x"}, target: {"type":"literal","value":"doc-1"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(addRefResult0.variant), `step 0: expected success but got '${addRefResult0.variant}'`).toBe(false);
+      expect(addRefResult0.variant).toBe("ok");
       let source = addRefResult0.output["source"];
       let target = addRefResult0.output["target"];
       const thenResult0 = await interpret(referenceHandler.getRefs({ source: {"type":"variable","name":"x"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

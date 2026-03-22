@@ -32,10 +32,10 @@ concept PessimisticLock [L] {
       -> ok(lockId: L) {
         Exclusive lock granted to holder.
       }
-      -> alreadyLocked(holder: String, expires: option String) {
+      -> ok(holder: String, expires: option String) {
         Resource held by another. Returns current holder info.
       }
-      -> queued(position: Int) {
+      -> ok(position: Int) {
         Requester added to wait queue at given position.
       }
 
@@ -47,10 +47,10 @@ concept PessimisticLock [L] {
       -> ok() {
         Lock released. Next requester in queue is notified.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         Lock not found.
       }
-      -> notHolder(message: String) {
+      -> ok(message: String) {
         Caller is not the current lock holder.
       }
 
@@ -62,7 +62,7 @@ concept PessimisticLock [L] {
       -> ok(previousHolder: String) {
         Lock forcibly released. Reason is mandatory and recorded.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         Lock not found.
       }
       -> unauthorized(message: String) {
@@ -77,10 +77,10 @@ concept PessimisticLock [L] {
       -> ok(newExpires: String) {
         Lock expiry extended by the additional duration.
       }
-      -> notFound(message: String) {
+      -> ok(message: String) {
         Lock not found.
       }
-      -> notHolder(message: String) {
+      -> ok(message: String) {
         Caller is not the current lock holder.
       }
 
@@ -111,7 +111,7 @@ concept PessimisticLock [L] {
 
     after checkOut(resource: r, holder: h, duration: _, reason: _) -> ok(lockId: l)
 
-        then checkOut(resource: r, holder: "other-user", duration: _, reason: _) -> alreadyLocked(holder: h, expires: _)
+        then checkOut(resource: r, holder: "other-user", duration: _, reason: _) -> ok(holder: h, expires: _)
 
   }
 

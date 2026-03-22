@@ -27,7 +27,7 @@ concept ChainFinality [CF] {
 
   actions {
     action track(operationRef: String, txHash: String, chainId: String, requiredConfirmations: Int, submittedBlock: Int) {
-      -> tracking(entry: CF) {
+      -> ok(entry: CF) {
         A transaction is registered for finality tracking.
       }
 
@@ -44,7 +44,7 @@ concept ChainFinality [CF] {
         Transaction has reached required confirmations or Casper-FFG
         finality epoch.
       }
-      -> reorged(entry: CF) {
+      -> ok(entry: CF) {
         The block containing the transaction was reorganized out of
         the canonical chain.
       }
@@ -57,7 +57,7 @@ concept ChainFinality [CF] {
 
   example "track-then-checkFinality": {
 
-    after track(operationRef: _, txHash: _, chainId: _, requiredConfirmations: 12) -> tracking(entry: cf)
+    after track(operationRef: _, txHash: _, chainId: _, requiredConfirmations: 12) -> ok(entry: cf)
 
         then checkFinality(entry: cf) -> finalized(entry: cf, finalizedBlock: _)
 

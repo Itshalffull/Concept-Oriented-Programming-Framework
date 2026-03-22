@@ -25,14 +25,14 @@ const _quadraticWeightHandler: FunctionalConceptHandler = {
       provider: 'QuadraticWeight',
       instanceId: id,
     });
-    return complete(p, 'configured', { config: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { config: id }) as StorageProgram<Result>;
   },
 
   compute(input: Record<string, unknown>) {
     const { participant, balance } = input;
     const weight = Math.sqrt(balance as number);
     let p = createProgram();
-    return complete(p, 'weight', { participant, balance, sqrtWeight: weight }) as StorageProgram<Result>;
+    return complete(p, 'ok', { participant, balance, sqrtWeight: weight }) as StorageProgram<Result>;
   },
 };
 

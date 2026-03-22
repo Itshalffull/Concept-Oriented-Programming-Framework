@@ -17,7 +17,7 @@ concept Group [G] {
   actions {
     action createGroup(group: G, name: String) {
       -> ok() { Isolated content space created with the given name. }
-      -> exists(message: String) { Group already exists. }
+      -> ok(message: String) { Group already exists. }
 
       fixture create_team_group { group: "team-engineering", name: "Engineering Team" }
       fixture create_empty_group { group: "", name: "" }

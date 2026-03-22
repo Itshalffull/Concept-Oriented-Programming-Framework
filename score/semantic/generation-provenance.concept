@@ -36,7 +36,7 @@ concept GenerationProvenance [G] {
         deploy, interface. generator is the concept name (e.g.,
         "HandlerScaffoldGen", "SurfaceComponentScaffoldGen").
       }
-      -> updated(existing: G) {
+      -> ok(existing: G) {
         Updated provenance for a file that was previously generated.
       }
 
@@ -48,7 +48,7 @@ concept GenerationProvenance [G] {
       -> ok(provenance: G) {
         Get generation provenance for a file.
       }
-      -> notGenerated() {
+      -> ok() {
         This file has no generation provenance — it is hand-written.
       }
 
@@ -82,7 +82,7 @@ concept GenerationProvenance [G] {
         intermediate generators to final output. Result as serialized
         JSON array of { step, input, generator, output }.
       }
-      -> notGenerated() {
+      -> ok() {
         This file has no generation provenance.
       }
 
@@ -97,7 +97,7 @@ concept GenerationProvenance [G] {
         array of { outputFile, sourceSpec, generator, generatedAt,
         sourceModified }.
       }
-      -> allFresh() {
+      -> ok() {
         All generated files are up to date.
       }
 
@@ -120,7 +120,7 @@ concept GenerationProvenance [G] {
       -> generated(generator: String, sourceSpec: String) {
         This file was generated.
       }
-      -> handWritten() {
+      -> ok() {
         This file has no generation provenance.
       }
 

@@ -15,7 +15,7 @@ concept RegistryProxy [T] {
       -> ok(results: list { name: String, namespace: String, latest_version: String, description: String }) {
         Forwards search to ClefRegistry.
       }
-      -> empty() {
+      -> ok() {
         No results found.
       }
       -> unavailable(message: String) {

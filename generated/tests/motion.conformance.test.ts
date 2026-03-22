@@ -88,24 +88,21 @@ describe('Motion functional handler', () => {
       if (typeof motionHandler.defineDuration !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(motionHandler.defineDuration({ motion: "O-1", name: "fast", ms: "100" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "duration_normal" -> ok', async () => {
       if (typeof motionHandler.defineDuration !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(motionHandler.defineDuration({ motion: "O-2", name: "normal", ms: "200" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "duration_instant" -> ok', async () => {
       if (typeof motionHandler.defineDuration !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(motionHandler.defineDuration({ motion: "O-3", name: "instant", ms: "0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "duration_negative" -> invalid', async () => {
@@ -180,8 +177,7 @@ describe('Motion functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(motionHandler.defineEasing({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "easing_cubic_bezier" -> ok', async () => {
@@ -194,8 +190,7 @@ describe('Motion functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(motionHandler.defineEasing({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "easing_empty_value" -> invalid', async () => {
@@ -270,8 +265,7 @@ describe('Motion functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(motionHandler.defineTransition({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "transition_slide" -> ok', async () => {
@@ -284,8 +278,7 @@ describe('Motion functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(motionHandler.defineTransition({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "transition_invalid_json" -> invalid', async () => {
@@ -332,12 +325,10 @@ describe('Motion functional handler', () => {
     it("defineDuration then defineTransition", async () => {
       const storage = createInMemoryStorage();
       const defineDurationResult0 = await interpret(motionHandler.defineDuration({ motion: {"type":"variable","name":"o"}, name: {"type":"literal","value":"normal"}, ms: {"type":"literal","value":200} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(defineDurationResult0.variant), `step 0: expected success but got '${defineDurationResult0.variant}'`).toBe(false);
+      expect(defineDurationResult0.variant).toBe("ok");
       let motion = defineDurationResult0.output["motion"];
       const thenResult0 = await interpret(motionHandler.defineTransition({ motion: {"type":"variable","name":"o2"}, name: {"type":"literal","value":"fade"}, config: {"type":"literal","value":"{ \"property\": \"opacity\", \"duration\": \"normal\", \"easing\": \"ease-out\" }"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(motionHandler.defineDuration({ motion: {"type":"variable","name":"o3"}, name: {"type":"literal","value":"bad"}, ms: {"type":"literal","value":-1} }), storage);
       expect(thenResult1.variant).toBe("invalid");
     });

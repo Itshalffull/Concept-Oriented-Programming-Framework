@@ -34,7 +34,7 @@ concept KindSystem [K] {
         "artifact" — terminal output (generated files, specs, tokens, images).
           Examples: TypeScriptFiles, RustFiles, RestRoutes, OpenApiDoc.
       }
-      -> exists(kind: K) {
+      -> ok(kind: K) {
         Kind with this name already registered. Returns existing ref.
         Idempotent — not an error.
       }
@@ -74,7 +74,7 @@ concept KindSystem [K] {
         Used by GenerationPlan for planning display and by
         `clef kinds path` CLI command.
       }
-      -> unreachable(message: String) {
+      -> ok(message: String) {
         No valid path exists between these kinds.
       }
 

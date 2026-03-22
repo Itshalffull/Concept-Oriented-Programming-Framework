@@ -70,7 +70,7 @@ concept Interactor [I] {
         is selected (entity-detail, entity-card, etc.).
         Confidence: 1.0 = exact, 0.5 = heuristic.
       }
-      -> ambiguous(interactor: I, candidates: String) {
+      -> ok(interactor: I, candidates: String) {
         Multiple types match equally. Returns ranked list.
       }
 

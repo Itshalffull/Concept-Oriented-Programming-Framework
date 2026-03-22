@@ -30,7 +30,7 @@ concept VoyageCodeEmbeddingProvider [I] {
         Default apiModel is voyage-code-3, default dimensions
         is 1024.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Missing or empty API key.
       }
     }
@@ -44,7 +44,7 @@ concept VoyageCodeEmbeddingProvider [I] {
         The API call failed due to network error, invalid key,
         rate limiting, or the model returned an unexpected response.
       }
-      -> notReady(message: String) {
+      -> ok(message: String) {
         Provider has not been initialized yet.
       }
     }

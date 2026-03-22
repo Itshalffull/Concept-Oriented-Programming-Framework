@@ -88,16 +88,14 @@ describe('WidgetGenFramework functional handler', () => {
       if (typeof widgetGenFrameworkHandler.initialize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(widgetGenFrameworkHandler.initialize({  }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "reinitialize" -> ok', async () => {
       if (typeof widgetGenFrameworkHandler.initialize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(widgetGenFrameworkHandler.initialize({  }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -158,16 +156,14 @@ describe('WidgetGenFramework functional handler', () => {
       if (typeof widgetGenFrameworkHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(widgetGenFrameworkHandler.generate({ widgetAst: "{\"name\":\"Button\",\"props\":[{\"name\":\"label\",\"type\":\"string\"},{\"name\":\"disabled\",\"type\":\"boolean\"}]}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "no_props_widget" -> ok', async () => {
       if (typeof widgetGenFrameworkHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(widgetGenFrameworkHandler.generate({ widgetAst: "{\"name\":\"Divider\"}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_ast_json" -> error', async () => {

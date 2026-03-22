@@ -22,7 +22,7 @@ concept ContributionPoint [C] {
       -> ok(point: C) {
         Contribution point defined and available for extensions to contribute to.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         A point with the same name already exists.
       }
     }

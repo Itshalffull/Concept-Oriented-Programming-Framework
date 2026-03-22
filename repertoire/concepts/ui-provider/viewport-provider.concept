@@ -33,7 +33,7 @@ concept ViewportProvider [P] {
         Idempotent — returns existing instance if pluginRef already
         registered.
       }
-      -> configError(message: String) {
+      -> ok(message: String) {
         Configuration invalid or breakpoints not ascending.
       }
       fixture init_default { config: "{}" }
@@ -53,7 +53,7 @@ concept ViewportProvider [P] {
       -> ok(provider: P, breakpoint: String, width: Int, height: Int) {
         Return current breakpoint and last-observed dimensions.
       }
-      -> notInitialized(message: String) {
+      -> ok(message: String) {
         Provider not yet initialized or no observation recorded.
       }
       fixture get_breakpoint_valid { provider: $init_default.provider } after init_default

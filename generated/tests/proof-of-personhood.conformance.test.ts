@@ -88,8 +88,7 @@ describe('ProofOfPersonhood functional handler', () => {
       if (typeof proofOfPersonhoodHandler.requestVerification !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(proofOfPersonhoodHandler.requestVerification({ candidate: "alice", method: "Biometric", expiryDays: "365" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "request_empty_candidate" -> error', async () => {
@@ -158,8 +157,7 @@ describe('ProofOfPersonhood functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_request_biometric = await interpret(proofOfPersonhoodHandler.requestVerification({ candidate: "alice", method: "Biometric", expiryDays: "365" }), storage);
       const result = await interpret(proofOfPersonhoodHandler.confirmVerification({ verification: afterResult_request_biometric?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "confirm_nonexistent" -> error', async () => {
@@ -228,8 +226,7 @@ describe('ProofOfPersonhood functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_request_biometric = await interpret(proofOfPersonhoodHandler.requestVerification({ candidate: "alice", method: "Biometric", expiryDays: "365" }), storage);
       const result = await interpret(proofOfPersonhoodHandler.rejectVerification({ verification: afterResult_request_biometric?.output?.["id"], reason: "Fraudulent proof submission" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "reject_nonexistent" -> error', async () => {
@@ -298,8 +295,7 @@ describe('ProofOfPersonhood functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_request_biometric = await interpret(proofOfPersonhoodHandler.requestVerification({ candidate: "alice", method: "Biometric", expiryDays: "365" }), storage);
       const result = await interpret(proofOfPersonhoodHandler.checkStatus({ verification: afterResult_request_biometric?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "check_nonexistent" -> error', async () => {
@@ -331,7 +327,7 @@ describe('ProofOfPersonhood functional handler', () => {
     it("verify-then-checkStatus", async () => {
       const storage = createInMemoryStorage();
       const verifyResult0 = await interpret(proofOfPersonhoodHandler.verify({ participant: {"type":"variable","name":"p"}, method: {"type":"variable","name":"_"}, proofHash: {"type":"variable","name":"_"}, verifier: {"type":"variable","name":"_"}, expiryDays: {"type":"variable","name":"_"} }), storage);
-      expect(verifyResult0.variant).toBe("verified");
+      expect(verifyResult0.variant).toBe("ok");
       let verification = verifyResult0.output["verification"];
       const thenResult0 = await interpret(proofOfPersonhoodHandler.checkStatus({ participant: {"type":"variable","name":"p"} }), storage);
       expect(thenResult0.variant).toBe("valid");

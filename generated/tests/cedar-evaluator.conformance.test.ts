@@ -94,8 +94,7 @@ describe('CedarEvaluator functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(cedarEvaluatorHandler.loadPolicies({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "load_empty_policies" -> validation_error', async () => {
@@ -170,8 +169,7 @@ describe('CedarEvaluator functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(cedarEvaluatorHandler.authorize({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "authorize_denied_action" -> deny', async () => {
@@ -246,8 +244,7 @@ describe('CedarEvaluator functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(cedarEvaluatorHandler.verify({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "verify_nonexistent_store" -> counterexample', async () => {
@@ -280,10 +277,10 @@ describe('CedarEvaluator functional handler', () => {
     it("loadPolicies-then-authorize", async () => {
       const storage = createInMemoryStorage();
       const loadPoliciesResult0 = await interpret(cedarEvaluatorHandler.loadPolicies({ policies: {"type":"variable","name":"_"}, schema: {"type":"variable","name":"_"} }), storage);
-      expect(loadPoliciesResult0.variant).toBe("loaded");
+      expect(loadPoliciesResult0.variant).toBe("ok");
       let store = loadPoliciesResult0.output["store"];
       const thenResult0 = await interpret(cedarEvaluatorHandler.authorize({ store: {"type":"variable","name":"ce"}, principal: {"type":"variable","name":"_"}, action: {"type":"variable","name":"_"}, resource: {"type":"variable","name":"_"}, context: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("allow");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

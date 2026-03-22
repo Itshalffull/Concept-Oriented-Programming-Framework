@@ -24,7 +24,7 @@ concept AttestationSybil [AS] {
 
   actions {
     action configure(requiredSchema: String, requiredAttester: String) {
-      -> configured(config: AS) {
+      -> ok(config: AS) {
         Defines which attestation schemas and issuers are accepted
         for sybil verification.
       }
@@ -34,7 +34,7 @@ concept AttestationSybil [AS] {
     }
 
     action submitAttestation(config: AS, candidate: String, attestationRef: String, schema: String, attester: String, expiresAt: option String) {
-      -> submitted(candidate: String, attestationRef: String) {
+      -> ok(candidate: String, attestationRef: String) {
         The candidate submits an attestation credential for verification.
       }
 
@@ -43,20 +43,20 @@ concept AttestationSybil [AS] {
     }
 
     action verify(config: AS, candidate: String) {
-      -> verified(candidate: String, attestationRef: String) {
+      -> ok(candidate: String, attestationRef: String) {
         The candidate holds a valid attestation from a trusted attester
         matching a required schema.
       }
-      -> schema_mismatch(candidate: String, expected: String, actual: String) {
+      -> ok(candidate: String, expected: String, actual: String) {
         The attestation does not match the required schema.
       }
-      -> attester_mismatch(candidate: String, expected: String, actual: String) {
+      -> ok(candidate: String, expected: String, actual: String) {
         The attestation's issuer is not in the trusted set.
       }
-      -> expired(candidate: String, expiresAt: String) {
+      -> ok(candidate: String, expiresAt: String) {
         The attestation has expired.
       }
-      -> no_attestation(candidate: String) {
+      -> ok(candidate: String) {
         No attestation submitted for this candidate.
       }
       -> not_found(config: AS) {
@@ -70,9 +70,9 @@ concept AttestationSybil [AS] {
 
   example "configure-then-checkParticipant": {
 
-    after configure(requiredSchemas: _, trustedAttesters: _) -> configured(config: as)
+    after configure(requiredSchemas: _, trustedAttesters: _) -> ok(config: as)
 
-        then checkParticipant(config: as, participant: _, attestationRef: _) -> verified(participant: _)
+        then checkParticipant(config: as, participant: _, attestationRef: _) -> ok(participant: _)
 
   }
 
@@ -97,7 +97,7 @@ concept AttestationSybil [AS] {
 
     requires: requiredSchemas != ""
 
-    ensures configured: requiredSchemas != none
+    ensures ok: requiredSchemas != none
 
   }
 }

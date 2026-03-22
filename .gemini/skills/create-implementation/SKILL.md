@@ -197,7 +197,17 @@ All inputs arrive as `Record<string, unknown>`. Cast each field to its TypeScrip
 
 #### Variant Returns
 
-Return exactly the variants declared in the spec. The `variant` field is the discriminant:
+Return exactly the variants declared in the spec. The `variant` field is the discriminant.
+
+**Convention: success is always `ok`.** Use `'ok'` for the happy-path variant
+in every action. Domain context belongs in the output fields, not the variant
+name. Do NOT use domain-specific success names like `'created'`, `'configured'`,
+`'registered'`, `'updated'` — these must all be `'ok'`.
+
+**Exception — multiple distinct success branches.** When an action genuinely
+has two or more success outcomes that syncs need to distinguish, use
+domain-specific variant names (e.g., `'ok'`/`'miss'` for cache lookup,
+`'clean'`/`'conflicts'` for merge). This should be rare.
 
 ```typescript
 // Spec: -> ok(user: U) { ... }

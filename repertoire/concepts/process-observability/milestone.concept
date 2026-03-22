@@ -30,10 +30,10 @@ concept Milestone [I] {
       -> achieved(milestone: I, name: String, run_ref: String) {
         Condition evaluates to true. Transitions to achieved.
       }
-      -> not_yet(milestone: I) {
+      -> ok(milestone: I) {
         Condition evaluates to false. Remains pending.
       }
-      -> already_achieved(milestone: I) {
+      -> ok(milestone: I) {
         Milestone was already achieved.
       }
     }

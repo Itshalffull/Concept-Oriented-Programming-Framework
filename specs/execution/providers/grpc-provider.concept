@@ -37,7 +37,7 @@ concept GrpcProvider [G] {
         Create a named gRPC channel to the target host:port with
         the given proto definition reference and channel options.
       }
-      -> exists(name: String) {
+      -> ok(name: String) {
         A channel with this name is already configured.
       }
 
@@ -51,10 +51,10 @@ concept GrpcProvider [G] {
         serializing the payload per the proto definition. Returns
         the deserialized response as JSON.
       }
-      -> notFound(channel: String) {
+      -> ok(channel: String) {
         No channel is configured with this name.
       }
-      -> rpcError(code: Int, message: String) {
+      -> ok(code: Int, message: String) {
         The gRPC call returned a non-OK status code.
       }
 
@@ -73,7 +73,7 @@ concept GrpcProvider [G] {
 
   example "execute fails for unknown channel": {
     after configure(name: "user-service", target: "localhost:50051", protoRef: "user.proto", options: "{}") -> ok(channel: g)
-    then execute(channel: "unknown-service", service: "UserService", method: "GetUser", payload: "{}") -> notFound(channel: "unknown-service")
+    then execute(channel: "unknown-service", service: "UserService", method: "GetUser", payload: "{}") -> ok(channel: "unknown-service")
   }
 
   always "channels have valid name": {

@@ -88,16 +88,14 @@ describe('Runtime functional handler', () => {
       if (typeof runtimeHandler.provision !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(runtimeHandler.provision({ concept: "UserService", runtimeType: "ecs-fargate", config: "{\"cpu\":256,\"memory\":512}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "provision_vercel" -> ok', async () => {
       if (typeof runtimeHandler.provision !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(runtimeHandler.provision({ concept: "WebApp", runtimeType: "vercel", config: "{\"framework\":\"nextjs\"}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "provision_empty_concept" -> error', async () => {
@@ -171,8 +169,7 @@ describe('Runtime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(runtimeHandler.deploy({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "deploy_missing_instance" -> error', async () => {
@@ -246,8 +243,7 @@ describe('Runtime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(runtimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "traffic_no_instance" -> ok', async () => {
@@ -260,8 +256,7 @@ describe('Runtime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(runtimeHandler.setTrafficWeight({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -328,8 +323,7 @@ describe('Runtime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(runtimeHandler.rollback({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "rollback_missing" -> error', async () => {
@@ -403,8 +397,7 @@ describe('Runtime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(runtimeHandler.destroy({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "destroy_missing" -> error', async () => {
@@ -478,8 +471,7 @@ describe('Runtime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(runtimeHandler.updateEndpoint({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "update_endpoint_missing" -> error', async () => {
@@ -553,8 +545,7 @@ describe('Runtime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(runtimeHandler.getEndpoint({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_endpoint_missing" -> error', async () => {
@@ -628,8 +619,7 @@ describe('Runtime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(runtimeHandler.configureDependencies({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_deps_missing" -> error', async () => {
@@ -709,8 +699,7 @@ describe('Runtime functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(runtimeHandler.healthCheck({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "healthcheck_missing" -> error', async () => {
@@ -742,13 +731,11 @@ describe('Runtime functional handler', () => {
     it("provision-then-deploy", async () => {
       const storage = createInMemoryStorage();
       const provisionResult0 = await interpret(runtimeHandler.provision({ concept: {"type":"literal","value":"User"}, runtimeType: {"type":"literal","value":"ecs-fargate"}, config: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(provisionResult0.variant), `step 0: expected success but got '${provisionResult0.variant}'`).toBe(false);
+      expect(provisionResult0.variant).toBe("ok");
       let instance = provisionResult0.output["instance"];
       let endpoint = provisionResult0.output["endpoint"];
       const thenResult0 = await interpret(runtimeHandler.deploy({ instance: {"type":"variable","name":"i"}, artifact: {"type":"literal","value":"s3://artifacts/user-v1"}, version: {"type":"literal","value":"1.0.0"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

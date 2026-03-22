@@ -88,8 +88,7 @@ describe('User functional handler', () => {
       if (typeof userHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(userHandler.register({ user: "u-001", name: "Alice Chen", email: "alice@example.com" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "duplicate_name" -> ok', async () => {
@@ -97,8 +96,7 @@ describe('User functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_new_user = await interpret(userHandler.register({ user: "u-001", name: "Alice Chen", email: "alice@example.com" }), storage);
       const result = await interpret(userHandler.register({ user: afterResult_new_user?.output?.["user"], name: "Alice Chen", email: "other@example.com" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "duplicate_email" -> ok', async () => {
@@ -106,8 +104,7 @@ describe('User functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_new_user = await interpret(userHandler.register({ user: "u-001", name: "Alice Chen", email: "alice@example.com" }), storage);
       const result = await interpret(userHandler.register({ user: afterResult_new_user?.output?.["user"], name: "Bob Smith", email: "alice@example.com" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -117,8 +114,7 @@ describe('User functional handler', () => {
     it("duplicate name rejected", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(userHandler.register({ user: {"type":"variable","name":"x"}, name: {"type":"literal","value":"alice"}, email: {"type":"literal","value":"a@b.com"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let user = registerResult0.output["user"];
       const thenResult0 = await interpret(userHandler.register({ user: {"type":"variable","name":"y"}, name: {"type":"literal","value":"alice"}, email: {"type":"literal","value":"c@d.com"} }), storage);
       expect(thenResult0.variant).toBe("error");
@@ -127,8 +123,7 @@ describe('User functional handler', () => {
     it("successful registration stores user", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(userHandler.register({ user: {"type":"variable","name":"x"}, name: {"type":"literal","value":"bob"}, email: {"type":"literal","value":"bob@test.com"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let user = registerResult0.output["user"];
       expect(xResult.output["name"]).toBe({"type":"literal","value":"bob"});
       expect(xResult.output["email"]).toBe({"type":"literal","value":"bob@test.com"});

@@ -28,7 +28,7 @@ concept TreeDiff [C] {
         Structural edit script preserving tree relationships
         and tree edit distance.
       }
-      -> unsupportedContent(message: String) {
+      -> ok(message: String) {
         Content is not a valid tree structure.
       }
 

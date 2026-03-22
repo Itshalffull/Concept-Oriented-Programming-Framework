@@ -22,7 +22,7 @@ concept TrigramIndexProvider [I] {
         Register this index provider with PluginRegistry
         for trigram text search.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the trigram index.
       }
     }

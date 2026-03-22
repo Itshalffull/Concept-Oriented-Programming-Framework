@@ -88,16 +88,14 @@ describe('Provenance functional handler', () => {
       if (typeof provenanceHandler.record !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(provenanceHandler.record({ entity: "item-1", activity: "capture", agent: "system", inputs: "" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "record_transform" -> ok', async () => {
       if (typeof provenanceHandler.record !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(provenanceHandler.record({ entity: "item-2", activity: "transform", agent: "enricher-ocr", inputs: "item-1" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -159,8 +157,7 @@ describe('Provenance functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_record_capture = await interpret(provenanceHandler.record({ entity: "item-1", activity: "capture", agent: "system", inputs: "" }), storage);
       const result = await interpret(provenanceHandler.trace({ entityId: afterResult_record_capture?.output?.["recordId"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "trace_missing" -> notfound', async () => {
@@ -235,8 +232,7 @@ describe('Provenance functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(provenanceHandler.audit({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "audit_missing" -> notfound', async () => {
@@ -311,8 +307,7 @@ describe('Provenance functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(provenanceHandler.rollback({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "rollback_missing" -> notfound', async () => {
@@ -387,8 +382,7 @@ describe('Provenance functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(provenanceHandler.diff({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "diff_missing" -> notfound', async () => {
@@ -458,8 +452,7 @@ describe('Provenance functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_record_capture = await interpret(provenanceHandler.record({ entity: "item-1", activity: "capture", agent: "system", inputs: "" }), storage);
       const result = await interpret(provenanceHandler.reproduce({ entityId: afterResult_record_capture?.output?.["recordId"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "reproduce_missing" -> notfound', async () => {
@@ -492,23 +485,19 @@ describe('Provenance functional handler', () => {
     it("record-then-trace", async () => {
       const storage = createInMemoryStorage();
       const recordResult0 = await interpret(provenanceHandler.record({ entity: {"type":"literal","value":"item-1"}, activity: {"type":"literal","value":"capture"}, agent: {"type":"literal","value":"system"}, inputs: {"type":"literal","value":""} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(recordResult0.variant), `step 0: expected success but got '${recordResult0.variant}'`).toBe(false);
+      expect(recordResult0.variant).toBe("ok");
       let recordId = recordResult0.output["recordId"];
       const thenResult0 = await interpret(provenanceHandler.trace({ entityId: {"type":"literal","value":"item-1"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("record-then-rollback", async () => {
       const storage = createInMemoryStorage();
       const recordResult0 = await interpret(provenanceHandler.record({ entity: {"type":"literal","value":"item-1"}, activity: {"type":"literal","value":"import"}, agent: {"type":"literal","value":"system"}, inputs: {"type":"literal","value":""} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(recordResult0.variant), `step 0: expected success but got '${recordResult0.variant}'`).toBe(false);
+      expect(recordResult0.variant).toBe("ok");
       let recordId = recordResult0.output["recordId"];
       const thenResult0 = await interpret(provenanceHandler.rollback({ batchId: {"type":"literal","value":"batch-1"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

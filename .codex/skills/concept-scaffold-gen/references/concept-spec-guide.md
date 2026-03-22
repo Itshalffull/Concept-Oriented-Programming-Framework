@@ -77,7 +77,8 @@ action create(name: String, email: String) {
 - Every parameter must have a type
 - At least one variant per action
 - Variant names are lowercase
-- `ok` is the conventional success variant
+- **Success is always `ok`.** Do not use domain-specific names like `created`, `configured`, `registered`, `updated`. Domain context belongs in the output fields, not the variant name
+- **Exception — multiple distinct success branches.** When an action has two or more success outcomes that syncs need to distinguish (e.g., `ok`/`miss` for cache lookup, `clean`/`conflicts` for merge, `valid`/`invalid` for verification), use domain-specific variant names. This should be rare
 
 ## Register Action
 

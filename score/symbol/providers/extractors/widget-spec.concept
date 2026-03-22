@@ -25,7 +25,7 @@ concept WidgetSpecSymbolExtractor [I] {
         Register this extractor with PluginRegistry for
         .widget file extensions.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the widget spec extractor.
       }
     }

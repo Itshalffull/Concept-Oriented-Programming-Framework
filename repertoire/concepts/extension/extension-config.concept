@@ -21,7 +21,7 @@ concept ExtensionConfig [C] {
       -> ok(config: C) {
         Configuration initialized with schema and default values.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         Configuration already initialized for this extension.
       }
       -> invalid(message: String) {

@@ -88,16 +88,14 @@ describe('InterfaceEntity functional handler', () => {
       if (typeof interfaceEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_minimal" -> ok', async () => {
       if (typeof interfaceEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(interfaceEntityHandler.register({ name: "admin-cli", source: "cli.interface.yaml", manifest: "{}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_empty_name" -> error', async () => {
@@ -171,8 +169,7 @@ describe('InterfaceEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(interfaceEntityHandler.get({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_missing" -> error', async () => {
@@ -192,8 +189,7 @@ describe('InterfaceEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(interfaceEntityHandler.get({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -255,8 +251,7 @@ describe('InterfaceEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_conduit_api = await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage);
       const result = await interpret(interfaceEntityHandler.listEndpoints({ interface: afterResult_register_conduit_api?.output?.["interface"], target: "rest" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "endpoints_empty_target" -> error', async () => {
@@ -325,8 +320,7 @@ describe('InterfaceEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_conduit_api = await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage);
       const result = await interpret(interfaceEntityHandler.listCommands({ interface: afterResult_register_conduit_api?.output?.["interface"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "commands_missing" -> error', async () => {
@@ -395,8 +389,7 @@ describe('InterfaceEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_conduit_api = await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage);
       const result = await interpret(interfaceEntityHandler.listTools({ interface: afterResult_register_conduit_api?.output?.["interface"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "tools_missing" -> error', async () => {
@@ -465,8 +458,7 @@ describe('InterfaceEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_conduit_api = await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage);
       const result = await interpret(interfaceEntityHandler.listSkills({ interface: afterResult_register_conduit_api?.output?.["interface"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "skills_missing" -> error', async () => {
@@ -540,8 +532,7 @@ describe('InterfaceEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(interfaceEntityHandler.findByConcept({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_empty_concept" -> error', async () => {
@@ -615,8 +606,7 @@ describe('InterfaceEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(interfaceEntityHandler.findByAction({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_empty_action" -> error', async () => {
@@ -690,8 +680,7 @@ describe('InterfaceEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(interfaceEntityHandler.traceEndpointToAction({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "trace_missing_endpoint" -> error', async () => {
@@ -711,8 +700,7 @@ describe('InterfaceEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(interfaceEntityHandler.traceEndpointToAction({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "trace_missing" -> error', async () => {
@@ -786,8 +774,7 @@ describe('InterfaceEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(interfaceEntityHandler.traceToolToAction({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "trace_missing_tool" -> error', async () => {
@@ -863,8 +850,7 @@ describe('InterfaceEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_conduit_api = await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage);
       const result = await interpret(interfaceEntityHandler.generatedSchemas({ interface: afterResult_register_conduit_api?.output?.["interface"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "schemas_missing" -> error', async () => {
@@ -938,8 +924,7 @@ describe('InterfaceEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(interfaceEntityHandler.validateAgainstSpecs({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "validate_missing" -> error', async () => {
@@ -956,12 +941,10 @@ describe('InterfaceEntity functional handler', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(interfaceEntityHandler.register({ name: {"type":"literal","value":"conduit-api"}, source: {"type":"literal","value":"examples/conduit/app.interface.yaml"}, manifest: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let interface = registerResult0.output["interface"];
       const thenResult0 = await interpret(interfaceEntityHandler.get({ name: {"type":"literal","value":"conduit-api"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

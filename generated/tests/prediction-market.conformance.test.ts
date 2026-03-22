@@ -88,16 +88,14 @@ describe('PredictionMarket functional handler', () => {
       if (typeof predictionMarketHandler.createMarket !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(predictionMarketHandler.createMarket({ question: "Will GDP grow by 3%?", outcomes: ["Yes","No"], deadline: "2026-12-31T23:59:59Z" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "multi_outcome" -> ok', async () => {
       if (typeof predictionMarketHandler.createMarket !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(predictionMarketHandler.createMarket({ question: "Which party wins?", outcomes: ["Alpha","Beta","Gamma"], deadline: "2026-06-01T00:00:00Z" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_question" -> error', async () => {
@@ -166,8 +164,7 @@ describe('PredictionMarket functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_market = await interpret(predictionMarketHandler.createMarket({ question: "Will GDP grow by 3%?", outcomes: ["Yes","No"], deadline: "2026-12-31T23:59:59Z" }), storage);
       const result = await interpret(predictionMarketHandler.trade({ market: afterResult_valid_market?.output?.["id"], trader: "alice", outcome: "Yes", amount: "50.0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_market" -> error', async () => {
@@ -236,8 +233,7 @@ describe('PredictionMarket functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_market = await interpret(predictionMarketHandler.createMarket({ question: "Will GDP grow by 3%?", outcomes: ["Yes","No"], deadline: "2026-12-31T23:59:59Z" }), storage);
       const result = await interpret(predictionMarketHandler.resolve({ market: afterResult_valid_market?.output?.["id"], outcome: "Yes" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_missing" -> error', async () => {
@@ -306,8 +302,7 @@ describe('PredictionMarket functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_market = await interpret(predictionMarketHandler.createMarket({ question: "Will GDP grow by 3%?", outcomes: ["Yes","No"], deadline: "2026-12-31T23:59:59Z" }), storage);
       const result = await interpret(predictionMarketHandler.claimPayout({ market: afterResult_valid_market?.output?.["id"], trader: "alice" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "claim_no_winnings" -> error', async () => {
@@ -339,12 +334,12 @@ describe('PredictionMarket functional handler', () => {
     it("createMarket-then-resolve", async () => {
       const storage = createInMemoryStorage();
       const createMarketResult0 = await interpret(predictionMarketHandler.createMarket({ question: {"type":"variable","name":"_"}, outcomes: {"type":"variable","name":"_"}, deadline: {"type":"variable","name":"_"} }), storage);
-      expect(createMarketResult0.variant).toBe("created");
+      expect(createMarketResult0.variant).toBe("ok");
       let market = createMarketResult0.output["market"];
       const thenResult0 = await interpret(predictionMarketHandler.trade({ market: {"type":"variable","name":"pm"}, trader: {"type":"variable","name":"_"}, outcome: {"type":"variable","name":"_"}, amount: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("traded");
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(predictionMarketHandler.resolve({ market: {"type":"variable","name":"pm"}, outcome: {"type":"variable","name":"o"} }), storage);
-      expect(thenResult1.variant).toBe("resolved");
+      expect(thenResult1.variant).toBe("ok");
     });
 
   });
@@ -431,7 +426,7 @@ describe('PredictionMarket functional handler', () => {
       }
     });
 
-    it('createMarket ensures on created: ', async () => {
+    it('createMarket ensures on ok: ', async () => {
       if (typeof predictionMarketHandler.createMarket !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -443,7 +438,7 @@ describe('PredictionMarket functional handler', () => {
               const program = predictionMarketHandler.createMarket(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "created") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

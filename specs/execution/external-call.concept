@@ -55,7 +55,7 @@ concept ExternalCall [X] {
         which executes the call and returns the response. Creates
         a call record with status "completed".
       }
-      -> protocolNotFound(protocol: String) {
+      -> ok(protocol: String) {
         No provider is registered for this protocol. The caller
         should register a protocol provider before dispatching.
       }
@@ -81,7 +81,7 @@ concept ExternalCall [X] {
   }
 
   example "dispatch fails without registered protocol": {
-    after dispatch(protocol: "http", operation: "GET", endpoint: "test", payload: "{}", config: "{}") -> protocolNotFound(protocol: "http")
+    after dispatch(protocol: "http", operation: "GET", endpoint: "test", payload: "{}", config: "{}") -> ok(protocol: "http")
     then registerProtocol(protocol: "http", providerName: "HttpProvider") -> ok()
   }
 

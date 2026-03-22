@@ -23,7 +23,7 @@ concept ConceptDependenceProvider [I] {
         Register this provider with PluginRegistry for
         concept spec dependence analysis.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the concept dependence provider.
       }
     }

@@ -85,15 +85,15 @@ concept Toolchain [T] {
         "incremental", "wasm-target", "cross-compile",
         "remote-execution", "debug-symbols", etc.
       }
-      -> notInstalled(language: String, platform: String, installHint: String) {
+      -> ok(language: String, platform: String, installHint: String) {
         Tool not found. installHint suggests how to install
         (e.g., "brew install swift", "rustup target add wasm32").
       }
-      -> versionMismatch(language: String, installed: String, required: String) {
+      -> ok(language: String, installed: String, required: String) {
         Tool found but wrong version. Returns both so the
         user can decide whether to upgrade.
       }
-      -> platformUnsupported(language: String, platform: String) {
+      -> ok(language: String, platform: String) {
         This language's toolchain doesn't support the
         requested target platform.
       }

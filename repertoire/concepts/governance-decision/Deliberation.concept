@@ -31,7 +31,7 @@ concept Deliberation [DL] {
 
   actions {
     action open(proposalRef: String) {
-      -> opened(thread: DL) {
+      -> ok(thread: DL) {
         A deliberation thread is created in Open status.
       }
 
@@ -40,11 +40,11 @@ concept Deliberation [DL] {
     }
 
     action addEntry(thread: DL, author: String, content: String, entryType: String, parentEntry: option String) {
-      -> added(thread: DL, entryIndex: Int) {
+      -> ok(thread: DL, entryIndex: Int) {
         A new entry is appended. EntryType can be "argument", "question",
         "response", "evidence", or "synthesis".
       }
-      -> closed(thread: DL) {
+      -> ok(thread: DL) {
         The thread is closed and no longer accepts entries.
       }
 
@@ -54,7 +54,7 @@ concept Deliberation [DL] {
     }
 
     action signal(thread: DL, signaller: String, signal: String) {
-      -> signalled(thread: DL) {
+      -> ok(thread: DL) {
         A consensus signal is recorded (e.g., "agree", "disagree",
         "need_more_info", "block").
       }
@@ -64,7 +64,7 @@ concept Deliberation [DL] {
     }
 
     action close(thread: DL) {
-      -> closed(thread: DL) {
+      -> ok(thread: DL) {
         The thread is closed. A summary of signals is available.
       }
 
@@ -75,11 +75,11 @@ concept Deliberation [DL] {
 
   example "open-then-close": {
 
-    after open(proposalRef: _) -> opened(thread: dl)
+    after open(proposalRef: _) -> ok(thread: dl)
 
-        then addEntry(thread: dl, author: _, content: _, entryType: _, parentEntry: _) -> added(thread: dl, entryIndex: _)
+        then addEntry(thread: dl, author: _, content: _, entryType: _, parentEntry: _) -> ok(thread: dl, entryIndex: _)
 
-        and  close(thread: dl) -> closed(thread: dl)
+        and  close(thread: dl) -> ok(thread: dl)
 
   }
 

@@ -55,7 +55,7 @@ const _adicoEvaluatorHandler: FunctionalConceptHandler = {
           ...structured as Record<string, unknown>,
           parsedAt: new Date().toISOString(),
         });
-        return complete(p, 'parsed', { rule: id }) as StorageProgram<Result>;
+        return complete(p, 'ok', { rule: id }) as StorageProgram<Result>;
       }
       return complete(createProgram(), 'parse_error', { sourceText: ruleText }) as StorageProgram<Result>;
     }
@@ -79,7 +79,7 @@ const _adicoEvaluatorHandler: FunctionalConceptHandler = {
       instanceId: id,
     });
 
-    return complete(p, 'parsed', { rule: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { rule: id }) as StorageProgram<Result>;
   },
 
   evaluate(input: Record<string, unknown>) {

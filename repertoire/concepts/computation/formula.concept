@@ -16,7 +16,7 @@ concept Formula [F] {
   actions {
     action create(formula: F, expression: String) {
       -> ok() { Formula created with the given expression. }
-      -> exists() { Formula already exists. }
+      -> ok() { Formula already exists. }
       fixture create_formula { formula: "total_price", expression: "price * quantity" }
       fixture create_empty_formula { formula: "", expression: "x + y" }
     }

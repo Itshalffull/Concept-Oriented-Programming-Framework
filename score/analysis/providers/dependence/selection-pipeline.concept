@@ -23,7 +23,7 @@ concept SelectionPipelineDependenceProvider [I] {
         Register this provider with PluginRegistry for
         selection pipeline dependence analysis.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the selection pipeline provider.
       }
     }

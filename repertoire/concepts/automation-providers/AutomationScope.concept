@@ -23,7 +23,7 @@ concept AutomationScope [AS] {
         Sets scope mode to "allowlist" or "denylist". Clears existing
         rules when mode changes.
       }
-      -> invalid_mode(mode: String) {
+      -> ok(mode: String) {
         Mode must be "allowlist" or "denylist".
       }
     }
@@ -33,7 +33,7 @@ concept AutomationScope [AS] {
         Adds a glob pattern to the scope's rule list under the given
         category. Duplicate patterns are ignored.
       }
-      -> not_configured(scope: AS) {
+      -> ok(scope: AS) {
         Scope has no mode set.
       }
     }
@@ -48,7 +48,7 @@ concept AutomationScope [AS] {
     }
 
     action check(scope: AS, action_ref: String) {
-      -> permitted(scope: AS, action_ref: String) {
+      -> ok(scope: AS, action_ref: String) {
         Action reference passes scope gate. In allowlist mode the
         action matched a rule; in denylist mode it matched none.
       }
@@ -74,7 +74,7 @@ concept AutomationScope [AS] {
 
         then  check(scope: s, action_ref: "Content/save")
 
-              -> permitted(scope: s, action_ref: "Content/save")
+              -> ok(scope: s, action_ref: "Content/save")
 
   }
 

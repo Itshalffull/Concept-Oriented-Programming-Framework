@@ -19,7 +19,7 @@ const _voteHandler: FunctionalConceptHandler = {
       id, proposalRef: input.proposalRef, deadline: input.deadline,
       snapshotRef: input.snapshotRef, status: 'Open', ballots: [], createdAt: new Date().toISOString(),
     });
-    return complete(p, 'opened', { session: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { session: id }) as StorageProgram<Result>;
   },
 
   castVote(input: Record<string, unknown>) {
@@ -48,12 +48,12 @@ const _voteHandler: FunctionalConceptHandler = {
                   const ballots = record.ballots as Array<{ voter: unknown; choice: unknown; weight: unknown }>;
                   return { ...record, ballots: [...ballots, { voter, choice, weight }] };
                 });
-                return complete(valid, 'cast', { ballot: `${session}:${voter}` });
+                return complete(valid, 'ok', { ballot: `${session}:${voter}` });
               })(),
               complete(createProgram(), 'already_voted', { voter }),
             );
           })(),
-          complete(createProgram(), 'closed', { session }),
+          complete(createProgram(), 'ok', { session }),
         );
       },
       (b) => complete(b, 'session_not_found', { session }),
@@ -72,7 +72,7 @@ const _voteHandler: FunctionalConceptHandler = {
         let b2 = putFrom(b, 'session', session as string, (bindings) => ({
           ...bindings.record as Record<string, unknown>, status: 'Closed',
         }));
-        return complete(b2, 'closed', { session });
+        return complete(b2, 'ok', { session });
       },
       (b) => complete(b, 'not_found', { session }),
     );

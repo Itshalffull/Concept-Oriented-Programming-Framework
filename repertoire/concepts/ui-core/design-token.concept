@@ -49,7 +49,7 @@ concept DesignToken [T] {
         by remapping semantic tokens to different primitives.
       }
       -> notfound(message: String) { The referenced token does not exist. }
-      -> cycle(message: String) { The alias would create a circular reference chain. }
+      -> ok(message: String) { The alias would create a circular reference chain. }
 
       fixture valid_alias { token: "primary-color", name: "primary-color", reference: $valid_define_color.token, tier: "semantic" } after valid_define_color
       fixture alias_nonexistent_ref { token: "bad-alias", name: "bad-alias", reference: "nonexistent-token", tier: "semantic" } -> error
@@ -60,7 +60,7 @@ concept DesignToken [T] {
         Walk the reference chain and return the final concrete value.
       }
       -> notfound(message: String) { The token does not exist. }
-      -> broken(message: String, brokenAt: T) { The reference chain is broken. }
+      -> ok(message: String, brokenAt: T) { The reference chain is broken. }
 
       fixture valid_resolve { token: $valid_define_color.token } after valid_define_color
       fixture resolve_nonexistent { token: "nonexistent-token" } -> error

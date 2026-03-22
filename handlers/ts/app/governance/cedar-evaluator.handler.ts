@@ -69,7 +69,7 @@ const _cedarEvaluatorHandler: FunctionalConceptHandler = {
       instanceId: id,
     });
 
-    return complete(p, 'loaded', { store: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { store: id }) as StorageProgram<Result>;
   },
 
   authorize(input: Record<string, unknown>) {

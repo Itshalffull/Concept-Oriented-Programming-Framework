@@ -31,11 +31,11 @@ concept SwiftToolchain [S] {
         5.9+ has "macros", 5.10+ has "swift-testing",
         6.0+ has "typed-throws".
       }
-      -> notInstalled(installHint: String) {
+      -> ok(installHint: String) {
         swiftc not found. Hint: "Install via Xcode or
         download from swift.org/download"
       }
-      -> xcodeRequired(reason: String) {
+      -> ok(reason: String) {
         Platform target requires Xcode (e.g., iOS, watchOS).
       }
 

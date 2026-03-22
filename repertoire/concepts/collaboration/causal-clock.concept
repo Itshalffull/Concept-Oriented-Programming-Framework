@@ -38,13 +38,13 @@ concept CausalClock [T] {
     }
 
     action compare(a: T, b: T) {
-      -> before() {
+      -> ok() {
         a happened-before b.
       }
-      -> after() {
+      -> ok() {
         b happened-before a.
       }
-      -> concurrent() {
+      -> ok() {
         Neither happened before the other. Events are concurrent.
       }
       fixture compare_events { a: "event-1", b: "event-2" }
@@ -67,7 +67,7 @@ concept CausalClock [T] {
 
         then tick(replicaId: r) -> ok(timestamp: t2, clock: _)
 
-        and  compare(a: t1, b: t2) -> before()
+        and  compare(a: t1, b: t2) -> ok()
 
   }
 

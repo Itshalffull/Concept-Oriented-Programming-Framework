@@ -88,8 +88,7 @@ describe('Conviction functional handler', () => {
       if (typeof convictionHandler.registerProposal !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(convictionHandler.registerProposal({ proposalRef: "proposal-infra-2026", requestedFunds: "5000.0", totalFunds: "100000.0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_empty_ref" -> error', async () => {
@@ -158,8 +157,7 @@ describe('Conviction functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_infra_proposal = await interpret(convictionHandler.registerProposal({ proposalRef: "proposal-infra-2026", requestedFunds: "5000.0", totalFunds: "100000.0" }), storage);
       const result = await interpret(convictionHandler.stake({ proposal: afterResult_register_infra_proposal?.output?.["id"], staker: "alice", amount: "500.0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "stake_missing_proposal" -> error', async () => {
@@ -229,8 +227,7 @@ describe('Conviction functional handler', () => {
       const afterResult_register_infra_proposal = await interpret(convictionHandler.registerProposal({ proposalRef: "proposal-infra-2026", requestedFunds: "5000.0", totalFunds: "100000.0" }), storage);
       const afterResult_stake_tokens = await interpret(convictionHandler.stake({ proposal: {"type":"ref","fixture":"register_infra_proposal","field":"id"}, staker: "alice", amount: "500.0" }), storage);
       const result = await interpret(convictionHandler.unstake({ proposal: afterResult_stake_tokens?.output?.["id"], staker: "alice" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "unstake_missing" -> error', async () => {
@@ -299,8 +296,7 @@ describe('Conviction functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_infra_proposal = await interpret(convictionHandler.registerProposal({ proposalRef: "proposal-infra-2026", requestedFunds: "5000.0", totalFunds: "100000.0" }), storage);
       const result = await interpret(convictionHandler.updateConviction({ proposal: afterResult_register_infra_proposal?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "update_missing" -> error', async () => {
@@ -332,10 +328,10 @@ describe('Conviction functional handler', () => {
     it("registerProposal-then-stake", async () => {
       const storage = createInMemoryStorage();
       const registerProposalResult0 = await interpret(convictionHandler.registerProposal({ proposalRef: {"type":"variable","name":"_"}, requestedFunds: {"type":"variable","name":"_"}, totalFunds: {"type":"variable","name":"_"} }), storage);
-      expect(registerProposalResult0.variant).toBe("registered");
+      expect(registerProposalResult0.variant).toBe("ok");
       let proposal = registerProposalResult0.output["proposal"];
       const thenResult0 = await interpret(convictionHandler.stake({ proposal: {"type":"variable","name":"k"}, staker: {"type":"variable","name":"_"}, amount: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("staked");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });
@@ -422,7 +418,7 @@ describe('Conviction functional handler', () => {
       }
     });
 
-    it('registerProposal ensures on registered: ', async () => {
+    it('registerProposal ensures on ok: ', async () => {
       if (typeof convictionHandler.registerProposal !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -434,7 +430,7 @@ describe('Conviction functional handler', () => {
               const program = convictionHandler.registerProposal(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "registered") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

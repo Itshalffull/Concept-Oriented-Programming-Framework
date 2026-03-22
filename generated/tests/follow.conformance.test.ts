@@ -88,8 +88,7 @@ describe('Follow functional handler', () => {
       if (typeof followHandler.follow !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(followHandler.follow({ user: "user-alice", target: "user-bob" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "follow_another" -> ok', async () => {
@@ -102,8 +101,7 @@ describe('Follow functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(followHandler.follow({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -170,8 +168,7 @@ describe('Follow functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(followHandler.unfollow({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "unfollow_not_following" -> ok', async () => {
@@ -184,8 +181,7 @@ describe('Follow functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(followHandler.unfollow({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -252,8 +248,7 @@ describe('Follow functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(followHandler.isFollowing({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "is_following_unknown_user" -> ok', async () => {
@@ -266,8 +261,7 @@ describe('Follow functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(followHandler.isFollowing({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -292,31 +286,25 @@ describe('Follow functional handler', () => {
     it("follow then check then unfollow", async () => {
       const storage = createInMemoryStorage();
       const followResult0 = await interpret(followHandler.follow({ user: {"type":"variable","name":"u"}, target: {"type":"literal","value":"u2"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(followResult0.variant), `step 0: expected success but got '${followResult0.variant}'`).toBe(false);
+      expect(followResult0.variant).toBe("ok");
       let user = followResult0.output["user"];
       let target = followResult0.output["target"];
       const thenResult0 = await interpret(followHandler.isFollowing({ user: {"type":"variable","name":"u"}, target: {"type":"literal","value":"u2"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(followHandler.unfollow({ user: {"type":"variable","name":"u"}, target: {"type":"literal","value":"u2"} }), storage);
-      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
+      expect(thenResult1.variant).toBe("ok");
     });
 
     it("unfollowed user not in following", async () => {
       const storage = createInMemoryStorage();
       const followResult0 = await interpret(followHandler.follow({ user: {"type":"variable","name":"u"}, target: {"type":"literal","value":"u3"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(followResult0.variant), `step 0: expected success but got '${followResult0.variant}'`).toBe(false);
+      expect(followResult0.variant).toBe("ok");
       let user = followResult0.output["user"];
       let target = followResult0.output["target"];
       const thenResult0 = await interpret(followHandler.unfollow({ user: {"type":"variable","name":"u"}, target: {"type":"literal","value":"u3"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(followHandler.isFollowing({ user: {"type":"variable","name":"u"}, target: {"type":"literal","value":"u3"} }), storage);
-      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
+      expect(thenResult1.variant).toBe("ok");
     });
 
   });

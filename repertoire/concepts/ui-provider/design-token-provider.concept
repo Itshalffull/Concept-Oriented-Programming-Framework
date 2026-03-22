@@ -31,7 +31,7 @@ concept DesignTokenProvider [P] {
         surface-provider/design-token. Idempotent — returns existing
         instance if pluginRef already registered.
       }
-      -> configError(message: String) {
+      -> ok(message: String) {
         Configuration invalid or missing required fields.
       }
       fixture init_with_theme { config: "{\"theme\":\"light\"}" }

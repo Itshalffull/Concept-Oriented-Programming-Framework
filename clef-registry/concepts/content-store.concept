@@ -19,7 +19,7 @@ concept ContentStore [B] {
       -> ok(blob: B) {
         Stores the content and indexes it by hash.
       }
-      -> exists(blob: B) {
+      -> ok(blob: B) {
         A blob with this hash already exists (deduplication).
       }
     }
@@ -37,7 +37,7 @@ concept ContentStore [B] {
       -> ok() {
         The stored content matches the expected hash.
       }
-      -> mismatch(expected: String, actual: String) {
+      -> ok(expected: String, actual: String) {
         Integrity check failed.
       }
       -> notfound() {

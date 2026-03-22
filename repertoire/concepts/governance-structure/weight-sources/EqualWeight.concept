@@ -14,7 +14,7 @@ concept EqualWeight [EW] {
 
   actions {
     action configure(weightPerPerson: option Float) {
-      -> configured(config: EW) {
+      -> ok(config: EW) {
         Every participant receives the given weight. Default 1.0.
       }
 
@@ -23,7 +23,7 @@ concept EqualWeight [EW] {
     }
 
     action getWeight(config: EW, participant: String) {
-      -> weight(participant: String, weight: Float) {
+      -> ok(participant: String, weight: Float) {
         Returns the fixed weight value.
       }
 
@@ -34,9 +34,9 @@ concept EqualWeight [EW] {
 
   example "configure-then-getWeight": {
 
-    after configure(weightPerPerson: 1.0) -> configured(config: ew)
+    after configure(weightPerPerson: 1.0) -> ok(config: ew)
 
-        then getWeight(config: ew, participant: _) -> weight(participant: _, weight: 1.0)
+        then getWeight(config: ew, participant: _) -> ok(participant: _, weight: 1.0)
 
   }
 
@@ -61,7 +61,7 @@ concept EqualWeight [EW] {
 
     requires: weightPerPerson != ""
 
-    ensures configured: weightPerPerson != none
+    ensures ok: weightPerPerson != none
 
   }
 }

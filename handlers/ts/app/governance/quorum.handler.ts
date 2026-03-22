@@ -19,7 +19,7 @@ const _quorumHandler: FunctionalConceptHandler = {
       id, type: input.type, absoluteThreshold: input.absoluteThreshold ?? null,
       fractionalThreshold: input.fractionalThreshold ?? null, scope: input.scope,
     });
-    return complete(p, 'set', { quorum: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { quorum: id }) as StorageProgram<Result>;
   },
 
   check(input: Record<string, unknown>) {
@@ -57,7 +57,7 @@ const _quorumHandler: FunctionalConceptHandler = {
     p = branch(p, 'record',
       (b) => {
         let b2 = put(b, 'quorum', quorum as string, { ...input });
-        return complete(b2, 'updated', { quorum });
+        return complete(b2, 'ok', { quorum });
       },
       (b) => complete(b, 'not_found', { quorum }),
     );

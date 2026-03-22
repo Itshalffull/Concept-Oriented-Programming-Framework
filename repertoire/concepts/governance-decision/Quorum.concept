@@ -19,7 +19,7 @@ concept Quorum [Q] {
 
   actions {
     action setThreshold(thresholdType: String, value: Float) {
-      -> set(rule: Q) {
+      -> ok(rule: Q) {
         A quorum rule is created with the given threshold type and value.
         Absolute means at least N votes. Fractional means at least N% of eligible.
       }
@@ -30,10 +30,10 @@ concept Quorum [Q] {
     }
 
     action check(totalVotes: Int, totalEligible: Int) {
-      -> met(totalVotes: Int, required: Int) {
+      -> ok(totalVotes: Int, required: Int) {
         The total votes meet or exceed the quorum threshold.
       }
-      -> not_met(totalVotes: Int, required: Int, shortfall: Int) {
+      -> ok(totalVotes: Int, required: Int, shortfall: Int) {
         The total votes fall short of the quorum threshold.
       }
 
@@ -42,7 +42,7 @@ concept Quorum [Q] {
     }
 
     action updateThreshold(rule: Q, newType: String, newValue: Float) {
-      -> updated(rule: Q) {
+      -> ok(rule: Q) {
         The quorum threshold is changed.
       }
       -> not_found(rule: Q) {
@@ -56,11 +56,11 @@ concept Quorum [Q] {
 
   example "setThreshold-then-check": {
 
-    after setThreshold(thresholdType: "Absolute", value: 10.0) -> set(rule: q)
+    after setThreshold(thresholdType: "Absolute", value: 10.0) -> ok(rule: q)
 
-        then check(totalVotes: 15, totalEligible: 100) -> met(totalVotes: 15, required: 10)
+        then check(totalVotes: 15, totalEligible: 100) -> ok(totalVotes: 15, required: 10)
 
-        and  check(totalVotes: 5, totalEligible: 100) -> not_met(totalVotes: 5, required: 10, shortfall: 5)
+        and  check(totalVotes: 5, totalEligible: 100) -> ok(totalVotes: 5, required: 10, shortfall: 5)
 
   }
 
@@ -69,7 +69,7 @@ concept Quorum [Q] {
 
     requires: thresholdType != ""
 
-    ensures set: thresholdType != none
+    ensures ok: thresholdType != none
 
   }
 }

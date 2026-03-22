@@ -6,7 +6,7 @@ sync ProposalAsContentEntity [eager]
   purpose { Persist governance proposals as queryable content entities. }
 when {
   Proposal/create: [ proposer: ?proposer; title: ?title; description: ?description; actions: ?actions ]
-    => created(proposal: ?proposal)
+    => ok(proposal: ?proposal)
 }
 then {
   ContentStorage/save: [ record: ?proposal; data: ?actions ]
@@ -17,7 +17,7 @@ sync ProposalTagEntity [eager]
   purpose { Tag proposals with their entity type. }
 when {
   Proposal/create: [ proposer: ?proposer; title: ?title; description: ?description; actions: ?actions ]
-    => created(proposal: ?proposal)
+    => ok(proposal: ?proposal)
 }
 then {
   Tag/addTag: [ entity: ?proposal; tag: "system:proposal" ]

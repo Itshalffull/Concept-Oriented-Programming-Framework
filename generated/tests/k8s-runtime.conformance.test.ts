@@ -88,8 +88,7 @@ describe('K8sRuntime functional handler', () => {
       if (typeof k8sRuntimeHandler.provision !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "provision_empty_concept" -> error', async () => {
@@ -158,8 +157,7 @@ describe('K8sRuntime functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_provision_deployment = await interpret(k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" }), storage);
       const result = await interpret(k8sRuntimeHandler.deploy({ deployment: afterResult_provision_deployment?.output?.["deployment"], imageUri: "registry.io/user-service:v1.2.0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "deploy_empty_image" -> ok', async () => {
@@ -167,8 +165,7 @@ describe('K8sRuntime functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_provision_deployment = await interpret(k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" }), storage);
       const result = await interpret(k8sRuntimeHandler.deploy({ deployment: afterResult_provision_deployment?.output?.["deployment"], imageUri: "" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -230,8 +227,7 @@ describe('K8sRuntime functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_provision_deployment = await interpret(k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" }), storage);
       const result = await interpret(k8sRuntimeHandler.setTrafficWeight({ deployment: afterResult_provision_deployment?.output?.["deployment"], weight: "25" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "set_invalid_weight" -> ok', async () => {
@@ -239,8 +235,7 @@ describe('K8sRuntime functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_provision_deployment = await interpret(k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" }), storage);
       const result = await interpret(k8sRuntimeHandler.setTrafficWeight({ deployment: afterResult_provision_deployment?.output?.["deployment"], weight: "-1" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -302,8 +297,7 @@ describe('K8sRuntime functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_provision_deployment = await interpret(k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" }), storage);
       const result = await interpret(k8sRuntimeHandler.rollback({ deployment: afterResult_provision_deployment?.output?.["deployment"], targetRevision: "1" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "rollback_empty_rev" -> ok', async () => {
@@ -311,8 +305,7 @@ describe('K8sRuntime functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_provision_deployment = await interpret(k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" }), storage);
       const result = await interpret(k8sRuntimeHandler.rollback({ deployment: afterResult_provision_deployment?.output?.["deployment"], targetRevision: "" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -374,8 +367,7 @@ describe('K8sRuntime functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_provision_deployment = await interpret(k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" }), storage);
       const result = await interpret(k8sRuntimeHandler.destroy({ deployment: afterResult_provision_deployment?.output?.["deployment"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "destroy_empty" -> error', async () => {
@@ -407,14 +399,12 @@ describe('K8sRuntime functional handler', () => {
     it("provision-then-deploy", async () => {
       const storage = createInMemoryStorage();
       const provisionResult0 = await interpret(k8sRuntimeHandler.provision({ concept: {"type":"literal","value":"User"}, namespace: {"type":"literal","value":"default"}, cluster: {"type":"literal","value":"prod"}, replicas: {"type":"literal","value":2} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(provisionResult0.variant), `step 0: expected success but got '${provisionResult0.variant}'`).toBe(false);
+      expect(provisionResult0.variant).toBe("ok");
       let deployment = provisionResult0.output["deployment"];
       let serviceName = provisionResult0.output["serviceName"];
       let endpoint = provisionResult0.output["endpoint"];
       const thenResult0 = await interpret(k8sRuntimeHandler.deploy({ deployment: {"type":"variable","name":"d"}, imageUri: {"type":"literal","value":"myregistry/user:latest"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

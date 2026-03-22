@@ -24,7 +24,7 @@ concept BindingDependenceProvider [I] {
         Register this provider with PluginRegistry for
         binding dependence analysis.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the binding dependence provider.
       }
 

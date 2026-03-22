@@ -47,7 +47,7 @@ concept ReWOOStrategy [S] {
       -> ok(results: list {step_id: String, result: String}) {
         Executes all planned calls in dependency order.
       }
-      -> partial(completed: Int, failed_step: String, error: String) {
+      -> ok(completed: Int, failed_step: String, error: String) {
         Some calls failed.
       }
     }

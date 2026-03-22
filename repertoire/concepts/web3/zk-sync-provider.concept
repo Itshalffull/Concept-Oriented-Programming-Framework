@@ -28,10 +28,10 @@ concept ZkSyncProvider [P] {
         Register a zkSync provider instance and verify initial
         connectivity to the L2 RPC and the L1 diamond proxy.
       }
-      -> already_registered(rpc_url: String) {
+      -> ok(rpc_url: String) {
         A provider is already registered for this RPC URL.
       }
-      -> unreachable(message: String) {
+      -> ok(message: String) {
         The L2 RPC endpoint did not respond during registration.
       }
 
@@ -68,14 +68,14 @@ concept ZkSyncProvider [P] {
     }
 
     action checkFinality(provider: P, tx_hash: String) {
-      -> executed(block_number: Int, batch_number: Int, l1_block: Int) {
+      -> ok(block_number: Int, batch_number: Int, l1_block: Int) {
         The transaction's batch has been executed on L1, which is
         the strongest finality guarantee on zkSync Era.
       }
-      -> proven(block_number: Int, batch_number: Int) {
+      -> ok(block_number: Int, batch_number: Int) {
         The batch is proven but not yet executed on L1.
       }
-      -> committed(block_number: Int, batch_number: Int) {
+      -> ok(block_number: Int, batch_number: Int) {
         The batch is committed to L1 but the ZK proof has not yet
         been submitted.
       }
@@ -102,7 +102,7 @@ concept ZkSyncProvider [P] {
         Retrieve the ZK proof and verification key for a specific
         batch. Only available after the batch is proven.
       }
-      -> not_proven(batch_number: Int) {
+      -> ok(batch_number: Int) {
         The batch exists but its ZK proof has not been generated yet.
       }
       -> notfound(provider: P) {

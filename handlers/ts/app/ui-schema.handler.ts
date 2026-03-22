@@ -68,7 +68,7 @@ const _uiSchemaHandler: FunctionalConceptHandler = {
     p = branch(p, 'existing',
       (b) => {
         return branch(b, (bindings) => !!(bindings.existing as Record<string, unknown>)?.resolved,
-          (b2) => complete(b2, 'resolved', { schema }),
+          (b2) => complete(b2, 'ok', { schema }),
           (b2) => completeFrom(b2, 'ok', (bindings) => {
             const record = bindings.existing as Record<string, unknown>;
             return { elements: (record.elements as string) || '' };

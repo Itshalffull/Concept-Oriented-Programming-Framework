@@ -88,16 +88,14 @@ describe('DockerComposeIacProvider functional handler', () => {
       if (typeof dockerComposeIacProviderHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(dockerComposeIacProviderHandler.generate({ plan: "dp-001" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "generate_empty_plan" -> ok', async () => {
       if (typeof dockerComposeIacProviderHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(dockerComposeIacProviderHandler.generate({ plan: "" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -164,8 +162,7 @@ describe('DockerComposeIacProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(dockerComposeIacProviderHandler.preview({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "preview_empty" -> error', async () => {
@@ -234,8 +231,7 @@ describe('DockerComposeIacProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_generate_compose = await interpret(dockerComposeIacProviderHandler.generate({ plan: "dp-001" }), storage);
       const result = await interpret(dockerComposeIacProviderHandler.apply({ composeFile: afterResult_generate_compose?.output?.["composeFile"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "apply_empty" -> ok', async () => {
@@ -248,8 +244,7 @@ describe('DockerComposeIacProvider functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(dockerComposeIacProviderHandler.apply({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -311,8 +306,7 @@ describe('DockerComposeIacProvider functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_generate_compose = await interpret(dockerComposeIacProviderHandler.generate({ plan: "dp-001" }), storage);
       const result = await interpret(dockerComposeIacProviderHandler.teardown({ composeFile: afterResult_generate_compose?.output?.["composeFile"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "teardown_empty" -> error', async () => {
@@ -344,13 +338,11 @@ describe('DockerComposeIacProvider functional handler', () => {
     it("generate-then-apply", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(dockerComposeIacProviderHandler.generate({ plan: {"type":"literal","value":"dp-001"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
+      expect(generateResult0.variant).toBe("ok");
       let composeFile = generateResult0.output["composeFile"];
       let files = generateResult0.output["files"];
       const thenResult0 = await interpret(dockerComposeIacProviderHandler.apply({ composeFile: {"type":"variable","name":"cf"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

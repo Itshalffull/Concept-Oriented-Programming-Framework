@@ -88,16 +88,14 @@ describe('Sdk functional handler', () => {
       if (typeof sdkHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(sdkHandler.generate({ projection: "user-projection", language: "typescript", config: "{\"packageName\":\"@acme/user-sdk\",\"version\":\"1.0.0\"}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "python_sdk" -> ok', async () => {
       if (typeof sdkHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(sdkHandler.generate({ projection: "order-projection", language: "python", config: "{}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "unsupported_language" -> error', async () => {
@@ -166,8 +164,7 @@ describe('Sdk functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_typescript_sdk = await interpret(sdkHandler.generate({ projection: "user-projection", language: "typescript", config: "{\"packageName\":\"@acme/user-sdk\",\"version\":\"1.0.0\"}" }), storage);
       const result = await interpret(sdkHandler.publish({ package: afterResult_typescript_sdk?.output?.["package"], registry: "npm" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "unknown_registry" -> error', async () => {
@@ -199,14 +196,12 @@ describe('Sdk functional handler', () => {
     it("generate-then-publish", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(sdkHandler.generate({ projection: {"type":"literal","value":"test-projection"}, language: {"type":"literal","value":"typescript"}, config: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
+      expect(generateResult0.variant).toBe("ok");
       let package = generateResult0.output["package"];
       let files = generateResult0.output["files"];
       let packageJson = generateResult0.output["packageJson"];
       const thenResult0 = await interpret(sdkHandler.publish({ package: {"type":"variable","name":"s"}, registry: {"type":"literal","value":"npm"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

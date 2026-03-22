@@ -88,8 +88,7 @@ describe('Patch functional handler', () => {
       if (typeof patchHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(patchHandler.create({ base: "sha256:aaa111", target: "sha256:bbb222", effect: "[{\"type\":\"equal\",\"line\":0,\"content\":\"hello\"}]" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_effect" -> error', async () => {
@@ -158,8 +157,7 @@ describe('Patch functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_patch = await interpret(patchHandler.create({ base: "sha256:aaa111", target: "sha256:bbb222", effect: "[{\"type\":\"equal\",\"line\":0,\"content\":\"hello\"}]" }), storage);
       const result = await interpret(patchHandler.apply({ patchId: afterResult_create_patch?.output?.["patchId"], content: "hello\nworld" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "apply_missing" -> error', async () => {
@@ -228,8 +226,7 @@ describe('Patch functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_patch = await interpret(patchHandler.create({ base: "sha256:aaa111", target: "sha256:bbb222", effect: "[{\"type\":\"equal\",\"line\":0,\"content\":\"hello\"}]" }), storage);
       const result = await interpret(patchHandler.invert({ patchId: afterResult_create_patch?.output?.["patchId"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invert_missing" -> error', async () => {
@@ -298,8 +295,7 @@ describe('Patch functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_patch = await interpret(patchHandler.create({ base: "sha256:aaa111", target: "sha256:bbb222", effect: "[{\"type\":\"equal\",\"line\":0,\"content\":\"hello\"}]" }), storage);
       const result = await interpret(patchHandler.compose({ first: afterResult_create_patch?.output?.["patchId"], second: afterResult_create_patch?.output?.["patchId"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "compose_missing" -> error', async () => {
@@ -368,8 +364,7 @@ describe('Patch functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_patch = await interpret(patchHandler.create({ base: "sha256:aaa111", target: "sha256:bbb222", effect: "[{\"type\":\"equal\",\"line\":0,\"content\":\"hello\"}]" }), storage);
       const result = await interpret(patchHandler.commute({ p1: afterResult_create_patch?.output?.["patchId"], p2: afterResult_create_patch?.output?.["patchId"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "commute_missing" -> error', async () => {
@@ -401,26 +396,21 @@ describe('Patch functional handler', () => {
     it("create then apply", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(patchHandler.create({ base: {"type":"variable","name":"b"}, target: {"type":"variable","name":"t"}, effect: {"type":"variable","name":"e"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
+      expect(createResult0.variant).toBe("ok");
       let patchId = createResult0.output["patchId"];
       const thenResult0 = await interpret(patchHandler.apply({ patchId: {"type":"variable","name":"p"}, content: {"type":"variable","name":"b"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("invert then apply", async () => {
       const storage = createInMemoryStorage();
       const invertResult0 = await interpret(patchHandler.invert({ patchId: {"type":"variable","name":"p"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(invertResult0.variant), `step 0: expected success but got '${invertResult0.variant}'`).toBe(false);
+      expect(invertResult0.variant).toBe("ok");
       let inversePatchId = invertResult0.output["inversePatchId"];
       const thenResult0 = await interpret(patchHandler.apply({ patchId: {"type":"variable","name":"p"}, content: {"type":"variable","name":"b"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(patchHandler.apply({ patchId: {"type":"variable","name":"inv"}, content: {"type":"variable","name":"t"} }), storage);
-      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
+      expect(thenResult1.variant).toBe("ok");
     });
 
   });

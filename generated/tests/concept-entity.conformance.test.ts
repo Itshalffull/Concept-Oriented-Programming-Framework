@@ -88,8 +88,7 @@ describe('ConceptEntity functional handler', () => {
       if (typeof conceptEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_empty_name" -> error', async () => {
@@ -163,8 +162,7 @@ describe('ConceptEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(conceptEntityHandler.get({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_nonexistent" -> error', async () => {
@@ -238,8 +236,7 @@ describe('ConceptEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(conceptEntityHandler.findByCapability({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_unknown_capability" -> error', async () => {
@@ -313,8 +310,7 @@ describe('ConceptEntity functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(conceptEntityHandler.findBySuite({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_empty_suite" -> error', async () => {
@@ -383,8 +379,7 @@ describe('ConceptEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_article = await interpret(conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }), storage);
       const result = await interpret(conceptEntityHandler.generatedArtifacts({ entity: afterResult_register_article?.output?.["entity"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "artifacts_nonexistent" -> error', async () => {
@@ -453,8 +448,7 @@ describe('ConceptEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_article = await interpret(conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }), storage);
       const result = await interpret(conceptEntityHandler.participatingSyncs({ entity: afterResult_register_article?.output?.["entity"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "syncs_nonexistent" -> error', async () => {
@@ -523,8 +517,7 @@ describe('ConceptEntity functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_register_article = await interpret(conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }), storage);
       const result = await interpret(conceptEntityHandler.checkCompatibility({ a: afterResult_register_article?.output?.["entity"], b: afterResult_register_article?.output?.["entity"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "incompatible_missing" -> error', async () => {
@@ -541,22 +534,19 @@ describe('ConceptEntity functional handler', () => {
     it("registered entity is retrievable", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(conceptEntityHandler.register({ name: {"type":"literal","value":"Article"}, source: {"type":"literal","value":"specs/article.concept"}, ast: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let entity = registerResult0.output["entity"];
       const thenResult0 = await interpret(conceptEntityHandler.get({ name: {"type":"literal","value":"Article"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("duplicate registration returns existing", async () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await interpret(conceptEntityHandler.register({ name: {"type":"literal","value":"Article"}, source: {"type":"literal","value":"specs/article.concept"}, ast: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(registerResult0.variant), `step 0: expected success but got '${registerResult0.variant}'`).toBe(false);
+      expect(registerResult0.variant).toBe("ok");
       let entity = registerResult0.output["entity"];
       const thenResult0 = await interpret(conceptEntityHandler.register({ name: {"type":"literal","value":"Article"}, source: {"type":"literal","value":"specs/article.concept"}, ast: {"type":"literal","value":"{}"} }), storage);
-      expect(thenResult0.variant).toBe("alreadyRegistered");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

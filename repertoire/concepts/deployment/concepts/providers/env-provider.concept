@@ -22,7 +22,7 @@ concept EnvProvider [E] {
       -> ok(value: String) {
         Environment variable retrieved from process env.
       }
-      -> variableNotSet(name: String) {
+      -> ok(name: String) {
         Environment variable is not set in the current process.
       }
 

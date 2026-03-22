@@ -88,16 +88,14 @@ describe('ApprovalCounting functional handler', () => {
       if (typeof approvalCountingHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(approvalCountingHandler.configure({ maxApprovals: null, winnerCount: "1" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "multi_winner_capped" -> ok', async () => {
       if (typeof approvalCountingHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(approvalCountingHandler.configure({ maxApprovals: "3", winnerCount: "2" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "zero_winners" -> error', async () => {
@@ -166,8 +164,7 @@ describe('ApprovalCounting functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_single_winner_unlimited = await interpret(approvalCountingHandler.configure({ maxApprovals: null, winnerCount: "1" }), storage);
       const result = await interpret(approvalCountingHandler.count({ config: afterResult_single_winner_unlimited?.output?.["id"], approvalSets: "[{\"voter\":\"alice\",\"approvals\":[\"A\",\"B\"]},{\"voter\":\"bob\",\"approvals\":[\"B\",\"C\"]}]", weights: "{}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "count_no_ballots" -> error', async () => {
@@ -200,10 +197,10 @@ describe('ApprovalCounting functional handler', () => {
     it("configure-then-count", async () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(approvalCountingHandler.configure({ maxApprovals: {"type":"variable","name":"_"}, winnerCount: {"type":"literal","value":1} }), storage);
-      expect(configureResult0.variant).toBe("configured");
+      expect(configureResult0.variant).toBe("ok");
       let config = configureResult0.output["config"];
       const thenResult0 = await interpret(approvalCountingHandler.count({ config: {"type":"variable","name":"ac"}, approvalSets: {"type":"variable","name":"_"}, weights: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("winners");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });
@@ -286,7 +283,7 @@ describe('ApprovalCounting functional handler', () => {
       }
     });
 
-    it('configure ensures on configured: ', async () => {
+    it('configure ensures on ok: ', async () => {
       if (typeof approvalCountingHandler.configure !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -298,7 +295,7 @@ describe('ApprovalCounting functional handler', () => {
               const program = approvalCountingHandler.configure(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "configured") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

@@ -94,8 +94,7 @@ describe('DeploymentValidator functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(deploymentValidatorHandler.parse({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_raw" -> error', async () => {
@@ -183,8 +182,7 @@ describe('DeploymentValidator functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(deploymentValidatorHandler.validate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_manifest_ref" -> error', async () => {
@@ -216,8 +214,7 @@ describe('DeploymentValidator functional handler', () => {
     it("parse valid then validate finds issues", async () => {
       const storage = createInMemoryStorage();
       const parseResult0 = await interpret(deploymentValidatorHandler.parse({ raw: {"type":"literal","value":"{\"app\":{\"name\":\"myapp\",\"version\":\"1.0\",\"uri\":\"urn:app/myapp\"},\"runtimes\":{},\"concepts\":{},\"syncs\":[]}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(parseResult0.variant), `step 0: expected success but got '${parseResult0.variant}'`).toBe(false);
+      expect(parseResult0.variant).toBe("ok");
       let manifest = parseResult0.output["manifest"];
       const thenResult0 = await interpret(deploymentValidatorHandler.validate({ manifest: {"type":"variable","name":"m"} }), storage);
       expect(thenResult0.variant).toBe("error");
@@ -226,8 +223,7 @@ describe('DeploymentValidator functional handler', () => {
     it("parse valid then parse invalid fails", async () => {
       const storage = createInMemoryStorage();
       const parseResult0 = await interpret(deploymentValidatorHandler.parse({ raw: {"type":"literal","value":"{\"app\":{\"name\":\"t\",\"version\":\"1\",\"uri\":\"u\"},\"runtimes\":{},\"concepts\":{},\"syncs\":[]}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(parseResult0.variant), `step 0: expected success but got '${parseResult0.variant}'`).toBe(false);
+      expect(parseResult0.variant).toBe("ok");
       let manifest = parseResult0.output["manifest"];
       const thenResult0 = await interpret(deploymentValidatorHandler.parse({ raw: {"type":"literal","value":"not json"} }), storage);
       expect(thenResult0.variant).toBe("error");

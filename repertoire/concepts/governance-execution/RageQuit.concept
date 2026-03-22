@@ -26,14 +26,14 @@ concept RageQuit [RQ] {
 
   actions {
     action initiate(member: String, shares: Float, loot: Float) {
-      -> initiated(exit: RQ) {
+      -> ok(exit: RQ) {
         A rage quit is initiated. The proportional claim is calculated
         based on shares / totalShares ratio applied to treasury balances.
       }
-      -> insufficient_shares(member: String) {
+      -> ok(member: String) {
         The member does not hold enough shares.
       }
-      -> window_closed() {
+      -> ok() {
         The rage quit window (e.g., grace period) has expired.
       }
 
@@ -43,7 +43,7 @@ concept RageQuit [RQ] {
     }
 
     action calculateClaim(exit: RQ) {
-      -> calculated(exit: RQ, claims: String) {
+      -> ok(exit: RQ, claims: String) {
         The proportional claim across all treasury tokens is computed.
       }
 
@@ -52,11 +52,11 @@ concept RageQuit [RQ] {
     }
 
     action claim(exit: RQ) {
-      -> claimed(exit: RQ) {
+      -> ok(exit: RQ) {
         Shares are burned and proportional tokens are transferred
         to the exiting member.
       }
-      -> not_calculated(exit: RQ) {
+      -> ok(exit: RQ) {
         The claim has not been calculated yet.
       }
 
@@ -67,11 +67,11 @@ concept RageQuit [RQ] {
 
   example "initiate-then-claim": {
 
-    after initiate(member: _, sharesToBurn: _) -> initiated(exit: rq)
+    after initiate(member: _, sharesToBurn: _) -> ok(exit: rq)
 
-        then calculateClaim(exit: rq, treasuryBalances: _) -> calculated(exit: rq, claims: _)
+        then calculateClaim(exit: rq, treasuryBalances: _) -> ok(exit: rq, claims: _)
 
-        and  claim(exit: rq) -> claimed(exit: rq)
+        and  claim(exit: rq) -> ok(exit: rq)
 
   }
 

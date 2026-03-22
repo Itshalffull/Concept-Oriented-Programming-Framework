@@ -28,7 +28,7 @@ concept ContentNode [N] {
         Add node to nodes set. Store type, content, createdBy,
         and set createdAt and updatedAt to current time.
       }
-      -> exists(message: String) {
+      -> ok(message: String) {
         The node already exists.
       }
 
@@ -109,7 +109,7 @@ concept ContentNode [N] {
 
     after create(node: x, type: "page", content: "Hello", createdBy: "user1") -> ok(node: x)
 
-        then create(node: x, type: "page", content: "Again", createdBy: "user2") -> exists(message: "already exists")
+        then create(node: x, type: "page", content: "Again", createdBy: "user2") -> ok(message: "already exists")
 
   }
 

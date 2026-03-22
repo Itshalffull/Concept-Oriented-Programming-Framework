@@ -28,14 +28,14 @@ concept Generator [G] {
         Validate that required provider concepts are loaded.
         Estimate output file count.
       }
-      -> noTargetsConfigured(suite: String) {
+      -> ok(suite: String) {
         Interface manifest does not configure any generation targets.
       }
-      -> missingProvider(target: String) {
+      -> ok(target: String) {
         A configured target requires a provider concept that
         is not loaded (e.g. rest target but RestTarget not in suite).
       }
-      -> projectionFailed(concept: String, reason: String) {
+      -> ok(concept: String, reason: String) {
         One or more concept projections failed.
       }
 
@@ -50,10 +50,10 @@ concept Generator [G] {
         All configured targets generated successfully.
         Unchanged files (content-addressed) were skipped.
       }
-      -> partial(plan: G, generated: list String, failed: list String) {
+      -> ok(plan: G, generated: list String, failed: list String) {
         Some targets generated, some failed.
       }
-      -> blocked(plan: G, breakingChanges: list String) {
+      -> ok(plan: G, breakingChanges: list String) {
         Breaking changes detected. Use --breaking flag to proceed.
         Lists the specific changes for review.
       }

@@ -38,7 +38,7 @@ concept RegistryScaffoldGen [R] {
       -> ok(files: list File, wouldWrite: Int, wouldSkip: Int) {
         Dry-run: compute output files without writing.
       }
-      -> cached() {
+      -> ok() {
         Inputs unchanged since the last successful run.
       }
       -> error(message: String) {

@@ -37,8 +37,7 @@ describe('StorageProgram imperative handler', () => {
       if (typeof storageProgramHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await storageProgramHandler.create({ program: "prog-1" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_duplicate" -> error', async () => {
@@ -70,8 +69,7 @@ describe('StorageProgram imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await storageProgramHandler.get({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_missing_program" -> error', async () => {
@@ -103,8 +101,7 @@ describe('StorageProgram imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await storageProgramHandler.find({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "find_missing_program" -> error', async () => {
@@ -130,8 +127,7 @@ describe('StorageProgram imperative handler', () => {
       if (typeof storageProgramHandler.put !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await storageProgramHandler.put({ program: "prog-1", relation: "users", key: "u1", value: "{\"name\":\"Alice\"}" }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "put_missing_program" -> error', async () => {
@@ -163,8 +159,7 @@ describe('StorageProgram imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await storageProgramHandler.del({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "del_missing_program" -> error', async () => {
@@ -196,8 +191,7 @@ describe('StorageProgram imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await storageProgramHandler.branch({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "branch_missing_program" -> error', async () => {
@@ -229,8 +223,7 @@ describe('StorageProgram imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await storageProgramHandler.pure({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "pure_missing_program" -> error', async () => {
@@ -262,8 +255,7 @@ describe('StorageProgram imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await storageProgramHandler.compose({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "compose_missing" -> error', async () => {
@@ -295,8 +287,7 @@ describe('StorageProgram imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await storageProgramHandler.getLens({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_lens_missing" -> error', async () => {
@@ -328,8 +319,7 @@ describe('StorageProgram imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await storageProgramHandler.putLens({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "put_lens_missing" -> error', async () => {
@@ -361,8 +351,7 @@ describe('StorageProgram imperative handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await storageProgramHandler.modifyLens({ ..._fixtureInput }, storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "modify_lens_missing" -> error', async () => {
@@ -390,19 +379,15 @@ describe('StorageProgram imperative handler', () => {
     it("create, get, put, pure terminates program", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await storageProgramHandler.create({ program: {"type":"variable","name":"p"} }, storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
+      expect(createResult0.variant).toBe("ok");
       const getResult1 = await storageProgramHandler.get({ program: {"type":"variable","name":"p"}, relation: {"type":"literal","value":"users"}, key: {"type":"literal","value":"u1"}, bindAs: {"type":"literal","value":"user"} }, storage);
-      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr1(getResult1.variant), `step 1: expected success but got '${getResult1.variant}'`).toBe(false);
+      expect(getResult1.variant).toBe("ok");
       let program = getResult1.output["program"];
       const putResult2 = await storageProgramHandler.put({ program: {"type":"variable","name":"p"}, relation: {"type":"literal","value":"users"}, key: {"type":"literal","value":"u1"}, value: {"type":"literal","value":"updated"} }, storage);
-      const _isErr2 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr2(putResult2.variant), `step 2: expected success but got '${putResult2.variant}'`).toBe(false);
+      expect(putResult2.variant).toBe("ok");
       program = putResult2.output["program"];
       const pureResult3 = await storageProgramHandler.pure({ program: {"type":"variable","name":"p"}, variant: {"type":"literal","value":"ok"}, output: {"type":"literal","value":"done"} }, storage);
-      const _isErr3 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr3(pureResult3.variant), `step 3: expected success but got '${pureResult3.variant}'`).toBe(false);
+      expect(pureResult3.variant).toBe("ok");
       program = pureResult3.output["program"];
       expect(pResult.output["terminated"]).toBe({"type":"literal","value":true});
     });
@@ -410,37 +395,30 @@ describe('StorageProgram imperative handler', () => {
     it("sealed program rejects new instructions", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await storageProgramHandler.create({ program: {"type":"variable","name":"p"} }, storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
+      expect(createResult0.variant).toBe("ok");
       const pureResult1 = await storageProgramHandler.pure({ program: {"type":"variable","name":"p"}, variant: {"type":"literal","value":"ok"}, output: {"type":"literal","value":"done"} }, storage);
-      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr1(pureResult1.variant), `step 1: expected success but got '${pureResult1.variant}'`).toBe(false);
+      expect(pureResult1.variant).toBe("ok");
       let program = pureResult1.output["program"];
       const thenResult0 = await storageProgramHandler.get({ program: {"type":"variable","name":"p"}, relation: {"type":"literal","value":"users"}, key: {"type":"literal","value":"u1"}, bindAs: {"type":"literal","value":"x"} }, storage);
-      expect(thenResult0.variant).toBe("sealed");
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("compose chains two programs", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await storageProgramHandler.create({ program: {"type":"variable","name":"a"} }, storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
+      expect(createResult0.variant).toBe("ok");
       const createResult1 = await storageProgramHandler.create({ program: {"type":"variable","name":"b"} }, storage);
-      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr1(createResult1.variant), `step 1: expected success but got '${createResult1.variant}'`).toBe(false);
+      expect(createResult1.variant).toBe("ok");
       const thenResult0 = await storageProgramHandler.compose({ first: {"type":"variable","name":"a"}, second: {"type":"variable","name":"b"}, bindAs: {"type":"literal","value":"result"} }, storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("getLens appends lens read instruction", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await storageProgramHandler.create({ program: {"type":"variable","name":"p"} }, storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
+      expect(createResult0.variant).toBe("ok");
       const thenResult0 = await storageProgramHandler.getLens({ program: {"type":"variable","name":"p"}, lens: {"type":"literal","value":"users.u1.email"}, bindAs: {"type":"literal","value":"email"} }, storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

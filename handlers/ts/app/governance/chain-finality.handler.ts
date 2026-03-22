@@ -33,7 +33,7 @@ const _chainFinalityHandler: FunctionalConceptHandler = {
       instanceId: id,
     });
 
-    return complete(p, 'tracking', { entry: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { entry: id }) as StorageProgram<Result>;
   },
 
   checkFinality(input: Record<string, unknown>) {

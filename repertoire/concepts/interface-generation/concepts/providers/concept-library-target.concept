@@ -43,7 +43,7 @@ concept ConceptLibraryTarget [D] {
       -> ok(document: D, files: list String) {
         concept-library.md generated with all suites, concepts, and syncs.
       }
-      -> noSuites(reason: String) {
+      -> ok(reason: String) {
         No suite manifests found in the repertoire directory.
       }
 
@@ -56,7 +56,7 @@ concept ConceptLibraryTarget [D] {
       -> ok(document: D) {
         Document contains table of contents, all suites, and cross-references.
       }
-      -> missingSection(document: D, section: String) {
+      -> ok(document: D, section: String) {
         A required section is missing from the document.
       }
 

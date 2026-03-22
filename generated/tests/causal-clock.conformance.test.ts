@@ -94,8 +94,7 @@ describe('CausalClock functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(causalClockHandler.tick({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "tick_empty_replica" -> ok', async () => {
@@ -108,8 +107,7 @@ describe('CausalClock functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(causalClockHandler.tick({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -176,8 +174,7 @@ describe('CausalClock functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(causalClockHandler.merge({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "merge_different_length" -> error', async () => {
@@ -251,8 +248,7 @@ describe('CausalClock functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(causalClockHandler.compare({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "compare_missing" -> error', async () => {
@@ -321,8 +317,7 @@ describe('CausalClock functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_tick_replica_a = await interpret(causalClockHandler.tick({ replicaId: "replica-a" }), storage);
       const result = await interpret(causalClockHandler.dominates({ a: afterResult_tick_replica_a?.output?.["timestamp"], b: afterResult_tick_replica_a?.output?.["timestamp"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "dominates_missing" -> ok', async () => {
@@ -330,8 +325,7 @@ describe('CausalClock functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_tick_replica_a = await interpret(causalClockHandler.tick({ replicaId: "replica-a" }), storage);
       const result = await interpret(causalClockHandler.dominates({ a: "nonexistent", b: afterResult_tick_replica_a?.output?.["timestamp"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -356,15 +350,13 @@ describe('CausalClock functional handler', () => {
     it("tick-then-compare", async () => {
       const storage = createInMemoryStorage();
       const tickResult0 = await interpret(causalClockHandler.tick({ replicaId: {"type":"variable","name":"r"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(tickResult0.variant), `step 0: expected success but got '${tickResult0.variant}'`).toBe(false);
+      expect(tickResult0.variant).toBe("ok");
       let timestamp = tickResult0.output["timestamp"];
       let clock = tickResult0.output["clock"];
       const thenResult0 = await interpret(causalClockHandler.tick({ replicaId: {"type":"variable","name":"r"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(causalClockHandler.compare({ a: {"type":"variable","name":"t1"}, b: {"type":"variable","name":"t2"} }), storage);
-      expect(thenResult1.variant).toBe("before");
+      expect(thenResult1.variant).toBe("ok");
     });
 
   });

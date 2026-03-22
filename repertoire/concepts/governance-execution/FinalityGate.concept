@@ -24,7 +24,7 @@ concept FinalityGate [FG] {
 
   actions {
     action submit(operationRef: String, providerRef: String) {
-      -> submitted(gate: FG) {
+      -> ok(gate: FG) {
         A finality gate is created in Pending status.
         The provider is queried asynchronously for finality.
       }
@@ -38,10 +38,10 @@ concept FinalityGate [FG] {
       -> finalized(gate: FG) {
         The external system has confirmed finality.
       }
-      -> reorged(gate: FG) {
+      -> ok(gate: FG) {
         The operation was reorged or reverted by the external system.
       }
-      -> disputed(gate: FG) {
+      -> ok(gate: FG) {
         The finality is being disputed.
       }
       -> timeout(gate: FG) {
@@ -55,7 +55,7 @@ concept FinalityGate [FG] {
 
   example "submit-then-confirm": {
 
-    after submit(operationRef: _, provider: _) -> submitted(gate: fg)
+    after submit(operationRef: _, provider: _) -> ok(gate: fg)
 
         then confirm(gate: fg) -> finalized(gate: fg)
 

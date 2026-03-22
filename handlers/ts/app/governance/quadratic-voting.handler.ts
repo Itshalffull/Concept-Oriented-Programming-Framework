@@ -27,7 +27,7 @@ const _quadraticVotingHandler: FunctionalConceptHandler = {
       provider: 'QuadraticVoting',
       instanceId: id,
     });
-    return complete(p, 'opened', { session: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { session: id }) as StorageProgram<Result>;
   },
 
   castVotes(input: Record<string, unknown>) {

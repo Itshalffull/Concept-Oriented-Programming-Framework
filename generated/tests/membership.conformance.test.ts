@@ -88,8 +88,7 @@ describe('Membership functional handler', () => {
       if (typeof membershipHandler.join !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(membershipHandler.join({ member: "alice", polity: "dao-governance" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "join_empty_member" -> error', async () => {
@@ -163,8 +162,7 @@ describe('Membership functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(membershipHandler.leave({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "leave_nonexistent" -> error', async () => {
@@ -238,8 +236,7 @@ describe('Membership functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(membershipHandler.suspend({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "suspend_nonexistent" -> error', async () => {
@@ -313,8 +310,7 @@ describe('Membership functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(membershipHandler.reinstate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "reinstate_nonexistent" -> error', async () => {
@@ -388,8 +384,7 @@ describe('Membership functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(membershipHandler.kick({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "kick_nonexistent" -> error', async () => {
@@ -463,8 +458,7 @@ describe('Membership functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(membershipHandler.updateRules({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "update_empty_polity" -> error', async () => {
@@ -499,13 +493,13 @@ describe('Membership functional handler', () => {
       expect(joinResult0.variant).toBe("accepted");
       let member = joinResult0.output["member"];
       const thenResult0 = await interpret(membershipHandler.leave({ member: {"type":"variable","name":"x"} }), storage);
-      expect(thenResult0.variant).toBe("left");
+      expect(thenResult0.variant).toBe("ok");
     });
 
     it("leave-then-join", async () => {
       const storage = createInMemoryStorage();
       const leaveResult0 = await interpret(membershipHandler.leave({ member: {"type":"variable","name":"x"} }), storage);
-      expect(leaveResult0.variant).toBe("left");
+      expect(leaveResult0.variant).toBe("ok");
       let member = leaveResult0.output["member"];
       const thenResult0 = await interpret(membershipHandler.join({ candidate: {"type":"variable","name":"x"}, evidence: {"type":"variable","name":"e"} }), storage);
       expect(thenResult0.variant).toBe("rejected");

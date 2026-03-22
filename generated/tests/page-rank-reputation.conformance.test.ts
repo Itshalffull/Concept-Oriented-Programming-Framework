@@ -322,12 +322,12 @@ describe('PageRankReputation functional handler', () => {
     it("configure-then-compute", async () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await interpret(pageRankReputationHandler.configure({ dampingFactor: {"type":"literal","value":0.85}, maxIterations: {"type":"literal","value":100}, convergenceThreshold: {"type":"literal","value":0.0001}, preTrusted: {"type":"variable","name":"_"} }), storage);
-      expect(configureResult0.variant).toBe("configured");
+      expect(configureResult0.variant).toBe("ok");
       let graph = configureResult0.output["graph"];
       const thenResult0 = await interpret(pageRankReputationHandler.addEdge({ graph: {"type":"variable","name":"pr"}, source: {"type":"variable","name":"_"}, target: {"type":"variable","name":"_"}, weight: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("added");
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(pageRankReputationHandler.compute({ graph: {"type":"variable","name":"pr"} }), storage);
-      expect(thenResult1.variant).toBe("computed");
+      expect(thenResult1.variant).toBe("ok");
     });
 
   });

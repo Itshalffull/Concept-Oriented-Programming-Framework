@@ -6,7 +6,7 @@ sync ReputationAsContentEntity [eager]
   purpose { Persist reputation entries as queryable content entities. }
 when {
   Reputation/earn: [ participant: ?participant; amount: ?amount; reason: ?reason ]
-    => earned(entry: ?entry)
+    => ok(entry: ?entry)
 }
 then {
   ContentStorage/save: [ record: ?entry; data: ?reason ]
@@ -17,7 +17,7 @@ sync ReputationTagEntity [eager]
   purpose { Tag reputation entries with their entity type. }
 when {
   Reputation/earn: [ participant: ?participant; amount: ?amount; reason: ?reason ]
-    => earned(entry: ?entry)
+    => ok(entry: ?entry)
 }
 then {
   Tag/addTag: [ entity: ?entry; tag: "system:reputation" ]

@@ -28,11 +28,11 @@ concept SyntaxTree [T] {
         Parse the file content using the resolved grammar.
         Stores the full CST root as an S-expression string.
       }
-      -> parseError(tree: T, errorCount: Int) {
+      -> ok(tree: T, errorCount: Int) {
         Partial parse with error recovery. Tree is stored
         but contains error nodes at the listed ranges.
       }
-      -> noGrammar(message: String) {
+      -> ok(message: String) {
         No grammar could be loaded for this file type.
       }
       fixture parse_ts_file { file: "src/app.ts", grammar: "typescript" }
@@ -56,7 +56,7 @@ concept SyntaxTree [T] {
         Run an S-expression query pattern against the tree.
         Returns matches as serialized JSON list of captures.
       }
-      -> invalidPattern(message: String) {
+      -> ok(message: String) {
         The S-expression pattern has a syntax error.
       }
       -> notfound(message: String) {
@@ -70,7 +70,7 @@ concept SyntaxTree [T] {
       -> ok(nodeType: String, startByte: Int, endByte: Int, named: String, field: String) {
         Return the deepest named node at the given byte offset.
       }
-      -> outOfRange() {
+      -> ok() {
         The byte offset is beyond the tree's range.
       }
       -> notfound(message: String) {

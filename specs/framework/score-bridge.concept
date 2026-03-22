@@ -25,11 +25,11 @@ concept ScoreBridge [B] {
         performing a health check over the specified protocol.
         Stores the connection for subsequent queries.
       }
-      -> unreachable(endpoint: String, message: String) {
+      -> ok(endpoint: String, message: String) {
         The remote endpoint did not respond to the health check
         or returned a non-success status.
       }
-      -> auth_failed(endpoint: String, message: String) {
+      -> ok(endpoint: String, message: String) {
         The endpoint responded but rejected the provided
         authentication token.
       }
@@ -47,11 +47,11 @@ concept ScoreBridge [B] {
       -> notfound(bridge: B) {
         No active connection exists with this identifier.
       }
-      -> remote_error(bridge: B, message: String) {
+      -> ok(bridge: B, message: String) {
         The remote Score endpoint returned an error response.
         The connection remains open for retry.
       }
-      -> disconnected(bridge: B, message: String) {
+      -> ok(bridge: B, message: String) {
         The connection was lost during the query. The bridge
         status is updated to reflect the disconnection.
       }
@@ -68,11 +68,11 @@ concept ScoreBridge [B] {
       -> notfound(bridge: B) {
         No active connection exists with this identifier.
       }
-      -> entity_notfound(kind: String, name: String) {
+      -> ok(kind: String, name: String) {
         The remote index has no entity of the given kind with
         that name.
       }
-      -> remote_error(bridge: B, message: String) {
+      -> ok(bridge: B, message: String) {
         The remote Score endpoint returned an error.
       }
 
@@ -88,11 +88,11 @@ concept ScoreBridge [B] {
       -> notfound(bridge: B) {
         No active connection exists with this identifier.
       }
-      -> edge_notfound(relation: String, target: String) {
+      -> ok(relation: String, target: String) {
         No relationship of that type leads to the named target
         from the current position in the remote graph.
       }
-      -> remote_error(bridge: B, message: String) {
+      -> ok(bridge: B, message: String) {
         The remote Score endpoint returned an error.
       }
 

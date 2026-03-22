@@ -94,8 +94,7 @@ describe('ADICOEvaluator functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(adicoEvaluatorHandler.parse({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "parse_invalid_text" -> parse_error', async () => {
@@ -170,8 +169,7 @@ describe('ADICOEvaluator functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(adicoEvaluatorHandler.evaluate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "evaluate_mismatch_actor" -> not_applicable', async () => {
@@ -204,10 +202,10 @@ describe('ADICOEvaluator functional handler', () => {
     it("parse-then-evaluate", async () => {
       const storage = createInMemoryStorage();
       const parseResult0 = await interpret(adicoEvaluatorHandler.parse({ ruleText: {"type":"variable","name":"_"} }), storage);
-      expect(parseResult0.variant).toBe("parsed");
+      expect(parseResult0.variant).toBe("ok");
       let rule = parseResult0.output["rule"];
       const thenResult0 = await interpret(adicoEvaluatorHandler.evaluate({ rule: {"type":"variable","name":"ae"}, context: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("permitted");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });
@@ -290,7 +288,7 @@ describe('ADICOEvaluator functional handler', () => {
       }
     });
 
-    it('parse ensures on parsed: ', async () => {
+    it('parse ensures on ok: ', async () => {
       if (typeof adicoEvaluatorHandler.parse !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -302,7 +300,7 @@ describe('ADICOEvaluator functional handler', () => {
               const program = adicoEvaluatorHandler.parse(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "parsed") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

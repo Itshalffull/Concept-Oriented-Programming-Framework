@@ -96,7 +96,7 @@ const _handler: FunctionalConceptHandler = {
       resolvedAt: new Date().toISOString(),
     });
 
-    return complete(p, 'resolved', { result: winner }) as StorageProgram<Result>;
+    return complete(p, 'ok', { result: winner }) as StorageProgram<Result>;
   },
 };
 

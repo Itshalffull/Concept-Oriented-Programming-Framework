@@ -25,7 +25,7 @@ concept FunctionalHandler [H] {
         the set of completion variant tags (serialized JSON array) that
         the handler may produce.
       }
-      -> exists() { A handler for this concept/action pair is already registered. }
+      -> ok() { A handler for this concept/action pair is already registered. }
 
       fixture register_readwrite {
         handler: "handler-user-create",
@@ -89,7 +89,7 @@ concept FunctionalHandler [H] {
         declared purity level. The declared purity is at least as permissive
         as the actual effects.
       }
-      -> violation(declaredPurity: String, actualPurity: String, message: String) {
+      -> ok(declaredPurity: String, actualPurity: String, message: String) {
         The program's structural effects violate the handler's declared purity.
         For example, a handler declared as read-only produced a program that
         writes to storage. The message describes which relations were unexpectedly
@@ -116,12 +116,12 @@ concept FunctionalHandler [H] {
 
   example "duplicate registration returns exists": {
     after register(handler: h, concept: "User", action: "create", purity: "read-write") -> ok()
-    then register(handler: h, concept: "User", action: "create", purity: "read-write") -> exists()
+    then register(handler: h, concept: "User", action: "create", purity: "read-write") -> ok()
   }
 
   example "validatePurity detects violation": {
     after register(handler: h, concept: "User", action: "create", purity: "read-only") -> ok()
-    then validatePurity(handler: h, program: "put(users, u1, data)") -> violation(declaredPurity: dp, actualPurity: ap, message: m)
+    then validatePurity(handler: h, program: "put(users, u1, data)") -> ok(declaredPurity: dp, actualPurity: ap, message: m)
   }
 
   example "list returns handlers for concept": {

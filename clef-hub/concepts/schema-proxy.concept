@@ -28,7 +28,7 @@ concept SchemaProxy [P] {
       -> ok(results: list { module_id: String, schema_name: String, version: String }) {
         Searches for modules by schema name or field criteria.
       }
-      -> empty() {
+      -> ok() {
         No results match the query and filter.
       }
       -> unavailable(message: String) {

@@ -6,7 +6,7 @@ sync TreasuryAsContentEntity [eager]
   purpose { Persist treasury deposit records as queryable content entities. }
 when {
   Treasury/deposit: [ vault: ?vault; token: ?token; amount: ?amount; depositor: ?depositor ]
-    => deposited(vault: ?vault; newBalance: ?newBalance)
+    => ok(vault: ?vault; newBalance: ?newBalance)
 }
 then {
   ContentStorage/save: [ record: ?vault; data: ?amount ]
@@ -17,7 +17,7 @@ sync TreasuryTagEntity [eager]
   purpose { Tag treasury records with their entity type. }
 when {
   Treasury/deposit: [ vault: ?vault; token: ?token; amount: ?amount; depositor: ?depositor ]
-    => deposited(vault: ?vault; newBalance: ?newBalance)
+    => ok(vault: ?vault; newBalance: ?newBalance)
 }
 then {
   Tag/addTag: [ entity: ?vault; tag: "system:treasury" ]

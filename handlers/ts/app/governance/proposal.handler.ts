@@ -19,7 +19,7 @@ const _proposalHandler: FunctionalConceptHandler = {
       id, proposer: input.proposer, title: input.title, description: input.description,
       actions: input.actions, status: 'Draft', createdAt: new Date().toISOString(),
     });
-    return complete(p, 'created', { proposal: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { proposal: id }) as StorageProgram<Result>;
   },
 
   sponsor(input: Record<string, unknown>) {
@@ -30,7 +30,7 @@ const _proposalHandler: FunctionalConceptHandler = {
     p = branch(p, 'record',
       (b) => {
         let b2 = put(b, 'proposal', proposal as string, { status: 'Sponsored', sponsor });
-        return complete(b2, 'sponsored', { proposal });
+        return complete(b2, 'ok', { proposal });
       },
       (b) => complete(b, 'not_found', { proposal }),
     );
@@ -46,7 +46,7 @@ const _proposalHandler: FunctionalConceptHandler = {
     p = branch(p, 'record',
       (b) => {
         let b2 = put(b, 'proposal', proposal as string, { status: 'Active', activatedAt: new Date().toISOString() });
-        return complete(b2, 'activated', { proposal });
+        return complete(b2, 'ok', { proposal });
       },
       (b) => complete(b, 'not_found', { proposal }),
     );
@@ -62,7 +62,7 @@ const _proposalHandler: FunctionalConceptHandler = {
     p = branch(p, 'record',
       (b) => {
         let b2 = put(b, 'proposal', proposal as string, { status: newStatus, advancedAt: new Date().toISOString() });
-        return complete(b2, 'advanced', { proposal, status: newStatus });
+        return complete(b2, 'ok', { proposal, status: newStatus });
       },
       (b) => complete(b, 'not_found', { proposal }),
     );

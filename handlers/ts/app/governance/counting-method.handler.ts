@@ -16,7 +16,7 @@ const _countingMethodHandler: FunctionalConceptHandler = {
     const id = `counting-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'counting', id, { id, name: input.name, providerRef: input.providerRef });
-    return complete(p, 'registered', { method: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { method: id }) as StorageProgram<Result>;
   },
 
   aggregate(input: Record<string, unknown>) {
@@ -25,7 +25,7 @@ const _countingMethodHandler: FunctionalConceptHandler = {
     p = get(p, 'counting', method as string, 'record');
 
     p = branch(p, 'record',
-      (b) => complete(b, 'result', { outcome: 'stub_result', details: '{}' }),
+      (b) => complete(b, 'ok', { outcome: 'stub_result', details: '{}' }),
       (b) => complete(b, 'not_found', { method }),
     );
 
@@ -36,7 +36,7 @@ const _countingMethodHandler: FunctionalConceptHandler = {
     const { method } = input;
     let p = createProgram();
     p = del(p, 'counting', method as string);
-    return complete(p, 'deregistered', { method }) as StorageProgram<Result>;
+    return complete(p, 'ok', { method }) as StorageProgram<Result>;
   },
 };
 

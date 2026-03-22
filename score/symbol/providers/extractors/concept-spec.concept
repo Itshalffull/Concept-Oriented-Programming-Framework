@@ -23,7 +23,7 @@ concept ConceptSpecSymbolExtractor [I] {
         Register this extractor with PluginRegistry for
         .concept file extensions.
       }
-      -> loadError(message: String) {
+      -> ok(message: String) {
         Failed to initialize the extractor.
       }
     }

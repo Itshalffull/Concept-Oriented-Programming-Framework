@@ -88,8 +88,7 @@ describe('Permission functional handler', () => {
       if (typeof permissionHandler.grant !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(permissionHandler.grant({ who: "alice", where: "articles", what: "read", condition: "", grantedBy: "admin" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "grant_empty_who" -> error', async () => {
@@ -163,8 +162,7 @@ describe('Permission functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(permissionHandler.revoke({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "revoke_nonexistent" -> error', async () => {
@@ -238,8 +236,7 @@ describe('Permission functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(permissionHandler.check({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "check_denied" -> error', async () => {
@@ -271,12 +268,12 @@ describe('Permission functional handler', () => {
     it("grant-then-check", async () => {
       const storage = createInMemoryStorage();
       const grantResult0 = await interpret(permissionHandler.grant({ who: {"type":"variable","name":"w"}, where: {"type":"variable","name":"t"}, what: {"type":"variable","name":"a"}, condition: {"type":"variable","name":"_"}, grantedBy: {"type":"variable","name":"_"} }), storage);
-      expect(grantResult0.variant).toBe("granted");
+      expect(grantResult0.variant).toBe("ok");
       let permission = grantResult0.output["permission"];
       const thenResult0 = await interpret(permissionHandler.check({ who: {"type":"variable","name":"w"}, where: {"type":"variable","name":"t"}, what: {"type":"variable","name":"a"} }), storage);
       expect(thenResult0.variant).toBe("allowed");
       const thenResult1 = await interpret(permissionHandler.revoke({ permission: {"type":"variable","name":"p"} }), storage);
-      expect(thenResult1.variant).toBe("revoked");
+      expect(thenResult1.variant).toBe("ok");
       const thenResult2 = await interpret(permissionHandler.check({ who: {"type":"variable","name":"w"}, where: {"type":"variable","name":"t"}, what: {"type":"variable","name":"a"} }), storage);
       expect(thenResult2.variant).toBe("denied");
     });

@@ -20,7 +20,7 @@ const _attestationHandler: FunctionalConceptHandler = {
       recipient: input.recipient, data: input.data,
       createdAt: new Date().toISOString(), expiry: input.expiry ?? null, revoked: false,
     });
-    return complete(p, 'created', { attestation: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { attestation: id }) as StorageProgram<Result>;
   },
 
   revoke(input: Record<string, unknown>) {
@@ -42,7 +42,7 @@ const _attestationHandler: FunctionalConceptHandler = {
               const record = bindings.record as Record<string, unknown>;
               return { ...record, revoked: true };
             });
-            return complete(authP, 'revoked', { attestation });
+            return complete(authP, 'ok', { attestation });
           },
           (unauthP) => complete(unauthP, 'unauthorized', { revoker }),
         );

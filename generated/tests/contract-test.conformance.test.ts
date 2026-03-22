@@ -88,8 +88,7 @@ describe('ContractTest functional handler', () => {
       if (typeof contractTestHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(contractTestHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "generate_missing_concept" -> specError', async () => {
@@ -167,8 +166,7 @@ describe('ContractTest functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_generate_password = await interpret(contractTestHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage);
       const result = await interpret(contractTestHandler.verify({ contract: afterResult_generate_password?.output?.["contract"], producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "verify_no_producer" -> producerUnavailable', async () => {
@@ -248,8 +246,7 @@ describe('ContractTest functional handler', () => {
       const _pool = Object.assign({}, (afterResult_generate_password?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(contractTestHandler.matrix({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "matrix_filtered" -> ok', async () => {
@@ -262,8 +259,7 @@ describe('ContractTest functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(contractTestHandler.matrix({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -330,8 +326,7 @@ describe('ContractTest functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(contractTestHandler.canDeploy({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "can_deploy_rust" -> ok', async () => {
@@ -344,8 +339,7 @@ describe('ContractTest functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(contractTestHandler.canDeploy({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -370,19 +364,16 @@ describe('ContractTest functional handler', () => {
     it("generate then canDeploy", async () => {
       const storage = createInMemoryStorage();
       const generateResult0 = await interpret(contractTestHandler.generate({ concept: {"type":"literal","value":"password"}, specPath: {"type":"literal","value":"./specs/password.concept"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(generateResult0.variant), `step 0: expected success but got '${generateResult0.variant}'`).toBe(false);
+      expect(generateResult0.variant).toBe("ok");
       let contract = generateResult0.output["contract"];
       let definition = generateResult0.output["definition"];
       const verifyResult1 = await interpret(contractTestHandler.verify({ contract: {"type":"variable","name":"p"}, producerArtifact: {"type":"literal","value":".clef-artifacts/rust/password"}, producerLanguage: {"type":"literal","value":"rust"}, consumerArtifact: {"type":"literal","value":".clef-artifacts/ts/password"}, consumerLanguage: {"type":"literal","value":"typescript"} }), storage);
-      const _isErr1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr1(verifyResult1.variant), `step 1: expected success but got '${verifyResult1.variant}'`).toBe(false);
+      expect(verifyResult1.variant).toBe("ok");
       contract = verifyResult1.output["contract"];
       let passed = verifyResult1.output["passed"];
       let total = verifyResult1.output["total"];
       const thenResult0 = await interpret(contractTestHandler.canDeploy({ concept: {"type":"literal","value":"password"}, language: {"type":"literal","value":"typescript"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

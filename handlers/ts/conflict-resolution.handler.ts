@@ -52,7 +52,7 @@ const _handler: FunctionalConceptHandler = {
 
     if (version1 === version2) {
       const p = createProgram();
-      return complete(p, 'noConflict', {}) as StorageProgram<Result>;
+      return complete(p, 'ok', {}) as StorageProgram<Result>;
     }
 
     const conflictId = nextId('conflict');
@@ -76,7 +76,7 @@ const _handler: FunctionalConceptHandler = {
       status: 'pending',
     });
 
-    return complete(p, 'detected', {
+    return complete(p, 'ok', {
       conflictId,
       detail,
     }) as StorageProgram<Result>;

@@ -19,7 +19,7 @@ const _migrationHandler: FunctionalConceptHandler = {
 
     // No migration needed if versions are the same
     if (fromVersion === toVersion) {
-      return complete(p, 'noMigrationNeeded', { concept }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      return complete(p, 'ok', { concept }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     // Incompatible if version goes backwards

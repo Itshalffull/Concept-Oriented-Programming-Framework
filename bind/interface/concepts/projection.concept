@@ -44,14 +44,14 @@ concept Projection [P] {
         workflows, annotations, and target configs is serialized
         as opaque JSON into the content field.
       }
-      -> annotationError(concept: String, errors: list String) {
+      -> ok(concept: String, errors: list String) {
         Interface manifest has invalid annotations for this concept.
       }
-      -> unresolvedReference(concept: String, missing: list String) {
+      -> ok(concept: String, missing: list String) {
         Annotations reference actions or types that don't exist
         in the ConceptManifest.
       }
-      -> traitConflict(concept: String, trait1: String, trait2: String, reason: String) {
+      -> ok(concept: String, trait1: String, trait2: String, reason: String) {
         Two traits are incompatible on the same action
         (e.g. @paginated and @streaming on the same action).
       }
@@ -79,12 +79,12 @@ concept Projection [P] {
         All annotations resolve. Resource mappings are consistent.
         No breaking changes from previous generation (if history exists).
       }
-      -> breakingChange(projection: P, changes: list String) {
+      -> ok(projection: P, changes: list String) {
         Generated interface would break consumers. Lists the
         specific incompatibilities. Generation proceeds only
         with explicit --breaking flag.
       }
-      -> incompleteAnnotation(projection: P, missing: list String) {
+      -> ok(projection: P, missing: list String) {
         Required annotations are missing for configured targets
         (e.g. REST target configured but no resource path for
         a concept with non-CRUD actions).

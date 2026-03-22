@@ -85,7 +85,7 @@ const _addWinsResolutionHandler: FunctionalConceptHandler = {
       resolvedAt: new Date().toISOString(),
     });
 
-    return complete(p, 'resolved', { result }) as StorageProgram<Result>;
+    return complete(p, 'ok', { result }) as StorageProgram<Result>;
   },
 };
 

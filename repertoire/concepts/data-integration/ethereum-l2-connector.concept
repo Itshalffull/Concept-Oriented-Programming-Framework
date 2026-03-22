@@ -63,7 +63,7 @@ concept EthereumL2Connector [C] {
         Verify connectivity by fetching the latest L2 block number
         and measuring round-trip latency.
       }
-      -> unreachable(message: String) {
+      -> ok(message: String) {
         The RPC endpoint did not respond within the timeout window.
       }
 

@@ -70,7 +70,7 @@ concept ProgressiveSchema [P] {
       -> notfound(message: String) {
         Item does not exist.
       }
-      -> incomplete(gaps: String) {
+      -> ok(gaps: String) {
         Item cannot fully conform; gaps describe missing required fields.
       }
 

@@ -88,16 +88,14 @@ describe('Theme functional handler', () => {
       if (typeof themeHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(themeHandler.create({ theme: "H-1", name: "dark", overrides: "{ \"color-bg\": \"#1a1a1a\", \"color-text\": \"#ffffff\" }" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_light" -> ok', async () => {
       if (typeof themeHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(themeHandler.create({ theme: "H-2", name: "light", overrides: "{ \"color-bg\": \"#ffffff\", \"color-text\": \"#111111\" }" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -164,8 +162,7 @@ describe('Theme functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(themeHandler.extend({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "extend_missing_base" -> notfound', async () => {
@@ -246,8 +243,7 @@ describe('Theme functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(themeHandler.activate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "activate_unknown" -> notfound', async () => {
@@ -323,8 +319,7 @@ describe('Theme functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(themeHandler.deactivate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "deactivate_unknown" -> notfound', async () => {
@@ -399,8 +394,7 @@ describe('Theme functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(themeHandler.resolve({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_unknown" -> notfound', async () => {
@@ -433,15 +427,12 @@ describe('Theme functional handler', () => {
     it("create then activate", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(themeHandler.create({ theme: {"type":"variable","name":"h"}, name: {"type":"literal","value":"dark"}, overrides: {"type":"literal","value":"{ \"color-bg\": \"#1a1a1a\" }"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(createResult0.variant), `step 0: expected success but got '${createResult0.variant}'`).toBe(false);
+      expect(createResult0.variant).toBe("ok");
       let theme = createResult0.output["theme"];
       const thenResult0 = await interpret(themeHandler.activate({ theme: {"type":"variable","name":"h"}, priority: {"type":"literal","value":1} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(themeHandler.resolve({ theme: {"type":"variable","name":"h"} }), storage);
-      const _isErrA1 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA1(thenResult1.variant), `assertion 1: expected success but got '${thenResult1.variant}'`).toBe(false);
+      expect(thenResult1.variant).toBe("ok");
     });
 
   });

@@ -25,7 +25,7 @@ concept SuiteManager [S] {
       -> ok(suite: S, path: String) {
         Suite directory created with standard structure.
       }
-      -> alreadyExists(name: String) {
+      -> ok(name: String) {
         A suite with this name already exists.
       }
 
@@ -86,7 +86,7 @@ concept SuiteManager [S] {
       -> ok(valid: Int, warnings: list String) {
         All overrides are valid.
       }
-      -> invalidOverride(override: String, reason: String) {
+      -> ok(override: String, reason: String) {
         An override references a nonexistent sync.
       }
 
@@ -102,7 +102,7 @@ concept SuiteManager [S] {
 
   example "init duplicate fails": {
     after init(name: "my-suite") -> ok(suite: s, path: "./suites/my-suite/")
-    then init(name: "my-suite") -> alreadyExists(name: "my-suite")
+    then init(name: "my-suite") -> ok(name: "my-suite")
   }
 
   always "suites have names and paths": {

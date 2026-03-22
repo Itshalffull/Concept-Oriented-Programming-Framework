@@ -88,8 +88,7 @@ describe('AuditTrail functional handler', () => {
       if (typeof auditTrailHandler.record !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(auditTrailHandler.record({ eventType: "policy_change", actor: "admin@example.com", action: "update_rule", details: "Changed voting threshold from 50% to 66%", sourceRef: "policy-42" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "record_missing_event_type" -> error', async () => {
@@ -163,8 +162,7 @@ describe('AuditTrail functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(auditTrailHandler.query({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "query_no_matches" -> no_results', async () => {
@@ -239,8 +237,7 @@ describe('AuditTrail functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(auditTrailHandler.verifyIntegrity({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "verify_tampered_entry" -> tampered', async () => {
@@ -273,7 +270,7 @@ describe('AuditTrail functional handler', () => {
     it("record-then-verifyIntegrity", async () => {
       const storage = createInMemoryStorage();
       const recordResult0 = await interpret(auditTrailHandler.record({ eventType: {"type":"variable","name":"_"}, actor: {"type":"variable","name":"_"}, action: {"type":"variable","name":"_"}, details: {"type":"variable","name":"_"}, sourceRef: {"type":"variable","name":"_"} }), storage);
-      expect(recordResult0.variant).toBe("recorded");
+      expect(recordResult0.variant).toBe("ok");
       let entry = recordResult0.output["entry"];
       const thenResult0 = await interpret(auditTrailHandler.verifyIntegrity({ entry: {"type":"variable","name":"at"} }), storage);
       expect(thenResult0.variant).toBe("valid");

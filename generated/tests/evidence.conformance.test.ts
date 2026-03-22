@@ -88,8 +88,7 @@ describe('Evidence functional handler', () => {
       if (typeof evidenceHandler.record !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(evidenceHandler.record({ property_ref: "prop-1", artifact_type: "proof_certificate", content: "(proof-body QED)", solver: "z3" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "invalid_type" -> invalid', async () => {
@@ -172,8 +171,7 @@ describe('Evidence functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(evidenceHandler.validate({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "validate_missing" -> notfound', async () => {
@@ -243,8 +241,7 @@ describe('Evidence functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_record = await interpret(evidenceHandler.record({ property_ref: "prop-1", artifact_type: "proof_certificate", content: "(proof-body QED)", solver: "z3" }), storage);
       const result = await interpret(evidenceHandler.retrieve({ id: afterResult_valid_record?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "retrieve_missing" -> notfound', async () => {
@@ -319,8 +316,7 @@ describe('Evidence functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(evidenceHandler.compare({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "compare_missing" -> notfound', async () => {
@@ -390,8 +386,7 @@ describe('Evidence functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_record = await interpret(evidenceHandler.record({ property_ref: "prop-1", artifact_type: "proof_certificate", content: "(proof-body QED)", solver: "z3" }), storage);
       const result = await interpret(evidenceHandler.minimize({ id: afterResult_valid_record?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "minimize_non_counter" -> not_applicable', async () => {
@@ -471,8 +466,7 @@ describe('Evidence functional handler', () => {
       const _pool = Object.assign({}, (afterResult_valid_record?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(evidenceHandler.list({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "list_by_type" -> ok', async () => {
@@ -485,8 +479,7 @@ describe('Evidence functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(evidenceHandler.list({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -511,13 +504,11 @@ describe('Evidence functional handler', () => {
     it("record-then-validate", async () => {
       const storage = createInMemoryStorage();
       const recordResult0 = await interpret(evidenceHandler.record({ artifact_type: {"type":"literal","value":"proof_certificate"}, content: {"type":"variable","name":"c"}, solver_metadata: {"type":"variable","name":"m"}, property_ref: {"type":"literal","value":"prop-1"}, confidence_score: {"type":"literal","value":1} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(recordResult0.variant), `step 0: expected success but got '${recordResult0.variant}'`).toBe(false);
+      expect(recordResult0.variant).toBe("ok");
       let evidence = recordResult0.output["evidence"];
       let content_hash = recordResult0.output["content_hash"];
       const thenResult0 = await interpret(evidenceHandler.validate({ evidence: {"type":"variable","name":"e"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

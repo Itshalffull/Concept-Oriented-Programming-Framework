@@ -88,16 +88,14 @@ describe('DeadBranchProvider functional handler', () => {
       if (typeof deadBranchProviderHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(deadBranchProviderHandler.analyze({ program: "{\"instructions\":[{\"tag\":\"branch\",\"condition\":false,\"thenBranch\":{\"instructions\":[]},\"elseBranch\":{\"instructions\":[]}}]}", constraints: "{}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "no_branches" -> ok', async () => {
       if (typeof deadBranchProviderHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(deadBranchProviderHandler.analyze({ program: "{\"instructions\":[{\"tag\":\"get\",\"relation\":\"users\",\"key\":\"u1\",\"bindAs\":\"user\"}]}", constraints: "{}" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_program" -> error', async () => {
@@ -129,8 +127,7 @@ describe('DeadBranchProvider functional handler', () => {
     it("false condition produces one dead branch", async () => {
       const storage = createInMemoryStorage();
       const analyzeResult0 = await interpret(deadBranchProviderHandler.analyze({ program: {"type":"literal","value":"branch(false, thenP, elseP)"}, constraints: {"type":"literal","value":"{}"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(analyzeResult0.variant), `step 0: expected success but got '${analyzeResult0.variant}'`).toBe(false);
+      expect(analyzeResult0.variant).toBe("ok");
       let result = analyzeResult0.output["result"];
       let deadBranches = analyzeResult0.output["deadBranches"];
       let reachableCount = analyzeResult0.output["reachableCount"];

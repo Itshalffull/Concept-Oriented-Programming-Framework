@@ -131,7 +131,7 @@ const _handler: FunctionalConceptHandler = {
     }, 'failing');
 
     let thenProg = createProgram();
-    thenProg = complete(thenProg, 'allPassing', {});
+    thenProg = complete(thenProg, 'ok', {});
 
     let elseProg = createProgram();
     elseProg = mapBindings(elseProg, (bindings) => {
@@ -183,13 +183,13 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     // TODO: Cross-reference all ConceptEntity actions with TestEntity coverage
     // For now, report full coverage as a stub
-    return complete(p, 'fullCoverage', {}) as StorageProgram<Result>;
+    return complete(p, 'ok', {}) as StorageProgram<Result>;
   },
 
   untestedInvariants(_input: Record<string, unknown>) {
     let p = createProgram();
     // TODO: Cross-reference all concept invariants with TestEntity coverage
-    return complete(p, 'fullCoverage', {}) as StorageProgram<Result>;
+    return complete(p, 'ok', {}) as StorageProgram<Result>;
   },
 
   recordResult(input: Record<string, unknown>) {

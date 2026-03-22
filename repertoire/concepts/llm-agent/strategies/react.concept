@@ -25,7 +25,7 @@ concept ReactStrategy [S] {
         final answer or max_iterations. Scratchpad accumulates
         Thought/Action/Observation triples.
       }
-      -> max_iterations(partial: String, steps: Int) {
+      -> ok(partial: String, steps: Int) {
         Hit limit without final answer.
       }
       -> error(message: String) {
@@ -37,10 +37,10 @@ concept ReactStrategy [S] {
       -> thought(reasoning: String) {
         Generated a thought. Awaiting action decision.
       }
-      -> action_request(tool_name: String, arguments: String) {
+      -> ok(tool_name: String, arguments: String) {
         Chose a tool.
       }
-      -> final_answer(result: String) {
+      -> ok(result: String) {
         Reached conclusion.
       }
     }

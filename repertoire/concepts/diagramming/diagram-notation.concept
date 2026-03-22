@@ -76,7 +76,7 @@ concept DiagramNotation [N] {
 
     action validateDiagram(canvas_id: ID, notation: N) {
       -> ok(canvas_id: ID) { All valid. }
-      -> violations(canvas_id: ID, errors: list {
+      -> ok(canvas_id: ID, errors: list {
         element_id: ID, rule: String, message: String, severity: String
       }) { Violations found. }
 

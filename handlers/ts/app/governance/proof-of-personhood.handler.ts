@@ -33,7 +33,7 @@ const _proofOfPersonhoodHandler: FunctionalConceptHandler = {
       provider: 'ProofOfPersonhood',
       instanceId: id,
     });
-    return complete(p, 'verification_requested', { verification: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { verification: id }) as StorageProgram<Result>;
   },
 
   confirmVerification(input: Record<string, unknown>) {

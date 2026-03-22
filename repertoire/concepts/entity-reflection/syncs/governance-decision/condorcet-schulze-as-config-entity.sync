@@ -6,7 +6,7 @@ sync CondorcetSchulzeAsConfigEntity [eager]
   purpose { Persist Condorcet-Schulze counting configuration as queryable config entity. }
 when {
   CondorcetSchulze/configure: []
-    => configured(config: ?config)
+    => ok(config: ?config)
 }
 then {
   ContentStorage/save: [ record: ?config; data: ?config ]
@@ -17,7 +17,7 @@ sync CondorcetSchulzeTagBundle [eager]
   purpose { Tag Condorcet-Schulze configuration with its bundle type. }
 when {
   CondorcetSchulze/configure: []
-    => configured(config: ?config)
+    => ok(config: ?config)
 }
 then {
   Property/set: [ entity: ?config; key: "config_bundle"; value: "counting_method_condorcet_schulze" ]

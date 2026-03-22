@@ -88,16 +88,14 @@ describe('Metric functional handler', () => {
       if (typeof metricHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "define_empty_name" -> ok', async () => {
       if (typeof metricHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(metricHandler.define({ name: "", unit: "", aggregation: "sum" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -159,8 +157,7 @@ describe('Metric functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_define_revenue = await interpret(metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" }), storage);
       const result = await interpret(metricHandler.update({ metric: afterResult_define_revenue?.output?.["id"], value: "150000.0", source: "finance-api" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "update_nonexistent" -> error', async () => {
@@ -229,8 +226,7 @@ describe('Metric functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_define_revenue = await interpret(metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" }), storage);
       const result = await interpret(metricHandler.setThreshold({ metric: afterResult_define_revenue?.output?.["id"], threshold: "100000.0", alertOnBreach: "true" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "set_threshold_nonexistent" -> error', async () => {
@@ -299,8 +295,7 @@ describe('Metric functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_define_revenue = await interpret(metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" }), storage);
       const result = await interpret(metricHandler.evaluate({ metric: afterResult_define_revenue?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "evaluate_nonexistent" -> error', async () => {
@@ -332,10 +327,10 @@ describe('Metric functional handler', () => {
     it("define-then-update", async () => {
       const storage = createInMemoryStorage();
       const defineResult0 = await interpret(metricHandler.define({ name: {"type":"variable","name":"_"}, unit: {"type":"variable","name":"_"}, aggregation: {"type":"variable","name":"_"} }), storage);
-      expect(defineResult0.variant).toBe("defined");
+      expect(defineResult0.variant).toBe("ok");
       let metric = defineResult0.output["metric"];
       const thenResult0 = await interpret(metricHandler.update({ metric: {"type":"variable","name":"me"}, value: {"type":"literal","value":50}, source: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult0.variant).toBe("updated");
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });
@@ -422,7 +417,7 @@ describe('Metric functional handler', () => {
       }
     });
 
-    it('define ensures on defined: ', async () => {
+    it('define ensures on ok: ', async () => {
       if (typeof metricHandler.define !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -434,7 +429,7 @@ describe('Metric functional handler', () => {
               const program = metricHandler.define(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "defined") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

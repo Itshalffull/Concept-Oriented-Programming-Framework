@@ -88,8 +88,7 @@ describe('Attestation functional handler', () => {
       if (typeof attestationHandler.attest !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(attestationHandler.attest({ schema: "kyc-identity", attester: "civic-authority", recipient: "alice", data: "{\"level\":\"basic\"}", expiry: "2027-12-31T00:00:00Z" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "attest_empty_schema" -> error', async () => {
@@ -158,8 +157,7 @@ describe('Attestation functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_attest_kyc = await interpret(attestationHandler.attest({ schema: "kyc-identity", attester: "civic-authority", recipient: "alice", data: "{\"level\":\"basic\"}", expiry: "2027-12-31T00:00:00Z" }), storage);
       const result = await interpret(attestationHandler.revoke({ attestation: afterResult_attest_kyc?.output?.["id"], revoker: "civic-authority" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "revoke_unauthorized" -> error', async () => {
@@ -228,8 +226,7 @@ describe('Attestation functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_attest_kyc = await interpret(attestationHandler.attest({ schema: "kyc-identity", attester: "civic-authority", recipient: "alice", data: "{\"level\":\"basic\"}", expiry: "2027-12-31T00:00:00Z" }), storage);
       const result = await interpret(attestationHandler.verify({ attestation: afterResult_attest_kyc?.output?.["id"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "verify_nonexistent" -> error', async () => {
@@ -261,14 +258,14 @@ describe('Attestation functional handler', () => {
     it("attest-then-verify", async () => {
       const storage = createInMemoryStorage();
       const attestResult0 = await interpret(attestationHandler.attest({ schema: {"type":"variable","name":"_"}, attester: {"type":"variable","name":"_"}, recipient: {"type":"variable","name":"_"}, data: {"type":"variable","name":"_"}, expiry: {"type":"variable","name":"_"} }), storage);
-      expect(attestResult0.variant).toBe("created");
+      expect(attestResult0.variant).toBe("ok");
       let attestation = attestResult0.output["attestation"];
       const thenResult0 = await interpret(attestationHandler.verify({ attestation: {"type":"variable","name":"a"} }), storage);
       expect(thenResult0.variant).toBe("valid");
       const thenResult1 = await interpret(attestationHandler.revoke({ attestation: {"type":"variable","name":"a"}, revoker: {"type":"variable","name":"_"} }), storage);
-      expect(thenResult1.variant).toBe("revoked");
+      expect(thenResult1.variant).toBe("ok");
       const thenResult2 = await interpret(attestationHandler.verify({ attestation: {"type":"variable","name":"a"} }), storage);
-      expect(thenResult2.variant).toBe("revoked_status");
+      expect(thenResult2.variant).toBe("ok");
     });
 
   });
@@ -353,7 +350,7 @@ describe('Attestation functional handler', () => {
       }
     });
 
-    it('attest ensures on created: ', async () => {
+    it('attest ensures on ok: ', async () => {
       if (typeof attestationHandler.attest !== 'function') return;
       let seen = false;
       await fc.assert(
@@ -365,7 +362,7 @@ describe('Attestation functional handler', () => {
               const program = attestationHandler.attest(input as Record<string, unknown>);
               return interpret(program, storage);
             });
-            if (result?.variant === "created") {
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

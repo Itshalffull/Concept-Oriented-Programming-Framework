@@ -88,16 +88,14 @@ describe('AppInstallation functional handler', () => {
       if (typeof appInstallationHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(appInstallationHandler.register({ installation: "core-suite", name: "Core Suite", version: "1.0.0", status: "active", registry: "clef-registry", description: "Core governance concepts", concepts: "12", syncs: "5" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_empty_installation" -> ok', async () => {
       if (typeof appInstallationHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(appInstallationHandler.register({ installation: "", name: "", version: "", status: "", registry: "", concepts: "0", syncs: "0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -164,8 +162,7 @@ describe('AppInstallation functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(appInstallationHandler.list({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "list_all" -> ok', async () => {
@@ -175,8 +172,7 @@ describe('AppInstallation functional handler', () => {
       const _pool = Object.assign({}, (afterResult_register_core_suite?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(appInstallationHandler.list({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });

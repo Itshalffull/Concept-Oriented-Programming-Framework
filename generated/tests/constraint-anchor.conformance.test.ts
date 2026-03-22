@@ -88,16 +88,14 @@ describe('ConstraintAnchor functional handler', () => {
       if (typeof constraintAnchorHandler.pin !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(constraintAnchorHandler.pin({ canvas_id: "canvas-1", item_id: "node-a", x: "100.0", y: "200.0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "pin_origin" -> ok', async () => {
       if (typeof constraintAnchorHandler.pin !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(constraintAnchorHandler.pin({ canvas_id: "canvas-1", item_id: "node-b", x: "0.0", y: "0.0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -159,8 +157,7 @@ describe('ConstraintAnchor functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_pin_item = await interpret(constraintAnchorHandler.pin({ canvas_id: "canvas-1", item_id: "node-a", x: "100.0", y: "200.0" }), storage);
       const result = await interpret(constraintAnchorHandler.align({ canvas_id: afterResult_pin_item?.output?.["anchor"], item_ids: ["node-a","node-b","node-c"], axis: "x" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "align_y" -> ok', async () => {
@@ -168,8 +165,7 @@ describe('ConstraintAnchor functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_pin_item = await interpret(constraintAnchorHandler.pin({ canvas_id: "canvas-1", item_id: "node-a", x: "100.0", y: "200.0" }), storage);
       const result = await interpret(constraintAnchorHandler.align({ canvas_id: afterResult_pin_item?.output?.["anchor"], item_ids: ["node-a","node-b"], axis: "y" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "too_few_items" -> error', async () => {
@@ -245,8 +241,7 @@ describe('ConstraintAnchor functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_pin_item = await interpret(constraintAnchorHandler.pin({ canvas_id: "canvas-1", item_id: "node-a", x: "100.0", y: "200.0" }), storage);
       const result = await interpret(constraintAnchorHandler.separate({ canvas_id: afterResult_pin_item?.output?.["anchor"], item_a: "node-a", item_b: "node-b", gap: "50.0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "large_gap" -> ok', async () => {
@@ -254,8 +249,7 @@ describe('ConstraintAnchor functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_pin_item = await interpret(constraintAnchorHandler.pin({ canvas_id: "canvas-1", item_id: "node-a", x: "100.0", y: "200.0" }), storage);
       const result = await interpret(constraintAnchorHandler.separate({ canvas_id: afterResult_pin_item?.output?.["anchor"], item_a: "node-x", item_b: "node-y", gap: "200.0" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -317,8 +311,7 @@ describe('ConstraintAnchor functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_pin_item = await interpret(constraintAnchorHandler.pin({ canvas_id: "canvas-1", item_id: "node-a", x: "100.0", y: "200.0" }), storage);
       const result = await interpret(constraintAnchorHandler.setFlowDirection({ canvas_id: afterResult_pin_item?.output?.["anchor"], item_ids: ["node-a","node-b"], direction: "top-to-bottom" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "left_to_right" -> ok', async () => {
@@ -326,8 +319,7 @@ describe('ConstraintAnchor functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_pin_item = await interpret(constraintAnchorHandler.pin({ canvas_id: "canvas-1", item_id: "node-a", x: "100.0", y: "200.0" }), storage);
       const result = await interpret(constraintAnchorHandler.setFlowDirection({ canvas_id: afterResult_pin_item?.output?.["anchor"], item_ids: ["node-a","node-b","node-c"], direction: "left-to-right" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -389,8 +381,7 @@ describe('ConstraintAnchor functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_pin_item = await interpret(constraintAnchorHandler.pin({ canvas_id: "canvas-1", item_id: "node-a", x: "100.0", y: "200.0" }), storage);
       const result = await interpret(constraintAnchorHandler.removeAnchor({ anchor: afterResult_pin_item?.output?.["anchor"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "nonexistent" -> notfound', async () => {
@@ -460,8 +451,7 @@ describe('ConstraintAnchor functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_pin_item = await interpret(constraintAnchorHandler.pin({ canvas_id: "canvas-1", item_id: "node-a", x: "100.0", y: "200.0" }), storage);
       const result = await interpret(constraintAnchorHandler.getAnchorsForCanvas({ canvas_id: afterResult_pin_item?.output?.["anchor"] }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_canvas" -> ok', async () => {
@@ -474,8 +464,7 @@ describe('ConstraintAnchor functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(constraintAnchorHandler.getAnchorsForCanvas({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
   });

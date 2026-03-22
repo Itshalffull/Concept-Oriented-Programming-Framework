@@ -88,8 +88,7 @@ describe('Alias functional handler', () => {
       if (typeof aliasHandler.addAlias !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(aliasHandler.addAlias({ entity: "page-123", name: "homepage" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "another_alias" -> ok', async () => {
@@ -97,8 +96,7 @@ describe('Alias functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_add = await interpret(aliasHandler.addAlias({ entity: "page-123", name: "homepage" }), storage);
       const result = await interpret(aliasHandler.addAlias({ entity: afterResult_valid_add?.output?.["entity"], name: "about-us" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "duplicate_alias" -> exists', async () => {
@@ -168,8 +166,7 @@ describe('Alias functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_add = await interpret(aliasHandler.addAlias({ entity: "page-123", name: "homepage" }), storage);
       const result = await interpret(aliasHandler.removeAlias({ entity: afterResult_valid_add?.output?.["entity"], name: "homepage" }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_alias" -> notfound', async () => {
@@ -244,8 +241,7 @@ describe('Alias functional handler', () => {
         if (k in _fixtureInput && v !== undefined) _fixtureInput[k] = v;
       }
       const result = await interpret(aliasHandler.resolve({ ..._fixtureInput }), storage);
-      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr(result.variant), `expected success variant but got '${result.variant}'`).toBe(false);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "unknown_name" -> notfound', async () => {
@@ -278,13 +274,11 @@ describe('Alias functional handler', () => {
     it("addAlias-then-resolve", async () => {
       const storage = createInMemoryStorage();
       const addAliasResult0 = await interpret(aliasHandler.addAlias({ entity: {"type":"variable","name":"x"}, name: {"type":"literal","value":"homepage"} }), storage);
-      const _isErr0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErr0(addAliasResult0.variant), `step 0: expected success but got '${addAliasResult0.variant}'`).toBe(false);
+      expect(addAliasResult0.variant).toBe("ok");
       let entity = addAliasResult0.output["entity"];
       let name = addAliasResult0.output["name"];
       const thenResult0 = await interpret(aliasHandler.resolve({ name: {"type":"literal","value":"homepage"} }), storage);
-      const _isErrA0 = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);
-      expect(_isErrA0(thenResult0.variant), `assertion 0: expected success but got '${thenResult0.variant}'`).toBe(false);
+      expect(thenResult0.variant).toBe("ok");
     });
 
   });

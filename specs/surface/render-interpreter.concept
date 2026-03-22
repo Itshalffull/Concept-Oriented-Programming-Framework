@@ -23,7 +23,7 @@ concept RenderInterpreter [I] {
         (react, svelte, swiftui, css-variables, etc.) with its
         code generation template.
       }
-      -> exists() {
+      -> ok() {
         An interpreter is already registered for this target.
       }
 
@@ -79,7 +79,7 @@ concept RenderInterpreter [I] {
 
   example "duplicate register returns exists": {
     after register(interpreter: i, target: "react", template: "jsx") -> ok(interpreter: i)
-    then register(interpreter: i, target: "svelte", template: "tmpl") -> exists()
+    then register(interpreter: i, target: "svelte", template: "tmpl") -> ok()
   }
 
   example "dryRun after register succeeds": {

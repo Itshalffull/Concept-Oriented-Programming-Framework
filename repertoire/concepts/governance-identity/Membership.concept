@@ -25,10 +25,10 @@ concept Membership [M] {
 
   actions {
     action join(member: String, polity: String) {
-      -> joined(membership: M) {
+      -> ok(membership: M) {
         Member is added to the polity with Active status and current timestamp.
       }
-      -> already_member(member: String) {
+      -> ok(member: String) {
         Member is already in the members set.
       }
 
@@ -37,7 +37,7 @@ concept Membership [M] {
     }
 
     action leave(member: String) {
-      -> left(member: String) {
+      -> ok(member: String) {
         Member is removed from the members set.
       }
       -> not_found(member: String) {
@@ -49,7 +49,7 @@ concept Membership [M] {
     }
 
     action suspend(member: String, until: option String) {
-      -> suspended(member: String) {
+      -> ok(member: String) {
         Member status changes to Suspended. Member remains in set but
         cannot exercise governance rights.
       }
@@ -62,7 +62,7 @@ concept Membership [M] {
     }
 
     action reinstate(member: String) {
-      -> reinstated(member: String) {
+      -> ok(member: String) {
         Member status returns to Active.
       }
       -> not_found(member: String) {
@@ -74,7 +74,7 @@ concept Membership [M] {
     }
 
     action kick(member: String) {
-      -> kicked(member: String) {
+      -> ok(member: String) {
         Member is forcibly removed from the members set.
       }
       -> not_found(member: String) {
@@ -86,7 +86,7 @@ concept Membership [M] {
     }
 
     action updateRules(polity: String, joinConditions: String, exitConditions: String) {
-      -> updated(polity: String) {
+      -> ok(polity: String) {
         Join and exit rules are replaced with the new values.
       }
 
@@ -99,13 +99,13 @@ concept Membership [M] {
 
     after join(candidate: x, evidence: e) -> accepted(member: x)
 
-        then leave(member: x) -> left(member: x)
+        then leave(member: x) -> ok(member: x)
 
   }
 
   example "leave-then-join": {
 
-    after leave(member: x) -> left(member: x)
+    after leave(member: x) -> ok(member: x)
 
         then join(candidate: x, evidence: e) -> rejected(candidate: x, reason: _)
 

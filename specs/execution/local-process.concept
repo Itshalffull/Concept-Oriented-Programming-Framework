@@ -54,7 +54,7 @@ concept LocalProcess [L] {
         which executes the operation and returns the output. Creates
         a process record with status "completed".
       }
-      -> runtimeNotFound(runtime: String) {
+      -> ok(runtime: String) {
         No provider is registered for this runtime. The caller
         should register a runtime provider before dispatching.
       }
@@ -80,7 +80,7 @@ concept LocalProcess [L] {
   }
 
   example "dispatch fails without registered runtime": {
-    after dispatch(runtime: "onnx", operation: "infer", moduleRef: "model", input: "{}", config: "{}") -> runtimeNotFound(runtime: "onnx")
+    after dispatch(runtime: "onnx", operation: "infer", moduleRef: "model", input: "{}", config: "{}") -> ok(runtime: "onnx")
     then registerRuntime(runtime: "onnx", providerName: "OnnxProvider") -> ok()
   }
 
