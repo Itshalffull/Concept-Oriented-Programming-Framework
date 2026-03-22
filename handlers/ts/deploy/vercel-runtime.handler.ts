@@ -9,6 +9,7 @@ import type { FunctionalConceptHandler } from '../../../runtime/functional-handl
 import {
   createProgram, get, put, find, del, pure, perform,
   type StorageProgram,
+  complete,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
@@ -47,12 +48,9 @@ const _vercelRuntimeHandler: FunctionalConceptHandler = {
       createdAt: new Date().toISOString(),
     });
 
-    p = pure(p, {
-      variant: 'ok',
-      project: projectId,
+    p = complete(p, 'ok', { project: projectId,
       projectId,
-      endpoint,
-    });
+      endpoint });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -97,12 +95,9 @@ const _vercelRuntimeHandler: FunctionalConceptHandler = {
       deploymentUrl,
     });
 
-    p = pure(p, {
-      variant: 'ok',
-      project,
+    p = complete(p, 'ok', { project,
       deploymentId,
-      deploymentUrl,
-    });
+      deploymentUrl });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -113,7 +108,7 @@ const _vercelRuntimeHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, RELATION, project, 'projectRecord');
     p = put(p, RELATION, project, { trafficWeight: weight });
-    p = pure(p, { variant: 'ok', project });
+    p = complete(p, 'ok', { project });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -136,11 +131,8 @@ const _vercelRuntimeHandler: FunctionalConceptHandler = {
       status: 'rolledback',
     });
 
-    p = pure(p, {
-      variant: 'ok',
-      project,
-      restoredDeploymentId: targetDeploymentId,
-    });
+    p = complete(p, 'ok', { project,
+      restoredDeploymentId: targetDeploymentId });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -158,7 +150,7 @@ const _vercelRuntimeHandler: FunctionalConceptHandler = {
       body: envVars,
     }, 'envResponse');
 
-    p = pure(p, { variant: 'ok', project, configured: 0 });
+    p = complete(p, 'ok', { project, configured: 0 });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -176,7 +168,7 @@ const _vercelRuntimeHandler: FunctionalConceptHandler = {
     }, 'deleteResponse');
 
     p = del(p, RELATION, project);
-    p = pure(p, { variant: 'ok', project });
+    p = complete(p, 'ok', { project });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

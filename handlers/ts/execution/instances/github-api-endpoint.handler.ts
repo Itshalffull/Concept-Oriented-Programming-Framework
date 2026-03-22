@@ -3,6 +3,7 @@ import type { FunctionalConceptHandler } from '../../../../runtime/functional-ha
 import {
   createProgram, get, put, find, pure,
   type StorageProgram,
+  complete,
 } from '../../../../runtime/storage-program.ts';
 
 /**
@@ -26,13 +27,10 @@ export const githubApiEndpointHandler: FunctionalConceptHandler = {
       repository,
       baseUrl: 'https://api.github.com',
     });
-    p = pure(p, {
-      variant: 'ok',
-      endpoint: endpointId,
+    p = complete(p, 'ok', { endpoint: endpointId,
       name,
       token,
-      repository,
-    });
+      repository });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -41,16 +39,13 @@ export const githubApiEndpointHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, 'endpoints', `gh-${name}`, 'endpointData');
-    p = pure(p, {
-      variant: 'ok',
-      endpoint: `gh-${name}`,
+    p = complete(p, 'ok', { endpoint: `gh-${name}`,
       baseUrl: 'https://api.github.com',
       repository: '',
       headers: JSON.stringify({
         'Authorization': 'token <resolved-at-runtime>',
         'Accept': 'application/vnd.github+json',
-        'Content-Type': 'application/json',
-      }),
+        'Content-Type': 'application/json' }),
     });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
@@ -58,7 +53,7 @@ export const githubApiEndpointHandler: FunctionalConceptHandler = {
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'endpoints', {}, 'allEndpoints');
-    p = pure(p, { variant: 'ok', endpoints: '[]' });
+    p = complete(p, 'ok', { endpoints: '[]' });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

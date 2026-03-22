@@ -14,6 +14,7 @@ import type { FunctionalConceptHandler } from '../../../../runtime/functional-ha
 import {
   createProgram, get, find, put, merge, mapBindings, pureFrom, delFrom, branch, pure,
   type StorageProgram,
+  complete,
 } from '../../../../runtime/storage-program.ts';
 
 const RELATION = 'verification-runs';
@@ -41,11 +42,11 @@ export const verificationRunHandler: FunctionalConceptHandler = {
     try {
       propertyList = JSON.parse(property_ids);
     } catch {
-      return pure(createProgram(), { variant: 'invalid', message: 'property_ids must be a valid JSON array' }) as StorageProgram<Result>;
+      return complete(createProgram(), 'invalid', { message: 'property_ids must be a valid JSON array' }) as StorageProgram<Result>;
     }
 
     if (!Array.isArray(propertyList) || propertyList.length === 0) {
-      return pure(createProgram(), { variant: 'invalid', message: 'property_ids must be a non-empty array' }) as StorageProgram<Result>;
+      return complete(createProgram(), 'invalid', { message: 'property_ids must be a non-empty array' }) as StorageProgram<Result>;
     }
 
     const id = `vr-${simpleHash(name + ':' + Date.now().toString())}`;
@@ -67,10 +68,8 @@ export const verificationRunHandler: FunctionalConceptHandler = {
       ended_at: '',
     });
 
-    return pure(p, {
-      variant: 'ok', id, name, status: 'running',
-      total_count: propertyList.length, started_at: now,
-    }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, name, status: 'running',
+      total_count: propertyList.length, started_at: now }) as StorageProgram<Result>;
   },
 
   complete(input) {
@@ -82,7 +81,7 @@ export const verificationRunHandler: FunctionalConceptHandler = {
     try {
       resultsMap = JSON.parse(results);
     } catch {
-      return pure(createProgram(), { variant: 'invalid', message: 'results must be a valid JSON object' }) as StorageProgram<Result>;
+      return complete(createProgram(), 'invalid', { message: 'results must be a valid JSON object' }) as StorageProgram<Result>;
     }
 
     let proved = 0, refuted = 0, unknown = 0;
@@ -99,12 +98,12 @@ export const verificationRunHandler: FunctionalConceptHandler = {
     p = branch(
       p,
       (bindings) => bindings.run == null,
-      pure(createProgram(), { variant: 'notfound', id }),
+      complete(createProgram(), 'notfound', { id }),
       (() => {
         return branch(
           createProgram(),
           (bindings) => (bindings.run as Record<string, unknown>).status !== 'running',
-          pure(createProgram(), { variant: 'invalid', id, message: 'Run is not in running state, cannot complete' }),
+          complete(createProgram(), 'invalid', { id, message: 'Run is not in running state, cannot complete' }),
           (() => {
             let inner = createProgram();
             inner = merge(inner, RELATION, id, {
@@ -113,7 +112,7 @@ export const verificationRunHandler: FunctionalConceptHandler = {
               resource_usage: resource_usage || '',
               ended_at: now,
             });
-            return pure(inner, { variant: 'ok', id, status: 'completed', proved, refuted, unknown, ended_at: now });
+            return complete(inner, 'ok', { id, status: 'completed', proved, refuted, unknown, ended_at: now });
           })(),
         );
       })(),
@@ -140,12 +139,12 @@ export const verificationRunHandler: FunctionalConceptHandler = {
     p = branch(
       p,
       (bindings) => bindings.run == null,
-      pure(createProgram(), { variant: 'notfound', id }),
+      complete(createProgram(), 'notfound', { id }),
       (() => {
         return branch(
           createProgram(),
           (bindings) => (bindings.run as Record<string, unknown>).status !== 'running',
-          pure(createProgram(), { variant: 'invalid', id, message: 'Run is not in running state, cannot timeout' }),
+          complete(createProgram(), 'invalid', { id, message: 'Run is not in running state, cannot timeout' }),
           (() => {
             let inner = createProgram();
             inner = merge(inner, RELATION, id, {
@@ -180,19 +179,19 @@ export const verificationRunHandler: FunctionalConceptHandler = {
     p = branch(
       p,
       (bindings) => bindings.run == null,
-      pure(createProgram(), { variant: 'notfound', id }),
+      complete(createProgram(), 'notfound', { id }),
       (() => {
         return branch(
           createProgram(),
           (bindings) => (bindings.run as Record<string, unknown>).status !== 'running',
-          pure(createProgram(), { variant: 'invalid', id, message: 'Run is not in running state, cannot cancel' }),
+          complete(createProgram(), 'invalid', { id, message: 'Run is not in running state, cannot cancel' }),
           (() => {
             let inner = createProgram();
             inner = merge(inner, RELATION, id, {
               status: 'cancelled',
               ended_at: now,
             });
-            return pure(inner, { variant: 'ok', id, status: 'cancelled', ended_at: now });
+            return complete(inner, 'ok', { id, status: 'cancelled', ended_at: now });
           })(),
         );
       })(),
@@ -208,7 +207,7 @@ export const verificationRunHandler: FunctionalConceptHandler = {
     p = branch(
       p,
       (bindings) => bindings.run == null,
-      pure(createProgram(), { variant: 'notfound', id }),
+      complete(createProgram(), 'notfound', { id }),
       pureFrom(createProgram(), (bindings) => {
         const run = bindings.run as Record<string, unknown>;
         const resultsRaw = run.results as string;
@@ -245,12 +244,12 @@ export const verificationRunHandler: FunctionalConceptHandler = {
     p = branch(
       p,
       (bindings) => bindings.runA == null,
-      pure(createProgram(), { variant: 'notfound', id: run_id_a }),
+      complete(createProgram(), 'notfound', { id: run_id_a }),
       (() => {
         return branch(
           createProgram(),
           (bindings) => bindings.runB == null,
-          pure(createProgram(), { variant: 'notfound', id: run_id_b }),
+          complete(createProgram(), 'notfound', { id: run_id_b }),
           pureFrom(createProgram(), (bindings) => {
             const runA = bindings.runA as Record<string, unknown>;
             const runB = bindings.runB as Record<string, unknown>;

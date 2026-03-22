@@ -3,6 +3,7 @@ import type { FunctionalConceptHandler } from '../../../../runtime/functional-ha
 import {
   createProgram, get, put, find, pure, perform,
   type StorageProgram,
+  complete,
 } from '../../../../runtime/storage-program.ts';
 
 /**
@@ -13,12 +14,9 @@ import {
  */
 export const wasmProviderHandler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
-    const p = pure(createProgram(), {
-      variant: 'ok',
-      name: 'wasm-provider',
+    const p = complete(createProgram(), 'ok', { name: 'wasm-provider',
       kind: 'runtime',
-      capabilities: JSON.stringify(['wasi', 'memory-sandbox', 'instance-pool']),
-    });
+      capabilities: JSON.stringify(['wasi', 'memory-sandbox', 'instance-pool']) });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -34,7 +32,7 @@ export const wasmProviderHandler: FunctionalConceptHandler = {
     p = put(p, 'modules', moduleId, {
       name, wasmPath, memoryLimit, status: 'ready',
     });
-    p = pure(p, { variant: 'ok', module: moduleId });
+    p = complete(p, 'ok', { module: moduleId });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -46,14 +44,14 @@ export const wasmProviderHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, 'modules', `wasm-${module}`, 'moduleConfig');
     p = perform(p, 'wasm', 'call', { module, function: fn, args }, 'callResult');
-    p = pure(p, { variant: 'ok', result: '' });
+    p = complete(p, 'ok', { result: '' });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'modules', {}, 'allModules');
-    p = pure(p, { variant: 'ok', modules: '[]' });
+    p = complete(p, 'ok', { modules: '[]' });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

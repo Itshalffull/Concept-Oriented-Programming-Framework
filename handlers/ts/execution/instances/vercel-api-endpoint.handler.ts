@@ -3,6 +3,7 @@ import type { FunctionalConceptHandler } from '../../../../runtime/functional-ha
 import {
   createProgram, get, put, find, pure,
   type StorageProgram,
+  complete,
 } from '../../../../runtime/storage-program.ts';
 
 /**
@@ -26,13 +27,10 @@ export const vercelApiEndpointHandler: FunctionalConceptHandler = {
       teamId,
       baseUrl: 'https://api.vercel.com',
     });
-    p = pure(p, {
-      variant: 'ok',
-      endpoint: endpointId,
+    p = complete(p, 'ok', { endpoint: endpointId,
       name,
       apiToken,
-      teamId,
-    });
+      teamId });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -41,14 +39,11 @@ export const vercelApiEndpointHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, 'endpoints', `vercel-${name}`, 'endpointData');
-    p = pure(p, {
-      variant: 'ok',
-      endpoint: `vercel-${name}`,
+    p = complete(p, 'ok', { endpoint: `vercel-${name}`,
       baseUrl: 'https://api.vercel.com',
       headers: JSON.stringify({
         'Authorization': 'Bearer <resolved-at-runtime>',
-        'Content-Type': 'application/json',
-      }),
+        'Content-Type': 'application/json' }),
       teamId: '',
     });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
@@ -57,7 +52,7 @@ export const vercelApiEndpointHandler: FunctionalConceptHandler = {
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'endpoints', {}, 'allEndpoints');
-    p = pure(p, { variant: 'ok', endpoints: '[]' });
+    p = complete(p, 'ok', { endpoints: '[]' });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

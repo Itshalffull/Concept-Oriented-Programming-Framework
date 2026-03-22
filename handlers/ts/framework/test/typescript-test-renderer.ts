@@ -336,11 +336,7 @@ function renderStructuralTests(handlerVar: string, action: TestPlanAction, style
         // the action defines specific error variants (notfound, invalid, etc.)
         lines.push(`      expect(result.variant).not.toBe('ok');`);
       } else if (fixture.expectedVariant === 'ok') {
-        // Accept 'ok' or domain-specific success variants (created, configured, etc.).
-        // Handlers may return named success variants instead of generic 'ok'.
-        // Reject only known error patterns.
-        lines.push(`      const _isErr = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);`);
-        lines.push(`      expect(_isErr(result.variant), \`expected success variant but got '\${result.variant}'\`).toBe(false);`);
+        lines.push(`      expect(result.variant).toBe('ok');`);
       } else {
         // For specific variant expectations, normalize casing for common variants
         // (notfound/not_found/notFound are all equivalent)
@@ -379,12 +375,7 @@ function renderExampleTests(handlerVar: string, examples: TestPlanExample[], sty
       const resultVar = `${step.action}Result${si}`;
       lines.push(`      const ${resultVar} = ${invokeExpr(handlerVar, step.action, stepInput, style)};`);
       if (step.expectedVariant) {
-        if (step.expectedVariant === 'ok') {
-          lines.push(`      const _isErr${si} = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);`);
-          lines.push(`      expect(_isErr${si}(${resultVar}.variant), \`step ${si}: expected success but got '\${${resultVar}.variant}'\`).toBe(false);`);
-        } else {
-          lines.push(`      expect(${resultVar}.variant).toBe(${JSON.stringify(step.expectedVariant)});`);
-        }
+        lines.push(`      expect(${resultVar}.variant).toBe(${JSON.stringify(step.expectedVariant)});`);
       }
       for (const [name, _val] of Object.entries(step.outputBindings)) {
         if (declaredVars.has(name)) {
@@ -405,12 +396,7 @@ function renderExampleTests(handlerVar: string, examples: TestPlanExample[], sty
         const thenVar = `thenResult${ai}`;
         lines.push(`      const ${thenVar} = ${invokeExpr(handlerVar, assertion.action, thenInput, style)};`);
         if (assertion.expectedVariant) {
-          if (assertion.expectedVariant === 'ok') {
-            lines.push(`      const _isErrA${ai} = (v: string) => !v || /error|invalid|not.?found|forbidden|unauthorized|unavailable|unsupported/i.test(v);`);
-            lines.push(`      expect(_isErrA${ai}(${thenVar}.variant), \`assertion ${ai}: expected success but got '\${${thenVar}.variant}'\`).toBe(false);`);
-          } else {
-            lines.push(`      expect(${thenVar}.variant).toBe(${JSON.stringify(assertion.expectedVariant)});`);
-          }
+          lines.push(`      expect(${thenVar}.variant).toBe(${JSON.stringify(assertion.expectedVariant)});`);
         }
       } else if (assertion.type === 'field_check' && assertion.variable && assertion.field) {
         const op = assertion.operator === '=' ? 'toBe' :

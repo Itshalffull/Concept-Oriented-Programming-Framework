@@ -3,6 +3,7 @@ import type { FunctionalConceptHandler } from '../../../../runtime/functional-ha
 import {
   createProgram, get, put, find, pure, perform,
   type StorageProgram,
+  complete,
 } from '../../../../runtime/storage-program.ts';
 
 /**
@@ -14,12 +15,9 @@ import {
  */
 export const httpProviderHandler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
-    const p = pure(createProgram(), {
-      variant: 'ok',
-      name: 'http-provider',
+    const p = complete(createProgram(), 'ok', { name: 'http-provider',
       kind: 'protocol',
-      capabilities: JSON.stringify(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS']),
-    });
+      capabilities: JSON.stringify(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS']) });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -39,7 +37,7 @@ export const httpProviderHandler: FunctionalConceptHandler = {
       timeout,
       status: 'ready',
     });
-    p = pure(p, { variant: 'ok', instance: instanceId });
+    p = complete(p, 'ok', { instance: instanceId });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -62,22 +60,19 @@ export const httpProviderHandler: FunctionalConceptHandler = {
       headers,
     }, 'httpResponse');
 
-    p = pure(p, {
-      variant: 'ok',
-      status: 200,
+    p = complete(p, 'ok', { status: 200,
       body: '',
       headers: '{}',
       instance,
       method,
-      path,
-    });
+      path });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'instances', {}, 'allInstances');
-    p = pure(p, { variant: 'ok', instances: '[]' });
+    p = complete(p, 'ok', { instances: '[]' });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

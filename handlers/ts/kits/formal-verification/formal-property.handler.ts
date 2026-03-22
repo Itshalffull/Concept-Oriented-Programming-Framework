@@ -12,6 +12,7 @@ import type { FunctionalConceptHandler } from '../../../../runtime/functional-ha
 import {
   createProgram, get, find, put, merge, branch, mapBindings, pure, pureFrom,
   type StorageProgram,
+  complete,
 } from '../../../../runtime/storage-program.ts';
 
 const RELATION = 'formal-properties';
@@ -49,16 +50,16 @@ export const formalPropertyHandler: FunctionalConceptHandler = {
     const effectiveLanguage = formal_language || language || 'smtlib';
 
     if (!VALID_KINDS.includes(kind as any)) {
-      return pure(createProgram(), { variant: 'invalid', message: `Invalid kind "${kind}". Must be one of: ${VALID_KINDS.join(', ')}` }) as StorageProgram<Result>;
+      return complete(createProgram(), 'invalid', { message: `Invalid kind "${kind}". Must be one of: ${VALID_KINDS.join(', ')}` }) as StorageProgram<Result>;
     }
     if (!VALID_LANGUAGES.includes(effectiveLanguage as any)) {
-      return pure(createProgram(), { variant: 'invalid', message: `Invalid formal_language "${effectiveLanguage}". Must be one of: ${VALID_LANGUAGES.join(', ')}` }) as StorageProgram<Result>;
+      return complete(createProgram(), 'invalid', { message: `Invalid formal_language "${effectiveLanguage}". Must be one of: ${VALID_LANGUAGES.join(', ')}` }) as StorageProgram<Result>;
     }
     if (scope && !VALID_SCOPES.includes(scope as any)) {
-      return pure(createProgram(), { variant: 'invalid', message: `Invalid scope "${scope}". Must be one of: ${VALID_SCOPES.join(', ')}` }) as StorageProgram<Result>;
+      return complete(createProgram(), 'invalid', { message: `Invalid scope "${scope}". Must be one of: ${VALID_SCOPES.join(', ')}` }) as StorageProgram<Result>;
     }
     if (priority && !VALID_PRIORITIES.includes(priority as any)) {
-      return pure(createProgram(), { variant: 'invalid', message: `Invalid priority "${priority}". Must be one of: ${VALID_PRIORITIES.join(', ')}` }) as StorageProgram<Result>;
+      return complete(createProgram(), 'invalid', { message: `Invalid priority "${priority}". Must be one of: ${VALID_PRIORITIES.join(', ')}` }) as StorageProgram<Result>;
     }
 
     const id = `fp-${simpleHash(name + ':' + target_symbol + ':' + effectiveExpression)}`;
@@ -80,7 +81,7 @@ export const formalPropertyHandler: FunctionalConceptHandler = {
       created_at: now,
       updated_at: now,
     });
-    return pure(p, { variant: 'ok', id, name, kind, status: 'unproven' }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, name, kind, status: 'unproven' }) as StorageProgram<Result>;
   },
 
   prove(input) {
@@ -93,11 +94,11 @@ export const formalPropertyHandler: FunctionalConceptHandler = {
     p = branch(
       p,
       (bindings) => bindings.property == null,
-      pure(createProgram(), { variant: 'notfound', id }),
+      complete(createProgram(), 'notfound', { id }),
       (() => {
         let inner = createProgram();
         inner = merge(inner, RELATION, id, { status: 'proved', evidence_ref, updated_at: now });
-        return pure(inner, { variant: 'ok', id, status: 'proved', evidence_ref });
+        return complete(inner, 'ok', { id, status: 'proved', evidence_ref });
       })(),
     );
     return p as StorageProgram<Result>;
@@ -113,11 +114,11 @@ export const formalPropertyHandler: FunctionalConceptHandler = {
     p = branch(
       p,
       (bindings) => bindings.property == null,
-      pure(createProgram(), { variant: 'notfound', id }),
+      complete(createProgram(), 'notfound', { id }),
       (() => {
         let inner = createProgram();
         inner = merge(inner, RELATION, id, { status: 'refuted', evidence_ref, updated_at: now });
-        return pure(inner, { variant: 'ok', id, status: 'refuted', evidence_ref });
+        return complete(inner, 'ok', { id, status: 'refuted', evidence_ref });
       })(),
     );
     return p as StorageProgram<Result>;
@@ -132,7 +133,7 @@ export const formalPropertyHandler: FunctionalConceptHandler = {
     p = branch(
       p,
       (bindings) => bindings.property == null,
-      pure(createProgram(), { variant: 'notfound', id }),
+      complete(createProgram(), 'notfound', { id }),
       pureFrom(createProgram(), (bindings) => {
         const prop = bindings.property as Record<string, unknown>;
         const mockStatuses = ['proved', 'refuted', 'unknown'] as const;
@@ -185,12 +186,9 @@ export const formalPropertyHandler: FunctionalConceptHandler = {
       });
     }
 
-    return pure(p, {
-      variant: 'ok',
-      intent_ref,
+    return complete(p, 'ok', { intent_ref,
       property_ids: JSON.stringify(propertyIds),
-      count: propertyIds.length,
-    }) as StorageProgram<Result>;
+      count: propertyIds.length }) as StorageProgram<Result>;
   },
 
   coverage(input) {
@@ -254,7 +252,7 @@ export const formalPropertyHandler: FunctionalConceptHandler = {
     p = branch(
       p,
       (bindings) => bindings.property == null,
-      pure(createProgram(), { variant: 'notfound', id }),
+      complete(createProgram(), 'notfound', { id }),
       (() => {
         return branch(
           createProgram(),

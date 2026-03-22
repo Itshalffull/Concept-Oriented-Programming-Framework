@@ -3,6 +3,7 @@ import type { FunctionalConceptHandler } from '../../../../runtime/functional-ha
 import {
   createProgram, get, put, find, pure,
   type StorageProgram,
+  complete,
 } from '../../../../runtime/storage-program.ts';
 
 /**
@@ -28,14 +29,11 @@ export const voyageEndpointHandler: FunctionalConceptHandler = {
       baseUrl: 'https://api.voyageai.com/v1',
       inputType,
     });
-    p = pure(p, {
-      variant: 'ok',
-      endpoint: endpointId,
+    p = complete(p, 'ok', { endpoint: endpointId,
       name,
       apiKey,
       model,
-      inputType,
-    });
+      inputType });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -45,15 +43,12 @@ export const voyageEndpointHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, 'endpoints', `voyage-${name}`, 'endpointData');
 
-    p = pure(p, {
-      variant: 'ok',
-      endpoint: `voyage-${name}`,
+    p = complete(p, 'ok', { endpoint: `voyage-${name}`,
       baseUrl: 'https://api.voyageai.com/v1',
       model: '',
       headers: JSON.stringify({
         'Authorization': 'Bearer <resolved-at-runtime>',
-        'Content-Type': 'application/json',
-      }),
+        'Content-Type': 'application/json' }),
     });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
@@ -61,7 +56,7 @@ export const voyageEndpointHandler: FunctionalConceptHandler = {
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'endpoints', {}, 'allEndpoints');
-    p = pure(p, { variant: 'ok', endpoints: '[]' });
+    p = complete(p, 'ok', { endpoints: '[]' });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

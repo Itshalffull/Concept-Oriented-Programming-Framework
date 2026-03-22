@@ -3,6 +3,7 @@ import type { FunctionalConceptHandler } from '../../../runtime/functional-handl
 import {
   createProgram, get, put, pure,
   type StorageProgram,
+  complete,
 } from '../../../runtime/storage-program.ts';
 
 /**
@@ -33,7 +34,7 @@ export const circuitBreakerHandler: FunctionalConceptHandler = {
       lastFailureAt: null,
       openedAt: null,
     });
-    p = pure(p, { variant: 'ok', breaker: breakerId });
+    p = complete(p, 'ok', { breaker: breakerId });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -46,10 +47,7 @@ export const circuitBreakerHandler: FunctionalConceptHandler = {
 
     // The actual state machine logic runs at interpretation time.
     // For now, return the check with current status.
-    p = pure(p, {
-      variant: 'closed',
-      breaker: breakerId,
-    });
+    p = complete(p, 'closed', { breaker: breakerId });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -69,11 +67,8 @@ export const circuitBreakerHandler: FunctionalConceptHandler = {
       lastFailureAt: null,
       openedAt: null,
     });
-    p = pure(p, {
-      variant: 'ok',
-      breaker: breakerId,
-      status: 'closed',
-    });
+    p = complete(p, 'ok', { breaker: breakerId,
+      status: 'closed' });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -95,11 +90,8 @@ export const circuitBreakerHandler: FunctionalConceptHandler = {
       lastFailureAt: now,
       openedAt: null,
     });
-    p = pure(p, {
-      variant: 'ok',
-      breaker: breakerId,
-      status: 'closed',
-    });
+    p = complete(p, 'ok', { breaker: breakerId,
+      status: 'closed' });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -117,7 +109,7 @@ export const circuitBreakerHandler: FunctionalConceptHandler = {
       lastFailureAt: null,
       openedAt: null,
     });
-    p = pure(p, { variant: 'ok', breaker: breakerId });
+    p = complete(p, 'ok', { breaker: breakerId });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -127,13 +119,10 @@ export const circuitBreakerHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, 'breakers', breakerId, 'breakerData');
-    p = pure(p, {
-      variant: 'ok',
-      breaker: breakerId,
+    p = complete(p, 'ok', { breaker: breakerId,
       status: 'closed',
       failureCount: 0,
-      successCount: 0,
-    });
+      successCount: 0 });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

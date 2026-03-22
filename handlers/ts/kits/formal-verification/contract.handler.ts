@@ -14,6 +14,7 @@ import {
   createProgram, get, find, put, branch, pure, merge, mapBindings, pureFrom,
   mergeFrom, putFrom,
   type StorageProgram,
+  complete,
 } from '../../../../runtime/storage-program.ts';
 
 const RELATION = 'contracts';
@@ -39,7 +40,7 @@ export const contractHandler: FunctionalConceptHandler = {
     const guarantees = input.guarantees as string;
 
     if (!name || !source_concept || !target_concept) {
-      return pure(createProgram(), { variant: 'invalid', message: 'name, source_concept, and target_concept are required' }) as StorageProgram<Result>;
+      return complete(createProgram(), 'invalid', { message: 'name, source_concept, and target_concept are required' }) as StorageProgram<Result>;
     }
 
     let assumptionsList: string[];
@@ -48,11 +49,11 @@ export const contractHandler: FunctionalConceptHandler = {
       assumptionsList = JSON.parse(assumptions);
       guaranteesList = JSON.parse(guarantees);
     } catch {
-      return pure(createProgram(), { variant: 'invalid', message: 'assumptions and guarantees must be valid JSON arrays' }) as StorageProgram<Result>;
+      return complete(createProgram(), 'invalid', { message: 'assumptions and guarantees must be valid JSON arrays' }) as StorageProgram<Result>;
     }
 
     if (!Array.isArray(assumptionsList) || !Array.isArray(guaranteesList)) {
-      return pure(createProgram(), { variant: 'invalid', message: 'assumptions and guarantees must be arrays' }) as StorageProgram<Result>;
+      return complete(createProgram(), 'invalid', { message: 'assumptions and guarantees must be arrays' }) as StorageProgram<Result>;
     }
 
     const id = `ct-${simpleHash(name + ':' + source_concept + ':' + target_concept)}`;
@@ -73,10 +74,8 @@ export const contractHandler: FunctionalConceptHandler = {
       updated_at: now,
     });
 
-    return pure(p, {
-      variant: 'ok', id, name, source_concept, target_concept,
-      compatibility_status: 'unchecked',
-    }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, name, source_concept, target_concept,
+      compatibility_status: 'unchecked' }) as StorageProgram<Result>;
   },
 
   verify(input) {
@@ -88,7 +87,7 @@ export const contractHandler: FunctionalConceptHandler = {
     p = branch(
       p,
       (bindings) => bindings.contract == null,
-      pure(createProgram(), { variant: 'notfound', id }),
+      complete(createProgram(), 'notfound', { id }),
       (() => {
         // Derive verification status from contract guarantees
         let inner = createProgram();
@@ -128,11 +127,11 @@ export const contractHandler: FunctionalConceptHandler = {
     try {
       ids = JSON.parse(contract_ids);
     } catch {
-      return pure(createProgram(), { variant: 'invalid', message: 'contract_ids must be a valid JSON array' }) as StorageProgram<Result>;
+      return complete(createProgram(), 'invalid', { message: 'contract_ids must be a valid JSON array' }) as StorageProgram<Result>;
     }
 
     if (!Array.isArray(ids) || ids.length < 2) {
-      return pure(createProgram(), { variant: 'invalid', message: 'At least two contracts are required for composition' }) as StorageProgram<Result>;
+      return complete(createProgram(), 'invalid', { message: 'At least two contracts are required for composition' }) as StorageProgram<Result>;
     }
 
     // Read all contracts
@@ -150,7 +149,7 @@ export const contractHandler: FunctionalConceptHandler = {
         }
         return false;
       },
-      pure(createProgram(), { variant: 'notfound', message: 'One or more contracts not found' }),
+      complete(createProgram(), 'notfound', { message: 'One or more contracts not found' }),
       (() => {
         const composedId = `ct-composed-${simpleHash(ids.join(':'))}`;
         const now = new Date().toISOString();
@@ -253,7 +252,7 @@ export const contractHandler: FunctionalConceptHandler = {
     p = branch(
       p,
       (bindings) => bindings.contract == null,
-      pure(createProgram(), { variant: 'notfound', id }),
+      complete(createProgram(), 'notfound', { id }),
       (() => {
         // Check assumption exists and is not already discharged
         return branch(
@@ -263,7 +262,7 @@ export const contractHandler: FunctionalConceptHandler = {
             const assumptions: string[] = JSON.parse(contract.assumptions as string);
             return !assumptions.includes(assumption_ref);
           },
-          pure(createProgram(), { variant: 'invalid', message: `Assumption "${assumption_ref}" not found in contract` }),
+          complete(createProgram(), 'invalid', { message: `Assumption "${assumption_ref}" not found in contract` }),
           (() => {
             return branch(
               createProgram(),
@@ -272,7 +271,7 @@ export const contractHandler: FunctionalConceptHandler = {
                 const discharged: string[] = JSON.parse(contract.discharged_assumptions as string);
                 return discharged.includes(assumption_ref);
               },
-              pure(createProgram(), { variant: 'already_discharged', id, assumption_ref }),
+              complete(createProgram(), 'already_discharged', { id, assumption_ref }),
               (() => {
                 let inner = createProgram();
 

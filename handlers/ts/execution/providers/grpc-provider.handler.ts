@@ -3,6 +3,7 @@ import type { FunctionalConceptHandler } from '../../../../runtime/functional-ha
 import {
   createProgram, get, put, find, pure, perform,
   type StorageProgram,
+  complete,
 } from '../../../../runtime/storage-program.ts';
 
 /**
@@ -13,12 +14,9 @@ import {
  */
 export const grpcProviderHandler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
-    const p = pure(createProgram(), {
-      variant: 'ok',
-      name: 'grpc-provider',
+    const p = complete(createProgram(), 'ok', { name: 'grpc-provider',
       kind: 'protocol',
-      capabilities: JSON.stringify(['unary', 'server-stream', 'client-stream', 'bidi']),
-    });
+      capabilities: JSON.stringify(['unary', 'server-stream', 'client-stream', 'bidi']) });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -34,7 +32,7 @@ export const grpcProviderHandler: FunctionalConceptHandler = {
     p = put(p, 'channels', channelId, {
       name, target, protoRef, options, status: 'ready',
     });
-    p = pure(p, { variant: 'ok', channel: channelId });
+    p = complete(p, 'ok', { channel: channelId });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -49,14 +47,14 @@ export const grpcProviderHandler: FunctionalConceptHandler = {
     p = perform(p, 'grpc', 'invoke', {
       channel, service, method, payload,
     }, 'grpcResponse');
-    p = pure(p, { variant: 'ok', response: '' });
+    p = complete(p, 'ok', { response: '' });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'channels', {}, 'allChannels');
-    p = pure(p, { variant: 'ok', channels: '[]' });
+    p = complete(p, 'ok', { channels: '[]' });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

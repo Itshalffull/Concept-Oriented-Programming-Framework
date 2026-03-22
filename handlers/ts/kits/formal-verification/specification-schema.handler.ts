@@ -13,6 +13,7 @@ import type { FunctionalConceptHandler } from '../../../../runtime/functional-ha
 import {
   createProgram, get, find, put, branch, pure, pureFrom, mapBindings,
   type StorageProgram,
+  complete,
 } from '../../../../runtime/storage-program.ts';
 
 const RELATION = 'spec-schemas';
@@ -64,25 +65,22 @@ export const specificationSchemaHandler: FunctionalConceptHandler = {
     const description = input.description as string | undefined;
 
     if (!VALID_CATEGORIES.includes(category as any)) {
-      return pure(createProgram(), {
-        variant: 'invalid',
-        message: `Invalid category "${category}". Must be one of: ${VALID_CATEGORIES.join(', ')}`,
-      }) as StorageProgram<Result>;
+      return complete(createProgram(), 'invalid', { message: `Invalid category "${category}". Must be one of: ${VALID_CATEGORIES.join(', ')}` }) as StorageProgram<Result>;
     }
 
     if (!name || !pattern_type || !template_text) {
-      return pure(createProgram(), { variant: 'invalid', message: 'name, pattern_type, and template_text are required' }) as StorageProgram<Result>;
+      return complete(createProgram(), 'invalid', { message: 'name, pattern_type, and template_text are required' }) as StorageProgram<Result>;
     }
 
     let paramList: Array<{ name: string; type: string; description?: string }>;
     try {
       paramList = JSON.parse(parameters);
     } catch {
-      return pure(createProgram(), { variant: 'invalid', message: 'parameters must be a valid JSON array' }) as StorageProgram<Result>;
+      return complete(createProgram(), 'invalid', { message: 'parameters must be a valid JSON array' }) as StorageProgram<Result>;
     }
 
     if (!Array.isArray(paramList)) {
-      return pure(createProgram(), { variant: 'invalid', message: 'parameters must be an array' }) as StorageProgram<Result>;
+      return complete(createProgram(), 'invalid', { message: 'parameters must be an array' }) as StorageProgram<Result>;
     }
 
     const id = `ss-${simpleHash(name + ':' + category + ':' + pattern_type)}`;
@@ -102,7 +100,7 @@ export const specificationSchemaHandler: FunctionalConceptHandler = {
       updated_at: now,
     });
 
-    return pure(p, { variant: 'ok', id, name, category, pattern_type }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, name, category, pattern_type }) as StorageProgram<Result>;
   },
 
   instantiate(input) {
@@ -113,7 +111,7 @@ export const specificationSchemaHandler: FunctionalConceptHandler = {
     try {
       values = JSON.parse(param_values);
     } catch {
-      return pure(createProgram(), { variant: 'invalid', message: 'param_values must be a valid JSON object' }) as StorageProgram<Result>;
+      return complete(createProgram(), 'invalid', { message: 'param_values must be a valid JSON object' }) as StorageProgram<Result>;
     }
 
     let p = createProgram();
@@ -121,7 +119,7 @@ export const specificationSchemaHandler: FunctionalConceptHandler = {
     p = branch(
       p,
       (bindings) => bindings.schema == null,
-      pure(createProgram(), { variant: 'notfound', schema_id }),
+      complete(createProgram(), 'notfound', { schema_id }),
       pureFrom(createProgram(), (bindings) => {
         const schema = bindings.schema as Record<string, unknown>;
         const templateText = schema.template_text as string;
@@ -158,7 +156,7 @@ export const specificationSchemaHandler: FunctionalConceptHandler = {
     try {
       values = JSON.parse(param_values);
     } catch {
-      return pure(createProgram(), { variant: 'invalid', message: 'param_values must be a valid JSON object' }) as StorageProgram<Result>;
+      return complete(createProgram(), 'invalid', { message: 'param_values must be a valid JSON object' }) as StorageProgram<Result>;
     }
 
     let p = createProgram();
@@ -166,7 +164,7 @@ export const specificationSchemaHandler: FunctionalConceptHandler = {
     p = branch(
       p,
       (bindings) => bindings.schema == null,
-      pure(createProgram(), { variant: 'notfound', schema_id }),
+      complete(createProgram(), 'notfound', { schema_id }),
       pureFrom(createProgram(), (bindings) => {
         const schema = bindings.schema as Record<string, unknown>;
         const paramDefs: Array<{ name: string; type: string }> = JSON.parse(schema.parameters as string);
@@ -215,7 +213,7 @@ export const specificationSchemaHandler: FunctionalConceptHandler = {
     const query = input.query as string;
 
     if (!query || query.trim() === '') {
-      return pure(createProgram(), { variant: 'invalid', message: 'query must be non-empty' }) as StorageProgram<Result>;
+      return complete(createProgram(), 'invalid', { message: 'query must be non-empty' }) as StorageProgram<Result>;
     }
 
     const lowerQuery = query.toLowerCase();

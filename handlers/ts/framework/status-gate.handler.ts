@@ -10,6 +10,7 @@ import type { FunctionalConceptHandler } from '../../../runtime/functional-handl
 import {
   createProgram, get, put, find, pure, perform,
   type StorageProgram,
+  complete,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
@@ -82,12 +83,9 @@ const _statusGateHandler: FunctionalConceptHandler = {
     }
     // exit-code provider: no external call needed
 
-    p = pure(p, {
-      variant: 'ok',
-      gate: id,
+    p = complete(p, 'ok', { gate: id,
       target,
-      provider: providerName,
-    });
+      provider: providerName });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -114,7 +112,7 @@ const _statusGateHandler: FunctionalConceptHandler = {
       body: JSON.stringify({ status, details }),
     }, 'updateResponse');
 
-    p = pure(p, { variant: 'ok', gate: gateId, status });
+    p = complete(p, 'ok', { gate: gateId, status });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -140,7 +138,7 @@ const _statusGateHandler: FunctionalConceptHandler = {
     }, 'completeResponse');
 
     const accepted = finalStatus === 'passing';
-    p = pure(p, { variant: 'ok', gate: gateId, accepted });
+    p = complete(p, 'ok', { gate: gateId, accepted });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -150,7 +148,7 @@ const _statusGateHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = put(p, 'config', 'default', { provider, url });
-    p = pure(p, { variant: 'ok', provider });
+    p = complete(p, 'ok', { provider });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -159,15 +157,12 @@ const _statusGateHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, 'gates', gateId, 'gateData');
-    p = pure(p, {
-      variant: 'ok',
-      gate: gateId,
+    p = complete(p, 'ok', { gate: gateId,
       target: '',
       status: '',
       provider: '',
       details: '',
-      completed: false,
-    });
+      completed: false });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -176,7 +171,7 @@ const _statusGateHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'gates', target ? { target } : {}, 'allGates');
-    p = pure(p, { variant: 'ok', gates: '[]' });
+    p = complete(p, 'ok', { gates: '[]' });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

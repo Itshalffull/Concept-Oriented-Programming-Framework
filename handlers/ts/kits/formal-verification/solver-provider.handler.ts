@@ -14,6 +14,7 @@ import {
   merge, mapBindings, pureFrom, delFrom,
   type StorageProgram,
   type Bindings,
+  complete,
 } from '../../../../runtime/storage-program.ts';
 
 const RELATION = 'solver-providers';
@@ -40,7 +41,7 @@ export const solverProviderHandler: FunctionalConceptHandler = {
     const priority = input.priority as number | undefined;
 
     if (!provider_id || !name) {
-      return pure(createProgram(), { variant: 'invalid', message: 'provider_id and name are required' }) as StorageProgram<Result>;
+      return complete(createProgram(), 'invalid', { message: 'provider_id and name are required' }) as StorageProgram<Result>;
     }
 
     let languages: string[];
@@ -49,7 +50,7 @@ export const solverProviderHandler: FunctionalConceptHandler = {
       languages = JSON.parse(supported_languages);
       kinds = JSON.parse(supported_kinds);
     } catch {
-      return pure(createProgram(), { variant: 'invalid', message: 'supported_languages and supported_kinds must be valid JSON arrays' }) as StorageProgram<Result>;
+      return complete(createProgram(), 'invalid', { message: 'supported_languages and supported_kinds must be valid JSON arrays' }) as StorageProgram<Result>;
     }
 
     const id = `sp-${simpleHash(provider_id + ':' + name)}`;
@@ -64,7 +65,7 @@ export const solverProviderHandler: FunctionalConceptHandler = {
         const existing = bindings.existing as unknown[];
         return existing && existing.length > 0;
       },
-      pure(createProgram(), { variant: 'duplicate', provider_id, message: `Provider "${provider_id}" is already registered` }),
+      complete(createProgram(), 'duplicate', { provider_id, message: `Provider "${provider_id}" is already registered` }),
       (() => {
         let inner = createProgram();
         inner = put(inner, RELATION, id, {
@@ -78,7 +79,7 @@ export const solverProviderHandler: FunctionalConceptHandler = {
           status: 'active',
           registered_at: now,
         });
-        return pure(inner, { variant: 'ok', id, provider_id, name, status: 'active' });
+        return complete(inner, 'ok', { id, provider_id, name, status: 'active' });
       })(),
     );
     return p as StorageProgram<Result>;
@@ -130,11 +131,11 @@ export const solverProviderHandler: FunctionalConceptHandler = {
     try {
       refs = JSON.parse(property_refs);
     } catch {
-      return pure(createProgram(), { variant: 'invalid', message: 'property_refs must be a valid JSON array' }) as StorageProgram<Result>;
+      return complete(createProgram(), 'invalid', { message: 'property_refs must be a valid JSON array' }) as StorageProgram<Result>;
     }
 
     if (!Array.isArray(refs) || refs.length === 0) {
-      return pure(createProgram(), { variant: 'invalid', message: 'property_refs must be a non-empty array' }) as StorageProgram<Result>;
+      return complete(createProgram(), 'invalid', { message: 'property_refs must be a non-empty array' }) as StorageProgram<Result>;
     }
 
     let p = createProgram();
@@ -195,7 +196,7 @@ export const solverProviderHandler: FunctionalConceptHandler = {
         const matches = bindings.matches as unknown[];
         return !matches || matches.length === 0;
       },
-      pure(createProgram(), { variant: 'notfound', provider_id }),
+      complete(createProgram(), 'notfound', { provider_id }),
       (() => {
         let inner = createProgram();
         return pureFrom(inner, (bindings: Bindings) => {
@@ -246,7 +247,7 @@ export const solverProviderHandler: FunctionalConceptHandler = {
         const matches = bindings.matches as unknown[];
         return !matches || matches.length === 0;
       },
-      pure(createProgram(), { variant: 'notfound', provider_id }),
+      complete(createProgram(), 'notfound', { provider_id }),
       (() => {
         let inner = createProgram();
         inner = delFrom(inner, RELATION, (bindings: Bindings) => (bindings.matches as any[])[0].id);

@@ -3,6 +3,7 @@ import type { FunctionalConceptHandler } from '../../../../runtime/functional-ha
 import {
   createProgram, get, put, find, pure,
   type StorageProgram,
+  complete,
 } from '../../../../runtime/storage-program.ts';
 
 /**
@@ -31,15 +32,12 @@ export const openAiEndpointHandler: FunctionalConceptHandler = {
       dimensions,
       maxTokens: 8191,
     });
-    p = pure(p, {
-      variant: 'ok',
-      endpoint: endpointId,
+    p = complete(p, 'ok', { endpoint: endpointId,
       name,
       apiKey,
       model,
       baseUrl,
-      dimensions,
-    });
+      dimensions });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -50,15 +48,12 @@ export const openAiEndpointHandler: FunctionalConceptHandler = {
     p = get(p, 'endpoints', `oai-${name}`, 'endpointData');
 
     // Build authorization headers from stored API key
-    p = pure(p, {
-      variant: 'ok',
-      endpoint: `oai-${name}`,
+    p = complete(p, 'ok', { endpoint: `oai-${name}`,
       baseUrl: '',
       model: '',
       headers: JSON.stringify({
         'Authorization': 'Bearer <resolved-at-runtime>',
-        'Content-Type': 'application/json',
-      }),
+        'Content-Type': 'application/json' }),
     });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
@@ -66,7 +61,7 @@ export const openAiEndpointHandler: FunctionalConceptHandler = {
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'endpoints', {}, 'allEndpoints');
-    p = pure(p, { variant: 'ok', endpoints: '[]' });
+    p = complete(p, 'ok', { endpoints: '[]' });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

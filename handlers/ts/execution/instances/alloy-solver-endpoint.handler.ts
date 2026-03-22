@@ -3,6 +3,7 @@ import type { FunctionalConceptHandler } from '../../../../runtime/functional-ha
 import {
   createProgram, get, put, pure, perform,
   type StorageProgram,
+  complete,
 } from '../../../../runtime/storage-program.ts';
 
 /**
@@ -23,7 +24,7 @@ export const alloySolverEndpointHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = put(p, 'endpoints', endpointId, { name, jarPath, scope, timeout, options });
-    p = pure(p, { variant: 'ok', endpoint: endpointId, name, jarPath, scope, timeout });
+    p = complete(p, 'ok', { endpoint: endpointId, name, jarPath, scope, timeout });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -44,12 +45,9 @@ export const alloySolverEndpointHandler: FunctionalConceptHandler = {
       timeout: 60000,
     }, 'solverResult');
 
-    p = pure(p, {
-      variant: 'ok',
-      result: '',
+    p = complete(p, 'ok', { result: '',
       counterexample: '',
-      timingMs: 0,
-    });
+      timingMs: 0 });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -58,13 +56,10 @@ export const alloySolverEndpointHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, 'endpoints', `alloy-${name}`, 'endpointData');
-    p = pure(p, {
-      variant: 'ok',
-      endpoint: `alloy-${name}`,
+    p = complete(p, 'ok', { endpoint: `alloy-${name}`,
       jarPath: '',
       scope: 5,
-      timeout: 60000,
-    });
+      timeout: 60000 });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

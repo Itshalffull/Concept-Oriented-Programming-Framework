@@ -3,6 +3,7 @@ import type { FunctionalConceptHandler } from '../../../../runtime/functional-ha
 import {
   createProgram, get, put, pure, perform,
   type StorageProgram,
+  complete,
 } from '../../../../runtime/storage-program.ts';
 
 /**
@@ -22,7 +23,7 @@ export const z3SolverEndpointHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = put(p, 'endpoints', endpointId, { name, binaryPath, timeout, options });
-    p = pure(p, { variant: 'ok', endpoint: endpointId, name, binaryPath, timeout, options });
+    p = complete(p, 'ok', { endpoint: endpointId, name, binaryPath, timeout, options });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -43,12 +44,9 @@ export const z3SolverEndpointHandler: FunctionalConceptHandler = {
       timeout: 30000,
     }, 'solverResult');
 
-    p = pure(p, {
-      variant: 'ok',
-      result: '',
+    p = complete(p, 'ok', { result: '',
       status: 'unknown',
-      timingMs: 0,
-    });
+      timingMs: 0 });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -57,13 +55,10 @@ export const z3SolverEndpointHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, 'endpoints', `z3-${name}`, 'endpointData');
-    p = pure(p, {
-      variant: 'ok',
-      endpoint: `z3-${name}`,
+    p = complete(p, 'ok', { endpoint: `z3-${name}`,
       binaryPath: '',
       timeout: 30000,
-      options: '-smt2',
-    });
+      options: '-smt2' });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

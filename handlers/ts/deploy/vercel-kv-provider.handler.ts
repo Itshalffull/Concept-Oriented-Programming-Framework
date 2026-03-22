@@ -8,6 +8,7 @@ import type { FunctionalConceptHandler } from '../../../runtime/functional-handl
 import {
   createProgram, get, put, del, pure, perform,
   type StorageProgram,
+  complete,
 } from '../../../runtime/storage-program.ts';
 
 const RELATION = 'vercel-kv';
@@ -47,12 +48,9 @@ export const vercelKVProviderHandler: FunctionalConceptHandler = {
       provisionedAt: new Date().toISOString(),
     });
 
-    p = pure(p, {
-      variant: 'ok',
-      storeName,
+    p = complete(p, 'ok', { storeName,
       storeId,
-      credentials: '{}',
-    });
+      credentials: '{}' });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -61,11 +59,8 @@ export const vercelKVProviderHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, RELATION, storeName, 'storeData');
-    p = pure(p, {
-      variant: 'ok',
-      storeName,
-      credentials: '{}',
-    });
+    p = complete(p, 'ok', { storeName,
+      credentials: '{}' });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -83,7 +78,7 @@ export const vercelKVProviderHandler: FunctionalConceptHandler = {
     }, 'deleteResponse');
 
     p = del(p, RELATION, storeName);
-    p = pure(p, { variant: 'ok', storeName });
+    p = complete(p, 'ok', { storeName });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

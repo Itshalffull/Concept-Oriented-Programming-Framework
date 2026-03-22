@@ -21,7 +21,7 @@
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, find, pure,
+  createProgram, get, put, find, pure, complete,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 
@@ -343,17 +343,11 @@ export const testGenHandler: FunctionalConceptHandler = {
     const invariant_version = input.invariant_version as string || 'v1';
 
     if (!concept_ref || !language) {
-      return pure(createProgram(), {
-        variant: 'invalid',
-        message: 'concept_ref and language are required',
-      }) as StorageProgram<Result>;
+      return complete(createProgram(), 'invalid', { message: 'concept_ref and language are required' }) as StorageProgram<Result>;
     }
 
     if (!VALID_LANGUAGES.includes(language)) {
-      return pure(createProgram(), {
-        variant: 'invalid',
-        message: `Unsupported language "${language}". Valid: ${VALID_LANGUAGES.join(', ')}`,
-      }) as StorageProgram<Result>;
+      return complete(createProgram(), 'invalid', { message: `Unsupported language "${language}". Valid: ${VALID_LANGUAGES.join(', ')}` }) as StorageProgram<Result>;
     }
 
     const id = `tg-${simpleHash(concept_ref + ':' + language + ':' + invariant_version)}`;
@@ -417,13 +411,10 @@ export const testGenHandler: FunctionalConceptHandler = {
       stateful_test_depth: DEFAULT_CONFIG.stateful_test_depth,
     });
 
-    p = pure(p, {
-      variant: 'ok',
-      generation: id,
+    p = complete(p, 'ok', { generation: id,
       generated_files,
       provider_used,
-      strategies,
-    });
+      strategies });
     return p as StorageProgram<Result>;
   },
 
@@ -441,10 +432,7 @@ export const testGenHandler: FunctionalConceptHandler = {
     const language = input.language as string || 'typescript';
 
     if (!concept_ref || !concept_data) {
-      return pure(createProgram(), {
-        variant: 'invalid',
-        message: 'concept_ref and concept_data are required',
-      }) as StorageProgram<Result>;
+      return complete(createProgram(), 'invalid', { message: 'concept_ref and concept_data are required' }) as StorageProgram<Result>;
     }
 
     const plan = buildTestPlan(concept_ref, concept_data);
@@ -457,12 +445,9 @@ export const testGenHandler: FunctionalConceptHandler = {
     };
 
     let p = createProgram();
-    p = pure(p, {
-      variant: 'ok',
-      test_plan: JSON.stringify(plan),
+    p = complete(p, 'ok', { test_plan: JSON.stringify(plan),
       provider: providerMap[language] || 'TestGenTypeScript',
-      language,
-    });
+      language });
     return p as StorageProgram<Result>;
   },
 
@@ -478,12 +463,9 @@ export const testGenHandler: FunctionalConceptHandler = {
       generated_at: new Date().toISOString(),
     });
 
-    p = pure(p, {
-      variant: 'ok',
-      generation,
+    p = complete(p, 'ok', { generation,
       generated_files: '[]',
-      provider_used: '',
-    });
+      provider_used: '' });
     return p as StorageProgram<Result>;
   },
 
@@ -492,7 +474,7 @@ export const testGenHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, GENERATIONS, concept_ref ? { concept_ref } : {}, 'allGens');
-    p = pure(p, { variant: 'ok', generations: '[]' });
+    p = complete(p, 'ok', { generations: '[]' });
     return p as StorageProgram<Result>;
   },
 
@@ -509,7 +491,7 @@ export const testGenHandler: FunctionalConceptHandler = {
     if (input.stateful_test_depth !== undefined) updates.stateful_test_depth = input.stateful_test_depth;
 
     p = put(p, GENERATIONS, generation, updates);
-    p = pure(p, { variant: 'ok', generation });
+    p = complete(p, 'ok', { generation });
     return p as StorageProgram<Result>;
   },
 
@@ -519,9 +501,7 @@ export const testGenHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = find(p, GENERATIONS, { concept_ref }, 'matchingGens');
 
-    p = pure(p, {
-      variant: 'ok',
-      total_invariants: 0,
+    p = complete(p, 'ok', { total_invariants: 0,
       covered: 0,
       uncovered: 0,
       coverage_pct: 0.0,
@@ -532,8 +512,7 @@ export const testGenHandler: FunctionalConceptHandler = {
         always: { total: 0, covered: 0 },
         never: { total: 0, covered: 0 },
         eventually: { total: 0, covered: 0 },
-        requires_ensures: { total: 0, covered: 0 },
-      }),
+        requires_ensures: { total: 0, covered: 0 } }),
     });
     return p as StorageProgram<Result>;
   },

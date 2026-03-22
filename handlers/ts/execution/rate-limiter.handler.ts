@@ -3,6 +3,7 @@ import type { FunctionalConceptHandler } from '../../../runtime/functional-handl
 import {
   createProgram, get, put, pure,
   type StorageProgram,
+  complete,
 } from '../../../runtime/storage-program.ts';
 
 /**
@@ -31,7 +32,7 @@ export const rateLimiterHandler: FunctionalConceptHandler = {
       lastRefillAt: new Date().toISOString(),
       waitingCount: 0,
     });
-    p = pure(p, { variant: 'ok', limiter: limiterId });
+    p = complete(p, 'ok', { limiter: limiterId });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -52,11 +53,8 @@ export const rateLimiterHandler: FunctionalConceptHandler = {
       lastRefillAt: new Date().toISOString(),
       waitingCount: 0,
     });
-    p = pure(p, {
-      variant: 'ok',
-      limiter: limiterId,
-      remaining: 0,
-    });
+    p = complete(p, 'ok', { limiter: limiterId,
+      remaining: 0 });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -73,11 +71,8 @@ export const rateLimiterHandler: FunctionalConceptHandler = {
       lastRefillAt: new Date().toISOString(),
       waitingCount: 0,
     });
-    p = pure(p, {
-      variant: 'ok',
-      limiter: limiterId,
-      remaining: returnedTokens,
-    });
+    p = complete(p, 'ok', { limiter: limiterId,
+      remaining: returnedTokens });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -87,13 +82,10 @@ export const rateLimiterHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, 'limiters', limiterId, 'limiterData');
-    p = pure(p, {
-      variant: 'ok',
-      limiter: limiterId,
+    p = complete(p, 'ok', { limiter: limiterId,
       tokens: 0,
       maxTokens: 0,
-      waitingCount: 0,
-    });
+      waitingCount: 0 });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -109,7 +101,7 @@ export const rateLimiterHandler: FunctionalConceptHandler = {
       lastRefillAt: new Date().toISOString(),
       waitingCount: 0,
     });
-    p = pure(p, { variant: 'ok', limiter: limiterId });
+    p = complete(p, 'ok', { limiter: limiterId });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

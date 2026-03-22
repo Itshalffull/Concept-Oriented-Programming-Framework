@@ -4,6 +4,7 @@ import {
   createProgram, putLens, getLens, pure, pureFrom, find,
   branch, mapBindings, relation, at,
   type StorageProgram, type StateLens,
+  complete,
 } from '../../../runtime/storage-program.ts';
 
 // Module-scope lens constants — dogfooding the lens DSL for our own storage access.
@@ -49,7 +50,7 @@ export const lensHandler: FunctionalConceptHandler = {
     p = branch(
       p,
       (b) => b.existing != null,
-      pure(createProgram(), { variant: 'exists' }),
+      complete(createProgram(), 'exists', {}),
       (() => {
         const segments = buildSegments(rel, key, fld);
         const kind = inferKind(rel, key, fld);
@@ -60,7 +61,7 @@ export const lensHandler: FunctionalConceptHandler = {
           focusType: fld || rel,
           kind,
         });
-        inner = pure(inner, { variant: 'ok', lens });
+        inner = complete(inner, 'ok', { lens });
         return inner;
       })(),
     );
@@ -78,7 +79,7 @@ export const lensHandler: FunctionalConceptHandler = {
     p = branch(
       p,
       (b) => b.existing != null,
-      pure(createProgram(), { variant: 'exists' }),
+      complete(createProgram(), 'exists', {}),
       (() => {
         const segments = [{ type: 'relation', value: rel }];
         let inner = createProgram();
@@ -88,7 +89,7 @@ export const lensHandler: FunctionalConceptHandler = {
           focusType: `relation<${rel}>`,
           kind: 'relation',
         });
-        inner = pure(inner, { variant: 'ok', lens });
+        inner = complete(inner, 'ok', { lens });
         return inner;
       })(),
     );
@@ -108,7 +109,7 @@ export const lensHandler: FunctionalConceptHandler = {
     p = branch(
       p,
       (b) => b.outerData == null || b.innerData == null,
-      pure(createProgram(), { variant: 'notfound' }),
+      complete(createProgram(), 'notfound', {}),
       (() => {
         let inner = createProgram();
         inner = mapBindings(inner, (b) => {
@@ -149,7 +150,7 @@ export const lensHandler: FunctionalConceptHandler = {
     p = branch(
       p,
       (b) => b.data == null,
-      pure(createProgram(), { variant: 'notfound' }),
+      complete(createProgram(), 'notfound', {}),
       pureFrom(createProgram(), (b) => {
         const data = b.data as Record<string, unknown>;
         return {
@@ -174,7 +175,7 @@ export const lensHandler: FunctionalConceptHandler = {
     p = branch(
       p,
       (b) => b.data == null,
-      pure(createProgram(), { variant: 'notfound' }),
+      complete(createProgram(), 'notfound', {}),
       pureFrom(createProgram(), (b) => {
         const data = b.data as Record<string, unknown>;
         return { variant: 'ok', segments: data.segments };
@@ -193,7 +194,7 @@ export const lensHandler: FunctionalConceptHandler = {
     p = branch(
       p,
       (b) => b.data == null,
-      pure(createProgram(), { variant: 'notfound' }),
+      complete(createProgram(), 'notfound', {}),
       pureFrom(createProgram(), (b) => {
         const data = b.data as Record<string, unknown>;
         try {

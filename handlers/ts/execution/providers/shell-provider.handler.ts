@@ -3,6 +3,7 @@ import type { FunctionalConceptHandler } from '../../../../runtime/functional-ha
 import {
   createProgram, put, find, pure, perform,
   type StorageProgram,
+  complete,
 } from '../../../../runtime/storage-program.ts';
 
 /**
@@ -13,12 +14,9 @@ import {
  */
 export const shellProviderHandler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
-    const p = pure(createProgram(), {
-      variant: 'ok',
-      name: 'shell-provider',
+    const p = complete(createProgram(), 'ok', { name: 'shell-provider',
       kind: 'runtime',
-      capabilities: JSON.stringify(['spawn', 'timeout', 'env-sandbox']),
-    });
+      capabilities: JSON.stringify(['spawn', 'timeout', 'env-sandbox']) });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -39,20 +37,17 @@ export const shellProviderHandler: FunctionalConceptHandler = {
       command, env, timeout, status: 'completed',
       stdout: '', stderr: '', exitCode: 0,
     });
-    p = pure(p, {
-      variant: 'ok',
-      execution: executionId,
+    p = complete(p, 'ok', { execution: executionId,
       stdout: '',
       stderr: '',
-      exitCode: 0,
-    });
+      exitCode: 0 });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'executions', {}, 'allExecutions');
-    p = pure(p, { variant: 'ok', executions: '[]' });
+    p = complete(p, 'ok', { executions: '[]' });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

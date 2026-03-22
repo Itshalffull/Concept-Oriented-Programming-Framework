@@ -3,6 +3,7 @@ import type { FunctionalConceptHandler } from '../../../../runtime/functional-ha
 import {
   createProgram, get, put, find, pure,
   type StorageProgram,
+  complete,
 } from '../../../../runtime/storage-program.ts';
 
 /**
@@ -34,15 +35,12 @@ export const localModelInstanceHandler: FunctionalConceptHandler = {
       maxSequenceLength,
       dimensions,
     });
-    p = pure(p, {
-      variant: 'ok',
-      instance: instanceId,
+    p = complete(p, 'ok', { instance: instanceId,
       name,
       runtime,
       modelPath,
       device,
-      dimensions,
-    });
+      dimensions });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -52,17 +50,14 @@ export const localModelInstanceHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, 'instances', `local-${name}`, 'instanceData');
 
-    p = pure(p, {
-      variant: 'ok',
-      instance: `local-${name}`,
+    p = complete(p, 'ok', { instance: `local-${name}`,
       runtime: '',
       modelPath: '',
       config: JSON.stringify({
         tokenizerPath: '',
         device: 'cpu',
         maxSequenceLength: 512,
-        dimensions: 768,
-      }),
+        dimensions: 768 }),
     });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
@@ -70,7 +65,7 @@ export const localModelInstanceHandler: FunctionalConceptHandler = {
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'instances', {}, 'allInstances');
-    p = pure(p, { variant: 'ok', instances: '[]' });
+    p = complete(p, 'ok', { instances: '[]' });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

@@ -3,6 +3,7 @@ import type { FunctionalConceptHandler } from '../../../../runtime/functional-ha
 import {
   createProgram, get, put, find, pure, perform,
   type StorageProgram,
+  complete,
 } from '../../../../runtime/storage-program.ts';
 
 /**
@@ -13,12 +14,9 @@ import {
  */
 export const graphqlProviderHandler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
-    const p = pure(createProgram(), {
-      variant: 'ok',
-      name: 'graphql-provider',
+    const p = complete(createProgram(), 'ok', { name: 'graphql-provider',
       kind: 'protocol',
-      capabilities: JSON.stringify(['query', 'mutation', 'subscription']),
-    });
+      capabilities: JSON.stringify(['query', 'mutation', 'subscription']) });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -34,7 +32,7 @@ export const graphqlProviderHandler: FunctionalConceptHandler = {
     p = put(p, 'endpoints', endpointId, {
       name, url, headers, schemaRef, status: 'ready',
     });
-    p = pure(p, { variant: 'ok', endpoint: endpointId });
+    p = complete(p, 'ok', { endpoint: endpointId });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -49,14 +47,14 @@ export const graphqlProviderHandler: FunctionalConceptHandler = {
     p = perform(p, 'graphql', operationType, {
       endpoint, query, variables,
     }, 'gqlResponse');
-    p = pure(p, { variant: 'ok', data: '' });
+    p = complete(p, 'ok', { data: '' });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'endpoints', {}, 'allEndpoints');
-    p = pure(p, { variant: 'ok', endpoints: '[]' });
+    p = complete(p, 'ok', { endpoints: '[]' });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

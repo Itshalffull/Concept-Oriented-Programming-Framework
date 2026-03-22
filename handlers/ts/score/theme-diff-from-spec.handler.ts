@@ -11,6 +11,7 @@ import type { FunctionalConceptHandler } from '../../../runtime/functional-handl
 import {
   createProgram, find, branch, pure, pureFrom,
   type StorageProgram,
+  complete,
 } from '../../../runtime/storage-program.ts';
 
 type Result = { variant: string; [key: string]: unknown };
@@ -37,7 +38,7 @@ export const themeDiffFromSpecHandler: FunctionalConceptHandler = {
         const impls = bindings.allImpls as Record<string, unknown>[];
         return !impls || !impls.find(i => i.id === implId);
       },
-      pure(createProgram(), { variant: 'inSync' }),
+      complete(createProgram(), 'inSync', {}),
       (() => {
         // Implementation found — look up the theme entity and all themes for extends
         let inner = createProgram();

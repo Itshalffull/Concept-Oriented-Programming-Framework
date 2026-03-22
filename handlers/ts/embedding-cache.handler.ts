@@ -12,6 +12,7 @@ import type { FunctionalConceptHandler } from '../../runtime/functional-handler.
 import {
   createProgram, get, put, del, find, pure, perform,
   type StorageProgram,
+  complete,
 } from '../../runtime/storage-program.ts';
 
 const ENTRIES_RELATION = 'embedding-cache';
@@ -31,11 +32,8 @@ export const embeddingCacheHandler: FunctionalConceptHandler = {
     // The manifest parsing and entry loading happens at interpretation
     // time via pureFrom when the file content is available in bindings.
     // For the program structure, we declare the intent.
-    p = pure(p, {
-      variant: 'ok',
-      loaded: 0,
-      skipped: 0,
-    });
+    p = complete(p, 'ok', { loaded: 0,
+      skipped: 0 });
     return p as StorageProgram<Result>;
   },
 
@@ -47,7 +45,7 @@ export const embeddingCacheHandler: FunctionalConceptHandler = {
 
     // If entry exists, return hit; otherwise miss.
     // At interpretation time, the branch resolves based on bindings.
-    p = pure(p, { variant: 'miss' });
+    p = complete(p, 'miss', {});
     return p as StorageProgram<Result>;
   },
 
@@ -72,7 +70,7 @@ export const embeddingCacheHandler: FunctionalConceptHandler = {
       sourceKey,
       cachedAt: now,
     });
-    p = pure(p, { variant: 'stored', entry: digest });
+    p = complete(p, 'stored', { entry: digest });
     return p as StorageProgram<Result>;
   },
 
@@ -88,7 +86,7 @@ export const embeddingCacheHandler: FunctionalConceptHandler = {
       content: '{}',  // Serialized at interpretation time from bindings
     }, 'writeResult');
 
-    p = pure(p, { variant: 'ok', count: 0 });
+    p = complete(p, 'ok', { count: 0 });
     return p as StorageProgram<Result>;
   },
 
@@ -98,19 +96,16 @@ export const embeddingCacheHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, ENTRIES_RELATION, digest, 'existing');
     p = del(p, ENTRIES_RELATION, digest);
-    p = pure(p, { variant: 'ok' });
+    p = complete(p, 'ok', {});
     return p as StorageProgram<Result>;
   },
 
   stats(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, ENTRIES_RELATION, {}, 'allEntries');
-    p = pure(p, {
-      variant: 'ok',
-      totalEntries: 0,
+    p = complete(p, 'ok', { totalEntries: 0,
       models: '[]',
-      sourceKinds: '[]',
-    });
+      sourceKinds: '[]' });
     return p as StorageProgram<Result>;
   },
 
@@ -127,7 +122,7 @@ export const embeddingCacheHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, ENTRIES_RELATION, configKey, 'cacheEntry');
-    p = pure(p, { variant: 'miss' });
+    p = complete(p, 'miss', {});
     return p as StorageProgram<Result>;
   },
 
@@ -153,7 +148,7 @@ export const embeddingCacheHandler: FunctionalConceptHandler = {
       sourceKey,
       cachedAt: now,
     });
-    p = pure(p, { variant: 'stored', entry: configKey });
+    p = complete(p, 'stored', { entry: configKey });
     return p as StorageProgram<Result>;
   },
 };

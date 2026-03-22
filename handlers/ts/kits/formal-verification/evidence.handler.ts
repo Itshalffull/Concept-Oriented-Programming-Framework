@@ -13,6 +13,7 @@ import {
   createProgram, get, find, put, del, branch, pure,
   merge, mapBindings, pureFrom, putFrom,
   type StorageProgram,
+  complete,
 } from '../../../../runtime/storage-program.ts';
 
 const RELATION = 'evidence-records';
@@ -46,14 +47,11 @@ export const evidenceHandler: FunctionalConceptHandler = {
     const run_ref = input.run_ref as string | undefined;
 
     if (!VALID_ARTIFACT_TYPES.includes(artifact_type as any)) {
-      return pure(createProgram(), {
-        variant: 'invalid',
-        message: `Invalid artifact_type "${artifact_type}". Must be one of: ${VALID_ARTIFACT_TYPES.join(', ')}`,
-      }) as StorageProgram<Result>;
+      return complete(createProgram(), 'invalid', { message: `Invalid artifact_type "${artifact_type}". Must be one of: ${VALID_ARTIFACT_TYPES.join(', ')}` }) as StorageProgram<Result>;
     }
 
     if (!content || content.trim() === '') {
-      return pure(createProgram(), { variant: 'invalid', message: 'content must be non-empty' }) as StorageProgram<Result>;
+      return complete(createProgram(), 'invalid', { message: 'content must be non-empty' }) as StorageProgram<Result>;
     }
 
     const content_hash = simpleHash(content);
@@ -72,7 +70,7 @@ export const evidenceHandler: FunctionalConceptHandler = {
       created_at: now,
     });
 
-    return pure(p, { variant: 'ok', id, content_hash, artifact_type, property_ref }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, content_hash, artifact_type, property_ref }) as StorageProgram<Result>;
   },
 
   validate(input) {
@@ -83,7 +81,7 @@ export const evidenceHandler: FunctionalConceptHandler = {
     p = branch(
       p,
       (bindings) => bindings.evidence == null,
-      pure(createProgram(), { variant: 'notfound', id }),
+      complete(createProgram(), 'notfound', { id }),
       pureFrom(createProgram(), (bindings) => {
         const evidence = bindings.evidence as Record<string, unknown>;
         const recomputed = simpleHash(evidence.content as string);
@@ -108,7 +106,7 @@ export const evidenceHandler: FunctionalConceptHandler = {
     p = branch(
       p,
       (bindings) => bindings.evidence == null,
-      pure(createProgram(), { variant: 'notfound', id }),
+      complete(createProgram(), 'notfound', { id }),
       pureFrom(createProgram(), (bindings) => {
         const evidence = bindings.evidence as Record<string, unknown>;
         return {
@@ -137,12 +135,12 @@ export const evidenceHandler: FunctionalConceptHandler = {
     p = branch(
       p,
       (bindings) => bindings.evidenceA == null,
-      pure(createProgram(), { variant: 'notfound', id: id_a }),
+      complete(createProgram(), 'notfound', { id: id_a }),
       (() => {
         return branch(
           createProgram(),
           (bindings) => bindings.evidenceB == null,
-          pure(createProgram(), { variant: 'notfound', id: id_b }),
+          complete(createProgram(), 'notfound', { id: id_b }),
           pureFrom(createProgram(), (bindings) => {
             const a = bindings.evidenceA as Record<string, unknown>;
             const b = bindings.evidenceB as Record<string, unknown>;
@@ -169,7 +167,7 @@ export const evidenceHandler: FunctionalConceptHandler = {
     p = branch(
       p,
       (bindings) => bindings.evidence == null,
-      pure(createProgram(), { variant: 'notfound', id }),
+      complete(createProgram(), 'notfound', { id }),
       (() => {
         // Only counterexamples can be minimized
         return branch(

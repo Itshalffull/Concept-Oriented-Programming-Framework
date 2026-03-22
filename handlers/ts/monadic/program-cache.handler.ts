@@ -3,6 +3,7 @@ import type { FunctionalConceptHandler } from '../../../runtime/functional-handl
 import {
   createProgram, get, find, put, del, pure, branch,
   type StorageProgram,
+  complete,
 } from '../../../runtime/storage-program.ts';
 
 /**
@@ -19,7 +20,7 @@ export const programCacheHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, 'entries', cacheKey, 'entry');
-    const miss = pure(createProgram(), { variant: 'miss' });
+    const miss = complete(createProgram(), 'miss', {});
     // On hit, update the hit counter and return
     const hit = pure(
       put(createProgram(), 'entries', cacheKey, {
@@ -40,7 +41,7 @@ export const programCacheHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, 'entries', cacheKey, 'existing');
-    const exists = pure(createProgram(), { variant: 'exists' });
+    const exists = complete(createProgram(), 'exists', {});
     const store = pure(
       put(createProgram(), 'entries', cacheKey, {
         programHash, stateHash, result, hits: 0, storedAt: '__NOW__',
@@ -57,7 +58,7 @@ export const programCacheHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = find(p, 'entries', { stateHash }, 'matching');
     // The interpreter will need to iterate and delete — we describe the intent
-    p = pure(p, { variant: 'ok', evicted: '__COUNT_MATCHING__' });
+    p = complete(p, 'ok', { evicted: '__COUNT_MATCHING__' });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -65,14 +66,14 @@ export const programCacheHandler: FunctionalConceptHandler = {
     const programHash = input.programHash as string;
     let p = createProgram();
     p = find(p, 'entries', { programHash }, 'matching');
-    p = pure(p, { variant: 'ok', evicted: '__COUNT_MATCHING__' });
+    p = complete(p, 'ok', { evicted: '__COUNT_MATCHING__' });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   stats(input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'entries', {}, 'allEntries');
-    p = pure(p, { variant: 'ok', totalEntries: '__COUNT__', hitRate: '__COMPUTED__', memoryBytes: '__COMPUTED__' });
+    p = complete(p, 'ok', { totalEntries: '__COUNT__', hitRate: '__COMPUTED__', memoryBytes: '__COMPUTED__' });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

@@ -3,6 +3,7 @@ import type { FunctionalConceptHandler } from '../../../../runtime/functional-ha
 import {
   createProgram, put, pure,
   type StorageProgram,
+  complete,
 } from '../../../../runtime/storage-program.ts';
 
 /**
@@ -27,7 +28,7 @@ export const commutativityProviderHandler: FunctionalConceptHandler = {
         const resultId = `comm-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
         let p = createProgram();
         p = put(p, 'results', resultId, { commutes: false, reason: 'no read/write sets provided' });
-        p = pure(p, { variant: 'ok', result: resultId, commutes: false, reason: 'no read/write sets provided' });
+        p = complete(p, 'ok', { result: resultId, commutes: false, reason: 'no read/write sets provided' });
         return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
       }
 
@@ -52,13 +53,10 @@ export const commutativityProviderHandler: FunctionalConceptHandler = {
 
       let p = createProgram();
       p = put(p, 'results', resultId, { commutes, reason });
-      p = pure(p, { variant: 'ok', result: resultId, commutes, reason });
+      p = complete(p, 'ok', { result: resultId, commutes, reason });
       return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
     } catch (e) {
-      const p = pure(createProgram(), {
-        variant: 'error',
-        message: `Commutativity check failed: ${(e as Error).message}`,
-      });
+      const p = complete(createProgram(), 'error', { message: `Commutativity check failed: ${(e as Error).message}` });
       return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
   },

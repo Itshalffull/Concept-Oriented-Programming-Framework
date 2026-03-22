@@ -3,6 +3,7 @@ import type { FunctionalConceptHandler } from '../../../../runtime/functional-ha
 import {
   createProgram, get, put, find, pure,
   type StorageProgram,
+  complete,
 } from '../../../../runtime/storage-program.ts';
 
 /**
@@ -27,13 +28,10 @@ export const gitlabApiEndpointHandler: FunctionalConceptHandler = {
       projectId,
       baseUrl,
     });
-    p = pure(p, {
-      variant: 'ok',
-      endpoint: endpointId,
+    p = complete(p, 'ok', { endpoint: endpointId,
       name,
       token,
-      projectId,
-    });
+      projectId });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -42,14 +40,11 @@ export const gitlabApiEndpointHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, 'endpoints', `gl-${name}`, 'endpointData');
-    p = pure(p, {
-      variant: 'ok',
-      endpoint: `gl-${name}`,
+    p = complete(p, 'ok', { endpoint: `gl-${name}`,
       baseUrl: 'https://gitlab.com/api/v4',
       projectId: '',
       headers: JSON.stringify({
-        'PRIVATE-TOKEN': '<resolved-at-runtime>',
-      }),
+        'PRIVATE-TOKEN': '<resolved-at-runtime>' }),
     });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
@@ -57,7 +52,7 @@ export const gitlabApiEndpointHandler: FunctionalConceptHandler = {
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'endpoints', {}, 'allEndpoints');
-    p = pure(p, { variant: 'ok', endpoints: '[]' });
+    p = complete(p, 'ok', { endpoints: '[]' });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
