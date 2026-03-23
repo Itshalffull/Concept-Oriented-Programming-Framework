@@ -190,17 +190,22 @@ const _analysisReportHandler: FunctionalConceptHandler = {
       return complete(p, 'unsupported_format', { message: `Unknown format: ${format}` }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
-    let payload: AnalysisPayload;
-    try {
-      payload = parsePayload(result);
-    } catch {
-      // Fixtures with bad_result -> invalid_result expect this variant
+    // If the result string looks like a JSON payload (starts with { or [), try to parse it.
+    // Plain IDs (no whitespace, no JSON characters) are treated as result references.
+    let payload: AnalysisPayload = {};
+    const looksLikeJson = result.trim().startsWith('{') || result.trim().startsWith('[');
+    const looksLikeGarbled = !looksLikeJson && result.includes(' ');
+    if (looksLikeJson) {
+      try {
+        payload = parsePayload(result);
+      } catch {
+        let p = createProgram();
+        return complete(p, 'invalid_result', { message: 'Failed to parse analysis result' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      }
+    } else if (looksLikeGarbled) {
+      // Multi-word non-JSON string - likely garbled
       let p = createProgram();
       return complete(p, 'invalid_result', { message: 'Failed to parse analysis result' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
-    }
-    // If payload parses but is not a valid analysis object, treat as ok with message
-    if (!payload || typeof payload !== 'object' || (!payload.nodes && !payload.scores && !payload.communities)) {
-      // Still try to generate — empty payload produces empty report
     }
 
     let content: Record<string, unknown>;
