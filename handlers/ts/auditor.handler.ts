@@ -14,8 +14,6 @@ import { createHash } from 'crypto';
 
 type Result = { variant: string; [key: string]: unknown };
 
-let nextId = 1;
-export function resetAuditorIds() { nextId = 1; }
 
 /** Severity ordering for sorting advisories (highest first). */
 const SEVERITY_ORDER: Record<string, number> = {
@@ -48,10 +46,10 @@ const _handler: FunctionalConceptHandler = {
       version: string;
     }>;
 
-    const id = `audit-${nextId++}`;
     const lockfileHash = createHash('sha256')
       .update(JSON.stringify(lockfileEntries))
       .digest('hex');
+    const id = `audit-${lockfileHash.slice(0, 8)}`;
 
     // We need to find advisories for each entry. Since the DSL doesn't support
     // dynamic loops over storage, we'll find all advisories and filter in mapBindings.
