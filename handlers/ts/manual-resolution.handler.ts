@@ -11,7 +11,7 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, put, complete, type StorageProgram,
+  createProgram, get, find, put, branch, complete, type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
 
@@ -42,27 +42,9 @@ const _handler: FunctionalConceptHandler = {
     const v2 = input.v2 as string;
     const context = input.context as string;
 
-    // When base is provided, the conflict has history — manual resolution needed, cannot auto-resolve
-    if (base != null && base.trim() !== '') {
-      const conflictId = nextId();
-      let p = createProgram();
-      p = put(p, 'manual-resolution', conflictId, {
-        id: conflictId,
-        base,
-        v1,
-        v2,
-        context,
-        candidates: JSON.stringify([v1, v2, base]),
-        status: 'pending',
-        createdAt: new Date().toISOString(),
-      });
-      return complete(p, 'cannotResolve', {
-        reason: 'Manual resolution required — conflict has base version requiring human review',
-      }) as StorageProgram<Result>;
-    }
-
     const conflictId = nextId();
     const candidates = [v1, v2];
+    if (base) candidates.push(base);
 
     let p = createProgram();
     p = put(p, 'manual-resolution', conflictId, {
