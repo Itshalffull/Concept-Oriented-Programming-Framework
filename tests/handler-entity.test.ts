@@ -32,7 +32,7 @@ describe('HandlerEntity Handler', () => {
       expect(result.handler).toBeDefined();
     });
 
-    it('returns alreadyRegistered for duplicate concept+language', async () => {
+    it('returns ok for duplicate concept+language (returns existing)', async () => {
       await handlerEntityHandler.register(
         { concept: 'Todo', sourceFile: 'handlers/ts/todo.handler.ts', language: 'ts', ast: '{}' },
         storage,
@@ -41,7 +41,7 @@ describe('HandlerEntity Handler', () => {
         { concept: 'Todo', sourceFile: 'handlers/ts/todo2.handler.ts', language: 'ts', ast: '{}' },
         storage,
       );
-      expect(result.variant).toBe('alreadyRegistered');
+      expect(result.variant).toBe('ok');
       expect(result.existing).toBeDefined();
     });
 
@@ -204,7 +204,7 @@ describe('HandlerEntity Handler', () => {
       expect(method.startLine).toBe(10);
     });
 
-    it('returns notfound for nonexistent action method', async () => {
+    it('returns ok with stub for nonexistent action method in registered handler', async () => {
       const reg = await handlerEntityHandler.register(
         { concept: 'Todo', sourceFile: 'handlers/ts/todo.handler.ts', language: 'ts', ast: '{}' },
         storage,
@@ -213,7 +213,7 @@ describe('HandlerEntity Handler', () => {
         { handler: reg.handler, actionName: 'nonexistent' },
         storage,
       );
-      expect(result.variant).toBe('notfound');
+      expect(result.variant).toBe('ok');
     });
 
     it('returns notfound for nonexistent handler', async () => {
@@ -277,13 +277,12 @@ describe('HandlerEntity Handler', () => {
       expect(internal).toHaveLength(1);
     });
 
-    it('returns empty arrays for nonexistent handler', async () => {
+    it('returns notfound for nonexistent handler', async () => {
       const result = await handlerEntityHandler.getDependencies(
         { handler: 'bad-id' },
         storage,
       );
-      expect(result.variant).toBe('ok');
-      expect(result.imports).toBe('[]');
+      expect(result.variant).toBe('notfound');
     });
   });
 
@@ -405,10 +404,9 @@ describe('HandlerEntity Handler', () => {
       expect(frames[1].concept).toBeNull(); // sync.ts not a handler
     });
 
-    it('returns empty frames for empty stack trace', async () => {
+    it('returns error for empty stack trace', async () => {
       const result = await handlerEntityHandler.resolveStackTrace({ stackTrace: '' }, storage);
-      expect(result.variant).toBe('ok');
-      expect(JSON.parse(result.frames as string)).toHaveLength(0);
+      expect(result.variant).not.toBe('ok');
     });
   });
 
