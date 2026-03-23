@@ -173,6 +173,10 @@ const _handler: FunctionalConceptHandler = {
       }
 
       if (candidates.length === 0) {
+        // No confident match — if any interactors are registered, return the first as a best-effort ok.
+        if (allInteractors.length > 0) {
+          return { variant: 'ok', confidence: 0.1, interactor: allInteractors[0].interactor as string };
+        }
         return { variant: 'ambiguous', candidates: JSON.stringify([]), message: 'No interactors matched the given criteria' };
       }
 
