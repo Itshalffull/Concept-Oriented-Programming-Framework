@@ -106,28 +106,13 @@ const _syncPairHandler: FunctionalConceptHandler = {
     p = spGet(p, 'syncPair', pairId, 'pair');
     p = branch(p, 'pair',
       (b) => {
-        let b2 = mapBindings(b, (bindings) => {
+        let b2 = putFrom(b, 'syncPair', pairId, (bindings) => {
           const pair = bindings.pair as Record<string, unknown>;
           const pairMap = (pair.pairMap as Record<string, string>) || {};
-          return idA in pairMap;
-        }, 'isLinked');
-        b2 = branch(b2, (bindings) => bindings.isLinked as boolean,
-          (() => {
-            let t = createProgram();
-            t = putFrom(t, 'syncPair', pairId, (bindings) => {
-              const pair = bindings.pair as Record<string, unknown>;
-              const pairMap = (pair.pairMap as Record<string, string>) || {};
-              delete pairMap[idA];
-              return { ...pair, pairMap };
-            });
-            return complete(t, 'ok', {});
-          })(),
-          (() => {
-            let e = createProgram();
-            return complete(e, 'notfound', { message: `Record "${idA}" not linked in pair "${pairId}"` });
-          })(),
-        );
-        return b2;
+          delete pairMap[idA];
+          return { ...pair, pairMap };
+        });
+        return complete(b2, 'ok', {});
       },
       (b) => complete(b, 'notfound', { message: `Pair "${pairId}" not found` }),
     );

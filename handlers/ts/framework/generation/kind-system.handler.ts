@@ -250,44 +250,32 @@ const _handler: FunctionalConceptHandler = {
         return !!fromKind && !!toKind;
       },
       (b) => {
-        let b2 = mapBindings(b, (bindings) => {
-          const fromKind = bindings.fromKind as Record<string, unknown>;
-          const toKind = bindings.toKind as Record<string, unknown>;
-          return edgeKey(fromKind.name as string, toKind.name as string);
-        }, 'edgeKey');
+        let b2 = find(b, EDGES_RELATION, {}, 'allEdges');
 
         b2 = mapBindings(b2, (bindings) => {
-          const fromKind = bindings.fromKind as Record<string, unknown>;
-          return fromKind.name as string;
-        }, 'fromName');
-
-        b2 = get(b2, EDGES_RELATION, '', 'edge');
-        b2 = find(b2, EDGES_RELATION, {}, 'fromEdges');
-
-        return completeFrom(b2, '', (bindings) => {
-          const fromName = bindings.fromName as string;
           const fromKind = bindings.fromKind as Record<string, unknown>;
           const toKind = bindings.toKind as Record<string, unknown>;
           const fName = fromKind.name as string;
           const tName = toKind.name as string;
-          const allEdges = bindings.fromEdges as Array<Record<string, unknown>>;
+          const allEdges = bindings.allEdges as Array<Record<string, unknown>>;
           const directEdge = allEdges.find(e =>
             (e.fromName as string) === fName && (e.toName as string) === tName
           );
-
-          if (directEdge) {
-            return { variant: 'ok' };
-          }
-
+          if (directEdge) return { valid: true, fName, tName };
           const suggestions = allEdges
             .filter(e => (e.fromName as string) === fName)
             .map(e => e.toName as string);
+          return { valid: false, fName, tName, suggestions };
+        }, '_validateResult');
 
-          return {
-            variant: 'invalid',
-            message: `No direct edge from ${fName} to ${tName}. Reachable from ${fName}: ${suggestions.join(', ') || 'none'}`,
-          };
-        });
+        return branch(b2,
+          (bindings) => (bindings._validateResult as { valid: boolean }).valid,
+          (thenP) => complete(thenP, 'ok', {}),
+          (elseP) => completeFrom(elseP, 'invalid', (bindings) => {
+            const r = bindings._validateResult as { fName: string; tName: string; suggestions: string[] };
+            return { message: `No direct edge from ${r.fName} to ${r.tName}. Reachable from ${r.fName}: ${r.suggestions.join(', ') || 'none'}` };
+          }),
+        );
       },
       (b) => complete(b, 'invalid', { message: `One or both kinds not found: '${from}', '${to}'` }),
     );

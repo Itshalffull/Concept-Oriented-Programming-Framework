@@ -163,7 +163,8 @@ describe('KindSystem functional handler', () => {
       if (typeof kindSystemHandler.connect !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_define_source = await interpret(kindSystemHandler.define({ name: "ConceptDSL", category: "source" }), storage);
-      const _pool = Object.assign({}, (afterResult_define_source?.output ?? {}));
+      const afterResult_define_model = await interpret(kindSystemHandler.define({ name: "ConceptAST", category: "model" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_source?.output ?? {}), (afterResult_define_model?.output ?? {}));
       const _fixtureInput = { from: "ConceptDSL", to: "ConceptAST", relation: "parses_to", transformName: "ConceptParser" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -250,7 +251,10 @@ describe('KindSystem functional handler', () => {
       if (typeof kindSystemHandler.route !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_define_source = await interpret(kindSystemHandler.define({ name: "ConceptDSL", category: "source" }), storage);
-      const _pool = Object.assign({}, (afterResult_define_source?.output ?? {}));
+      const afterResult_define_model = await interpret(kindSystemHandler.define({ name: "ConceptAST", category: "model" }), storage);
+      const afterResult_define_artifact = await interpret(kindSystemHandler.define({ name: "TypeScriptFiles", category: "artifact" }), storage);
+      const afterResult_connect_parse = await interpret(kindSystemHandler.connect({ from: "ConceptDSL", to: "ConceptAST", relation: "parses_to", transformName: "ConceptParser" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_source?.output ?? {}), (afterResult_define_model?.output ?? {}), (afterResult_define_artifact?.output ?? {}), (afterResult_connect_parse?.output ?? {}));
       const _fixtureInput = { from: "ConceptDSL", to: "TypeScriptFiles" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -338,7 +342,9 @@ describe('KindSystem functional handler', () => {
       if (typeof kindSystemHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_define_source = await interpret(kindSystemHandler.define({ name: "ConceptDSL", category: "source" }), storage);
-      const _pool = Object.assign({}, (afterResult_define_source?.output ?? {}));
+      const afterResult_define_model = await interpret(kindSystemHandler.define({ name: "ConceptAST", category: "model" }), storage);
+      const afterResult_connect_parse = await interpret(kindSystemHandler.connect({ from: "ConceptDSL", to: "ConceptAST", relation: "parses_to", transformName: "ConceptParser" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_source?.output ?? {}), (afterResult_define_model?.output ?? {}), (afterResult_connect_parse?.output ?? {}));
       const _fixtureInput = { from: "ConceptDSL", to: "ConceptAST" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -354,7 +360,19 @@ describe('KindSystem functional handler', () => {
     it('fixture "validate_no_edge" -> invalid', async () => {
       if (typeof kindSystemHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(kindSystemHandler.validate({ from: "ConceptDSL", to: "RustFiles" }), storage);
+      const afterResult_define_source = await interpret(kindSystemHandler.define({ name: "ConceptDSL", category: "source" }), storage);
+      const afterResult_define_model = await interpret(kindSystemHandler.define({ name: "ConceptAST", category: "model" }), storage);
+      const afterResult_connect_parse = await interpret(kindSystemHandler.connect({ from: "ConceptDSL", to: "ConceptAST", relation: "parses_to", transformName: "ConceptParser" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_source?.output ?? {}), (afterResult_define_model?.output ?? {}), (afterResult_connect_parse?.output ?? {}));
+      const _fixtureInput = { from: "ConceptDSL", to: "RustFiles" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(kindSystemHandler.validate({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('invalid'));
     });
