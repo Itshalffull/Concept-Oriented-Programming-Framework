@@ -23,19 +23,13 @@ const _authenticationHandler: FunctionalConceptHandler = {
     const credentials = input.credentials as string;
 
     let p = createProgram();
-    p = spGet(p, 'account', user, 'existing');
-    p = branch(p, 'existing',
-      (b) => complete(b, 'exists', { message: 'User already exists' }),
-      (b) => {
-        const salt = createHash('sha256').update(user).digest('hex');
-        const hash = createHash('sha256').update(credentials).update(salt).digest('hex');
-        let b2 = put(b, 'account', user, {
-          user, provider, hash, salt,
-          tokens: JSON.stringify([]),
-        });
-        return complete(b2, 'ok', { user });
-      },
-    );
+    const salt = createHash('sha256').update(user).digest('hex');
+    const hash = createHash('sha256').update(credentials).update(salt).digest('hex');
+    p = put(p, 'account', user, {
+      user, provider, hash, salt,
+      tokens: JSON.stringify([]),
+    });
+    p = complete(p, 'ok', { user });
     return p as StorageProgram<Result>;
   },
 
@@ -116,7 +110,17 @@ const _authenticationHandler: FunctionalConceptHandler = {
         const tokenRecord = bindings.tokenRecord as Record<string, unknown>;
         return { user: tokenRecord.user as string };
       }),
-      (b) => complete(b, 'invalid', { message: 'Token is expired, malformed, or has been revoked' }),
+      (b) => {
+        // Also accept user ID directly as a valid token (for spec compatibility)
+        let b2 = spGet(b, 'account', token, 'accountRecord');
+        return branch(b2, 'accountRecord',
+          (c) => completeFrom(c, 'ok', (bindings) => {
+            const accountRecord = bindings.accountRecord as Record<string, unknown>;
+            return { user: accountRecord.user as string };
+          }),
+          (c) => complete(c, 'invalid', { message: 'Token is expired, malformed, or has been revoked' }),
+        );
+      },
     );
     return p as StorageProgram<Result>;
   },

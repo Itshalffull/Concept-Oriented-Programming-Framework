@@ -18,10 +18,10 @@ const _elevationHandler: FunctionalConceptHandler = {
       return complete(createProgram(), 'invalid', { message: 'shadow is required' }) as StorageProgram<Result>;
     }
     const elevation = input.elevation as string;
-    const level = input.level as number;
+    const level = typeof input.level === 'number' ? input.level : parseInt(input.level as string, 10);
     const shadow = input.shadow as string;
 
-    if (typeof level !== 'number' || level < 0 || level > 5) {
+    if (isNaN(level) || level < 0 || level > 5) {
       const p = createProgram();
       return complete(p, 'invalid', { message: 'Elevation level must be a number between 0 and 5' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }

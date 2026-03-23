@@ -16,12 +16,12 @@ const VALID_CATEGORIES = ['serif', 'sans-serif', 'monospace', 'display', 'handwr
 const _typographyHandler: FunctionalConceptHandler = {
   defineScale(input: Record<string, unknown>) {
     const typography = input.typography as string;
-    const baseSize = input.baseSize as number;
-    const ratio = input.ratio as number;
-    const steps = input.steps as number;
-    if (typeof baseSize !== 'number' || baseSize <= 0) { let p = createProgram(); return complete(p, 'invalid', { message: 'Base size must be a positive number' }) as StorageProgram<{ variant: string; [key: string]: unknown }>; }
-    if (typeof ratio !== 'number' || ratio <= 0) { let p = createProgram(); return complete(p, 'invalid', { message: 'Ratio must be a positive number' }) as StorageProgram<{ variant: string; [key: string]: unknown }>; }
-    if (typeof steps !== 'number' || steps < 1 || !Number.isInteger(steps)) { let p = createProgram(); return complete(p, 'invalid', { message: 'Steps must be a positive integer' }) as StorageProgram<{ variant: string; [key: string]: unknown }>; }
+    const baseSize = typeof input.baseSize === 'number' ? input.baseSize : parseFloat(input.baseSize as string);
+    const ratio = typeof input.ratio === 'number' ? input.ratio : parseFloat(input.ratio as string);
+    const steps = typeof input.steps === 'number' ? input.steps : parseInt(input.steps as string, 10);
+    if (isNaN(baseSize) || baseSize <= 0) { let p = createProgram(); return complete(p, 'invalid', { message: 'Base size must be a positive number' }) as StorageProgram<{ variant: string; [key: string]: unknown }>; }
+    if (isNaN(ratio) || ratio <= 0) { let p = createProgram(); return complete(p, 'invalid', { message: 'Ratio must be a positive number' }) as StorageProgram<{ variant: string; [key: string]: unknown }>; }
+    if (isNaN(steps) || steps < 1 || !Number.isInteger(steps)) { let p = createProgram(); return complete(p, 'invalid', { message: 'Steps must be a positive integer' }) as StorageProgram<{ variant: string; [key: string]: unknown }>; }
     const id = typography || nextId('X');
     const scale: Record<string, number> = {};
     for (let i = -2; i <= steps; i++) {
@@ -31,7 +31,7 @@ const _typographyHandler: FunctionalConceptHandler = {
     }
     let p = createProgram();
     p = put(p, 'typography', id, { name: `scale-${id}`, kind: 'scale', value: JSON.stringify({ baseSize, ratio, steps }), scale: JSON.stringify(scale) });
-    return complete(p, 'ok', { scale: JSON.stringify(scale) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return complete(p, 'ok', { typography: id, scale: JSON.stringify(scale) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   defineFontStack(input: Record<string, unknown>) {
@@ -65,7 +65,8 @@ const _typographyHandler: FunctionalConceptHandler = {
     const config = input.config as string;
     let parsed: Record<string, unknown>;
     try { parsed = JSON.parse(config); } catch { let p = createProgram(); return complete(p, 'invalid', { message: 'Style config must be valid JSON with fontSize, fontWeight, lineHeight, letterSpacing fields' }) as StorageProgram<{ variant: string; [key: string]: unknown }>; }
-    if (!parsed.fontSize) { let p = createProgram(); return complete(p, 'invalid', { message: 'Style config must include at least "fontSize"' }) as StorageProgram<{ variant: string; [key: string]: unknown }>; }
+    // fontSize OR scale reference is required
+    if (!parsed.fontSize && !parsed.scale && !parsed.size) { let p = createProgram(); return complete(p, 'invalid', { message: 'Style config must include at least "fontSize" or "scale"' }) as StorageProgram<{ variant: string; [key: string]: unknown }>; }
     const id = typography || nextId('X');
     let p = createProgram();
     p = put(p, 'typography', id, { name, kind: 'style', value: JSON.stringify(parsed), scale: '' });

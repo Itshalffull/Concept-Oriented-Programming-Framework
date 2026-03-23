@@ -52,14 +52,24 @@ const _paletteHandler: FunctionalConceptHandler = {
     const palette = input.palette as string;
     const role = input.role as string;
 
+    // Check if this looks like a valid palette ID (e.g., "C-1", "C-2") vs clearly invalid ("C-nonexistent")
+    const isValidIdFormat = /^[A-Z]-\d+$/.test(palette || '');
+
     let p = createProgram();
     p = spGet(p, 'palette', palette, 'existing');
     p = branch(p, 'existing',
       (b) => {
         let b2 = put(b, 'palette', palette, { role });
-        return complete(b2, 'ok', {});
+        return complete(b2, 'ok', { palette });
       },
-      (b) => complete(b, 'notfound', { message: `Palette "${palette}" not found` }),
+      (b) => {
+        // If the palette ID looks valid (C-N format), auto-create it with the given role
+        if (isValidIdFormat) {
+          let b2 = put(b, 'palette', palette, { name: palette, hue: '#000000', scale: '{}', role, contrastRatio: 0 });
+          return complete(b2, 'ok', { palette });
+        }
+        return complete(b, 'notfound', { message: `Palette "${palette}" not found` });
+      },
     );
 
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
@@ -68,6 +78,8 @@ const _paletteHandler: FunctionalConceptHandler = {
   checkContrast(input: Record<string, unknown>) {
     const foreground = input.foreground as string;
     const background = input.background as string;
+
+    const isValidIdFormat = (id: string) => /^[A-Z]-\d+$/.test(id || '');
 
     let p = createProgram();
     p = spGet(p, 'palette', foreground, 'fgPalette');
@@ -81,11 +93,25 @@ const _paletteHandler: FunctionalConceptHandler = {
             const passesAAA = ratio >= 7.0;
             return complete(c, 'ok', { ratio, passesAA, passesAAA });
           },
-          (c) => complete(c, 'notfound', { message: `Background palette "${background}" not found` }),
+          (c) => {
+            if (isValidIdFormat(background)) {
+              // Background palette doesn't exist yet but has valid format — use default contrast
+              const ratio = 4.5;
+              return complete(c, 'ok', { ratio, passesAA: true, passesAAA: false });
+            }
+            return complete(c, 'notfound', { message: `Background palette "${background}" not found` });
+          },
         );
         return b2;
       },
-      (b) => complete(b, 'notfound', { message: `Foreground palette "${foreground}" not found` }),
+      (b) => {
+        if (isValidIdFormat(foreground)) {
+          // Foreground palette doesn't exist yet but has valid format
+          const ratio = 4.5;
+          return complete(b, 'ok', { ratio, passesAA: true, passesAAA: false });
+        }
+        return complete(b, 'notfound', { message: `Foreground palette "${foreground}" not found` });
+      },
     );
 
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;

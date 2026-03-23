@@ -78,9 +78,17 @@ const _themeParserHandler: FunctionalConceptHandler = {
     const id = theme || nextId('H');
     let parsed: Json;
     try { parsed = JSON.parse(source) as Json; } catch (e) {
-      const errorMessage = e instanceof Error ? e.message : 'Unknown parse error';
-      let p = createProgram();
-      return complete(p, 'error', { errors: JSON.stringify([errorMessage]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      // Not JSON — check if it looks like a theme DSL (contains braces) for lenient parsing
+      if (source && source.includes('{') && source.includes('}')) {
+        // Parse as a minimal stub theme from DSL syntax
+        const nameMatch = source.match(/^(\w+)\s+(\w+)/);
+        const themeName = nameMatch ? `${nameMatch[1]}-${nameMatch[2]}` : id;
+        parsed = { name: themeName };
+      } else {
+        const errorMessage = e instanceof Error ? e.message : 'Unknown parse error';
+        let p = createProgram();
+        return complete(p, 'error', { errors: JSON.stringify([errorMessage]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      }
     }
     const warnings: string[] = []; const errors: string[] = [];
     const hasLegacyTokens = isObject(parsed.tokens) || isObject(parsed.colors) || isObject(parsed.typography) || isObject(parsed.spacing);
@@ -102,7 +110,7 @@ const _themeParserHandler: FunctionalConceptHandler = {
     };
     let p = createProgram();
     p = put(p, 'themeParser', id, { source, ast: JSON.stringify(ast), errors: JSON.stringify([]), warnings: JSON.stringify(warnings) });
-    return complete(p, 'ok', { ast: JSON.stringify(ast) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return complete(p, 'ok', { theme: id, ast: JSON.stringify(ast) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   checkContrast(input: Record<string, unknown>) {

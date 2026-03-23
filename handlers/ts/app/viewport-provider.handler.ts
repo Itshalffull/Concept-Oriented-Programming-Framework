@@ -68,7 +68,19 @@ const _viewportProviderHandler: FunctionalConceptHandler = {
   setBreakpoints(input: Record<string, unknown>) {
     const provider = input.provider as string; const breakpoints = input.breakpoints as string;
     let parsed: Record<string, number>;
-    try { parsed = JSON.parse(breakpoints); } catch { let p = createProgram(); return complete(p, 'invalid', { message: 'Breakpoints must be valid JSON' }) as StorageProgram<{ variant: string; [key: string]: unknown }>; }
+    try { parsed = JSON.parse(breakpoints); } catch {
+      // Try parsing as "key:value,key:value" format (e.g. "sm:480,md:768,lg:1024")
+      const isKvFormat = /^[a-zA-Z]+:\d+(?:,[a-zA-Z]+:\d+)*$/.test((breakpoints || '').trim());
+      if (isKvFormat) {
+        parsed = {};
+        for (const pair of breakpoints.split(',')) {
+          const [k, v] = pair.split(':');
+          if (k && v) parsed[k.trim()] = parseInt(v.trim(), 10);
+        }
+      } else {
+        let p = createProgram(); return complete(p, 'invalid', { message: 'Breakpoints must be valid JSON or key:value format' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      }
+    }
     let p = createProgram();
     p = spGet(p, 'viewport-provider', provider, 'instance');
     p = branch(p, 'instance',

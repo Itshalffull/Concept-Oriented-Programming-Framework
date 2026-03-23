@@ -76,18 +76,12 @@ const _designTokenProviderHandler: FunctionalConceptHandler = {
     p = spGet(p, 'design-token-provider', provider, 'instance');
     p = branch(p, 'instance',
       (b) => {
-        let b2 = spGet(b, 'theme', theme, 'themeRecord');
-        b2 = branch(b2, 'themeRecord',
-          (c) => {
-            let c2 = put(c, 'design-token-provider', provider, {
-              activeTheme: theme,
-              tokenCache: '{}',
-            });
-            return complete(c2, 'ok', { provider });
-          },
-          (c) => complete(c, 'notfound', { theme }),
-        );
-        return b2;
+        // Theme doesn't need to be pre-registered — just update the active theme
+        let c2 = put(b, 'design-token-provider', provider, {
+          activeTheme: theme,
+          tokenCache: '{}',
+        });
+        return complete(c2, 'ok', { provider });
       },
       (b) => complete(b, 'notfound', { theme }),
     );
@@ -99,9 +93,14 @@ const _designTokenProviderHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = spGet(p, 'design-token-provider', provider, 'instance');
-    p = find(p, 'token', {}, 'tokens');
-    // Token resolution from bindings at runtime
-    return complete(p, 'ok', { tokens: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = branch(p, 'instance',
+      (b) => {
+        let b2 = find(b, 'token', {}, 'tokens');
+        return complete(b2, 'ok', { tokens: '' });
+      },
+      (b) => complete(b, 'error', { message: `Provider "${provider}" not found` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   export(input: Record<string, unknown>) {

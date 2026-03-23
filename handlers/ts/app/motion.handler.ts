@@ -16,11 +16,11 @@ const _motionHandler: FunctionalConceptHandler = {
   defineDuration(input: Record<string, unknown>) {
     const motion = input.motion as string;
     const name = input.name as string;
-    const ms = input.ms as number;
+    const ms = typeof input.ms === 'number' ? input.ms : parseFloat(input.ms as string);
 
     let p = createProgram();
 
-    if (typeof ms !== 'number' || ms < 0) {
+    if (isNaN(ms) || ms < 0) {
       return complete(p, 'invalid', { message: 'Duration must be a non-negative number in milliseconds' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 

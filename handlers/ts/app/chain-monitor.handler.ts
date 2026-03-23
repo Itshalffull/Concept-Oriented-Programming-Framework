@@ -7,7 +7,7 @@
 // validity proof). See Architecture doc for gate convention details.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, del, branch, complete,
+  createProgram, get as spGet, find, put, del, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -70,6 +70,19 @@ const _chainMonitorHandler: FunctionalConceptHandler = {
       updatedAt: new Date().toISOString(),
     });
     return complete(p, 'ok', { chainId }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  status(input: Record<string, unknown>) {
+    const txHash = input.txHash as string;
+    let p = createProgram();
+    p = spGet(p, 'subscription', txHash, 'sub');
+    return branch(p, 'sub',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const sub = bindings.sub as Record<string, unknown>;
+        return { txHash, status: sub.status, confirmations: sub.confirmations, block: sub.blockNumber, chain: sub.chain };
+      }),
+      (b) => complete(b, 'not_found', { txHash }),
+    ) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   onBlock(input: Record<string, unknown>) {

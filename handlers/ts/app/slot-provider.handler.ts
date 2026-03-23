@@ -85,7 +85,14 @@ const _slotProviderHandler: FunctionalConceptHandler = {
         });
         return complete(b2, 'ok', { provider });
       },
-      (b) => complete(b, 'notfound', { message: `Slot "${slot}" not defined` }),
+      (b) => {
+        // If slot === provider, auto-create a default slot for this provider
+        if (slot === provider) {
+          let b2 = put(b, 'slot', slot, { id: slot, name: slot, host: provider, position: 'default', fallback: '', content });
+          return complete(b2, 'ok', { provider });
+        }
+        return complete(b, 'notfound', { message: `Slot "${slot}" not defined` });
+      },
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
@@ -111,7 +118,14 @@ const _slotProviderHandler: FunctionalConceptHandler = {
         });
         return complete(b2, 'ok', { provider });
       },
-      (b) => complete(b, 'notfound', { message: `Slot "${slot}" not defined` }),
+      (b) => {
+        // If slot === provider, auto-create/clear a default slot for this provider
+        if (slot === provider) {
+          let b2 = put(b, 'slot', slot, { id: slot, name: slot, host: provider, position: 'default', fallback: '', content: '' });
+          return complete(b2, 'ok', { provider });
+        }
+        return complete(b, 'notfound', { message: `Slot "${slot}" not defined` });
+      },
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },

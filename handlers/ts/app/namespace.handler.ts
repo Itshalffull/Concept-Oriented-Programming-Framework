@@ -33,7 +33,7 @@ const _namespaceHandler: FunctionalConceptHandler = {
           parent: parentPath,
           createdAt: new Date().toISOString(),
         });
-        return complete(b2, 'ok', {});
+        return complete(b2, 'ok', { id: node });
       },
     );
 

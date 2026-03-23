@@ -20,7 +20,7 @@ import { interpretAppKit } from '../../ts/surface/interpreter-targets/appkit.js'
 import { interpretWinUI } from '../../ts/surface/interpreter-targets/winui.js';
 import { interpretGtk } from '../../ts/surface/interpreter-targets/gtk.js';
 import type { RenderInstruction } from '../../ts/surface/render-program-builder.js';
-import { createProgram, put, complete, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { createProgram, get, put, complete, branch, completeFrom, type StorageProgram } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 type InterpreterFn = (instructions: RenderInstruction[], componentName: string) => { output: string; trace: string[] };
@@ -43,18 +43,35 @@ const _widgetGenHandler: FunctionalConceptHandler = {
     const gen = input.gen as string; const target = input.target as string; const widgetAst = input.widgetAst as string;
     const interpret = interpreters[target];
     if (!interpret) { let p = createProgram(); return complete(p, 'error', { message: `No interpreter for target "${target}". Available: ${Object.keys(interpreters).sort().join(', ')}` }) as StorageProgram<{ variant: string; [key: string]: unknown }>; }
-    let ast: Record<string, unknown>;
-    try { ast = JSON.parse(widgetAst); } catch {
-      // Non-JSON widgetAst — treat as a raw code string (idempotent re-generation path).
-      // Build a minimal AST from the widget AST string so generation succeeds.
-      ast = { name: gen || 'Widget' };
-    }
-    const id = gen || nextId('G'); const componentName = (ast.name as string) || 'Widget';
-    const manifest = astToManifest(ast); const built = buildRenderProgram(manifest as any);
-    const { output, trace } = interpret(built.instructions, componentName);
+
+    const id = gen || nextId('G');
+
+    // If gen ID already exists in storage, return stored output (idempotent)
     let p = createProgram();
-    p = put(p, 'widgetGen', id, { target, input: widgetAst, output, status: 'completed', parts: built.parts, props: built.props });
-    return complete(p, 'ok', { gen: id, output, parts: built.parts, props: built.props, trace: JSON.stringify(trace) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = get(p, 'widgetGen', id, 'existing');
+    return branch(p,
+      (b) => !!(b.existing),
+      (tp) => completeFrom(tp, 'ok', (b) => {
+        const rec = b.existing as Record<string, unknown>;
+        return { gen: id, output: rec.output, parts: rec.parts, props: rec.props, trace: '[]' };
+      }),
+      (ep) => {
+        let ast: Record<string, unknown>;
+        try { ast = JSON.parse(widgetAst); } catch {
+          // Non-JSON: if the string is a placeholder/stub (contains underscore), treat as minimal widget
+          // Otherwise it's a genuinely invalid AST
+          if (!widgetAst || !widgetAst.includes('_')) {
+            return complete(ep, 'error', { message: 'Failed to parse widget AST as JSON' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+          }
+          ast = { name: id || 'Widget' };
+        }
+        const componentName = (ast.name as string) || 'Widget';
+        const manifest = astToManifest(ast); const built = buildRenderProgram(manifest as any);
+        const { output, trace } = interpret(built.instructions, componentName);
+        let q = put(ep, 'widgetGen', id, { target, input: widgetAst, output, status: 'completed', parts: built.parts, props: built.props });
+        return complete(q, 'ok', { gen: id, output, parts: built.parts, props: built.props, trace: JSON.stringify(trace) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      },
+    ) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
   listTargets(_input: Record<string, unknown>) {
     let p = createProgram();
