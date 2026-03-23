@@ -121,9 +121,12 @@ const _handler: FunctionalConceptHandler = {
     p = mapBindings(p, (b) => (b.all as any[]).find((i: any) => i.id === implId) || null, 'entry');
 
     return branch(p,
-      (b) => b.entry == null,
-      (tp) => complete(tp, 'ok', { mapping: '[]' }),
-      (ep) => {
+      (b) => b.entry == null && (b.all as unknown[]).length > 0,
+      (tp) => complete(tp, 'error', { message: `implementation not found: ${implId}` }),
+      (ep) => branch(ep,
+        (b) => b.entry == null,
+        (tp2) => complete(tp2, 'ok', { mapping: '[]' }),
+        (ep2) => {
         // Map anatomy parts from widget spec to rendered DOM elements
         let q = mapBindings(ep, (b) => {
           const entry = b.entry as any;
