@@ -19,7 +19,7 @@ type Result = { variant: string; [key: string]: unknown };
 const _functionalHandler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
     const p = createProgram();
-    return complete(p, 'ok', { name: 'grid', category: 'layout' }) as StorageProgram<Result>;
+    return complete(p, 'ok', { name: 'GridLayout', category: 'layout' }) as StorageProgram<Result>;
   },
 
   apply(input: Record<string, unknown>) {

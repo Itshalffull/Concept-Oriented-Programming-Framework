@@ -20,7 +20,7 @@ type Result = { variant: string; [key: string]: unknown };
 const _handler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
     const p = createProgram();
-    return complete(p, 'ok', { name: 'force-directed', category: 'layout' }) as StorageProgram<Result>;
+    return complete(p, 'ok', { name: 'ForceDirectedLayout', category: 'layout' }) as StorageProgram<Result>;
   },
 
   apply(input: Record<string, unknown>) {
