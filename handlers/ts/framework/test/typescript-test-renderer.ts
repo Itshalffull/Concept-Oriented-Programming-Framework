@@ -83,6 +83,19 @@ function isVariableBinding(v: unknown): v is { type: 'variable'; name: string } 
   return isAstVariable(v);
 }
 
+/**
+ * Generate the expression to access an output field from a result.
+ * - functional: result.output["field"] (interpreter wraps in output object)
+ * - imperative: (result.output ?? result)["field"] (handler may or may not use output wrapper)
+ */
+function outputAccess(resultVar: string, field: string, style: HandlerStyle): string {
+  if (style === 'functional') {
+    return `${resultVar}.output[${JSON.stringify(field)}]`;
+  }
+  // Imperative handlers may return fields directly on result or in .output
+  return `(${resultVar}.output ?? ${resultVar})[${JSON.stringify(field)}]`;
+}
+
 /** Check if any value in the fixture input contains output references */
 function hasRefs(input: Record<string, unknown>): boolean {
   return Object.values(input).some(isRef);
@@ -433,10 +446,11 @@ function renderExampleTests(handlerVar: string, examples: TestPlanExample[], sty
         lines.push(`      expect(${resultVar}.variant).toBe(${JSON.stringify(step.expectedVariant)});`);
       }
       for (const [name, _val] of Object.entries(step.outputBindings)) {
+        const access = outputAccess(resultVar, name, style);
         if (declaredVars.has(name)) {
-          lines.push(`      ${name} = ${resultVar}.output[${JSON.stringify(name)}];`);
+          lines.push(`      ${name} = ${access};`);
         } else {
-          lines.push(`      let ${name} = ${resultVar}.output[${JSON.stringify(name)}];`);
+          lines.push(`      let ${name} = ${access};`);
           declaredVars.add(name);
         }
         varToResultVar.set(name, resultVar);
@@ -479,7 +493,7 @@ function renderExampleTests(handlerVar: string, examples: TestPlanExample[], sty
         const sourceResultVar = varToResultVar.get(assertion.variable);
         const unwrappedValue = unwrapAstValue(assertion.value);
         if (sourceResultVar) {
-          lines.push(`      expect(${sourceResultVar}.output[${JSON.stringify(assertion.field)}]).${op}(${JSON.stringify(unwrappedValue)});`);
+          lines.push(`      expect(${outputAccess(sourceResultVar, assertion.field!, style)}).${op}(${JSON.stringify(unwrappedValue)});`);
         } else if (declaredVars.has(assertion.variable)) {
           // The variable was declared as a local — it IS the value, not a result object
           lines.push(`      expect(${assertion.variable}).${op}(${JSON.stringify(unwrappedValue)});`);

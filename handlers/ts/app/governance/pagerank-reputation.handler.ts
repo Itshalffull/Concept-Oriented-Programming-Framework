@@ -4,7 +4,7 @@
 // PageRank: iterative computation of reputation scores from a directed contribution graph.
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, putFrom, branch, complete, completeFrom, mapBindings,
+  createProgram, get, find, put, putFrom, del, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
@@ -14,11 +14,20 @@ type Result = { variant: string; [key: string]: unknown };
 const _pageRankReputationHandler: FunctionalConceptHandler = {
   configure(input: Record<string, unknown>) {
     const id = `pr-${Date.now()}`;
+    const dampingFactor = typeof input.dampingFactor === 'number' ? input.dampingFactor :
+      parseFloat(input.dampingFactor as string) || 0.85;
+    const maxIterations = typeof input.maxIterations === 'number' ? input.maxIterations :
+      parseInt(input.maxIterations as string, 10) || 20;
+    const convergenceThreshold = typeof input.convergenceThreshold === 'number' ? input.convergenceThreshold :
+      parseFloat(input.convergenceThreshold as string) || 0.0001;
+
     let p = createProgram();
     p = put(p, 'pagerank', id, {
       id,
-      dampingFactor: input.dampingFactor ?? 0.85,
-      iterations: input.iterations ?? 20,
+      dampingFactor,
+      maxIterations,
+      convergenceThreshold,
+      preTrusted: input.preTrusted ?? null,
     });
     p = put(p, 'plugin-registry', `reputation-algorithm:${id}`, {
       id: `reputation-algorithm:${id}`,
@@ -26,36 +35,64 @@ const _pageRankReputationHandler: FunctionalConceptHandler = {
       provider: 'PageRankReputation',
       instanceId: id,
     });
-    return complete(p, 'ok', { config: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, graph: id, config: id }) as StorageProgram<Result>;
   },
 
-  addContribution(input: Record<string, unknown>) {
-    const { config, from, to, weight } = input;
-    const edgeKey = `${config}:${from}:${to}`;
+  addEdge(input: Record<string, unknown>) {
+    const { graph, source, target } = input;
+    if (!graph || !source || !target) {
+      return complete(createProgram(), 'error', { message: 'graph, source, and target are required' }) as StorageProgram<Result>;
+    }
+    const weight = typeof input.weight === 'number' ? input.weight :
+      parseFloat(input.weight as string) || 1;
+    const edgeKey = `${graph}:${source}:${target}`;
     let p = createProgram();
     p = put(p, 'pr_edge', edgeKey, {
-      config, from, to, weight: weight ?? 1,
+      id: edgeKey, graph, source, target, weight,
     });
-    return complete(p, 'ok', { edge: `${from}:${to}` }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id: edgeKey, graph, source, target, weight }) as StorageProgram<Result>;
+  },
+
+  removeEdge(input: Record<string, unknown>) {
+    const { graph, source, target } = input;
+    if (!graph || !source || !target) {
+      return complete(createProgram(), 'error', { message: 'graph, source, and target are required' }) as StorageProgram<Result>;
+    }
+    const edgeKey = `${graph}:${source}:${target}`;
+    let p = createProgram();
+    p = get(p, 'pr_edge', edgeKey, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        b = del(b, 'pr_edge', edgeKey);
+        return complete(b, 'ok', { graph, source, target });
+      },
+      (b) => complete(b, 'not_found', { graph, source, target }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 
   compute(input: Record<string, unknown>) {
-    const { config } = input;
+    const { graph } = input;
+    if (!graph) {
+      return complete(createProgram(), 'not_found', { graph }) as StorageProgram<Result>;
+    }
     let p = createProgram();
-    p = get(p, 'pagerank', config as string, 'cfg');
-    p = find(p, 'pr_edge', { config: config as string }, 'edges');
+    p = get(p, 'pagerank', graph as string, 'cfg');
+    p = find(p, 'pr_edge', { graph: graph as string }, 'edges');
 
     p = mapBindings(p, (bindings) => {
       const cfg = bindings.cfg as Record<string, unknown> | null;
       const edges = bindings.edges as Array<Record<string, unknown>>;
       const d = cfg ? (cfg.dampingFactor as number) : 0.85;
-      const iterations = cfg ? (cfg.iterations as number) : 20;
+      const iterations = cfg ? ((cfg.maxIterations as number) ?? (cfg.iterations as number) ?? 20) : 20;
 
       const nodeSet = new Set<string>();
       const outgoing = new Map<string, Array<{ to: string; weight: number }>>();
       for (const edge of edges) {
-        const from = edge.from as string;
-        const to = edge.to as string;
+        const from = (edge.source ?? edge.from) as string;
+        const to = (edge.target ?? edge.to) as string;
         const w = edge.weight as number;
         nodeSet.add(from);
         nodeSet.add(to);
@@ -99,29 +136,31 @@ const _pageRankReputationHandler: FunctionalConceptHandler = {
       return { scores: JSON.stringify(result), scoreEntries };
     }, 'computed');
 
-    // Store all scores in a single document keyed by config
-    p = putFrom(p, 'pr_scores', config as string, (bindings) => {
+    p = putFrom(p, 'pr_scores', graph as string, (bindings) => {
       const computed = bindings.computed as Record<string, unknown>;
-      return { config, scores: computed.scores };
+      return { graph, scores: computed.scores };
     });
 
     return completeFrom(p, 'computed', (bindings) => {
       const computed = bindings.computed as Record<string, unknown>;
-      return { config, scores: computed.scores };
+      return { variant: 'ok', graph, scores: computed.scores };
     }) as StorageProgram<Result>;
   },
 
   getScore(input: Record<string, unknown>) {
-    const { config, participant } = input;
+    const { graph, participant } = input;
+    if (!graph || !participant) {
+      return complete(createProgram(), 'error', { message: 'graph and participant are required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
-    p = get(p, 'pr_scores', config as string, 'record');
+    p = get(p, 'pr_scores', graph as string, 'record');
 
     return completeFrom(p, 'score', (bindings) => {
       const record = bindings.record as Record<string, unknown> | null;
-      if (!record) return { participant, pageRank: 0 };
+      if (!record) return { variant: 'ok', participant, pageRank: 0 };
       const scores = JSON.parse(record.scores as string) as Record<string, number>;
       const pageRank = scores[participant as string] ?? 0;
-      return { participant, pageRank };
+      return { variant: 'ok', participant, pageRank };
     }) as StorageProgram<Result>;
   },
 };

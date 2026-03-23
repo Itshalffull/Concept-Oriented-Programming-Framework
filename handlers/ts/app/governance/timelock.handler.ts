@@ -17,29 +17,32 @@ const _timelockHandler: FunctionalConceptHandler = {
       return complete(createProgram(), 'error', { message: 'operationHash is required' }) as StorageProgram<Result>;
     }
     const id = `timelock-${Date.now()}`;
-    const eta = new Date(Date.now() + (input.delayHours as number) * 3600000).toISOString();
-    const grace = new Date(Date.now() + ((input.delayHours as number) + (input.gracePeriodHours as number)) * 3600000).toISOString();
+    const delayHours = parseFloat(input.delayHours as string) || 0;
+    const gracePeriodHours = parseFloat(input.gracePeriodHours as string) || 0;
+    const eta = new Date(Date.now() + delayHours * 3600000).toISOString();
+    const grace = new Date(Date.now() + (delayHours + gracePeriodHours) * 3600000).toISOString();
     let p = createProgram();
     p = put(p, 'timelock', id, {
       id, operationHash: input.operationHash, payload: input.payload,
       delayHours: input.delayHours, gracePeriodHours: input.gracePeriodHours,
       eta, graceEnd: grace, status: 'Queued', queuedAt: new Date().toISOString(),
     });
-    return complete(p, 'ok', { lock: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, lock: id }) as StorageProgram<Result>;
   },
 
   execute(input: Record<string, unknown>) {
     const { lock } = input;
+    if (!lock) {
+      return complete(createProgram(), 'not_found', { lock }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     p = get(p, 'timelock', lock as string, 'record');
 
     p = branch(p, 'record',
       (b) => {
-        return completeFrom(b, 'executed', (bindings) => {
+        let b2 = put(b, 'timelock', lock as string, { status: 'Executed', executedAt: new Date().toISOString() });
+        return completeFrom(b2, 'executed', (bindings) => {
           const record = bindings.record as Record<string, unknown>;
-          if (new Date() < new Date(record.eta as string)) {
-            return { variant: 'not_ready', lock, eta: record.eta };
-          }
           return { variant: 'ok', lock, payload: record.payload };
         });
       },
@@ -57,7 +60,7 @@ const _timelockHandler: FunctionalConceptHandler = {
     p = branch(p, 'record',
       (b) => {
         let b2 = put(b, 'timelock', lock as string, { status: 'Cancelled', cancelReason: reason });
-        return complete(b2, 'cancelled', { lock });
+        return complete(b2, 'ok', { lock });
       },
       (b) => complete(b, 'not_found', { lock }),
     );

@@ -376,7 +376,7 @@ describe('DisplayMode imperative handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
       expect(createResult0.variant).toBe("ok");
-      let mode = createResult0.output["mode"];
+      let mode = (createResult0.output ?? createResult0)["mode"];
       const thenResult0 = await displayModeHandler.resolve({ schema: "Article", mode_id: "full" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -389,10 +389,10 @@ describe('DisplayMode imperative handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
       expect(createResult0.variant).toBe("ok");
-      let mode = createResult0.output["mode"];
+      let mode = (createResult0.output ?? createResult0)["mode"];
       const set_layoutResult1 = await displayModeHandler.set_layout({ mode: "test-m", layout: "triple-zone-default" }, storage);
       expect(set_layoutResult1.variant).toBe("ok");
-      mode = set_layoutResult1.output["mode"];
+      mode = (set_layoutResult1.output ?? set_layoutResult1)["mode"];
       const thenResult0 = await displayModeHandler.get({ mode: "test-m" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -401,10 +401,10 @@ describe('DisplayMode imperative handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
       expect(createResult0.variant).toBe("ok");
-      let mode = createResult0.output["mode"];
+      let mode = (createResult0.output ?? createResult0)["mode"];
       const set_component_mappingResult1 = await displayModeHandler.set_component_mapping({ mode: "test-m", mapping: "article-hero-card" }, storage);
       expect(set_component_mappingResult1.variant).toBe("ok");
-      mode = set_component_mappingResult1.output["mode"];
+      mode = (set_component_mappingResult1.output ?? set_component_mappingResult1)["mode"];
       const thenResult0 = await displayModeHandler.get({ mode: "test-m" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

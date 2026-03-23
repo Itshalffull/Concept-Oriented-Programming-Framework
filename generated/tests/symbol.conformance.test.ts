@@ -224,7 +224,7 @@ describe('Symbol imperative handler', () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await symbolHandler.register({ symbolString: "clef/concept/Article", kind: "concept", displayName: "Article", definingFile: "specs/article.concept" }, storage);
       expect(registerResult0.variant).toBe("ok");
-      let symbol = registerResult0.output["symbol"];
+      let symbol = (registerResult0.output ?? registerResult0)["symbol"];
       const thenResult0 = await symbolHandler.get({ symbol: "test-s" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -233,7 +233,7 @@ describe('Symbol imperative handler', () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await symbolHandler.register({ symbolString: "clef/concept/Article", kind: "concept", displayName: "Article", definingFile: "specs/article.concept" }, storage);
       expect(registerResult0.variant).toBe("ok");
-      let symbol = registerResult0.output["symbol"];
+      let symbol = (registerResult0.output ?? registerResult0)["symbol"];
       const thenResult0 = await symbolHandler.resolve({ symbolString: "clef/concept/Article" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -242,7 +242,7 @@ describe('Symbol imperative handler', () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await symbolHandler.register({ symbolString: "clef/concept/Article", kind: "concept", displayName: "Article", definingFile: "specs/article.concept" }, storage);
       expect(registerResult0.variant).toBe("ok");
-      let symbol = registerResult0.output["symbol"];
+      let symbol = (registerResult0.output ?? registerResult0)["symbol"];
       const thenResult0 = await symbolHandler.register({ symbolString: "clef/concept/Article", kind: "concept", displayName: "Article", definingFile: "specs/article.concept" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

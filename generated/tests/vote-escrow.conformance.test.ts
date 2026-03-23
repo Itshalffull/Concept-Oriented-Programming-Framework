@@ -179,7 +179,7 @@ describe('VoteEscrow imperative handler', () => {
       const storage = createInMemoryStorage();
       const configureResult0 = await voteEscrowHandler.configure({ token: "GOV", maxLockYears: 4 }, storage);
       expect(configureResult0.variant).toBe("ok");
-      let config = configureResult0.output["config"];
+      let config = (configureResult0.output ?? configureResult0)["config"];
       const thenResult0 = await voteEscrowHandler.lock({ config: "test-cfg", locker: "test-p", amount: 100, lockYears: 4 }, storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await voteEscrowHandler.getWeight({ config: "test-cfg", participant: "test-p" }, storage);

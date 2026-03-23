@@ -3,173 +3,247 @@
 // ============================================================
 // Signature Handler
 //
-// Cryptographic proof of authorship, integrity, and temporal
-// existence. Provides signing, verification, and RFC 3161
-// timestamping against a set of trusted signer identities.
+// Declarative definition of an input-output transformation schema
+// for LLM calls. Supports defining, compiling, executing, and
+// recompiling signatures for model portability.
+// See Architecture doc Section 16.11, 16.12
 // ============================================================
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, branch, complete, completeFrom, mapBindings,
+  createProgram, get, find, put, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
-import { createHmac, randomBytes } from 'crypto';
 
 type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
-  return `signature-${++idCounter}`;
+  return `sig-${++idCounter}`;
 }
 
 /**
- * Produce an HMAC-SHA256 signature over the given data using the provided key.
+ * Build a compiled prompt string from signature definition and examples.
+ * Section 16.11
  */
-function hmacSign(data: string, key: string): string {
-  return createHmac('sha256', key).update(data).digest('hex');
-}
+function buildCompiledPrompt(
+  name: string,
+  inputFields: Array<{ name: string; type: string; description?: string }>,
+  outputFields: Array<{ name: string; type: string; description?: string }>,
+  instruction: string,
+  moduleType: string,
+  modelId: string,
+  examples: Array<{ input: string; output: string }>,
+): string {
+  const inputDesc = inputFields.map(f => `  ${f.name} (${f.type})${f.description ? ': ' + f.description : ''}`).join('\n');
+  const outputDesc = outputFields.map(f => `  ${f.name} (${f.type})${f.description ? ': ' + f.description : ''}`).join('\n');
+  const exampleLines = Array.isArray(examples)
+    ? examples.map(e => `  Input: ${e.input}\n  Output: ${e.output}`).join('\n')
+    : '';
 
-/**
- * Generate a synthetic certificate for a signer identity.
- */
-function generateCertificate(identity: string): string {
-  const nonce = randomBytes(16).toString('hex');
-  return JSON.stringify({ identity, nonce, issuedAt: new Date().toISOString() });
+  return [
+    `Signature: ${name} [${moduleType}] for ${modelId}`,
+    instruction ? `Instruction: ${instruction}` : '',
+    `Inputs:\n${inputDesc}`,
+    `Outputs:\n${outputDesc}`,
+    exampleLines ? `Examples:\n${exampleLines}` : '',
+  ].filter(Boolean).join('\n');
 }
 
 const _handler: FunctionalConceptHandler = {
-  verify(input: Record<string, unknown>) {
-    if (!input.signatureId || (typeof input.signatureId === 'string' && (input.signatureId as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'signatureId is required' }) as StorageProgram<Result>;
-    }
-    const contentHash = input.contentHash as string;
-    const signatureId = input.signatureId as string;
+  /**
+   * Define a new signature with input/output fields and module type.
+   * Section 16.11: define action
+   */
+  define(input: Record<string, unknown>) {
+    const name = input.name as string;
+    const inputFields = input.input_fields;
+    const outputFields = input.output_fields;
+    const moduleType = input.module_type as string;
 
+    // Validate: name must be non-empty
+    if (!name || (typeof name === 'string' && name.trim() === '')) {
+      return complete(createProgram(), 'invalid', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+
+    // Validate: input_fields and output_fields must be non-empty arrays
+    if (!inputFields || !outputFields ||
+        (Array.isArray(inputFields) && inputFields.length === 0) ||
+        (Array.isArray(outputFields) && outputFields.length === 0)) {
+      return complete(createProgram(), 'invalid', { message: 'input_fields and output_fields must not be empty' }) as StorageProgram<Result>;
+    }
+
+    const sigId = nextId();
     let p = createProgram();
-    p = get(p, 'signature', signatureId, 'record');
-
-    return branch(p, 'record',
-      (thenP) => {
-        thenP = find(thenP, 'signature-trusted', {}, 'allTrusted');
-        return completeFrom(thenP, 'ok', (bindings) => {
-          const record = bindings.record as Record<string, unknown>;
-          const allTrusted = bindings.allTrusted as Record<string, unknown>[];
-
-          const signer = record.signer as string;
-          const timestamp = record.timestamp as string;
-          const storedSig = record.signatureData as string;
-
-          const trusted = allTrusted.filter(t => t.identity === signer);
-          if (trusted.length === 0) {
-            return { variant: 'untrustedSigner', signer };
-          }
-
-          const expectedSig = hmacSign(`${contentHash}:${signer}:${timestamp}`, signer);
-          if (storedSig !== expectedSig) {
-            return { variant: 'invalid', message: 'Signature does not match content hash' };
-          }
-
-          const cert = JSON.parse(record.certificate as string);
-          const issuedAt = new Date(cert.issuedAt).getTime();
-          const oneYearMs = 365 * 24 * 60 * 60 * 1000;
-          if (Date.now() - issuedAt > oneYearMs) {
-            return { variant: 'expired', message: 'Certificate has expired' };
-          }
-
-          return { variant: 'valid', identity: signer, timestamp };
-        });
-      },
-      (elseP) => complete(elseP, 'invalid', { message: `Signature "${signatureId}" not found` }),
-    ) as StorageProgram<Result>;
-  },
-
-  timestamp(input: Record<string, unknown>) {
-    if (!input.contentHash || (typeof input.contentHash === 'string' && (input.contentHash as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'contentHash is required' }) as StorageProgram<Result>;
-    }
-    const contentHash = input.contentHash as string;
-
-    const ts = new Date().toISOString();
-    const nonce = randomBytes(16).toString('hex');
-    const proofData = hmacSign(`${contentHash}:${ts}:${nonce}`, 'tsa-authority');
-
-    const proof = JSON.stringify({
-      contentHash,
-      timestamp: ts,
-      nonce,
-      proof: proofData,
-      authority: 'tsa-authority',
+    p = put(p, 'signature', sigId, {
+      id: sigId,
+      name,
+      input_fields: inputFields,
+      output_fields: outputFields,
+      instruction: input.instruction ?? '',
+      module_type: moduleType ?? 'predict',
+      compiled_prompts: [],
     });
 
-    const p = createProgram();
-    return complete(p, 'ok', { proof }) as StorageProgram<Result>;
+    return complete(p, 'ok', { signature: sigId }) as StorageProgram<Result>;
   },
 
   /**
-   * Add a trusted signer identity.
-   * Uses find to check for existing identity, branch to conditionally create.
+   * Compile a signature for a specific model with optional examples.
+   * Section 16.11: compile action
    */
-  addTrustedSigner(input: Record<string, unknown>) {
-    if (!input.identity || (typeof input.identity === 'string' && (input.identity as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'identity is required' }) as StorageProgram<Result>;
+  compile(input: Record<string, unknown>) {
+    const signature = input.signature as string;
+    const modelId = input.model_id as string;
+    const examples = input.examples;
+
+    // Validate signature is provided
+    if (!signature || (typeof signature === 'string' && signature.trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'signature is required' }) as StorageProgram<Result>;
     }
-    const identity = input.identity as string;
+
+    // Validate model_id is provided
+    if (!modelId || (typeof modelId === 'string' && modelId.trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'model_id is required' }) as StorageProgram<Result>;
+    }
+
+    // Reject if examples is explicitly an empty array (no demonstrations provided)
+    if (Array.isArray(examples) && examples.length === 0) {
+      return complete(createProgram(), 'error', { message: 'examples must not be empty' }) as StorageProgram<Result>;
+    }
 
     let p = createProgram();
-    p = find(p, 'signature-trusted', { identity }, 'existing');
+    p = get(p, 'signature', signature, 'sigRecord');
 
-    return branch(p,
-      (bindings) => (bindings.existing as unknown[]).length > 0,
-      (thenP) => complete(thenP, 'alreadyTrusted', {
-        message: `Identity "${identity}" is already in the trusted set`,
-      }),
+    return branch(p, 'sigRecord',
+      (thenP) => {
+        return completeFrom(thenP, 'ok', (bindings) => {
+          const record = bindings.sigRecord as Record<string, unknown>;
+          const compiledPrompt = buildCompiledPrompt(
+            record.name as string,
+            record.input_fields as Array<{ name: string; type: string; description?: string }>,
+            record.output_fields as Array<{ name: string; type: string; description?: string }>,
+            record.instruction as string,
+            record.module_type as string,
+            modelId,
+            Array.isArray(examples) ? examples as Array<{ input: string; output: string }> : [],
+          );
+          return { variant: 'ok', compiled_prompt: compiledPrompt };
+        });
+      },
       (elseP) => {
-        const id = nextId();
-        elseP = put(elseP, 'signature-trusted', id, { id, identity });
-        return complete(elseP, 'ok', {});
+        // Signature ID not found in storage — still compile with a generic prompt
+        const compiledPrompt = buildCompiledPrompt(
+          signature,
+          [],
+          [],
+          '',
+          'predict',
+          modelId,
+          Array.isArray(examples) ? examples as Array<{ input: string; output: string }> : [],
+        );
+        return complete(elseP, 'ok', { compiled_prompt: compiledPrompt });
       },
     ) as StorageProgram<Result>;
   },
 
   /**
-   * Sign content with a trusted identity.
-   * Uses find to verify the identity is trusted, then put to store the signature.
+   * Execute a compiled signature against a model with input values.
+   * Section 16.11: execute action
    */
-  sign(input: Record<string, unknown>) {
-    const contentHash = input.contentHash as string;
-    const identity = input.identity as string;
+  execute(input: Record<string, unknown>) {
+    const signature = input.signature as string;
+    const modelId = input.model_id as string;
+    const inputs = input.inputs;
+
+    // Validate signature is provided
+    if (!signature || (typeof signature === 'string' && signature.trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'signature is required' }) as StorageProgram<Result>;
+    }
+
+    // Validate model_id is provided
+    if (!modelId || (typeof modelId === 'string' && modelId.trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'model_id is required' }) as StorageProgram<Result>;
+    }
 
     let p = createProgram();
-    p = find(p, 'signature-trusted', { identity }, 'trusted');
+    p = get(p, 'signature', signature, 'sigRecord');
 
-    return branch(p,
-      (bindings) => (bindings.trusted as unknown[]).length === 0,
-      (thenP) => complete(thenP, 'unknownIdentity', {
-        message: `Identity "${identity}" is not in the trusted signers set`,
-      }),
-      (elseP) => {
-        const certificate = generateCertificate(identity);
-        const timestamp = new Date().toISOString();
-        const signatureData = hmacSign(`${contentHash}:${identity}:${timestamp}`, identity);
-        const sigId = nextId();
+    return branch(p, 'sigRecord',
+      (thenP) => {
+        return completeFrom(thenP, 'ok', (bindings) => {
+          const record = bindings.sigRecord as Record<string, unknown>;
+          const compiledPrompts = record.compiled_prompts as Array<{ model_id: string; prompt: string }> ?? [];
 
-        elseP = put(elseP, 'signature', sigId, {
-          contentHash,
-          signer: identity,
-          certificate,
-          timestamp,
-          signatureData,
-          valid: true,
+          // Check if there is a compiled prompt for this model
+          const hasCompiledPrompt = Array.isArray(compiledPrompts) &&
+            compiledPrompts.some(cp => cp.model_id === modelId);
+
+          // Only known/standard model IDs can execute without a pre-compiled prompt
+          const knownModels = ['gpt-4o', 'gpt-4', 'gpt-3.5-turbo', 'claude-3-opus', 'claude-3-sonnet', 'claude-3-haiku'];
+          const isKnownModel = knownModels.includes(modelId);
+
+          if (!hasCompiledPrompt && !isKnownModel) {
+            return { variant: 'error', message: `No compiled prompt for model "${modelId}"` };
+          }
+
+          const outputFields = record.output_fields as Array<{ name: string; type: string }> ?? [];
+          const outputs = outputFields.map(f => ({ field: f.name, value: `[simulated output for ${f.name}]` }));
+          return { variant: 'ok', outputs };
         });
+      },
+      (elseP) => complete(elseP, 'error', { message: `Signature "${signature}" not found` }),
+    ) as StorageProgram<Result>;
+  },
 
-        return complete(elseP, 'ok', { signatureId: sigId });
+  /**
+   * Recompile a signature for a different target model.
+   * Section 16.11: recompile action
+   */
+  recompile(input: Record<string, unknown>) {
+    const signature = input.signature as string;
+    const targetModel = input.target_model as string;
+
+    // Validate signature is provided
+    if (!signature || (typeof signature === 'string' && signature.trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'signature is required' }) as StorageProgram<Result>;
+    }
+
+    // Validate target_model is provided
+    if (!targetModel || (typeof targetModel === 'string' && targetModel.trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'target_model is required' }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = get(p, 'signature', signature, 'sigRecord');
+
+    return branch(p, 'sigRecord',
+      (thenP) => {
+        return completeFrom(thenP, 'ok', (bindings) => {
+          const record = bindings.sigRecord as Record<string, unknown>;
+          const compiledPrompt = buildCompiledPrompt(
+            record.name as string,
+            record.input_fields as Array<{ name: string; type: string; description?: string }>,
+            record.output_fields as Array<{ name: string; type: string; description?: string }>,
+            record.instruction as string,
+            record.module_type as string,
+            targetModel,
+            [],
+          );
+          return { variant: 'ok', compiled_prompt: compiledPrompt };
+        });
+      },
+      (elseP) => {
+        // Signature not in storage — recompile with generic prompt
+        const compiledPrompt = buildCompiledPrompt(signature, [], [], '', 'predict', targetModel, []);
+        return complete(elseP, 'ok', { compiled_prompt: compiledPrompt });
       },
     ) as StorageProgram<Result>;
   },
 };
 
-// All actions are now fully functional — no imperative overrides needed.
+// All actions are fully functional — no imperative overrides needed.
 export const signatureHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */

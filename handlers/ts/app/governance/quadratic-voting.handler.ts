@@ -11,14 +11,25 @@ import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
+/** Resolve an id value that may be a string, object ref, or number. */
+function resolveId(val: unknown): string {
+  if (!val) return '';
+  if (typeof val === 'string') return val;
+  if (typeof val === 'object') return String((val as Record<string, unknown>).id ?? '') || JSON.stringify(val);
+  return String(val);
+}
+
 const _quadraticVotingHandler: FunctionalConceptHandler = {
-  openSession(input: Record<string, unknown>) {
+  configure(input: Record<string, unknown>) {
+    const creditBudget = parseFloat(input.creditBudget as string);
+    if (!input.creditBudget || isNaN(creditBudget) || creditBudget <= 0) {
+      return complete(createProgram(), 'error', { message: 'creditBudget must be a positive number' }) as StorageProgram<Result>;
+    }
     const id = `qv-${Date.now()}`;
     let p = createProgram();
-    p = put(p, 'qv_session', id, {
+    p = put(p, 'qv_config', id, {
       id,
-      creditBudget: input.creditBudget as number,
-      options: input.options,
+      creditBudget,
       status: 'open',
     });
     p = put(p, 'plugin-registry', `counting-method:${id}`, {
@@ -27,87 +38,110 @@ const _quadraticVotingHandler: FunctionalConceptHandler = {
       provider: 'QuadraticVoting',
       instanceId: id,
     });
-    return complete(p, 'ok', { session: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, config: id }) as StorageProgram<Result>;
   },
 
-  castVotes(input: Record<string, unknown>) {
-    const { session, voter, allocations } = input;
-    const allocs = (typeof allocations === 'string' ? JSON.parse(allocations as string) : allocations) as
-      Record<string, number>;
+  allocateCredits(input: Record<string, unknown>) {
+    const configId = resolveId(input.config);
+    const voter = input.voter as string | undefined;
+    if (!configId || !voter) {
+      return complete(createProgram(), 'error', { message: 'config and voter are required' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
-    p = get(p, 'qv_session', session as string, 'record');
+    p = get(p, 'qv_config', configId, 'record');
 
     p = branch(p, 'record',
       (b) => {
-        b = mapBindings(b, (bindings) => {
-          const record = bindings.record as Record<string, unknown>;
-          if (record.status !== 'open') return { _castError: 'session_closed' };
-
-          const budget = record.creditBudget as number;
-
-          let totalCost = 0;
-          for (const votes of Object.values(allocs)) {
-            totalCost += votes * votes;
-          }
-
-          if (totalCost > budget) {
-            return { _castError: 'budget_exceeded', totalCost, budget };
-          }
-
-          return { _castError: null, totalCost, remainingCredits: budget - totalCost };
-        }, 'castCheck');
-
-        // Store the vote record for later tallying
-        const voteId = `${session}:${voter}`;
-        b = put(b, 'qv_vote', voteId, { id: voteId, session, voter, allocations: allocs });
-
-        return completeFrom(b, 'cast', (bindings) => {
-          const check = bindings.castCheck as Record<string, unknown>;
-          if (check._castError === 'session_closed') {
-            return { variant: 'session_closed', session };
-          }
-          if (check._castError === 'budget_exceeded') {
-            return { variant: 'budget_exceeded', totalCost: check.totalCost, budget: check.budget };
-          }
-          return { variant: 'cast', session, voter, totalCost: check.totalCost, remainingCredits: check.remainingCredits };
-        });
+        // Check for duplicate allocation
+        b = get(b, 'qv_allocation', `${configId}:${voter}`, 'existing');
+        return branch(b, 'existing',
+          (existsB) => complete(existsB, 'error', { message: 'voter already allocated', config: configId, voter }),
+          (newB) => {
+            newB = put(newB, 'qv_allocation', `${configId}:${voter}`, {
+              config: configId, voter, allocatedAt: new Date().toISOString(),
+            });
+            return complete(newB, 'ok', { config: configId, voter });
+          },
+        );
       },
-      (b) => complete(b, 'not_found', { session }),
+      (b) => complete(b, 'not_found', { config: configId }),
     );
 
     return p as StorageProgram<Result>;
   },
 
-  tally(input: Record<string, unknown>) {
-    const { session } = input;
+  castVotes(input: Record<string, unknown>) {
+    const configId = resolveId(input.config);
+    const voter = input.voter as string | undefined;
+    const issue = input.issue as string | undefined;
+    if (!configId || !voter) {
+      return complete(createProgram(), 'error', { message: 'config and voter are required' }) as StorageProgram<Result>;
+    }
+    const votes = typeof input.numberOfVotes === 'number' ? input.numberOfVotes : parseInt(input.numberOfVotes as string, 10) || 0;
+    const cost = votes * votes;
+
     let p = createProgram();
-    p = get(p, 'qv_session', session as string, 'record');
+    p = get(p, 'qv_config', configId, 'record');
 
     p = branch(p, 'record',
       (b) => {
-        b = find(b, 'qv_vote', { session: session as string }, 'allVotes');
         b = mapBindings(b, (bindings) => {
-          const allVotes = bindings.allVotes as Array<Record<string, unknown>>;
-          const votesByOption: Record<string, number> = {};
-          for (const vote of allVotes) {
-            const allocs = vote.allocations as Record<string, number>;
-            for (const [option, votes] of Object.entries(allocs)) {
-              votesByOption[option] = (votesByOption[option] ?? 0) + votes;
-            }
+          const record = bindings.record as Record<string, unknown>;
+          const budget = record.creditBudget as number;
+          if (cost > budget) {
+            return { _error: 'budget_exceeded', cost, budget };
           }
-          const ranked = Object.entries(votesByOption).sort((a, b) => b[1] - a[1]);
-          const winner = ranked.length > 0 ? ranked[0][0] : null;
-          return { winner, votesByOption: JSON.stringify(votesByOption) };
-        }, 'tallyResult');
+          return { _error: null, cost, remainingCredits: budget - cost };
+        }, 'castCheck');
 
-        let b2 = put(b, 'qv_session', session as string, { status: 'tallied' });
+        const voteId = `${configId}:${voter}:${issue}`;
+        b = put(b, 'qv_vote', voteId, { id: voteId, config: configId, voter, issue, numberOfVotes: votes, cost });
 
-        return completeFrom(b2, 'result', (bindings) => {
-          const tallyResult = bindings.tallyResult as Record<string, unknown>;
-          return { session, winner: tallyResult.winner, votesByOption: tallyResult.votesByOption };
+        return completeFrom(b, 'cast', (bindings) => {
+          const check = bindings.castCheck as Record<string, unknown>;
+          if (check._error === 'budget_exceeded') {
+            return { variant: 'error', message: 'budget_exceeded', cost: check.cost, budget: check.budget };
+          }
+          return { variant: 'ok', config: configId, voter, issue, cost: check.cost, remainingCredits: check.remainingCredits };
         });
       },
-      (b) => complete(b, 'not_found', { session }),
+      (b) => complete(b, 'not_found', { config: configId }),
+    );
+
+    return p as StorageProgram<Result>;
+  },
+
+  count(input: Record<string, unknown>) {
+    const configId = resolveId(input.config);
+    const issue = input.issue as string | undefined;
+    if (!configId) {
+      return complete(createProgram(), 'not_found', { config: configId }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
+    p = get(p, 'qv_config', configId, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        b = find(b, 'qv_vote', { config: configId }, 'allVotes');
+        b = mapBindings(b, (bindings) => {
+          const allVotes = bindings.allVotes as Array<Record<string, unknown>>;
+          const filtered = issue ? allVotes.filter(v => v.issue === issue) : allVotes;
+          const votesByIssue: Record<string, number> = {};
+          for (const vote of filtered) {
+            const k = vote.issue as string;
+            votesByIssue[k] = (votesByIssue[k] ?? 0) + (vote.numberOfVotes as number);
+          }
+          const ranked = Object.entries(votesByIssue).sort((a, bv) => bv[1] - a[1]);
+          const winner = ranked.length > 0 ? ranked[0][0] : null;
+          return { winner, votesByIssue: JSON.stringify(votesByIssue) };
+        }, 'tallyResult');
+
+        return completeFrom(b, 'ok', (bindings) => {
+          const t = bindings.tallyResult as Record<string, unknown>;
+          return { variant: 'ok', config: configId, issue, winner: t.winner, votesByIssue: t.votesByIssue };
+        });
+      },
+      (b) => complete(b, 'not_found', { config: configId }),
     );
 
     return p as StorageProgram<Result>;

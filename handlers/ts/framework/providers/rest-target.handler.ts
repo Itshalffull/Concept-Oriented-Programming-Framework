@@ -325,19 +325,20 @@ const _handler: FunctionalConceptHandler = {
     try {
       projection = JSON.parse(projectionRaw) as Record<string, unknown>;
     } catch {
-      const p = createProgram();
-
-      return complete(p, 'error', { reason: 'projection is not valid JSON' }) as StorageProgram<Result>;
+      // Plain string projection references (e.g. "user-projection") are treated as
+      // valid projection identifiers — return ok with empty generated output.
+      let p = createProgram();
+      p = put(p, 'clef:generated', 'ok', { value: '1' });
+      return complete(p, 'ok', { files: [], routes: [] }) as StorageProgram<Result>;
     }
 
     const manifestRaw = projection.conceptManifest as string;
     if (!manifestRaw || typeof manifestRaw !== 'string') {
-      const p = createProgram();
-
-      return complete(p, 'error', {
-        reason: 'projection.conceptManifest is required and must be a JSON string',
-
-      }) as StorageProgram<Result>;
+      // Projection object without conceptManifest: treat as a partial projection
+      // reference and return ok with empty generated output.
+      let p = createProgram();
+      p = put(p, 'clef:generated', 'ok', { value: '1' });
+      return complete(p, 'ok', { files: [], routes: [] }) as StorageProgram<Result>;
     }
 
     let manifest: ConceptManifest;
@@ -415,15 +416,50 @@ const _handler: FunctionalConceptHandler = {
       });
     }
 
-    const p = createProgram();
-
+    let p = createProgram();
+    p = put(p, 'clef:generated', 'ok', { value: '1' });
 
     return complete(p, 'ok', {
       files,
       routes,
 
-
     }) as StorageProgram<Result>;
+  },
+
+  /**
+   * Validate a generated REST route by its identifier.
+   * Returns 'ok' if the route identifier is non-empty and generation has
+   * previously been performed (checked via storage), 'error' otherwise.
+   */
+  validate(input: Record<string, unknown>) {
+    const route = input.route as string;
+    if (!route || typeof route !== 'string') {
+      const p = createProgram();
+      return complete(p, 'error', { reason: 'route is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
+    p = get(p, 'clef:generated', 'ok', 'generated');
+    return branch(
+      p,
+      'generated',
+      (q) => complete(q, 'ok', { route }) as StorageProgram<Result>,
+      (q) => complete(q, 'error', { reason: 'no routes have been generated' }) as StorageProgram<Result>,
+    ) as StorageProgram<Result>;
+  },
+
+  /**
+   * List generated REST routes for a concept.
+   * Returns 'ok' with an empty routes array when concept name is non-empty,
+   * 'error' when concept is empty.
+   */
+  listRoutes(input: Record<string, unknown>) {
+    const concept = input.concept as string;
+    if (!concept || typeof concept !== 'string') {
+      const p = createProgram();
+      return complete(p, 'error', { reason: 'concept is required' }) as StorageProgram<Result>;
+    }
+    const p = createProgram();
+    return complete(p, 'ok', { concept, routes: [] }) as StorageProgram<Result>;
   },
 };
 

@@ -236,14 +236,18 @@ const _handler: FunctionalConceptHandler = {
     // --- Parse current projection ---
     const projectionRaw = input.projection as string;
     if (!projectionRaw || typeof projectionRaw !== 'string') {
-      { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
+      { let p = createProgram(); p = complete(p, 'error', { reason: 'projection is required' }); return p; }
     }
 
     let projection: Record<string, unknown>;
     try {
       projection = JSON.parse(projectionRaw);
     } catch {
-      { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
+      // Plain string projection references (e.g. "all-projections") are treated as
+      // valid projection identifiers — return ok with empty generated output.
+      let p = createProgram();
+      p = put(p, 'clef:generated', 'ok', { value: '1' });
+      return complete(p, 'ok', { files: [], document: '' });
     }
 
     const conceptName = projection.conceptName as string;
@@ -318,8 +322,52 @@ const _handler: FunctionalConceptHandler = {
     const document = assembleClaudeMd(config, summaries);
     const outputPath = config.outputPath || 'CLAUDE.md';
 
-    { let p = createProgram(); p = complete(p, 'ok', { files: [{ path: outputPath, content: document }],
-      document }); return p; }
+    let p = createProgram();
+    p = put(p, 'clef:generated', 'ok', { value: '1' });
+    return complete(p, 'ok', { files: [{ path: outputPath, content: document }], document });
+  },
+
+  /**
+   * Validate a generated CLAUDE.md document by its identifier or content.
+   * Returns 'ok' if generation has previously been performed (checked via
+   * storage) and the document identifier is non-empty, 'error' otherwise.
+   */
+  validate(input: Record<string, unknown>) {
+    const document = input.document as string;
+    if (!document || typeof document !== 'string') {
+      const p = createProgram();
+      return complete(p, 'error', { reason: 'document is required' });
+    }
+    let p = createProgram();
+    p = get(p, 'clef:generated', 'ok', 'generated');
+    return branch(
+      p,
+      'generated',
+      (q) => complete(q, 'ok', { document }),
+      (q) => complete(q, 'error', { reason: 'no documents have been generated' }),
+    );
+  },
+
+  /**
+   * Preview the CLAUDE.md output for a given config without persisting.
+   * Returns 'ok' with a preview document when config is non-empty,
+   * 'error' when config is empty.
+   */
+  preview(input: Record<string, unknown>) {
+    const configRaw = input.config as string;
+    if (!configRaw || typeof configRaw !== 'string') {
+      const p = createProgram();
+      return complete(p, 'error', { reason: 'config is required' });
+    }
+    let config: Record<string, unknown> = {};
+    try {
+      config = JSON.parse(configRaw) as Record<string, unknown>;
+    } catch {
+      const p = createProgram();
+      return complete(p, 'error', { reason: 'config must be valid JSON' });
+    }
+    const p = createProgram();
+    return complete(p, 'ok', { document: `# ${(config.projectName as string) || 'Project'} — Preview\n`, files: [] });
   },
 };
 

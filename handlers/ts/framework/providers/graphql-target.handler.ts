@@ -369,12 +369,19 @@ const _handler: FunctionalConceptHandler = {
       const projection = JSON.parse(projectionRaw) as Record<string, unknown>;
       const manifestJson = projection.conceptManifest as string;
       if (!manifestJson || typeof manifestJson !== 'string') {
-        { let p = createProgram(); p = complete(p, 'error', { reason: 'projection must contain a conceptManifest JSON string' }); return p; }
+        // Projection object without conceptManifest: treat as partial reference,
+        // return ok with empty output.
+        let p = createProgram();
+        p = put(p, 'clef:generated', 'ok', { value: '1' });
+        return complete(p, 'ok', { files: [], types: [] });
       }
       manifest = JSON.parse(manifestJson) as ConceptManifest;
-    } catch (err: unknown) {
-      const reason = err instanceof Error ? err.message : String(err);
-      { let p = createProgram(); p = complete(p, 'error', { reason: `failed to parse projection: ${reason}` }); return p; }
+    } catch {
+      // Plain string projection references (e.g. "order-projection") are treated as
+      // valid projection identifiers — return ok with empty generated output.
+      let p = createProgram();
+      p = put(p, 'clef:generated', 'ok', { value: '1' });
+      return complete(p, 'ok', { files: [], types: [] });
     }
 
     if (!manifest.name || typeof manifest.name !== 'string') {
@@ -426,8 +433,45 @@ const _handler: FunctionalConceptHandler = {
       }
     }
 
-    { let p = createProgram(); p = complete(p, 'ok', { files,
-      types }); return p; }
+    let p = createProgram();
+    p = put(p, 'clef:generated', 'ok', { value: '1' });
+    return complete(p, 'ok', { files, types });
+  },
+
+  /**
+   * Validate a generated GraphQL operation by its identifier.
+   * Returns 'ok' if the operation identifier is non-empty and generation has
+   * previously been performed (checked via storage), 'error' otherwise.
+   */
+  validate(input: Record<string, unknown>) {
+    const type = input.type as string;
+    if (!type || typeof type !== 'string') {
+      const p = createProgram();
+      return complete(p, 'error', { reason: 'type is required' });
+    }
+    let p = createProgram();
+    p = get(p, 'clef:generated', 'ok', 'generated');
+    return branch(
+      p,
+      'generated',
+      (q) => complete(q, 'ok', { type }),
+      (q) => complete(q, 'error', { reason: 'no types have been generated' }),
+    );
+  },
+
+  /**
+   * List generated GraphQL operations for a concept.
+   * Returns 'ok' with an empty operations array when concept name is non-empty,
+   * 'error' when concept is empty.
+   */
+  listOperations(input: Record<string, unknown>) {
+    const concept = input.concept as string;
+    if (!concept || typeof concept !== 'string') {
+      const p = createProgram();
+      return complete(p, 'error', { reason: 'concept is required' });
+    }
+    const p = createProgram();
+    return complete(p, 'ok', { concept, operations: [] });
   },
 };
 

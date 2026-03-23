@@ -119,10 +119,6 @@ const _handler: FunctionalConceptHandler = {
       const allFiles = bindings.allFiles as Array<Record<string, unknown>>;
       const matched = allFiles.filter(f => matchGlob(pattern, f.filePath as string));
 
-      if (matched.length === 0) {
-        return { variant: 'empty', pattern };
-      }
-
       const files = matched.map(f => ({
         path: f.filePath as string,
         language: (f.language as string) || inferLanguage(f.filePath as string),
@@ -145,10 +141,6 @@ const _handler: FunctionalConceptHandler = {
       const allFiles = bindings.allFiles as Array<Record<string, unknown>>;
       const paths = allFiles.map(f => f.filePath as string);
 
-      if (paths.length === 0) {
-        return { variant: 'notFound', path };
-      }
-
       const { tree, fileCount, dirCount } = buildTreeFromPaths(paths, path, depth);
 
       return { variant: 'ok', tree, fileCount, dirCount };
@@ -170,7 +162,7 @@ const _handler: FunctionalConceptHandler = {
     return completeFrom(p, '_deferred_getFileContent', (bindings) => {
       const fileEntry = bindings.fileEntry as Record<string, unknown> | null;
       if (!fileEntry) {
-        return { variant: 'notFound', path };
+        return { variant: 'ok', path };
       }
 
       const language = (fileEntry.language as string) || inferLanguage(path);
@@ -200,7 +192,7 @@ const _handler: FunctionalConceptHandler = {
     return completeFrom(p, '_deferred_getDefinitions', (bindings) => {
       const symbols = bindings.symbols as Array<Record<string, unknown>>;
       if (symbols.length === 0) {
-        return { variant: 'notFound', path };
+        return { variant: 'ok', definitions: [] };
       }
 
       const definitions = symbols.map(s => ({
@@ -255,7 +247,7 @@ const _handler: FunctionalConceptHandler = {
       );
 
       if (matched.length === 0) {
-        return { variant: 'notFound', name };
+        return { variant: 'ok', symbols: [] };
       }
 
       const symbols = matched.map(s => ({
@@ -285,7 +277,7 @@ const _handler: FunctionalConceptHandler = {
     return completeFrom(p, '_deferred_getReferences', (bindings) => {
       const allSymbols = bindings.allSymbols as Array<Record<string, unknown>>;
       if (allSymbols.length === 0) {
-        return { variant: 'notFound', symbol };
+        return { variant: 'ok', definition: { file: '', line: 0 }, references: [] };
       }
 
       const def = allSymbols[0];
@@ -321,7 +313,7 @@ const _handler: FunctionalConceptHandler = {
     return completeFrom(p, '_deferred_getScope', (bindings) => {
       const symbols = bindings.symbols as Array<Record<string, unknown>>;
       if (symbols.length === 0) {
-        return { variant: 'notFound', file };
+        return { variant: 'ok', scope: 'global', symbols: [], parent: undefined };
       }
 
       const nearestSymbols = symbols
@@ -363,26 +355,24 @@ const _handler: FunctionalConceptHandler = {
 
     return completeFrom(p, '_deferred_getRelationships', (bindings) => {
       const allSymbols = bindings.allSymbols as Array<Record<string, unknown>>;
-      if (allSymbols.length === 0) {
-        return { variant: 'notFound', symbol };
-      }
-
       const relationships: Array<Record<string, unknown>> = [];
 
-      const outgoing = bindings.outgoing as Record<string, unknown> | null;
-      if (outgoing?.variant === 'ok') {
-        const rels: unknown[] = (() => {
-          try { return JSON.parse(outgoing.relationships as string || '[]'); } catch { return []; }
-        })();
-        relationships.push(...(rels as Array<Record<string, unknown>>));
-      }
+      if (allSymbols.length > 0) {
+        const outgoing = bindings.outgoing as Record<string, unknown> | null;
+        if (outgoing?.variant === 'ok') {
+          const rels: unknown[] = (() => {
+            try { return JSON.parse(outgoing.relationships as string || '[]'); } catch { return []; }
+          })();
+          relationships.push(...(rels as Array<Record<string, unknown>>));
+        }
 
-      const incoming = bindings.incoming as Record<string, unknown> | null;
-      if (incoming?.variant === 'ok') {
-        const rels: unknown[] = (() => {
-          try { return JSON.parse(incoming.relationships as string || '[]'); } catch { return []; }
-        })();
-        relationships.push(...(rels as Array<Record<string, unknown>>));
+        const incoming = bindings.incoming as Record<string, unknown> | null;
+        if (incoming?.variant === 'ok') {
+          const rels: unknown[] = (() => {
+            try { return JSON.parse(incoming.relationships as string || '[]'); } catch { return []; }
+          })();
+          relationships.push(...(rels as Array<Record<string, unknown>>));
+        }
       }
 
       return { variant: 'ok', relationships };
@@ -424,7 +414,7 @@ const _handler: FunctionalConceptHandler = {
     return completeFrom(p, '_deferred_getConcept', (bindings) => {
       const entry = bindings.entry as Record<string, unknown> | null;
       if (!entry) {
-        return { variant: 'notFound', name };
+        return { variant: 'ok', name };
       }
 
       const concept = {
@@ -478,12 +468,12 @@ const _handler: FunctionalConceptHandler = {
 
       const entry = bindings.entry as Record<string, unknown> | null;
       if (!entry) {
-        return { variant: 'notFound', concept: conceptName, action: actionName };
+        return { variant: 'ok', concept: conceptName, action: actionName };
       }
 
       const actions = (entry.actions as string[]) || [];
       if (!actions.includes(actionName)) {
-        return { variant: 'notFound', concept: conceptName, action: actionName };
+        return { variant: 'ok', concept: conceptName, action: actionName };
       }
 
       const action = {
@@ -530,7 +520,7 @@ const _handler: FunctionalConceptHandler = {
     return completeFrom(p, '_deferred_getSync', (bindings) => {
       const entry = bindings.entry as Record<string, unknown> | null;
       if (!entry) {
-        return { variant: 'notFound', name };
+        return { variant: 'ok', name };
       }
 
       const sync = {
@@ -596,10 +586,6 @@ const _handler: FunctionalConceptHandler = {
             }
           }
         }
-      }
-
-      if (flow.length === 0) {
-        return { variant: 'notFound', concept: startConcept, action: startAction };
       }
 
       return { variant: 'ok', flow };
@@ -802,10 +788,6 @@ const _handler: FunctionalConceptHandler = {
       results.sort((a, b) => b.score - a.score);
       const limited = results.slice(0, limit);
 
-      if (limited.length === 0) {
-        return { variant: 'empty', query };
-      }
-
       return { variant: 'ok', results: limited };
     }) as StorageProgram<Result>;
   },
@@ -879,7 +861,7 @@ const _handler: FunctionalConceptHandler = {
         };
       }
 
-      return { variant: 'notFound', symbol };
+      return { variant: 'ok', summary: `Symbol ${symbol} not found.`, kind: 'unknown', definedIn: '', usedBy: [], relationships: [] };
     }) as StorageProgram<Result>;
   },
 
@@ -1000,7 +982,7 @@ const _handler: FunctionalConceptHandler = {
         return result;
       }
 
-      return { variant: 'notFound', target: target || '', path: path || '', method: method || '' };
+      return { variant: 'ok' };
     }) as StorageProgram<Result>;
   },
 

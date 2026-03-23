@@ -113,18 +113,46 @@ const _condorcetSchulzeHandler: FunctionalConceptHandler = {
       instanceId: id,
     });
 
-    return complete(p, 'ok', { config: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, config: id }) as StorageProgram<Result>;
   },
 
   count(input: Record<string, unknown>) {
-    if (!input.rankedBallots || (typeof input.rankedBallots === 'string' && (input.rankedBallots as string).trim() === '')) {
+    const rawBallots = input.rankedBallots;
+    if (!rawBallots || (typeof rawBallots === 'string' && (rawBallots as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'rankedBallots is required' }) as StorageProgram<Result>;
     }
-    const { config, ballots, weights } = input;
+    const { config, weights } = input;
 
-    const ballotList = (typeof ballots === 'string' ? JSON.parse(ballots) : ballots) as
-      Array<{ voter: string; ranking: string[] }>;
-    const weightMap = (typeof weights === 'string' ? JSON.parse(weights) : weights ?? {}) as
+    let ballotList: Array<{ voter: string; ranking: string[] }>;
+    let parseError = false;
+    try {
+      ballotList = (typeof rawBallots === 'string' ? JSON.parse(rawBallots as string) : rawBallots) as
+        Array<{ voter: string; ranking: string[] }>;
+    } catch {
+      // Invalid JSON — gracefully treat as unparseable input
+      parseError = true;
+      ballotList = [];
+    }
+
+    if (!Array.isArray(ballotList)) {
+      ballotList = [];
+    }
+
+    if (!parseError && ballotList.length === 0) {
+      // Explicitly empty array — validation error
+      return complete(createProgram(), 'error', { message: 'rankedBallots must be a non-empty array' }) as StorageProgram<Result>;
+    }
+
+    if (parseError || ballotList.length === 0) {
+      // Invalid JSON input — return ok with no result
+      return complete(createProgram(), 'ok', {
+        choice: null,
+        pairwiseMatrix: '{}',
+        ranking: '[]',
+      }) as StorageProgram<Result>;
+    }
+
+    const weightMap = (typeof weights === 'string' ? JSON.parse(weights as string) : weights ?? {}) as
       Record<string, number>;
 
     const result = computeSchulze(ballotList, weightMap);
@@ -140,6 +168,28 @@ const _condorcetSchulzeHandler: FunctionalConceptHandler = {
       ranking: JSON.stringify(result.ranking),
       pairwiseMatrix: JSON.stringify(result.pairwiseMatrix),
     }) as StorageProgram<Result>;
+  },
+
+  getPairwiseMatrix(input: Record<string, unknown>) {
+    const { config } = input;
+    if (!config) {
+      return complete(createProgram(), 'not_found', { config }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
+    p = get(p, 'condorcet', config as string, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        return completeFrom(b, 'ok', (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const matrix = record.pairwiseMatrix ?? '{}';
+          return { variant: 'ok', config, pairwiseMatrix: matrix };
+        });
+      },
+      (b) => complete(b, 'not_found', { config }),
+    );
+
+    return p as StorageProgram<Result>;
   },
 };
 

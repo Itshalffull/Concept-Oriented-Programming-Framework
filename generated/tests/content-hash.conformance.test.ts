@@ -162,7 +162,7 @@ describe('ContentHash imperative handler', () => {
       const storage = createInMemoryStorage();
       const storeResult0 = await contentHashHandler.store({ content: "test-c" }, storage);
       expect(storeResult0.variant).toBe("ok");
-      let hash = storeResult0.output["hash"];
+      let hash = (storeResult0.output ?? storeResult0)["hash"];
       const thenResult0 = await contentHashHandler.retrieve({ hash: "test-h" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -171,7 +171,7 @@ describe('ContentHash imperative handler', () => {
       const storage = createInMemoryStorage();
       const storeResult0 = await contentHashHandler.store({ content: "test-c" }, storage);
       expect(storeResult0.variant).toBe("ok");
-      let hash = storeResult0.output["hash"];
+      let hash = (storeResult0.output ?? storeResult0)["hash"];
       const thenResult0 = await contentHashHandler.verify({ hash: "test-h", content: "test-c" }, storage);
       expect(thenResult0.variant).toBe("valid");
     });
@@ -180,7 +180,7 @@ describe('ContentHash imperative handler', () => {
       const storage = createInMemoryStorage();
       const storeResult0 = await contentHashHandler.store({ content: "test-c" }, storage);
       expect(storeResult0.variant).toBe("ok");
-      let hash = storeResult0.output["hash"];
+      let hash = (storeResult0.output ?? storeResult0)["hash"];
       const thenResult0 = await contentHashHandler.store({ content: "test-c" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

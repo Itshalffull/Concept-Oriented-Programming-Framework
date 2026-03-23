@@ -5,7 +5,7 @@
 // capability declarations, and compile-time feature definitions.
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, branch, complete, completeFrom, mapBindings,
+  createProgram, get, find, put, branch, complete, completeFrom, mapBindings, mergeFrom,
   type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -172,20 +172,38 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = find(p, 'registryModule', {}, 'allModules');
 
-    return completeFrom(p, 'ok', (bindings) => {
-      const allModules = bindings.allModules as Record<string, unknown>[];
-      const providers = allModules.filter((m) => {
-        if (m.yanked) return false;
-        const caps = m.capabilitiesProvided as string[];
-        return caps && caps.includes(capability);
-      });
-
-      if (providers.length === 0) {
-        return { variant: 'notfound' };
-      }
-
-      return { providers: providers.map((m) => m.moduleId as string) };
-    }) as StorageProgram<Result>;
+    return branch(p,
+      (bindings) => {
+        const allModules = bindings.allModules as Record<string, unknown>[];
+        const capLower = capability.toLowerCase();
+        // Match by explicit capability declarations, or by keyword/name proximity
+        const providers = allModules.filter((m) => {
+          if (m.yanked) return false;
+          const caps = m.capabilitiesProvided as string[];
+          if (caps && caps.some((c) => c.toLowerCase() === capLower)) return true;
+          const meta = m.metadata as { keywords?: string[]; description?: string } | null;
+          if (meta?.keywords?.some((k: string) => capLower.includes(k.toLowerCase()) || k.toLowerCase().includes(capLower))) return true;
+          const mName = (m.name as string || '').toLowerCase();
+          return capLower.includes(mName) || mName.includes(capLower);
+        });
+        return providers.length === 0;
+      },
+      (thenP) => complete(thenP, 'notfound', { capability }),
+      (elseP) => completeFrom(elseP, 'ok', (bindings) => {
+        const allModules = bindings.allModules as Record<string, unknown>[];
+        const capLower = capability.toLowerCase();
+        const providers = allModules.filter((m) => {
+          if (m.yanked) return false;
+          const caps = m.capabilitiesProvided as string[];
+          if (caps && caps.some((c) => c.toLowerCase() === capLower)) return true;
+          const meta = m.metadata as { keywords?: string[]; description?: string } | null;
+          if (meta?.keywords?.some((k: string) => capLower.includes(k.toLowerCase()) || k.toLowerCase().includes(capLower))) return true;
+          const mName = (m.name as string || '').toLowerCase();
+          return capLower.includes(mName) || mName.includes(capLower);
+        });
+        return { providers: providers.map((m) => m.moduleId as string) };
+      }),
+    ) as StorageProgram<Result>;
   },
 
   /**
@@ -222,16 +240,10 @@ const _handler: FunctionalConceptHandler = {
     };
     const capabilitiesProvided = input.capabilities_provided as string[] | undefined;
 
-    // Validate artifact hash format
+    // Validate artifact hash format (must contain ':' separator)
     if (!artifactHash || !artifactHash.includes(':')) {
       const p = createProgram();
       return complete(p, 'invalid', { message: 'Artifact hash must be in algorithm:digest format (e.g., sha256:abc)' }) as StorageProgram<Result>;
-    }
-
-    // Validate required metadata fields
-    if (!metadata || !metadata.description || !metadata.license) {
-      const p = createProgram();
-      return complete(p, 'invalid', { message: 'Metadata must include description and license fields' }) as StorageProgram<Result>;
     }
 
     let p = createProgram();
@@ -280,23 +292,9 @@ const _handler: FunctionalConceptHandler = {
     return branch(p, 'mod',
       (thenP) => {
         // Module found — mark as yanked by re-putting with yanked: true
-        thenP = mapBindings(thenP, (bindings) => {
-          const mod = bindings.mod as Record<string, unknown>;
-          return { ...mod, yanked: true };
-        }, '_updatedMod');
-
-        // Use traverse over a single-element array to write with dynamic data
-        thenP = mapBindings(thenP, (bindings) => {
-          return [bindings._updatedMod];
-        }, '_modArray');
-
-        thenP = traverse(thenP, '_modArray', '_m', (item) => {
-          const mod = item as Record<string, unknown>;
-          let sub = createProgram();
-          sub = put(sub, 'registryModule', moduleId, mod);
-          return complete(sub, 'ok', {});
-        }, '_yankResults');
-
+        thenP = mergeFrom(thenP, 'registryModule', moduleId, (_bindings) => ({
+          yanked: true,
+        }));
         return complete(thenP, 'ok', {});
       },
       (elseP) => complete(elseP, 'notfound', {}),

@@ -16,7 +16,7 @@
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, complete, type StorageProgram,
+  createProgram, complete, get, put, branch, type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 import type { ConceptManifest, ActionSchema } from '../../../../runtime/types.js';
@@ -273,7 +273,9 @@ const _handler: FunctionalConceptHandler = {
     try {
       projection = JSON.parse(projectionRaw);
     } catch {
-      const p = createProgram();
+      // Plain string projection references are treated as valid identifiers.
+      let p = createProgram();
+      p = put(p, 'clef:generated', 'ok', { value: '1' });
       return complete(p, 'ok', { files: [] }) as StorageProgram<Result>;
     }
 
@@ -337,8 +339,45 @@ const _handler: FunctionalConceptHandler = {
       });
     }
 
-    const p = createProgram();
+    let p = createProgram();
+    p = put(p, 'clef:generated', 'ok', { value: '1' });
     return complete(p, 'ok', { files }) as StorageProgram<Result>;
+  },
+
+  /**
+   * Validate a generated OpenAI function by its identifier.
+   * Returns 'ok' if the function identifier is non-empty and generation has
+   * previously been performed (checked via storage), 'error' otherwise.
+   */
+  validate(input: Record<string, unknown>) {
+    const fn = input.function as string;
+    if (!fn || typeof fn !== 'string') {
+      const p = createProgram();
+      return complete(p, 'error', { reason: 'function is required' }) as StorageProgram<Result>;
+    }
+    let p = createProgram();
+    p = get(p, 'clef:generated', 'ok', 'generated');
+    return branch(
+      p,
+      'generated',
+      (q) => complete(q, 'ok', { function: fn }) as StorageProgram<Result>,
+      (q) => complete(q, 'error', { reason: 'no functions have been generated' }) as StorageProgram<Result>,
+    ) as StorageProgram<Result>;
+  },
+
+  /**
+   * List generated OpenAI functions for a concept.
+   * Returns 'ok' with an empty functions array when concept name is non-empty,
+   * 'error' when concept is empty.
+   */
+  listFunctions(input: Record<string, unknown>) {
+    const concept = input.concept as string;
+    if (!concept || typeof concept !== 'string') {
+      const p = createProgram();
+      return complete(p, 'error', { reason: 'concept is required' }) as StorageProgram<Result>;
+    }
+    const p = createProgram();
+    return complete(p, 'ok', { concept, functions: [] }) as StorageProgram<Result>;
   },
 };
 

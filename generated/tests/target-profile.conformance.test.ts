@@ -336,7 +336,7 @@ describe('TargetProfile imperative handler', () => {
       const storage = createInMemoryStorage();
       const createResult0 = await targetProfileHandler.create({ name: "myProfile" }, storage);
       expect(createResult0.variant).toBe("ok");
-      let profile = createResult0.output["profile"];
+      let profile = (createResult0.output ?? createResult0)["profile"];
       const thenResult0 = await targetProfileHandler.validate({ profile: "test-p" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

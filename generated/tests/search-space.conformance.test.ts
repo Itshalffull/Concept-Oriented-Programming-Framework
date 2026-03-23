@@ -188,7 +188,7 @@ describe('SearchSpace imperative handler', () => {
       const storage = createInMemoryStorage();
       const indexResult0 = await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "e1", data: "hello world" }, storage);
       expect(indexResult0.variant).toBe("ok");
-      let entry = indexResult0.output["entry"];
+      let entry = (indexResult0.output ?? indexResult0)["entry"];
       const thenResult0 = await searchSpaceHandler.query({ scope_id: "vs-1", provider: "text", query_expr: "hello" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -197,10 +197,10 @@ describe('SearchSpace imperative handler', () => {
       const storage = createInMemoryStorage();
       const indexResult0 = await searchSpaceHandler.index({ scope_id: "vs-2", provider: "text", entity_id: "e2", data: "test data" }, storage);
       expect(indexResult0.variant).toBe("ok");
-      let entry = indexResult0.output["entry"];
+      let entry = (indexResult0.output ?? indexResult0)["entry"];
       const tombstoneResult1 = await searchSpaceHandler.tombstone({ scope_id: "vs-2", provider: "text", entity_id: "e2" }, storage);
       expect(tombstoneResult1.variant).toBe("ok");
-      entry = tombstoneResult1.output["entry"];
+      entry = (tombstoneResult1.output ?? tombstoneResult1)["entry"];
       const thenResult0 = await searchSpaceHandler.query({ scope_id: "vs-2", provider: "text", query_expr: "test" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -209,7 +209,7 @@ describe('SearchSpace imperative handler', () => {
       const storage = createInMemoryStorage();
       const indexResult0 = await searchSpaceHandler.index({ scope_id: "vs-3", provider: "text", entity_id: "e3", data: "content" }, storage);
       expect(indexResult0.variant).toBe("ok");
-      let entry = indexResult0.output["entry"];
+      let entry = (indexResult0.output ?? indexResult0)["entry"];
       const clearResult1 = await searchSpaceHandler.clear({ scope_id: "vs-3" }, storage);
       expect(clearResult1.variant).toBe("ok");
       const thenResult0 = await searchSpaceHandler.query({ scope_id: "vs-3", provider: "text", query_expr: "content" }, storage);

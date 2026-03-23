@@ -382,14 +382,14 @@ describe('StorageProgram imperative handler', () => {
       expect(createResult0.variant).toBe("ok");
       const getResult1 = await storageProgramHandler.get({ program: "test-p", relation: "users", key: "u1", bindAs: "user" }, storage);
       expect(getResult1.variant).toBe("ok");
-      let program = getResult1.output["program"];
+      let program = (getResult1.output ?? getResult1)["program"];
       const putResult2 = await storageProgramHandler.put({ program: "test-p", relation: "users", key: "u1", value: "updated" }, storage);
       expect(putResult2.variant).toBe("ok");
-      program = putResult2.output["program"];
+      program = (putResult2.output ?? putResult2)["program"];
       const pureResult3 = await storageProgramHandler.pure({ program: "test-p", variant: "ok", output: "done" }, storage);
       expect(pureResult3.variant).toBe("ok");
-      program = pureResult3.output["program"];
-      expect(pureResult3.output["terminated"]).toBe(true);
+      program = (pureResult3.output ?? pureResult3)["program"];
+      expect((pureResult3.output ?? pureResult3)["terminated"]).toBe(true);
     });
 
     it("sealed program rejects new instructions", async () => {
@@ -398,7 +398,7 @@ describe('StorageProgram imperative handler', () => {
       expect(createResult0.variant).toBe("ok");
       const pureResult1 = await storageProgramHandler.pure({ program: "test-p", variant: "ok", output: "done" }, storage);
       expect(pureResult1.variant).toBe("ok");
-      let program = pureResult1.output["program"];
+      let program = (pureResult1.output ?? pureResult1)["program"];
       const thenResult0 = await storageProgramHandler.get({ program: "test-p", relation: "users", key: "u1", bindAs: "x" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

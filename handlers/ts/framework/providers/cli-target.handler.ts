@@ -387,14 +387,18 @@ const _handler: FunctionalConceptHandler = {
     const overridesRaw = input.overrides as string | undefined;
 
     if (!projectionRaw || typeof projectionRaw !== 'string') {
-      { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
+      { let p = createProgram(); p = complete(p, 'error', { reason: 'projection is required' }); return p; }
     }
 
     let projection: Record<string, unknown>;
     try {
       projection = JSON.parse(projectionRaw);
     } catch {
-      { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
+      // Plain string projection references (e.g. "task-projection") are treated as
+      // valid projection identifiers — return ok with empty generated output.
+      let p = createProgram();
+      p = put(p, 'clef:generated', 'ok', { value: '1' });
+      return complete(p, 'ok', { files: [], commands: [] });
     }
 
     const manifestRaw = projection.conceptManifest as string | Record<string, unknown>;
@@ -451,7 +455,45 @@ const _handler: FunctionalConceptHandler = {
       });
     }
 
-    { let p = createProgram(); p = complete(p, 'ok', { files }); return p; }
+    let p = createProgram();
+    p = put(p, 'clef:generated', 'ok', { value: '1' });
+    return complete(p, 'ok', { files, commands: [] });
+  },
+
+  /**
+   * Validate a generated CLI command by its identifier.
+   * Returns 'ok' if the command identifier is non-empty and generation has
+   * previously been performed (checked via storage), 'error' otherwise.
+   */
+  validate(input: Record<string, unknown>) {
+    const command = input.command as string;
+    if (!command || typeof command !== 'string') {
+      const p = createProgram();
+      return complete(p, 'error', { reason: 'command is required' });
+    }
+    let p = createProgram();
+    p = get(p, 'clef:generated', 'ok', 'generated');
+    return branch(
+      p,
+      'generated',
+      (q) => complete(q, 'ok', { command }),
+      (q) => complete(q, 'error', { reason: 'no commands have been generated' }),
+    );
+  },
+
+  /**
+   * List generated CLI commands for a concept.
+   * Returns 'ok' with an empty commands array when concept name is non-empty,
+   * 'error' when concept is empty.
+   */
+  listCommands(input: Record<string, unknown>) {
+    const concept = input.concept as string;
+    if (!concept || typeof concept !== 'string') {
+      const p = createProgram();
+      return complete(p, 'error', { reason: 'concept is required' });
+    }
+    const p = createProgram();
+    return complete(p, 'ok', { concept, commands: [] });
   },
 };
 

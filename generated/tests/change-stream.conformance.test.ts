@@ -208,8 +208,8 @@ describe('ChangeStream imperative handler', () => {
       const storage = createInMemoryStorage();
       const appendResult0 = await changeStreamHandler.append({ type: "insert", before: "test-_", after: "test-_", source: "db" }, storage);
       expect(appendResult0.variant).toBe("ok");
-      let offset = appendResult0.output["offset"];
-      let eventId = appendResult0.output["eventId"];
+      let offset = (appendResult0.output ?? appendResult0)["offset"];
+      let eventId = (appendResult0.output ?? appendResult0)["eventId"];
       const thenResult0 = await changeStreamHandler.append({ type: "update", before: "test-_", after: "test-_", source: "db" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -218,8 +218,8 @@ describe('ChangeStream imperative handler', () => {
       const storage = createInMemoryStorage();
       const appendResult0 = await changeStreamHandler.append({ type: "test-t", before: "test-b", after: "test-a", source: "test-s" }, storage);
       expect(appendResult0.variant).toBe("ok");
-      let offset = appendResult0.output["offset"];
-      let eventId = appendResult0.output["eventId"];
+      let offset = (appendResult0.output ?? appendResult0)["offset"];
+      let eventId = (appendResult0.output ?? appendResult0)["eventId"];
       const thenResult0 = await changeStreamHandler.replay({ from: "test-n", to: "test-n" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

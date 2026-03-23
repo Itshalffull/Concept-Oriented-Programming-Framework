@@ -194,7 +194,7 @@ describe('Reputation imperative handler', () => {
       const storage = createInMemoryStorage();
       const earnResult0 = await reputationHandler.earn({ participant: "test-p", amount: 10, reason: "test-_" }, storage);
       expect(earnResult0.variant).toBe("ok");
-      let entry = earnResult0.output["entry"];
+      let entry = (earnResult0.output ?? earnResult0)["entry"];
       const thenResult0 = await reputationHandler.getScore({ participant: "test-p" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

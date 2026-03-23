@@ -158,7 +158,7 @@ describe('Installer imperative handler', () => {
       const storage = createInMemoryStorage();
       const stageResult0 = await installerHandler.stage({ lockfile_entries: "test-entries", project_root: "test-root" }, storage);
       expect(stageResult0.variant).toBe("ok");
-      let installation = stageResult0.output["installation"];
+      let installation = (stageResult0.output ?? stageResult0)["installation"];
       // Note: variable 'i' not found in step outputs
       expect(i).toBe(false);
       // Note: variable 'i' not found in step outputs
@@ -169,7 +169,7 @@ describe('Installer imperative handler', () => {
       const storage = createInMemoryStorage();
       const stageResult0 = await installerHandler.stage({ lockfile_entries: "test-entries", project_root: "test-root" }, storage);
       expect(stageResult0.variant).toBe("ok");
-      let installation = stageResult0.output["installation"];
+      let installation = (stageResult0.output ?? stageResult0)["installation"];
       const thenResult0 = await installerHandler.activate({ installation: "test-i" }, storage);
       expect(thenResult0.variant).toBe("ok");
       // Note: variable 'i' not found in step outputs

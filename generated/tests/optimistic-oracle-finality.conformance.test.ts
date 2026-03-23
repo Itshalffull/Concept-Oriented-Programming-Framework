@@ -167,7 +167,7 @@ describe('OptimisticOracleFinality imperative handler', () => {
       const storage = createInMemoryStorage();
       const assertFinalityResult0 = await optimisticOracleFinalityHandler.assertFinality({ operationRef: "test-_", asserter: "test-_", bond: "test-_", challengeWindowHours: 48 }, storage);
       expect(assertFinalityResult0.variant).toBe("ok");
-      let assertion = assertFinalityResult0.output["assertion"];
+      let assertion = (assertFinalityResult0.output ?? assertFinalityResult0)["assertion"];
       const thenResult0 = await optimisticOracleFinalityHandler.checkExpiry({ assertion: "test-oo" }, storage);
       expect(thenResult0.variant).toBe("finalized");
     });

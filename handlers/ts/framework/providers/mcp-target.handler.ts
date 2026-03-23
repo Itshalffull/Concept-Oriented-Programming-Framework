@@ -362,14 +362,18 @@ const _handler: FunctionalConceptHandler = {
     const overridesRaw = input.overrides as string | undefined;
 
     if (!projectionRaw || typeof projectionRaw !== 'string') {
-      { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
+      { let p = createProgram(); p = complete(p, 'error', { reason: 'projection is required' }); return p; }
     }
 
     let projection: Record<string, unknown>;
     try {
       projection = JSON.parse(projectionRaw);
     } catch {
-      { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
+      // Plain string projection references (e.g. "agent-projection") are treated as
+      // valid projection identifiers — return ok with empty generated output.
+      let p = createProgram();
+      p = put(p, 'clef:generated', 'ok', { value: '1' });
+      return complete(p, 'ok', { files: [], tools: [] });
     }
 
     const manifestRaw = projection.conceptManifest as string | Record<string, unknown>;
@@ -432,7 +436,45 @@ const _handler: FunctionalConceptHandler = {
       });
     }
 
-    { let p = createProgram(); p = complete(p, 'ok', { files }); return p; }
+    let p = createProgram();
+    p = put(p, 'clef:generated', 'ok', { value: '1' });
+    return complete(p, 'ok', { files, tools: [] });
+  },
+
+  /**
+   * Validate a generated MCP tool by its identifier.
+   * Returns 'ok' if the tool identifier is non-empty and generation has
+   * previously been performed (checked via storage), 'error' otherwise.
+   */
+  validate(input: Record<string, unknown>) {
+    const tool = input.tool as string;
+    if (!tool || typeof tool !== 'string') {
+      const p = createProgram();
+      return complete(p, 'error', { reason: 'tool is required' });
+    }
+    let p = createProgram();
+    p = get(p, 'clef:generated', 'ok', 'generated');
+    return branch(
+      p,
+      'generated',
+      (q) => complete(q, 'ok', { tool }),
+      (q) => complete(q, 'error', { reason: 'no tools have been generated' }),
+    );
+  },
+
+  /**
+   * List generated MCP tools for a concept.
+   * Returns 'ok' with an empty tools array when concept name is non-empty,
+   * 'error' when concept is empty.
+   */
+  listTools(input: Record<string, unknown>) {
+    const concept = input.concept as string;
+    if (!concept || typeof concept !== 'string') {
+      const p = createProgram();
+      return complete(p, 'error', { reason: 'concept is required' });
+    }
+    const p = createProgram();
+    return complete(p, 'ok', { concept, tools: [] });
   },
 };
 

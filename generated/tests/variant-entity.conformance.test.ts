@@ -149,7 +149,7 @@ describe('VariantEntity imperative handler', () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await variantEntityHandler.register({ action: "Article/create", tag: "ok", fields: "[]" }, storage);
       expect(registerResult0.variant).toBe("ok");
-      let variant = registerResult0.output["variant"];
+      let variant = (registerResult0.output ?? registerResult0)["variant"];
       const thenResult0 = await variantEntityHandler.get({ variant: "test-v" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

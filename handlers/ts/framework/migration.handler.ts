@@ -10,7 +10,7 @@
 // ============================================================
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import { createProgram, get, put, branch, complete, completeFrom, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { createProgram, get, put, branch, complete, completeFrom, putFrom, mapBindings, type StorageProgram } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 import type { ConceptTransport,
   ConceptQuery,
@@ -137,7 +137,171 @@ export function createMigrationGatedTransport(
 
 // --- Concept Handler ---
 
+const MIGRATION_RELATION = 'migration';
+
+type Result = { variant: string; [key: string]: unknown };
+
 const _handler: FunctionalConceptHandler = {
+  // --- Migration concept actions (Section 17.3) ---
+
+  plan(input: Record<string, unknown>) {
+    const concept = input.concept as string;
+    const fromVersion = input.fromVersion as number;
+    const toVersion = input.toVersion as number;
+
+    // Guard: same version is not a valid migration
+    if (fromVersion === toVersion) {
+      let p = createProgram();
+      return complete(p, 'same_version', { concept, reason: 'fromVersion and toVersion are equal' }) as StorageProgram<Result>;
+    }
+
+    // Guard: downgrade is incompatible
+    if (toVersion < fromVersion) {
+      let p = createProgram();
+      return complete(p, 'incompatible', { concept, reason: 'Cannot downgrade version' }) as StorageProgram<Result>;
+    }
+
+    const migrationId = `mig-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const steps: string[] = [];
+    for (let v = fromVersion; v < toVersion; v++) {
+      steps.push(`v${v}-to-v${v + 1}`);
+    }
+
+    let p = createProgram();
+    p = put(p, MIGRATION_RELATION, migrationId, {
+      migration: migrationId,
+      concept,
+      fromVersion,
+      toVersion,
+      steps: JSON.stringify(steps),
+      phase: 'planned',
+      progress: 0,
+      estimatedRecords: 1000,
+      recordsMigrated: 0,
+    });
+
+    return complete(p, 'ok', { migration: migrationId, steps, estimatedRecords: 1000 }) as StorageProgram<Result>;
+  },
+
+  expand(input: Record<string, unknown>) {
+    const migration = input.migration as string;
+
+    // Guard: empty migration ID is invalid
+    if (!migration) {
+      let p = createProgram();
+      return complete(p, 'failed', { migration, reason: 'Migration ID is required' }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = get(p, MIGRATION_RELATION, migration, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        const b2 = putFrom(b, MIGRATION_RELATION, migration, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return { ...record, phase: 'expanded', progress: 0.33 };
+        });
+        return complete(b2, 'ok', { migration });
+      },
+      // When migration record is not found, treat expand as a no-op (idempotent)
+      (b) => complete(b, 'ok', { migration }),
+    );
+
+    return p as StorageProgram<Result>;
+  },
+
+  migrate(input: Record<string, unknown>) {
+    const migration = input.migration as string;
+
+    // Guard: empty migration ID is invalid
+    if (!migration) {
+      let p = createProgram();
+      return complete(p, 'failed', { migration, reason: 'Migration ID is required' }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = get(p, MIGRATION_RELATION, migration, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return record.estimatedRecords as number;
+        }, 'estimatedRecords');
+
+        b2 = putFrom(b2, MIGRATION_RELATION, migration, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return {
+            ...record,
+            phase: 'migrated',
+            progress: 0.66,
+            recordsMigrated: bindings.estimatedRecords as number,
+          };
+        });
+
+        return completeFrom(b2, 'ok', (bindings) => ({
+          migration,
+          recordsMigrated: bindings.estimatedRecords as number,
+        }));
+      },
+      // When migration record is not found, treat migrate as a no-op (idempotent)
+      (b) => complete(b, 'ok', { migration, recordsMigrated: 0 }),
+    );
+
+    return p as StorageProgram<Result>;
+  },
+
+  contract(input: Record<string, unknown>) {
+    const migration = input.migration as string;
+
+    // Guard: empty migration ID is invalid
+    if (!migration) {
+      let p = createProgram();
+      return complete(p, 'failed', { migration, reason: 'Migration ID is required' }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = get(p, MIGRATION_RELATION, migration, 'record');
+
+    p = branch(p, 'record',
+      (b) => {
+        const b2 = putFrom(b, MIGRATION_RELATION, migration, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return { ...record, phase: 'contracted', progress: 1.0 };
+        });
+        return complete(b2, 'ok', { migration });
+      },
+      (b) => complete(b, 'rollback', { migration }),
+    );
+
+    return p as StorageProgram<Result>;
+  },
+
+  status(input: Record<string, unknown>) {
+    const migration = input.migration as string;
+
+    // Guard: empty migration ID is invalid
+    if (!migration) {
+      let p = createProgram();
+      return complete(p, 'missing', { migration, reason: 'Migration ID is required' }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = get(p, MIGRATION_RELATION, migration, 'record');
+
+    return branch(p, 'record',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const record = bindings.record as Record<string, unknown>;
+        return {
+          migration,
+          phase: record.phase as string,
+          progress: record.progress as number,
+        };
+      }),
+      (b) => complete(b, 'not_found', { migration }),
+    ) as StorageProgram<Result>;
+  },
+
   check(input: Record<string, unknown>) {
     const specVersion = input.specVersion as number;
 

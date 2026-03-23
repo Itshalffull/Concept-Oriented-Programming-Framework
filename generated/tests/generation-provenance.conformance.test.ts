@@ -305,7 +305,7 @@ describe('GenerationProvenance imperative handler', () => {
       const storage = createInMemoryStorage();
       const recordResult0 = await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage);
       expect(recordResult0.variant).toBe("ok");
-      let provenance = recordResult0.output["provenance"];
+      let provenance = (recordResult0.output ?? recordResult0)["provenance"];
       const thenResult0 = await generationProvenanceHandler.getByFile({ outputFile: "handlers/ts/article.handler.ts" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

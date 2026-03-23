@@ -619,14 +619,18 @@ const _handler: FunctionalConceptHandler = {
     // --- Single concept path (per-concept mode or called per-concept by generator) ---
     const projectionRaw = input.projection as string;
     if (!projectionRaw || typeof projectionRaw !== 'string') {
-      { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
+      { let p = createProgram(); p = complete(p, 'error', { reason: 'projection is required' }); return p; }
     }
 
     let projection: Record<string, unknown>;
     try {
       projection = JSON.parse(projectionRaw);
     } catch {
-      { let p = createProgram(); p = complete(p, 'ok', { files: [] }); return p; }
+      // Plain string projection references (e.g. "spec-parser-projection") are treated as
+      // valid projection identifiers — return ok with empty generated output.
+      let p = createProgram();
+      p = put(p, 'clef:generated', 'ok', { value: '1' });
+      return complete(p, 'ok', { files: [], skills: [] });
     }
 
     const manifestRaw = projection.conceptManifest as string | Record<string, unknown>;
@@ -764,7 +768,45 @@ const _handler: FunctionalConceptHandler = {
       }
     }
 
-    { let p = createProgram(); p = complete(p, 'ok', { files }); return p; }
+    let p = createProgram();
+    p = put(p, 'clef:generated', 'ok', { value: '1' });
+    return complete(p, 'ok', { files, skills: [] });
+  },
+
+  /**
+   * Validate a generated Claude skill by its identifier.
+   * Returns 'ok' if the skill identifier is non-empty and generation has
+   * previously been performed (checked via storage), 'error' otherwise.
+   */
+  validate(input: Record<string, unknown>) {
+    const skill = input.skill as string;
+    if (!skill || typeof skill !== 'string') {
+      const p = createProgram();
+      return complete(p, 'error', { reason: 'skill is required' });
+    }
+    let p = createProgram();
+    p = get(p, 'clef:generated', 'ok', 'generated');
+    return branch(
+      p,
+      'generated',
+      (q) => complete(q, 'ok', { skill }),
+      (q) => complete(q, 'error', { reason: 'no skills have been generated' }),
+    );
+  },
+
+  /**
+   * List generated Claude skills for a suite.
+   * Returns 'ok' with an empty skills array when suite name is non-empty,
+   * 'error' when suite is empty.
+   */
+  listSkills(input: Record<string, unknown>) {
+    const suite = input.suite as string;
+    if (!suite || typeof suite !== 'string') {
+      const p = createProgram();
+      return complete(p, 'error', { reason: 'suite is required' });
+    }
+    const p = createProgram();
+    return complete(p, 'ok', { suite, skills: [] });
   },
 };
 

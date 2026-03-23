@@ -19,14 +19,24 @@ function nextPhase(current: Phase): Phase | null {
 
 type Result = { variant: string; [key: string]: unknown };
 
+function resolveId(val: unknown): string | undefined {
+  if (!val) return undefined;
+  if (typeof val === 'string') return val.trim() || undefined;
+  if (typeof val === 'object') return String((val as Record<string, unknown>).id ?? '') || undefined;
+  return String(val) || undefined;
+}
+
 const _consentProcessHandler: FunctionalConceptHandler = {
-  openRound(input: Record<string, unknown>) {
+  initiate(input: Record<string, unknown>) {
+    const proposalRef = input.proposalRef as string | undefined;
+    if (!proposalRef || proposalRef.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'proposalRef is required' }) as StorageProgram<Result>;
+    }
     const id = `consent-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'consent', id, {
       id,
-      proposal: input.proposal,
-      facilitator: input.facilitator,
+      proposalRef,
       phase: 'Presenting' as Phase,
       objections: '[]',
       reactions: '[]',
@@ -40,20 +50,19 @@ const _consentProcessHandler: FunctionalConceptHandler = {
       instanceId: id,
     });
 
-    return complete(p, 'ok', { round: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, process: id }) as StorageProgram<Result>;
   },
 
   advancePhase(input: Record<string, unknown>) {
-    if (!input.process || (typeof input.process === 'string' && (input.process as string).trim() === '')) {
+    const processId = resolveId(input.process);
+    if (!processId) {
       return complete(createProgram(), 'error', { message: 'process is required' }) as StorageProgram<Result>;
     }
-    const { round } = input;
     let p = createProgram();
-    p = get(p, 'consent', round as string, 'record');
+    p = get(p, 'consent', processId, 'record');
 
     return branch(p, 'record',
       (thenP) => {
-        // Compute next phase or error condition
         thenP = mapBindings(thenP, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           const currentPhase = record.phase as Phase;
@@ -71,8 +80,7 @@ const _consentProcessHandler: FunctionalConceptHandler = {
           return { status: 'ok', phase: next };
         }, 'advance');
 
-        // Write updated phase if advancing
-        thenP = putFrom(thenP, 'consent', round as string, (bindings) => {
+        thenP = putFrom(thenP, 'consent', processId, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           const advance = bindings.advance as { status: string; phase?: string };
           if (advance.status === 'ok') {
@@ -84,108 +92,109 @@ const _consentProcessHandler: FunctionalConceptHandler = {
         return completeFrom(thenP, 'advance_result', (bindings) => {
           const advance = bindings.advance as { status: string; phase?: string; count?: number };
           if (advance.status === 'blocked') {
-            return { variant: 'unresolved_objections', round, count: advance.count };
+            return { variant: 'unresolved_objections', process: processId, count: advance.count };
           }
           if (advance.status === 'final') {
-            return { variant: 'already_final', round, phase: advance.phase };
+            return { variant: 'already_final', process: processId, phase: advance.phase };
           }
-          return { variant: 'advanced', round, phase: advance.phase };
+          return { variant: 'ok', process: processId, phase: advance.phase };
         });
       },
-      (elseP) => complete(elseP, 'not_found', { round }),
+      (elseP) => complete(elseP, 'not_found', { process: processId }),
     ) as StorageProgram<Result>;
   },
 
   raiseObjection(input: Record<string, unknown>) {
-    const { round, raiser, objection } = input;
+    const processId = resolveId(input.process);
+    const { objector, reason, isParamount } = input;
+    if (!processId) {
+      return complete(createProgram(), 'not_found', { process: processId }) as StorageProgram<Result>;
+    }
     let p = createProgram();
-    p = get(p, 'consent', round as string, 'record');
+    p = get(p, 'consent', processId, 'record');
 
     return branch(p, 'record',
       (thenP) => {
-        // Check phase validity
         thenP = mapBindings(thenP, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           const phase = record.phase as Phase;
-          return (phase === 'Objecting' || phase === 'Reacting');
+          return (phase === 'Objecting' || phase === 'Reacting' || phase === 'Presenting');
         }, 'validPhase');
 
         return branch(thenP, 'validPhase',
           (validP) => {
             const objId = `obj-${Date.now()}`;
-            validP = putFrom(validP, 'consent', round as string, (bindings) => {
+            validP = putFrom(validP, 'consent', processId, (bindings) => {
               const record = bindings.record as Record<string, unknown>;
               const objections = JSON.parse(record.objections as string) as unknown[];
-              objections.push({ id: objId, raiser, text: objection, resolved: false });
+              const paramount = isParamount === 'true' || isParamount === true;
+              objections.push({ id: objId, objector, reason, isParamount: paramount, resolved: false });
               return {
                 ...record,
                 phase: 'Objecting',
                 objections: JSON.stringify(objections),
               };
             });
-            return complete(validP, 'ok', { round, objectionId: objId });
+            return complete(validP, 'ok', { process: processId, objectionId: objId });
           },
           (invalidP) => {
             return completeFrom(invalidP, 'wrong_phase', (bindings) => {
               const record = bindings.record as Record<string, unknown>;
-              return { variant: 'wrong_phase', round, phase: record.phase };
+              return { variant: 'wrong_phase', process: processId, phase: record.phase };
             });
           },
         );
       },
-      (elseP) => complete(elseP, 'not_found', { round }),
+      (elseP) => complete(elseP, 'not_found', { process: processId }),
     ) as StorageProgram<Result>;
   },
 
-  resolveObjection(input: Record<string, unknown>) {
-    const { round, objection, resolution } = input;
+  integrateObjection(input: Record<string, unknown>) {
+    const processId = resolveId(input.process);
+    const { objectionIndex, amendment } = input;
+    if (!processId) {
+      return complete(createProgram(), 'not_found', { process: processId }) as StorageProgram<Result>;
+    }
     let p = createProgram();
-    p = get(p, 'consent', round as string, 'record');
+    p = get(p, 'consent', processId, 'record');
 
     return branch(p, 'record',
       (thenP) => {
-        // Check if objection exists
-        thenP = mapBindings(thenP, (bindings) => {
+        const idx = typeof objectionIndex === 'number' ? objectionIndex : parseInt(objectionIndex as string, 10);
+
+        // Integrate the objection — if index is within bounds, mark resolved; otherwise add amendment
+        thenP = putFrom(thenP, 'consent', processId, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
-          const objections = JSON.parse(record.objections as string) as Array<{ id: string }>;
-          return objections.some(o => o.id === objection);
-        }, 'objFound');
+          const objections = JSON.parse(record.objections as string) as Array<{ resolved: boolean; amendment?: string }>;
+          if (!isNaN(idx) && idx >= 0 && idx < objections.length) {
+            objections[idx].resolved = true;
+            objections[idx].amendment = amendment as string;
+          }
+          const amendments = JSON.parse(record.amendments as string) as unknown[];
+          amendments.push({ objectionIndex: idx, amendment, appliedAt: new Date().toISOString() });
+          return {
+            ...record,
+            objections: JSON.stringify(objections),
+            amendments: JSON.stringify(amendments),
+          };
+        });
 
-        return branch(thenP, 'objFound',
-          (foundP) => {
-            foundP = putFrom(foundP, 'consent', round as string, (bindings) => {
-              const record = bindings.record as Record<string, unknown>;
-              const objections = JSON.parse(record.objections as string) as Array<{ id: string; resolved: boolean; resolution?: string }>;
-              const target = objections.find(o => o.id === objection)!;
-              target.resolved = true;
-              target.resolution = resolution as string;
-
-              const amendments = JSON.parse(record.amendments as string) as unknown[];
-              amendments.push({ objectionId: objection, resolution, appliedAt: new Date().toISOString() });
-
-              return {
-                ...record,
-                objections: JSON.stringify(objections),
-                amendments: JSON.stringify(amendments),
-              };
-            });
-            return complete(foundP, 'ok', { round });
-          },
-          (notFoundP) => complete(notFoundP, 'objection_not_found', { round, objection }),
-        );
+        return complete(thenP, 'ok', { process: processId, objectionIndex: idx });
       },
-      (elseP) => complete(elseP, 'not_found', { round }),
+      (elseP) => complete(elseP, 'not_found', { process: processId }),
     ) as StorageProgram<Result>;
   },
 
-  finalize(input: Record<string, unknown>) {
-    const { round } = input;
+  resolve(input: Record<string, unknown>) {
+    const processId = resolveId(input.process);
+    if (!processId) {
+      return complete(createProgram(), 'not_found', { process: processId }) as StorageProgram<Result>;
+    }
     let p = createProgram();
-    p = get(p, 'consent', round as string, 'record');
+    p = get(p, 'consent', processId, 'record');
 
     return branch(p, 'record',
       (thenP) => {
-        // Check for unresolved objections
         thenP = mapBindings(thenP, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           const objections = JSON.parse(record.objections as string) as Array<{ resolved: boolean }>;
@@ -196,23 +205,23 @@ const _consentProcessHandler: FunctionalConceptHandler = {
         return branch(thenP,
           (bindings) => (bindings.unresolvedCount as number) === 0,
           (okP) => {
-            okP = putFrom(okP, 'consent', round as string, (bindings) => {
+            okP = putFrom(okP, 'consent', processId, (bindings) => {
               const record = bindings.record as Record<string, unknown>;
               return { ...record, phase: 'Consented' };
             });
             return completeFrom(okP, 'consented', (bindings) => {
               const record = bindings.record as Record<string, unknown>;
-              return { variant: 'consented', round, amendments: record.amendments };
+              return { variant: 'ok', process: processId, amendments: record.amendments };
             });
           },
           (blockedP) => {
             return completeFrom(blockedP, 'unresolved_objections', (bindings) => {
-              return { variant: 'unresolved_objections', round, count: bindings.unresolvedCount };
+              return { variant: 'unresolved_objections', process: processId, count: bindings.unresolvedCount };
             });
           },
         );
       },
-      (elseP) => complete(elseP, 'not_found', { round }),
+      (elseP) => complete(elseP, 'not_found', { process: processId }),
     ) as StorageProgram<Result>;
   },
 };

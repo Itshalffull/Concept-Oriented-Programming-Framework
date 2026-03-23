@@ -160,10 +160,10 @@ describe('ProgramInterpreter imperative handler', () => {
       expect(registerResult0.variant).toBe("ok");
       const executeResult1 = await programInterpreterHandler.execute({ interpreter: "test-i", program: "get(users, u1)", snapshot: "current" }, storage);
       expect(executeResult1.variant).toBe("ok");
-      let executionId = executeResult1.output["executionId"];
-      let variant = executeResult1.output["variant"];
-      let output = executeResult1.output["output"];
-      let trace = executeResult1.output["trace"];
+      let executionId = (executeResult1.output ?? executeResult1)["executionId"];
+      let variant = (executeResult1.output ?? executeResult1)["variant"];
+      let output = (executeResult1.output ?? executeResult1)["output"];
+      let trace = (executeResult1.output ?? executeResult1)["trace"];
       const thenResult0 = await programInterpreterHandler.rollback({ interpreter: "test-i", executionId: "test-eid" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });

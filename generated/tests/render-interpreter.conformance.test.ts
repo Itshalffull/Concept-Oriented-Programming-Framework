@@ -155,7 +155,7 @@ describe('RenderInterpreter imperative handler', () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await renderInterpreterHandler.register({ interpreter: "test-i", target: "react", template: "jsx" }, storage);
       expect(registerResult0.variant).toBe("ok");
-      let interpreter = registerResult0.output["interpreter"];
+      let interpreter = (registerResult0.output ?? registerResult0)["interpreter"];
       const thenResult0 = await renderInterpreterHandler.execute({ interpreter: "test-i", program: "p1", snapshot: "current" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -164,7 +164,7 @@ describe('RenderInterpreter imperative handler', () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await renderInterpreterHandler.register({ interpreter: "test-i", target: "react", template: "jsx" }, storage);
       expect(registerResult0.variant).toBe("ok");
-      let interpreter = registerResult0.output["interpreter"];
+      let interpreter = (registerResult0.output ?? registerResult0)["interpreter"];
       const thenResult0 = await renderInterpreterHandler.register({ interpreter: "test-i", target: "svelte", template: "tmpl" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -173,7 +173,7 @@ describe('RenderInterpreter imperative handler', () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await renderInterpreterHandler.register({ interpreter: "test-i", target: "svelte", template: "tmpl" }, storage);
       expect(registerResult0.variant).toBe("ok");
-      let interpreter = registerResult0.output["interpreter"];
+      let interpreter = (registerResult0.output ?? registerResult0)["interpreter"];
       const thenResult0 = await renderInterpreterHandler.dryRun({ interpreter: "test-i", program: "p1" }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
@@ -182,7 +182,7 @@ describe('RenderInterpreter imperative handler', () => {
       const storage = createInMemoryStorage();
       const registerResult0 = await renderInterpreterHandler.register({ interpreter: "test-i", target: "react", template: "jsx" }, storage);
       expect(registerResult0.variant).toBe("ok");
-      let interpreter = registerResult0.output["interpreter"];
+      let interpreter = (registerResult0.output ?? registerResult0)["interpreter"];
       const thenResult0 = await renderInterpreterHandler.listTargets({  }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
