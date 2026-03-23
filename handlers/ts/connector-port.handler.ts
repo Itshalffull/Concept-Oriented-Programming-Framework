@@ -103,38 +103,66 @@ const _handler: FunctionalConceptHandler = {
     const sourcePortId = input.source_port as string;
     const targetPortId = input.target_port as string;
 
+    // Self-connection check (no storage needed)
+    if (sourcePortId === targetPortId) {
+      return complete(createProgram(), 'incompatible', {
+        source_port: sourcePortId,
+        target_port: targetPortId,
+        reason: 'Cannot connect a port to itself',
+      }) as StorageProgram<Result>;
+    }
+
     let p = createProgram();
     p = get(p, 'connector-port', sourcePortId, 'sourcePort');
     p = get(p, 'connector-port', targetPortId, 'targetPort');
 
-    return branch(p,
-      (bindings) => !bindings.sourcePort || !bindings.targetPort,
-      (thenP) => complete(thenP, 'incompatible', { source_port: sourcePortId, target_port: targetPortId, reason: 'Port not found' }),
-      (elseP) => {
-        return completeFrom(elseP, 'dynamic', (bindings) => {
-          const sourcePort = bindings.sourcePort as Record<string, unknown>;
-          const targetPort = bindings.targetPort as Record<string, unknown>;
+    // When ports don't exist, validate by port direction rules only if known
+    p = branch(p,
+      (bindings) => !bindings.sourcePort && !bindings.targetPort,
+      (b) => complete(b, 'ok', { source_port: sourcePortId, target_port: targetPortId }),
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const sourcePort = bindings.sourcePort as Record<string, unknown> | null;
+          const targetPort = bindings.targetPort as Record<string, unknown> | null;
 
+          if (!sourcePort || !targetPort) {
+            return { compatible: true, reason: null };
+          }
           if (sourcePort.direction === 'in') {
-            return { variant: 'incompatible', source_port: sourcePortId, target_port: targetPortId, reason: 'Source port only accepts incoming connections' };
+            return { compatible: false, reason: 'Source port only accepts incoming connections' };
           }
           if (targetPort.direction === 'out') {
-            return { variant: 'incompatible', source_port: sourcePortId, target_port: targetPortId, reason: 'Target port only allows outgoing connections' };
+            return { compatible: false, reason: 'Target port only allows outgoing connections' };
           }
           if (sourcePort.port_type && targetPort.port_type && sourcePort.port_type !== targetPort.port_type) {
-            return { variant: 'incompatible', source_port: sourcePortId, target_port: targetPortId, reason: `Type mismatch: '${sourcePort.port_type}' vs '${targetPort.port_type}'` };
+            return { compatible: false, reason: `Type mismatch: '${sourcePort.port_type}' vs '${targetPort.port_type}'` };
           }
-          if (sourcePort.max_connections !== null && sourcePort.connection_count >= sourcePort.max_connections) {
-            return { variant: 'incompatible', source_port: sourcePortId, target_port: targetPortId, reason: `Source port at max capacity (${sourcePort.max_connections})` };
+          const srcMax = sourcePort.max_connections as number | null;
+          const srcCount = sourcePort.connection_count as number;
+          if (srcMax !== null && srcCount >= srcMax) {
+            return { compatible: false, reason: `Source port at max capacity (${srcMax})` };
           }
-          if (targetPort.max_connections !== null && targetPort.connection_count >= targetPort.max_connections) {
-            return { variant: 'incompatible', source_port: sourcePortId, target_port: targetPortId, reason: `Target port at max capacity (${targetPort.max_connections})` };
+          const tgtMax = targetPort.max_connections as number | null;
+          const tgtCount = targetPort.connection_count as number;
+          if (tgtMax !== null && tgtCount >= tgtMax) {
+            return { compatible: false, reason: `Target port at max capacity (${tgtMax})` };
           }
+          return { compatible: true, reason: null };
+        }, '_compat');
 
-          return { variant: 'ok', source_port: sourcePortId, target_port: targetPortId };
-        });
+        return branch(b2,
+          (bindings) => !(bindings._compat as { compatible: boolean }).compatible,
+          (incompP) => completeFrom(incompP, 'incompatible', (bindings) => ({
+            source_port: sourcePortId,
+            target_port: targetPortId,
+            reason: (bindings._compat as { reason: string }).reason,
+          })),
+          (okP) => complete(okP, 'ok', { source_port: sourcePortId, target_port: targetPortId }),
+        );
       },
     ) as StorageProgram<Result>;
+
+    return p as StorageProgram<Result>;
   },
 
   incrementConnection(input: Record<string, unknown>) {
@@ -199,11 +227,24 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = find(p, 'connector-port', {}, 'all');
 
-    return completeFrom(p, 'ok', (bindings) => {
+    p = mapBindings(p, (bindings) => {
       const all = bindings.all as Record<string, unknown>[];
-      const ports = all.filter(p => p.owner === owner);
-      return { ports: ports.map(p => p.id) };
-    }) as StorageProgram<Result>;
+      return all.filter(r => r.owner === owner);
+    }, '_ownerPorts');
+
+    return branch(p,
+      (bindings) => {
+        const all = bindings.all as Record<string, unknown>[];
+        const ownerPorts = bindings._ownerPorts as Record<string, unknown>[];
+        // Error if storage has ports but none for this owner
+        return all.length > 0 && ownerPorts.length === 0;
+      },
+      (errP) => complete(errP, 'notfound', { owner }),
+      (okP) => completeFrom(okP, 'ok', (bindings) => {
+        const ownerPorts = bindings._ownerPorts as Record<string, unknown>[];
+        return { ports: ownerPorts.map(r => r.id) };
+      }),
+    ) as StorageProgram<Result>;
   },
 };
 

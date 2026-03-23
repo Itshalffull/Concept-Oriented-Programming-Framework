@@ -310,32 +310,34 @@ const _handler: FunctionalConceptHandler = {
     const path = input.path as string;
 
     p = get(p, BASELINES, path, 'baseline');
+    p = get(p, COMPARISONS, path, 'comparison');
 
+    // If no baseline AND no comparison → noBaseline
     p = branch(p,
-      (bindings) => !bindings.baseline,
+      (bindings) => !bindings.baseline && !bindings.comparison,
+      (b) => complete(b, 'noBaseline', { path }),
       (b) => {
-        return complete(b, 'noBaseline', { path });
-      },
-      (b) => {
-        let b2 = get(b, COMPARISONS, path, 'comparison');
-
-        return branch(b2,
-          (bindings) => {
-            const comparison = bindings.comparison as Record<string, unknown> | undefined;
-            return !comparison || (comparison.status as string) === 'current';
-          },
-          (b3) => {
-            return complete(b3, 'unchanged', { path });
-          },
-          (b3) => {
-            return completeFrom(b3, 'ok', (bindings) => {
-              const baseline = bindings.baseline as Record<string, unknown>;
-              const comparison = bindings.comparison as Record<string, unknown>;
-              const baselineHash = baseline.contentHash as string;
-              const currentHash = comparison.currentHash as string;
-              const { diff, linesAdded, linesRemoved } = computeDiff(baselineHash, currentHash);
-              return { diff, linesAdded, linesRemoved };
-            });
+        // If no baseline but comparison exists → ok (first-gen comparison)
+        return branch(b,
+          (bindings) => !bindings.baseline,
+          (b2) => complete(b2, 'ok', { path }),
+          (b2) => {
+            // Baseline exists - check comparison status
+            return branch(b2,
+              (bindings) => {
+                const comparison = bindings.comparison as Record<string, unknown> | undefined;
+                return !comparison || (comparison.status as string) === 'current';
+              },
+              (b3) => complete(b3, 'unchanged', { path }),
+              (b3) => completeFrom(b3, 'ok', (bindings) => {
+                const baseline = bindings.baseline as Record<string, unknown>;
+                const comparison = bindings.comparison as Record<string, unknown>;
+                const baselineHash = baseline.contentHash as string;
+                const currentHash = comparison.currentHash as string;
+                const { diff, linesAdded, linesRemoved } = computeDiff(baselineHash, currentHash);
+                return { diff, linesAdded, linesRemoved };
+              }),
+            );
           },
         );
       },

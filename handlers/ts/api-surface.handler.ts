@@ -123,9 +123,22 @@ const _apiSurfaceHandler: FunctionalConceptHandler = {
     }
     const suite = input.suite as string;
     const target = input.target as string;
-    const outputs = input.outputs as string[];
+    let rawOutputs = input.outputs;
 
-    if (!Array.isArray(outputs) || outputs.length === 0) {
+    // Handle structured list format from test generator: {"type":"list","items":[{"type":"literal","value":"..."},...]}
+    let outputs: string[];
+    if (Array.isArray(rawOutputs)) {
+      outputs = rawOutputs as string[];
+    } else if (rawOutputs && typeof rawOutputs === 'object' && (rawOutputs as Record<string,unknown>).type === 'list') {
+      const items = (rawOutputs as Record<string,unknown>).items as Array<Record<string,unknown>>;
+      outputs = Array.isArray(items) ? items.map(item => item.value as string).filter(Boolean) : [];
+    } else if (typeof rawOutputs === 'string') {
+      try { outputs = JSON.parse(rawOutputs); } catch { outputs = [rawOutputs]; }
+    } else {
+      outputs = [];
+    }
+
+    if (outputs.length === 0) {
       const p = createProgram();
       return complete(p, 'conflictingRoutes', { target, conflicts: [] }) as StorageProgram<Result>;
     }
