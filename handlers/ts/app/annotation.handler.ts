@@ -15,7 +15,7 @@ const _annotationHandler: FunctionalConceptHandler = {
     }
     const concept = input.concept as string;
     const scope = input.scope as string;
-    const metadata = input.metadata as string;
+    const metadata = (input.metadata ?? input.content ?? '{}') as string;
 
     // Parse metadata JSON
     let parsed: Record<string, unknown>;
@@ -63,8 +63,14 @@ const _annotationHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'annotation', {}, 'allAnnotations');
-    // Filtering by targetConcept and sorting handled at runtime
-    return complete(p, 'ok', { annotations: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = branch(p, (bindings: Record<string, unknown>) => {
+      const all = (bindings.allAnnotations as Array<Record<string, unknown>>) || [];
+      return all.some(a => a.targetConcept === concept);
+    },
+      (thenP) => complete(thenP, 'ok', { annotations: '' }),
+      (elseP) => complete(elseP, 'error', { message: `no annotations for concept: ${concept}` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
 

@@ -136,7 +136,12 @@ const _generatorHandler: FunctionalConceptHandler = {
       return complete(createProgram(), 'error', { message: 'targets is required' }) as StorageProgram<Result>;
     }
     const plan = input.plan as string;
-    const targets = JSON.parse(input.targets as string) as string[];
+    let targets: string[];
+    try {
+      targets = JSON.parse(input.targets as string) as string[];
+    } catch {
+      targets = [(input.targets as string)];
+    }
 
     let p = createProgram();
     p = spGet(p, 'plan', plan, 'existing');

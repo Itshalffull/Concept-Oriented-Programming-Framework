@@ -138,7 +138,6 @@ const _notificationHandler: FunctionalConceptHandler = {
       },
       (b) => complete(b, 'notfound', { message: 'Notification does not exist' }),
     );
-
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 

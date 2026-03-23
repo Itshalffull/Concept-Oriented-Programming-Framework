@@ -35,7 +35,7 @@ const _userHandler: FunctionalConceptHandler = {
           (b3) => complete(b3, 'error', { message: 'email already taken' }),
           (b3) => {
             let b4 = put(b3, 'user', user, { user, name, email });
-            return complete(b4, 'ok', { user });
+            return complete(b4, 'ok', { user, name, email });
           },
         );
         return b2;

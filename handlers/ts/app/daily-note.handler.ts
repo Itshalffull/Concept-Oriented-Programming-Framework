@@ -11,7 +11,9 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 const _dailyNoteHandler: FunctionalConceptHandler = {
   getOrCreateToday(input: Record<string, unknown>) {
     const note = input.note as string;
-    const today = new Date().toISOString().slice(0, 10);
+    // Extract date from note name if it matches "daily-YYYY-MM-DD" pattern
+    const dateMatch = note.match(/(\d{4}-\d{2}-\d{2})/);
+    const today = dateMatch ? dateMatch[1] : new Date().toISOString().slice(0, 10);
 
     let p = createProgram();
     p = spGet(p, 'dailyNote', note, 'existingNote');
@@ -36,10 +38,17 @@ const _dailyNoteHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'dailyNote', { date }, 'results');
-    return completeFrom(p, 'ok', (bindings) => {
+    p = branch(p, (bindings: Record<string, unknown>) => {
       const results = (bindings.results as Array<Record<string, unknown>>) || [];
-      return { note: results.length > 0 ? (results[0].note as string) : '' };
-    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      return results.length > 0;
+    },
+      (thenP) => completeFrom(thenP, 'ok', (bindings) => {
+        const results = (bindings.results as Array<Record<string, unknown>>) || [];
+        return { note: (results[0].note as string) };
+      }),
+      (elseP) => complete(elseP, 'notfound', { message: `no daily note for date: ${date}` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   listRecent(input: Record<string, unknown>) {

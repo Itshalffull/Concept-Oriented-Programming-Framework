@@ -13,7 +13,7 @@ const KNOWN_FORMATS = ['openapi', 'asyncapi', 'jsonschema', 'graphql-schema', 'p
 
 const _specHandler: FunctionalConceptHandler = {
   emit(input: Record<string, unknown>) {
-    const projections = JSON.parse(input.projections as string) as string[];
+    const projections = Array.isArray(input.projections) ? input.projections as string[] : JSON.parse(input.projections as string) as string[];
     const format = input.format as string;
     const config = input.config as string;
 

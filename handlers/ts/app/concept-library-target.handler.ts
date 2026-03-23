@@ -11,7 +11,7 @@
 // Works with any project directory structure.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, put, complete,
+  createProgram, get as spGet, put, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import type {
@@ -356,6 +356,18 @@ function renderFeatureHierarchy(
 // ---------------------------------------------------------------------------
 
 const _conceptLibraryTargetHandler: FunctionalConceptHandler = {
+  validate(input: Record<string, unknown>) {
+    const document = input.document as string;
+
+    let p = createProgram();
+    p = spGet(p, 'document', document, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'ok', { valid: true }),
+      (b) => complete(b, 'notfound', { message: 'Document not found' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
   generate(input: Record<string, unknown>) {
     if (!input.config || (typeof input.config === 'string' && (input.config as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'config is required' }) as StorageProgram<Result>;

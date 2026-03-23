@@ -12,7 +12,12 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }
 
-const VALID_KINDS = ['field', 'group', 'layout', 'action', 'display', 'container', 'slot'];
+const VALID_KINDS = [
+  'field', 'group', 'layout', 'action', 'display', 'container', 'slot',
+  'input-text', 'input-number', 'input-date', 'input-bool',
+  'selection-single', 'selection-multi', 'trigger', 'navigation',
+  'media', 'composite', 'reference',
+];
 
 const _elementHandler: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {

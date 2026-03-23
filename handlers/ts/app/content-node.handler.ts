@@ -133,6 +133,25 @@ const _contentNodeHandler: FunctionalConceptHandler = {
     p = find(p, 'node', {}, 'items');
     return completeFrom(p, 'ok', (bindings) => ({ items: JSON.stringify((bindings.items as Array<Record<string, unknown>>) || []) })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
+
+  changeType(input: Record<string, unknown>) {
+    const node = input.node as string;
+    const type = input.type as string;
+
+    let p = createProgram();
+    p = spGet(p, 'node', node, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = put(b, 'node', node, {
+          type,
+          updatedAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', { node });
+      },
+      (b) => complete(b, 'notfound', { message: 'Node not found' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
 };
 
 export const contentNodeHandler = autoInterpret(_contentNodeHandler);

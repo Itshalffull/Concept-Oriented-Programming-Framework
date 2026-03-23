@@ -24,6 +24,9 @@ const _argocdProviderHandler: FunctionalConceptHandler = {
   },
 
   emit(input: Record<string, unknown>) {
+    if (!input.plan || (typeof input.plan === 'string' && (input.plan as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'plan is required' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
     const plan = input.plan as string;
     const repo = input.repo as string;
     const path = input.path as string;
@@ -78,8 +81,15 @@ const _argocdProviderHandler: FunctionalConceptHandler = {
   },
 
   syncWave(input: Record<string, unknown>) {
+    if (!input.application || (typeof input.application === 'string' && (input.application as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'application is required' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
     const application = input.application as string;
-    const wave = input.wave as number;
+    const rawWave = Number(input.wave);
+    if (isNaN(rawWave) || rawWave <= 0) {
+      return complete(createProgram(), 'error', { message: 'wave must be a positive number' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+    const wave = rawWave;
 
     let p = createProgram();
     p = spGet(p, 'application', application, 'record');
@@ -88,7 +98,7 @@ const _argocdProviderHandler: FunctionalConceptHandler = {
         let b2 = put(b, 'application', application, { syncWave: wave });
         return complete(b2, 'ok', { application });
       },
-      (b) => complete(b, 'ok', { application }),
+      (b) => complete(b, 'error', { application, message: 'application not found' }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },

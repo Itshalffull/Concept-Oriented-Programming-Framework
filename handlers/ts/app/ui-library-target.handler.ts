@@ -9,7 +9,7 @@ import { parseWidgetFile } from '../framework/widget-spec-parser.js';
 import { parseThemeFile } from '../framework/theme-spec-parser.js';
 import { readFileSync, readdirSync, existsSync, statSync } from 'fs';
 import { join, basename, relative, dirname } from 'path';
-import { createProgram, put, complete, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { createProgram, get as spGet, put, branch, complete, type StorageProgram } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const SKIP_DIRS = new Set(['node_modules','.git','.claude','dist','build','out','.next','.turbo','coverage','__pycache__']);
@@ -64,6 +64,18 @@ const _uiLibraryTargetHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = put(p, 'document', docId, { docId, outputPath, themeCount: themes.length, widgetCount: totalWidgets, groupCount: sortedGroups.length, content, generatedAt: new Date().toISOString() });
     return complete(p, 'ok', { document: docId, files: [outputPath] }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  validate(input: Record<string, unknown>) {
+    const document = input.document as string;
+
+    let p = createProgram();
+    p = spGet(p, 'document', document, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'ok', { valid: true }),
+      (b) => complete(b, 'notfound', { message: 'Document not found' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
 

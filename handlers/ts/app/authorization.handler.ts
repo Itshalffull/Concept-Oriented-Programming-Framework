@@ -101,7 +101,7 @@ const _authorizationHandler: FunctionalConceptHandler = {
           return { granted: false };
         });
       },
-      (b) => complete(b, 'error', { granted: false, message: 'user has no roles' }),
+      (b) => complete(b, 'ok', { granted: false }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },

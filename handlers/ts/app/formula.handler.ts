@@ -131,9 +131,9 @@ const _formulaHandler: FunctionalConceptHandler = {
           cachedResult: '',
           updatedAt: new Date().toISOString(),
         });
-        return complete(b2, 'ok', {});
+        return complete(b2, 'notfound', {});
       },
-      (b) => complete(b, 'notfound', {}),
+      (b) => complete(b, 'error', { message: 'formula not found' }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },

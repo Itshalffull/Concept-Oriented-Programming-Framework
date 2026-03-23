@@ -22,7 +22,7 @@ const _connectorHandler: FunctionalConceptHandler = {
       return complete(p, 'error', { message: 'Invalid JSON configuration' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
-    const connectorId = `conn-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const connectorId = (input.connectorId as string) || `conn-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
     let p = createProgram();
     p = put(p, 'connector', connectorId, {

@@ -21,7 +21,7 @@ const _viewportHandler: FunctionalConceptHandler = {
     const breakpoint = detectBreakpoint(width, DEFAULT_BREAKPOINTS); const orientation = detectOrientation(width, height);
     let p = createProgram();
     p = put(p, 'viewport', id, { width, height, breakpoint, orientation, customBreakpoints: JSON.stringify(DEFAULT_BREAKPOINTS) });
-    return complete(p, 'ok', { breakpoint, orientation }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return complete(p, 'ok', { viewport: id, breakpoint, orientation }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   setBreakpoints(input: Record<string, unknown>) {

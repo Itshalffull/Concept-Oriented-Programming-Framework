@@ -115,7 +115,7 @@ const _graphHandler: FunctionalConceptHandler = {
             let c2 = del(c, 'edge', edgeKey);
             return complete(c2, 'ok', {});
           },
-          (c) => complete(c, 'notfound', {}),
+          (c) => complete(c, 'ok', {}),
         );
         return b2;
       },

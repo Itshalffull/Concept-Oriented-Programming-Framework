@@ -203,6 +203,18 @@ const _schemaHandler: FunctionalConceptHandler = {
     return complete(p, 'ok', { items: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
+  getAssociations(input: Record<string, unknown>) {
+    const schema = input.schema as string;
+
+    let p = createProgram();
+    p = spGet(p, 'schema', schema, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'ok', { associations: '[]' }),
+      (b) => complete(b, 'notfound', { message: 'Schema does not exist' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
   export(input: Record<string, unknown>) {
     const schema = input.schema as string;
 

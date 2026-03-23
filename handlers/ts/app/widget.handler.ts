@@ -12,11 +12,11 @@ let widgetCounter = 0;
 
 const _widgetHandler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
-    const widget = input.widget as string; const name = input.name as string; const ast = input.ast as string; const category = input.category as string;
+    const widget = (input.widget as string) || `widget-${++widgetCounter}`; const name = input.name as string; const ast = input.ast as string; const category = input.category as string;
     let p = createProgram(); p = spGet(p, 'widget', widget, 'existing');
     p = branch(p, 'existing', (b) => complete(b, 'duplicate', { message: 'A widget with this identity already exists' }),
       (b) => { try { JSON.parse(ast); } catch { return complete(b, 'invalid', { message: 'Widget AST must be valid JSON' }); }
-        widgetCounter++; let b2 = put(b, 'widget', widget, { widget, name, category: category || 'general', ast, version: 1, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }); return complete(b2, 'ok', {}); });
+        let b2 = put(b, 'widget', widget, { widget, name, category: category || 'general', ast, version: 1, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }); return complete(b2, 'ok', { widget }); });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
   get(input: Record<string, unknown>) {

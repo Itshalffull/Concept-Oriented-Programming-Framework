@@ -2,7 +2,7 @@
 // @migrated dsl-constructs 2026-03-18
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, find, put, complete, completeFrom,
+  createProgram, find, put, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -34,13 +34,18 @@ const _runtimeProfileHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'profile', { name }, 'matches');
-
-    return completeFrom(p, 'ok', (bindings) => {
+    p = branch(p, (bindings: Record<string, unknown>) => {
       const matches = (bindings.matches as Array<Record<string, unknown>>) || [];
-      if (matches.length === 0) return { profile: '', name };
-      const match = matches[0];
-      return { ...match, profile: match.id as string, name: match.name as string };
-    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      return matches.length > 0;
+    },
+      (thenP) => completeFrom(thenP, 'ok', (bindings) => {
+        const matches = (bindings.matches as Array<Record<string, unknown>>) || [];
+        const match = matches[0];
+        return { ...match, profile: match.id as string, name: match.name as string };
+      }),
+      (elseP) => complete(elseP, 'notfound', { message: `profile not found: ${name}` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   list(_input: Record<string, unknown>) {

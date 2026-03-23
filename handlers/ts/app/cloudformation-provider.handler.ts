@@ -25,6 +25,9 @@ const _cloudformationProviderHandler: FunctionalConceptHandler = {
   },
 
   generate(input: Record<string, unknown>) {
+    if (!input.plan || (typeof input.plan === 'string' && (input.plan as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'plan is required' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
     const plan = input.plan as string;
 
     const stackId = `cfn-stack-${plan}-${Date.now()}`;
@@ -66,13 +69,15 @@ const _cloudformationProviderHandler: FunctionalConceptHandler = {
   },
 
   apply(input: Record<string, unknown>) {
+    if (!input.stack || (typeof input.stack === 'string' && (input.stack as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'stack is required' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
     const stack = input.stack as string;
 
     let p = createProgram();
     p = spGet(p, 'stack', stack, 'record');
     p = branch(p, 'record',
       (b) => {
-        // Capabilities check and stack creation resolved at runtime
         const awsStackId = `arn:aws:cloudformation:us-east-1:123456789012:stack/stack/${Date.now()}`;
         const created = ['AWS::EC2::VPC', 'AWS::EC2::Subnet', 'AWS::ECS::Cluster'];
         const updated = ['AWS::IAM::Role'];
@@ -84,7 +89,7 @@ const _cloudformationProviderHandler: FunctionalConceptHandler = {
         });
         return complete(b2, 'ok', { stack, stackId: awsStackId, created, updated });
       },
-      (b) => complete(b, 'ok', { stack, reason: 'Stack not found' }),
+      (b) => complete(b, 'error', { stack, reason: 'Stack not found' }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
