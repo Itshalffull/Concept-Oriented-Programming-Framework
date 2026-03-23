@@ -122,16 +122,26 @@ const _handler: FunctionalConceptHandler = {
       (thenP) => {
         return completeFrom(thenP, 'ok', (bindings) => {
           const record = bindings.sigRecord as Record<string, unknown>;
+          function normalizeFields(raw: unknown): Array<{ name: string; type: string; description?: string }> {
+            if (Array.isArray(raw)) return raw as Array<{ name: string; type: string; description?: string }>;
+            if (typeof raw === 'string') {
+              try { const p = JSON.parse(raw); return Array.isArray(p) ? p : []; } catch { return []; }
+            }
+            if (raw && typeof raw === 'object' && Array.isArray((raw as Record<string, unknown>).items)) {
+              return (raw as Record<string, unknown>).items as Array<{ name: string; type: string; description?: string }>;
+            }
+            return [];
+          }
           const compiledPrompt = buildCompiledPrompt(
             record.name as string,
-            record.input_fields as Array<{ name: string; type: string; description?: string }>,
-            record.output_fields as Array<{ name: string; type: string; description?: string }>,
+            normalizeFields(record.input_fields),
+            normalizeFields(record.output_fields),
             record.instruction as string,
             record.module_type as string,
             modelId,
             Array.isArray(examples) ? examples as Array<{ input: string; output: string }> : [],
           );
-          return { variant: 'ok', compiled_prompt: compiledPrompt };
+          return { compiled_prompt: compiledPrompt };
         });
       },
       (elseP) => {

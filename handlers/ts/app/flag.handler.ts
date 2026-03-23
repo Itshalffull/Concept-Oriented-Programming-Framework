@@ -24,12 +24,12 @@ const _flagHandler: FunctionalConceptHandler = {
     p = branch(p, 'existing',
       (b) => complete(b, 'exists', { message: 'User has already flagged this entity with this type' }),
       (b) => {
-        let b2 = put(b, 'flag', flagging, { flagging, flagType, entity, user });
+        let b2 = put(b, 'flag', flagging, { flagging, flagType, entity, user, id: flagging });
         // Update the count for this flagType + entity combination
         const countKey = `${flagType}:${entity}`;
         b2 = spGet(b2, 'flagCount', countKey, 'countRecord');
         b2 = put(b2, 'flagCount', countKey, { flagType, entity, count: 0 });
-        return complete(b2, 'ok', {});
+        return complete(b2, 'ok', { id: flagging });
       },
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;

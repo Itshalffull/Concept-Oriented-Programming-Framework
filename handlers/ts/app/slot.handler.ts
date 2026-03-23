@@ -3,60 +3,74 @@
 // Slot Concept Implementation
 // Named insertion points within host components for composable content projection.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import { createProgram, get as spGet, put, putFrom, branch, complete, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { createProgram, get as spGet, find, put, putFrom, branch, complete, completeFrom, mapBindings, type StorageProgram } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 let slotCounter = 0;
 
 const _slotHandler: FunctionalConceptHandler = {
   define(input: Record<string, unknown>) {
-    const slot = input.slot as string;
     const name = input.name as string;
     const host = input.host as string;
     const position = input.position as string;
     const fallback = input.fallback as string;
+    // Use (name, host) as composite key for duplicate detection
+    const slotKey = `${name}@${host}`;
 
     let p = createProgram();
-    p = spGet(p, 'slot', slot, 'existing');
+    p = spGet(p, 'slot', slotKey, 'existing');
     p = branch(p, 'existing',
-      (b) => complete(b, 'duplicate', { message: 'A slot with this identity already exists' }),
+      (b) => complete(b, 'duplicate', { message: `A slot named '${name}' already exists on host '${host}'` }),
       (b) => {
         slotCounter++;
-        let b2 = put(b, 'slot', slot, {
-          slot,
-          name: name || `slot-${slotCounter}`,
+        const slotId = `slot-${slotCounter}`;
+        let b2 = put(b, 'slot', slotKey, {
+          slot: slotId,
+          name: name || slotId,
           host,
           content: '',
           position: position || 'default',
           fallback: fallback || '',
           createdAt: new Date().toISOString(),
         });
-        return complete(b2, 'ok', { slot });
+        return complete(b2, 'ok', { slot: slotId });
       },
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   fill(input: Record<string, unknown>) {
-    if (!input.slot || (typeof input.slot === 'string' && (input.slot as string).trim() === '')) {
-      return complete(createProgram(), 'notfound', { message: 'slot is required' }) as StorageProgram<Result>;
-    }
-    const slot = input.slot as string;
+    const slotId = input.slot as string | undefined;
     const content = input.content as string;
 
+    // Find all slots to locate by slot ID or pick first available
     let p = createProgram();
-    p = spGet(p, 'slot', slot, 'existing');
-    p = branch(p, 'existing',
-      (b) => {
-        let b2 = putFrom(b, 'slot', slot, (bindings) => ({
-          ...(bindings.existing as Record<string, unknown>),
-          content,
-        }));
-        return complete(b2, 'ok', {});
+    p = find(p, 'slot', {}, 'allSlots');
+
+    return branch(p,
+      (bindings) => {
+        const all = bindings.allSlots as Array<Record<string, unknown>>;
+        if (all.length === 0) return false;
+        if (slotId && slotId.trim() !== '') {
+          return all.some(s => s.slot === slotId);
+        }
+        return true; // no slot specified, use first
       },
-      (b) => complete(b, 'notfound', { message: 'Slot not found' }),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const all = bindings.allSlots as Array<Record<string, unknown>>;
+          const rec = slotId ? all.find(s => s.slot === slotId) : all[0];
+          if (!rec) return null;
+          return { key: `${rec.name}@${rec.host}`, rec: JSON.stringify({ ...rec, content }) };
+        }, '_fillData');
+        return completeFrom(b2, 'ok', (bindings) => {
+          const fillData = bindings._fillData as { key: string; rec: string } | null;
+          if (!fillData) return { slot: slotId || '' };
+          return { slot: JSON.parse(fillData.rec).slot };
+        });
+      },
+      (b) => complete(b, 'notfound', { message: slotId ? `Slot '${slotId}' not found` : 'No slots defined' }),
+    ) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   clear(input: Record<string, unknown>) {

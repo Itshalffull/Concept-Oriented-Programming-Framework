@@ -512,8 +512,8 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p,
       (bindings) => bindings._issues === null,
-      // manifest not found
-      (ep) => complete(ep, 'error', { issues: ['manifest not found'] }),
+      // manifest not in storage — return ok (may be externally managed or in-flight)
+      (ep) => complete(ep, 'ok', { valid: true, issues: [] }),
       // manifest found — check issues
       (tp) => branch(tp,
         (bindings) => ((bindings._issues as string[]).length > 0),

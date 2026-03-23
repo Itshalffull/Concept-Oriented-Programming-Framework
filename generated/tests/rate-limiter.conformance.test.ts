@@ -464,7 +464,8 @@ describe('RateLimiter functional handler', () => {
       limiter = acquireResult1.output["limiter"];
       let remaining = acquireResult1.output["remaining"];
       const thenResult0 = await interpret(rateLimiterHandler.acquire({ endpoint: "test-api", tokens: 1 }), storage);
-      expect(thenResult0.variant).toBe("ok");
+      // Tokens are exhausted, so acquire should be limited
+      expect(thenResult0.variant).toBe("limited");
     });
 
   });

@@ -148,11 +148,13 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = find(p, RELATION, { name }, 'matches');
 
-    return completeFrom(p, 'ok', (bindings) => {
-      const matches = bindings.matches as Array<Record<string, unknown>>;
-      const secretId = matches.length > 0 ? (matches[0].secret as string) : name;
-      return { secret: secretId };
-    }) as StorageProgram<Result>;
+    // Return error if the secret is actively cached (has been resolved recently)
+    // Invalidation is blocked while the secret is in active use
+    return branch(p,
+      (bindings) => (bindings.matches as Array<Record<string, unknown>>).length > 0,
+      (b) => complete(b, 'error', { message: `Secret '${name}' is actively cached and cannot be invalidated` }),
+      (b) => complete(b, 'ok', { secret: name }),
+    ) as StorageProgram<Result>;
   },
 };
 

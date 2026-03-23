@@ -8,6 +8,15 @@ import {
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
+type Result = { variant: string; [key: string]: unknown };
+
+// Built-in transforms that don't require storage lookup
+const BUILTIN_TRANSFORMS: Record<string, { pluginId: string; description: string }> = {
+  'slugify': { pluginId: 'slugify', description: 'Convert to URL-friendly slug' },
+  'strip_tags': { pluginId: 'strip_tags', description: 'Remove HTML tags' },
+  'html_to_markdown': { pluginId: 'html_to_markdown', description: 'Convert HTML to Markdown' },
+};
+
 function applyTransform(pluginId: string, value: string): string {
   switch (pluginId) {
     case 'slugify': return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -23,6 +32,13 @@ const _transformHandler: FunctionalConceptHandler = {
   apply(input: Record<string, unknown>) {
     const value = input.value as string;
     const transformId = input.transformId as string;
+
+    // Check built-in transforms first
+    if (BUILTIN_TRANSFORMS[transformId]) {
+      const result = applyTransform(BUILTIN_TRANSFORMS[transformId].pluginId, value);
+      return complete(createProgram(), 'ok', { result }) as StorageProgram<Result>;
+    }
+
     let p = createProgram();
     p = spGet(p, 'transform', transformId, 'transform');
     p = branch(p, 'transform',
@@ -35,7 +51,7 @@ const _transformHandler: FunctionalConceptHandler = {
       },
       (b) => complete(b, 'notfound', { message: `Transform "${transformId}" not found` }),
     );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return p as StorageProgram<Result>;
   },
 
   chain(input: Record<string, unknown>) {
@@ -44,14 +60,27 @@ const _transformHandler: FunctionalConceptHandler = {
     }
     const value = input.value as string;
     const transformIds = input.transformIds as string;
-    // Chain requires sequential gets; simplified for functional style
-    let p = createProgram();
-    return complete(p, 'ok', { result: value }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    // Apply each transform in sequence using built-ins
+    const ids = (transformIds || '').split(',').map(s => s.trim()).filter(Boolean);
+    let result = value;
+    for (const id of ids) {
+      if (BUILTIN_TRANSFORMS[id]) {
+        result = applyTransform(BUILTIN_TRANSFORMS[id].pluginId, result);
+      }
+    }
+    return complete(createProgram(), 'ok', { result }) as StorageProgram<Result>;
   },
 
   preview(input: Record<string, unknown>) {
     const value = input.value as string;
     const transformId = input.transformId as string;
+
+    // Check built-in transforms first
+    if (BUILTIN_TRANSFORMS[transformId]) {
+      const after = applyTransform(BUILTIN_TRANSFORMS[transformId].pluginId, value);
+      return complete(createProgram(), 'ok', { before: value, after }) as StorageProgram<Result>;
+    }
+
     let p = createProgram();
     p = spGet(p, 'transform', transformId, 'transform');
     p = branch(p, 'transform',
@@ -64,7 +93,7 @@ const _transformHandler: FunctionalConceptHandler = {
       },
       (b) => complete(b, 'notfound', { message: `Transform "${transformId}" not found` }),
     );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return p as StorageProgram<Result>;
   },
 };
 

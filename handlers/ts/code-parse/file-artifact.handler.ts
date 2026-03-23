@@ -43,9 +43,9 @@ const _handler: FunctionalConceptHandler = {
         return existing.length > 0;
       },
       (b) => {
-        return completeFrom(b, 'alreadyRegistered', (bindings) => {
+        return completeFrom(b, 'ok', (bindings) => {
           const existing = bindings.existing as Array<Record<string, unknown>>;
-          return { existing: existing[0].id };
+          return { artifact: existing[0].id, existing: existing[0].id };
         });
       },
       (b) => {
@@ -136,8 +136,6 @@ const _handler: FunctionalConceptHandler = {
         artifacts: JSON.stringify(filtered.map((m) => ({ id: m.id, node: m.node, role: m.role }))),
       };
     }) as StorageProgram<Result>;
-
-    return p as StorageProgram<Result>;
   },
 
   get(input: Record<string, unknown>) {

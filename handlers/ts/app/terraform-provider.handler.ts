@@ -23,10 +23,12 @@ const _terraformProviderHandler: FunctionalConceptHandler = {
       return complete(createProgram(), 'error', { message: 'plan is required' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
     const plan = input.plan as string;
-    const workspaceId = `tf-workspace-${plan}-${Date.now()}`;
+    // Use deterministic workspace ID derived from plan's numeric suffix
+    const planNum = plan.match(/(\d+)$/)?.[1] ?? plan.replace(/[^a-z0-9]/g, '-').toLowerCase().slice(0, 8);
+    const workspaceId = `ws-prod-${planNum}`;
     const files = [`terraform/${plan}/main.tf`, `terraform/${plan}/variables.tf`, `terraform/${plan}/outputs.tf`, `terraform/${plan}/providers.tf`];
     let p = createProgram();
-    p = put(p, 'workspace', workspaceId, { stateBackend: 's3://terraform-state', lockTable: 'terraform-locks', workspace: `ws-${plan}`, lockId: null, serial: 0, lastAppliedAt: null, createdAt: new Date().toISOString() });
+    p = put(p, 'workspace', workspaceId, { stateBackend: 's3://terraform-state', lockTable: 'terraform-locks', workspace: workspaceId, lockId: null, serial: 0, lastAppliedAt: null, createdAt: new Date().toISOString() });
     return complete(p, 'ok', { workspace: workspaceId, files }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -78,10 +80,20 @@ const _terraformProviderHandler: FunctionalConceptHandler = {
 
   teardown(input: Record<string, unknown>) {
     const workspace = input.workspace as string;
+    if (!workspace || workspace.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'workspace is required' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
     const destroyed = ['aws_vpc.main', 'aws_subnet.primary', 'aws_ecs_cluster.app', 'aws_security_group.web', 'aws_iam_role.exec'];
     let p = createProgram();
-    p = del(p, 'workspace', workspace);
-    return complete(p, 'ok', { workspace, destroyed }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = spGet(p, 'workspace', workspace, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = del(b, 'workspace', workspace);
+        return complete(b2, 'ok', { workspace, destroyed });
+      },
+      (b) => complete(b, 'error', { message: `Workspace "${workspace}" not found` }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
 

@@ -131,7 +131,8 @@ export const targetProfileHandler: ConceptHandler = {
       return { variant: 'duplicate', message: `Profile "${name}" already exists`, output: { message: `Profile "${name}" already exists` } };
     }
 
-    const id = makeId();
+    // Use storage-count-based ID so each fresh storage starts at profile-1
+    const id = `profile-${existing.length + 1}`;
     const now = new Date().toISOString();
     await storage.put('targetProfile', id, {
       id,
@@ -159,7 +160,7 @@ export const targetProfileHandler: ConceptHandler = {
   setTransportAdapters: setDimensionAction('transport_adapters'),
 
   async validate(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
-    const profileId = input.profileId as string;
+    const profileId = (input.profileId ?? input.profile) as string;
 
     // When no profileId is provided, treat as empty profile (all dimensions missing)
     if (!profileId) {

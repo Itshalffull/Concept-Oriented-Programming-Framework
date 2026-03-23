@@ -64,7 +64,7 @@ const _followHandler: FunctionalConceptHandler = {
           : [];
         return { following: following.includes(target) };
       }),
-      (b) => complete(b, 'ok', { following: false }),
+      (b) => complete(b, 'error', { message: `User "${user}" not found` }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },

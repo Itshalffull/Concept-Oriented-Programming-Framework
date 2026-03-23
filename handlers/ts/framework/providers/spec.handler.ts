@@ -29,7 +29,12 @@ const _handler: FunctionalConceptHandler = {
     const config = input.config as string;
 
     if (!format) {
-      return complete(p, 'unsupportedFormat', { format: '' }) as StorageProgram<Result>;
+      return complete(p, 'error', { format: '', message: 'format is required' }) as StorageProgram<Result>;
+    }
+
+    const SUPPORTED_FORMATS = ['openapi', 'asyncapi', 'graphql', 'grpc', 'json-schema', 'markdown'];
+    if (!SUPPORTED_FORMATS.includes(format.toLowerCase())) {
+      return complete(p, 'error', { format, message: `Unsupported format: '${format}'. Supported: ${SUPPORTED_FORMATS.join(', ')}` }) as StorageProgram<Result>;
     }
 
     const docId = randomUUID();
