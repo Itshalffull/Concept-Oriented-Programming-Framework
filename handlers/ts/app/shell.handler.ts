@@ -82,6 +82,11 @@ const _shellHandler: FunctionalConceptHandler = {
     const shell = input.shell as string;
     const config = input.config as string;
 
+    // Validate config JSON before any storage operations
+    try { JSON.parse(config); } catch {
+      return complete(createProgram(), 'invalid', { message: 'Shell config must be valid JSON' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+
     let p = createProgram();
     p = spGet(p, 'shell', shell, 'existing');
     p = branch(p, 'existing',

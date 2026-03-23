@@ -198,7 +198,7 @@ describe('ReactAdapter functional handler', () => {
                 if (result?.variant !== undefined) {
                   expect(typeof result.variant).toBe('string');
                 }
-                // Never: normalize produces output with 'class' attribute
+                // Never: normalize produces output with "class" attribute
               }
             }
           },

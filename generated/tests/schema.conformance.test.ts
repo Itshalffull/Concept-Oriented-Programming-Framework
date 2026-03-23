@@ -258,7 +258,7 @@ describe('Schema functional handler', () => {
 
   describe('applyTo', () => {
     it('builds a valid StorageProgram', () => {
-      const program = schemaHandler.applyTo({ entity_id: {"type":"ref","fixture":"create_article","field":"id"}, schema: "article" });
+      const program = schemaHandler.applyTo({ entity_id: "page-1", schema: "article" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +266,21 @@ describe('Schema functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = schemaHandler.applyTo({ entity_id: {"type":"ref","fixture":"create_article","field":"id"}, schema: "article" });
+      const program = schemaHandler.applyTo({ entity_id: "page-1", schema: "article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = schemaHandler.applyTo({ entity_id: {"type":"ref","fixture":"create_article","field":"id"}, schema: "article" });
+      const program = schemaHandler.applyTo({ entity_id: "page-1", schema: "article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = schemaHandler.applyTo({ entity_id: {"type":"ref","fixture":"create_article","field":"id"}, schema: "article" });
+      const program = schemaHandler.applyTo({ entity_id: "page-1", schema: "article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +293,7 @@ describe('Schema functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = schemaHandler.applyTo({ entity_id: {"type":"ref","fixture":"create_article","field":"id"}, schema: "article" });
+      const program = schemaHandler.applyTo({ entity_id: "page-1", schema: "article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -301,7 +301,7 @@ describe('Schema functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof schemaHandler.applyTo !== 'function') return;
-      const result = await interpret(schemaHandler.applyTo({ entity_id: {"type":"ref","fixture":"create_article","field":"id"}, schema: "article" }), storage);
+      const result = await interpret(schemaHandler.applyTo({ entity_id: "page-1", schema: "article" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -312,7 +312,16 @@ describe('Schema functional handler', () => {
       if (typeof schemaHandler.applyTo !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_article = await interpret(schemaHandler.defineSchema({ schema: "article", fields: "title,body,author" }), storage);
-      const result = await interpret(schemaHandler.applyTo({ entity_id: afterResult_create_article?.output?.["id"], schema: "article" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_article?.output ?? {}));
+      const _fixtureInput = { entity_id: "page-1", schema: "article" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(schemaHandler.applyTo({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -327,7 +336,7 @@ describe('Schema functional handler', () => {
 
   describe('removeFrom', () => {
     it('builds a valid StorageProgram', () => {
-      const program = schemaHandler.removeFrom({ entity_id: {"type":"ref","fixture":"create_article","field":"id"}, schema: "article" });
+      const program = schemaHandler.removeFrom({ entity_id: "page-1", schema: "article" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -335,21 +344,21 @@ describe('Schema functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = schemaHandler.removeFrom({ entity_id: {"type":"ref","fixture":"create_article","field":"id"}, schema: "article" });
+      const program = schemaHandler.removeFrom({ entity_id: "page-1", schema: "article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = schemaHandler.removeFrom({ entity_id: {"type":"ref","fixture":"create_article","field":"id"}, schema: "article" });
+      const program = schemaHandler.removeFrom({ entity_id: "page-1", schema: "article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = schemaHandler.removeFrom({ entity_id: {"type":"ref","fixture":"create_article","field":"id"}, schema: "article" });
+      const program = schemaHandler.removeFrom({ entity_id: "page-1", schema: "article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -362,7 +371,7 @@ describe('Schema functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = schemaHandler.removeFrom({ entity_id: {"type":"ref","fixture":"create_article","field":"id"}, schema: "article" });
+      const program = schemaHandler.removeFrom({ entity_id: "page-1", schema: "article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -370,7 +379,7 @@ describe('Schema functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof schemaHandler.removeFrom !== 'function') return;
-      const result = await interpret(schemaHandler.removeFrom({ entity_id: {"type":"ref","fixture":"create_article","field":"id"}, schema: "article" }), storage);
+      const result = await interpret(schemaHandler.removeFrom({ entity_id: "page-1", schema: "article" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -381,7 +390,17 @@ describe('Schema functional handler', () => {
       if (typeof schemaHandler.removeFrom !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_article = await interpret(schemaHandler.defineSchema({ schema: "article", fields: "title,body,author" }), storage);
-      const result = await interpret(schemaHandler.removeFrom({ entity_id: afterResult_create_article?.output?.["id"], schema: "article" }), storage);
+      const afterResult_apply_article_to_page = await interpret(schemaHandler.applyTo({ entity_id: "page-1", schema: "article" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_article?.output ?? {}), (afterResult_apply_article_to_page?.output ?? {}));
+      const _fixtureInput = { entity_id: "page-1", schema: "article" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(schemaHandler.removeFrom({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 

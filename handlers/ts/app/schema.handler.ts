@@ -156,8 +156,7 @@ const _schemaHandler: FunctionalConceptHandler = {
         let b2 = del(b, 'membership', membershipKey);
         return complete(b2, 'ok', {});
       },
-      // Idempotent removal — ok even if no membership exists
-      (b) => complete(b, 'ok', {}),
+      (b) => complete(b, 'notfound', { message: 'Entity does not have this schema applied' }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
