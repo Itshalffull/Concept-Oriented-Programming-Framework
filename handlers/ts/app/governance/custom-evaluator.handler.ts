@@ -129,8 +129,15 @@ const _customEvaluatorHandler: FunctionalConceptHandler = {
   deregister(input: Record<string, unknown>) {
     const { evaluator } = input;
     let p = createProgram();
-    p = del(p, 'custom_eval', evaluator as string);
-    return complete(p, 'ok', { evaluator }) as StorageProgram<Result>;
+    p = get(p, 'custom_eval', evaluator as string, 'record');
+
+    return branch(p, 'record',
+      (b) => {
+        b = del(b, 'custom_eval', evaluator as string);
+        return complete(b, 'ok', { evaluator });
+      },
+      (b) => complete(b, 'error', { message: `Evaluator not found: ${evaluator}` }),
+    ) as StorageProgram<Result>;
   },
 };
 

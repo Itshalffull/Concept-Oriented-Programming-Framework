@@ -146,6 +146,11 @@ const handler: ConceptHandler = {
   async materialize(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const scope_id = input.scope_id as string;
 
+    const scope = await storage.get('scopes', scope_id);
+    if (!scope) {
+      return { variant: 'no_scope', scope_id };
+    }
+
     const entries = await storage.find('index_entries', { entry_scope: scope_id });
     let count = 0;
     for (const entry of entries) {

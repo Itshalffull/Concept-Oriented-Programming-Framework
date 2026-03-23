@@ -241,43 +241,41 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, KINDS_RELATION, from, 'fromKind');
     p = get(p, KINDS_RELATION, to, 'toKind');
+    p = find(p, KINDS_RELATION, { id: from }, 'fromById');
+    p = find(p, KINDS_RELATION, { id: to }, 'toById');
+    p = find(p, EDGES_RELATION, {}, 'allEdges');
 
-    p = branch(p,
-      (bindings) => {
-        const fromKind = bindings.fromKind as Record<string, unknown> | null;
-        const toKind = bindings.toKind as Record<string, unknown> | null;
-        // Need both to exist to check edge
-        return !!fromKind && !!toKind;
-      },
-      (b) => {
-        let b2 = find(b, EDGES_RELATION, {}, 'allEdges');
+    p = mapBindings(p, (bindings) => {
+      const fromKind = bindings.fromKind as Record<string, unknown> | null;
+      const toKind = bindings.toKind as Record<string, unknown> | null;
+      const fromById = bindings.fromById as Array<Record<string, unknown>>;
+      const toById = bindings.toById as Array<Record<string, unknown>>;
+      const fromRecord = fromKind || (fromById.length > 0 ? fromById[0] : null);
+      const toRecord = toKind || (toById.length > 0 ? toById[0] : null);
+      if (!fromRecord || !toRecord) {
+        return { valid: false, missing: true, fName: from, tName: to, suggestions: [] };
+      }
+      const fName = fromRecord.name as string;
+      const tName = toRecord.name as string;
+      const allEdges = bindings.allEdges as Array<Record<string, unknown>>;
+      const directEdge = allEdges.find(e =>
+        (e.fromName as string) === fName && (e.toName as string) === tName
+      );
+      if (directEdge) return { valid: true, missing: false, fName, tName, suggestions: [] };
+      const suggestions = allEdges
+        .filter(e => (e.fromName as string) === fName)
+        .map(e => e.toName as string);
+      return { valid: false, missing: false, fName, tName, suggestions };
+    }, '_validateResult');
 
-        b2 = mapBindings(b2, (bindings) => {
-          const fromKind = bindings.fromKind as Record<string, unknown>;
-          const toKind = bindings.toKind as Record<string, unknown>;
-          const fName = fromKind.name as string;
-          const tName = toKind.name as string;
-          const allEdges = bindings.allEdges as Array<Record<string, unknown>>;
-          const directEdge = allEdges.find(e =>
-            (e.fromName as string) === fName && (e.toName as string) === tName
-          );
-          if (directEdge) return { valid: true, fName, tName };
-          const suggestions = allEdges
-            .filter(e => (e.fromName as string) === fName)
-            .map(e => e.toName as string);
-          return { valid: false, fName, tName, suggestions };
-        }, '_validateResult');
-
-        return branch(b2,
-          (bindings) => (bindings._validateResult as { valid: boolean }).valid,
-          (thenP) => complete(thenP, 'ok', {}),
-          (elseP) => completeFrom(elseP, 'invalid', (bindings) => {
-            const r = bindings._validateResult as { fName: string; tName: string; suggestions: string[] };
-            return { message: `No direct edge from ${r.fName} to ${r.tName}. Reachable from ${r.fName}: ${r.suggestions.join(', ') || 'none'}` };
-          }),
-        );
-      },
-      (b) => complete(b, 'invalid', { message: `One or both kinds not found: '${from}', '${to}'` }),
+    return branch(p,
+      (bindings) => (bindings._validateResult as { valid: boolean }).valid,
+      (thenP) => complete(thenP, 'ok', {}),
+      (elseP) => completeFrom(elseP, 'invalid', (bindings) => {
+        const r = bindings._validateResult as { missing: boolean; fName: string; tName: string; suggestions: string[] };
+        if (r.missing) return { message: `One or both kinds not found: '${r.fName}', '${r.tName}'` };
+        return { message: `No direct edge from ${r.fName} to ${r.tName}. Reachable from ${r.fName}: ${r.suggestions.join(', ') || 'none'}` };
+      }),
     );
 
     return p as StorageProgram<Result>;
