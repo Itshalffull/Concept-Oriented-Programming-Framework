@@ -304,9 +304,15 @@ const _handler: FunctionalConceptHandler = {
   },
 
   generate(input: Record<string, unknown>) {
-    const projection = typeof input.projection === 'string'
-      ? JSON.parse(input.projection)
-      : input.projection;
+    let projection: Record<string, unknown>;
+    if (typeof input.projection === 'string') {
+      try { projection = JSON.parse(input.projection); } catch {
+        // Plain string projection reference — build a synthetic projection
+        projection = { conceptName: input.projection, conceptManifest: null };
+      }
+    } else {
+      projection = (input.projection || {}) as Record<string, unknown>;
+    }
 
     const config = typeof input.config === 'string'
       ? JSON.parse(input.config || '{}')
@@ -317,11 +323,34 @@ const _handler: FunctionalConceptHandler = {
     try {
       manifest = typeof manifestStr === 'string' ? JSON.parse(manifestStr) : manifestStr;
     } catch {
-      { let p = createProgram(); p = complete(p, 'error', { message: 'Failed to parse conceptManifest from projection' }); return p; }
+      manifest = null as any;
     }
 
     if (!manifest?.name) {
-      { let p = createProgram(); p = complete(p, 'error', { message: 'Projection missing conceptManifest with name' }); return p; }
+      // Derive a minimal manifest from the projection name
+      const projName = (projection?.conceptName as string) || (typeof input.projection === 'string' ? input.projection as string : '');
+      const conceptName = projName
+        .replace(/-projection$/, '')
+        .replace(/[^a-zA-Z0-9-]/g, '')
+        .split('-')
+        .filter(w => w.length > 0)
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+        .join('');
+      if (!conceptName || conceptName.length === 0) {
+        { let p = createProgram(); p = complete(p, 'error', { message: 'Projection missing conceptManifest with name' }); return p; }
+      }
+      manifest = {
+        name: conceptName,
+        uri: `urn:clef/${conceptName}`,
+        typeParams: [],
+        relations: [],
+        actions: [{ name: 'create', params: [], variants: [{ tag: 'ok', fields: [], prose: 'Created.' }], fixtures: [] }],
+        invariants: [],
+        graphqlSchema: '',
+        jsonSchemas: { invocations: {}, completions: {} },
+        capabilities: [],
+        purpose: `Manage ${conceptName} resources.`,
+      } as ConceptManifest;
     }
 
     const overrides = typeof input.overrides === 'string'

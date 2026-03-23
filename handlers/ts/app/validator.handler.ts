@@ -79,12 +79,30 @@ const _validatorHandler: FunctionalConceptHandler = {
           if (parsed[field] === undefined || parsed[field] === null || parsed[field] === '') { const msg = `${field} is required`; if (!errors.includes(msg)) errors.push(msg); }
         }
       }
+      // Built-in validation: check email fields even without explicit rules
+      for (const [field, value] of Object.entries(parsed)) {
+        if (field === 'email' && typeof value === 'string' && value !== '') {
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+            const msg = `${field} must be a valid email`;
+            if (!errors.includes(msg)) errors.push(msg);
+          }
+        }
+      }
       return { valid: errors.length === 0, errorsValue: errors.length === 0 ? '' : errors.join(', ') };
     }, 'result');
-    return completeFrom(p, 'ok', (bindings) => {
+    p = branch(p, (bindings: Record<string, unknown>) => {
       const result = bindings.result as { valid: boolean; errorsValue: string };
-      return { valid: result.valid, errors: result.errorsValue };
-    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      return result.valid;
+    },
+      (thenP) => completeFrom(thenP, 'ok', (bindings) => {
+        return { valid: true, errors: '' };
+      }),
+      (elseP) => completeFrom(elseP, 'error', (bindings) => {
+        const result = bindings.result as { valid: boolean; errorsValue: string };
+        return { valid: false, errors: result.errorsValue };
+      }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   validateField(input: Record<string, unknown>) {

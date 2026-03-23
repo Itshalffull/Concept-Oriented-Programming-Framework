@@ -69,8 +69,16 @@ const _handler: FunctionalConceptHandler = {
     const ts1 = extractTimestamp(v1);
     const ts2 = extractTimestamp(v2);
 
+    // If both have timestamps and they're identical, cannot resolve
+    if (ts1 !== null && ts2 !== null && ts1 === ts2) {
+      const p = createProgram();
+      return complete(p, 'cannotResolve', {
+        reason: 'Timestamps are identical — exactly concurrent writes with no ordering',
+      }) as StorageProgram<Result>;
+    }
+
     let winner: string;
-    if (ts1 === null || ts2 === null || ts1 === ts2) {
+    if (ts1 === null || ts2 === null) {
       // Fallback: deterministic tie-break using string comparison
       winner = v1 >= v2 ? v1 : v2;
     } else {

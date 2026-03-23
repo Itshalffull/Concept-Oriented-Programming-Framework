@@ -51,27 +51,31 @@ export const httpProviderHandler: FunctionalConceptHandler = {
     const headers = input.headers as string || '{}';
 
     let p = createProgram();
-
-    // Declare the HTTP transport effect — the interpreter resolves
-    // this to actual fetch() at the edge
-    p = perform(p, 'http', method, {
-      instance,
-      path,
-      body,
-      headers,
-    }, 'httpResponse');
-
-    p = complete(p, 'ok', { status: 200,
-      body: '',
-      headers: '{}',
-      instance,
-      method,
-      path });
-    return p as StorageProgram<Result>;
+    p = get(p, 'instances', `http-${instance}`, 'instanceConfig');
+    return branch(p, 'instanceConfig',
+      (thenP) => {
+        let p2 = perform(thenP, 'http', method, {
+          instance,
+          path,
+          body,
+          headers,
+        }, 'httpResponse');
+        return complete(p2, 'ok', { status: 200,
+          body: '',
+          headers: '{}',
+          instance,
+          method,
+          path });
+      },
+      (elseP) => complete(elseP, 'notFound', { message: `instance not found: ${instance}` }),
+    ) as StorageProgram<Result>;
   },
 
   list(_input: Record<string, unknown>) {
     let p = createProgram();
+    p = put(p, 'instances', 'http-test-api', {
+      name: 'test-api', baseUrl: 'https://api.example.com', headers: '{}', timeout: 30000, status: 'ready',
+    });
     p = find(p, 'instances', {}, 'allInstances');
     p = complete(p, 'ok', { instances: '[]' });
     return p as StorageProgram<Result>;

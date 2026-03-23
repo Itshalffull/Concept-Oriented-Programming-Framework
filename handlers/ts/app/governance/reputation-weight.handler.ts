@@ -31,6 +31,7 @@ function applyScaling(score: number, fn: string, cap: number | null): number {
 
 const _reputationWeightHandler: FunctionalConceptHandler = {
   configure(input: Record<string, unknown>) {
+    if (!input.reputationSource && !input.decayRate){return complete(createProgram(), 'error', { message: 'configuration required' }) as StorageProgram<Result>;}
     const id = `rw-cfg-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'rw_cfg', id, {

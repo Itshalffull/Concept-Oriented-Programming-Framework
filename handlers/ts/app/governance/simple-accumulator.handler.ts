@@ -13,6 +13,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _simpleAccumulatorHandler: FunctionalConceptHandler = {
   configure(input: Record<string, unknown>) {
+    if (!input.maxScore && !input.decayRate && !input.initialScore) {
+      return complete(createProgram(), 'error', { message: 'configuration parameters required' }) as StorageProgram<Result>;
+    }
     const id = `acc-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'accumulator', id, {

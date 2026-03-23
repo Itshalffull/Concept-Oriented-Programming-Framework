@@ -13,6 +13,10 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _optimisticApprovalHandler: FunctionalConceptHandler = {
   assert(input: Record<string, unknown>) {
+    const bondVal = typeof input.bond === 'string' ? parseFloat(input.bond) : (input.bond as number);
+    if (!bondVal || bondVal <= 0) {
+      return complete(createProgram(), 'error', { message: 'bond must be positive' }) as StorageProgram<Result>;
+    }
     const id = `assertion-${Date.now()}`;
     const expiresAt = new Date(Date.now() + (input.challengePeriodHours as number) * 3600000).toISOString();
     let p = createProgram();

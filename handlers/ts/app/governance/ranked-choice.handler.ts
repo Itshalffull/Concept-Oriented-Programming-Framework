@@ -13,6 +13,7 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _rankedChoiceHandler: FunctionalConceptHandler = {
   configure(input: Record<string, unknown>) {
+    if (!input.eliminationMethod || (typeof input.eliminationMethod === 'string' && (input.eliminationMethod as string).trim() === '')){return complete(createProgram(), 'error', { message: 'eliminationMethod required' }) as StorageProgram<Result>;}
     const id = `rcv-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'rcv', id, {

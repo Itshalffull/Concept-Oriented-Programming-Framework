@@ -13,6 +13,7 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _socialGraphVerificationHandler: FunctionalConceptHandler = {
   configure(input: Record<string, unknown>) {
+    if (!input.vouchThreshold && !input.maxVouches){return complete(createProgram(), 'error', { message: 'configuration required' }) as StorageProgram<Result>;}
     const id = `sg-cfg-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'sg_cfg', id, {

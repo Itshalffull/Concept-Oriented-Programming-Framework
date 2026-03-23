@@ -34,6 +34,10 @@ const _stakeWeightHandler: FunctionalConceptHandler = {
 
   stake(input: Record<string, unknown>) {
     const { config, staker, amount } = input;
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : (amount as number);
+    if (!numAmount || numAmount <= 0) {
+      return complete(createProgram(), 'error', { message: 'amount must be positive' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     p = get(p, 'sw_cfg', config as string, 'cfg');
 

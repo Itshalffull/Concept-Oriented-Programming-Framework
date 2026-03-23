@@ -14,28 +14,16 @@ import {
  */
 export const commutativityProviderHandler: FunctionalConceptHandler = {
   check(input: Record<string, unknown>) {
-    if (!input.programA || (typeof input.programA === 'string' && (input.programA as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'programA is required' }) as StorageProgram<Result>;
-    }
-    if (!input.programB || (typeof input.programB === 'string' && (input.programB as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'programB is required' }) as StorageProgram<Result>;
-    }
-    if (!input.readWriteSetsA || (typeof input.readWriteSetsA === 'string' && (input.readWriteSetsA as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'readWriteSetsA is required' }) as StorageProgram<Result>;
-    }
-    if (!input.readWriteSetsB || (typeof input.readWriteSetsB === 'string' && (input.readWriteSetsB as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'readWriteSetsB is required' }) as StorageProgram<Result>;
-    }
-    const readWriteSetsA = input.readWriteSetsA as string;
-    const readWriteSetsB = input.readWriteSetsB as string;
+    const readWriteSetsA = input.readWriteSetsA;
+    const readWriteSetsB = input.readWriteSetsB;
 
     try {
       let rwA: { r: string[]; w: string[] };
       let rwB: { r: string[]; w: string[] };
 
       try {
-        rwA = JSON.parse(readWriteSetsA);
-        rwB = JSON.parse(readWriteSetsB);
+        rwA = typeof readWriteSetsA === 'string' ? JSON.parse(readWriteSetsA) : readWriteSetsA as { r: string[]; w: string[] };
+        rwB = typeof readWriteSetsB === 'string' ? JSON.parse(readWriteSetsB) : readWriteSetsB as { r: string[]; w: string[] };
       } catch {
         const resultId = `comm-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
         let p = createProgram();

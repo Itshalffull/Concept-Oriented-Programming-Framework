@@ -54,6 +54,8 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _majorityCountHandler: FunctionalConceptHandler = {
   configure(input: Record<string, unknown>) {
+    const thr = typeof input.threshold === 'string' ? parseFloat(input.threshold as string) : input.threshold as number;
+    if (thr !== undefined && thr !== null && thr < 0){return complete(createProgram(), 'error', { message: 'threshold must be non-negative' }) as StorageProgram<Result>;}
     const id = `maj-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'majority', id, {

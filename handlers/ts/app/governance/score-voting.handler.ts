@@ -13,6 +13,9 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _scoreVotingHandler: FunctionalConceptHandler = {
   configure(input: Record<string, unknown>) {
+    const minS = typeof input.minScore === 'string' ? parseFloat(input.minScore as string) : input.minScore as number;
+    const maxS = typeof input.maxScore === 'string' ? parseFloat(input.maxScore as string) : input.maxScore as number;
+    if (minS !== undefined && maxS !== undefined && minS >= maxS){return complete(createProgram(), 'error', { message: 'minScore must be less than maxScore' }) as StorageProgram<Result>;}
     const id = `score-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'score_cfg', id, {

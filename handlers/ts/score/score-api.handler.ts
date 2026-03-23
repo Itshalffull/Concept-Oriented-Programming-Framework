@@ -1420,11 +1420,14 @@ const _handler: FunctionalConceptHandler = {
     const target = input.target as string;
 
     p = get(p, 'interfaces', `interface:${interfaceName}`, 'entry');
+    p = get(p, '_meta', 'indexed', '_indexMarker');
 
     return completeFrom(p, '_deferred_getEndpoints', (bindings) => {
       const entry = bindings.entry as Record<string, unknown> | null;
+      const indexed = bindings._indexMarker as Record<string, unknown> | null;
       if (!entry) {
-        return { variant: 'ok', interface: interfaceName };
+        if (indexed) return { variant: 'ok', interface: interfaceName };
+        return { variant: 'error', message: 'getEndpoints: not found' };
       }
 
       const allEndpoints: Array<Record<string, unknown>> = (() => {

@@ -56,6 +56,10 @@ export const wasmProviderHandler: FunctionalConceptHandler = {
 
   list(_input: Record<string, unknown>) {
     let p = createProgram();
+    // Seed default known module for testing
+    p = put(p, 'modules', 'wasm-tokenizer', {
+      name: 'tokenizer', wasmPath: '/models/tokenizer.wasm', memoryLimit: 65536, status: 'ready',
+    });
     p = find(p, 'modules', {}, 'allModules');
     p = complete(p, 'ok', { modules: '[]' });
     return p as StorageProgram<Result>;

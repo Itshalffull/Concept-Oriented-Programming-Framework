@@ -13,6 +13,8 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _supermajorityHandler: FunctionalConceptHandler = {
   configure(input: Record<string, unknown>) {
+    const thr = typeof input.threshold === 'string' ? parseFloat(input.threshold as string) : input.threshold as number;
+    if (thr !== undefined && thr !== null && thr < 0.5){return complete(createProgram(), 'error', { message: 'threshold must be >= 0.5' }) as StorageProgram<Result>;}
     const id = `supermaj-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'supermajority', id, {

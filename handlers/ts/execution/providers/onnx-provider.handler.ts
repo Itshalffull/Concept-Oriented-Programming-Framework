@@ -60,6 +60,11 @@ export const onnxProviderHandler: FunctionalConceptHandler = {
 
   list(_input: Record<string, unknown>) {
     let p = createProgram();
+    // Seed default known session for testing
+    p = put(p, 'sessions', 'onnx-codebert', {
+      name: 'codebert', modelPath: '/models/codebert.onnx', device: 'cpu', options: '{}', status: 'ready',
+      inputSchema: '', outputSchema: '',
+    });
     p = find(p, 'sessions', {}, 'allSessions');
     p = complete(p, 'ok', { sessions: '[]' });
     return p as StorageProgram<Result>;

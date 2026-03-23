@@ -50,6 +50,7 @@ function computeBordaScores(
 
 const _bordaCountHandler: FunctionalConceptHandler = {
   configure(input: Record<string, unknown>) {
+    if (!input.pointScheme || (typeof input.pointScheme === 'string' && (input.pointScheme as string).trim() === '')){return complete(createProgram(), 'error', { message: 'pointScheme required' }) as StorageProgram<Result>;}
     const id = `borda-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'borda', id, {
