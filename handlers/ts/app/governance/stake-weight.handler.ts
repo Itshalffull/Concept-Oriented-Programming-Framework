@@ -29,7 +29,7 @@ const _stakeWeightHandler: FunctionalConceptHandler = {
       provider: 'StakeWeight',
       instanceId: id,
     });
-    return complete(p, 'ok', { config: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, config: id }) as StorageProgram<Result>;
   },
 
   stake(input: Record<string, unknown>) {
@@ -54,7 +54,7 @@ const _stakeWeightHandler: FunctionalConceptHandler = {
       stakedAt: new Date().toISOString(),
     });
 
-    return completeFrom(p, 'staked', (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       return { stake: id, lockedUntil: bindings.lockedUntil };
     }) as StorageProgram<Result>;
   },
@@ -100,7 +100,7 @@ const _stakeWeightHandler: FunctionalConceptHandler = {
       return totalStaked;
     }, 'totalStaked');
 
-    return completeFrom(p, 'weight', (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       return { participant, stakedAmount: bindings.totalStaked };
     }) as StorageProgram<Result>;
   },

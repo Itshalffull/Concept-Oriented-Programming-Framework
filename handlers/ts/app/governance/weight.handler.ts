@@ -31,7 +31,7 @@ const _weightHandler: FunctionalConceptHandler = {
       return { id, participant, sources: computed.sources, total: computed.total, updatedAt: new Date().toISOString() };
     });
 
-    return completeFrom(p, 'updated', (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       const computed = bindings.computed as Record<string, unknown>;
       return { weight: id, newTotal: computed.total };
     }) as StorageProgram<Result>;
@@ -53,7 +53,7 @@ const _weightHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, 'weight', `weight-${participant}`, 'record');
 
-    return completeFrom(p, 'weight', (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       const record = bindings.record as Record<string, unknown> | null;
       if (!record) return { participant, total: 0.0 };
       return { participant, total: record.total };

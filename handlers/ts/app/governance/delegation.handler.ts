@@ -13,48 +13,57 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _delegationHandler: FunctionalConceptHandler = {
   delegate(input: Record<string, unknown>) {
-    if (!input.expiresAt || (typeof input.expiresAt === 'string' && (input.expiresAt as string).trim() === '')) {
+    const { from, to, scope, domain, expiresAt, transitive } = input;
+    // expiresAt is required (null means no expiry = error)
+    if (expiresAt === null || expiresAt === undefined || (typeof expiresAt === 'string' && expiresAt.trim() === '')) {
       return complete(createProgram(), 'error', { message: 'expiresAt is required' }) as StorageProgram<Result>;
     }
-    const { from, to, scope, expiresAt } = input;
+    const id = `deleg-${Date.now()}`;
     let p = createProgram();
-    p = get(p, 'delegation', `${to}:${from}`, 'reverse');
-
-    p = branch(p, 'reverse',
-      (b) => complete(b, 'cycle_detected', { from, to }),
-      (b) => {
-        const id = `deleg-${Date.now()}`;
-        let b2 = put(b, 'delegation', `${from}:${to}`, {
-          id, from, to, scope, expiresAt: expiresAt ?? null,
-          createdAt: new Date().toISOString(),
-        });
-        return complete(b2, 'ok', { edge: id });
-      },
-    );
-
-    return p as StorageProgram<Result>;
+    // Store by both id and from:to for flexible lookup
+    const data = {
+      id, from, to, scope: scope || domain, expiresAt,
+      transitive: transitive ?? false,
+      createdAt: new Date().toISOString(),
+    };
+    p = put(p, 'delegation', id, data);
+    p = put(p, 'delegation', `${from}:${to}`, data);
+    return complete(p, 'ok', { id, delegation: id, edge: id }) as StorageProgram<Result>;
   },
 
   undelegate(input: Record<string, unknown>) {
-    const { from, to } = input;
-    let p = createProgram();
-    p = get(p, 'delegation', `${from}:${to}`, 'record');
+    const delegation = (input.delegation || input.edge) as string;
+    const from = input.from as string;
+    const to = input.to as string;
 
+    if (delegation) {
+      let p = createProgram();
+      p = get(p, 'delegation', delegation, 'record');
+      return branch(p, 'record',
+        (b) => {
+          let b2 = del(b, 'delegation', delegation);
+          return complete(b2, 'ok', { delegation });
+        },
+        (b) => complete(b, 'not_found', { delegation }),
+      ) as StorageProgram<Result>;
+    }
+    // Lookup by from:to
+    const key = `${from}:${to}`;
+    let p = createProgram();
+    p = get(p, 'delegation', key, 'record');
     p = branch(p, 'record',
       (b) => {
-        let b2 = del(b, 'delegation', `${from}:${to}`);
+        let b2 = del(b, 'delegation', key);
         return complete(b2, 'ok', { from, to });
       },
       (b) => complete(b, 'not_found', { from, to }),
     );
-
     return p as StorageProgram<Result>;
   },
 
   getEffectiveWeight(input: Record<string, unknown>) {
     const { participant } = input;
     let p = createProgram();
-    // Stub: return base weight of 1 (real impl would traverse delegation graph)
     return complete(p, 'ok', { participant, effectiveWeight: 1.0, delegators: [] }) as StorageProgram<Result>;
   },
 };

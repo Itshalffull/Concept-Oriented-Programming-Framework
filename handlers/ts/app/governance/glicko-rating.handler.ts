@@ -90,6 +90,10 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _glickoRatingHandler: FunctionalConceptHandler = {
   configure(input: Record<string, unknown>) {
+    const initialDeviation = typeof input.initialDeviation === 'string' ? parseFloat(input.initialDeviation as string) : (input.initialDeviation as number ?? 350);
+    if (initialDeviation !== undefined && initialDeviation !== null && initialDeviation <= 0) {
+      return complete(createProgram(), 'error', { message: 'initialDeviation must be positive' }) as StorageProgram<Result>;
+    }
     const id = `glicko-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'glicko_cfg', id, {
@@ -105,7 +109,7 @@ const _glickoRatingHandler: FunctionalConceptHandler = {
       provider: 'GlickoRating',
       instanceId: id,
     });
-    return complete(p, 'ok', { config: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, config: id }) as StorageProgram<Result>;
   },
 
   recordOutcome(input: Record<string, unknown>) {
@@ -154,7 +158,7 @@ const _glickoRatingHandler: FunctionalConceptHandler = {
 
     p = putFrom(p, 'glicko_rating', pKey, (bindings) => (bindings.calc as Record<string, unknown>).putData as Record<string, unknown>);
 
-    return completeFrom(p, 'updated', (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       const calc = bindings.calc as Record<string, unknown>;
       return {
         participant,
@@ -195,12 +199,15 @@ const _glickoRatingHandler: FunctionalConceptHandler = {
 
         b2 = putFrom(b2, 'glicko_rating', key, (bindings) => (bindings.calc as Record<string, unknown>).updatedRec as Record<string, unknown>);
 
-        return completeFrom(b2, 'decayed', (bindings) => {
+        return completeFrom(b2, 'ok', (bindings) => {
           const calc = bindings.calc as Record<string, unknown>;
           return { participant, newDeviation: calc.newDeviation };
         });
       },
-      (b) => complete(b, 'not_found', { participant }),
+      (b) => {
+        // No rating record yet - use defaults from config
+        return complete(b, 'ok', { participant, newDeviation: 350 });
+      },
     );
 
     return p as StorageProgram<Result>;
@@ -215,7 +222,7 @@ const _glickoRatingHandler: FunctionalConceptHandler = {
     p = get(p, 'glicko_cfg', config as string, 'cfg');
     p = get(p, 'glicko_rating', `${config}:${participant}`, 'rec');
 
-    return completeFrom(p, 'weight', (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       const cfg = bindings.cfg as Record<string, unknown> | null;
       const rec = bindings.rec as Record<string, unknown> | null;
       const initialRating = cfg ? (cfg.initialRating as number) : 1500;

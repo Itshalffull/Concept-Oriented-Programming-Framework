@@ -23,7 +23,7 @@ const _bondingCurveHandler: FunctionalConceptHandler = {
       reserveToken: input.reserveToken, bondedToken: input.bondedToken,
       reserveBalance: 0, bondedSupply: 0,
     });
-    return complete(p, 'ok', { curve: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, curve: id }) as StorageProgram<Result>;
   },
 
   buy(input: Record<string, unknown>) {

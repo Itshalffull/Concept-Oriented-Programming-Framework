@@ -26,7 +26,7 @@ const _disclosurePolicyHandler: FunctionalConceptHandler = {
       audience: input.audience, format: input.format ?? null,
       status: 'Active', createdAt: new Date().toISOString(),
     });
-    return complete(p, 'ok', { policy: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, policy: id }) as StorageProgram<Result>;
   },
 
   evaluate(input: Record<string, unknown>) {
@@ -38,7 +38,7 @@ const _disclosurePolicyHandler: FunctionalConceptHandler = {
       (b) => {
         return branch(b,
           (bindings) => (bindings.record as Record<string, unknown>).status !== 'Active',
-          (b2) => complete(b2, 'suspended', { policy }),
+          (b2) => complete(b2, 'ok', { policy }),
           (b2) => complete(b2, 'ok', { policy, disclosedTo: requestor }),
         );
       },
@@ -60,7 +60,7 @@ const _disclosurePolicyHandler: FunctionalConceptHandler = {
           return { ...rec, status: 'Suspended', suspendReason: reason };
         }, 'updated');
         b2 = putFrom(b2, 'disclosure', policy as string, (bindings) => bindings.updated as Record<string, unknown>);
-        return complete(b2, 'suspended', { policy });
+        return complete(b2, 'ok', { policy });
       },
       (b) => complete(b, 'not_found', { policy }),
     );

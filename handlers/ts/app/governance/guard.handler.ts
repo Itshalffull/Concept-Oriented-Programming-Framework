@@ -23,7 +23,7 @@ const _guardHandler: FunctionalConceptHandler = {
       checkType: input.checkType, condition: input.condition,
       enabled: true, registeredAt: new Date().toISOString(),
     });
-    return complete(p, 'ok', { guard: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, guard: id }) as StorageProgram<Result>;
   },
 
   checkPre(input: Record<string, unknown>) {
@@ -36,7 +36,7 @@ const _guardHandler: FunctionalConceptHandler = {
         const rec = bindings.record as Record<string, unknown> | null;
         return !!rec && !!rec.enabled;
       },
-      (b) => complete(b, 'allowed', { guard }),
+      (b) => complete(b, 'ok', { guard }),
       (b) => complete(b, 'guard_disabled', { guard }),
     );
 

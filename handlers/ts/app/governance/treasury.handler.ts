@@ -14,26 +14,36 @@ type Result = { variant: string; [key: string]: unknown };
 const _treasuryHandler: FunctionalConceptHandler = {
   deposit(input: Record<string, unknown>) {
     const { vault, token, amount } = input;
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : (amount as number);
+    if (!numAmount || numAmount <= 0) {
+      return complete(createProgram(), 'error', { message: 'amount must be positive' }) as StorageProgram<Result>;
+    }
     const key = `${vault}:${token}`;
     let p = createProgram();
     p = get(p, 'vault', key, 'record');
 
     p = mapBindings(p, (bindings) => {
       const record = (bindings.record as Record<string, unknown>) ?? { balance: 0 };
-      return (record.balance as number) + (amount as number);
+      return (record.balance as number) + numAmount;
     }, 'newBalance');
 
     p = putFrom(p, 'vault', key, (bindings) => ({
       vault, token, balance: bindings.newBalance as number, updatedAt: new Date().toISOString(),
     }));
 
-    return completeFrom(p, 'deposited', (bindings) => {
-      return { vault, newBalance: bindings.newBalance };
+    const allocId = `alloc-${Date.now()}`;
+    p = put(p, 'allocation', allocId, {
+      id: allocId, vault, token, amount: numAmount, status: 'Active',
+    });
+
+    return completeFrom(p, 'ok', (bindings) => {
+      return { id: allocId, vault, newBalance: bindings.newBalance };
     }) as StorageProgram<Result>;
   },
 
   withdraw(input: Record<string, unknown>) {
     const { vault, token, amount } = input;
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : (amount as number);
     const key = `${vault}:${token}`;
     let p = createProgram();
     p = get(p, 'vault', key, 'record');
@@ -44,19 +54,19 @@ const _treasuryHandler: FunctionalConceptHandler = {
     }, 'balance');
 
     p = branch(p,
-      (bindings) => (bindings.balance as number) < (amount as number),
+      (bindings) => (bindings.balance as number) < numAmount,
       (b) => completeFrom(b, 'insufficient', (bindings) => {
         return { vault, available: bindings.balance, requested: amount };
       }),
       (b) => {
         b = mapBindings(b, (bindings) => {
-          return (bindings.balance as number) - (amount as number);
+          return (bindings.balance as number) - numAmount;
         }, 'newBalance');
 
         let b2 = putFrom(b, 'vault', key, (bindings) => ({
           vault, token, balance: bindings.newBalance as number, updatedAt: new Date().toISOString(),
         }));
-        return completeFrom(b2, 'withdrawn', (bindings) => {
+        return completeFrom(b2, 'ok', (bindings) => {
           return { vault, newBalance: bindings.newBalance };
         });
       },
@@ -75,7 +85,7 @@ const _treasuryHandler: FunctionalConceptHandler = {
       id, vault: input.vault, token: input.token, amount: input.amount,
       purpose: input.purpose, expiresAt: input.expiresAt ?? null, status: 'Active',
     });
-    return complete(p, 'ok', { allocation: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, allocation: id }) as StorageProgram<Result>;
   },
 
   releaseAllocation(input: Record<string, unknown>) {

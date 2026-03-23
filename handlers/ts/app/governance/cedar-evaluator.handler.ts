@@ -72,7 +72,7 @@ const _cedarEvaluatorHandler: FunctionalConceptHandler = {
       instanceId: id,
     });
 
-    return complete(p, 'ok', { store: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, store: id }) as StorageProgram<Result>;
   },
 
   authorize(input: Record<string, unknown>) {
@@ -104,7 +104,7 @@ const _cedarEvaluatorHandler: FunctionalConceptHandler = {
 
     return branch(p, 'record',
       (thenP) => {
-        return completeFrom(thenP, 'verified', (bindings) => {
+        return completeFrom(thenP, 'ok', (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           const policies = JSON.parse(record.policies as string) as CedarPolicy[];
 

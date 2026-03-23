@@ -39,7 +39,7 @@ const _auditTrailHandler: FunctionalConceptHandler = {
       return { hash: rec.hash, id: rec.id };
     });
 
-    return complete(p, 'recorded', { entry: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { entry: id }) as StorageProgram<Result>;
   },
 
   query(input: Record<string, unknown>) {
@@ -49,7 +49,7 @@ const _auditTrailHandler: FunctionalConceptHandler = {
 
   verifyIntegrity(input: Record<string, unknown>) {
     // Stub: real impl walks chain verifying hashes
-    return complete(createProgram(), 'valid', { entryCount: 0 }) as StorageProgram<Result>;
+    return complete(createProgram(), 'ok', { entryCount: 0 }) as StorageProgram<Result>;
   },
 };
 

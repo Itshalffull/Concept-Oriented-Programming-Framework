@@ -22,7 +22,7 @@ const _convictionHandler: FunctionalConceptHandler = {
       id, proposalRef: input.proposalRef, threshold: input.threshold,
       halfLifeDays: input.halfLifeDays, totalStaked: 0, stakes: [], status: 'Active',
     });
-    return complete(p, 'ok', { proposal: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, proposal: id }) as StorageProgram<Result>;
   },
 
   stake(input: Record<string, unknown>) {
@@ -42,10 +42,10 @@ const _convictionHandler: FunctionalConceptHandler = {
           const totalStaked = (record.totalStaked as number) + (amount as number);
           return { ...record, stakes, totalStaked };
         });
-        return completeFrom(thenP, 'staked', (bindings) => {
+        return completeFrom(thenP, 'ok', (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           const newTotal = (record.totalStaked as number) + (amount as number);
-          return { variant: 'ok', proposal, newTotal };
+          return { id: proposal, proposal, newTotal };
         });
       },
       (elseP) => complete(elseP, 'not_found', { proposal }),
@@ -64,10 +64,10 @@ const _convictionHandler: FunctionalConceptHandler = {
           const totalStaked = Math.max(0, (record.totalStaked as number) - (amount as number));
           return { ...record, totalStaked };
         });
-        return completeFrom(thenP, 'unstaked', (bindings) => {
+        return completeFrom(thenP, 'ok', (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           const newTotal = Math.max(0, (record.totalStaked as number) - (amount as number));
-          return { variant: 'ok', proposal, newTotal };
+          return { id: proposal, proposal, newTotal };
         });
       },
       (elseP) => complete(elseP, 'not_found', { proposal }),

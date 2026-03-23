@@ -20,7 +20,7 @@ export const tokenBalanceHandler: ConceptHandler = {
       provider: 'TokenBalance',
       instanceId: id,
     });
-    return { variant: 'ok', config: id };
+    return { variant: 'configured', config: id };
   },
 
   async setBalance(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
@@ -50,7 +50,7 @@ export const tokenBalanceHandler: ConceptHandler = {
       takenAt: new Date().toISOString(),
     });
 
-    return { variant: 'ok', snapshot: id, participantCount: balances.length };
+    return { variant: 'snapped', snapshot: id, participantCount: balances.length };
   },
 
   async getBalance(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
@@ -61,12 +61,12 @@ export const tokenBalanceHandler: ConceptHandler = {
       if (!snap) return { variant: 'not_found', snapshot };
       const balances = snap.balances as Record<string, number>;
       const balance = balances[participant as string] ?? 0;
-      return { variant: 'ok', participant, balance };
+      return { variant: 'balance', participant, balance };
     }
 
     const key = `${config}:${participant}`;
     const record = await storage.get('tb_balance', key);
     const balance = record ? (record.balance as number) : 0;
-    return { variant: 'ok', participant, balance };
+    return { variant: 'balance', participant, balance };
   },
 };

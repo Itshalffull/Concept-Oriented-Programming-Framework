@@ -28,7 +28,7 @@ const _peerAllocationHandler: FunctionalConceptHandler = {
       provider: 'PeerAllocation',
       instanceId: id,
     });
-    return complete(p, 'ok', { round: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, round: id }) as StorageProgram<Result>;
   },
 
   allocate(input: Record<string, unknown>) {
@@ -51,7 +51,7 @@ const _peerAllocationHandler: FunctionalConceptHandler = {
           id: entryKey, round, allocator, recipient, amount, note: note ?? null,
         });
 
-        return completeFrom(b, 'allocated', (bindings) => {
+        return completeFrom(b, 'ok', (bindings) => {
           const check = bindings.allocCheck as Record<string, unknown>;
           if (check._allocError === 'round_closed') return { variant: 'round_closed', round };
           if (check._allocError === 'self_allocation') return { variant: 'self_allocation', allocator };
@@ -94,7 +94,7 @@ const _peerAllocationHandler: FunctionalConceptHandler = {
           finalizedAt: new Date().toISOString(),
         });
 
-        return completeFrom(b2, 'finalized', (bindings) => {
+        return completeFrom(b2, 'ok', (bindings) => {
           return { round, results: bindings.results as string };
         });
       },

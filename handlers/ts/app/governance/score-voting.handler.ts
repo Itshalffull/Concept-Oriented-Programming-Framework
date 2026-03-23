@@ -27,7 +27,7 @@ const _scoreVotingHandler: FunctionalConceptHandler = {
       provider: 'ScoreVoting',
       instanceId: id,
     });
-    return complete(p, 'ok', { config: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, config: id }) as StorageProgram<Result>;
   },
 
   count(input: Record<string, unknown>) {
@@ -84,7 +84,7 @@ const _scoreVotingHandler: FunctionalConceptHandler = {
       };
     }, 'countResult');
 
-    return completeFrom(p, 'winner', (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       return bindings.countResult as Record<string, unknown>;
     }) as StorageProgram<Result>;
   },

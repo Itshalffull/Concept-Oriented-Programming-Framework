@@ -22,7 +22,7 @@ const _deliberationHandler: FunctionalConceptHandler = {
       id, topic: input.topic, proposalRef: input.proposalRef ?? null,
       status: 'Open', entries: [], openedAt: new Date().toISOString(),
     });
-    return complete(p, 'ok', { thread: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, thread: id }) as StorageProgram<Result>;
   },
 
   addEntry(input: Record<string, unknown>) {

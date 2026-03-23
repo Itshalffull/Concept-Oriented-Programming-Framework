@@ -28,14 +28,18 @@ const _quadraticWeightHandler: FunctionalConceptHandler = {
       provider: 'QuadraticWeight',
       instanceId: id,
     });
-    return complete(p, 'ok', { config: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, config: id }) as StorageProgram<Result>;
   },
 
   compute(input: Record<string, unknown>) {
     const { participant, balance } = input;
-    const weight = Math.sqrt(balance as number);
+    const numBalance = typeof balance === 'string' ? parseFloat(balance) : (balance as number);
+    if (!numBalance || numBalance <= 0) {
+      return complete(createProgram(), 'error', { message: 'balance must be positive' }) as StorageProgram<Result>;
+    }
+    const weight = Math.sqrt(numBalance);
     let p = createProgram();
-    return complete(p, 'ok', { participant, balance, sqrtWeight: weight }) as StorageProgram<Result>;
+    return complete(p, 'ok', { participant, balance: numBalance, sqrtWeight: weight }) as StorageProgram<Result>;
   },
 };
 

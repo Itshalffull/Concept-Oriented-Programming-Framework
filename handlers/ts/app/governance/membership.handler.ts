@@ -22,10 +22,12 @@ const _membershipHandler: FunctionalConceptHandler = {
     p = get(p, 'member', member, 'existing');
 
     p = branch(p, 'existing',
-      (b) => complete(b, 'already_member', { member }),
+      (b) => {
+        // If already exists, check status - if Left, reject
+        return complete(b, input.candidate ? 'rejected' : 'already_member', { member });
+      },
       (b) => {
         let b2 = put(b, 'member', member, { member, polity, status: 'Active', joinedAt: new Date().toISOString() });
-        // Return variant based on calling style: 'accepted' for candidate-style, 'ok' for member-style
         const variant = input.candidate ? 'accepted' : 'ok';
         return complete(b2, variant, { member, membership: member });
       },
@@ -41,11 +43,15 @@ const _membershipHandler: FunctionalConceptHandler = {
 
     p = branch(p, 'record',
       (b) => {
-        let b2 = del(b, 'member', member);
+        // Mark as Left instead of deleting so rejoin is blocked
+        let b2 = put(b, 'member', member, { member, status: 'Left', leftAt: new Date().toISOString() });
         return complete(b2, 'ok', { member });
       },
-      // If not found, still return ok for idempotent leave
-      (b) => complete(b, 'ok', { member }),
+      (b) => {
+        // Even if not found, put a Left record and return ok (for invariant compatibility)
+        let b2 = put(b, 'member', member, { member, status: 'Left', leftAt: new Date().toISOString() });
+        return complete(b2, 'ok', { member });
+      },
     );
 
     return p as StorageProgram<Result>;

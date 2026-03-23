@@ -25,7 +25,7 @@ const _voteHandler: FunctionalConceptHandler = {
       id, proposalRef: input.proposalRef, deadline: input.deadline,
       snapshotRef: input.snapshotRef, status: 'Open', ballots: [], createdAt: new Date().toISOString(),
     });
-    return complete(p, 'ok', { session: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, session: id }) as StorageProgram<Result>;
   },
 
   castVote(input: Record<string, unknown>) {

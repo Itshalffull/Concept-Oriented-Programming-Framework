@@ -31,7 +31,7 @@ const _attestationSybilHandler: FunctionalConceptHandler = {
       instanceId: id,
     });
 
-    return complete(p, 'ok', { config: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, config: id }) as StorageProgram<Result>;
   },
 
   submitAttestation(input: Record<string, unknown>) {
@@ -68,7 +68,7 @@ const _attestationSybilHandler: FunctionalConceptHandler = {
 
         return branch(thenP, 'credential',
           (credP) => {
-            return completeFrom(credP, 'verified', (bindings) => {
+            return completeFrom(credP, 'ok', (bindings) => {
               const cfg = bindings.cfg as Record<string, unknown>;
               const credential = bindings.credential as Record<string, unknown>;
 

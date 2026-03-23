@@ -19,7 +19,7 @@ const _countingMethodHandler: FunctionalConceptHandler = {
     const id = `counting-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'counting', id, { id, name: input.name, providerRef: input.providerRef });
-    return complete(p, 'ok', { method: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, method: id }) as StorageProgram<Result>;
   },
 
   aggregate(input: Record<string, unknown>) {

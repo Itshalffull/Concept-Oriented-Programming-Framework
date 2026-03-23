@@ -39,7 +39,7 @@ const _immediateFinalityHandler: FunctionalConceptHandler = {
           provider: 'ImmediateFinality',
           instanceId: id,
         });
-        return complete(b2, 'finalized', { confirmation: id });
+        return complete(b2, 'ok', { confirmation: id });
       },
     );
 

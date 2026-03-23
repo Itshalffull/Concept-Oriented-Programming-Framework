@@ -37,6 +37,10 @@ type Result = { variant: string; [key: string]: unknown };
 
 const _eloRatingHandler: FunctionalConceptHandler = {
   configure(input: Record<string, unknown>) {
+    const kFactor = typeof input.kFactor === 'string' ? parseFloat(input.kFactor) : (input.kFactor as number ?? 32);
+    if (kFactor <= 0) {
+      return complete(createProgram(), 'error', { message: 'kFactor must be positive' }) as StorageProgram<Result>;
+    }
     const id = `elo-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'elo_cfg', id, {
@@ -51,11 +55,14 @@ const _eloRatingHandler: FunctionalConceptHandler = {
       provider: 'EloRating',
       instanceId: id,
     });
-    return complete(p, 'ok', { config: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, config: id }) as StorageProgram<Result>;
   },
 
   recordOutcome(input: Record<string, unknown>) {
     const { config, winner, loser } = input;
+    if (winner === loser) {
+      return complete(createProgram(), 'error', { message: 'winner and loser must be different' }) as StorageProgram<Result>;
+    }
     const winnerKey = `${config}:${winner}`;
     const loserKey = `${config}:${loser}`;
 
@@ -88,7 +95,7 @@ const _eloRatingHandler: FunctionalConceptHandler = {
     p = putFrom(p, 'elo_rating', winnerKey, (bindings) => (bindings.calc as Record<string, unknown>).winnerPut as Record<string, unknown>);
     p = putFrom(p, 'elo_rating', loserKey, (bindings) => (bindings.calc as Record<string, unknown>).loserPut as Record<string, unknown>);
 
-    return completeFrom(p, 'updated', (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       const calc = bindings.calc as Record<string, unknown>;
       return {
         winnerNewRating: calc.winnerNewRating,
@@ -101,6 +108,9 @@ const _eloRatingHandler: FunctionalConceptHandler = {
 
   recordDraw(input: Record<string, unknown>) {
     const { config, participantA, participantB } = input;
+    if (participantA === participantB) {
+      return complete(createProgram(), 'error', { message: 'participants must be different' }) as StorageProgram<Result>;
+    }
     const keyA = `${config}:${participantA}`;
     const keyB = `${config}:${participantB}`;
 
@@ -134,7 +144,7 @@ const _eloRatingHandler: FunctionalConceptHandler = {
     p = putFrom(p, 'elo_rating', keyA, (bindings) => (bindings.calc as Record<string, unknown>).aPut as Record<string, unknown>);
     p = putFrom(p, 'elo_rating', keyB, (bindings) => (bindings.calc as Record<string, unknown>).bPut as Record<string, unknown>);
 
-    return completeFrom(p, 'updated', (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       const calc = bindings.calc as Record<string, unknown>;
       return { aNewRating: calc.aNewRating, bNewRating: calc.bNewRating };
     }) as StorageProgram<Result>;

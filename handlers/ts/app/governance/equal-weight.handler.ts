@@ -25,7 +25,7 @@ const _equalWeightHandler: FunctionalConceptHandler = {
       provider: 'EqualWeight',
       instanceId: id,
     });
-    return complete(p, 'ok', { config: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, config: id }) as StorageProgram<Result>;
   },
 
   getWeight(input: Record<string, unknown>) {
@@ -36,7 +36,7 @@ const _equalWeightHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, 'ew_cfg', config as string, 'record');
 
-    return completeFrom(p, 'weight', (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       const record = bindings.record as Record<string, unknown> | null;
       const weight = record ? (record.weightPerPerson as number) : 1.0;
       return { participant, weight };

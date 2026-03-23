@@ -29,7 +29,7 @@ const _polityHandler: FunctionalConceptHandler = {
       values: input.values, amendmentThreshold: input.amendmentThreshold,
       status: 'Active', establishedAt: new Date().toISOString(),
     });
-    return complete(p, 'ok', { polity: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, polity: id }) as StorageProgram<Result>;
   },
 
   amend(input: Record<string, unknown>) {

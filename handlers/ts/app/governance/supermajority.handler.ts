@@ -27,7 +27,7 @@ const _supermajorityHandler: FunctionalConceptHandler = {
       provider: 'Supermajority',
       instanceId: id,
     });
-    return complete(p, 'ok', { config: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, config: id }) as StorageProgram<Result>;
   },
 
   count(input: Record<string, unknown>) {
@@ -74,7 +74,7 @@ const _supermajorityHandler: FunctionalConceptHandler = {
       return { variant: 'no_supermajority', topChoice, voteShare, requiredShare: threshold, totalWeight, abstentions: abstainWeight };
     }, 'countResult');
 
-    return completeFrom(p, 'winner', (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       return bindings.countResult as Record<string, unknown>;
     }) as StorageProgram<Result>;
   },

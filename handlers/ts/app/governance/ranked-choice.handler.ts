@@ -26,7 +26,7 @@ const _rankedChoiceHandler: FunctionalConceptHandler = {
       provider: 'RankedChoice',
       instanceId: id,
     });
-    return complete(p, 'ok', { config: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, config: id }) as StorageProgram<Result>;
   },
 
   count(input: Record<string, unknown>) {

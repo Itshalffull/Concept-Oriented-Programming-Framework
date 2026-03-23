@@ -19,7 +19,7 @@ const _executionHandler: FunctionalConceptHandler = {
       id, sourceRef: input.sourceRef, actions: input.actions,
       executor: input.executor, status: 'Pending', scheduledAt: new Date().toISOString(),
     });
-    return complete(p, 'ok', { execution: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, execution: id }) as StorageProgram<Result>;
   },
 
   execute(input: Record<string, unknown>) {

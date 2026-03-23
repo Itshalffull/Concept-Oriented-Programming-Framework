@@ -22,7 +22,7 @@ const _finalityGateHandler: FunctionalConceptHandler = {
       id, operationRef: input.operationRef, providerRef: input.providerRef,
       status: 'Pending', submittedAt: new Date().toISOString(),
     });
-    return complete(p, 'pending', { gate: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { gate: id }) as StorageProgram<Result>;
   },
 
   confirm(input: Record<string, unknown>) {
@@ -37,7 +37,7 @@ const _finalityGateHandler: FunctionalConceptHandler = {
           return { ...rec, status: 'Finalized', proof, confirmedAt: new Date().toISOString() };
         }, 'updated');
         b2 = putFrom(b2, 'finality', gate as string, (bindings) => bindings.updated as Record<string, unknown>);
-        return complete(b2, 'finalized', { gate });
+        return complete(b2, 'ok', { gate });
       },
       (b) => complete(b, 'not_found', { gate }),
     );

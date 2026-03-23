@@ -55,7 +55,7 @@ const _permissionHandler: FunctionalConceptHandler = {
     p = get(p, 'grant', key, 'record');
 
     p = branch(p, 'record',
-      (b) => complete(b, 'allowed', { permission: key }),
+      (b) => complete(b, 'ok', { permission: key }),
       (b) => complete(b, 'denied', { who, where, what }),
     );
 

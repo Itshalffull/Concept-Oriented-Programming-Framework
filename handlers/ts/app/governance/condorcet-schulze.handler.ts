@@ -138,7 +138,7 @@ const _condorcetSchulzeHandler: FunctionalConceptHandler = {
     const result = computeSchulze(ballotList, weightMap);
 
     if (result.winner) {
-      return complete(createProgram(), 'winner', {
+      return complete(createProgram(), 'ok', {
         choice: result.winner,
         pairwiseMatrix: JSON.stringify(result.pairwiseMatrix),
       }) as StorageProgram<Result>;

@@ -22,7 +22,7 @@ const _quorumHandler: FunctionalConceptHandler = {
       id, type: input.type, absoluteThreshold: input.absoluteThreshold ?? null,
       fractionalThreshold: input.fractionalThreshold ?? null, scope: input.scope,
     });
-    return complete(p, 'ok', { quorum: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, quorum: id }) as StorageProgram<Result>;
   },
 
   check(input: Record<string, unknown>) {

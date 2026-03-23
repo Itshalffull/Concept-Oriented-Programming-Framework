@@ -95,7 +95,7 @@ const _regoEvaluatorHandler: FunctionalConceptHandler = {
       provider: 'RegoEvaluator',
       instanceId: id,
     });
-    return complete(p, 'ok', { bundle: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, bundle: id }) as StorageProgram<Result>;
   },
 
   evaluate(input: Record<string, unknown>) {
@@ -106,7 +106,7 @@ const _regoEvaluatorHandler: FunctionalConceptHandler = {
 
     p = branch(p, 'record',
       (b) => {
-        return completeFrom(b, 'result', (bindings) => {
+        return completeFrom(b, 'ok', (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           const rules = JSON.parse(record.rules as string) as RegoRule[];
           const data = JSON.parse(record.data as string) as Record<string, unknown>;

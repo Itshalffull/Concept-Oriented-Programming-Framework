@@ -36,7 +36,7 @@ const _proofOfPersonhoodHandler: FunctionalConceptHandler = {
       provider: 'ProofOfPersonhood',
       instanceId: id,
     });
-    return complete(p, 'ok', { verification: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, verification: id }) as StorageProgram<Result>;
   },
 
   confirmVerification(input: Record<string, unknown>) {
@@ -59,7 +59,7 @@ const _proofOfPersonhoodHandler: FunctionalConceptHandler = {
               const record = bindings.record as Record<string, unknown>;
               return { ...record, status: 'Verified', verifiedAt: new Date().toISOString() };
             });
-            return completeFrom(e2, 'verified', (bindings) => {
+            return completeFrom(e2, 'ok', (bindings) => {
               const record = bindings.record as Record<string, unknown>;
               return { verification, candidate: record.candidate };
             });

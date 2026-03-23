@@ -25,7 +25,7 @@ const _metricHandler: FunctionalConceptHandler = {
       id, name: input.name, unit: input.unit,
       aggregation: input.aggregation, value: null, history: [],
     });
-    return complete(p, 'ok', { metric: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, metric: id }) as StorageProgram<Result>;
   },
 
   update(input: Record<string, unknown>) {
@@ -67,7 +67,7 @@ const _metricHandler: FunctionalConceptHandler = {
               const computed = bindings.computed as Record<string, unknown>;
               return { value, history: computed.updatedHistory, updatedAt: new Date().toISOString() };
             });
-            return completeFrom(b3, 'updated', (bindings) => {
+            return completeFrom(b3, 'ok', (bindings) => {
               const computed = bindings.computed as Record<string, unknown>;
               return { metric, previousValue: computed.previousValue };
             });
@@ -110,7 +110,7 @@ const _metricHandler: FunctionalConceptHandler = {
             const record = bindings.record as Record<string, unknown>;
             return record.threshold == null || (record.value as number) <= (record.threshold as number);
           },
-          completeFrom(createProgram(), 'within_threshold', (bindings) => {
+          completeFrom(createProgram(), 'ok', (bindings) => {
             const record = bindings.record as Record<string, unknown>;
             return { metric, value: record.value };
           }),

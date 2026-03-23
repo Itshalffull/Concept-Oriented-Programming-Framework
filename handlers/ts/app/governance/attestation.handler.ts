@@ -23,7 +23,7 @@ const _attestationHandler: FunctionalConceptHandler = {
       recipient: input.recipient, data: input.data,
       createdAt: new Date().toISOString(), expiry: input.expiry ?? null, revoked: false,
     });
-    return complete(p, 'ok', { attestation: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, attestation: id }) as StorageProgram<Result>;
   },
 
   revoke(input: Record<string, unknown>) {
@@ -61,7 +61,7 @@ const _attestationHandler: FunctionalConceptHandler = {
 
     return branch(p, 'record',
       (thenP) => {
-        return completeFrom(thenP, 'valid', (bindings) => {
+        return completeFrom(thenP, 'ok', (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           if (record.revoked) return { variant: 'revoked_status', attestation };
           if (record.expiry && new Date(record.expiry as string) < new Date()) return { variant: 'expired', attestation };

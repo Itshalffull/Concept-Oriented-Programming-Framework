@@ -78,7 +78,7 @@ const _customEvaluatorHandler: FunctionalConceptHandler = {
       provider: 'CustomEvaluator',
       instanceId: id,
     });
-    return complete(p, 'ok', { evaluator: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, evaluator: id }) as StorageProgram<Result>;
   },
 
   evaluate(input: Record<string, unknown>) {
@@ -88,7 +88,7 @@ const _customEvaluatorHandler: FunctionalConceptHandler = {
 
     p = branch(p, 'record',
       (b) => {
-        return completeFrom(b, 'result', (bindings) => {
+        return completeFrom(b, 'ok', (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           const tree = record.predicateTree as Record<string, unknown>;
           const ctx = (typeof context === 'string' ? JSON.parse(context as string) : context) as Record<string, unknown>;

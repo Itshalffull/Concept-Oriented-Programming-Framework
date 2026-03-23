@@ -44,7 +44,7 @@ const _reputationWeightHandler: FunctionalConceptHandler = {
       provider: 'ReputationWeight',
       instanceId: id,
     });
-    return complete(p, 'ok', { config: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, config: id }) as StorageProgram<Result>;
   },
 
   compute(input: Record<string, unknown>) {
@@ -52,7 +52,7 @@ const _reputationWeightHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, 'rw_cfg', config as string, 'cfg');
 
-    return completeFrom(p, 'weight', (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       const cfg = bindings.cfg as Record<string, unknown> | null;
       const scalingFn = cfg ? (cfg.scalingFunction as string) : 'linear';
       const cap = cfg ? (cfg.cap as number | null) : null;

@@ -36,7 +36,7 @@ const _objectiveHandler: FunctionalConceptHandler = {
       targetDate: input.targetDate, owner: input.owner,
       status: 'Active', progress: 0, createdAt: new Date().toISOString(),
     });
-    return complete(p, 'ok', { objective: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, objective: id }) as StorageProgram<Result>;
   },
 
   updateProgress(input: Record<string, unknown>) {
@@ -61,16 +61,7 @@ const _objectiveHandler: FunctionalConceptHandler = {
     p = get(p, 'objective', objective as string, 'record');
 
     p = branch(p, 'record',
-      (b) => {
-        return completeFrom(b, 'achieved', (bindings) => {
-          const record = bindings.record as Record<string, unknown>;
-          const achieved = (record.progress as number) >= 100;
-          if (achieved) {
-            return { variant: 'achieved', objective };
-          }
-          return { variant: 'missed', objective, progress: record.progress };
-        });
-      },
+      (b) => complete(b, 'ok', { objective }),
       (b) => complete(b, 'not_found', { objective }),
     );
 
@@ -85,7 +76,7 @@ const _objectiveHandler: FunctionalConceptHandler = {
     p = branch(p, 'record',
       (b) => {
         let b2 = put(b, 'objective', objective as string, { status: 'Cancelled', cancelReason: reason });
-        return complete(b2, 'cancelled', { objective });
+        return complete(b2, 'ok', { objective });
       },
       (b) => complete(b, 'not_found', { objective }),
     );

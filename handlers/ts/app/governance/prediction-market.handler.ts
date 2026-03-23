@@ -26,7 +26,7 @@ const _predictionMarketHandler: FunctionalConceptHandler = {
       resolution: input.resolution, liquidity: input.liquidity,
       status: 'Open', createdAt: new Date().toISOString(),
     });
-    return complete(p, 'ok', { market: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, market: id }) as StorageProgram<Result>;
   },
 
   trade(input: Record<string, unknown>) {
@@ -39,7 +39,7 @@ const _predictionMarketHandler: FunctionalConceptHandler = {
 
     p = branch(p, 'record',
       (b) => {
-        return completeFrom(b, 'traded', (bindings) => {
+        return completeFrom(b, 'ok', (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           if (record.status !== 'Open') return { variant: 'market_closed', market };
           return { variant: 'traded', trade: `trade-${Date.now()}`, newPrice: 0.5 };

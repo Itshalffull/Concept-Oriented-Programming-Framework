@@ -65,7 +65,7 @@ const _bordaCountHandler: FunctionalConceptHandler = {
       instanceId: id,
     });
 
-    return complete(p, 'ok', { config: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, config: id }) as StorageProgram<Result>;
   },
 
   count(input: Record<string, unknown>) {
@@ -73,7 +73,7 @@ const _bordaCountHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, 'borda', config as string, 'cfg');
 
-    return completeFrom(p, 'winner', (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       const cfg = bindings.cfg as Record<string, unknown> | null;
       const scheme = cfg ? (cfg.scheme as string) : 'Standard';
 

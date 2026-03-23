@@ -155,7 +155,7 @@ const _pageRankReputationHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, 'pr_scores', graph as string, 'record');
 
-    return completeFrom(p, 'score', (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       const record = bindings.record as Record<string, unknown> | null;
       if (!record) return { variant: 'ok', participant, pageRank: 0 };
       const scores = JSON.parse(record.scores as string) as Record<string, number>;

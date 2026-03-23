@@ -26,7 +26,7 @@ const _simpleAccumulatorHandler: FunctionalConceptHandler = {
       provider: 'SimpleAccumulator',
       instanceId: id,
     });
-    return complete(p, 'ok', { config: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, config: id }) as StorageProgram<Result>;
   },
 
   add(input: Record<string, unknown>) {
@@ -51,7 +51,7 @@ const _simpleAccumulatorHandler: FunctionalConceptHandler = {
       updatedAt: new Date().toISOString(),
     }));
 
-    return completeFrom(p, 'added', (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       return { participant, newScore: bindings.newScore };
     }) as StorageProgram<Result>;
   },
@@ -83,7 +83,7 @@ const _simpleAccumulatorHandler: FunctionalConceptHandler = {
           updatedAt: new Date().toISOString(),
         }));
 
-        return completeFrom(b2, 'decayed', (bindings) => {
+        return completeFrom(b2, 'ok', (bindings) => {
           const result = bindings.decayResult as Record<string, unknown>;
           return { participant, newScore: result.newScore, previousScore: result.previousScore };
         });
@@ -102,7 +102,7 @@ const _simpleAccumulatorHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, 'acc_score', key, 'existing');
 
-    return completeFrom(p, 'score', (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       const existing = bindings.existing as Record<string, unknown> | null;
       const score = existing ? (existing.score as number) : 0;
       return { participant, score };

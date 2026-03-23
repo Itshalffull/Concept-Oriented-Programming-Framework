@@ -26,7 +26,7 @@ const _socialGraphVerificationHandler: FunctionalConceptHandler = {
       provider: 'SocialGraphVerification',
       instanceId: id,
     });
-    return complete(p, 'ok', { config: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, config: id }) as StorageProgram<Result>;
   },
 
   addVouch(input: Record<string, unknown>) {
@@ -99,7 +99,7 @@ const _socialGraphVerificationHandler: FunctionalConceptHandler = {
       return { variant: 'insufficient', candidate, voucherCount, required: minimumVouchers, trustScore };
     }, 'verifyResult');
 
-    return completeFrom(p, 'verified', (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       return bindings.verifyResult as Record<string, unknown>;
     }) as StorageProgram<Result>;
   },

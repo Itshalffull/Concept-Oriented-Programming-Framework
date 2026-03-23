@@ -22,7 +22,7 @@ const _rageQuitHandler: FunctionalConceptHandler = {
       id, member: input.member, shares: input.shares, loot: input.loot,
       status: 'Initiated', initiatedAt: new Date().toISOString(),
     });
-    return complete(p, 'ok', { exit: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, exit: id }) as StorageProgram<Result>;
   },
 
   calculateClaim(input: Record<string, unknown>) {
