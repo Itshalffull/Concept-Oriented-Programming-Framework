@@ -55,6 +55,10 @@ const _configSyncHandler: FunctionalConceptHandler = {
     const layer = input.layer as string;
     const values = input.values as string;
 
+    if (!layer || (typeof layer === 'string' && layer.trim() === '')) {
+      return complete(createProgram(), 'notfound', { message: 'layer is required' }) as StorageProgram<Result>;
+    }
+
     let p = createProgram();
     p = spGet(p, 'config', config, 'entry');
 
