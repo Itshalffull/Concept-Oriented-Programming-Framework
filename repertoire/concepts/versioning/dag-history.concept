@@ -32,7 +32,7 @@ concept DAGHistory [N] {
       }
 
       fixture append_root { parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }
-      fixture append_with_parent { parents: ["dag-history-1"], contentRef: "sha256:def456", metadata: "{\"author\":\"bob\"}" }
+      fixture append_with_parent { parents: [$append_root.nodeId], contentRef: "sha256:def456", metadata: "{\"author\":\"bob\"}" } after append_root
       fixture empty_content_ref { parents: [], contentRef: "", metadata: "" } -> error
     }
 
