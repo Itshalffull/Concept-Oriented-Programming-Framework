@@ -49,7 +49,7 @@ concept FewShotExample [F] {
       -> ok(examples: list {input: String, output: String, score: Float}) {
         Chooses best examples. Ordered by relevance, last weighted most.
       }
-      -> ok(message: String) {
+      -> empty(message: String) {
         Pool has no examples.
       }
     }

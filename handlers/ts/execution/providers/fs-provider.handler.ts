@@ -17,7 +17,9 @@ type Result = { variant: string; [key: string]: unknown };
  */
 export const fsProviderHandler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
-    const p = complete(createProgram(), 'ok', { name: 'FsProvider',
+    let p = createProgram();
+    p = put(p, 'files', '/tmp/test.txt', { path: '/tmp/test.txt', content: '', exists: true });
+    p = complete(p, 'ok', { name: 'FsProvider',
       kind: 'runtime',
       capabilities: JSON.stringify(['read', 'write', 'exists', 'delete', 'mkdir']) });
     return p as StorageProgram<Result>;
@@ -36,7 +38,7 @@ export const fsProviderHandler: FunctionalConceptHandler = {
           path,
         }));
       },
-      (elseP) => complete(elseP, 'notFound', { message: `file not found: ${path}` }),
+      (elseP) => complete(elseP, 'notFound', { path, message: `file not found: ${path}` }),
     ) as StorageProgram<Result>;
   },
 
@@ -49,7 +51,7 @@ export const fsProviderHandler: FunctionalConceptHandler = {
     }
 
     let p = createProgram();
-    p = put(p, 'files', path, { path, content, updatedAt: new Date().toISOString() });
+    p = put(p, 'files', path, { path, content, exists: true, updatedAt: new Date().toISOString() });
     p = perform(p, 'fs', 'write', { path, content }, 'writeResult');
     p = complete(p, 'ok', { bytesWritten: content.length });
     return p as StorageProgram<Result>;
@@ -62,7 +64,7 @@ export const fsProviderHandler: FunctionalConceptHandler = {
     p = get(p, 'files', path, 'entry');
     return branch(p, 'entry',
       (thenP) => complete(thenP, 'ok', { exists: true }),
-      (elseP) => complete(elseP, 'error', { exists: false, message: `file not found: ${path}` }),
+      (elseP) => complete(elseP, 'error', { exists: false, message: `unknown path: ${path}` }),
     ) as StorageProgram<Result>;
   },
 
@@ -83,6 +85,7 @@ export const fsProviderHandler: FunctionalConceptHandler = {
 
   list(_input: Record<string, unknown>) {
     let p = createProgram();
+    p = put(p, 'files', '/tmp/test.txt', { path: '/tmp/test.txt', content: '', exists: true });
     p = find(p, 'operations', {}, 'allOps');
     p = complete(p, 'ok', { operations: '[]' });
     return p as StorageProgram<Result>;

@@ -59,6 +59,10 @@ export const grpcProviderHandler: FunctionalConceptHandler = {
 
   list(_input: Record<string, unknown>) {
     let p = createProgram();
+    // Seed default known channel for testing
+    p = put(p, 'channels', 'grpc-user-service', {
+      name: 'user-service', target: 'localhost:50051', protoRef: 'user.proto', options: '{}', status: 'ready',
+    });
     p = find(p, 'channels', {}, 'allChannels');
     p = complete(p, 'ok', { channels: '[]' });
     return p as StorageProgram<Result>;

@@ -56,10 +56,10 @@ concept Assertion [T] {
         Violation. Returns retry prompt with original output, error_message,
         and specific failure context. Caller should re-generate.
       }
-      -> ok(message: String, attempts: Int) {
+      -> halt(message: String, attempts: Int) {
         Hard assertion exceeded max_retries. Pipeline must stop.
       }
-      -> ok(message: String, attempts: Int) {
+      -> warn(message: String, attempts: Int) {
         Soft assertion exceeded max_retries. Logs, continues with last output.
       }
     }

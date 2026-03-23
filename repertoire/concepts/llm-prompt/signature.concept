@@ -68,10 +68,10 @@ concept Signature [G] {
         Executes compiled signature. Chain_of_thought outputs include
         rationale field. React outputs include action_trace.
       }
-      -> ok(field: String, message: String) {
+      -> validation_error(field: String, message: String) {
         Output field failed type validation.
       }
-      -> ok(message: String) {
+      -> not_compiled(message: String) {
         No compiled prompt for this model_id.
       }
 

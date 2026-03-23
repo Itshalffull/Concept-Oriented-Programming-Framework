@@ -47,13 +47,13 @@ concept AgentLoop [L] {
         and status but delegates all strategy-specific logic to the
         resolved provider.
       }
-      -> ok(partial_result: String, steps: Int) {
+      -> max_iterations(partial_result: String, steps: Int) {
         Hit iteration limit.
       }
       -> error(message: String, step: Int) {
         Unrecoverable error (including strategy resolution failure).
       }
-      -> ok(question: String, step: Int) {
+      -> waiting_for_human(question: String, step: Int) {
         Agent needs human input. Status: "waiting_for_human".
       }
     }
@@ -62,10 +62,10 @@ concept AgentLoop [L] {
       -> thought(reasoning: String, step: Int) {
         Strategy produced a reasoning step. Needs to continue.
       }
-      -> ok(tool_name: String, arguments: String, step: Int) {
+      -> action_request(tool_name: String, arguments: String, step: Int) {
         Strategy decided to call a tool. Syncs route to ToolBinding.
       }
-      -> ok(result: String, step: Int) {
+      -> final_answer(result: String, step: Int) {
         Strategy decided it has enough information.
       }
       -> error(message: String, step: Int) {

@@ -59,6 +59,10 @@ export const graphqlProviderHandler: FunctionalConceptHandler = {
 
   list(_input: Record<string, unknown>) {
     let p = createProgram();
+    // Seed default known endpoint for testing
+    p = put(p, 'endpoints', 'gql-github-api', {
+      name: 'github-api', url: 'https://api.github.com/graphql', headers: '{}', schemaRef: '', status: 'ready',
+    });
     p = find(p, 'endpoints', {}, 'allEndpoints');
     p = complete(p, 'ok', { endpoints: '[]' });
     return p as StorageProgram<Result>;
