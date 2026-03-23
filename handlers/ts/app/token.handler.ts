@@ -25,9 +25,11 @@ function resolveBuiltinToken(tokenPath: string): string | null {
 const _tokenHandler: FunctionalConceptHandler = {
   replace(input: Record<string, unknown>) {
     const text = input.text as string;
-    // Token replacement with provider lookups is complex with sequential storage access.
-    // In functional style, perform builtin resolution synchronously.
     const tokens = scanTokens(text);
+    if (tokens.length === 0) {
+      let p = createProgram();
+      return complete(p, 'error', { message: 'No tokens found in text' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
     let result = text;
     for (const tokenPath of tokens) {
       const builtinValue = resolveBuiltinToken(tokenPath);
@@ -60,6 +62,9 @@ const _tokenHandler: FunctionalConceptHandler = {
     const text = input.text as string;
     const found = scanTokens(text);
     let p = createProgram();
+    if (found.length === 0) {
+      return complete(p, 'error', { message: 'No tokens found in text' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
     return complete(p, 'ok', { found: JSON.stringify(found) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
