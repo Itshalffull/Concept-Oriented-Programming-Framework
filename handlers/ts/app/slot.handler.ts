@@ -3,7 +3,7 @@
 // Slot Concept Implementation
 // Named insertion points within host components for composable content projection.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import { createProgram, get as spGet, find, put, putFrom, branch, complete, completeFrom, mapBindings, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { createProgram, find, put, putFrom, branch, complete, completeFrom, mapBindings, type StorageProgram } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 let slotCounter = 0;
@@ -14,17 +14,21 @@ const _slotHandler: FunctionalConceptHandler = {
     const host = input.host as string;
     const position = input.position as string;
     const fallback = input.fallback as string;
-    // Use (name, host) as composite key for duplicate detection
-    const slotKey = `${name}@${host}`;
 
     let p = createProgram();
-    p = spGet(p, 'slot', slotKey, 'existing');
-    p = branch(p, 'existing',
+    // Check for duplicate by (name, host) combo
+    p = find(p, 'slot', {}, 'allSlots');
+
+    return branch(p,
+      (bindings) => {
+        const all = bindings.allSlots as Array<Record<string, unknown>>;
+        return all.some(s => s.name === name && s.host === host);
+      },
       (b) => complete(b, 'duplicate', { message: `A slot named '${name}' already exists on host '${host}'` }),
       (b) => {
         slotCounter++;
         const slotId = `slot-${slotCounter}`;
-        let b2 = put(b, 'slot', slotKey, {
+        let b2 = put(b, 'slot', slotId, {
           slot: slotId,
           name: name || slotId,
           host,
@@ -35,8 +39,7 @@ const _slotHandler: FunctionalConceptHandler = {
         });
         return complete(b2, 'ok', { slot: slotId });
       },
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    ) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   fill(input: Record<string, unknown>) {
@@ -57,16 +60,20 @@ const _slotHandler: FunctionalConceptHandler = {
         return true; // no slot specified, use first
       },
       (b) => {
-        let b2 = mapBindings(b, (bindings) => {
+        // When slot ID is provided, update the specific slot
+        if (slotId && slotId.trim() !== '') {
+          let b2 = putFrom(b, 'slot', slotId, (bindings) => {
+            const all = bindings.allSlots as Array<Record<string, unknown>>;
+            const rec = all.find(s => s.slot === slotId) || {};
+            return { ...rec, content };
+          });
+          return complete(b2, 'ok', { slot: slotId });
+        }
+        // No slot ID — fill the first available slot
+        return completeFrom(b, 'ok', (bindings) => {
           const all = bindings.allSlots as Array<Record<string, unknown>>;
-          const rec = slotId ? all.find(s => s.slot === slotId) : all[0];
-          if (!rec) return null;
-          return { key: `${rec.name}@${rec.host}`, rec: JSON.stringify({ ...rec, content }) };
-        }, '_fillData');
-        return completeFrom(b2, 'ok', (bindings) => {
-          const fillData = bindings._fillData as { key: string; rec: string } | null;
-          if (!fillData) return { slot: slotId || '' };
-          return { slot: JSON.parse(fillData.rec).slot };
+          const rec = all[0];
+          return { slot: rec?.slot as string ?? '' };
         });
       },
       (b) => complete(b, 'notfound', { message: slotId ? `Slot '${slotId}' not found` : 'No slots defined' }),
@@ -86,12 +93,7 @@ const _slotHandler: FunctionalConceptHandler = {
         return all.some(s => s.slot === slotId);
       },
       (b) => {
-        let b2 = mapBindings(b, (bindings) => {
-          const all = bindings.allSlots as Array<Record<string, unknown>>;
-          const rec = all.find(s => s.slot === slotId);
-          return rec ? `${rec.name}@${rec.host}` : null;
-        }, '_clearKey');
-        b2 = putFrom(b2, 'slot', slotId, (bindings) => {
+        let b2 = putFrom(b, 'slot', slotId, (bindings) => {
           const all = bindings.allSlots as Array<Record<string, unknown>>;
           const rec = all.find(s => s.slot === slotId) || {};
           return { ...rec, content: '' };
@@ -104,4 +106,3 @@ const _slotHandler: FunctionalConceptHandler = {
 };
 
 export const slotHandler = autoInterpret(_slotHandler);
-

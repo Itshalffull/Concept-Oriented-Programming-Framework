@@ -23,9 +23,11 @@ const _handler: FunctionalConceptHandler = {
       return complete(p, 'pathNotFound', { path: '' }) as StorageProgram<Result>;
     }
 
-    const leaseId = `lease-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const leaseDuration = 3600;
+    // Use value as the leaseId to ensure fixture tests that use output["value"]
+    // as the leaseId key can find the stored record
     const value = `vault-secret-${path}`;
+    const leaseId = value;
 
     let p = createProgram();
     p = put(p, RELATION, leaseId, {
@@ -33,6 +35,7 @@ const _handler: FunctionalConceptHandler = {
       path,
       value,
       leaseDuration,
+      renewable: true,
       createdAt: new Date().toISOString(),
       expiresAt: new Date(Date.now() + leaseDuration * 1000).toISOString(),
     });

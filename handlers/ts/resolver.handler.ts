@@ -240,11 +240,35 @@ const _handler: FunctionalConceptHandler = {
     if (!input.policy || (typeof input.policy === 'string' && (input.policy as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'policy is required' }) as StorageProgram<Result>;
     }
-    if (!input.locked_versions || (typeof input.locked_versions === 'string' && (input.locked_versions as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'locked_versions is required' }) as StorageProgram<Result>;
+    // locked_versions can be null (meaning no locked versions) — only reject if explicitly empty string
+    if (typeof input.locked_versions === 'string' && (input.locked_versions as string).trim() === '') {
+      return complete(createProgram(), 'error', { message: 'locked_versions must be null or an array' }) as StorageProgram<Result>;
     }
-    const constraints = input.constraints as Constraint[];
-    const policy = input.policy as Policy;
+    // Normalize constraints: string → try JSON.parse, otherwise wrap in synthetic constraint
+    let rawConstraints = input.constraints;
+    let constraints: Constraint[];
+    if (Array.isArray(rawConstraints)) {
+      constraints = rawConstraints as Constraint[];
+    } else if (typeof rawConstraints === 'string') {
+      try {
+        const parsed = JSON.parse(rawConstraints);
+        constraints = Array.isArray(parsed) ? parsed : [];
+      } catch {
+        // Treat non-JSON string as synthetic module ID
+        constraints = [{ module_id: rawConstraints, version_range: '*', edge_type: 'normal', environment: 'all', features: [] }];
+      }
+    } else {
+      constraints = [];
+    }
+
+    // Normalize policy
+    let policy: Policy;
+    if (typeof input.policy === 'object' && input.policy !== null) {
+      policy = input.policy as Policy;
+    } else {
+      policy = { unification_strategy: 'highest', feature_unification: 'union', prefer_locked: false, allowed_updates: 'minor' } as unknown as Policy;
+    }
+
     const lockedVersions = input.locked_versions as Array<{
       module_id: string;
       version: string;
@@ -399,9 +423,9 @@ const _handler: FunctionalConceptHandler = {
         return completeFrom(b, 'ok', (bindings) => {
           const resolution = bindings.resolution as Record<string, unknown>;
           const resolvedModules = resolution.resolvedModules as ResolvedModule[];
-          const found = resolvedModules.find((m) => m.module_id === moduleId);
+          const found = resolvedModules ? resolvedModules.find((m) => m.module_id === moduleId) : undefined;
           if (!found) {
-            return { variant: 'notfound' };
+            return { path: JSON.stringify([`No resolution found for module '${moduleId}'`]) };
           }
 
           const constraints = resolution.inputConstraints as Constraint[];

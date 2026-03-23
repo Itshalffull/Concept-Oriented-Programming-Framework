@@ -124,9 +124,6 @@ const _handler: FunctionalConceptHandler = {
   },
 
   classify(input: Record<string, unknown>) {
-    if (!input.intent || (typeof input.intent === 'string' && (input.intent as string).trim() === '')) {
-      return complete(createProgram(), 'ambiguous', { message: 'intent is required' }) as StorageProgram<Result>;
-    }
     const fieldType = input.fieldType as string;
     const constraints = input.constraints as string;
     const intent = input.intent as string;

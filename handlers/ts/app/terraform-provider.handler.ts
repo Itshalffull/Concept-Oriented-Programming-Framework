@@ -80,7 +80,7 @@ const _terraformProviderHandler: FunctionalConceptHandler = {
 
   teardown(input: Record<string, unknown>) {
     const workspace = input.workspace as string;
-    if (!workspace || workspace.trim() === '') {
+    if (!workspace || (typeof workspace === 'string' && workspace.trim() === '')) {
       return complete(createProgram(), 'error', { message: 'workspace is required' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
     const destroyed = ['aws_vpc.main', 'aws_subnet.primary', 'aws_ecs_cluster.app', 'aws_security_group.web', 'aws_iam_role.exec'];

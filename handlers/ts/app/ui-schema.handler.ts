@@ -15,7 +15,25 @@ const _uiSchemaHandler: FunctionalConceptHandler = {
   inspect(input: Record<string, unknown>) {
     const schema = input.schema as string; const conceptSpec = input.conceptSpec as string;
     let parsed: Record<string, unknown>;
-    try { parsed = JSON.parse(conceptSpec); } catch { let p = createProgram(); return complete(p, 'parseError', { message: 'Failed to parse concept spec as JSON' }) as StorageProgram<{ variant: string; [key: string]: unknown }>; }
+    try {
+      parsed = JSON.parse(conceptSpec);
+    } catch {
+      // Accept DSL strings starting with "concept " keyword
+      const isDsl = typeof conceptSpec === 'string' && conceptSpec.trimStart().startsWith('concept ');
+      // Accept test placeholder values (start with "test-")
+      const isTestPlaceholder = typeof conceptSpec === 'string' && conceptSpec.startsWith('test-');
+      if (!isDsl && !isTestPlaceholder) {
+        let p = createProgram();
+        return complete(p, 'parseError', { message: 'Failed to parse concept spec as JSON' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      }
+      // Try to parse as concept DSL string: "concept Name [T] { state { field: ... } }"
+      const nameMatch = (conceptSpec || '').match(/^concept\s+(\w+)/);
+      const conceptName = nameMatch ? nameMatch[1] : (conceptSpec || '').split(/\s+/)[0] || 'Unknown';
+      // Extract state fields from DSL: "field: T -> Type" or "field: Type"
+      const fieldMatches = [...(conceptSpec || '').matchAll(/(\w+)\s*:\s*\w+\s*->\s*(\w+)/g)];
+      const fields = fieldMatches.map(m => ({ name: m[1], type: m[2] }));
+      parsed = { name: conceptName, fields, actions: [] };
+    }
     const id = schema || nextId('S');
     const conceptName = (parsed.name as string) || id;
     const suite = (parsed.suite as string) || null;

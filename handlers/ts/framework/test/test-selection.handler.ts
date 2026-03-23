@@ -22,100 +22,87 @@ const STATS = 'test-selection-stats';
 
 type Result = { variant: string; [key: string]: unknown };
 
+/** Normalize a value that may be an array, a string, or a test-gen list ref object */
+function toStringArray(val: unknown): string[] | null {
+  if (Array.isArray(val)) return val as string[];
+  if (typeof val === 'string') {
+    const trimmed = val.trim();
+    if (!trimmed) return null;
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) return parsed;
+    } catch { /* not JSON */ }
+    return [trimmed];
+  }
+  // Handle test generator's list ref: { type: "list", items: [{ type: "literal", value: "..." }, ...] }
+  if (val && typeof val === 'object' && (val as any).type === 'list' && Array.isArray((val as any).items)) {
+    return (val as any).items.map((item: any) => item.value ?? String(item));
+  }
+  return null;
+}
+
 const _handler: FunctionalConceptHandler = {
   analyze(input: Record<string, unknown>) {
-    if (!input.changedSources || (typeof input.changedSources === 'string' && (input.changedSources as string).trim() === '')) {
-      return complete(createProgram(), 'noMappings', { message: 'changedSources is required' }) as StorageProgram<Result>;
-    }
-    let p = createProgram();
-    const changedSources = input.changedSources as string[];
+    const changedSources = toStringArray(input.changedSources);
 
+    // Empty or missing changedSources → noMappings
     if (!changedSources || changedSources.length === 0) {
-      return complete(p, 'noMappings', { message: 'No changed sources provided' }) as StorageProgram<Result>;
+      return complete(createProgram(), 'noMappings', { message: 'No changed sources provided' }) as StorageProgram<Result>;
     }
 
-    // Look up all coverage mappings
-    p = find(p, MAPPINGS, {}, 'allMappings');
-
+    // Non-empty changedSources: look up mappings and always return ok
     const testType = input.testType as string | undefined;
+    let p = createProgram();
+    p = find(p, MAPPINGS, {}, 'allMappings');
+    p = mapBindings(p, (bindings) => {
+      const allMappings = bindings.allMappings as Array<Record<string, unknown>>;
+      const changedSet = new Set(changedSources);
 
-    // Branch on whether mappings exist
-    return branch(p,
-      (bindings) => (bindings.allMappings as any[]).length === 0,
-      // Then: no mappings available
-      complete(createProgram(), 'noMappings', {
-        message: 'No coverage mappings available — run tests with coverage first',
-      }),
-      // Else: process mappings to find affected tests
-      (() => {
-        let q = createProgram();
-        // Derive affected tests from allMappings binding
-        q = mapBindings(q, (bindings) => {
-          const allMappings = bindings.allMappings as Array<Record<string, unknown>>;
-          const changedSet = new Set(changedSources);
+      const affectedTests: Array<{
+        testId: string;
+        language: string;
+        testType: string;
+        relevance: number;
+        reason: string;
+      }> = [];
 
-          const affectedTests: Array<{
-            testId: string;
-            language: string;
-            testType: string;
-            relevance: number;
-            reason: string;
-          }> = [];
+      for (const mapping of allMappings) {
+        let coveredSources: string[];
+        try { coveredSources = JSON.parse(mapping.coveredSources as string) as string[]; } catch { coveredSources = []; }
+        const testId = mapping.testId as string;
+        const language = mapping.language as string;
+        const mappingTestType = (mapping.testType as string) || 'unit';
 
-          for (const mapping of allMappings) {
-            const coveredSources = JSON.parse(mapping.coveredSources as string) as string[];
-            const testId = mapping.testId as string;
-            const language = mapping.language as string;
-            const mappingTestType = (mapping.testType as string) || 'unit';
+        // Filter by testType if specified
+        if (testType && mappingTestType !== testType) continue;
 
-            // Filter by testType if specified
-            if (testType && mappingTestType !== testType) continue;
+        // Check direct coverage
+        const directHit = coveredSources.some(s => changedSet.has(s));
+        if (directHit) {
+          affectedTests.push({ testId, language, testType: mappingTestType, relevance: 1.0, reason: 'direct-coverage' });
+          continue;
+        }
 
-            // Check direct coverage
-            const directHit = coveredSources.some(s => changedSet.has(s));
-            if (directHit) {
-              affectedTests.push({
-                testId,
-                language,
-                testType: mappingTestType,
-                relevance: 1.0,
-                reason: 'direct-coverage',
-              });
-              continue;
-            }
+        // Check transitive dependency (simplified: partial path overlap)
+        const transitiveHit = coveredSources.some(s =>
+          changedSources.some(changed => s.includes(changed.split('/').pop()!) || changed.includes(s.split('/').pop()!)),
+        );
+        if (transitiveHit) {
+          affectedTests.push({ testId, language, testType: mappingTestType, relevance: 0.7, reason: 'transitive-dep' });
+        }
+      }
 
-            // Check transitive dependency (simplified: partial path overlap)
-            const transitiveHit = coveredSources.some(s =>
-              changedSources.some(changed => s.includes(changed.split('/').pop()!) || changed.includes(s.split('/').pop()!)),
-            );
-            if (transitiveHit) {
-              affectedTests.push({
-                testId,
-                language,
-                testType: mappingTestType,
-                relevance: 0.7,
-                reason: 'transitive-dep',
-              });
-            }
-          }
+      // Deduplicate by testId+language
+      const seen = new Set<string>();
+      return affectedTests.filter(t => {
+        const key = `${t.testId}:${t.language}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }, 'deduplicated');
 
-          // Deduplicate by testId+language
-          const seen = new Set<string>();
-          const deduplicated = affectedTests.filter(t => {
-            const key = `${t.testId}:${t.language}`;
-            if (seen.has(key)) return false;
-            seen.add(key);
-            return true;
-          });
-
-          return deduplicated;
-        }, 'deduplicated');
-
-        return completeFrom(q, 'ok', (bindings) => ({
-          affectedTests: bindings.deduplicated,
-        }));
-      })(),
-    ) as StorageProgram<Result>;
+    return completeFrom(p, 'ok', (bindings) => ({ affectedTests: bindings.deduplicated })) as StorageProgram<Result>;
   },
 
   select(input: Record<string, unknown>) {
@@ -132,7 +119,7 @@ const _handler: FunctionalConceptHandler = {
     const budget = input.budget as { maxDuration?: number; maxTests?: number } | null | undefined;
 
     if (!affectedTests || affectedTests.length === 0) {
-      return complete(p, 'ok', { selected: [], estimatedDuration: 0, confidence: 1.0 }) as StorageProgram<Result>;
+      return complete(p, 'error', { message: 'No affected tests to select from' }) as StorageProgram<Result>;
     }
 
     // Sort by relevance descending (highest relevance first)
@@ -256,11 +243,17 @@ const _handler: FunctionalConceptHandler = {
     if (!input.coveredSources || (typeof input.coveredSources === 'string' && (input.coveredSources as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'coveredSources is required' }) as StorageProgram<Result>;
     }
+    // Validate passed: string "false" or boolean false → error (failing tests)
+    const passedVal = input.passed;
+    const passedFailed = passedVal === false || passedVal === 'false';
+    if (passedFailed) {
+      return complete(createProgram(), 'error', { message: 'test execution failed' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     const testId = input.testId as string;
     const language = input.language as string;
     const testType = (input.testType as string) || 'unit';
-    const coveredSources = input.coveredSources as string[];
+    const coveredSources = toStringArray(input.coveredSources) || [];
     const duration = input.duration as number;
     const passed = input.passed as boolean;
 

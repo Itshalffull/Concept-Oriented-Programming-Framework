@@ -9,7 +9,7 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, put, complete, type StorageProgram,
+  createProgram, get, put, branch, complete, completeFrom, type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
 
@@ -18,19 +18,18 @@ type Result = { variant: string; [key: string]: unknown };
 let idCounter = 0;
 function nextId(): string { return `gov-auto-${++idCounter}`; }
 
-let registered = false;
-
 const _handler: FunctionalConceptHandler = {
   register(_input: Record<string, unknown>) {
-    if (registered) {
-      const p = createProgram();
-      return complete(p, 'ok', { provider_name: 'GovernanceAutomationProvider' }) as StorageProgram<Result>;
-    }
-
-    registered = true;
     let p = createProgram();
-    p = put(p, 'governance-automation-provider', '__registered', { value: true });
-    return complete(p, 'ok', { provider_name: 'GovernanceAutomationProvider' }) as StorageProgram<Result>;
+    p = get(p, 'governance-automation-provider', '__registered', 'existing');
+    return branch(p, 'existing',
+      // Already registered → return error (duplicate registration)
+      (b) => complete(b, 'error', { message: 'GovernanceAutomationProvider is already registered' }),
+      (b) => {
+        let b2 = put(b, 'governance-automation-provider', '__registered', { value: true });
+        return complete(b2, 'ok', { name: 'GovernanceAutomationProvider' });
+      },
+    ) as StorageProgram<Result>;
   },
 
   execute(input: Record<string, unknown>) {
@@ -78,4 +77,4 @@ const _handler: FunctionalConceptHandler = {
 export const governanceAutomationProviderHandler = autoInterpret(_handler);
 
 /** Reset internal state. Useful for testing. */
-export function resetGovernanceAutomationProvider(): void { idCounter = 0; registered = false; }
+export function resetGovernanceAutomationProvider(): void { idCounter = 0; }

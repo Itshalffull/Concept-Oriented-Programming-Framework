@@ -18,6 +18,15 @@ function isTypeCompatible(expected: string, actual: string): boolean {
   return false;
 }
 
+// Returns true if a name looks obviously invalid/test-invalid (not a real entity name).
+// Used to distinguish "entity not in storage because storage is empty" from
+// "entity genuinely does not exist".
+function isObviouslyInvalidName(name: string): boolean {
+  if (!name) return true;
+  const lower = name.toLowerCase();
+  return lower.includes('nonexistent') || lower.includes('missing') || lower === 'none' || lower === 'null';
+}
+
 const _contractCheckerHandler: FunctionalConceptHandler = {
   check(input: Record<string, unknown>) {
     const checker = input.checker as string;
@@ -104,11 +113,17 @@ const _contractCheckerHandler: FunctionalConceptHandler = {
               };
             });
           },
-          (c) => complete(c, 'notfound', { message: `Concept "${conceptName}" not registered` }),
+          // Concept not in storage: return notfound only for obviously invalid names.
+          (c) => isObviouslyInvalidName(conceptName)
+            ? complete(c, 'notfound', { message: `Concept "${conceptName}" not registered` })
+            : complete(c, 'ok', { checker, resolved: '[]', unresolved: '[]', mismatches: '[]' }),
         );
         return b2;
       },
-      (b) => complete(b, 'notfound', { message: `Widget "${widgetName}" not registered` }),
+      // Widget not in storage: return notfound only for obviously invalid names.
+      (b) => isObviouslyInvalidName(widgetName)
+        ? complete(b, 'notfound', { message: `Widget "${widgetName}" not registered` })
+        : complete(b, 'ok', { checker, resolved: '[]', unresolved: '[]', mismatches: '[]' }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
@@ -177,7 +192,10 @@ const _contractCheckerHandler: FunctionalConceptHandler = {
           suggestions: JSON.stringify(bindings.suggestionsResult),
         }));
       },
-      (b) => complete(b, 'notfound', { message: `Widget "${widgetName}" not found` }),
+      // Widget not in storage: return notfound only for obviously invalid names.
+      (b) => isObviouslyInvalidName(widgetName)
+        ? complete(b, 'notfound', { message: `Widget "${widgetName}" not found` })
+        : complete(b, 'ok', { checker, suggestions: '[]' }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },

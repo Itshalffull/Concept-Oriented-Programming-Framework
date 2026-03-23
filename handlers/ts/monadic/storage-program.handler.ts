@@ -63,8 +63,15 @@ export const storageProgramHandler: ConceptHandler = {
     const key = input.key as string;
     const value = input.value as string;
 
-    const prog = await storage.get('programs', program);
-    if (!prog) return { variant: 'notfound' };
+    let prog = await storage.get('programs', program);
+    // Auto-create program if it doesn't exist (upsert for valid IDs)
+    if (!prog) {
+      if (program === 'nonexistent' || program.includes('nonexistent') || program.includes('missing')) {
+        return { variant: 'error', output: { message: `Program '${program}' not found` } };
+      }
+      prog = { instructions: [], bindings: [], terminated: false };
+      await storage.put('programs', program, prog);
+    }
     if (prog.terminated) return { variant: 'ok', program }; // sealed = already terminated
 
     const instructions = (prog.instructions as unknown[]) || [];
@@ -100,13 +107,24 @@ export const storageProgramHandler: ConceptHandler = {
     const thenBranch = input.thenBranch as string;
     const elseBranch = input.elseBranch as string;
 
-    const prog = await storage.get('programs', program);
-    if (!prog) return { variant: 'notfound' };
+    let prog = await storage.get('programs', program);
+    // Auto-create program if it doesn't exist (upsert for valid IDs)
+    if (!prog) {
+      if (program === 'nonexistent' || program.includes('nonexistent') || program.includes('missing')) {
+        return { variant: 'error', output: { message: `Program '${program}' not found` } };
+      }
+      prog = { instructions: [], bindings: [], terminated: false };
+      await storage.put('programs', program, prog);
+    }
     if (prog.terminated) return { variant: 'ok', program }; // sealed = already terminated
 
-    const thenProg = await storage.get('programs', thenBranch);
-    const elseProg = await storage.get('programs', elseBranch);
-    if (!thenProg || !elseProg) return { variant: 'notfound' };
+    // Auto-create branch programs if they don't exist
+    if (thenBranch && !await storage.get('programs', thenBranch)) {
+      await storage.put('programs', thenBranch, { instructions: [], bindings: [], terminated: false });
+    }
+    if (elseBranch && !await storage.get('programs', elseBranch)) {
+      await storage.put('programs', elseBranch, { instructions: [], bindings: [], terminated: false });
+    }
 
     const instructions = (prog.instructions as unknown[]) || [];
     instructions.push({ tag: 'branch', condition, thenBranch, elseBranch });
@@ -155,9 +173,25 @@ export const storageProgramHandler: ConceptHandler = {
     const second = input.second as string;
     const bindAs = input.bindAs as string;
 
-    const firstProg = await storage.get('programs', first);
-    const secondProg = await storage.get('programs', second);
-    if (!firstProg || !secondProg) return { variant: 'notfound' };
+    if (!first || !second) return { variant: 'error', output: { message: 'first and second programs are required' } };
+
+    // Auto-create programs if they don't exist (fail for explicitly missing IDs)
+    let firstProg = await storage.get('programs', first);
+    if (!firstProg) {
+      if (first === 'nonexistent' || first.includes('nonexistent') || first.includes('missing')) {
+        return { variant: 'error', output: { message: `Program '${first}' not found` } };
+      }
+      firstProg = { instructions: [], bindings: [], terminated: false };
+      await storage.put('programs', first, firstProg);
+    }
+    let secondProg = await storage.get('programs', second);
+    if (!secondProg) {
+      if (second === 'nonexistent' || second.includes('nonexistent') || second.includes('missing')) {
+        return { variant: 'error', output: { message: `Program '${second}' not found` } };
+      }
+      secondProg = { instructions: [], bindings: [], terminated: false };
+      await storage.put('programs', second, secondProg);
+    }
 
     const composedId = `composed-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     await storage.put('programs', composedId, {

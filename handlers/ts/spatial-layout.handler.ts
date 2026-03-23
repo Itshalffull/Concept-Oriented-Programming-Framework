@@ -17,10 +17,27 @@ import { autoInterpret } from '../../runtime/functional-compat.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
+// Built-in layout algorithms that don't require explicit registration
+const BUILTIN_ALGORITHMS: Record<string, string> = {
+  'force-directed': 'built-in',
+  'hierarchical': 'built-in',
+  'grid': 'built-in',
+  'circular': 'built-in',
+  'radial': 'built-in',
+  'tree': 'built-in',
+  'dagre': 'built-in',
+  'elk': 'built-in',
+  'random': 'built-in',
+};
+
 const _handler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
     const algorithm = input.algorithm as string;
     const provider = input.provider as string;
+
+    if (!algorithm || algorithm.trim() === '') {
+      return complete(createProgram(), 'unknown_algorithm', { message: 'algorithm name is required' }) as StorageProgram<Result>;
+    }
 
     let p = createProgram();
     p = put(p, 'layout_algorithm', algorithm, {
@@ -36,6 +53,11 @@ const _handler: FunctionalConceptHandler = {
       return complete(createProgram(), 'unknown_algorithm', { message: 'algorithm is required' }) as StorageProgram<Result>;
     }
     const algorithm = input.algorithm as string;
+
+    // Check built-in algorithms first
+    if (BUILTIN_ALGORITHMS[algorithm]) {
+      return complete(createProgram(), 'ok', { provider: BUILTIN_ALGORITHMS[algorithm] }) as StorageProgram<Result>;
+    }
 
     let p = createProgram();
     p = get(p, 'layout_algorithm', algorithm, 'record');

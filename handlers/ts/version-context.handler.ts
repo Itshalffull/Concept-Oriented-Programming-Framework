@@ -35,7 +35,7 @@ const _handler: ConceptHandler = {
         context_stack: stack,
         context_updated_at: new Date().toISOString(),
       });
-      return { variant: 'ok', context: ctx.id as string };
+      return { variant: 'ok', context: ctx.id as string, output: { context: ctx.id as string } };
     }
 
     const id = nextId();
@@ -46,7 +46,7 @@ const _handler: ConceptHandler = {
       context_stack: [space_id],
       context_updated_at: now,
     });
-    return { variant: 'ok', context: id };
+    return { variant: 'ok', context: id, output: { context: id } };
   },
 
   async pop(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
@@ -57,7 +57,7 @@ const _handler: ConceptHandler = {
 
     if (existing.length === 0) {
       const id = nextId();
-      return { variant: 'ok', context: id };
+      return { variant: 'ok', context: id, output: { context: id } };
     }
 
     const ctx = existing[0];
@@ -66,24 +66,20 @@ const _handler: ConceptHandler = {
     // Find the index of the space_id to pop
     const idx = stack.indexOf(space_id);
     if (idx === -1) {
-      return { variant: 'ok', context: ctx.id as string };
+      return { variant: 'ok', context: ctx.id as string, output: { context: ctx.id as string } };
     }
 
     // Remove the space and all children (everything from idx onward)
     const newStack = stack.slice(0, idx);
 
-    if (newStack.length === 0) {
-      // Delete the context entirely
-      await storage.del('contexts', ctx.id as string);
-    } else {
-      await storage.put('contexts', ctx.id as string, {
-        ...ctx,
-        context_stack: newStack,
-        context_updated_at: new Date().toISOString(),
-      });
-    }
+    // Keep context even when stack is empty (don't delete) so get() still returns ok
+    await storage.put('contexts', ctx.id as string, {
+      ...ctx,
+      context_stack: newStack,
+      context_updated_at: new Date().toISOString(),
+    });
 
-    return { variant: 'ok', context: ctx.id as string };
+    return { variant: 'ok', context: ctx.id as string, output: { context: ctx.id as string } };
   },
 
   async get(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {

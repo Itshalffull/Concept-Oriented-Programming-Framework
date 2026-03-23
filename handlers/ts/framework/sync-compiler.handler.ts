@@ -15,10 +15,51 @@
 import type { ConceptHandler, ConceptStorage, CompiledSync } from '../../../runtime/types.js';
 import { generateId } from '../../../runtime/types.js';
 
+/**
+ * Normalize a serialized AST record (type:"record", fields:[...]) into a plain object.
+ * If the value is already a plain object, return it as-is.
+ */
+function normalizeAst(ast: unknown): Record<string, unknown> {
+  if (!ast || typeof ast !== 'object') return {};
+  const obj = ast as Record<string, unknown>;
+
+  // Already a plain CompiledSync-like object (has name as string)
+  if (typeof obj.name === 'string') return obj;
+
+  // Serialized record: { type: 'record', fields: [{name, value}, ...] }
+  if (obj.type === 'record' && Array.isArray(obj.fields)) {
+    const result: Record<string, unknown> = {};
+    for (const field of obj.fields as Array<{ name: string; value: unknown }>) {
+      result[field.name] = normalizeValue(field.value);
+    }
+    return result;
+  }
+
+  return obj;
+}
+
+function normalizeValue(val: unknown): unknown {
+  if (!val || typeof val !== 'object') return val;
+  const v = val as Record<string, unknown>;
+  if (v.type === 'literal') return v.value;
+  if (v.type === 'list' && Array.isArray(v.items)) {
+    return (v.items as unknown[]).map(normalizeValue);
+  }
+  if (v.type === 'record' && Array.isArray(v.fields)) {
+    const result: Record<string, unknown> = {};
+    for (const field of v.fields as Array<{ name: string; value: unknown }>) {
+      result[field.name] = normalizeValue(field.value);
+    }
+    return result;
+  }
+  return val;
+}
+
 export const syncCompilerHandler: ConceptHandler = {
   async compile(input, storage) {
     const syncRef = input.sync as string;
-    const ast = input.ast as CompiledSync;
+    const rawAst = input.ast;
+    const ast = normalizeAst(rawAst) as unknown as CompiledSync;
 
     if (!ast || !ast.name) {
       return { variant: 'error', message: 'Invalid sync AST: missing name' };

@@ -56,51 +56,40 @@ const _validatorHandler: FunctionalConceptHandler = {
     const data = input.data as string;
     let p = createProgram();
     p = spGet(p, 'validator', validator, 'entry');
-    p = mapBindings(p, (bindings) => {
-      const entry = bindings.entry as Record<string, unknown> | null;
-      const constraints = entry ? (entry.constraints as string[]) : [];
-      const fieldRules = entry ? ((entry.fieldRules ?? {}) as Record<string, string>) : {};
-      const parsed = JSON.parse(data) as Record<string, unknown>;
-      const errors: string[] = [];
-      for (const [field, ruleStr] of Object.entries(fieldRules)) {
-        const rules = ruleStr.split('|').map(r => r.trim());
-        const value = parsed[field];
-        for (const rule of rules) {
-          if (rule === 'required' && (value === undefined || value === null || value === '')) errors.push(`${field} is required`);
-          if (rule === 'email' && typeof value === 'string' && value !== '') { if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) errors.push(`${field} must be a valid email`); }
-          if (rule === 'string' && value !== undefined && value !== null && typeof value !== 'string') errors.push(`${field} must be a string`);
-          if (rule === 'number' && value !== undefined && value !== null && typeof value !== 'number') errors.push(`${field} must be a number`);
-          if (rule.startsWith('min:') && typeof value === 'string') { const minLen = parseInt(rule.split(':')[1], 10); if (value.length < minLen) errors.push(`${field} must be at least ${minLen} characters`); }
-          if (rule.startsWith('max:') && typeof value === 'string') { const maxLen = parseInt(rule.split(':')[1], 10); if (value.length > maxLen) errors.push(`${field} must be at most ${maxLen} characters`); }
-        }
-      }
-      for (const constraint of constraints) {
-        if (constraint === 'required') for (const field of Object.keys(fieldRules)) {
-          if (parsed[field] === undefined || parsed[field] === null || parsed[field] === '') { const msg = `${field} is required`; if (!errors.includes(msg)) errors.push(msg); }
-        }
-      }
-      // Built-in validation: check email fields even without explicit rules
-      for (const [field, value] of Object.entries(parsed)) {
-        if (field === 'email' && typeof value === 'string' && value !== '') {
-          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-            const msg = `${field} must be a valid email`;
-            if (!errors.includes(msg)) errors.push(msg);
+    p = branch(p, 'entry',
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const entry = bindings.entry as Record<string, unknown>;
+          const constraints = (entry.constraints as string[]) || [];
+          const fieldRules = ((entry.fieldRules ?? {}) as Record<string, string>);
+          let parsed: Record<string, unknown>;
+          try { parsed = JSON.parse(data) as Record<string, unknown>; } catch { return { valid: false, errorsValue: 'Invalid JSON data' }; }
+          const errors: string[] = [];
+          for (const [field, ruleStr] of Object.entries(fieldRules)) {
+            const rules = ruleStr.split('|').map(r => r.trim());
+            const value = parsed[field];
+            for (const rule of rules) {
+              if (rule === 'required' && (value === undefined || value === null || value === '')) errors.push(`${field} is required`);
+              if (rule === 'email' && typeof value === 'string' && value !== '') { if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) errors.push(`${field} must be a valid email`); }
+              if (rule === 'string' && value !== undefined && value !== null && typeof value !== 'string') errors.push(`${field} must be a string`);
+              if (rule === 'number' && value !== undefined && value !== null && typeof value !== 'number') errors.push(`${field} must be a number`);
+              if (rule.startsWith('min:') && typeof value === 'string') { const minLen = parseInt(rule.split(':')[1], 10); if (value.length < minLen) errors.push(`${field} must be at least ${minLen} characters`); }
+              if (rule.startsWith('max:') && typeof value === 'string') { const maxLen = parseInt(rule.split(':')[1], 10); if (value.length > maxLen) errors.push(`${field} must be at most ${maxLen} characters`); }
+            }
           }
-        }
-      }
-      return { valid: errors.length === 0, errorsValue: errors.length === 0 ? '' : errors.join(', ') };
-    }, 'result');
-    p = branch(p, (bindings: Record<string, unknown>) => {
-      const result = bindings.result as { valid: boolean; errorsValue: string };
-      return result.valid;
-    },
-      (thenP) => completeFrom(thenP, 'ok', (bindings) => {
-        return { valid: true, errors: '' };
-      }),
-      (elseP) => completeFrom(elseP, 'error', (bindings) => {
-        const result = bindings.result as { valid: boolean; errorsValue: string };
-        return { valid: false, errors: result.errorsValue };
-      }),
+          for (const constraint of constraints) {
+            if (constraint === 'required') for (const field of Object.keys(fieldRules)) {
+              if (parsed[field] === undefined || parsed[field] === null || parsed[field] === '') { const msg = `${field} is required`; if (!errors.includes(msg)) errors.push(msg); }
+            }
+          }
+          return { valid: errors.length === 0, errorsValue: errors.length === 0 ? '' : errors.join(', ') };
+        }, 'result');
+        return completeFrom(b2, 'ok', (bindings) => {
+          const result = bindings.result as { valid: boolean; errorsValue: string };
+          return { valid: result.valid, errors: result.errorsValue };
+        });
+      },
+      (b) => complete(b, 'notfound', { message: `Validator "${validator}" not found` }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },

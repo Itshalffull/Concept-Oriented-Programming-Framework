@@ -6,9 +6,8 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, del, pure, perform,
+  createProgram, get, put, del, pure, perform, branch, complete,
   type StorageProgram,
-  complete,
 } from '../../../runtime/storage-program.ts';
 
 const RELATION = 'vercel-kv';
@@ -62,8 +61,10 @@ export const vercelKVProviderHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, RELATION, storeName, 'storeData');
-    p = complete(p, 'ok', { storeName,
-      credentials: '{}' });
+    p = branch(p, 'storeData',
+      (b) => complete(b, 'ok', { storeName, credentials: '{}' }),
+      (b) => complete(b, 'notfound', { message: `Store "${storeName}" not found` }),
+    );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -72,16 +73,19 @@ export const vercelKVProviderHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, RELATION, storeName, 'storeData');
-
-    // Delete via Vercel API
-    p = perform(p, 'http', 'DELETE', {
-      endpoint: 'vercel-api',
-      path: `/v1/storage/stores/${storeName}`,
-      body: '',
-    }, 'deleteResponse');
-
-    p = del(p, RELATION, storeName);
-    p = complete(p, 'ok', { storeName });
+    p = branch(p, 'storeData',
+      (b) => {
+        // Delete via Vercel API
+        let b2 = perform(b, 'http', 'DELETE', {
+          endpoint: 'vercel-api',
+          path: `/v1/storage/stores/${storeName}`,
+          body: '',
+        }, 'deleteResponse');
+        b2 = del(b2, RELATION, storeName);
+        return complete(b2, 'ok', { storeName });
+      },
+      (b) => complete(b, 'notfound', { message: `Store "${storeName}" not found` }),
+    );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
