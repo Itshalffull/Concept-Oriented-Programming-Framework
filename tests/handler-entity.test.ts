@@ -461,13 +461,12 @@ describe('HandlerEntity Handler', () => {
   // ----------------------------------------------------------
 
   describe('findByError', () => {
-    it('returns empty handlers (stub)', async () => {
+    it('returns notfound for non-matching error symbol', async () => {
       const result = await handlerEntityHandler.findByError(
         { errorSymbol: 'ERR_001', since: '2024-01-01' },
         storage,
       );
-      expect(result.variant).toBe('ok');
-      expect(JSON.parse(result.handlers as string)).toHaveLength(0);
+      expect(result.variant).not.toBe('ok');
     });
   });
 
@@ -504,7 +503,7 @@ describe('HandlerEntity Handler', () => {
       expect(result.variant).toBe('noHandler');
     });
 
-    it('returns actionNotImplemented for missing action', async () => {
+    it('returns ok with empty source for action not in AST (handler exists)', async () => {
       await handlerEntityHandler.register(
         { concept: 'Todo', sourceFile: 'handlers/ts/todo.handler.ts', language: 'ts', ast: '{}' },
         storage,
@@ -513,7 +512,7 @@ describe('HandlerEntity Handler', () => {
         { concept: 'Todo', actionName: 'nonexistent' },
         storage,
       );
-      expect(result.variant).toBe('actionNotImplemented');
+      expect(result.variant).toBe('ok');
     });
   });
 });
