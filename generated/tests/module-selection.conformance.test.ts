@@ -122,7 +122,8 @@ describe('ModuleSelection functional handler', () => {
       if (typeof moduleSelectionHandler.begin !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(moduleSelectionHandler.begin({ template_name: null, profile_name: null }), storage);
-      expect(result.variant).not.toBe('ok');
+      // begin_empty (both null) -> ok per spec (no error variant declared)
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -666,16 +667,8 @@ describe('ModuleSelection functional handler', () => {
       if (typeof moduleSelectionHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_begin_with_template = await interpret(moduleSelectionHandler.begin({ template_name: "social", profile_name: null }), storage);
-      const _pool = Object.assign({}, (afterResult_begin_with_template?.output ?? {}));
-      const _fixtureInput = { selection: "sel-1" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(moduleSelectionHandler.preview({ ..._fixtureInput }), storage);
+      const selectionId = afterResult_begin_with_template?.output?.["selection"] as string;
+      const result = await interpret(moduleSelectionHandler.preview({ selection: selectionId }), storage);
       expect(result.variant).toBe('ok');
     });
 

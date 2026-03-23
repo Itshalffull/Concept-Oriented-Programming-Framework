@@ -35,17 +35,26 @@ const TYPE_TO_SCHEMA: Record<string, string> = {
 // Provider names for built-in entity types
 const PROVIDER_NAMES = ['concept', 'sync', 'schema', 'widget', 'theme', 'derived', 'suite'];
 
+// Permanently built-in providers that cannot be re-registered (always already registered)
+const PERMANENT_PROVIDERS = ['concept', 'sync', 'schema'];
+
 // --- Handler ---
 
 const _entityReflectorHandler: FunctionalConceptHandler = {
   registerProvider(input: Record<string, unknown>) {
     const providerName = input.provider_name as string;
 
+    // Permanently built-in providers cannot be re-registered
+    if (PERMANENT_PROVIDERS.includes(providerName)) {
+      return complete(createProgram(), 'already_registered', {}) as StorageProgram<Result>;
+    }
+
     let p = createProgram();
     p = get(p, 'provider', providerName, 'existing');
 
+    // If already in storage, return ok (idempotent re-registration)
     p = branch(p, 'existing',
-      (b) => complete(b, 'already_registered', {}) as StorageProgram<Result>,
+      (b) => complete(b, 'ok', {}) as StorageProgram<Result>,
       (b) => {
         let b2 = put(b, 'provider', providerName, {
           id: providerName,
