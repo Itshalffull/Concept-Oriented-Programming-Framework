@@ -39,12 +39,6 @@ const _handler: FunctionalConceptHandler = {
     if (!input.resource || (typeof input.resource === 'string' && (input.resource as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'resource is required' }) as StorageProgram<Result>;
     }
-    if (!input.duration || (typeof input.duration === 'string' && (input.duration as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'duration is required' }) as StorageProgram<Result>;
-    }
-    if (!input.reason || (typeof input.reason === 'string' && (input.reason as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'reason is required' }) as StorageProgram<Result>;
-    }
     const resource = input.resource as string;
     const holder = input.holder as string;
     const duration = input.duration as number | undefined;

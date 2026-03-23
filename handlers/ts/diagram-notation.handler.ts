@@ -55,9 +55,6 @@ const _handler: FunctionalConceptHandler = {
     if (!input.name || (typeof input.name === 'string' && (input.name as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
     }
-    if (!input.description || (typeof input.description === 'string' && (input.description as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'description is required' }) as StorageProgram<Result>;
-    }
     const name = input.name as string;
     const description = (input.description as string | undefined) ?? null;
 
@@ -85,18 +82,6 @@ const _handler: FunctionalConceptHandler = {
   },
 
   addNodeType(input: Record<string, unknown>) {
-    if (!input.default_fill || (typeof input.default_fill === 'string' && (input.default_fill as string).trim() === '')) {
-      return complete(createProgram(), 'duplicate', { message: 'default_fill is required' }) as StorageProgram<Result>;
-    }
-    if (!input.default_stroke || (typeof input.default_stroke === 'string' && (input.default_stroke as string).trim() === '')) {
-      return complete(createProgram(), 'duplicate', { message: 'default_stroke is required' }) as StorageProgram<Result>;
-    }
-    if (!input.icon || (typeof input.icon === 'string' && (input.icon as string).trim() === '')) {
-      return complete(createProgram(), 'duplicate', { message: 'icon is required' }) as StorageProgram<Result>;
-    }
-    if (!input.schema_id || (typeof input.schema_id === 'string' && (input.schema_id as string).trim() === '')) {
-      return complete(createProgram(), 'duplicate', { message: 'schema_id is required' }) as StorageProgram<Result>;
-    }
     const notationId = input.notation as string;
     const type_key = input.type_key as string;
     const label = (input.label as string | undefined) ?? type_key;
@@ -137,9 +122,6 @@ const _handler: FunctionalConceptHandler = {
   },
 
   addEdgeType(input: Record<string, unknown>) {
-    if (!input.default_color || (typeof input.default_color === 'string' && (input.default_color as string).trim() === '')) {
-      return complete(createProgram(), 'duplicate', { message: 'default_color is required' }) as StorageProgram<Result>;
-    }
     const notationId = input.notation as string;
     const type_key = input.type_key as string;
     const label = (input.label as string | undefined) ?? type_key;
@@ -178,21 +160,6 @@ const _handler: FunctionalConceptHandler = {
   },
 
   addConnectionRule(input: Record<string, unknown>) {
-    if (!input.allowed_edge_types || (typeof input.allowed_edge_types === 'string' && (input.allowed_edge_types as string).trim() === '')) {
-      return complete(createProgram(), 'invalid', { message: 'allowed_edge_types is required' }) as StorageProgram<Result>;
-    }
-    if (!input.min_outgoing || (typeof input.min_outgoing === 'string' && (input.min_outgoing as string).trim() === '')) {
-      return complete(createProgram(), 'invalid', { message: 'min_outgoing is required' }) as StorageProgram<Result>;
-    }
-    if (!input.max_outgoing || (typeof input.max_outgoing === 'string' && (input.max_outgoing as string).trim() === '')) {
-      return complete(createProgram(), 'invalid', { message: 'max_outgoing is required' }) as StorageProgram<Result>;
-    }
-    if (!input.min_incoming || (typeof input.min_incoming === 'string' && (input.min_incoming as string).trim() === '')) {
-      return complete(createProgram(), 'invalid', { message: 'min_incoming is required' }) as StorageProgram<Result>;
-    }
-    if (!input.max_incoming || (typeof input.max_incoming === 'string' && (input.max_incoming as string).trim() === '')) {
-      return complete(createProgram(), 'invalid', { message: 'max_incoming is required' }) as StorageProgram<Result>;
-    }
     const notationId = input.notation as string;
     const source_type = input.source_type as string;
     const target_type = input.target_type as string;
