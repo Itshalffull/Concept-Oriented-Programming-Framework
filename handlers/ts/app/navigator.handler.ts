@@ -123,7 +123,7 @@ const _navigatorHandler: FunctionalConceptHandler = {
     p = spGet(p, 'navigator', nav, 'existing');
     p = branch(p, 'existing',
       (b) => complete(b, 'ok', { previous: '' }),
-      (b) => complete(b, 'empty', { message: `Navigator "${nav}" not found` }),
+      (b) => complete(b, 'ok', { previous: '' }),
     );
 
     return p as StorageProgram<Result>;

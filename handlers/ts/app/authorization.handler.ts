@@ -38,18 +38,12 @@ const _authorizationHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = spGet(p, 'role', role, 'roleRecord');
-    p = branch(p, 'roleRecord',
-      (b) => {
-        let b2 = putFrom(b, 'role', role, (bindings) => {
-          const existing = bindings.roleRecord as Record<string, unknown>;
-          const permissions: string[] = JSON.parse((existing.permissions as string) || '[]');
-          return { ...existing, permissions: JSON.stringify(permissions.filter(p => p !== permission)) };
-        });
-        return complete(b2, 'ok', { role, permission });
-      },
-      (b) => complete(b, 'notfound', { message: 'The specified role does not exist' }),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = putFrom(p, 'role', role, (bindings) => {
+      const existing = (bindings.roleRecord as Record<string, unknown>) || { role, permissions: '[]' };
+      const permissions: string[] = JSON.parse((existing.permissions as string) || '[]');
+      return { ...existing, role, permissions: JSON.stringify(permissions.filter((perm: string) => perm !== permission)) };
+    });
+    return complete(p, 'ok', { role, permission }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   assignRole(input: Record<string, unknown>) {
@@ -101,7 +95,8 @@ const _authorizationHandler: FunctionalConceptHandler = {
           return { granted: false };
         });
       },
-      (b) => complete(b, 'ok', { granted: false }),
+      // User has no role assignment at all → permission denied (error)
+      (b) => complete(b, 'error', { message: 'User has no roles assigned', granted: false }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },

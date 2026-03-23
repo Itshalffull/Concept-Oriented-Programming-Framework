@@ -30,12 +30,12 @@ const _syncedContentHandler: FunctionalConceptHandler = {
           const rec = bindings.originalRecord as Record<string, unknown>;
           return { ref, originalId: original, content: rec.content as string, references: '[]', isReference: true };
         });
-        return complete(b2, 'ok', {});
+        return complete(b2, 'ok', { id: ref, output: { id: ref } });
       },
       (b) => {
         let b2 = put(b, 'syncedContent', original, { original, content: '', references: JSON.stringify([ref]), isReference: false });
         b2 = put(b2, 'syncedContent', ref, { ref, originalId: original, content: '', references: '[]', isReference: true });
-        return complete(b2, 'ok', {});
+        return complete(b2, 'ok', { id: ref, output: { id: ref } });
       },
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
