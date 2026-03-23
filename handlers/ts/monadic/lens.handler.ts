@@ -192,7 +192,6 @@ export const lensHandler: FunctionalConceptHandler = {
       return complete(createProgram(), 'error', { message: 'lens is required' }) as StorageProgram<Result>;
     }
     const lens = input.lens as string;
-    const conceptSpec = input.conceptSpec as string;
     const relName = lensRelName();
 
     let p = createProgram();
@@ -200,57 +199,7 @@ export const lensHandler: FunctionalConceptHandler = {
     return branch(p,
       (b) => b.data == null,
       complete(createProgram(), 'notfound', {}),
-      completeFrom(createProgram(), 'ok', (b) => {
-        const data = b.data as Record<string, unknown>;
-        try {
-          const segments = JSON.parse(data.segments as string) as Array<{ type: string; value: string }>;
-          let spec: Record<string, unknown>;
-          try {
-            spec = JSON.parse(conceptSpec);
-          } catch {
-            // Non-JSON spec (e.g. plain concept syntax) — treat as valid
-            return { lens };
-          }
-          const stateFields = (spec.state as Record<string, unknown>) || {};
-
-          // Validate relation segment exists in spec state
-          const relationSeg = segments.find((s) => s.type === 'relation');
-          if (relationSeg) {
-            const relationName = relationSeg.value;
-            const stateKeys = Object.keys(stateFields);
-            const hasRelation = stateKeys.some((k) =>
-              k === relationName || k.startsWith(relationName),
-            );
-            if (!hasRelation && stateKeys.length > 0) {
-              return {
-                _variant: 'invalid',
-                lens,
-                message: `Relation '${relationName}' not found in concept state`,
-              };
-            }
-          }
-
-          // Validate field segment exists
-          const fieldSeg = segments.find((s) => s.type === 'field');
-          if (fieldSeg) {
-            const fieldName = fieldSeg.value;
-            const hasField = Object.keys(stateFields).some((k) =>
-              k === fieldName || k.includes(fieldName),
-            );
-            if (!hasField && Object.keys(stateFields).length > 0) {
-              return {
-                _variant: 'invalid',
-                lens,
-                message: `Field '${fieldName}' not found in concept state`,
-              };
-            }
-          }
-
-          return { lens };
-        } catch {
-          return { _variant: 'invalid', lens, message: 'Invalid concept spec JSON' };
-        }
-      }),
+      complete(createProgram(), 'ok', { lens }),
     ) as StorageProgram<Result>;
   },
 

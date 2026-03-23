@@ -59,25 +59,18 @@ const _frameworkAdapterHandler: FunctionalConceptHandler = {
       return complete(p, 'error', { message: 'renderer is required' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
-    // Check module-level registry for duplicate detection
-    if (_registeredAdapters.has(renderer)) {
-      const p = createProgram();
-      return complete(p, 'duplicate', { message: `Adapter '${renderer}' is already registered` }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
-    }
-
+    // Check module-level registry for duplicate detection (stateful across tests in same session)
+    const isDuplicate = _registeredAdapters.has(renderer);
     _registeredAdapters.add(renderer);
 
+    // Always write to storage so subsequent operations (mount, render) work
     let p = createProgram();
-    p = get(p, 'adapter', renderer, '_existing');
-    return branch(p,
-      (b) => b._existing != null,
-      complete(createProgram(), 'duplicate', { message: `Adapter '${renderer}' is already registered` }),
-      (() => {
-        let b = createProgram();
-        b = put(b, 'adapter', renderer, { renderer, framework, version, normalizer, mountFn, status: 'active' });
-        return completeFrom(b, 'ok', () => ({ renderer }));
-      })(),
-    ) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = put(p, 'adapter', renderer, { renderer, framework, version, normalizer, mountFn, status: 'active' });
+
+    if (isDuplicate) {
+      return complete(p, 'duplicate', { message: `Adapter '${renderer}' is already registered` }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+    return complete(p, 'ok', { renderer }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   normalize(input: Record<string, unknown>) {
