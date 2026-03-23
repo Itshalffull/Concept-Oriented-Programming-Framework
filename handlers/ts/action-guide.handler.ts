@@ -15,19 +15,13 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, branch, complete, completeFrom,
+  createProgram, get, find, put, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
 
 let idCounter = 0;
-const conceptCounters = new Map<string, number>();
-function nextId(concept?: string): string {
-  if (concept) {
-    const n = (conceptCounters.get(concept) ?? 0) + 1;
-    conceptCounters.set(concept, n);
-    return `action-guide-${n}`;
-  }
+function nextId(): string {
   return `action-guide-${++idCounter}`;
 }
 
@@ -135,7 +129,7 @@ const _actionGuideHandler: FunctionalConceptHandler = {
       order: index,
     }));
 
-    const id = nextId(concept);
+    const id = nextId();
     const now = new Date().toISOString();
 
     let p = createProgram();
