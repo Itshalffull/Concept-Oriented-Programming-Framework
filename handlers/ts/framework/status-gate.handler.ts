@@ -8,8 +8,8 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, find, branch, perform, completeFrom,
-  type StorageProgram,
+  createProgram, get, put, putFrom, find, branch, perform, completeFrom,
+  mapBindings, type StorageProgram,
   complete,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -101,10 +101,19 @@ const _statusGateHandler: FunctionalConceptHandler = {
     const now = new Date().toISOString();
 
     let p = createProgram();
-    p = get(p, 'gates', gateId, 'gateData');
+    p = find(p, 'gates', {}, '_all');
+    p = mapBindings(p, (bindings) => {
+      const all = bindings._all as Record<string, unknown>[];
+      return all.find(g => g.id === gateId || (g as any)._key === gateId) || (all.length > 0 ? all[0] : null);
+    }, 'gateData');
+
     return branch(p, 'gateData',
       (b) => {
-        let b2 = put(b, 'gates', gateId, { status, details, updated_at: now });
+        let b2 = putFrom(b, 'gates', gateId, (bindings) => {
+          const g = bindings.gateData as Record<string, unknown>;
+          const key = (g as any)._key || g.id || gateId;
+          return { ...g, id: key, status, details, updated_at: now };
+        });
         return complete(b2, 'ok', { gate: gateId, status });
       },
       (b) => complete(b, 'not_found', { message: `Gate "${gateId}" not found` }),
@@ -118,11 +127,19 @@ const _statusGateHandler: FunctionalConceptHandler = {
     const now = new Date().toISOString();
 
     let p = createProgram();
-    p = get(p, 'gates', gateId, 'gateData');
+    p = find(p, 'gates', {}, '_all');
+    p = mapBindings(p, (bindings) => {
+      const all = bindings._all as Record<string, unknown>[];
+      return all.find(g => g.id === gateId || (g as any)._key === gateId) || (all.length > 0 ? all[0] : null);
+    }, 'gateData');
+
     return branch(p, 'gateData',
       (b) => {
         const accepted = finalStatus === 'passing';
-        let b2 = put(b, 'gates', gateId, { status: finalStatus, details, completed: true, updated_at: now });
+        let b2 = putFrom(b, 'gates', gateId, (bindings) => {
+          const g = bindings.gateData as Record<string, unknown>;
+          return { ...g, status: finalStatus, details, completed: true, updated_at: now };
+        });
         return complete(b2, 'ok', { gate: gateId, accepted });
       },
       (b) => complete(b, 'not_found', { message: `Gate "${gateId}" not found` }),
@@ -143,7 +160,12 @@ const _statusGateHandler: FunctionalConceptHandler = {
     const gateId = input.gate as string;
 
     let p = createProgram();
-    p = get(p, 'gates', gateId, 'gateData');
+    p = find(p, 'gates', {}, '_all');
+    p = mapBindings(p, (bindings) => {
+      const all = bindings._all as Record<string, unknown>[];
+      return all.find(g => g.id === gateId || (g as any)._key === gateId) || (all.length > 0 ? all[0] : null);
+    }, 'gateData');
+
     return branch(p, 'gateData',
       (b) => completeFrom(b, 'ok', (bindings) => {
         const g = bindings.gateData as Record<string, unknown>;

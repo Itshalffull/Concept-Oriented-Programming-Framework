@@ -227,16 +227,17 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = find(p, 'connector-port', {}, 'all');
 
+    // Find ports by owner field OR by port id (owner param may be port id)
     p = mapBindings(p, (bindings) => {
       const all = bindings.all as Record<string, unknown>[];
-      return all.filter(r => r.owner === owner);
+      return all.filter(r => r.owner === owner || r.id === owner);
     }, '_ownerPorts');
 
     return branch(p,
       (bindings) => {
         const all = bindings.all as Record<string, unknown>[];
         const ownerPorts = bindings._ownerPorts as Record<string, unknown>[];
-        // Error if storage has ports but none for this owner
+        // Error if storage has ports but none match this owner
         return all.length > 0 && ownerPorts.length === 0;
       },
       (errP) => complete(errP, 'notfound', { owner }),

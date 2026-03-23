@@ -17,40 +17,34 @@ import { autoInterpret } from '../../runtime/functional-compat.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
-let idCounter = 0;
-function nextId(): string {
-  return `widget-dependence-provider-${++idCounter}`;
-}
+const PROVIDER_REF = `dependence-provider:widget`;
+const INSTANCE_ID = 'widget-dependence-provider-1';
 
 const _handler: FunctionalConceptHandler = {
   initialize(_input: Record<string, unknown>) {
-    const id = nextId();
-    const providerRef = `dependence-provider:widget`;
     const handledLanguages = 'widget';
 
     let p = createProgram();
-    p = find(p, 'widget-dependence-provider', { providerRef }, 'existing');
+    p = find(p, 'widget-dependence-provider', { providerRef: PROVIDER_REF }, 'existing');
 
     return branch(p,
       (bindings) => (bindings.existing as unknown[]).length > 0,
-      (thenP) => completeFrom(thenP, 'ok', (bindings) => ({
-        instance: (bindings.existing as Record<string, unknown>[])[0].id as string,
-      })),
+      (thenP) => complete(thenP, 'loadError', { message: 'WidgetDependenceProvider already initialized' }),
       (elseP) => {
-        elseP = put(elseP, 'widget-dependence-provider', id, {
-          id,
-          providerRef,
+        elseP = put(elseP, 'widget-dependence-provider', INSTANCE_ID, {
+          id: INSTANCE_ID,
+          providerRef: PROVIDER_REF,
           handledLanguages,
         });
-        elseP = put(elseP, 'plugin-registry', `dependence-provider:${id}`, {
-          id: `dependence-provider:${id}`,
+        elseP = put(elseP, 'plugin-registry', `dependence-provider:${INSTANCE_ID}`, {
+          id: `dependence-provider:${INSTANCE_ID}`,
           pluginKind: 'dependence-provider',
           domain: 'widget',
           handledLanguages,
-          providerRef,
-          instanceId: id,
+          providerRef: PROVIDER_REF,
+          instanceId: INSTANCE_ID,
         });
-        return complete(elseP, 'ok', { instance: id });
+        return complete(elseP, 'ok', { instance: INSTANCE_ID });
       },
     ) as StorageProgram<Result>;
   },
