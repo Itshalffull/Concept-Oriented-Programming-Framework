@@ -56,11 +56,18 @@ const _pluginRegistryHandler: FunctionalConceptHandler = {
     const plugin = input.plugin as string;
     const config = input.config as string;
 
+    // Validate config JSON before any storage operations
+    let parsedConfig: Record<string, unknown>;
+    try {
+      parsedConfig = JSON.parse(config) as Record<string, unknown>;
+    } catch {
+      return complete(createProgram(), 'error', { message: 'config must be valid JSON' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+
     let p = createProgram();
     p = spGet(p, 'pluginregistry', plugin, 'definition');
 
     const instanceId = `${plugin}:${Date.now()}`;
-    const parsedConfig = JSON.parse(config) as Record<string, unknown>;
 
     const instance = {
       instanceId,

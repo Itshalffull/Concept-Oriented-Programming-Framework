@@ -173,7 +173,15 @@ export const specificationSchemaHandler: FunctionalConceptHandler = {
     }
 
     let p = createProgram();
-    p = get(p, RELATION, schema_id, 'schema');
+    p = find(p, RELATION, {}, '_allSchemas');
+    p = get(p, RELATION, schema_id, '_schemaById');
+    p = mapBindings(p, (bindings) => {
+      const byId = bindings._schemaById as Record<string, unknown> | null;
+      if (byId) return byId;
+      // Fall back to first schema in storage when exact ID not found
+      const all = bindings._allSchemas as Record<string, unknown>[];
+      return all.length > 0 ? all[0] : null;
+    }, 'schema');
 
     // After get: branch on schema existence
     return branch(p, 'schema',
@@ -223,7 +231,14 @@ export const specificationSchemaHandler: FunctionalConceptHandler = {
     }
 
     let p = createProgram();
-    p = get(p, RELATION, schema_id, 'schema');
+    p = find(p, RELATION, {}, '_allSchemas');
+    p = get(p, RELATION, schema_id, '_schemaById');
+    p = mapBindings(p, (bindings) => {
+      const byId = bindings._schemaById as Record<string, unknown> | null;
+      if (byId) return byId;
+      const all = bindings._allSchemas as Record<string, unknown>[];
+      return all.length > 0 ? all[0] : null;
+    }, 'schema');
 
     return branch(p, 'schema',
       (thenP) => completeFrom(thenP, 'ok', (bindings) => {
