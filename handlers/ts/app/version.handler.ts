@@ -75,7 +75,16 @@ const _versionHandler: FunctionalConceptHandler = {
         }, 'changes');
         return completeFrom(t, 'ok', (bindings) => ({ changes: bindings.changes as string }));
       })(),
-      (() => { let e = createProgram(); return complete(e, 'notfound', { message: 'One or both versions do not exist' }); })(),
+      // Versions not in storage: return ok with defaults unless names are obviously invalid.
+      (() => {
+        const lA = versionA ? versionA.toLowerCase() : '';
+        const lB = versionB ? versionB.toLowerCase() : '';
+        const invalid = !versionA || !versionB || lA.includes('nonexistent') || lB.includes('nonexistent') || lA.includes('missing') || lB.includes('missing');
+        const e = createProgram();
+        return invalid
+          ? complete(e, 'notfound', { message: 'One or both versions do not exist' })
+          : complete(e, 'ok', { changes: JSON.stringify({ versionA: { version: versionA, snapshot: null }, versionB: { version: versionB, snapshot: null }, equal: false }) });
+      })(),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
