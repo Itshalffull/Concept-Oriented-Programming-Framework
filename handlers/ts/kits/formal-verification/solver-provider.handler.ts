@@ -73,16 +73,11 @@ export const solverProviderHandler: FunctionalConceptHandler = {
     // Check for duplicate via find, then branch
     let p = createProgram();
     p = find(p, RELATION, { provider_id }, 'existing');
-    p = branch(
-      p,
-      (bindings) => {
-        const existing = bindings.existing as unknown[];
-        return existing && existing.length > 0;
-      },
-      complete(createProgram(), 'duplicate', { provider_id, message: `Provider "${provider_id}" is already registered` }),
-      (() => {
-        let inner = createProgram();
-        inner = put(inner, RELATION, id, {
+    return branch(p,
+      (bindings) => (bindings.existing as unknown[]).length > 0,
+      (dupP) => complete(dupP, 'duplicate', { provider_id, message: `Provider "${provider_id}" is already registered` }),
+      (newP) => {
+        let inner = put(newP, RELATION, id, {
           id,
           provider_id,
           name,
@@ -94,9 +89,8 @@ export const solverProviderHandler: FunctionalConceptHandler = {
           registered_at: now,
         });
         return complete(inner, 'ok', { id, provider_id, name, status: 'active' });
-      })(),
-    );
-    return p as StorageProgram<Result>;
+      },
+    ) as StorageProgram<Result>;
   },
 
   dispatch(input) {
@@ -186,13 +180,9 @@ export const solverProviderHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, RELATION, { provider_id }, 'matches');
-    p = branch(
-      p,
-      (bindings) => {
-        const matches = bindings.matches as unknown[];
-        return !matches || matches.length === 0;
-      },
-      complete(createProgram(), 'notfound', { provider_id }),
+    return branch(p,
+      (bindings) => !bindings.matches || (bindings.matches as unknown[]).length === 0,
+      (notFoundP) => complete(notFoundP, 'notfound', { provider_id }),
       (foundP) => completeFrom(foundP, 'ok', (bindings: Bindings) => {
         const match = (bindings.matches as Record<string, unknown>[])[0];
         return {
@@ -202,8 +192,7 @@ export const solverProviderHandler: FunctionalConceptHandler = {
           latency_ms: Math.floor(Math.random() * 50) + 5,
         };
       }),
-    );
-    return p as StorageProgram<Result>;
+    ) as StorageProgram<Result>;
   },
 
   list(_input) {
@@ -232,25 +221,16 @@ export const solverProviderHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, RELATION, { provider_id }, 'matches');
-    p = branch(
-      p,
-      (bindings) => {
-        const matches = bindings.matches as unknown[];
-        return !matches || matches.length === 0;
-      },
-      complete(createProgram(), 'notfound', { provider_id }),
-      (() => {
-        let inner = createProgram();
-        inner = delFrom(inner, RELATION, (bindings: Bindings) => (bindings.matches as any[])[0].id);
+    return branch(p,
+      (bindings) => !bindings.matches || (bindings.matches as unknown[]).length === 0,
+      (notFoundP) => complete(notFoundP, 'notfound', { provider_id }),
+      (foundP) => {
+        let inner = delFrom(foundP, RELATION, (bindings: Bindings) => (bindings.matches as any[])[0].id);
         return completeFrom(inner, 'ok', (bindings: Bindings) => {
           const match = (bindings.matches as Record<string, unknown>[])[0];
-          return {
-            provider_id,
-            name: match.name,
-          };
+          return { provider_id, name: match.name };
         });
-      })(),
-    );
-    return p as StorageProgram<Result>;
+      },
+    ) as StorageProgram<Result>;
   },
 };
