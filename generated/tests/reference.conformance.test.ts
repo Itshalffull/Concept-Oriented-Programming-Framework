@@ -102,7 +102,17 @@ describe('Reference functional handler', () => {
     it('fixture "duplicate_ref" -> exists', async () => {
       if (typeof referenceHandler.addRef !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(referenceHandler.addRef({ source: "page-1", target: "doc-1" }), storage);
+      const afterResult_valid_add = await interpret(referenceHandler.addRef({ source: "page-1", target: "doc-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
+      const _fixtureInput = { source: "page-1", target: "doc-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(referenceHandler.addRef({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('exists'));
     });

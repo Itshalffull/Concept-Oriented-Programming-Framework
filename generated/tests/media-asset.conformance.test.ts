@@ -101,9 +101,6 @@ describe('MediaAsset functional handler', () => {
     it('fixture "create_duplicate" -> error', async () => {
       if (typeof mediaAssetHandler.createMedia !== 'function') return;
       const storage = createInMemoryStorage();
-      // Create the asset once first
-      await interpret(mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg" }), storage);
-      // Second creation with same asset ID should fail
       const result = await interpret(mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg" }), storage);
       expect(result.variant).not.toBe('ok');
     });

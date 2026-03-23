@@ -94,7 +94,17 @@ describe('FrameworkAdapter functional handler', () => {
     it('fixture "duplicate_registration" -> duplicate', async () => {
       if (typeof frameworkAdapterHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(frameworkAdapterHandler.register({ renderer: "react-adapter", framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" }), storage);
+      const afterResult_register_react = await interpret(frameworkAdapterHandler.register({ renderer: "react-adapter", framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_react?.output ?? {}));
+      const _fixtureInput = { renderer: "react-adapter", framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(frameworkAdapterHandler.register({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('duplicate'));
     });

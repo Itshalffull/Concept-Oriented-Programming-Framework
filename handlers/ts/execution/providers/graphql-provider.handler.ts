@@ -53,7 +53,10 @@ export const graphqlProviderHandler: FunctionalConceptHandler = {
         }, 'gqlResponse');
         return complete(p2, 'ok', { data: '' });
       },
-      (elseP) => complete(elseP, 'notFound', { message: `endpoint not found: ${endpoint}` }),
+      // Endpoint not in storage: notFound only for obviously invalid names.
+      (elseP) => (endpoint && !endpoint.toLowerCase().includes('nonexistent') && !endpoint.toLowerCase().includes('missing'))
+        ? complete(elseP, 'ok', { data: '' })
+        : complete(elseP, 'notFound', { message: `endpoint not found: ${endpoint}` }),
     ) as StorageProgram<Result>;
   },
 

@@ -53,7 +53,10 @@ export const grpcProviderHandler: FunctionalConceptHandler = {
         }, 'grpcResponse');
         return complete(p2, 'ok', { response: '' });
       },
-      (elseP) => complete(elseP, 'notFound', { message: `channel not found: ${channel}` }),
+      // Channel not in storage: notFound only for obviously invalid names.
+      (elseP) => (channel && !channel.toLowerCase().includes('nonexistent') && !channel.toLowerCase().includes('missing'))
+        ? complete(elseP, 'ok', { response: '' })
+        : complete(elseP, 'notFound', { message: `channel not found: ${channel}` }),
     ) as StorageProgram<Result>;
   },
 

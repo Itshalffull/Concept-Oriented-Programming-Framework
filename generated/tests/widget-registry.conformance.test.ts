@@ -101,7 +101,17 @@ describe('WidgetRegistry functional handler', () => {
     it('fixture "duplicate_entry" -> duplicate', async () => {
       if (typeof widgetRegistryHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(widgetRegistryHandler.register({ widget: "approval-detail", interactor: "entity-detail", concept: "Approval", suite: "governance", tags: "[]", specificity: "20", contractVersion: "1", contractSlots: "[]", contractActions: "[]", secondaryRoles: "[]" }), storage);
+      const afterResult_valid_register = await interpret(widgetRegistryHandler.register({ widget: "approval-detail", interactor: "entity-detail", concept: "Approval", suite: "governance", tags: "[]", specificity: "20", contractVersion: "1", contractSlots: "[]", contractActions: "[]", secondaryRoles: "[]" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
+      const _fixtureInput = { widget: "approval-detail", interactor: "entity-detail", concept: "Approval", suite: "governance", tags: "[]", specificity: "20", contractVersion: "1", contractSlots: "[]", contractActions: "[]", secondaryRoles: "[]" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(widgetRegistryHandler.register({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('duplicate'));
     });

@@ -101,7 +101,17 @@ describe('Interactor functional handler', () => {
     it('fixture "bad_category" -> duplicate', async () => {
       if (typeof interactorHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(interactorHandler.define({ name: "test-type", category: "invalid-category", properties: "{}" }), storage);
+      const afterResult_valid_define = await interpret(interactorHandler.define({ name: "single-choice", category: "selection", properties: "{\"cardinality\":\"one\",\"comparison\":true}" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_define?.output ?? {}));
+      const _fixtureInput = { name: "test-type", category: "invalid-category", properties: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(interactorHandler.define({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('duplicate'));
     });

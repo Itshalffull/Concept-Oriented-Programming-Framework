@@ -101,7 +101,17 @@ describe('Affordance functional handler', () => {
     it('fixture "duplicate_declare" -> duplicate', async () => {
       if (typeof affordanceHandler.declare !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(affordanceHandler.declare({ widget: "radio-group", interactor: "single-choice", specificity: "10" }), storage);
+      const afterResult_valid_declare = await interpret(affordanceHandler.declare({ widget: "radio-group", interactor: "single-choice", specificity: "10", conditions: "{\"maxOptions\":8}", bind: "", contractVersion: "1" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_declare?.output ?? {}));
+      const _fixtureInput = { widget: "radio-group", interactor: "single-choice", specificity: "10" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(affordanceHandler.declare({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('duplicate'));
     });

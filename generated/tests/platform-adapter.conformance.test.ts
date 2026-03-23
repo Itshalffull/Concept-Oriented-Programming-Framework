@@ -101,7 +101,17 @@ describe('PlatformAdapter functional handler', () => {
     it('fixture "register_invalid_platform" -> duplicate', async () => {
       if (typeof platformAdapterHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(platformAdapterHandler.register({ adapter: "bad-adapter", platform: "vr", config: "{}" }), storage);
+      const afterResult_register_browser = await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_browser?.output ?? {}));
+      const _fixtureInput = { adapter: "bad-adapter", platform: "vr", config: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(platformAdapterHandler.register({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('duplicate'));
     });

@@ -94,7 +94,10 @@ describe('WebhookAutomationProvider functional handler', () => {
     it('fixture "register_already_registered" -> already_registered', async () => {
       if (typeof webhookAutomationProviderHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(webhookAutomationProviderHandler.register({  }), storage);
+      const afterResult_register_webhook_provider = await interpret(webhookAutomationProviderHandler.register({  }), storage);
+      const _pool = Object.assign({}, (afterResult_register_webhook_provider?.output ?? {}));
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
+      const result = await interpret(webhookAutomationProviderHandler.register({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('already_registered'));
     });

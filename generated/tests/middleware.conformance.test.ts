@@ -325,9 +325,9 @@ describe('Middleware functional handler', () => {
       expect(registerResult0.variant).toBe("ok");
       let middleware = registerResult0.output["middleware"];
       let m = middleware;
-      const thenResult0 = await interpret(middlewareHandler.resolve({ traits: ["auth"], target: "rest" }), storage);
+      const thenResult0 = await interpret(middlewareHandler.resolve({ traits: {"type":"list","items":[{"type":"literal","value":"auth"}]}, target: "rest" }), storage);
       expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(middlewareHandler.inject({ output: "route-code", middlewares: ["bearer-check"], target: "rest" }), storage);
+      const thenResult1 = await interpret(middlewareHandler.inject({ output: "route-code", middlewares: {"type":"list","items":[{"type":"literal","value":"bearer-check"}]}, target: "rest" }), storage);
       expect(thenResult1.variant).toBe("ok");
     });
 

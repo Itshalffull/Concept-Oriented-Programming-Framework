@@ -261,6 +261,31 @@ function isCreatorAction(actionName: string): boolean {
   return CREATOR_ACTION_NAMES.includes(actionName);
 }
 
+/**
+ * Variant names that indicate "duplicate/already exists" errors.
+ * When a fixture expects one of these, the test should auto-seed by running
+ * the same action's ok fixture first to populate storage before testing the duplicate.
+ */
+const DUPLICATE_VARIANT_PATTERNS = [
+  'duplicate', 'exists', 'already_registered', 'already_exists',
+  'alreadyregistered', 'alreadyexists', 'conflict',
+];
+
+/**
+ * Check if a variant name indicates a "duplicate/already exists" error.
+ */
+function isDuplicateVariant(variant: string): boolean {
+  const normalized = variant.toLowerCase().replace(/_/g, '');
+  return DUPLICATE_VARIANT_PATTERNS.some(p => normalized.includes(p.replace(/_/g, '')));
+}
+
+/**
+ * Find the ok fixture for the same action (used for auto-seeding duplicate tests).
+ */
+function findOkFixtureForAction(action: TestPlanAction): TestPlanFixture | undefined {
+  return action.fixtures?.find(f => f.expectedVariant === 'ok' && (!f.after || f.after.length === 0));
+}
+
 function renderStructuralTests(handlerVar: string, action: TestPlanAction, style: HandlerStyle, allActions?: TestPlanAction[]): string[] {
   const lines: string[] = [];
   const inputObj = bestInput(action);
@@ -355,6 +380,21 @@ function renderStructuralTests(handlerVar: string, action: TestPlanAction, style
           // Ensure the creator fixture is in the index
           if (!fixtureIndex.has(creator.fixture.name)) {
             fixtureIndex.set(creator.fixture.name, creator);
+          }
+        }
+      }
+      // Auto-seed for duplicate/exists variants: run the same action's ok fixture first
+      // so the item exists in storage before testing the duplicate error case.
+      if (
+        (!effectiveFixture.after || effectiveFixture.after.length === 0)
+        && isDuplicateVariant(fixture.expectedVariant)
+        && allActions
+      ) {
+        const okFixture = findOkFixtureForAction(action);
+        if (okFixture) {
+          effectiveFixture.after = [okFixture.name];
+          if (!fixtureIndex.has(okFixture.name)) {
+            fixtureIndex.set(okFixture.name, { actionName: action.name, fixture: okFixture });
           }
         }
       }

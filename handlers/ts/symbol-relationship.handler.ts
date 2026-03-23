@@ -41,7 +41,7 @@ const _handler: FunctionalConceptHandler = {
       (b) => completeFrom(b, 'ok', (bindings) => {
         const existing = bindings.existing as Record<string, unknown>[];
         const duplicate = existing.find(r => r.target === target && r.kind === kind);
-        return { relationship: duplicate!.id as string, output: { relationship: duplicate!.id as string } };
+        return { relationship: duplicate!.id as string, existing: duplicate!.id as string };
       }),
       (b) => {
         const id = nextId();

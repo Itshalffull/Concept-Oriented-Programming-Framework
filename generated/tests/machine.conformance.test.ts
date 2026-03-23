@@ -173,7 +173,7 @@ describe('Machine functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_spawn = await interpret(machineHandler.spawn({ widget: "dialog", context: "{\"title\":\"Confirm\"}" }), storage);
       const _pool = Object.assign({}, (afterResult_valid_spawn?.output ?? {}));
-      const _fixtureInput = { machine: null, event: "start" } as Record<string, unknown>;
+      const _fixtureInput = { event: "start" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
           const cur = _fixtureInput[k];

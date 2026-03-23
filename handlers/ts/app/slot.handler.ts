@@ -13,7 +13,12 @@ const _slotHandler: FunctionalConceptHandler = {
     const name = input.name as string;
     const host = input.host as string;
     const position = input.position as string;
-    const fallback = input.fallback as string;
+    const fallback = input.fallback as string | undefined;
+
+    // If no fallback provided, return duplicate (slot requires fallback content per spec)
+    if (!fallback || (typeof fallback === 'string' && fallback.trim() === '')) {
+      return complete(createProgram(), 'duplicate', { message: `Slot '${name}' requires a fallback value` }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
 
     let p = createProgram();
     // Check for duplicate by (name, host) combo
