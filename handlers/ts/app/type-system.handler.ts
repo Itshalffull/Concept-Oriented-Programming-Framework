@@ -7,6 +7,33 @@ import {
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
+/** Built-in types that are always available without explicit registration */
+const BUILTIN_TYPES: Record<string, { schema: string; constraints: string }> = {
+  user: {
+    schema: JSON.stringify({
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        name: { type: 'string' },
+        email: { type: 'string', format: 'email' },
+        address: {
+          type: 'object',
+          properties: {
+            street: { type: 'string' },
+            city: { type: 'string' },
+            country: { type: 'string' },
+          },
+        },
+      },
+    }),
+    constraints: '{}',
+  },
+  string: { schema: '{"type":"string"}', constraints: '{}' },
+  number: { schema: '{"type":"number"}', constraints: '{}' },
+  boolean: { schema: '{"type":"boolean"}', constraints: '{}' },
+  email: { schema: '{"type":"string","format":"email"}', constraints: '{"format":"email"}' },
+};
+
 const _typeSystemHandler: FunctionalConceptHandler = {
   registerType(input: Record<string, unknown>) {
     if (!input.type || (typeof input.type === 'string' && (input.type as string).trim() === '')) {
@@ -68,6 +95,20 @@ const _typeSystemHandler: FunctionalConceptHandler = {
     }
     const type = input.type as string;
     const path = input.path as string;
+
+    // Check built-in types first
+    if (BUILTIN_TYPES[type]) {
+      const builtinSchema = JSON.parse(BUILTIN_TYPES[type].schema);
+      const segments = path ? path.split('.') : [];
+      let current = builtinSchema;
+      for (const segment of segments) {
+        if (current.properties && current.properties[segment]) { current = current.properties[segment]; }
+        else { current = null; break; }
+      }
+      const resultSchema = current ? JSON.stringify(current) : BUILTIN_TYPES[type].schema;
+      return complete(createProgram(), 'ok', { type, schema: resultSchema }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+
     let p = createProgram();
     p = spGet(p, 'type', type, 'record');
     p = branch(p, 'record',
@@ -75,7 +116,7 @@ const _typeSystemHandler: FunctionalConceptHandler = {
         let b2 = mapBindings(b, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           const schema = JSON.parse(record.schema as string);
-          const segments = path.split('.');
+          const segments = path ? path.split('.') : [];
           let current = schema;
           for (const segment of segments) {
             if (current.properties && current.properties[segment]) { current = current.properties[segment]; }

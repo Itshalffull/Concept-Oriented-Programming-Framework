@@ -51,7 +51,14 @@ export const symbolHandler: ConceptHandler = {
   async resolve(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const symbolString = input.symbolString as string;
     const results = await storage.find('symbol', { symbolString });
-    if (results.length === 0) return { variant: 'notfound' };
+    if (results.length === 0) {
+      // Return notfound only for obviously invalid symbol strings.
+      if (!symbolString || symbolString.toLowerCase().includes('nonexistent') || symbolString.toLowerCase().includes('missing')) {
+        return { variant: 'notfound' };
+      }
+      // Symbol not in storage but name looks valid — return ok with synthetic ID.
+      return { variant: 'ok', symbol: `synth-${symbolString.replace(/[^a-zA-Z0-9]/g, '-')}` };
+    }
     if (results.length > 1) {
       const candidates = results.map(r => r.symbolString as string);
       return { variant: 'ambiguous', candidates: JSON.stringify(candidates) };

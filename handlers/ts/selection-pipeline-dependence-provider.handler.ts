@@ -29,7 +29,8 @@ const _handler: ConceptHandler = {
     const existing = await storage.find('selection-pipeline-dependence-provider', { providerRef });
 
     if (existing.length > 0) {
-      return { variant: 'ok', instance: existing[0].id as string };
+      const existingId = existing[0].id as string;
+      return { variant: 'ok', instance: existingId, output: { instance: existingId } };
     }
 
     // Create new provider instance
@@ -46,7 +47,7 @@ const _handler: ConceptHandler = {
       instanceId: id,
     });
 
-    return { variant: 'ok', instance: id };
+    return { variant: 'ok', instance: id, output: { instance: id } };
   },
 };
 

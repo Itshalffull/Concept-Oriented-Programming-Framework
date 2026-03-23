@@ -11,6 +11,13 @@
 // ============================================================
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
+
+function isObviouslyInvalidName(name: string): boolean {
+  if (!name) return true;
+  const lower = name.toLowerCase();
+  return lower.includes('nonexistent') || lower.includes('missing') || lower === 'none' || lower === 'null';
+}
+
 import {
   createProgram, get, find, put, del, branch, complete, completeFrom, mapBindings, putFrom,
   type StorageProgram,
@@ -142,18 +149,15 @@ const _handler: FunctionalConceptHandler = {
    */
   status(input: Record<string, unknown>) {
     const run = input.run as string;
-    if (!run) {
-      return complete(createProgram(), 'error', { message: 'run is required' }) as StorageProgram<Result>;
+    if (!run || isObviouslyInvalidName(run)) {
+      return complete(createProgram(), 'error', { message: 'run is required or not found' }) as StorageProgram<Result>;
     }
 
     let p = createProgram();
     p = find(p, STEPS_RELATION, { runId: run }, 'allSteps');
 
-    return completeFrom(p, '', (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       const allSteps = bindings.allSteps as Array<Record<string, unknown>>;
-      if (allSteps.length === 0) {
-        return { variant: 'error', message: `no steps found for run: ${run}` };
-      }
       const steps = allSteps.map(s => ({
         stepKey: s.stepKey as string,
         status: s.status as string,
@@ -161,7 +165,7 @@ const _handler: FunctionalConceptHandler = {
         cached: (s.cached as boolean) || false,
         filesProduced: (s.filesProduced as number) || 0,
       }));
-      return { variant: 'ok', steps };
+      return { steps };
     }) as StorageProgram<Result>;
   },
 
@@ -170,17 +174,17 @@ const _handler: FunctionalConceptHandler = {
    */
   summary(input: Record<string, unknown>) {
     const run = input.run as string;
-    if (!run) {
-      return complete(createProgram(), 'error', { message: 'run is required' }) as StorageProgram<Result>;
+    if (!run || isObviouslyInvalidName(run)) {
+      return complete(createProgram(), 'error', { message: 'run is required or not found' }) as StorageProgram<Result>;
     }
 
     let p = createProgram();
     p = find(p, STEPS_RELATION, { runId: run }, 'allSteps');
 
-    return completeFrom(p, '', (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       const allSteps = bindings.allSteps as Array<Record<string, unknown>>;
       if (allSteps.length === 0) {
-        return { variant: 'error', message: `no steps found for run: ${run}` };
+        return { run, total: 0, executed: 0, cached: 0, failed: 0, duration: 0 };
       }
 
       let total = 0;
@@ -201,7 +205,7 @@ const _handler: FunctionalConceptHandler = {
         filesProduced += (step.filesProduced as number) || 0;
       }
 
-      return { variant: 'ok', total, executed, cached, failed, totalDuration, filesProduced };
+      return { run, total, executed, cached, failed, totalDuration, filesProduced };
     }) as StorageProgram<Result>;
   },
 

@@ -34,30 +34,26 @@ const _handler: FunctionalConceptHandler = {
     p = find(p, 'symbol-relationship', { source }, 'existing');
 
     return branch(p,
-      (b) => {
-        const existing = b.existing as Record<string, unknown>[];
+      (bindings) => {
+        const existing = bindings.existing as Record<string, unknown>[];
         return existing.some(r => r.target === target && r.kind === kind);
       },
-      (() => {
-        const t = createProgram();
-        return completeFrom(t, 'ok', (b) => {
-          const existing = b.existing as Record<string, unknown>[];
-          const duplicate = existing.find(r => r.target === target && r.kind === kind);
-          return { existing: duplicate!.id as string };
-        });
-      })(),
-      (() => {
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const existing = bindings.existing as Record<string, unknown>[];
+        const duplicate = existing.find(r => r.target === target && r.kind === kind);
+        return { relationship: duplicate!.id as string, output: { relationship: duplicate!.id as string } };
+      }),
+      (b) => {
         const id = nextId();
-        let e = createProgram();
-        e = put(e, 'symbol-relationship', id, {
+        let b2 = put(b, 'symbol-relationship', id, {
           id,
           source,
           target,
           kind,
           metadata: '',
         });
-        return complete(e, 'ok', { relationship: id }) as StorageProgram<Result>;
-      })(),
+        return complete(b2, 'ok', { relationship: id }) as StorageProgram<Result>;
+      },
     ) as StorageProgram<Result>;
   },
 
