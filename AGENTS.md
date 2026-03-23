@@ -99,6 +99,18 @@ TypeScript implementations of concept actions. Two styles:
   targets that lack higher-kinded types, legacy concepts not yet migrated,
   or concepts requiring direct FFI/system calls.
 - Runtime: `runtime/storage-program.ts` (DSL), `runtime/functional-handler.ts` (types)
+- **Handler Conformance Requirements** — every handler MUST:
+  1. Implement every action declared in the concept spec (missing = conformance failure)
+  2. Return the correct error variant for error-case fixtures — NEVER return `ok` when
+     the spec fixture says `-> error`. Use `get` + `branch` to check existence, not
+     `completeFrom('ok', ...)` with an inline null-check (which still returns `ok`).
+  3. Check existence before reads/updates/deletes — `get(p, rel, key, 'existing')`
+     then `branch(p, 'existing', okPath, errorPath)`
+  4. Check uniqueness before creates — `get` + `branch` to return `duplicate`/`already_exists`
+  5. Validate inputs before storage operations — guard clauses for empty strings, missing
+     required fields, invalid formats
+  6. Return the exact PascalCase concept name in `register()` (e.g., `'MyersDiff'` not `'myers'`)
+  7. Handle JSON.parse safely — wrap in try/catch and return error variant on failure
 
 **StorageProgram Monad** (`runtime/storage-program.ts`)
 Free monad DSL for building inspectable storage operation descriptions.

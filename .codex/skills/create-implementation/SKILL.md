@@ -755,6 +755,11 @@ Before considering the implementation complete:
 - [ ] No references to other concepts (all coordination via syncs)
 - [ ] Handler exported as `const <name>Handler: FunctionalConceptHandler`
 - [ ] Capabilities imported if spec declares them
+- [ ] **Existence checks before reads/updates/deletes** — use `get(p, relation, key, 'existing')` then `branch(p, 'existing', thenBranch, elseBranch)` to return `error`/`notfound` when the entity doesn't exist. **NEVER** use `completeFrom(p, 'ok', ...)` with an inline null-check that silently returns empty data — that still completes with variant `ok` and will fail conformance tests for error-case fixtures
+- [ ] **Uniqueness checks before creates** — use `get` + `branch` to check if a record already exists and return `duplicate`/`already_exists` variant
+- [ ] **Input validation guards for error fixtures** — for every error-case fixture in the concept spec (fixtures with `-> error`, `-> invalid`, etc.), the handler MUST have a guard clause that validates the input and returns the error variant BEFORE any storage operations. Pattern: `if (!input.name || (input.name as string).trim() === '') return complete(createProgram(), 'error', { message: 'name is required' })`
+- [ ] **JSON.parse safety** — when parsing input fields that may not be valid JSON, wrap in try/catch and return an error variant on parse failure. Never assume `input.field` is valid JSON
+- [ ] **register() concept name** — the `register()` action must return the exact PascalCase concept name matching the spec (e.g., `'MyersDiff'` not `'myers'`)
 
 **For imperative handlers (ConceptHandler) — fallback only:**
 - [ ] One async method per action in the spec

@@ -7424,6 +7424,18 @@ project-instructions:
       targets that lack higher-kinded types, legacy concepts not yet migrated,
       or concepts requiring direct FFI/system calls.
     - Runtime: `runtime/storage-program.ts` (DSL), `runtime/functional-handler.ts` (types)
+    - **Handler Conformance Requirements** — every handler MUST:
+      1. Implement every action declared in the concept spec (missing = conformance failure)
+      2. Return the correct error variant for error-case fixtures — NEVER return `ok` when
+         the spec fixture says `-> error`. Use `get` + `branch` to check existence, not
+         `completeFrom('ok', ...)` with an inline null-check (which still returns `ok`).
+      3. Check existence before reads/updates/deletes — `get(p, rel, key, 'existing')`
+         then `branch(p, 'existing', okPath, errorPath)`
+      4. Check uniqueness before creates — `get` + `branch` to return `duplicate`/`already_exists`
+      5. Validate inputs before storage operations — guard clauses for empty strings, missing
+         required fields, invalid formats
+      6. Return the exact PascalCase concept name in `register()` (e.g., `'MyersDiff'` not `'myers'`)
+      7. Handle JSON.parse safely — wrap in try/catch and return error variant on failure
 
     **StorageProgram Monad** (`runtime/storage-program.ts`)
     Free monad DSL for building inspectable storage operation descriptions.
@@ -8012,3 +8024,8 @@ agent-annotations:
       - "**Variant coverage** — every variant in the spec must be reachable"
       - "NEVER use try/catch in functional handlers — use branch() for conditional logic"
       - "**Input validation for error fixtures** — for every error-case fixture in the concept spec (fixtures with `-> error`, `-> invalid`, etc.), the handler MUST have a guard clause that validates the input and returns the error variant. Empty required params, missing fields, and invalid formats must be caught BEFORE any storage operations. Pattern: `if (!input.name || (input.name as string).trim() === '') return complete(createProgram(), 'error', { message: 'name is required' })`"
+      - "**Existence checks before reads/updates/deletes** — use `get(p, relation, key, 'existing')` then `branch(p, 'existing', okPath, errorPath)`. NEVER use `completeFrom(p, 'ok', fn)` with an inline null-check — that returns variant `ok` even when the entity is missing, which fails error-case fixture conformance tests"
+      - "**Uniqueness checks before creates** — use `get(p, relation, key, 'existing')` + `branch` to return `duplicate`/`already_exists` when the entity already exists"
+      - "**register() must return exact PascalCase concept name** — e.g., `{ name: 'MyersDiff' }` not `{ name: 'myers' }` or `{ name: 'myersDiff' }`. This must match the concept spec's `concept MyersDiff` declaration exactly"
+      - "**JSON.parse safety** — when parsing input fields that may not be valid JSON, return an error variant on parse failure. Never assume input strings are valid JSON"
+      - "**Storage key consistency** — the key format used in `put(p, rel, KEY, ...)` during create/register actions MUST match the key format used in `get(p, rel, KEY, ...)` during read/update/delete actions. Inconsistent keys cause valid fixtures to fail with notfound"

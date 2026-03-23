@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-23T02:46:34.768Z",
+  "generatedAt": "2026-03-23T18:35:08.752Z",
   "files": [
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/spec-parser/spec-parser.commands.ts",
@@ -3868,7 +3868,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/agents/handler-scaffold-gen.md",
       "relativePath": "claude-agents/handler-scaffold-gen.md",
-      "hash": "c5caa794f611c1c4f6baac8060870c0c5a487d73b2f16852a9b798e212d2e794",
+      "hash": "2fcd662562715a806d9d5a5de3bed8c0d6cbe7d60ded961c2bab6c457185072b",
       "target": "claude-agents"
     },
     {
@@ -3886,19 +3886,19 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/CLAUDE.md",
       "relativePath": "project-instructions/CLAUDE.md",
-      "hash": "2628d7956b51c3d82177e9da4f2a943dbf05594511199be378b15e9cfab450f2",
+      "hash": "952fa313b5b612cee534f9e02a8d62eb633fdd1cad3455f2023ff8fee304cef5",
       "target": "project-instructions"
     },
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/AGENTS.md",
       "relativePath": "project-instructions/AGENTS.md",
-      "hash": "1bc9cd80bc882b8a4ff3c211d79123a12b6d99c9aca2219ac4935c7567ee3725",
+      "hash": "fdc04f2b13167ad1fd6f49277aa4b72494242b510c83f85523ef8c6b73aab63f",
       "target": "project-instructions"
     },
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/GEMINI.md",
       "relativePath": "project-instructions/GEMINI.md",
-      "hash": "4121b052b86dd71d4db029ebcd1303a7c5646a5726916b1f04dc42fc13b27d66",
+      "hash": "af1bd37a83ad2d10312dda40d0d76cfb379b9f870b0ab9324ba2b6eb90c2a640",
       "target": "project-instructions"
     },
     {
