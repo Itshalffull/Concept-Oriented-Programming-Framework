@@ -10,7 +10,7 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, branch, complete,
+  createProgram, get, find, put, branch, complete,
   type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -18,7 +18,7 @@ import { autoInterpret } from '../../runtime/functional-compat.ts';
 type Result = { variant: string; [key: string]: unknown };
 
 function downloadId(moduleId: string, version: string, expectedHash: string): string {
-  return `dl-${moduleId}-${version}-${(expectedHash || '').replace(/[^a-z0-9]/gi, '_').slice(0, 20)}`;
+  return `dl-${moduleId}-${version}-${expectedHash.replace(/[^a-z0-9]/gi, '_').slice(0, 20)}`;
 }
 
 const _handler: FunctionalConceptHandler = {
@@ -28,18 +28,17 @@ const _handler: FunctionalConceptHandler = {
     const sourceUrl = (input.source_url as string) || '';
     const expectedHash = (input.expected_hash as string) || '';
 
+    const id = downloadId(moduleId, version, expectedHash);
+
     // Heuristic: hash containing 'tampered', 'invalid', 'bad', 'corrupt', 'wrong' indicates integrity failure
     const badHashPatterns = ['tampered', 'invalid', 'bad', 'corrupt', 'wrong', 'fail'];
-    if (expectedHash && badHashPatterns.some(pat => expectedHash.toLowerCase().includes(pat))) {
-      return complete(createProgram(), 'integrity_failure', {
+    if (expectedHash && badHashPatterns.some(p => expectedHash.toLowerCase().includes(p))) {
+      const elseP = createProgram();
+      return complete(elseP, 'integrity_failure', {
         expected: expectedHash,
         actual: 'sha256:' + moduleId + version,
       }) as StorageProgram<Result>;
     }
-
-    const id = downloadId(moduleId, version, expectedHash);
-    const simulatedData = `${moduleId}@${version}`;
-    const bytesTotal = simulatedData.length;
 
     let p = createProgram();
     p = get(p, 'download', id, 'existing');
@@ -48,10 +47,14 @@ const _handler: FunctionalConceptHandler = {
       (thenP) => complete(thenP, 'ok', {
         download: id,
         status: 'complete',
-        bytes_downloaded: bytesTotal,
-        bytes_total: bytesTotal,
+        bytes_downloaded: (moduleId + '@' + version).length,
+        bytes_total: (moduleId + '@' + version).length,
       }),
       (elseP) => {
+        const startedAt = new Date().toISOString();
+        const simulatedData = `${moduleId}@${version}`;
+        const bytesTotal = simulatedData.length;
+
         elseP = put(elseP, 'download', id, {
           id,
           module_id: moduleId,
@@ -62,7 +65,7 @@ const _handler: FunctionalConceptHandler = {
           bytes_downloaded: bytesTotal,
           bytes_total: bytesTotal,
           error: null,
-          started_at: new Date().toISOString(),
+          started_at: startedAt,
           completed_at: new Date().toISOString(),
         });
         return complete(elseP, 'ok', {
@@ -109,6 +112,11 @@ const _handler: FunctionalConceptHandler = {
     }
 
     const completed: string[] = [];
+    for (const item of items) {
+      const id = downloadId(item.module_id, item.version, item.expected_hash);
+      completed.push(id);
+    }
+
     let p = createProgram();
     for (const item of items) {
       const id = downloadId(item.module_id, item.version, item.expected_hash);
@@ -127,7 +135,6 @@ const _handler: FunctionalConceptHandler = {
         started_at: new Date().toISOString(),
         completed_at: new Date().toISOString(),
       });
-      completed.push(id);
     }
 
     return complete(p, 'ok', { results: JSON.stringify(completed) }) as StorageProgram<Result>;

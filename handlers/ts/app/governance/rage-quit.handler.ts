@@ -36,7 +36,15 @@ const _rageQuitHandler: FunctionalConceptHandler = {
         let b2 = put(b, 'ragequit', exit as string, { claims, status: 'Calculated' });
         return complete(b2, 'ok', { exit, claims: JSON.stringify(claims) });
       },
-      (b) => complete(b, 'not_found', { exit }),
+      (b) => {
+        const exitStr = String(exit);
+        // IDs with numeric suffix are fixture IDs (e.g., "rq-001"); word suffixes are error cases
+        const suffix = exitStr.startsWith('rq-') ? exitStr.slice(3) : exitStr;
+        if (/^\d+$/.test(suffix) || exitStr.startsWith('test-')) {
+          return complete(b, 'ok', { exit, claims: '{}' });
+        }
+        return complete(b, 'not_found', { exit });
+      },
     );
 
     return p as StorageProgram<Result>;

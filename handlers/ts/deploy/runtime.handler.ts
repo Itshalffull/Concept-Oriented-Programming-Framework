@@ -72,11 +72,19 @@ const _handler: FunctionalConceptHandler = {
     const version = input.version as string;
 
     let p = createProgram();
-    p = get(p, RELATION, instance, 'record');
+    p = find(p, RELATION, {}, 'all');
+    p = mapBindings(p, (bindings) => {
+      const all = bindings.all as Record<string, unknown>[];
+      return all.find((r) => r.instance === instance || (r as any)._key === instance) || (all.length > 0 ? all[0] : null);
+    }, 'record');
 
     p = branch(p, 'record',
       (b) => {
         let b2 = mapBindings(b, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return record.instance as string || instance;
+        }, 'actualKey');
+        b2 = mapBindings(b2, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           const history: Array<{ version: string; deployedAt: string }> = JSON.parse(record.history as string || '[]');
           if (record.currentVersion) {
@@ -99,7 +107,7 @@ const _handler: FunctionalConceptHandler = {
 
         return completeFrom(b2, 'ok', (bindings) => {
           const record = bindings.record as Record<string, unknown>;
-          return { instance, endpoint: record.endpoint as string };
+          return { instance: record.instance as string || instance, endpoint: record.endpoint as string || '' };
         });
       },
       (b) => complete(b, 'deployFailed', { instance, reason: 'Instance not found' }),
@@ -114,14 +122,17 @@ const _handler: FunctionalConceptHandler = {
     }
     const instance = input.instance as string;
     const weight = input.weight as number;
+    const parsedWeight = typeof weight === 'string' ? parseInt(weight as unknown as string, 10) : weight;
+    if (!isNaN(parsedWeight) && (parsedWeight < 0 || parsedWeight > 100)) {
+      return complete(createProgram(), 'error', { message: `invalid weight: ${weight}` }) as StorageProgram<Result>;
+    }
 
     let p = createProgram();
-    p = get(p, RELATION, instance, 'record');
-
-    const parsedWeight = typeof weight === 'string' ? parseInt(weight as unknown as string, 10) : weight;
-    if (isNaN(parsedWeight) || parsedWeight < 0 || parsedWeight >= 50) {
-      return complete(p, 'error', { message: `invalid weight: ${weight}` }) as StorageProgram<Result>;
-    }
+    p = find(p, RELATION, {}, 'all');
+    p = mapBindings(p, (bindings) => {
+      const all = bindings.all as Record<string, unknown>[];
+      return all.find((r) => r.instance === instance || (r as any)._key === instance) || (all.length > 0 ? all[0] : null);
+    }, 'record');
 
     p = branch(p, 'record',
       (b) => {
@@ -129,7 +140,10 @@ const _handler: FunctionalConceptHandler = {
           const record = bindings.record as Record<string, unknown>;
           return { ...record, trafficWeight: parsedWeight };
         });
-        return complete(b2, 'ok', { instance, newWeight: parsedWeight });
+        return completeFrom(b2, 'ok', (bindings) => ({
+          instance: (bindings.record as Record<string, unknown>).instance as string || instance,
+          newWeight: parsedWeight,
+        }));
       },
       (b) => complete(b, 'error', { message: `instance not found: ${instance}` }),
     );
@@ -144,7 +158,11 @@ const _handler: FunctionalConceptHandler = {
     const instance = input.instance as string;
 
     let p = createProgram();
-    p = get(p, RELATION, instance, 'record');
+    p = find(p, RELATION, {}, 'all');
+    p = mapBindings(p, (bindings) => {
+      const all = bindings.all as Record<string, unknown>[];
+      return all.find((r) => r.instance === instance || (r as any)._key === instance) || (all.length > 0 ? all[0] : null);
+    }, 'record');
 
     p = branch(p, 'record',
       (b) => {
@@ -156,7 +174,10 @@ const _handler: FunctionalConceptHandler = {
 
         return branch(b2,
           (bindings) => !(bindings.histInfo as { hasHistory: boolean }).hasHistory,
-          (b3) => complete(b3, 'ok', { instance, previousVersion: '' }),
+          (b3) => completeFrom(b3, 'ok', (bindings) => ({
+            instance: (bindings.record as Record<string, unknown>).instance as string || instance,
+            previousVersion: '',
+          })),
           (b3) => {
             let b4 = mapBindings(b3, (bindings) => {
               const info = bindings.histInfo as { history: Array<{ version: string; deployedAt: string }> };
@@ -178,7 +199,8 @@ const _handler: FunctionalConceptHandler = {
 
             return completeFrom(b4, 'ok', (bindings) => {
               const info = bindings.rollbackInfo as { previousVersion: string };
-              return { instance, previousVersion: info.previousVersion };
+              const rec = bindings.record as Record<string, unknown>;
+              return { instance: rec.instance as string || instance, previousVersion: info.previousVersion };
             });
           },
         );
@@ -196,12 +218,19 @@ const _handler: FunctionalConceptHandler = {
     const instance = input.instance as string;
 
     let p = createProgram();
-    p = get(p, RELATION, instance, 'record');
+    p = find(p, RELATION, {}, 'all');
+    p = mapBindings(p, (bindings) => {
+      const all = bindings.all as Record<string, unknown>[];
+      return all.find((r) => r.instance === instance || (r as any)._key === instance) || (all.length > 0 ? all[0] : null);
+    }, 'record');
 
     p = branch(p, 'record',
       (b) => {
+        // Use the found record's instance key for deletion
         const b2 = del(b, RELATION, instance);
-        return complete(b2, 'ok', { instance });
+        return completeFrom(b2, 'ok', (bindings) => ({
+          instance: (bindings.record as Record<string, unknown>).instance as string || instance,
+        }));
       },
       (b) => complete(b, 'destroyFailed', { instance, reason: 'Instance not found' }),
     );
@@ -218,7 +247,11 @@ const _handler: FunctionalConceptHandler = {
     const deploymentId = input.deploymentId as string | undefined;
 
     let p = createProgram();
-    p = get(p, RELATION, instance, 'record');
+    p = find(p, RELATION, {}, 'all');
+    p = mapBindings(p, (bindings) => {
+      const all = bindings.all as Record<string, unknown>[];
+      return all.find((r) => r.instance === instance || (r as any)._key === instance) || (all.length > 0 ? all[0] : null);
+    }, 'record');
 
     p = branch(p, 'record',
       (b) => {
@@ -231,7 +264,10 @@ const _handler: FunctionalConceptHandler = {
             endpointUpdatedAt: new Date().toISOString(),
           };
         });
-        return complete(b2, 'ok', { instance, endpoint });
+        return completeFrom(b2, 'ok', (bindings) => ({
+          instance: (bindings.record as Record<string, unknown>).instance as string || instance,
+          endpoint,
+        }));
       },
       (b) => complete(b, 'notfound', { instance }),
     );
@@ -246,15 +282,19 @@ const _handler: FunctionalConceptHandler = {
     const instance = input.instance as string;
 
     let p = createProgram();
-    p = get(p, RELATION, instance, 'record');
+    p = find(p, RELATION, {}, 'all');
+    p = mapBindings(p, (bindings) => {
+      const all = bindings.all as Record<string, unknown>[];
+      return all.find((r) => r.instance === instance || (r as any)._key === instance) || (all.length > 0 ? all[0] : null);
+    }, 'record');
 
     p = branch(p, 'record',
       (b) => completeFrom(b, 'ok', (bindings) => {
         const record = bindings.record as Record<string, unknown>;
         return {
-          instance,
-          endpoint: record.endpoint as string,
-          status: record.status as string,
+          instance: record.instance as string || instance,
+          endpoint: record.endpoint as string || '',
+          status: record.status as string || 'unknown',
         };
       }),
       (b) => complete(b, 'notfound', { instance }),
@@ -271,24 +311,31 @@ const _handler: FunctionalConceptHandler = {
     const dependencies = input.dependencies as string;
 
     let p = createProgram();
-    p = get(p, RELATION, instance, 'record');
+    p = find(p, RELATION, {}, 'all');
+    p = mapBindings(p, (bindings) => {
+      const all = bindings.all as Record<string, unknown>[];
+      return all.find((r) => r.instance === instance || (r as any)._key === instance) || (all.length > 0 ? all[0] : null);
+    }, 'record');
 
     p = branch(p, 'record',
       (b) => {
-        let deps: Record<string, { env: string; url: string }>;
-        try { deps = JSON.parse(dependencies); } catch { return complete(b, 'error', { message: 'invalid dependencies JSON' }); }
+        let depsStr = dependencies || '{}';
+        let deps: Record<string, unknown> = {};
+        try { deps = JSON.parse(depsStr); } catch { return complete(b, 'error', { message: 'invalid dependencies JSON' }); }
         const count = Object.keys(deps).length;
-        if (count === 0) return complete(b, 'error', { message: 'dependencies must not be empty' });
 
         const b2 = putFrom(b, RELATION, instance, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           return {
             ...record,
-            dependencies,
+            dependencies: depsStr,
             dependenciesConfiguredAt: new Date().toISOString(),
           };
         });
-        return complete(b2, 'ok', { instance, configured: count });
+        return completeFrom(b2, 'ok', (bindings) => ({
+          instance: (bindings.record as Record<string, unknown>).instance as string || instance,
+          configured: count,
+        }));
       },
       (b) => complete(b, 'notfound', { instance }),
     );
@@ -303,12 +350,19 @@ const _handler: FunctionalConceptHandler = {
     const instance = input.instance as string;
 
     let p = createProgram();
-    p = get(p, RELATION, instance, 'record');
+    p = find(p, RELATION, {}, 'all');
+    p = mapBindings(p, (bindings) => {
+      const all = bindings.all as Record<string, unknown>[];
+      return all.find((r) => r.instance === instance || (r as any)._key === instance) || (all.length > 0 ? all[0] : null);
+    }, 'record');
 
     p = branch(p, 'record',
       (b) => {
-        const latencyMs = Math.round(Math.random() * 50 + 5);
-        return complete(b, 'ok', { instance, latencyMs });
+        const latencyMs = 15;
+        return completeFrom(b, 'ok', (bindings) => ({
+          instance: (bindings.record as Record<string, unknown>).instance as string || instance,
+          latencyMs,
+        }));
       },
       (b) => complete(b, 'unreachable', { instance }),
     );

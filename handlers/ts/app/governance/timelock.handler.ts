@@ -41,10 +41,7 @@ const _timelockHandler: FunctionalConceptHandler = {
     p = branch(p, 'record',
       (b) => {
         let b2 = put(b, 'timelock', lock as string, { status: 'Executed', executedAt: new Date().toISOString() });
-        return completeFrom(b2, 'executed', (bindings) => {
-          const record = bindings.record as Record<string, unknown>;
-          return { lock, payload: record.payload };
-        });
+        return complete(b2, 'ok', { lock });
       },
       (b) => complete(b, 'not_found', { lock }),
     );

@@ -175,7 +175,7 @@ const _handler: FunctionalConceptHandler = {
               const head2 = branch2.head as string;
 
               if (head1 === head2) {
-                return { variant: 'noDivergence', message: 'Both branches point to the same node' };
+                return { variant: 'ok', noDivergence: true, message: 'Both branches point to the same node' };
               }
 
               const allNodes = bindings.allNodes as Record<string, unknown>[];

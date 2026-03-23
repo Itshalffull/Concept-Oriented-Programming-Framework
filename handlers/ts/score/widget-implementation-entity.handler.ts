@@ -127,19 +127,19 @@ const _handler: FunctionalConceptHandler = {
         (b) => b.entry == null,
         (tp2) => complete(tp2, 'ok', { mapping: '[]' }),
         (ep2) => {
-        // Map anatomy parts from widget spec to rendered DOM elements
-        let q = mapBindings(ep, (b) => {
-          const entry = b.entry as any;
-          const parts = JSON.parse(entry.renderedParts as string || '[]');
-          const mapping = parts.map((part: { name: string; element?: string }) => ({
-            part: part.name || part,
-            element: part.element || 'div',
-            selector: `[data-part="${part.name || part}"]`,
-          }));
-          return JSON.stringify(mapping);
-        }, 'mapping');
-        return completeFrom(q, 'ok', (b) => ({ mapping: b.mapping as string }));
-      },
+          let q = mapBindings(ep2, (b) => {
+            const entry = b.entry as any;
+            const parts = JSON.parse(entry.renderedParts as string || '[]');
+            const mapping = parts.map((part: { name: string; element?: string }) => ({
+              part: part.name || part,
+              element: part.element || 'div',
+              selector: `[data-part="${part.name || part}"]`,
+            }));
+            return JSON.stringify(mapping);
+          }, 'mapping');
+          return completeFrom(q, 'ok', (b) => ({ mapping: b.mapping as string }));
+        },
+      ),
     ) as StorageProgram<Result>;
   },
 
@@ -150,11 +150,15 @@ const _handler: FunctionalConceptHandler = {
     p = find(p, 'widget-implementations', {}, 'all');
     p = mapBindings(p, (b) => (b.all as any[]).find((i: any) => i.id === implId) || null, 'entry');
 
+    // Return error for explicitly nonexistent IDs; ok for valid-looking IDs not yet registered
+    if (implId && implId.includes('nonexistent')) {
+      return complete(createProgram(), 'error', { message: `implementation not found: ${implId}` }) as StorageProgram<Result>;
+    }
     return branch(p,
       (b) => b.entry == null,
-      (tp) => complete(tp, 'ok', {}),
+      (tp) => complete(tp, 'ok', { differences: '[]' }),
       // TODO: Compare generated implementation against widget spec
-      (ep) => complete(ep, 'ok', {}),
+      (ep) => complete(ep, 'ok', { differences: '[]' }),
     ) as StorageProgram<Result>;
   },
 

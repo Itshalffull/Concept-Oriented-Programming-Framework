@@ -9,16 +9,15 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, putFrom, branch, complete, completeFrom,
+  createProgram, get, put, putFrom, branch, complete, completeFrom,
   mapBindings, type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
-let idCounter = 0;
-function nextId(): string {
-  return `notation-${++idCounter}`;
+function notationId(name: string): string {
+  return name.toLowerCase().replace(/\s+/g, '-');
 }
 
 interface NodeType {
@@ -58,14 +57,14 @@ const _handler: FunctionalConceptHandler = {
     const name = input.name as string;
     const description = (input.description as string | undefined) ?? null;
 
-    let p = createProgram();
-    p = find(p, 'diagram-notation', {}, 'all');
+    const id = notationId(name);
 
-    return branch(p,
-      (bindings) => (bindings.all as Record<string, unknown>[]).some((n) => n.name === name),
+    let p = createProgram();
+    p = get(p, 'diagram-notation', id, 'existing');
+
+    return branch(p, 'existing',
       (thenP) => complete(thenP, 'error', { message: `Notation '${name}' already exists` }),
       (elseP) => {
-        const id = nextId();
         elseP = put(elseP, 'diagram-notation', id, {
           id,
           notation: id,
@@ -311,9 +310,5 @@ const _handler: FunctionalConceptHandler = {
 
 export const diagramNotationHandler = autoInterpret(_handler);
 
-/** Reset the ID counter. Useful for testing. */
-export function resetDiagramNotationCounter(): void {
-  idCounter = 0;
-}
 
 export default diagramNotationHandler;

@@ -299,8 +299,10 @@ const _handler: FunctionalConceptHandler = {
     }, '_entry');
 
     return branch(p,
+      // If no deployments exist at all AND entry not found → invalid
       (bindings) => !bindings._entry && (bindings.all as unknown[]).length === 0,
       (thenP) => complete(thenP, 'invalid', { errors: JSON.stringify([{ kind: 'missing', entity: deploymentId, message: 'Deployment not found' }]) }),
+      // Otherwise (deployments exist or entry found) → ok
       (elseP) => complete(elseP, 'ok', { valid: JSON.stringify({ valid: true, checkedAt: new Date().toISOString() }) }),
     ) as StorageProgram<Result>;
   },

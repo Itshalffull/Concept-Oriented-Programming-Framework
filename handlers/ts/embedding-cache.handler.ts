@@ -10,9 +10,9 @@
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, del, find, pure, perform,
+  createProgram, get, put, del, find, perform,
   type StorageProgram,
-  complete,
+  complete, completeFrom, branch,
 } from '../../runtime/storage-program.ts';
 
 const ENTRIES_RELATION = 'embedding-cache';
@@ -49,10 +49,19 @@ export const embeddingCacheHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, ENTRIES_RELATION, digest, 'cacheEntry');
 
-    // If entry exists, return hit; otherwise miss.
-    // At interpretation time, the branch resolves based on bindings.
-    p = complete(p, 'miss', {});
-    return p as StorageProgram<Result>;
+    return branch(p, 'cacheEntry',
+      (hitP) => completeFrom(hitP, 'hit', (bindings) => {
+        const entry = bindings.cacheEntry as Record<string, unknown>;
+        return {
+          vector: entry.vector as string,
+          model: entry.model as string,
+          dimensions: entry.dimensions as number,
+          sourceKind: entry.sourceKind as string,
+          sourceKey: entry.sourceKey as string,
+        };
+      }),
+      (missP) => complete(missP, 'miss', {}),
+    ) as StorageProgram<Result>;
   },
 
   put(input: Record<string, unknown>) {
@@ -129,7 +138,7 @@ export const embeddingCacheHandler: FunctionalConceptHandler = {
   // -----------------------------------------------------------------------
 
   lookupWithConfig(input: Record<string, unknown>) {
-    if (!input.model || (typeof input.model === 'string' && (input.model as string).trim() === '')) {
+    if (input.model === undefined || input.model === null || (typeof input.model === 'string' && (input.model as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'model is required' }) as StorageProgram<Result>;
     }
     const digest = input.digest as string;
@@ -140,8 +149,20 @@ export const embeddingCacheHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = get(p, ENTRIES_RELATION, configKey, 'cacheEntry');
-    p = complete(p, 'miss', {});
-    return p as StorageProgram<Result>;
+
+    return branch(p, 'cacheEntry',
+      (hitP) => completeFrom(hitP, 'hit', (bindings) => {
+        const entry = bindings.cacheEntry as Record<string, unknown>;
+        return {
+          vector: entry.vector as string,
+          model: entry.model as string,
+          dimensions: entry.dimensions as number,
+          sourceKind: entry.sourceKind as string,
+          sourceKey: entry.sourceKey as string,
+        };
+      }),
+      (missP) => complete(missP, 'miss', {}),
+    ) as StorageProgram<Result>;
   },
 
   putWithConfig(input: Record<string, unknown>) {

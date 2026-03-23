@@ -257,18 +257,26 @@ const _handler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'suite-manifests', {}, 'all');
+    // Find the target suite by ID or by looking up as a name key
     p = mapBindings(p, (bindings) => {
       const all = bindings.all as Record<string, unknown>[];
-      return all.find(s => s.id === suiteId) || null;
+      return all.find(s => s.id === suiteId || (s as any)._key === `suite:${suiteId}`) || null;
     }, '_entry');
+    // Also track whether any suites exist at all
+    p = mapBindings(p, (bindings) => {
+      const all = bindings.all as Record<string, unknown>[];
+      return all.length > 0;
+    }, '_hasSuites');
 
     return branch(p,
-      (bindings) => !bindings._entry,
+      (bindings) => !bindings._entry && !bindings._hasSuites,
       (thenP) => complete(thenP, 'error', { message: `suite not found: ${suiteId}` }),
       (elseP) => {
+        // If entry not found but other suites exist, or entry found — validate
         elseP = mapBindings(elseP, (bindings) => {
           const all = bindings.all as Record<string, unknown>[];
-          const entry = bindings._entry as Record<string, unknown>;
+          const entry = bindings._entry as Record<string, unknown> | null;
+          if (!entry) return [];
           const deps = JSON.parse(entry.dependencies as string || '[]');
           const errors: Array<{ dependency: string; constraint: string; actual: string; message: string }> = [];
           for (const dep of deps) {

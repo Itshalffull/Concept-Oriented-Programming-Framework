@@ -14,7 +14,7 @@ const _backlinkHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = spGet(p, 'backlink', entity, 'existing');
-    // Return ok with empty sources — not finding backlinks is a valid state
+    // Always return ok — empty sources means no backlinks found yet
     return complete(p, 'ok', { sources: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -23,7 +23,7 @@ const _backlinkHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = spGet(p, 'backlink', entity, 'existing');
-    // Return ok with empty mentions — not finding mentions is a valid state
+    // Always return ok — empty mentions means none found yet
     return complete(p, 'ok', { mentions: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
