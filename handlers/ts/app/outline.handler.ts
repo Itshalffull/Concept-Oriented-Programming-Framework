@@ -12,9 +12,6 @@ const _outlineHandler: FunctionalConceptHandler = {
     if (!input.node || (typeof input.node === 'string' && (input.node as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'node is required' }) as StorageProgram<Result>;
     }
-    if (!input.parent || (typeof input.parent === 'string' && (input.parent as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'parent is required' }) as StorageProgram<Result>;
-    }
     const node = input.node as string;
     const parent = (input.parent as string) || '';
 

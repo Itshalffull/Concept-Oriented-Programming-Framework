@@ -72,7 +72,7 @@ const _guardHandler: FunctionalConceptHandler = {
           return { ...rec, enabled: true };
         }, 'updated');
         b2 = putFrom(b2, 'guard', guard as string, (bindings) => bindings.updated as Record<string, unknown>);
-        return complete(b2, 'ok', { guard });
+        return complete(b2, 'ok', { id: guard, guard });
       },
       (b) => complete(b, 'not_found', { guard }),
     );
