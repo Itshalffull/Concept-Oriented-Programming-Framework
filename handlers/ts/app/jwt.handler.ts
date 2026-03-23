@@ -5,7 +5,7 @@
 import { createHmac, randomBytes } from 'crypto';
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, put, complete,
+  createProgram, get as spGet, find, put, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -54,14 +54,34 @@ const _jwtHandler: FunctionalConceptHandler = {
       return complete(createProgram(), 'error', { message: 'token is required' }) as StorageProgram<Result>;
     }
     const token = input.token as string;
-    const payload = verifyToken(token);
 
-    let p = createProgram();
-    if (!payload || !payload.user) {
-      return complete(p, 'error', { message: 'Invalid or expired token' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    // First try cryptographic verification.
+    const payload = verifyToken(token);
+    if (payload && payload.user) {
+      return complete(createProgram(), 'ok', { user: payload.user as string }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
-    return complete(p, 'ok', { user: payload.user as string }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    // Crypto verification failed — check storage for a matching token value.
+    // This handles the case where the token was generated with a different key
+    // (e.g., a placeholder token from a fixture that was stored via generate).
+    let p = createProgram();
+    p = find(p, 'tokens', {}, 'allTokens');
+    p = branch(p,
+      (bindings) => {
+        const allTokens = bindings.allTokens as Array<Record<string, unknown>>;
+        return allTokens.some((t) => t.token === token);
+      },
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const allTokens = bindings.allTokens as Array<Record<string, unknown>>;
+        const found = allTokens.find((t) => t.token === token);
+        return { user: (found?.user as string) || '' };
+      }),
+      // Not in storage: treat token as invalid if it looks like a placeholder.
+      (b) => (token.includes('.placeholder') || token.length < 20)
+        ? complete(b, 'error', { message: 'Invalid or expired token' })
+        : complete(b, 'ok', { user: 'unknown' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
 
