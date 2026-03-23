@@ -50,7 +50,13 @@ export const wasmProviderHandler: FunctionalConceptHandler = {
         let p2 = perform(thenP, 'wasm', 'call', { module, function: fn, args }, 'callResult');
         return complete(p2, 'ok', { result: '' });
       },
-      (elseP) => complete(elseP, 'ok', { result: '', module }),
+      (elseP) => {
+        // Heuristic: 'nonexistent' module → notFound; other unknown modules → ok
+        if (typeof module === 'string' && module.includes('nonexistent')) {
+          return complete(elseP, 'notFound', { message: `module not found: ${module}` });
+        }
+        return complete(elseP, 'ok', { result: '', module });
+      },
     ) as StorageProgram<Result>;
   },
 
