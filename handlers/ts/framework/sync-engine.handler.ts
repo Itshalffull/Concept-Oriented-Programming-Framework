@@ -216,6 +216,27 @@ export function createSyncEngineHandler(registry: ConceptRegistry): {
   const log = new ActionLog();
   const engine = new SyncEngine(log, registry);
 
+  // Helper: normalize an AST value into a plain JavaScript value.
+  // AST values have shapes like { type: 'literal', value }, { type: 'list', items }, { type: 'record', fields }.
+  function normalizeAstValue(val: unknown): unknown {
+    if (val === null || val === undefined) return val;
+    if (typeof val !== 'object') return val;
+    if (Array.isArray(val)) return val.map(normalizeAstValue);
+    const obj = val as Record<string, unknown>;
+    if (obj.type === 'literal') return obj.value;
+    if (obj.type === 'list' && Array.isArray(obj.items)) {
+      return (obj.items as unknown[]).map(normalizeAstValue);
+    }
+    if (obj.type === 'record' && Array.isArray(obj.fields)) {
+      const result: Record<string, unknown> = {};
+      for (const f of obj.fields as Array<{ name: string; value: unknown }>) {
+        result[f.name] = normalizeAstValue(f.value);
+      }
+      return result;
+    }
+    return val;
+  }
+
   // Helper: extract a field value from either a plain object or an AST record literal.
   // AST record literals have the shape { type: 'record', fields: [{ name, value: { type: 'literal', value } }] }.
   function extractField(obj: Record<string, unknown>, fieldName: string): unknown {
@@ -223,11 +244,7 @@ export function createSyncEngineHandler(registry: ConceptRegistry): {
     // Try AST record literal form
     if (obj.type === 'record' && Array.isArray(obj.fields)) {
       const entry = (obj.fields as Array<{ name: string; value: unknown }>).find(f => f.name === fieldName);
-      if (entry) {
-        const val = entry.value as Record<string, unknown>;
-        if (val && val.type === 'literal') return val.value;
-        return val;
-      }
+      if (entry) return normalizeAstValue(entry.value);
     }
     return undefined;
   }
@@ -236,12 +253,13 @@ export function createSyncEngineHandler(registry: ConceptRegistry): {
   function normalizeSyncInput(raw: unknown): CompiledSync | null {
     if (!raw || typeof raw !== 'object') return null;
     const obj = raw as Record<string, unknown>;
-    const name = extractField(obj, 'name') as string | undefined;
+    const normalized = normalizeAstValue(obj) as Record<string, unknown>;
+    const name = normalized.name as string | undefined;
     if (!name) return null;
-    const annotations = (extractField(obj, 'annotations') as string[] | undefined) ?? [];
-    const when = (extractField(obj, 'when') as CompiledSync['when'] | undefined) ?? [];
-    const where = (extractField(obj, 'where') as CompiledSync['where'] | undefined) ?? [];
-    const then = (extractField(obj, 'then') as CompiledSync['then'] | undefined) ?? [];
+    const annotations = (normalized.annotations as string[] | undefined) ?? [];
+    const when = (normalized.when as CompiledSync['when'] | undefined) ?? [];
+    const where = (normalized.where as CompiledSync['where'] | undefined) ?? [];
+    const then = (normalized.then as CompiledSync['then'] | undefined) ?? [];
     return { name, annotations, when, where, then };
   }
 
@@ -265,16 +283,20 @@ export function createSyncEngineHandler(registry: ConceptRegistry): {
     },
 
     onCompletion(input: Record<string, unknown>) {
-      const completion = input.completion as ActionCompletion | undefined;
-      if (!completion || !completion.id) {
+      const rawCompletion = input.completion;
+      if (!rawCompletion || typeof rawCompletion !== 'object') {
+        return complete(createProgram(), 'ok', { invocations: [] }) as StorageProgram<Result>;
+      }
+      // Handle both plain ActionCompletion and AST record literal form
+      const completionObj = rawCompletion as Record<string, unknown>;
+      const completionId = completionObj.id !== undefined
+        ? completionObj.id
+        : extractField(completionObj, 'id');
+      if (!completionId) {
         return complete(createProgram(), 'ok', { invocations: [] }) as StorageProgram<Result>;
       }
       let p = createProgram();
       p = find(p, 'syncs', {}, '_allSyncs');
-      p = mapBindings(p, () => {
-        // Engine call happens at interpretation time via mapBindings
-        return completion;
-      }, '_completion');
       return completeFrom(p, 'ok', (_bindings) => ({ invocations: [] })) as StorageProgram<Result>;
     },
 

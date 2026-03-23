@@ -14,6 +14,14 @@ import {
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
+/** Module-level registry to track registered adapter names for duplicate detection. */
+const _registeredAdapters = new Set<string>();
+
+/** Reset the registered adapters set (for testing). */
+export function resetFrameworkAdapterRegistry(): void {
+  _registeredAdapters.clear();
+}
+
 const FRAMEWORK_ADAPTER_MAP: Record<string, string> = {
   react: 'react-adapter',
   vue: 'vue-adapter',
@@ -50,6 +58,14 @@ const _frameworkAdapterHandler: FunctionalConceptHandler = {
       const p = createProgram();
       return complete(p, 'error', { message: 'renderer is required' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
+
+    // Check module-level registry for duplicate detection
+    if (_registeredAdapters.has(renderer)) {
+      const p = createProgram();
+      return complete(p, 'duplicate', { message: `Adapter '${renderer}' is already registered` }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+
+    _registeredAdapters.add(renderer);
 
     let p = createProgram();
     p = get(p, 'adapter', renderer, '_existing');
