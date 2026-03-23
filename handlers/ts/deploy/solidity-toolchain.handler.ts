@@ -45,14 +45,17 @@ const _handler: FunctionalConceptHandler = {
           });
         }
 
-        if (platform === 'prague' || platform === 'osaka') {
+        const UNSUPPORTED_EVM = ['prague', 'osaka'];
+        if (UNSUPPORTED_EVM.some(u => platform === u || platform.includes(u))) {
           return complete(b, 'evmVersionUnsupported', {
             requested: platform,
             supported: ['shanghai', 'cancun', 'paris', 'london'],
           });
         }
 
-        if (platform !== 'shanghai' && platform !== 'cancun' && platform !== 'paris') {
+        const SUPPORTED_EVM = ['shanghai', 'cancun', 'paris', 'london', 'istanbul', 'berlin', 'evm'];
+        const isSupported = SUPPORTED_EVM.some(s => platform === s || platform.includes(s) || s.includes(platform.split('-')[0]));
+        if (!isSupported) {
           return complete(b, 'notInstalled', {
             installHint: 'pip install solc-select && solc-select install 0.8.25',
           });

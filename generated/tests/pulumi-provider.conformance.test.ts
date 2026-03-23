@@ -156,16 +156,8 @@ describe('PulumiProvider functional handler', () => {
       if (typeof pulumiProviderHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_generate_plan = await interpret(pulumiProviderHandler.generate({ plan: "dp-001-auth-suite" }), storage);
-      const _pool = Object.assign({}, (afterResult_generate_plan?.output ?? {}));
-      const _fixtureInput = { stack: "stack-abc123" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(pulumiProviderHandler.preview({ ..._fixtureInput }), storage);
+      const stackId = afterResult_generate_plan?.output?.["stack"] as string;
+      const result = await interpret(pulumiProviderHandler.preview({ stack: stackId }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -234,16 +226,8 @@ describe('PulumiProvider functional handler', () => {
       if (typeof pulumiProviderHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_generate_plan = await interpret(pulumiProviderHandler.generate({ plan: "dp-001-auth-suite" }), storage);
-      const _pool = Object.assign({}, (afterResult_generate_plan?.output ?? {}));
-      const _fixtureInput = { stack: "stack-abc123" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(pulumiProviderHandler.apply({ ..._fixtureInput }), storage);
+      const stackId = afterResult_generate_plan?.output?.["stack"] as string;
+      const result = await interpret(pulumiProviderHandler.apply({ stack: stackId }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -312,16 +296,8 @@ describe('PulumiProvider functional handler', () => {
       if (typeof pulumiProviderHandler.teardown !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_generate_plan = await interpret(pulumiProviderHandler.generate({ plan: "dp-001-auth-suite" }), storage);
-      const _pool = Object.assign({}, (afterResult_generate_plan?.output ?? {}));
-      const _fixtureInput = { stack: "stack-abc123" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(pulumiProviderHandler.teardown({ ..._fixtureInput }), storage);
+      const stackId = afterResult_generate_plan?.output?.["stack"] as string;
+      const result = await interpret(pulumiProviderHandler.teardown({ stack: stackId }), storage);
       expect(result.variant).toBe('ok');
     });
 

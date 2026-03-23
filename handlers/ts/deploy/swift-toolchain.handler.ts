@@ -47,7 +47,20 @@ const _handler: FunctionalConceptHandler = {
           });
         }
 
-        if (platform !== 'macos' && platform !== 'linux' && platform !== 'ios') {
+        const UNSUPPORTED_PLATFORMS = ['windows', 'android', 'freebsd'];
+        const isUnsupported = UNSUPPORTED_PLATFORMS.some(u =>
+          platform === u || platform.startsWith(u) || platform.includes(u)
+        );
+        if (isUnsupported) {
+          return complete(b, 'notInstalled', {
+            installHint: 'Install via Xcode or download from swift.org/download',
+          });
+        }
+        const SUPPORTED_PLATFORMS = ['macos', 'linux', 'ios', 'watchos', 'tvos', 'visionos', 'arm64', 'x86_64', 'aarch64'];
+        const isSupported = SUPPORTED_PLATFORMS.some(s =>
+          platform === s || platform.startsWith(s) || platform.includes(s) || s.includes(platform.split('-')[0])
+        );
+        if (!isSupported) {
           return complete(b, 'notInstalled', {
             installHint: 'Install via Xcode or download from swift.org/download',
           });

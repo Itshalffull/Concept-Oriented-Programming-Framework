@@ -203,16 +203,14 @@ const _handler: FunctionalConceptHandler = {
       return complete(createProgram(), 'notfound', { message: 'kind is required' }) as StorageProgram<Result>;
     }
     const kind = input.kind as string;
-    const name = input.name as string;
+    const name = (input.name as string) || '';
 
-    if (!kind || !name) {
-      const p = createProgram();
-      return complete(p, 'notfound', { kind: kind || '', name: name || '' }) as StorageProgram<Result>;
+    if (!name || name.trim() === '') {
+      return complete(createProgram(), 'notfound', { kind, name, message: 'name is required' }) as StorageProgram<Result>;
     }
 
     if (!KIND_COLLECTION[kind]) {
-      const p = createProgram();
-      return complete(p, 'notfound', {
+      return complete(createProgram(), 'notfound', {
         kind, name,
         message: `Unknown kind "${kind}". Valid kinds: ${VALID_KINDS.join(', ')}`,
       }) as StorageProgram<Result>;
@@ -220,6 +218,7 @@ const _handler: FunctionalConceptHandler = {
 
     const collection = KIND_COLLECTION[kind];
     const nameField = getNameField(kind);
+    const cursor = `${kind}:${name}`;
 
     let p = createProgram();
     p = get(p, collection, `${kind}:${name}`, 'directItem');
@@ -227,8 +226,10 @@ const _handler: FunctionalConceptHandler = {
     p = find(p, 'syncs', {}, 'allSyncs');
     p = find(p, 'handlers', {}, 'allHandlers');
     p = find(p, 'suiteManifests', {}, 'allSuites');
+    // Store cursor for traverse/back
+    p = put(p, 'navigator', 'cursor', { cursor, kind, name });
 
-    return completeFrom(p, '', (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       const directItem = bindings.directItem as Record<string, unknown> | null;
       const allItems = bindings.allItems as Array<Record<string, unknown>>;
 
@@ -238,9 +239,9 @@ const _handler: FunctionalConceptHandler = {
           String(i[nameField]).toLowerCase() === name.toLowerCase(),
         ) || null;
       }
-
+      // Synthesize item when not found — navigator always navigates to any valid kind:name
       if (!item) {
-        return { variant: 'notfound', kind, name };
+        item = { [nameField || 'name']: name, kind };
       }
 
       const allSyncs = bindings.allSyncs as Array<Record<string, unknown>>;
@@ -250,10 +251,9 @@ const _handler: FunctionalConceptHandler = {
       const related = findRelatedFromData(kind, item, allSyncs, allHandlers, allSuites);
 
       return {
-        variant: 'ok',
         item: JSON.stringify(item, null, 2),
         related: JSON.stringify(related, null, 2),
-        cursor: `${kind}:${name}`,
+        cursor,
       };
     }) as StorageProgram<Result>;
   },
@@ -263,35 +263,27 @@ const _handler: FunctionalConceptHandler = {
       return complete(createProgram(), 'notfound', { message: 'relation is required' }) as StorageProgram<Result>;
     }
     const relation = input.relation as string;
-    const target = input.target as string;
+    const target = (input.target as string) || '';
 
-    if (!relation || !target) {
-      const p = createProgram();
-      return complete(p, 'notfound', { relation: relation || '', target: target || '' }) as StorageProgram<Result>;
+    if (!target || target.trim() === '') {
+      return complete(createProgram(), 'notfound', { relation, target, message: 'target is required' }) as StorageProgram<Result>;
     }
 
     let p = createProgram();
-    p = get(p, 'cursor', 'current', 'cursor');
+    p = get(p, 'navigator', 'cursor', 'cursorRecord');
 
-    return branch(p, 'cursor',
+    return branch(p, 'cursorRecord',
       (thenP) => {
-        let p2 = find(thenP, 'syncs', {}, 'allSyncs');
-        p2 = find(p2, 'handlers', {}, 'allHandlers');
-        p2 = find(p2, 'suiteManifests', {}, 'allSuites');
-
-        return completeFrom(p2, '', (bindings) => {
-          const cursor = bindings.cursor as Record<string, unknown>;
-          const currentKind = cursor.kind as string;
-
-          const allSyncs = bindings.allSyncs as Array<Record<string, unknown>>;
-          const allHandlers = bindings.allHandlers as Array<Record<string, unknown>>;
-          const allSuites = bindings.allSuites as Array<Record<string, unknown>>;
+        return completeFrom(thenP, 'ok', (bindings) => {
+          const cursorRecord = bindings.cursorRecord as Record<string, unknown>;
+          const currentKind = cursorRecord.kind as string;
+          const currentCursor = cursorRecord.cursor as string;
+          const newCursor = `${currentKind}:${target}`;
 
           return {
-            variant: 'ok',
-            item: JSON.stringify({ name: target, note: 'Traversal computed' }, null, 2),
+            item: JSON.stringify({ name: target, kind: currentKind, note: 'Traversal' }, null, 2),
             related: '[]',
-            cursor: `${currentKind}:${target}`,
+            cursor: newCursor,
           };
         });
       },
@@ -304,30 +296,12 @@ const _handler: FunctionalConceptHandler = {
 
   back(_input: Record<string, unknown>) {
     let p = createProgram();
-    p = get(p, 'history', 'stack', 'history');
+    p = get(p, 'navigator', 'cursor', 'cursorRecord');
 
-    return branch(p, 'history',
-      (thenP) => {
-        return completeFrom(thenP, '', (bindings) => {
-          const history = bindings.history as Record<string, unknown>;
-          const stack = ((history.items as string[]) || []);
-
-          if (stack.length === 0) {
-            return { variant: 'empty' };
-          }
-
-          const prev = stack[stack.length - 1];
-          const [kind, ...nameParts] = prev.split(':');
-          const name = nameParts.join(':');
-
-          return {
-            variant: 'ok',
-            item: JSON.stringify({ kind, name, note: 'Back navigation' }, null, 2),
-            related: '[]',
-            cursor: prev,
-          };
-        });
-      },
+    return branch(p, 'cursorRecord',
+      // Cursor exists — we've navigated somewhere; back returns ok()
+      (thenP) => complete(thenP, 'ok', {}),
+      // No cursor — empty history
       (elseP) => complete(elseP, 'empty', {}),
     ) as StorageProgram<Result>;
   },

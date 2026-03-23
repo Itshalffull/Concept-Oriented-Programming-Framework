@@ -183,16 +183,8 @@ describe('Projection functional handler', () => {
       if (typeof projectionHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_valid_projection = await interpret(projectionHandler.project({ manifest: "{\"name\":\"Todo\",\"uri\":\"core/Todo\",\"typeParams\":[{\"name\":\"T\"}],\"relations\":[{\"name\":\"items\",\"fields\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}]}],\"actions\":[{\"name\":\"create\",\"params\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}],\"variants\":[{\"tag\":\"ok\",\"fields\":[]}]}]}", annotations: "{\"traits\":[{\"name\":\"cached\",\"scope\":\"*\"}],\"resourceMapping\":{\"path\":\"/todos\",\"idField\":\"id\",\"actions\":[\"create\"]}}" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_projection?.output ?? {}));
-      const _fixtureInput = { projection: "proj-abc123" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(projectionHandler.validate({ ..._fixtureInput }), storage);
+      const projectionId = afterResult_valid_projection?.output?.["projection"] as string;
+      const result = await interpret(projectionHandler.validate({ projection: projectionId }), storage);
       expect(result.variant).toBe('ok');
     });
 

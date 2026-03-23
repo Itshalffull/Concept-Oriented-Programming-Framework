@@ -130,21 +130,12 @@ const _handler: FunctionalConceptHandler = {
       });
     }, 'filtered');
 
-    p = branch(p,
-      (bindings) => {
-        const filtered = bindings.filtered as unknown[];
-        return filtered.length === 0;
-      },
-      (b) => complete(b, 'noGeneratedFiles', {}),
-      (b) => {
-        return completeFrom(b, 'ok', (bindings) => {
-          const filtered = bindings.filtered as Array<Record<string, unknown>>;
-          return {
-            artifacts: JSON.stringify(filtered.map((m) => ({ id: m.id, node: m.node, role: m.role }))),
-          };
-        });
-      },
-    );
+    return completeFrom(p, 'ok', (bindings) => {
+      const filtered = bindings.filtered as Array<Record<string, unknown>>;
+      return {
+        artifacts: JSON.stringify(filtered.map((m) => ({ id: m.id, node: m.node, role: m.role }))),
+      };
+    }) as StorageProgram<Result>;
 
     return p as StorageProgram<Result>;
   },
