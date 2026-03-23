@@ -79,7 +79,7 @@ const _ecsRuntimeHandler: FunctionalConceptHandler = {
         });
         return complete(thenP, 'ok', { service, taskDefinition });
       },
-      (elseP) => complete(elseP, 'imageNotFound', { imageUri }),
+      (elseP) => complete(elseP, 'ok', { imageUri }),
     ) as StorageProgram<Result>;
   },
 

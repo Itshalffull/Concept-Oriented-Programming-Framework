@@ -42,16 +42,12 @@ const _handler: FunctionalConceptHandler = {
           });
         }
 
-        if (platform.startsWith('wasm') && versionConstraint === 'nightly') {
-          return complete(b, 'targetMissing', {
-            target: platform,
-            installHint: `rustup target add ${platform} --toolchain nightly`,
-          });
-        }
-
-        if (platform !== 'x86_64-linux' && platform !== 'aarch64-macos' && platform !== 'wasm32') {
+        // Check if platform is in the supported set
+        const SUPPORTED_PLATFORMS = ['x86_64-linux', 'linux-x86_64', 'aarch64-macos', 'aarch64-apple-darwin', 'wasm32', 'wasm32-unknown-unknown', 'x86_64-unknown-linux-gnu', 'aarch64-unknown-linux-gnu'];
+        const isSupported = SUPPORTED_PLATFORMS.some(p => platform.startsWith(p) || p.startsWith(platform.split('-')[0]));
+        if (!isSupported) {
           return complete(b, 'notInstalled', {
-            installHint: 'curl --proto \'=https\' --tlsv1.2 -sSf https://sh.rustup.rs | sh',
+            installHint: `Platform '${platform}' is not supported. Supported: ${SUPPORTED_PLATFORMS.join(', ')}`,
           });
         }
 

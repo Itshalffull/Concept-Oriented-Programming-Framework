@@ -14,21 +14,55 @@ import {
  */
 export const commutativityProviderHandler: FunctionalConceptHandler = {
   check(input: Record<string, unknown>) {
+    const programA = input.programA as string;
+    const programB = input.programB as string;
     const readWriteSetsA = input.readWriteSetsA;
     const readWriteSetsB = input.readWriteSetsB;
+
+    // Validate required fields
+    if (!programA || (typeof programA === 'string' && programA.trim() === '')) {
+      const p = complete(createProgram(), 'error', { message: 'programA is required' });
+      return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+    if (!programB || (typeof programB === 'string' && programB.trim() === '')) {
+      const p = complete(createProgram(), 'error', { message: 'programB is required' });
+      return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+    if (!readWriteSetsA || (typeof readWriteSetsA === 'string' && (readWriteSetsA as string).trim() === '')) {
+      const p = complete(createProgram(), 'error', { message: 'readWriteSetsA is required' });
+      return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+    if (!readWriteSetsB || (typeof readWriteSetsB === 'string' && (readWriteSetsB as string).trim() === '')) {
+      const p = complete(createProgram(), 'error', { message: 'readWriteSetsB is required' });
+      return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
 
     try {
       let rwA: { r: string[]; w: string[] };
       let rwB: { r: string[]; w: string[] };
 
+      function parseRWSet(s: unknown): { r: string[]; w: string[] } {
+        if (typeof s !== 'string') return s as { r: string[]; w: string[] };
+        // Try standard JSON first
+        try { return JSON.parse(s); } catch {}
+        // Try lenient parsing: replace unquoted keys and array brackets with identifier lists
+        try {
+          // Extract r: [...] and w: [...] patterns, supporting unquoted keys like {r: [], w: [x,y]}
+          const rMatch = s.match(/r\s*:\s*\[([^\]]*)\]/);
+          const wMatch = s.match(/w\s*:\s*\[([^\]]*)\]/);
+          const r = rMatch ? rMatch[1].split(',').map(x => x.trim()).filter(Boolean) : [];
+          const w = wMatch ? wMatch[1].split(',').map(x => x.trim()).filter(Boolean) : [];
+          return { r, w };
+        } catch {
+          return { r: [], w: [] };
+        }
+      }
+
       try {
-        rwA = typeof readWriteSetsA === 'string' ? JSON.parse(readWriteSetsA) : readWriteSetsA as { r: string[]; w: string[] };
-        rwB = typeof readWriteSetsB === 'string' ? JSON.parse(readWriteSetsB) : readWriteSetsB as { r: string[]; w: string[] };
+        rwA = parseRWSet(readWriteSetsA);
+        rwB = parseRWSet(readWriteSetsB);
       } catch {
-        const resultId = `comm-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-        let p = createProgram();
-        p = put(p, 'results', resultId, { commutes: false, reason: 'no read/write sets provided' });
-        p = complete(p, 'ok', { result: resultId, commutes: false, reason: 'no read/write sets provided' });
+        const p = complete(createProgram(), 'error', { message: 'readWriteSets could not be parsed' });
         return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
       }
 

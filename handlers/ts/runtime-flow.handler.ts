@@ -136,29 +136,41 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = get(p, 'runtime-flow', flow, 'record');
 
+    // If no record found, return ok (no static path exists for this flow)
     return branch(p, 'record',
       (thenP) => {
-        return completeFrom(thenP, 'ok', (bindings) => {
+        // Record found — check if it has a static path
+        let t = mapBindings(thenP, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
-          // If no static path was found during correlation, return noStaticPath
-          if (!record.hasStaticPath) {
-            return { variant: 'noStaticPath' };
-          }
+          if (!record.hasStaticPath) return 'ok';
           try {
             const deviations = JSON.parse(record.deviations as string || '[]');
             const steps = JSON.parse(record.steps as string || '[]');
-
-            if (deviations.length === 0) {
-              return { variant: 'matches', pathLength: steps.length };
-            }
-
-            return { variant: 'deviates', deviations: JSON.stringify(deviations) };
+            if (deviations.length === 0) return 'matches';
+            return 'deviates';
           } catch {
-            return { variant: 'noStaticPath' };
+            return 'ok';
           }
-        });
+        }, '_compareResult');
+
+        return branch(t,
+          (b) => b._compareResult === 'matches',
+          (b) => completeFrom(b, 'matches', (bindings) => {
+            const record = bindings.record as Record<string, unknown>;
+            const steps = JSON.parse(record.steps as string || '[]');
+            return { pathLength: steps.length };
+          }),
+          (b) => branch(b,
+            (bindings) => bindings._compareResult === 'deviates',
+            (b2) => completeFrom(b2, 'deviates', (bindings) => {
+              const record = bindings.record as Record<string, unknown>;
+              return { deviations: record.deviations as string };
+            }),
+            (b2) => complete(b2, 'ok', {}),
+          ),
+        );
       },
-      (elseP) => complete(elseP, 'noStaticPath', {}),
+      (elseP) => complete(elseP, 'ok', {}),
     ) as StorageProgram<Result>;
   },
 

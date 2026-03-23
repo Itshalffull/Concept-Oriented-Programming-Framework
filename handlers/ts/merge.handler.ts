@@ -106,21 +106,20 @@ const _handler: FunctionalConceptHandler = {
   },
 
   merge(input: Record<string, unknown>) {
-    if (!input.strategy || (typeof input.strategy === 'string' && (input.strategy as string).trim() === '')) {
-      return complete(createProgram(), 'clean', { message: 'strategy is required' }) as StorageProgram<Result>;
-    }
     const base = input.base as string;
     const ours = input.ours as string;
     const theirs = input.theirs as string;
-    const strategy = input.strategy as string | null | undefined;
+    // strategy is optional - null/undefined means "use default (no strategy check)"
+    const strategy = (input.strategy !== null && input.strategy !== undefined && input.strategy !== '')
+      ? input.strategy as string
+      : null;
 
     if (strategy) {
       let p = createProgram();
-      p = find(p, 'merge-strategy', { name: strategy }, 'strategies');
+      // Look up strategy by ID first, then by name
+      p = get(p, 'merge-strategy', strategy, 'strategyById');
 
-      return branch(p,
-        (bindings) => (bindings.strategies as Record<string, unknown>[]).length === 0,
-        (bp) => complete(bp, 'noStrategy', { message: `No strategy registered for '${strategy}'` }),
+      return branch(p, 'strategyById',
         (bp) => {
           const { result, conflicts } = threeWayMerge(base, ours, theirs);
           if (result !== null && conflicts.length === 0) {
@@ -132,6 +131,29 @@ const _handler: FunctionalConceptHandler = {
             conflicts: JSON.stringify(conflicts), result: null,
           });
           return complete(bp2, 'conflicts', { mergeId, conflictCount: conflicts.length });
+        },
+        (bp) => {
+          // Fall back to looking up by name
+          let bp2 = find(bp, 'merge-strategy', {}, 'allStrategies');
+          return branch(bp2,
+            (bindings) => {
+              const all = bindings.allStrategies as Record<string, unknown>[];
+              return all.some((s) => s.name === strategy);
+            },
+            (bp3) => {
+              const { result, conflicts } = threeWayMerge(base, ours, theirs);
+              if (result !== null && conflicts.length === 0) {
+                return complete(bp3, 'clean', { result });
+              }
+              const mergeId = nextId();
+              const bp4 = put(bp3, 'merge-active', mergeId, {
+                id: mergeId, base, ours, theirs,
+                conflicts: JSON.stringify(conflicts), result: null,
+              });
+              return complete(bp4, 'conflicts', { mergeId, conflictCount: conflicts.length });
+            },
+            (bp3) => complete(bp3, 'noStrategy', { message: `No strategy registered for '${strategy}'` }),
+          );
         },
       ) as StorageProgram<Result>;
     }

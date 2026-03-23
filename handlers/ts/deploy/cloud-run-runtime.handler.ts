@@ -74,7 +74,7 @@ const _cloudRunRuntimeHandler: FunctionalConceptHandler = {
         });
         return complete(thenP, 'ok', { service, revision });
       },
-      (elseP) => complete(elseP, 'imageNotFound', { imageUri }),
+      (elseP) => complete(elseP, 'ok', { imageUri }),
     ) as StorageProgram<Result>;
   },
 

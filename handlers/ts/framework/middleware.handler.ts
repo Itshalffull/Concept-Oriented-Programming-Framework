@@ -15,6 +15,8 @@ import { createProgram, get, find, put, del, merge, branch, complete, completeFr
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 import { randomUUID } from 'crypto';
 
+type Result = { variant: string; [key: string]: unknown };
+
 /**
  * Numeric ordering for middleware positions. Lower values run first.
  */
@@ -25,6 +27,23 @@ const POSITION_ORDER: Record<string, number> = {
   'validation': 3,
   'business-logic': 4,
   'serialization': 5,
+};
+
+// Built-in trait implementations for common targets
+const BUILTIN_MIDDLEWARE: Record<string, Record<string, { implementation: string; position: string }>> = {
+  'auth:rest': { implementation: 'bearer-check', position: 'auth' },
+  'auth:grpc': { implementation: 'grpc-auth-interceptor', position: 'auth' },
+  'auth:graphql': { implementation: 'graphql-auth-directive', position: 'auth' },
+  'auth:cli': { implementation: 'cli-auth-check', position: 'auth' },
+  'auth:mcp': { implementation: 'mcp-auth-check', position: 'auth' },
+  'validation:rest': { implementation: 'zod-body-validator', position: 'validation' },
+  'validation:grpc': { implementation: 'grpc-proto-validator', position: 'validation' },
+  'validation:graphql': { implementation: 'graphql-input-validator', position: 'validation' },
+  'validation:cli': { implementation: 'cli-arg-validator', position: 'validation' },
+  'logging:rest': { implementation: 'http-logger', position: 'before-auth' },
+  'logging:grpc': { implementation: 'grpc-logger', position: 'before-auth' },
+  'rate-limiting:rest': { implementation: 'express-rate-limit', position: 'before-auth' },
+  'cors:rest': { implementation: 'cors-handler', position: 'before-auth' },
 };
 
 /**
@@ -85,10 +104,20 @@ const _handler: FunctionalConceptHandler = {
    * and incompatibility rules.
    */
   resolve(input: Record<string, unknown>) {
-    if (!input.traits || (typeof input.traits === 'string' && (input.traits as string).trim() === '')) {
+    // traits can be a string (JSON array) or an actual array
+    let traitsRaw = input.traits;
+    if (typeof traitsRaw === 'string') {
+      try {
+        traitsRaw = JSON.parse(traitsRaw);
+      } catch {
+        // treat as single trait in array
+        traitsRaw = [traitsRaw];
+      }
+    }
+    if (!traitsRaw || !Array.isArray(traitsRaw) || (traitsRaw as string[]).length === 0) {
       return complete(createProgram(), 'error', { message: 'traits is required' }) as StorageProgram<Result>;
     }
-    const traits = input.traits as string[];
+    const traits = traitsRaw as string[];
     const target = input.target as string;
 
     // Load all middleware and incompatibility records
@@ -102,17 +131,29 @@ const _handler: FunctionalConceptHandler = {
       // Collect entries for requested traits
       const entries: Array<{ trait: string; implementation: string; position: string; positionOrder: number }> = [];
       for (const trait of traits) {
-        const compositeKey = `${trait}:${target}`;
+        // Check storage first, then built-in map
         const record = allMiddleware.find((m) => m.trait === trait && m.target === target);
-        if (!record) {
-          return { variant: 'missingImplementation', trait, target };
+        if (record) {
+          entries.push({
+            trait,
+            implementation: record.implementation as string,
+            position: record.position as string,
+            positionOrder: (record.positionOrder as number) ?? 999,
+          });
+        } else {
+          const builtinKey = `${trait}:${target}`;
+          const builtin = BUILTIN_MIDDLEWARE[builtinKey];
+          if (builtin) {
+            entries.push({
+              trait,
+              implementation: builtin.implementation,
+              position: builtin.position,
+              positionOrder: POSITION_ORDER[builtin.position] ?? 999,
+            });
+          } else {
+            return { variant: 'missingImplementation', trait, target };
+          }
         }
-        entries.push({
-          trait,
-          implementation: record.implementation as string,
-          position: record.position as string,
-          positionOrder: (record.positionOrder as number) ?? 999,
-        });
       }
 
       // Check pairwise incompatibility
@@ -139,14 +180,23 @@ const _handler: FunctionalConceptHandler = {
    * Pure computation - no storage needed.
    */
   inject(input: Record<string, unknown>) {
-    if (!input.output || (typeof input.output === 'string' && (input.output as string).trim() === '')) {
+    if (input.output === undefined || input.output === null || input.output === '') {
       return complete(createProgram(), 'error', { message: 'output is required' }) as StorageProgram<Result>;
     }
-    if (!input.middlewares || (typeof input.middlewares === 'string' && (input.middlewares as string).trim() === '')) {
+    const output = input.output as string;
+    // middlewares can be string (JSON) or array
+    let middlewaresRaw = input.middlewares;
+    if (typeof middlewaresRaw === 'string') {
+      try {
+        middlewaresRaw = JSON.parse(middlewaresRaw);
+      } catch {
+        middlewaresRaw = [middlewaresRaw];
+      }
+    }
+    if (!middlewaresRaw || !Array.isArray(middlewaresRaw)) {
       return complete(createProgram(), 'error', { message: 'middlewares is required' }) as StorageProgram<Result>;
     }
-    const output = input.output as string;
-    const middlewares = input.middlewares as string[];
+    const middlewares = middlewaresRaw as string[];
     const target = input.target as string;
 
     let result = output;

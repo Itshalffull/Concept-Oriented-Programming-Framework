@@ -138,26 +138,38 @@ export const runtimeFlowHandler: FunctionalConceptHandler = {
     p = mapBindings(p, (b) => {
       const all = b.all as Array<Record<string, unknown>>;
       const entry = all.find(f => f.id === flow);
-      if (!entry) return { status: 'noPath' };
+      if (!entry) return null;
 
       const deviations: unknown[] = JSON.parse(entry.deviations as string || '[]');
       const steps: unknown[] = JSON.parse(entry.steps as string || '[]');
 
       if (deviations.length > 0) return { status: 'deviates', deviations, pathLength: steps.length };
+      if ((entry.expectedPath as string || '[]') === '[]') return { status: 'ok' };
       return { status: 'matches', pathLength: steps.length };
     }, 'comparison');
 
     return branch(p,
-      (b) => (b.comparison as Record<string, unknown>).status === 'matches',
-      completeFrom(createProgram(), 'ok', (b) => ({
-        pathLength: (b.comparison as Record<string, unknown>).pathLength,
-      })),
+      (b) => b.comparison == null,
+      // Flow not found in storage at all — check if storage has ANY flows
       branch(createProgram(),
-        (b) => (b.comparison as Record<string, unknown>).status === 'deviates',
-        completeFrom(createProgram(), 'deviates', (b) => ({
-          deviations: JSON.stringify((b.comparison as Record<string, unknown>).deviations),
+        (b) => { const all = b.all as Array<Record<string, unknown>>; return all && all.length > 0; },
+        // Storage has flows but not this one — ok (no static path for this flow trigger)
+        complete(createProgram(), 'ok', {}),
+        // Storage is empty — flow was never correlated
+        complete(createProgram(), 'notfound', { message: 'Flow not found' }),
+      ),
+      branch(createProgram(),
+        (b) => (b.comparison as Record<string, unknown>).status === 'matches',
+        completeFrom(createProgram(), 'matches', (b) => ({
+          pathLength: (b.comparison as Record<string, unknown>).pathLength,
         })),
-        complete(createProgram(), 'noStaticPath', {}),
+        branch(createProgram(),
+          (b) => (b.comparison as Record<string, unknown>).status === 'deviates',
+          completeFrom(createProgram(), 'deviates', (b) => ({
+            deviations: JSON.stringify((b.comparison as Record<string, unknown>).deviations),
+          })),
+          complete(createProgram(), 'ok', {}),
+        ),
       ),
     );
   },
