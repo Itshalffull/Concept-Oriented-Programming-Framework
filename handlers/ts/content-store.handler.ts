@@ -26,7 +26,7 @@ export const contentStoreHandler: ConceptHandler = {
       const blob = existing[0];
       const updated = { ...blob, reference_count: (blob.reference_count as number) + 1 };
       await storage.put('blob', blob.id as string, updated);
-      return { variant: 'ok', blob: blob.id as string, hash };
+      return { variant: 'ok', blob: blob.id as string, hash, output: { blob: blob.id as string, hash } };
     }
 
     const id = `blob-${nextId++}`;
@@ -40,7 +40,7 @@ export const contentStoreHandler: ConceptHandler = {
       reference_count: 1, data,
     });
 
-    return { variant: 'ok', blob: id, hash };
+    return { variant: 'ok', blob: id, hash, output: { blob: id, hash } };
   },
 
   async retrieve(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {

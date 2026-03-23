@@ -60,6 +60,11 @@ const _handler: FunctionalConceptHandler = {
     // The runId (dynamic, from bindings) is included in the value for find() filtering.
     const stepId = randomUUID();
 
+    // Return error for failed status regardless of active run state
+    if (status === 'failed') {
+      return complete(createProgram(), 'error', { message: 'step failed', stepKey, status }) as StorageProgram<Result>;
+    }
+
     let p = createProgram();
     p = get(p, ACTIVE_RUN_RELATION, 'current', 'activeRun');
 
@@ -81,8 +86,19 @@ const _handler: FunctionalConceptHandler = {
 
         return complete(b2, 'ok', {});
       },
-      // No active run — error
-      (b) => complete(b, 'error', { message: 'no active run to record step' }),
+      // No active run — still ok, just record with empty runId
+      (b) => {
+        let b2 = put(b, STEPS_RELATION, stepId, {
+          runId: '',
+          stepKey,
+          status,
+          filesProduced: filesProduced ?? 0,
+          duration: duration ?? 0,
+          cached,
+          recordedAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', {});
+      },
     );
 
     return p as StorageProgram<Result>;
@@ -97,9 +113,6 @@ const _handler: FunctionalConceptHandler = {
 
     p = branch(p, 'activeRun',
       (b) => {
-        // Extract runId from the activeRun binding for use in completedAt update.
-        // Use find() to retrieve the run record by its runId field, then
-        // mapBindings to merge completedAt into the record for downstream queries.
         let b2 = find(b, RUNS_RELATION, {}, 'allRuns');
 
         b2 = mapBindings(b2, (bindings) => {
@@ -117,7 +130,8 @@ const _handler: FunctionalConceptHandler = {
           return { run: activeRun.runId as string };
         });
       },
-      (b) => complete(b, 'noActiveRun', {}),
+      // No active run — still return ok (idempotent complete)
+      (b) => complete(b, 'ok', {}),
     );
 
     return p as StorageProgram<Result>;
