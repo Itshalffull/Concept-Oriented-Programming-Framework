@@ -26,7 +26,7 @@ concept RenderProgram [R] {
         Initialize an empty render program with no instructions,
         ready to receive rendering directives.
       }
-      -> ok() {
+      -> exists() {
         A render program with this identifier already exists.
       }
 
@@ -247,8 +247,8 @@ concept RenderProgram [R] {
 
   example "pure seals program against further instructions": {
     after create(program: p) -> ok()
-    then pure(program: p, output: "done") -> ok(program: p)
-    and  element(program: p, part: "x", role: "text") -> ok()
+    and  pure(program: p, output: "done") -> ok(program: p)
+    then element(program: p, part: "x", role: "text") -> ok()
   }
 
   example "text after create succeeds": {
@@ -303,7 +303,7 @@ concept RenderProgram [R] {
 
   example "duplicate create returns exists": {
     after create(program: p) -> ok()
-    then create(program: p) -> ok()
+    then create(program: p) -> exists()
   }
 
   always "terminated programs are sealed": {

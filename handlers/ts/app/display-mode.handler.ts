@@ -22,8 +22,12 @@ export const displayModeHandler: ConceptHandler = {
     const schema = input.schema as string;
     const modeId = input.mode_id as string;
     const name = input.name as string;
-    const key = compositeKey(schema, modeId);
 
+    if (!schema || schema.trim() === '') {
+      return { variant: 'error', message: 'schema is required' };
+    }
+
+    const key = compositeKey(schema, modeId);
     const existing = await storage.get('displayMode', key);
     if (existing) {
       return { variant: 'already_exists', schema, mode_id: modeId };
@@ -77,9 +81,10 @@ export const displayModeHandler: ConceptHandler = {
     const mode = input.mode as string;
 
     const record = await storage.get('displayMode', mode);
-    if (record) {
-      await storage.put('displayMode', mode, { ...record, layout: null });
+    if (!record) {
+      return { variant: 'not_found', mode };
     }
+    await storage.put('displayMode', mode, { ...record, layout: null });
     return { variant: 'ok', mode };
   },
 
@@ -89,7 +94,7 @@ export const displayModeHandler: ConceptHandler = {
 
     const record = await storage.get('displayMode', mode);
     if (!record) {
-      return { variant: 'ok', mode };
+      return { variant: 'not_found', mode };
     }
 
     await storage.put('displayMode', mode, {
@@ -104,9 +109,10 @@ export const displayModeHandler: ConceptHandler = {
     const mode = input.mode as string;
 
     const record = await storage.get('displayMode', mode);
-    if (record) {
-      await storage.put('displayMode', mode, { ...record, component_mapping: null });
+    if (!record) {
+      return { variant: 'not_found', mode };
     }
+    await storage.put('displayMode', mode, { ...record, component_mapping: null });
     return { variant: 'ok', mode };
   },
 
@@ -116,7 +122,7 @@ export const displayModeHandler: ConceptHandler = {
 
     const record = await storage.get('displayMode', mode);
     if (!record) {
-      return { variant: 'ok', mode };
+      return { variant: 'not_found', mode };
     }
 
     await storage.put('displayMode', mode, {
@@ -162,6 +168,10 @@ export const displayModeHandler: ConceptHandler = {
 
   async list_for_schema(input: Record<string, unknown>, storage: ConceptStorage): Promise<Result> {
     const schema = input.schema as string;
+
+    if (!schema || schema.trim() === '') {
+      return { variant: 'error', message: 'schema is required' };
+    }
 
     const all = await storage.find('displayMode', {}) as Record<string, unknown>[];
     const filtered = all.filter(m => m.schema === schema);
