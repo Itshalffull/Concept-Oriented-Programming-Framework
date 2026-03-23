@@ -47,7 +47,7 @@ concept AgentRole [K] {
         Agent evaluates task against capabilities and current load.
         Returns a competitive bid. This is the Contract Net bid response.
       }
-      -> ok(reason: String) {
+      -> decline(reason: String) {
         Cannot handle this task (wrong type, at capacity, missing tools).
       }
     }

@@ -50,7 +50,7 @@ concept TrainingRun [J] {
         Begins training. Status: "training". Checkpoints saved
         per epoch. This action may complete asynchronously (@gate).
       }
-      -> ok(count: Int, minimum: Int) {
+      -> insufficient_data(count: Int, minimum: Int) {
         Dataset too small.
       }
       -> error(message: String) {
@@ -62,7 +62,7 @@ concept TrainingRun [J] {
       -> ok(run: J, checkpoint: String) {
         Pauses at current epoch. Status: "paused".
       }
-      -> ok(message: String) {
+      -> not_running(message: String) {
         Run is not in "training" status.
       }
     }
@@ -71,7 +71,7 @@ concept TrainingRun [J] {
       -> ok(run: J) {
         Resumes from last checkpoint.
       }
-      -> ok(message: String) {
+      -> not_paused(message: String) {
         Run is not paused.
       }
     }
@@ -81,7 +81,7 @@ concept TrainingRun [J] {
         Evaluates the latest checkpoint against a dataset.
         Metrics: accuracy, perplexity, SemanticF1, answer_relevancy.
       }
-      -> ok(message: String) {
+      -> not_ready(message: String) {
         No checkpoint available yet.
       }
     }
@@ -91,7 +91,7 @@ concept TrainingRun [J] {
         Exports the trained model. Format: safetensors, gguf,
         provider_api (upload to provider's fine-tuning API).
       }
-      -> ok(message: String) {
+      -> not_complete(message: String) {
         Training not finished.
       }
     }
@@ -100,7 +100,7 @@ concept TrainingRun [J] {
       -> ok(run: J) {
         Cancels training. Status: "cancelled".
       }
-      -> ok(message: String) {
+      -> not_running(message: String) {
         Run not active.
       }
     }

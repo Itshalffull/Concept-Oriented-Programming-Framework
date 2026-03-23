@@ -49,16 +49,16 @@ concept ToolBinding [T] {
       -> ok(result: String, execution_ms: Int) {
         Validates arguments, executes handler, returns result.
       }
-      -> ok(errors: list {path: String, message: String}) {
+      -> validation_error(errors: list {path: String, message: String}) {
         Arguments don't match input_schema.
       }
       -> timeout(elapsed_ms: Int) {
         Execution exceeded timeout.
       }
-      -> ok(message: String) {
+      -> execution_error(message: String) {
         Handler threw an error.
       }
-      -> ok(tool: T, arguments: String) {
+      -> approval_required(tool: T, arguments: String) {
         requires_approval=true. Emits approval request via sync.
       }
     }

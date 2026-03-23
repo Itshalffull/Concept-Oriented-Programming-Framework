@@ -55,7 +55,7 @@ concept VectorIndex [X] {
       -> ok(vectors: list {text: String, vector: list Float}, count: Int) {
         Batch embedding via configured model.
       }
-      -> ok(completed: Int, failed: Int) {
+      -> partial(completed: Int, failed: Int) {
         Some embeddings failed.
       }
     }
@@ -65,7 +65,7 @@ concept VectorIndex [X] {
       -> ok() {
         Inserts vector with optional JSON metadata.
       }
-      -> ok(expected: Int, got: Int) {
+      -> dimension_mismatch(expected: Int, got: Int) {
         Vector dimensions don't match.
       }
     }
@@ -75,7 +75,7 @@ concept VectorIndex [X] {
       -> ok(count: Int) {
         Bulk insert.
       }
-      -> ok(added: Int, failed: Int, errors: list String) {
+      -> partial(added: Int, failed: Int, errors: list String) {
         Some inserts failed.
       }
     }
@@ -86,7 +86,7 @@ concept VectorIndex [X] {
             metadata: option String}) {
         Top-k similarity search with optional metadata filters.
       }
-      -> ok(message: String) {
+      -> empty(message: String) {
         No results.
       }
     }
@@ -99,7 +99,7 @@ concept VectorIndex [X] {
         Combines vector + BM25 via reciprocal rank fusion.
         vector_weight 0=BM25 only, 1=vector only.
       }
-      -> ok(message: String) {
+      -> empty(message: String) {
         No results.
       }
     }
@@ -110,7 +110,7 @@ concept VectorIndex [X] {
             metadata: option String}) {
         Maximal marginal relevance. Diversity 0-1.
       }
-      -> ok(message: String) {
+      -> empty(message: String) {
         No results.
       }
     }

@@ -56,7 +56,7 @@ concept Guardrail [G] {
       -> pass() {
         Input passes all rules.
       }
-      -> ok(rule_id: String, severity: String,
+      -> violation(rule_id: String, severity: String,
                    explanation: String, action: String) {
         Input violates a rule. Action taken per config.
       }
@@ -66,7 +66,7 @@ concept Guardrail [G] {
       -> pass() {
         Output passes all rules.
       }
-      -> ok(rule_id: String, severity: String,
+      -> violation(rule_id: String, severity: String,
                    explanation: String, action: String) {
         Output violates a rule.
       }
@@ -76,10 +76,10 @@ concept Guardrail [G] {
       -> pass() {
         Content passes. Direction: input or output.
       }
-      -> ok(rule_id: String, message: String) {
+      -> blocked(rule_id: String, message: String) {
         Content blocked.
       }
-      -> ok(rule_id: String, message: String, severity: String) {
+      -> flagged(rule_id: String, message: String, severity: String) {
         Content flagged but allowed through.
       }
     }
@@ -91,7 +91,7 @@ concept Guardrail [G] {
             severity: String, action_taken: String}) {
         Returns violation history.
       }
-      -> ok(message: String) {
+      -> empty(message: String) {
         No violations found.
       }
     }

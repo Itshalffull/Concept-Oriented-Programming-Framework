@@ -61,7 +61,7 @@ concept Constitution [W] {
             history: list {critique: String, revision: String}) {
         Full Critique-Revision loop up to max_revisions.
       }
-      -> ok(best: String, rounds: Int) {
+      -> max_revisions(best: String, rounds: Int) {
         Could not achieve full compliance.
       }
     }

@@ -39,10 +39,10 @@ concept SemanticRouter [S] {
         Matches message against all route exemplars via embedding
         similarity. Returns highest-confidence match above threshold.
       }
-      -> ok(message: String) {
+      -> no_match(message: String) {
         No route exceeds threshold. Falls back if configured.
       }
-      -> ok(pipeline: String) {
+      -> fallback(pipeline: String) {
         No route matched; using fallback pipeline.
       }
     }

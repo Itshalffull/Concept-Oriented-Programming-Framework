@@ -58,7 +58,7 @@ concept Adapter [A] {
         additional inference latency. Sets merged=true. The merged model
         can be registered as a new LLMProvider.
       }
-      -> ok(message: String) {
+      -> not_trained(message: String) {
         Adapter not trained yet.
       }
     }
@@ -70,7 +70,7 @@ concept Adapter [A] {
         pass. Multiple adapters can be swapped without reloading the
         base model.
       }
-      -> ok(message: String) {
+      -> not_trained(message: String) {
         Adapter not trained.
       }
     }
@@ -89,7 +89,7 @@ concept Adapter [A] {
       -> ok(path: String) {
         Exports adapter weights. Format: safetensors, peft_checkpoint.
       }
-      -> ok(message: String) {
+      -> not_trained(message: String) {
         Nothing to export.
       }
     }

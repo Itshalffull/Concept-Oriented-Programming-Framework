@@ -136,7 +136,7 @@ concept StateGraph [H] {
       -> error(node_id: String, message: String) {
         Execution failed at a specific node.
       }
-      -> ok(node_id: String, state: String) {
+      -> waiting_for_human(node_id: String, state: String) {
         Reached a human node. Execution paused.
       }
     }
