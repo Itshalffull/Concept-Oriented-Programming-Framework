@@ -37,29 +37,38 @@ const _navigatorHandler: FunctionalConceptHandler = {
 
     p = branch(p, 'existing',
       (b) => {
-        // Accumulate destinations, avoiding duplicates by name
-        let b2 = putFrom(b, 'navigator', id, (bindings) => {
+        // Check if name already registered in destinations
+        let b2 = mapBindings(b, (bindings) => {
           const existing = bindings.existing as Record<string, unknown>;
           let destinations: Array<Record<string, unknown>> = [];
           try {
             destinations = JSON.parse(existing.destinations as string || '[]');
           } catch { /* empty */ }
-
-          if (!destinations.some((d) => d.name === name)) {
-            destinations.push(newDest);
-          }
-
-          return {
-            ...existing,
-            destinations: JSON.stringify(destinations),
-            name,
-            targetConcept,
-            targetView,
-            paramsSchema: paramsSchema || '',
-            meta: meta || '',
-          };
-        });
-        return complete(b2, 'ok', { nav: id });
+          return destinations.some((d) => d.name === name);
+        }, '_isDuplicate');
+        return branch(b2, (bindings) => !!bindings._isDuplicate,
+          (dupP) => complete(dupP, 'duplicate', { message: `Name "${name}" already registered` }),
+          (okP) => {
+            let b3 = putFrom(okP, 'navigator', id, (bindings) => {
+              const existing = bindings.existing as Record<string, unknown>;
+              let destinations: Array<Record<string, unknown>> = [];
+              try {
+                destinations = JSON.parse(existing.destinations as string || '[]');
+              } catch { /* empty */ }
+              destinations.push(newDest);
+              return {
+                ...existing,
+                destinations: JSON.stringify(destinations),
+                name,
+                targetConcept,
+                targetView,
+                paramsSchema: paramsSchema || '',
+                meta: meta || '',
+              };
+            });
+            return complete(b3, 'ok', { nav: id });
+          },
+        );
       },
       (b) => {
         let b2 = put(b, 'navigator', id, {

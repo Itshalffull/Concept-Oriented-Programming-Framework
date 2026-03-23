@@ -101,7 +101,17 @@ describe('Navigator functional handler', () => {
     it('fixture "duplicate_name" -> duplicate', async () => {
       if (typeof navigatorHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(navigatorHandler.register({ name: "detail", targetConcept: "Article", targetView: "detail" }), storage);
+      const afterResult_valid_register = await interpret(navigatorHandler.register({ name: "detail", targetConcept: "Article", targetView: "detail", paramsSchema: "", meta: "" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
+      const _fixtureInput = { nav: "test-nav", name: "detail", targetConcept: "Article", targetView: "detail" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(navigatorHandler.register({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('duplicate'));
     });
@@ -351,7 +361,7 @@ describe('Navigator functional handler', () => {
 
   describe('replace', () => {
     it('builds a valid StorageProgram', () => {
-      const program = navigatorHandler.replace({ params: "{\"id\":\"article-99\"}" });
+      const program = navigatorHandler.replace({ nav: "test-nav", params: "{\"id\":\"article-99\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -359,21 +369,21 @@ describe('Navigator functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = navigatorHandler.replace({ params: "{\"id\":\"article-99\"}" });
+      const program = navigatorHandler.replace({ nav: "test-nav", params: "{\"id\":\"article-99\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = navigatorHandler.replace({ params: "{\"id\":\"article-99\"}" });
+      const program = navigatorHandler.replace({ nav: "test-nav", params: "{\"id\":\"article-99\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = navigatorHandler.replace({ params: "{\"id\":\"article-99\"}" });
+      const program = navigatorHandler.replace({ nav: "test-nav", params: "{\"id\":\"article-99\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -386,7 +396,7 @@ describe('Navigator functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = navigatorHandler.replace({ params: "{\"id\":\"article-99\"}" });
+      const program = navigatorHandler.replace({ nav: "test-nav", params: "{\"id\":\"article-99\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -394,7 +404,7 @@ describe('Navigator functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof navigatorHandler.replace !== 'function') return;
-      const result = await interpret(navigatorHandler.replace({ params: "{\"id\":\"article-99\"}" }), storage);
+      const result = await interpret(navigatorHandler.replace({ nav: "test-nav", params: "{\"id\":\"article-99\"}" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -406,7 +416,7 @@ describe('Navigator functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_register = await interpret(navigatorHandler.register({ name: "detail", targetConcept: "Article", targetView: "detail", paramsSchema: "", meta: "" }), storage);
       const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
-      const _fixtureInput = { params: "{\"id\":\"article-99\"}" } as Record<string, unknown>;
+      const _fixtureInput = { nav: "test-nav", params: "{\"id\":\"article-99\"}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
           const cur = _fixtureInput[k];
@@ -430,7 +440,7 @@ describe('Navigator functional handler', () => {
 
   describe('addGuard', () => {
     it('builds a valid StorageProgram', () => {
-      const program = navigatorHandler.addGuard({ guard: "unsaved-changes-check" });
+      const program = navigatorHandler.addGuard({ nav: "test-nav", guard: "unsaved-changes-check" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -438,21 +448,21 @@ describe('Navigator functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = navigatorHandler.addGuard({ guard: "unsaved-changes-check" });
+      const program = navigatorHandler.addGuard({ nav: "test-nav", guard: "unsaved-changes-check" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = navigatorHandler.addGuard({ guard: "unsaved-changes-check" });
+      const program = navigatorHandler.addGuard({ nav: "test-nav", guard: "unsaved-changes-check" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = navigatorHandler.addGuard({ guard: "unsaved-changes-check" });
+      const program = navigatorHandler.addGuard({ nav: "test-nav", guard: "unsaved-changes-check" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -465,7 +475,7 @@ describe('Navigator functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = navigatorHandler.addGuard({ guard: "unsaved-changes-check" });
+      const program = navigatorHandler.addGuard({ nav: "test-nav", guard: "unsaved-changes-check" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -473,7 +483,7 @@ describe('Navigator functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof navigatorHandler.addGuard !== 'function') return;
-      const result = await interpret(navigatorHandler.addGuard({ guard: "unsaved-changes-check" }), storage);
+      const result = await interpret(navigatorHandler.addGuard({ nav: "test-nav", guard: "unsaved-changes-check" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -485,7 +495,7 @@ describe('Navigator functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_register = await interpret(navigatorHandler.register({ name: "detail", targetConcept: "Article", targetView: "detail", paramsSchema: "", meta: "" }), storage);
       const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
-      const _fixtureInput = { guard: "unsaved-changes-check" } as Record<string, unknown>;
+      const _fixtureInput = { nav: "test-nav", guard: "unsaved-changes-check" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
           const cur = _fixtureInput[k];
@@ -509,7 +519,7 @@ describe('Navigator functional handler', () => {
 
   describe('removeGuard', () => {
     it('builds a valid StorageProgram', () => {
-      const program = navigatorHandler.removeGuard({ guard: "unsaved-changes-check" });
+      const program = navigatorHandler.removeGuard({ nav: "test-nav", guard: "unsaved-changes-check" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -517,21 +527,21 @@ describe('Navigator functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = navigatorHandler.removeGuard({ guard: "unsaved-changes-check" });
+      const program = navigatorHandler.removeGuard({ nav: "test-nav", guard: "unsaved-changes-check" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = navigatorHandler.removeGuard({ guard: "unsaved-changes-check" });
+      const program = navigatorHandler.removeGuard({ nav: "test-nav", guard: "unsaved-changes-check" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = navigatorHandler.removeGuard({ guard: "unsaved-changes-check" });
+      const program = navigatorHandler.removeGuard({ nav: "test-nav", guard: "unsaved-changes-check" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -544,7 +554,7 @@ describe('Navigator functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = navigatorHandler.removeGuard({ guard: "unsaved-changes-check" });
+      const program = navigatorHandler.removeGuard({ nav: "test-nav", guard: "unsaved-changes-check" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -552,7 +562,7 @@ describe('Navigator functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof navigatorHandler.removeGuard !== 'function') return;
-      const result = await interpret(navigatorHandler.removeGuard({ guard: "unsaved-changes-check" }), storage);
+      const result = await interpret(navigatorHandler.removeGuard({ nav: "test-nav", guard: "unsaved-changes-check" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -564,7 +574,7 @@ describe('Navigator functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_valid_register = await interpret(navigatorHandler.register({ name: "detail", targetConcept: "Article", targetView: "detail", paramsSchema: "", meta: "" }), storage);
       const _pool = Object.assign({}, (afterResult_valid_register?.output ?? {}));
-      const _fixtureInput = { guard: "unsaved-changes-check" } as Record<string, unknown>;
+      const _fixtureInput = { nav: "test-nav", guard: "unsaved-changes-check" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
           const cur = _fixtureInput[k];

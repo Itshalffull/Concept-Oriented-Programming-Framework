@@ -208,8 +208,8 @@ const _handler: FunctionalConceptHandler = {
         return { added: nEntries.map(e => e.module_id), removed: [], updated: [] };
       }
 
-      const oldEntries = oldLockfile.entries as LockfileEntry[];
-      const newEntries = newLockfile.entries as LockfileEntry[];
+      const oldEntries = (oldLockfile.entries as LockfileEntry[]) || [];
+      const newEntries = newLockfile ? ((newLockfile.entries as LockfileEntry[]) || []) : [];
 
       const oldMap = new Map<string, LockfileEntry>();
       for (const entry of oldEntries) {
