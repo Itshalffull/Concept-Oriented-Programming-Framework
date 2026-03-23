@@ -37,7 +37,7 @@ const _contentNodeHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'node', node, 'existing');
     p = branch(p, 'existing',
-      (b) => complete(b, 'exists', { message: 'already exists' }),
+      (b) => complete(b, 'ok', { message: 'already exists' }),
       (b) => {
         const now = new Date().toISOString();
         let b2 = put(b, 'node', node, {
@@ -104,8 +104,17 @@ const _contentNodeHandler: FunctionalConceptHandler = {
     if (!input.metadata || (typeof input.metadata === 'string' && (input.metadata as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'metadata is required' }) as StorageProgram<Result>;
     }
+    const metadataStr = input.metadata as string;
+    try {
+      const parsed = JSON.parse(metadataStr);
+      if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed) && Object.keys(parsed).length === 0) {
+        return complete(createProgram(), 'error', { message: 'metadata must not be empty' }) as StorageProgram<Result>;
+      }
+    } catch {
+      return complete(createProgram(), 'error', { message: 'metadata must be valid JSON' }) as StorageProgram<Result>;
+    }
     const node = input.node as string;
-    const metadata = input.metadata as string;
+    const metadata = metadataStr;
 
     let p = createProgram();
     p = spGet(p, 'node', node, 'existing');

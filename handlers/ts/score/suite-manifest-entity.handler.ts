@@ -137,13 +137,13 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = find(p, 'suite-manifests', {}, 'all');
 
-    return completeFrom(p, 'ok', (bindings) => {
+    return completeFrom(p, '', (bindings) => {
       const all = bindings.all as Record<string, unknown>[];
       const entry = all.find(s => s.id === suiteId);
       if (!entry) {
-        return { concepts: '[]' };
+        return { variant: 'error', message: `suite not found: ${suiteId}` };
       }
-      return { concepts: entry.concepts as string || '[]' };
+      return { variant: 'ok', concepts: entry.concepts as string || '[]' };
     }) as StorageProgram<Result>;
   },
 
@@ -153,13 +153,13 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = find(p, 'suite-manifests', {}, 'all');
 
-    return completeFrom(p, 'ok', (bindings) => {
+    return completeFrom(p, '', (bindings) => {
       const all = bindings.all as Record<string, unknown>[];
       const entry = all.find(s => s.id === suiteId);
       if (!entry) {
-        return { syncs: '[]' };
+        return { variant: 'error', message: `suite not found: ${suiteId}` };
       }
-      return { syncs: entry.syncs as string || '[]' };
+      return { variant: 'ok', syncs: entry.syncs as string || '[]' };
     }) as StorageProgram<Result>;
   },
 
@@ -199,11 +199,11 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = find(p, 'suite-manifests', {}, 'all');
 
-    return completeFrom(p, 'ok', (bindings) => {
+    return completeFrom(p, '', (bindings) => {
       const all = bindings.all as Record<string, unknown>[];
       const entry = all.find(s => s.id === suiteId);
       if (!entry) {
-        return { dependencies: '[]' };
+        return { variant: 'error', message: `suite not found: ${suiteId}` };
       }
 
       const result: Array<{ name: string; version: string; depth: number; via: string }> = [];
@@ -240,7 +240,7 @@ const _handler: FunctionalConceptHandler = {
         }
       }
 
-      return { dependencies: JSON.stringify(result) };
+      return { variant: 'ok', dependencies: JSON.stringify(result) };
     }) as StorageProgram<Result>;
   },
 
@@ -250,11 +250,11 @@ const _handler: FunctionalConceptHandler = {
     let p = createProgram();
     p = find(p, 'suite-manifests', {}, 'all');
 
-    return completeFrom(p, 'ok', (bindings) => {
+    return completeFrom(p, '', (bindings) => {
       const all = bindings.all as Record<string, unknown>[];
       const entry = all.find(s => s.id === suiteId);
       if (!entry) {
-        return { valid: JSON.stringify({ valid: true }) };
+        return { variant: 'error', message: `suite not found: ${suiteId}` };
       }
 
       const deps = JSON.parse(entry.dependencies as string || '[]');
@@ -279,7 +279,7 @@ const _handler: FunctionalConceptHandler = {
         return { variant: 'invalid', errors: JSON.stringify(errors) };
       }
 
-      return { valid: JSON.stringify({ valid: true }) };
+      return { variant: 'ok', valid: JSON.stringify({ valid: true }) };
     }) as StorageProgram<Result>;
   },
 

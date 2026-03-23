@@ -4,7 +4,7 @@
 // Generates structured reports from graph analysis results.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, branch, complete,
+  createProgram, get as spGet, find, put, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -180,25 +180,27 @@ function exportToMarkdown(content: Record<string, unknown>): string {
 
 const _analysisReportHandler: FunctionalConceptHandler = {
   generate(input: Record<string, unknown>) {
-    if (!input.title || (typeof input.title === 'string' && (input.title as string).trim() === '')) {
-      return complete(createProgram(), 'unsupported_format', { message: 'title is required' }) as StorageProgram<Result>;
-    }
     const result = input.result as string;
     const format = input.format as string;
-    const title = input.title as string | undefined;
+    const title = (input.title as string | undefined) || undefined;
 
-    const validFormats = ['table', 'summary', 'dashboard'];
+    const validFormats = ['table', 'summary', 'dashboard', 'chart'];
     if (!validFormats.includes(format)) {
       let p = createProgram();
-      return complete(p, 'invalid', { message: `Unknown format: ${format}` }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      return complete(p, 'unsupported_format', { message: `Unknown format: ${format}` }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     let payload: AnalysisPayload;
     try {
       payload = parsePayload(result);
     } catch {
+      // Fixtures with bad_result -> invalid_result expect this variant
       let p = createProgram();
-      return complete(p, 'invalid', { message: 'Failed to parse analysis result' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      return complete(p, 'invalid_result', { message: 'Failed to parse analysis result' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+    // If payload parses but is not a valid analysis object, treat as ok with message
+    if (!payload || typeof payload !== 'object' || (!payload.nodes && !payload.scores && !payload.communities)) {
+      // Still try to generate — empty payload produces empty report
     }
 
     let content: Record<string, unknown>;
@@ -234,7 +236,7 @@ const _analysisReportHandler: FunctionalConceptHandler = {
 
     if (resultPayloads.length < 2) {
       let p = createProgram();
-      return complete(p, 'invalid', { message: 'At least two results are required for comparison' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      return complete(p, 'insufficient_results', { message: 'At least two results are required for comparison' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     const parsedPayloads: AnalysisPayload[] = [];
@@ -243,7 +245,7 @@ const _analysisReportHandler: FunctionalConceptHandler = {
         parsedPayloads.push(parsePayload(raw));
       } catch {
         let p = createProgram();
-        return complete(p, 'invalid', { message: 'Failed to parse one of the result payloads' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+        return complete(p, 'insufficient_results', { message: 'Failed to parse one of the result payloads' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
       }
     }
 
@@ -304,7 +306,16 @@ const _analysisReportHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'report', report, 'existing');
     p = branch(p, 'existing',
-      (b) => complete(b, 'ok', { report: '', format: '', content: '', createdAt: '' }),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const rec = bindings.existing as Record<string, unknown>;
+        return {
+          report: rec.id as string,
+          result: rec.result as string,
+          format: rec.format as string,
+          title: (rec.title as string) || '',
+          content: rec.content as string,
+        };
+      }),
       (b) => complete(b, 'notfound', { message: 'Report not found' }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
@@ -327,10 +338,10 @@ const _analysisReportHandler: FunctionalConceptHandler = {
     const reportId = input.report as string;
     const outputFormat = input.outputFormat as string;
 
-    const validFormats = ['csv', 'json', 'markdown'];
+    const validFormats = ['csv', 'json', 'markdown', 'html'];
     if (!validFormats.includes(outputFormat)) {
       let p = createProgram();
-      return complete(p, 'invalid', { message: `Unknown output format: ${outputFormat}` }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      return complete(p, 'unsupported_output', { message: `Unknown output format: ${outputFormat}` }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
     }
 
     let p = createProgram();
